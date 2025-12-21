@@ -1,0 +1,158 @@
+F/* --- 1. VARIABLES --- */
+:root {
+  --bg-dark: #0b0e11; 
+  --bg-header: #181a20; 
+  --bg-card: #1e2329;
+  
+  /* Binance Pure Gold */
+  --gold-text: linear-gradient(to right, #F0B90B, #FCD535, #F0B90B);
+  --gold-button: linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%);
+  --unified-gold-color: #FCD535;
+  
+  --text-on-gold: #1E2329; 
+  --text-main: #eaecef; 
+  --text-sub: #848e9c; 
+  --border: #2b3139; 
+  --up-green: #0ecb81;
+}
+
+body { 
+  background-color: var(--bg-dark); 
+  color: var(--text-main); 
+  font-family: 'IBM Plex Sans', sans-serif; 
+  overflow-x: hidden; 
+}
+
+/* GOLD CLASSES */
+.text-gold-metallic { 
+  background: var(--gold-text); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+  background-clip: text; 
+  text-fill-color: transparent; 
+  font-weight: 700; 
+}
+
+.btn-gold-metallic, w3m-button::part(button) { 
+  background: var(--gold-button) !important; 
+  border: none !important; 
+  color: var(--text-on-gold) !important; 
+  box-shadow: none; 
+  transition: all 0.2s ease; 
+  font-weight: 600; 
+}
+
+.btn-gold-metallic:hover, w3m-button::part(button):hover { 
+  background: #FCD535 !important; 
+  filter: brightness(1.05); 
+}
+
+/* BUTTON STYLES (GOLD PILL) */
+.btn-warning-custom {
+    background: var(--gold-button) !important;
+    border: 1px solid #b3882a;
+    color: #000000 !important;
+    font-weight: 700 !important;
+    border-radius: 50px !important; 
+    transition: transform 0.2s ease;
+    box-shadow: none !important;
+}
+
+.btn-warning-custom:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1);
+}
+
+/* WALLET FORCE FIX */
+w3m-button { 
+  --w3m-accent: #FCD535 !important; 
+  --w3m-color-mix: #000 !important; 
+  --w3m-color-mix-strength: 10 !important; 
+  --w3m-border-radius-master: 4px !important; 
+}
+w3m-button::part(button) { 
+  color: #1E2329 !important; 
+  font-weight: 600 !important; 
+  border: none !important; 
+  background: var(--gold-button) !important; 
+}
+w3m-button::part(text), w3m-button::part(label) { 
+  color: #1E2329 !important; 
+  fill: #1E2329 !important; 
+}
+
+/* NAVBAR */
+.navbar { 
+  background-color: var(--bg-header); 
+  border-bottom: 1px solid var(--border); 
+  min-height: 64px; 
+  padding: 0; 
+}
+
+.navbar-nav .nav-link { 
+  color: #eaecef !important; 
+  font-weight: 600; /* Increased weight */
+  font-size: 15px; 
+  transition: color 0.2s; 
+}
+
+.navbar-nav .nav-link:hover, .navbar-nav .nav-link.active { 
+  color: var(--unified-gold-color) !important; 
+  background: none !important; /* Removed gradient background on text */
+}
+
+/* Dropdown Fixes */
+.dropdown-menu {
+    border: 1px solid #333;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.dropdown-item:hover { 
+  background-color: #2b3139 !important; 
+  color: #FCD535 !important;
+}
+
+/* HERO (Cleaned up) */
+.hero { 
+  padding: 2rem 0; 
+  text-align: left; 
+  background: transparent !important; 
+  position: relative; 
+  z-index: 1; 
+}
+
+/* MOBILE FIXES */
+@media (max-width: 991px) { 
+  .navbar-brand { margin-right: auto; flex-grow: 1; }
+  
+  .navbar-toggler { 
+    border: 1px solid #FCD535; 
+    background-color: transparent; 
+    padding: 4px 8px; 
+  }
+  
+  .navbar-toggler-icon { 
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(252, 213, 53, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important; 
+    filter: none !important; 
+  }
+  
+  .navbar-collapse { 
+    position: absolute; 
+    top: 70px; 
+    left: 0; 
+    width: 100%; 
+    background-color: var(--bg-header); 
+    border-top: 1px solid var(--border); 
+    padding: 15px; 
+    z-index: 1000; 
+    height: auto;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .navbar-nav .nav-link { 
+    padding: 12px 0; 
+    border-bottom: 1px solid #2b3139; 
+    width: 100%;
+  }
+}

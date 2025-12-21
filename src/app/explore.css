@@ -1,0 +1,90 @@
+/* EXPLORE STYLES (V36.0 - PRO TRADER) */
+
+/* 1. Ticker Animation */
+@keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+body { background-color: #0b0e11; }
+
+/* 2. TABS & FILTERS */
+.tab-btn {
+    background: none;
+    border: none;
+    color: #848e9c;
+    font-weight: 600;
+    font-size: 16px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    margin-right: 20px;
+}
+.tab-btn:hover { color: #eaecef; }
+.tab-btn.active {
+    color: #eaecef;
+    border-bottom: 3px solid #FCD535; /* Gold Active Line */
+}
+
+.filter-btn { color: #eaecef; background-color: #1e2329; border: 1px solid #1e2329; font-size: 14px; font-weight: 500; padding: 6px 12px; }
+.filter-btn:hover, .filter-btn.show { border-color: #FCD535; color: #FCD535; }
+
+/* 3. MARKET TABLE STYLES */
+.market-table { margin-top: 10px; }
+
+/* Table Header */
+.market-table thead th {
+    background-color: #0b0e11;
+    border-bottom: 1px solid #2b3139;
+    color: #848e9c;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    padding: 12px 8px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Sort Arrows */
+.sort-arrows {
+    display: inline-flex;
+    flex-direction: column;
+    font-size: 8px;
+    margin-left: 5px;
+    vertical-align: middle;
+    color: #474d57;
+}
+
+/* Table Body */
+.market-table tbody td {
+    background-color: #0b0e11;
+    border-bottom: 1px solid #1e2329;
+    padding: 16px 8px;
+    color: #eaecef;
+    font-size: 13px;
+    font-weight: 400;
+    vertical-align: middle;
+}
+
+/* Row Hover: Subtle Grey Highlight */
+.asset-row { transition: background-color 0.2s; }
+.asset-row:hover td {
+    background-color: #181a20; /* Dark Grey Highlight */
+    cursor: pointer;
+}
+
+.asset-name-text { font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+
+/* 4. NEW ICONS (SVG Code) */
+.tier-icon-svg { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+.tier-icon-svg svg { width: 100%; height: 100%; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
+
+/* 5. TREND BAR (Heatmap Style) */
+.trend-bar {
+    height: 4px;
+    border-radius: 2px;
+    display: block;
+}
+.bg-gradient-up { background: linear-gradient(to right, #0ecb81, #00ff88); box-shadow: 0 0 5px rgba(14, 203, 129, 0.5); }
+.bg-gradient-down { background: linear-gradient(to right, #f6465d, #ff002b); box-shadow: 0 0 5px rgba(246, 70, 93, 0.5); }
+
+.btn-buy-sm { font-size: 12px; padding: 6px 16px; font-weight: 600; border-radius: 4px; }
+.btn-outline-gold { border: 1px solid #FCD535; color: #FCD535; background: transparent; font-size: 12px; padding: 6px 16px; font-weight: 600; border-radius: 4px; }
+.btn-outline-gold:hover { background: #FCD535; color: #000; }
