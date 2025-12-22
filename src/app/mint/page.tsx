@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useWalletClient, useAccount } from 'wagmi';
-import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { useSafeWeb3Modal } from '@/hooks/useSafeWeb3Modal';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CHAIN_ID } from '@/data/config';
 import ABI from '@/data/abi.json';
+import '@/lib/web3modal'; // Initialize Web3Modal
+
+// Prevent static page generation for this page
+export const dynamic = 'force-dynamic';
 
 const ADMIN_WALLET = "0xf65bf669ee7775c9788ed367742e1527d0118b58"; 
 const READ_PROVIDER = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com');
@@ -40,7 +43,7 @@ const MintContent = () => {
 
   const { data: walletClient } = useWalletClient();
   const { address, isConnected, chain } = useAccount();
-  const { open } = useWeb3Modal();
+  const { open } = useSafeWeb3Modal();
 
   const signer = useMemo(() => {
     if (!walletClient) return null;

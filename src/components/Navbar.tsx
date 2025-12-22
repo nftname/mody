@@ -1,14 +1,14 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { useSafeWeb3Modal } from '@/hooks/useSafeWeb3Modal';
 import { useAccount, useBalance } from 'wagmi';
 import { useRef, useState, useEffect } from 'react';
 
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { open } = useWeb3Modal();
+  const { open } = useSafeWeb3Modal();
   const { address, isConnected } = useAccount();
   
   const { data: ethBalance } = useBalance({ address, chainId: 1 });

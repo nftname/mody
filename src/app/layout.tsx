@@ -4,10 +4,7 @@ import Script from "next/script";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import Web3Provider from "@/components/Web3Provider";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import LegalModal from "@/components/LegalModal";
-import InstallPrompt from "@/components/InstallPrompt";
+import ClientLayout from "@/components/ClientLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,15 +36,9 @@ export default function RootLayout({
         />
 
         <Web3Provider>
-          <div className="d-flex flex-column min-vh-100">
-            <Navbar />
-            <InstallPrompt />
-            <LegalModal />
-            <main className="flex-grow-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <ClientLayout>
+            {children}
+          </ClientLayout>
         </Web3Provider>
 
         <Script
