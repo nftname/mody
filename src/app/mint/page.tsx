@@ -29,14 +29,13 @@ const MintContent = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [isMinting, setIsMinting] = useState(false);
-  const [hasPaid, setHasPaid] = useState(false);
   const [mintStep, setMintStep] = useState(0); 
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'process' | 'error' | 'success'>('process');
   const [errorMessage, setErrorMessage] = useState('');
-  const [txHash, setTxHash] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [mintedTokenId, setMintedTokenId] = useState<string | null>(null);
 
   const { data: walletClient } = useWalletClient();
   const { address, isConnected, chain } = useAccount();
@@ -95,7 +94,6 @@ const MintContent = () => {
     if (modalType === 'success' || modalType === 'error') {
         setShowModal(false);
         setMintStep(0);
-        setHasPaid(false);
         return;
     }
     setShowModal(false);
@@ -113,9 +111,8 @@ const MintContent = () => {
 
     setDebugLog([]); 
     setErrorMessage('');
-    setTxHash('');
+    setMintedTokenId(null);
     setIsMinting(true); 
-    setHasPaid(false);
     setModalType('process');
     setShowModal(true);
     
@@ -138,7 +135,6 @@ const MintContent = () => {
 
       let tierId = 2; 
       const lowerLabel = tierLabel.toLowerCase();
-      
       if (lowerLabel === 'immortal') tierId = 0;
       else if (lowerLabel === 'elite') tierId = 1;
       else if (lowerLabel === 'founders') tierId = 2;
@@ -153,7 +149,6 @@ const MintContent = () => {
       });
 
       const apiData = await apiResponse.json();
-
       if (!apiData.success || !apiData.tokenUri) {
         throw new Error(apiData.error || "Metadata Generation Failed");
       }
@@ -163,45 +158,47 @@ const MintContent = () => {
 
       setMintStep(2);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      let tx;
 
       if (isAdmin) {
           addLog("👑 Admin Identified: Initiating Free Mint...");
-          
-          const tx = await contract.reserveName(nameToMint, tierId, tokenURI);
-          
-          addLog(`Tx Sent: ${tx.hash}`);
-          setTxHash(tx.hash);
-          setMintStep(3); 
-          
-          await tx.wait(); 
-
+          tx = await contract.reserveName(nameToMint, tierId, tokenURI);
       } else {
           addLog("Calculating Oracle Price...");
-          
           let usdAmountWei;
           if (tierId === 0) usdAmountWei = ethers.parseUnits("50", 18);
           else if (tierId === 1) usdAmountWei = ethers.parseUnits("30", 18);
           else usdAmountWei = ethers.parseUnits("10", 18);
 
           const costInMatic = await contract.getMaticCost(usdAmountWei);
-          
           // @ts-ignore
           const buffer = (costInMatic * 102n) / 100n; 
 
           addLog(`Price: ${ethers.formatEther(costInMatic)} MATIC`);
           addLog("Requesting Wallet Signature...");
-
-          const tx = await contract.mintPublic(nameToMint, tierId, tokenURI, { 
-              value: buffer
-          });
-
-          setHasPaid(true);
-          setTxHash(tx.hash);
-          addLog(`Tx Sent: ${tx.hash}`);
-          setMintStep(3);
-          
-          await tx.wait();
+          tx = await contract.mintPublic(nameToMint, tierId, tokenURI, { value: buffer });
       }
+
+      addLog(`Tx Sent: ${tx.hash}`);
+      setMintStep(3);
+      
+      const receipt = await tx.wait();
+      
+      // استخراج الـ ID
+      let newTokenId = null;
+      if (receipt.logs) {
+          try {
+              for (const log of receipt.logs) {
+                  const parsed = contract.interface.parseLog(log);
+                  if (parsed && parsed.name === 'Transfer' && parsed.args[0] === ethers.ZeroAddress) {
+                      newTokenId = parsed.args[2].toString();
+                      break;
+                  }
+              }
+          } catch (e) { console.log("Log parse error", e); }
+      }
+
+      if (newTokenId) setMintedTokenId(newTokenId);
       
       addLog("Transaction Confirmed on Blockchain!");
       setMintStep(4);
@@ -210,9 +207,7 @@ const MintContent = () => {
     } catch (error: any) {
       console.error(error);
       let errorMsg = error.reason || error.message || "Unknown Error";
-      
       if (errorMsg.includes("rejected")) errorMsg = "Transaction cancelled by user.";
-      if (errorMsg.includes("insufficient funds")) errorMsg = "Insufficient MATIC balance for gas or price.";
       
       addLog(`ERROR: ${errorMsg}`);
       setErrorMessage(errorMsg);
@@ -226,14 +221,7 @@ const MintContent = () => {
     <main dir="ltr" style={{ backgroundColor: '#0d1117', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
       
       {isAdmin && (
-        <div 
-            title="Admin Mode: ReserveName Active"
-            style={{
-                position: 'fixed', top: '20px', right: '20px', width: '10px', height: '10px',
-                backgroundColor: '#00ff00', borderRadius: '50%', boxShadow: '0 0 10px #00ff00',
-                zIndex: 9999, cursor: 'help'
-            }}
-        ></div>
+        <div title="Admin Mode" style={{ position: 'fixed', top: '20px', right: '20px', width: '10px', height: '10px', backgroundColor: '#00ff00', borderRadius: '50%', boxShadow: '0 0 10px #00ff00', zIndex: 9999 }}></div>
       )}
 
       <div className="container hero-container text-center">
@@ -267,11 +255,7 @@ const MintContent = () => {
                 caretColor: '#FCD535'
               }}
             />
-            <button 
-                type="submit"
-                className="btn position-absolute top-50 start-0 translate-middle-y ms-1 rounded-circle d-flex align-items-center justify-content-center"
-                style={{ width: '42px', height: '42px', background: GOLD_GRADIENT, border: 'none', transition: 'all 0.3s', right: '5px' }}
-            >
+            <button type="submit" className="btn position-absolute top-50 start-0 translate-middle-y ms-1 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '42px', height: '42px', background: GOLD_GRADIENT, border: 'none', transition: 'all 0.3s', right: '5px' }}>
                 {isSearching ? <div className="spinner-border text-dark" style={{ width: '18px', height: '18px' }} role="status"></div> : <i className="bi bi-search text-dark" style={{ fontSize: '20px' }}></i>}
             </button>
           </form>
@@ -314,9 +298,14 @@ const MintContent = () => {
                      <div className="mb-3"><i className="bi bi-check-circle-fill text-success" style={{fontSize: '3.5rem'}}></i></div>
                      <h3 className="text-white fw-bold mb-2">History Made!</h3>
                      <p className="text-secondary mb-4">The name <span style={{color: '#FCD535'}}>{searchTerm}</span> is now your eternal digital asset.</p>
-                     <Link href={`/dashboard`} passHref>
-                        <button className="btn w-100 fw-bold py-3" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000', fontSize: '16px', borderRadius: '8px' }}>View Your New Asset <i className="bi bi-arrow-right ms-2"></i></button>
+                     
+                     {/* Dynamic Link Button */}
+                     <Link href={mintedTokenId ? `/asset/${mintedTokenId}` : `/dashboard`} passHref>
+                        <button className="btn w-100 fw-bold py-3" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000', fontSize: '16px', borderRadius: '8px' }}>
+                            View Your New Asset <i className="bi bi-arrow-right ms-2"></i>
+                        </button>
                      </Link>
+                     
                      <div className="mt-3"><button onClick={handleCloseModal} className="btn btn-link text-secondary text-decoration-none" style={{fontSize: '12px'}}>Mint Another</button></div>
                    </div>
                 )}

@@ -18,29 +18,53 @@ export default function DashboardPage() {
   const fetchAssets = async () => {
     if (!address || !isConnected) return;
     setLoading(true);
+    setMyAssets([]); // Clear previous state
+
     try {
-      const provider = new ethers.JsonRpcProvider('https://polygon-rpc.com');
+      // Use Env RPC for reliability
+      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com');
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+      
       const balance = await contract.balanceOf(address);
       const count = Number(balance);
       
-      const loaded = [];
-      for (let i = 0; i < count; i++) {
-        try {
-          const tokenId = await contract.tokenOfOwnerByIndex(address, i);
-          const tokenURI = await contract.tokenURI(tokenId);
-          const metaRes = await fetch(tokenURI.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/'));
-          const meta = await metaRes.json();
-          
-          loaded.push({
-            id: tokenId.toString(),
-            name: meta.name,
-            tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
-            price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '10'
-          });
-        } catch (e) { console.error(e); }
+      if (count === 0) {
+          setLoading(false);
+          return;
       }
-      setMyAssets(loaded);
+
+      // 1. Get all IDs first (Fast)
+      const idPromises = [];
+      for (let i = 0; i < count; i++) {
+        idPromises.push(contract.tokenOfOwnerByIndex(address, i));
+      }
+      const tokenIds = await Promise.all(idPromises);
+
+      // 2. Fetch all metadata in Parallel (Super Fast)
+      const dataPromises = tokenIds.map(async (tokenId) => {
+          try {
+              const uri = await contract.tokenURI(tokenId);
+              const gatewayURI = uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+              const metaRes = await fetch(gatewayURI);
+              const meta = await metaRes.json();
+              
+              return {
+                  id: tokenId.toString(),
+                  name: meta.name,
+                  tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
+                  price: '10' // Placeholder
+              };
+          } catch (err) {
+              console.error(`Error fetching token ${tokenId}`, err);
+              return null;
+          }
+      });
+
+      const results = await Promise.all(dataPromises);
+      const validAssets = results.filter(asset => asset !== null);
+      
+      setMyAssets(validAssets);
+
     } catch (error) {
       console.error("Dashboard Engine Error:", error);
     } finally {
@@ -70,7 +94,7 @@ export default function DashboardPage() {
             <div className="d-flex gap-4 p-3 rounded-3" style={{ backgroundColor: '#161b22', border: '1px solid #1c2128' }}>
                 <div>
                     <div className="text-secondary text-uppercase" style={{ fontSize: '10px' }}>Total Assets</div>
-                    <div className="text-white fw-bold" style={{ fontSize: '20px' }}>{myAssets.length}</div>
+                    <div className="text-white fw-bold" style={{ fontSize: '20px' }}>{loading ? '...' : myAssets.length}</div>
                 </div>
                 <div style={{ width: '1px', backgroundColor: '#30363d' }}></div>
                 <div>
@@ -95,11 +119,25 @@ export default function DashboardPage() {
 
       <div className="container">
         <div className="row g-4">
-            {filteredAssets.map((asset) => (
+            {/* Skeleton Loading State */}
+            {loading && (
+                <>
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className="col-12 col-md-6 col-lg-4 col-xl-3">
+                        <div style={{ height: '280px', backgroundColor: '#161b22', borderRadius: '12px', border: '1px solid #1c2128', opacity: 0.5 }} className="d-flex align-items-center justify-content-center">
+                            <div className="spinner-border text-secondary" role="status"></div>
+                        </div>
+                    </div>
+                  ))}
+                </>
+            )}
+
+            {!loading && filteredAssets.map((asset) => (
                 <div key={asset.id} className="col-12 col-md-6 col-lg-4 col-xl-3">
                    <DashboardAssetCard item={asset} />
                 </div>
             ))}
+
             <div className="col-12 col-md-6 col-lg-4 col-xl-3">
                 <Link href="/mint" className="text-decoration-none">
                     <div className="h-100 d-flex flex-column align-items-center justify-content-center p-4" style={{ border: '1px dashed #333', borderRadius: '12px', minHeight: '280px' }}>
