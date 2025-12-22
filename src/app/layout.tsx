@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
+import dynamic from 'next/dynamic';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import Web3Provider from "@/components/Web3Provider";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LegalModal from "@/components/LegalModal";
 import InstallPrompt from "@/components/InstallPrompt";
+
+const Navbar = dynamic(() => import('@/components/Navbar'), { 
+  ssr: false,
+  loading: () => <div style={{ height: '80px' }} /> 
+});
 
 const inter = Inter({ subsets: ["latin"] });
 
