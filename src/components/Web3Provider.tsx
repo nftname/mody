@@ -32,17 +32,26 @@ export const config = defaultWagmiConfig({
   })
 });
 
-createWeb3Modal({
-  wagmiConfig: config,
-  projectId,
-  themeVariables: {
-    '--w3m-accent': '#F0B90B',
-    '--w3m-color-mix': '#F0B90B',
-    '--w3m-color-mix-strength': 5,
-    '--w3m-border-radius-master': '4px',
-    '--w3m-z-index': 999999
-  }
-});
+// Singleton Pattern: createWeb3Modal will only run once
+let isWeb3ModalCreated = false;
+
+if (typeof window !== 'undefined' && !isWeb3ModalCreated) {
+  createWeb3Modal({
+    wagmiConfig: config,
+    projectId,
+    enableAnalytics: false,
+    enableOnramp: false,
+    enableEmail: false, // Disable email/social login
+    themeVariables: {
+      '--w3m-accent': '#F0B90B',
+      '--w3m-color-mix': '#F0B90B',
+      '--w3m-color-mix-strength': 5,
+      '--w3m-border-radius-master': '4px',
+      '--w3m-z-index': 999999
+    }
+  });
+  isWeb3ModalCreated = true;
+}
 
 export default function Web3Provider({ 
    children, 
