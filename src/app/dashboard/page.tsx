@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const fetchAssets = async () => {
     if (!address || !isConnected) return;
     
+    // 1. Load from Cache Immediately
     const CACHE_KEY = `myAssets_${address}`;
     const cachedData = localStorage.getItem(CACHE_KEY);
     if (cachedData) {
@@ -59,6 +60,7 @@ export default function DashboardPage() {
 
             tempAssets.push(newAsset);
             
+            // Incremental Update
             setMyAssets(prev => {
                 const exists = prev.find(a => a.id === newAsset.id);
                 if (exists) return prev;
@@ -70,6 +72,7 @@ export default function DashboardPage() {
         }
       }
 
+      // Update Cache after full load
       localStorage.setItem(CACHE_KEY, JSON.stringify(tempAssets));
 
     } catch (error) {
@@ -127,13 +130,11 @@ export default function DashboardPage() {
 
       <div className="container">
         <div className="row g-4">
-            
             {filteredAssets.map((asset) => (
                 <div key={asset.id} className="col-12 col-md-6 col-lg-4 col-xl-3 fade-in">
                    <DashboardAssetCard item={asset} />
                 </div>
             ))}
-
             <div className="col-12 col-md-6 col-lg-4 col-xl-3">
                 <Link href="/mint" className="text-decoration-none">
                     <div className="h-100 d-flex flex-column align-items-center justify-content-center p-4" style={{ border: '1px dashed #333', borderRadius: '12px', minHeight: '280px' }}>

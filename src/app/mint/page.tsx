@@ -109,7 +109,7 @@ const MintContent = () => {
 
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, READ_PROVIDER);
       let attempts = 0;
-      const maxAttempts = 20;
+      const maxAttempts = 30; 
 
       const checkLoop = setInterval(async () => {
           attempts++;
@@ -120,7 +120,7 @@ const MintContent = () => {
                   router.push(`/asset/${mintedTokenId}`);
               }
           } catch (e) {
-              console.log("Waiting for indexing...");
+              console.log("Waiting for block index...");
           }
 
           if (attempts >= maxAttempts) {

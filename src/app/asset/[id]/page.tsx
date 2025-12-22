@@ -157,7 +157,6 @@ export default function AssetPage() {
                                 </div>
 
                                 {isOwner ? (
-                                    // OWNER VIEW CONTROLS
                                     <div className="d-flex flex-column gap-2">
                                         <button className="btn btn-warning w-100 fw-bold py-2">
                                             <i className="bi bi-tag-fill me-2"></i> List For Sale
@@ -172,7 +171,6 @@ export default function AssetPage() {
                                         </div>
                                     </div>
                                 ) : (
-                                    // PUBLIC VIEW CONTROLS
                                     <div className="d-flex gap-2 mt-3">
                                         <button className="btn btn-warning w-100 fw-bold" disabled onClick={() => !isConnected && open()}>
                                             Not Listed
