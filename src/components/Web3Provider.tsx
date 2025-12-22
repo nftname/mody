@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode, useEffect, useRef } from 'react';
+import React, { ReactNode } from 'react';
 import { createWeb3Modal } from '@web3modal/wagmi/react';
 import { defaultWagmiConfig } from '@web3modal/wagmi/react/config';
 import { WagmiProvider, cookieStorage, createStorage } from 'wagmi';
@@ -32,8 +32,29 @@ export const config = defaultWagmiConfig({
   })
 });
 
-// Global flag to track modal creation
-let modalCreated = false;
+// Create modal instance immediately when module loads on client-side
+// This ensures it's available before any component tries to use useWeb3Modal
+if (typeof window !== 'undefined') {
+  try {
+    createWeb3Modal({
+      wagmiConfig: config,
+      projectId,
+      enableAnalytics: false,
+      enableOnramp: false,
+      enableEmail: false,
+      themeVariables: {
+        '--w3m-accent': '#F0B90B',
+        '--w3m-color-mix': '#F0B90B',
+        '--w3m-color-mix-strength': 5,
+        '--w3m-border-radius-master': '4px',
+        '--w3m-z-index': 999999
+      }
+    });
+  } catch (error) {
+    // Modal might already be created, ignore error
+    console.warn('Web3Modal creation:', error);
+  }
+}
 
 export default function Web3Provider({ 
    children, 
@@ -42,34 +63,6 @@ export default function Web3Provider({
    children: ReactNode; 
    initialState?: any;
 }) {
-  const initialized = useRef(false);
-
-  useEffect(() => {
-    // Create modal only once on client-side
-    if (!initialized.current && !modalCreated) {
-      try {
-        createWeb3Modal({
-          wagmiConfig: config,
-          projectId,
-          enableAnalytics: false,
-          enableOnramp: false,
-          enableEmail: false,
-          themeVariables: {
-            '--w3m-accent': '#F0B90B',
-            '--w3m-color-mix': '#F0B90B',
-            '--w3m-color-mix-strength': 5,
-            '--w3m-border-radius-master': '4px',
-            '--w3m-z-index': 999999
-          }
-        });
-        modalCreated = true;
-        initialized.current = true;
-      } catch (error) {
-        console.error('Failed to create Web3Modal:', error);
-      }
-    }
-  }, []);
-
   return (
     <WagmiProvider config={config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
