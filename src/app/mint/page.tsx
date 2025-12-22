@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useWalletClient, useAccount } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { ethers } from 'ethers';
@@ -25,6 +25,7 @@ function clientToSigner(client: any) {
 }
 
 const MintContent = () => {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -36,6 +37,7 @@ const MintContent = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [mintedTokenId, setMintedTokenId] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const { data: walletClient } = useWalletClient();
   const { address, isConnected, chain } = useAccount();
@@ -83,7 +85,7 @@ const MintContent = () => {
         else setStatus('available');
 
     } catch (err: any) {
-        console.error("Check Error:", err);
+        console.error(err);
         setStatus('available');
     } finally {
         setIsSearching(false);
@@ -101,6 +103,33 @@ const MintContent = () => {
     setMintStep(0);
   };
 
+  const handleViewAsset = async () => {
+      if (!mintedTokenId) return;
+      setIsRedirecting(true);
+
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, READ_PROVIDER);
+      let attempts = 0;
+      const maxAttempts = 20;
+
+      const checkLoop = setInterval(async () => {
+          attempts++;
+          try {
+              const uri = await contract.tokenURI(mintedTokenId);
+              if (uri && uri.length > 0) {
+                  clearInterval(checkLoop);
+                  router.push(`/asset/${mintedTokenId}`);
+              }
+          } catch (e) {
+              console.log("Waiting for indexing...");
+          }
+
+          if (attempts >= maxAttempts) {
+              clearInterval(checkLoop);
+              router.push(`/asset/${mintedTokenId}`);
+          }
+      }, 1500);
+  };
+
   const startMinting = async (tierLabel: string) => {
     if (status !== 'available') {
         setErrorMessage("Name is not available.");
@@ -115,6 +144,7 @@ const MintContent = () => {
     setIsMinting(true); 
     setModalType('process');
     setShowModal(true);
+    setIsRedirecting(false);
     
     const nameToMint = searchTerm.toUpperCase(); 
 
@@ -184,7 +214,6 @@ const MintContent = () => {
       
       const receipt = await tx.wait();
       
-      // استخراج الـ ID
       let newTokenId = null;
       if (receipt.logs) {
           try {
@@ -299,12 +328,16 @@ const MintContent = () => {
                      <h3 className="text-white fw-bold mb-2">History Made!</h3>
                      <p className="text-secondary mb-4">The name <span style={{color: '#FCD535'}}>{searchTerm}</span> is now your eternal digital asset.</p>
                      
-                     {/* Dynamic Link Button */}
-                     <Link href={mintedTokenId ? `/asset/${mintedTokenId}` : `/dashboard`} passHref>
-                        <button className="btn w-100 fw-bold py-3" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000', fontSize: '16px', borderRadius: '8px' }}>
+                     {!isRedirecting ? (
+                        <button onClick={handleViewAsset} className="btn w-100 fw-bold py-3" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000', fontSize: '16px', borderRadius: '8px' }}>
                             View Your New Asset <i className="bi bi-arrow-right ms-2"></i>
                         </button>
-                     </Link>
+                     ) : (
+                        <div className="d-flex flex-column align-items-center justify-content-center py-2">
+                            <div className="spinner-border text-warning mb-2" role="status" style={{ width: '3rem', height: '3rem', borderWidth: '4px' }}></div>
+                            <span className="text-warning small fw-bold">Verifying On-Chain...</span>
+                        </div>
+                     )}
                      
                      <div className="mt-3"><button onClick={handleCloseModal} className="btn btn-link text-secondary text-decoration-none" style={{fontSize: '12px'}}>Mint Another</button></div>
                    </div>

@@ -38,7 +38,6 @@ const getHeroStyles = (tier: string) => {
                 labelColor: '#4db6ac' 
             };
         default: 
-            // Fallback for loading or unknown
             return { 
                 bg: 'linear-gradient(135deg, #001f24 0%, #003840 100%)', 
                 border: '1px solid rgba(0, 128, 128, 0.4)', 
@@ -53,7 +52,8 @@ export default function AssetPage() {
     const params = useParams();
     const [asset, setAsset] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
-    const { isConnected } = useAccount();
+    const [isOwner, setIsOwner] = useState(false);
+    const { address, isConnected } = useAccount();
     const { open } = useWeb3Modal();
     const [showBidModal, setShowBidModal] = useState(false);
 
@@ -63,19 +63,22 @@ export default function AssetPage() {
             const id = Array.isArray(params.id) ? params.id[0] : params.id;
             
             try {
-                // Use Env RPC for better performance
                 const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com');
                 const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
                 
-                // 1. Get Token URI
                 const tokenURI = await contract.tokenURI(id);
+                const ownerAddress = await contract.ownerOf(id);
+
+                if (address && ownerAddress.toLowerCase() === address.toLowerCase()) {
+                    setIsOwner(true);
+                } else {
+                    setIsOwner(false);
+                }
                 
-                // 2. Fetch Metadata from IPFS
                 const gatewayURI = tokenURI.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
                 const metaRes = await fetch(gatewayURI);
                 const meta = await metaRes.json();
                 
-                // 3. Extract Tier
                 const tier = meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value || 'founders';
                 const year = meta.attributes?.find((a: any) => a.trait_type === 'Mint Date')?.value || '2025';
 
@@ -84,9 +87,9 @@ export default function AssetPage() {
                     name: meta.name,
                     tier: tier,
                     year: year,
-                    floor: "0", // Placeholder until marketplace logic is connected
+                    floor: "0", 
                     volume: "0",
-                    owner: "Owners"
+                    owner: ownerAddress
                 });
             } catch (error) {
                 console.error("Asset Fetch Error:", error);
@@ -97,7 +100,7 @@ export default function AssetPage() {
         };
 
         fetchAssetOnChain();
-    }, [params]);
+    }, [params, address]);
 
     if (loading) return (
         <div className="vh-100 d-flex flex-column justify-content-center align-items-center" style={{backgroundColor: '#0d1117'}}>
@@ -141,23 +144,48 @@ export default function AssetPage() {
 
                     <div className="col-lg-5">
                         <div className="p-4 bg-dark rounded-3 border border-secondary sticky-top" style={{ top: '20px' }}>
-                            <div className="d-flex justify-content-between">
-                                <h2 className="text-white fw-bold font-serif">{asset.name}</h2>
-                                <span className="px-2 border border-warning text-warning rounded small">GEN-0</span>
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                <h2 className="text-white fw-bold font-serif m-0">{asset.name}</h2>
+                                {isOwner && <span className="badge bg-warning text-dark">YOU OWN THIS</span>}
                             </div>
                             <p className="small text-secondary mb-4">Tier: <span style={{ color: style.labelColor }}>{asset.tier.toUpperCase()}</span></p>
                             
                             <div className="p-3 bg-black rounded border border-secondary mb-4">
-                                <span className="small text-secondary">Est. Value</span>
-                                <h3 className="text-white fw-bold">-- POL</h3>
-                                <div className="d-flex gap-2 mt-3">
-                                    <button className="btn btn-warning w-100 fw-bold" onClick={() => !isConnected && open()}>List For Sale</button>
-                                    <button className="btn btn-outline-light w-100 fw-bold" onClick={() => isConnected && setShowBidModal(true)}>Transfer</button>
+                                <div className="d-flex justify-content-between mb-3">
+                                    <span className="small text-secondary">Asset Status</span>
+                                    <span className="text-white small fw-bold">{isOwner ? 'In Wallet' : 'Not Listed'}</span>
                                 </div>
+
+                                {isOwner ? (
+                                    // OWNER VIEW CONTROLS
+                                    <div className="d-flex flex-column gap-2">
+                                        <button className="btn btn-warning w-100 fw-bold py-2">
+                                            <i className="bi bi-tag-fill me-2"></i> List For Sale
+                                        </button>
+                                        <div className="d-flex gap-2">
+                                            <button className="btn btn-outline-light w-50 fw-bold" style={{fontSize: '14px'}}>
+                                                <i className="bi bi-send me-1"></i> Transfer
+                                            </button>
+                                            <button className="btn btn-outline-secondary w-50 fw-bold" style={{fontSize: '14px'}}>
+                                                <i className="bi bi-gift me-1"></i> Gift
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    // PUBLIC VIEW CONTROLS
+                                    <div className="d-flex gap-2 mt-3">
+                                        <button className="btn btn-warning w-100 fw-bold" disabled onClick={() => !isConnected && open()}>
+                                            Not Listed
+                                        </button>
+                                        <button className="btn btn-outline-light w-100 fw-bold" onClick={() => isConnected && setShowBidModal(true)}>
+                                            Make Offer
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                             
                             <div className="row g-2 text-center">
-                                <div className="col-4 p-2 border border-secondary rounded"><div className="small text-secondary">Volume</div><div className="text-white small">--</div></div>
+                                <div className="col-4 p-2 border border-secondary rounded"><div className="small text-secondary">Owner</div><div className="text-white small">{asset.owner.slice(0,6)}...</div></div>
                                 <div className="col-4 p-2 border border-secondary rounded"><div className="small text-secondary">Royalty</div><div className="text-white small">1%</div></div>
                                 <div className="col-4 p-2 border border-secondary rounded"><div className="small text-secondary">Items</div><div className="text-white small">1/1</div></div>
                             </div>
