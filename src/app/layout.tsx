@@ -4,7 +4,10 @@ import Script from "next/script";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import Web3Provider from "@/components/Web3Provider";
-import ClientLayout from "@/components/ClientLayout";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import LegalModal from "@/components/LegalModal";
+import InstallPrompt from "@/components/InstallPrompt";
 
 const inter = Inter({ subsets: ["latin"] });
 
