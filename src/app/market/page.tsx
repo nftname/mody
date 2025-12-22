@@ -8,6 +8,8 @@ import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
 import { FULL_ASSET_LIST } from '@/data/assets';
 
+export const dynamic = 'force-dynamic';
+
 const ITEMS_PER_PAGE = 30;
 const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #B3882A 100%)';
 

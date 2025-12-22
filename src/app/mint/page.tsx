@@ -2,12 +2,14 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import { useWalletClient, useAccount } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CHAIN_ID } from '@/data/config';
 import ABI from '@/data/abi.json';
+
+export const dynamic = 'force-dynamic';
 
 const ADMIN_WALLET = "0xf65bf669ee7775c9788ed367742e1527d0118b58"; 
 const READ_PROVIDER = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com');
@@ -390,5 +392,5 @@ const ProcessingStep = ({ label, status, icon, color }: any) => {
     );
 };
 
-export default dynamic(() => Promise.resolve(MintContent), { ssr: false });
+export default dynamicImport(() => Promise.resolve(MintContent), { ssr: false });
 
