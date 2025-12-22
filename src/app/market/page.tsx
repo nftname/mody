@@ -3,14 +3,10 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
-import { useSafeWeb3Modal } from '@/hooks/useSafeWeb3Modal';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
 import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
 import { FULL_ASSET_LIST } from '@/data/assets';
-import '@/lib/web3modal'; // Initialize Web3Modal
-
-// Prevent static page generation for this page
-export const dynamic = 'force-dynamic';
 
 const ITEMS_PER_PAGE = 30;
 const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #B3882A 100%)';

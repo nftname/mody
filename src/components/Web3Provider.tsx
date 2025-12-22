@@ -1,6 +1,7 @@
 'use client';
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect, useRef } from 'react';
+import { createWeb3Modal } from '@web3modal/wagmi/react';
 import { defaultWagmiConfig } from '@web3modal/wagmi/react/config';
 import { WagmiProvider, cookieStorage, createStorage } from 'wagmi';
 import { mainnet, polygon, sepolia, polygonAmoy } from 'viem/chains';
@@ -31,6 +32,9 @@ export const config = defaultWagmiConfig({
   })
 });
 
+// Global flag to track modal creation
+let modalCreated = false;
+
 export default function Web3Provider({ 
    children, 
    initialState 
@@ -38,6 +42,34 @@ export default function Web3Provider({
    children: ReactNode; 
    initialState?: any;
 }) {
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    // Create modal only once on client-side
+    if (!initialized.current && !modalCreated) {
+      try {
+        createWeb3Modal({
+          wagmiConfig: config,
+          projectId,
+          enableAnalytics: false,
+          enableOnramp: false,
+          enableEmail: false,
+          themeVariables: {
+            '--w3m-accent': '#F0B90B',
+            '--w3m-color-mix': '#F0B90B',
+            '--w3m-color-mix-strength': 5,
+            '--w3m-border-radius-master': '4px',
+            '--w3m-z-index': 999999
+          }
+        });
+        modalCreated = true;
+        initialized.current = true;
+      } catch (error) {
+        console.error('Failed to create Web3Modal:', error);
+      }
+    }
+  }, []);
+
   return (
     <WagmiProvider config={config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>

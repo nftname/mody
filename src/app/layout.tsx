@@ -36,9 +36,15 @@ export default function RootLayout({
         />
 
         <Web3Provider>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
+          <div className="d-flex flex-column min-vh-100">
+            <Navbar />
+            <InstallPrompt />
+            <LegalModal />
+            <main className="flex-grow-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
         </Web3Provider>
 
         <Script
