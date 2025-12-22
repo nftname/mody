@@ -9,10 +9,8 @@ import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CHAIN_ID } from '@/data/config';
 import ABI from '@/data/abi.json';
 
+const ADMIN_WALLET = "0xf65bf669ee7775c9788ed367742e1527d0118b58"; 
 const READ_PROVIDER = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com');
-
-// عنوانك (الأدمن)
-const ADMIN_WALLET = "0xf65bf669ee7775c9788ed367742e1527d0118b58";
 
 function clientToSigner(client: any) {
   const { account, chain, transport } = client;
@@ -32,7 +30,7 @@ const MintContent = () => {
   const [status, setStatus] = useState<string | null>(null);
   const [isMinting, setIsMinting] = useState(false);
   const [hasPaid, setHasPaid] = useState(false);
-  const [mintStep, setMintStep] = useState(0);
+  const [mintStep, setMintStep] = useState(0); 
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'process' | 'error' | 'success'>('process');
@@ -49,15 +47,11 @@ const MintContent = () => {
     return clientToSigner(walletClient);
   }, [walletClient]);
 
-  // التحقق من الأدمن (فقط للشكل الجمالي الآن)
   useEffect(() => {
     if (address) {
-        const currentAddr = address.toLowerCase();
-        if (currentAddr === ADMIN_WALLET) {
-            setIsAdmin(true);
-        } else {
-            setIsAdmin(false);
-        }
+        setIsAdmin(address.toLowerCase() === ADMIN_WALLET.toLowerCase());
+    } else {
+        setIsAdmin(false);
     }
   }, [address]);
 
@@ -74,16 +68,23 @@ const MintContent = () => {
   const checkAvailability = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!searchTerm) return;
+    
+    const cleanName = searchTerm.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    if (cleanName !== searchTerm) setSearchTerm(cleanName);
+
     setIsSearching(true);
     setStatus(null);
-    const nameToCheck = searchTerm.toUpperCase(); 
+
     try {
         const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, READ_PROVIDER);
-        const nameHash = ethers.keccak256(ethers.toUtf8Bytes(nameToCheck));
+        const nameHash = ethers.keccak256(ethers.toUtf8Bytes(cleanName));
         const isTaken = await readContract.registeredNames(nameHash);
+        
         if (isTaken === true) setStatus('taken');
         else setStatus('available');
+
     } catch (err: any) {
+        console.error("Check Error:", err);
         setStatus('available');
     } finally {
         setIsSearching(false);
@@ -97,19 +98,14 @@ const MintContent = () => {
         setHasPaid(false);
         return;
     }
-    if (!hasPaid) {
-        setShowModal(false);
-        setIsMinting(false);
-        setMintStep(0);
-        addLog("Process Cancelled.");
-    } else {
-        setShowModal(false);
-    }
+    setShowModal(false);
+    setIsMinting(false);
+    setMintStep(0);
   };
 
   const startMinting = async (tierLabel: string) => {
     if (status !== 'available') {
-        setErrorMessage("Please check availability first.");
+        setErrorMessage("Name is not available.");
         setModalType('error');
         setShowModal(true);
         return;
@@ -124,34 +120,30 @@ const MintContent = () => {
     setShowModal(true);
     
     const nameToMint = searchTerm.toUpperCase(); 
-    
-    // إشعار فقط، لكن العملية ستكون مدفوعة للجميع
-    if (isAdmin) {
-        addLog(`👑 Admin detected. Using standard payment (Funds stay in your contract).`);
-    } else {
-        addLog(`Standard Mint Mode`);
-    }
 
     try {
       if (!isConnected || !signer) {
-        addLog("Connecting Wallet...");
+        addLog("Wallet not connected. Opening...");
         await open();
+        setIsMinting(false);
         return; 
       }
 
-      let tierId = 0; 
-      const lowerLabel = tierLabel.toLowerCase();
-      if (lowerLabel === 'elite') tierId = 1;
-      if (lowerLabel === 'founders') tierId = 2; 
-
       const targetChainId = CHAIN_ID;
       if (chain?.id !== targetChainId) {
-        addLog(`Switching Chain...`);
+        addLog(`Wrong Network. Switching to Polygon...`);
         await walletClient?.switchChain({ id: targetChainId });
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 1500));
       }
 
-      addLog("Creating Asset...");
+      let tierId = 2; 
+      const lowerLabel = tierLabel.toLowerCase();
+      
+      if (lowerLabel === 'immortal') tierId = 0;
+      else if (lowerLabel === 'elite') tierId = 1;
+      else if (lowerLabel === 'founders') tierId = 2;
+
+      addLog("Generating Metadata...");
       setMintStep(1);
 
       const apiResponse = await fetch('/api/mint-prep', {
@@ -163,50 +155,55 @@ const MintContent = () => {
       const apiData = await apiResponse.json();
 
       if (!apiData.success || !apiData.tokenUri) {
-        throw new Error(apiData.error || "Failed to generate asset URI");
+        throw new Error(apiData.error || "Metadata Generation Failed");
       }
 
       const tokenURI = apiData.tokenUri;
-      addLog(`Asset Uploaded.`);
+      addLog(`Metadata Ready.`);
 
       setMintStep(2);
-
-      // --- مرحلة الدفع (الحل الوحيد المضمون) ---
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      
-      addLog(`Calculating Price...`);
-      let usdAmountWei;
-      
-      // تحديد السعر
-      if (tierId === 0) usdAmountWei = ethers.parseUnits("50", 18); // 50$
-      else if (tierId === 1) usdAmountWei = ethers.parseUnits("30", 18); // 30$
-      else usdAmountWei = ethers.parseUnits("10", 18); // 10$
-      
-      // تحويل الدولار إلى MATIC من العقد
-      const costInMatic = await contract.getMaticCost(usdAmountWei);
-      
-      // إضافة نسبة أمان 2% لتجنب أخطاء تقلب السعر
-      // @ts-ignore
-      const buffer = (costInMatic * 102n) / 100n; 
-      
-      addLog(isAdmin ? "Admin Payment (Refundable via Withdraw)..." : "Requesting Payment...");
-      
-      // تنفيذ العملية بالدفع الكامل للجميع
-      const tx = await contract.mintPublic(nameToMint, tierId, tokenURI, { 
-          value: buffer, 
-          gasLimit: 600000 
-      });
 
-      setHasPaid(true);
-      setTxHash(tx.hash);
-      setMintStep(3);
+      if (isAdmin) {
+          addLog("👑 Admin Identified: Initiating Free Mint...");
+          
+          const tx = await contract.reserveName(nameToMint, tierId, tokenURI);
+          
+          addLog(`Tx Sent: ${tx.hash}`);
+          setTxHash(tx.hash);
+          setMintStep(3); 
+          
+          await tx.wait(); 
+
+      } else {
+          addLog("Calculating Oracle Price...");
+          
+          let usdAmountWei;
+          if (tierId === 0) usdAmountWei = ethers.parseUnits("50", 18);
+          else if (tierId === 1) usdAmountWei = ethers.parseUnits("30", 18);
+          else usdAmountWei = ethers.parseUnits("10", 18);
+
+          const costInMatic = await contract.getMaticCost(usdAmountWei);
+          
+          // @ts-ignore
+          const buffer = (costInMatic * 102n) / 100n; 
+
+          addLog(`Price: ${ethers.formatEther(costInMatic)} MATIC`);
+          addLog("Requesting Wallet Signature...");
+
+          const tx = await contract.mintPublic(nameToMint, tierId, tokenURI, { 
+              value: buffer
+          });
+
+          setHasPaid(true);
+          setTxHash(tx.hash);
+          addLog(`Tx Sent: ${tx.hash}`);
+          setMintStep(3);
+          
+          await tx.wait();
+      }
       
-      addLog(`Tx Sent: ${tx.hash}`);
-      addLog("Confirming...");
-      
-      await tx.wait();
-      
-      addLog("Success!");
+      addLog("Transaction Confirmed on Blockchain!");
       setMintStep(4);
       setModalType('success'); 
 
@@ -214,8 +211,8 @@ const MintContent = () => {
       console.error(error);
       let errorMsg = error.reason || error.message || "Unknown Error";
       
-      if (errorMsg.includes("rejected")) errorMsg = "Transaction cancelled.";
-      if (errorMsg.includes("insufficient funds")) errorMsg = "Insufficient Balance (You must pay the mint price).";
+      if (errorMsg.includes("rejected")) errorMsg = "Transaction cancelled by user.";
+      if (errorMsg.includes("insufficient funds")) errorMsg = "Insufficient MATIC balance for gas or price.";
       
       addLog(`ERROR: ${errorMsg}`);
       setErrorMessage(errorMsg);
@@ -228,21 +225,13 @@ const MintContent = () => {
   return (
     <main dir="ltr" style={{ backgroundColor: '#0d1117', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
       
-      {/* 🟢 النقطة الخضراء (تأكيد أنك الأدمن) */}
       {isAdmin && (
         <div 
-            title="Admin Mode Active"
+            title="Admin Mode: ReserveName Active"
             style={{
-                position: 'fixed',
-                top: '20px',
-                right: '20px',
-                width: '12px',
-                height: '12px',
-                backgroundColor: '#00ff00',
-                borderRadius: '50%',
-                boxShadow: '0 0 10px #00ff00',
-                zIndex: 9999,
-                cursor: 'help'
+                position: 'fixed', top: '20px', right: '20px', width: '10px', height: '10px',
+                backgroundColor: '#00ff00', borderRadius: '50%', boxShadow: '0 0 10px #00ff00',
+                zIndex: 9999, cursor: 'help'
             }}
         ></div>
       )}
@@ -314,7 +303,7 @@ const MintContent = () => {
                     <ProcessingStep label="Generating Visual ID" status={mintStep > 1 ? 'done' : (mintStep === 1 ? 'loading' : 'waiting')} icon="bi-cloud-upload" color="#FCD535" />
                     <ProcessingStep label="Wallet Signature" status={mintStep > 2 ? 'done' : (mintStep === 2 ? 'loading' : 'waiting')} icon="bi-wallet2" color="#8247E5" />
                     <ProcessingStep label="Blockchain Confirmation" status={mintStep > 3 ? 'done' : (mintStep === 3 ? 'loading' : 'waiting')} icon="bi-link-45deg" color="#0ecb81" />
-                    <div className="mt-4 p-2 rounded text-start" style={{ backgroundColor: 'rgba(0,0,0,0.3)', fontSize: '10px', color: '#666', fontFamily: 'monospace' }}>
+                    <div className="mt-4 p-2 rounded text-start" style={{ backgroundColor: 'rgba(0,0,0,0.3)', fontSize: '10px', color: '#666', fontFamily: 'monospace', maxHeight: '100px', overflowY: 'auto' }}>
                         {debugLog.length > 0 ? debugLog[debugLog.length - 1] : 'Initializing...'}
                     </div>
                   </>
