@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import dynamicImport from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { getAssetById, Asset } from '@/data/assets';
 import { useAccount, useBalance, useWriteContract } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
-
-export const dynamic = 'force-dynamic';
 
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 const RICH_GOLD_GRADIENT_CSS = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
@@ -73,7 +72,7 @@ const GoldBrandItem = ({ label, icon, isCustom = false }: { label: string, icon:
     );
 };
 
-export default function AssetPage() {
+function AssetPage() {
     const params = useParams();
     const [asset, setAsset] = useState<Asset | null>(null);
     const [loading, setLoading] = useState(true);
@@ -158,3 +157,4 @@ export default function AssetPage() {
         </main>
     );
 }
+export default dynamicImport(() => Promise.resolve(AssetPage), { ssr: false });

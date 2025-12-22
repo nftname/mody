@@ -2,13 +2,12 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import dynamicImport from 'next/dynamic';
 import { useAccount } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
 import { FULL_ASSET_LIST } from '@/data/assets';
-
-export const dynamic = 'force-dynamic';
 
 const ITEMS_PER_PAGE = 30;
 const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #B3882A 100%)';
@@ -67,7 +66,7 @@ const SortArrows = ({ active, direction, onClick }: any) => (
     </div>
 );
 
-export default function MarketPage() {
+function MarketPage() {
   const [activeFilter, setActiveFilter] = useState('All Assets');
   const [timeFilter, setTimeFilter] = useState('24H');
   const [currencyFilter, setCurrencyFilter] = useState('POL'); 
@@ -384,3 +383,5 @@ export default function MarketPage() {
     </main>
   );
 }
+
+export default dynamicImport(() => Promise.resolve(MarketPage), { ssr: false });
