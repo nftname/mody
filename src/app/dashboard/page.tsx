@@ -15,32 +15,85 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('ALL');
 
+  const resolveIPFS = (uri: string) => {
+    if (!uri) return '';
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
+  };
+
+  const chunk = <T,>(arr: T[], size: number) => {
+    const result: T[][] = [];
+    for (let i = 0; i < arr.length; i += size) result.push(arr.slice(i, i + size));
+    return result;
+  };
+
+  const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+
   const fetchAssets = async () => {
     if (!address || !isConnected) return;
     setLoading(true);
     try {
-      const provider = new ethers.JsonRpcProvider('https://polygon-rpc.com');
+      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com');
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+      const cacheKey = `dashboard-assets:${address}`;
+
+      try {
+        const cachedRaw = typeof window !== 'undefined' ? window.localStorage.getItem(cacheKey) : null;
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw);
+          if (cached.timestamp && Date.now() - cached.timestamp < CACHE_TTL && Array.isArray(cached.assets)) {
+            setMyAssets(cached.assets);
+          }
+        }
+      } catch (err) {
+        console.warn('Cache read failed', err);
+      }
+
       const balance = await contract.balanceOf(address);
       const count = Number(balance);
-      
-      const loaded = [];
-      for (let i = 0; i < count; i++) {
-        try {
-          const tokenId = await contract.tokenOfOwnerByIndex(address, i);
-          const tokenURI = await contract.tokenURI(tokenId);
-          const metaRes = await fetch(tokenURI.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/'));
-          const meta = await metaRes.json();
-          
-          loaded.push({
-            id: tokenId.toString(),
-            name: meta.name,
-            tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
-            price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '10'
-          });
-        } catch (e) { console.error(e); }
+      if (!count) {
+        setMyAssets([]);
+        return;
       }
-      setMyAssets(loaded);
+
+      const tokenIds = await Promise.all(
+        Array.from({ length: count }, (_, i) => contract.tokenOfOwnerByIndex(address, i))
+      );
+
+      const batches = chunk(tokenIds, 5);
+      const loaded: any[] = [];
+
+      for (const batch of batches) {
+        const batchResults = await Promise.all(
+          batch.map(async (tokenId) => {
+            try {
+              const tokenURI = await contract.tokenURI(tokenId);
+              const metaRes = await fetch(resolveIPFS(tokenURI));
+              const meta = metaRes.ok ? await metaRes.json() : {};
+              return {
+                id: tokenId.toString(),
+                name: meta.name || `NNM #${tokenId.toString()}`,
+                tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
+                price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '10'
+              };
+            } catch (error) {
+              console.error('Failed to load token metadata', error);
+              return null;
+            }
+          })
+        );
+
+        const valid = batchResults.filter(Boolean) as any[];
+        loaded.push(...valid);
+        setMyAssets([...loaded]); // progressive UI update
+      }
+
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(cacheKey, JSON.stringify({ assets: loaded, timestamp: Date.now() }));
+        }
+      } catch (err) {
+        console.warn('Cache write failed', err);
+      }
     } catch (error) {
       console.error("Dashboard Engine Error:", error);
     } finally {
