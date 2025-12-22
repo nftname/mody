@@ -17,64 +17,30 @@ export default function DashboardPage() {
 
   const fetchAssets = async () => {
     if (!address || !isConnected) return;
-    
-    // 1. Load from Cache Immediately
-    const CACHE_KEY = `myAssets_${address}`;
-    const cachedData = localStorage.getItem(CACHE_KEY);
-    if (cachedData) {
-        setMyAssets(JSON.parse(cachedData));
-    }
-
     setLoading(true);
-
     try {
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com');
+      const provider = new ethers.JsonRpcProvider('https://polygon-rpc.com');
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-      
       const balance = await contract.balanceOf(address);
       const count = Number(balance);
       
-      if (count === 0) {
-          setLoading(false);
-          setMyAssets([]);
-          localStorage.removeItem(CACHE_KEY);
-          return;
-      }
-
-      const tempAssets: any[] = [];
-
+      const loaded = [];
       for (let i = 0; i < count; i++) {
         try {
-            const tokenId = await contract.tokenOfOwnerByIndex(address, i);
-            const uri = await contract.tokenURI(tokenId);
-            const gatewayURI = uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
-            const metaRes = await fetch(gatewayURI);
-            const meta = await metaRes.json();
-
-            const newAsset = {
-                id: tokenId.toString(),
-                name: meta.name,
-                tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
-                price: '10'
-            };
-
-            tempAssets.push(newAsset);
-            
-            // Incremental Update
-            setMyAssets(prev => {
-                const exists = prev.find(a => a.id === newAsset.id);
-                if (exists) return prev;
-                return [...prev, newAsset];
-            });
-
-        } catch (err) {
-            console.error(err);
-        }
+          const tokenId = await contract.tokenOfOwnerByIndex(address, i);
+          const tokenURI = await contract.tokenURI(tokenId);
+          const metaRes = await fetch(tokenURI.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/'));
+          const meta = await metaRes.json();
+          
+          loaded.push({
+            id: tokenId.toString(),
+            name: meta.name,
+            tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
+            price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '10'
+          });
+        } catch (e) { console.error(e); }
       }
-
-      // Update Cache after full load
-      localStorage.setItem(CACHE_KEY, JSON.stringify(tempAssets));
-
+      setMyAssets(loaded);
     } catch (error) {
       console.error("Dashboard Engine Error:", error);
     } finally {
@@ -99,7 +65,6 @@ export default function DashboardPage() {
                 <div className="d-flex align-items-center gap-2 mt-2">
                     <span className="badge bg-dark border border-secondary text-secondary px-3 py-2">{address?.slice(0,6)}...{address?.slice(-4)}</span>
                     <span className="badge" style={{ backgroundColor: '#161b22', color: '#FCD535', border: '1px solid #FCD535' }}>VIP TRADER</span>
-                    {loading && <div className="spinner-border spinner-border-sm text-warning ms-2" role="status"></div>}
                 </div>
             </div>
             <div className="d-flex gap-4 p-3 rounded-3" style={{ backgroundColor: '#161b22', border: '1px solid #1c2128' }}>
@@ -131,7 +96,7 @@ export default function DashboardPage() {
       <div className="container">
         <div className="row g-4">
             {filteredAssets.map((asset) => (
-                <div key={asset.id} className="col-12 col-md-6 col-lg-4 col-xl-3 fade-in">
+                <div key={asset.id} className="col-12 col-md-6 col-lg-4 col-xl-3">
                    <DashboardAssetCard item={asset} />
                 </div>
             ))}
@@ -145,11 +110,6 @@ export default function DashboardPage() {
             </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
     </main>
   );
 }

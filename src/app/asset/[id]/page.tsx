@@ -3,13 +3,33 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useAccount } from 'wagmi';
+import { getAssetById, Asset } from '@/data/assets';
+import { useAccount, useBalance, useWriteContract } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
-import { ethers } from 'ethers';
-import { CONTRACT_ADDRESS } from '@/data/config';
-import ABI from '@/data/abi.json';
 
+const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 const RICH_GOLD_GRADIENT_CSS = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
+const RICH_GOLD_SOLID = '#E6BE03'; 
+
+const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: boolean }) => {
+    if (isCustomSVG) {
+        return (
+            <svg viewBox="0 0 32 32" width="24" height="24" style={{ marginBottom: '6px' }}>
+                <defs>
+                    <linearGradient id="goldGradientIconAsset" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#FFD700" />
+                        <stop offset="25%" stopColor="#E6BE03" />
+                        <stop offset="50%" stopColor="#B3882A" />
+                        <stop offset="75%" stopColor="#E6BE03" />
+                        <stop offset="100%" stopColor="#FFD700" />
+                    </linearGradient>
+                </defs>
+                <path d={icon} fill="url(#goldGradientIconAsset)" />
+            </svg>
+        );
+    }
+    return <i className={`bi ${icon}`} style={{ fontSize: '24px', marginBottom: '6px', color: RICH_GOLD_SOLID }}></i>;
+};
 
 const getHeroStyles = (tier: string) => {
     switch(tier?.toLowerCase()) {
@@ -38,77 +58,42 @@ const getHeroStyles = (tier: string) => {
                 labelColor: '#4db6ac' 
             };
         default: 
-            return { 
-                bg: 'linear-gradient(135deg, #001f24 0%, #003840 100%)', 
-                border: '1px solid rgba(0, 128, 128, 0.4)', 
-                shadow: 'none', 
-                textColor: RICH_GOLD_GRADIENT_CSS, 
-                labelColor: '#fff' 
-            };
+            return { bg: '#000', border: '1px solid #333', shadow: 'none', textColor: '#fff', labelColor: '#fff' };
     }
+};
+
+const GoldBrandItem = ({ label, icon, isCustom = false }: { label: string, icon: string, isCustom?: boolean }) => {
+    return (
+        <div className="d-flex flex-column align-items-center justify-content-center" style={{ padding: '0 10px', flex: 1 }}>
+            <GoldIcon icon={icon} isCustomSVG={isCustom} />
+            <span style={{ fontSize: '13px', fontWeight: '800', background: RICH_GOLD_GRADIENT_CSS, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{label}</span>
+        </div>
+    );
 };
 
 export default function AssetPage() {
     const params = useParams();
-    const [asset, setAsset] = useState<any | null>(null);
+    const [asset, setAsset] = useState<Asset | null>(null);
     const [loading, setLoading] = useState(true);
-    const [isOwner, setIsOwner] = useState(false);
     const { address, isConnected } = useAccount();
     const { open } = useWeb3Modal();
+    const { data: balanceData } = useBalance({ address });
     const [showBidModal, setShowBidModal] = useState(false);
+    const [bidAmount, setBidAmount] = useState('');
 
     useEffect(() => {
-        const fetchAssetOnChain = async () => {
-            if (!params.id) return;
-            const id = Array.isArray(params.id) ? params.id[0] : params.id;
-            
-            try {
-                const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com');
-                const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-                
-                const tokenURI = await contract.tokenURI(id);
-                const ownerAddress = await contract.ownerOf(id);
-
-                if (address && ownerAddress.toLowerCase() === address.toLowerCase()) {
-                    setIsOwner(true);
-                } else {
-                    setIsOwner(false);
-                }
-                
-                const gatewayURI = tokenURI.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
-                const metaRes = await fetch(gatewayURI);
-                const meta = await metaRes.json();
-                
-                const tier = meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value || 'founders';
-                const year = meta.attributes?.find((a: any) => a.trait_type === 'Mint Date')?.value || '2025';
-
-                setAsset({
-                    id: id,
-                    name: meta.name,
-                    tier: tier,
-                    year: year,
-                    floor: "0", 
-                    volume: "0",
-                    owner: ownerAddress
-                });
-            } catch (error) {
-                console.error("Asset Fetch Error:", error);
-                setAsset(null);
-            } finally {
-                setLoading(false);
+        if (params.id) {
+            const id = parseInt(Array.isArray(params.id) ? params.id[0] : params.id);
+            const found = getAssetById(id);
+            if (found) {
+                setAsset(found);
+                document.title = `${found.name.toUpperCase()} - Market`;
             }
-        };
+            setLoading(false);
+        }
+    }, [params]);
 
-        fetchAssetOnChain();
-    }, [params, address]);
-
-    if (loading) return (
-        <div className="vh-100 d-flex flex-column justify-content-center align-items-center" style={{backgroundColor: '#0d1117'}}>
-            <div className="spinner-border text-warning mb-3" role="status"></div>
-            <div className="text-secondary" style={{letterSpacing: '2px'}}>LOADING ASSET DATA...</div>
-        </div>
-    );
-
+    if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading...</div>;
     if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
     
     const style = getHeroStyles(asset.tier);
@@ -117,7 +102,7 @@ export default function AssetPage() {
         <main style={{ backgroundColor: '#0d1117', minHeight: '100vh', paddingBottom: '50px' }}>
             <div className="container py-2" style={{ borderBottom: '1px solid #1c2128' }}>
                 <div className="d-flex align-items-center gap-2 text-white" style={{ fontSize: '14px' }}>
-                    <Link href="/dashboard" className="text-white text-decoration-none">DASHBOARD</Link>
+                    <Link href="/market" className="text-white text-decoration-none">MARKET</Link>
                     <span className="text-secondary">/</span>
                     <span style={{ color: '#FCD535' }}>{asset.name.toUpperCase()}</span>
                     <div className="ms-auto px-3 bg-dark border border-secondary rounded">ID {asset.id}</div>
@@ -130,9 +115,9 @@ export default function AssetPage() {
                         <div className="p-5 mb-3 rounded-4 d-flex justify-content-center align-items-center" style={{ background: 'radial-gradient(circle, #161b22 0%, #0d1117 100%)', border: '1px solid #1c2128', minHeight: '400px' }}>
                             <div style={{ width: '350px', height: '200px', background: style.bg, border: style.border, borderRadius: '16px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                                 <div style={{ textAlign: 'center', zIndex: 2 }}>
-                                    <p style={{ fontSize: '10px', letterSpacing: '2px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>GEN-0 #{asset.id.toString().padStart(4, '0')} GENESIS</p>
+                                    <p style={{ fontSize: '10px', letterSpacing: '2px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>GEN-0 #00{asset.id} GENESIS</p>
                                     <h1 style={{ fontSize: '48px', fontFamily: 'serif', fontWeight: '900', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{asset.name}</h1>
-                                    <p style={{ fontSize: '10px', letterSpacing: '2px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>OWNED & MINTED - {asset.year}</p>
+                                    <p style={{ fontSize: '10px', letterSpacing: '2px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>OWNED & MINTED - 2025</p>
                                 </div>
                             </div>
                         </div>
@@ -144,46 +129,23 @@ export default function AssetPage() {
 
                     <div className="col-lg-5">
                         <div className="p-4 bg-dark rounded-3 border border-secondary sticky-top" style={{ top: '20px' }}>
-                            <div className="d-flex justify-content-between align-items-center mb-2">
-                                <h2 className="text-white fw-bold font-serif m-0">{asset.name}</h2>
-                                {isOwner && <span className="badge bg-warning text-dark">YOU OWN THIS</span>}
+                            <div className="d-flex justify-content-between">
+                                <h2 className="text-white fw-bold font-serif">{asset.name}</h2>
+                                <span className="px-2 border border-warning text-warning rounded small">GEN-0</span>
                             </div>
                             <p className="small text-secondary mb-4">Tier: <span style={{ color: style.labelColor }}>{asset.tier.toUpperCase()}</span></p>
                             
                             <div className="p-3 bg-black rounded border border-secondary mb-4">
-                                <div className="d-flex justify-content-between mb-3">
-                                    <span className="small text-secondary">Asset Status</span>
-                                    <span className="text-white small fw-bold">{isOwner ? 'In Wallet' : 'Not Listed'}</span>
+                                <span className="small text-secondary">Current Price</span>
+                                <h3 className="text-white fw-bold">{asset.floor} POL</h3>
+                                <div className="d-flex gap-2 mt-3">
+                                    <button className="btn btn-warning w-100 fw-bold" onClick={() => !isConnected && open()}>Buy Now</button>
+                                    <button className="btn btn-outline-light w-100 fw-bold" onClick={() => isConnected && setShowBidModal(true)}>Make Offer</button>
                                 </div>
-
-                                {isOwner ? (
-                                    <div className="d-flex flex-column gap-2">
-                                        <button className="btn btn-warning w-100 fw-bold py-2">
-                                            <i className="bi bi-tag-fill me-2"></i> List For Sale
-                                        </button>
-                                        <div className="d-flex gap-2">
-                                            <button className="btn btn-outline-light w-50 fw-bold" style={{fontSize: '14px'}}>
-                                                <i className="bi bi-send me-1"></i> Transfer
-                                            </button>
-                                            <button className="btn btn-outline-secondary w-50 fw-bold" style={{fontSize: '14px'}}>
-                                                <i className="bi bi-gift me-1"></i> Gift
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="d-flex gap-2 mt-3">
-                                        <button className="btn btn-warning w-100 fw-bold" disabled onClick={() => !isConnected && open()}>
-                                            Not Listed
-                                        </button>
-                                        <button className="btn btn-outline-light w-100 fw-bold" onClick={() => isConnected && setShowBidModal(true)}>
-                                            Make Offer
-                                        </button>
-                                    </div>
-                                )}
                             </div>
                             
                             <div className="row g-2 text-center">
-                                <div className="col-4 p-2 border border-secondary rounded"><div className="small text-secondary">Owner</div><div className="text-white small">{asset.owner.slice(0,6)}...</div></div>
+                                <div className="col-4 p-2 border border-secondary rounded"><div className="small text-secondary">Volume</div><div className="text-white small">{asset.volume}</div></div>
                                 <div className="col-4 p-2 border border-secondary rounded"><div className="small text-secondary">Royalty</div><div className="text-white small">1%</div></div>
                                 <div className="col-4 p-2 border border-secondary rounded"><div className="small text-secondary">Items</div><div className="text-white small">1/1</div></div>
                             </div>
