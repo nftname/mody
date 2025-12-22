@@ -27,7 +27,7 @@
 
 **NNM Market** is a revolutionary Web3 platform that enables users to mint, trade, and own sovereign visual identity NFTs on the Polygon blockchain. Our marketplace empowers individuals and brands to secure their digital identities as immutable, tradeable assets.
 
-### Why NNM Market?
+### Why NNM Market? 
 
 ✨ **Immutable Ownership** - Your visual identity is permanently recorded on the blockchain  
 🚀 **Low Gas Fees** - Built on Polygon for affordable transactions  
