@@ -7,12 +7,18 @@ import Web3Provider from "@/components/Web3Provider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LegalModal from "@/components/LegalModal";
+import InstallPrompt from "@/components/InstallPrompt";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "NNM Market",
   description: "Next-Gen NFT Marketplace",
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -35,6 +41,7 @@ export default function RootLayout({
         <Web3Provider>
           <div className="d-flex flex-column min-vh-100">
             <Navbar />
+            <InstallPrompt />
             <LegalModal />
             <main className="flex-grow-1">
               {children}
