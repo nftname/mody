@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useWalletClient, useAccount } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { ethers } from 'ethers';
@@ -39,7 +40,7 @@ const MintContent = () => {
 
   const { data: walletClient } = useWalletClient();
   const { address, isConnected, chain } = useAccount();
-  const { open } = useSafeWeb3Modal();
+  const { open } = useWeb3Modal();
 
   const signer = useMemo(() => {
     if (!walletClient) return null;

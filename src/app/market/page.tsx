@@ -75,7 +75,7 @@ export default function MarketPage() {
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const { isConnected } = useAccount();
-  const { open } = useSafeWeb3Modal();
+  const { open } = useWeb3Modal();
   
   const finalData = useMemo(() => {
       let processedData = [...FULL_ASSET_LIST];
