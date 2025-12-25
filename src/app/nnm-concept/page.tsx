@@ -318,9 +318,7 @@ export default function NNMConceptPage() {
                     <p className="mt-2 mb-0" style={{ fontSize: '13px', color: TEXT_BODY_COLOR, fontStyle: 'italic', lineHeight: '1.5' }}>
                         Historical trends are presented for contextual reference only. Projections are illustrative and hypothetical and do not imply guaranteed outcomes.
                     </p>
-                    <p className="mt-2 mb-0" style={{ fontSize: '12px', color: TEXT_BODY_COLOR }}>
-                        <span className="text-white fw-bold"></span> This material is informational in nature and does not constitute financial advice. Ownership of digital assets does not guarantee financial returns.
-                    </p>
+                
                 </div>
 
                 {/* Legal Note Box (Gold Border Added) */}
