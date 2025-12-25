@@ -168,7 +168,7 @@ export default function Home() {
                           margin: 0,
                           lineHeight: '1.3'
                       }}>
-                          NNM â€” The Global Market of <span style={{ color: '#FCD535' }}>Nexus Rare Digital<br />Name NFTs.</span>
+                          NNM — The Global Market for <span style={{ color: '#FCD535' }}>Nexus Rare Digital<br />Name NFTs</span>
                       </h1>
                       
                       <p style={{ 

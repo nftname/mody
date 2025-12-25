@@ -145,7 +145,7 @@ function MarketPage() {
                           letterSpacing: '-1px', 
                           lineHeight: '1.2' 
                       }}>
-                      Buy & Sell <span style={{ color: '#FCD535' }}>Nexus Rare</span> Digital Name Assets NFTs.
+                      Buy & Sell <span style={{ color: '#FCD535' }}>Nexus Rare</span> Digital Name Assets NFTs
                   </h1>
                   
                   <p style={{ 
@@ -158,7 +158,7 @@ function MarketPage() {
                       marginTop: '10px',
                       marginBottom: 0,
                   }}>
-                      Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets. Turn your NFTs into liquid financial power.
+                      Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets — turning NFTs into liquid financial power.
                   </p>
               </div>
               <div style={{ width: '100%', maxWidth: '380px' }}>
