@@ -1,75 +1,59 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
-import { useWalletClient, useAccount } from 'wagmi';
-import { useWeb3Modal } from '@web3modal/wagmi/react';
-import { ethers } from 'ethers';
-import { CONTRACT_ADDRESS, CHAIN_ID } from '@/data/config';
-import ABI from '@/data/abi.json';
+import { useActiveAccount, TransactionButton, useReadContract } from "thirdweb/react";
+import { prepareContractCall, readContract, getContract, defineChain } from "thirdweb";
+import { keccak256, toBytes } from "thirdweb/utils";
+import { upload } from "thirdweb/storage";
+import { client } from "@/lib/client"; 
+
+// --- إعدادات العقد والمحرك الجديد ---
+const CONTRACT_ADDRESS = "0x8e46c897bc74405922871a8a6863ccf5cd1fc721"; // عنوان عقدك
+const CHAIN_ID = 137; // Polygon
+const chain = defineChain(CHAIN_ID);
+// 
+const MASTER_IMAGE_URI = "ipfs://Bafkreiech2mqddofl5af7k24qglnbpxqmvmxaehbudrlxs2drhprxcsmvu";
+
+const contract = getContract({
+  client: client,
+  chain: chain,
+  address: CONTRACT_ADDRESS,
+});
 
 export const dynamic = 'force-dynamic';
 
-const ADMIN_WALLET = "0xf65bf669ee7775c9788ed367742e1527d0118b58"; 
-const READ_PROVIDER = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com');
-
-function clientToSigner(client: any) {
-  const { account, chain, transport } = client;
-  const network = {
-    chainId: chain.id,
-    name: chain.name,
-    ensAddress: chain.contracts?.ensRegistry?.address,
-  };
-  const provider = new ethers.BrowserProvider(transport, network);
-  const signer = new ethers.JsonRpcSigner(provider, account.address);
-  return signer;
-}
-
 const MintContent = () => {
+  // Thirdweb Hooks
+  const account = useActiveAccount();
+  
+  // State
   const [searchTerm, setSearchTerm] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
-  const [isMinting, setIsMinting] = useState(false);
-  const [hasPaid, setHasPaid] = useState(false);
-  const [mintStep, setMintStep] = useState(0); 
-  const [debugLog, setDebugLog] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'process' | 'error' | 'success'>('process');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [txHash, setTxHash] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // 
+  const { data: ownerAddress } = useReadContract({
+    contract,
+    method: "function owner() view returns (address)",
+    params: [],
+  });
 
-  const { data: walletClient } = useWalletClient();
-  const { address, isConnected, chain } = useAccount();
-  const { open } = useWeb3Modal();
-
-  const signer = useMemo(() => {
-    if (!walletClient) return null;
-    return clientToSigner(walletClient);
-  }, [walletClient]);
-
-  useEffect(() => {
-    if (address) {
-        setIsAdmin(address.toLowerCase() === ADMIN_WALLET.toLowerCase());
-    } else {
-        setIsAdmin(false);
-    }
-  }, [address]);
-
-  const addLog = (msg: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setDebugLog(prev => [...prev, `[${timestamp}] ${msg}`]);
-  };
+  const isAdmin = account?.address && ownerAddress && (account.address.toLowerCase() === ownerAddress.toLowerCase());
 
   const handleInputFocus = () => {
     setStatus(null);   
     setErrorMessage('');
   };
 
+  // -- Thirdweb ---
   const checkAvailability = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!searchTerm) return;
+    if (!searchTerm || searchTerm.length < 2) return;
     
     const cleanName = searchTerm.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
     if (cleanName !== searchTerm) setSearchTerm(cleanName);
@@ -78,148 +62,34 @@ const MintContent = () => {
     setStatus(null);
 
     try {
-        const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, READ_PROVIDER);
-        const nameHash = ethers.keccak256(ethers.toUtf8Bytes(cleanName));
-        const isTaken = await readContract.registeredNames(nameHash);
+        const nameHash = keccak256(toBytes(cleanName));
+        const isRegistered = await readContract({
+            contract,
+            method: "function registeredNames(bytes32) view returns (bool)",
+            params: [nameHash]
+        });
         
-        if (isTaken === true) setStatus('taken');
+        if (isRegistered) setStatus('taken');
         else setStatus('available');
 
     } catch (err: any) {
         console.error("Check Error:", err);
-        setStatus('available');
+        setStatus('available'); // Fallback logic
     } finally {
         setIsSearching(false);
     }
   };
 
   const handleCloseModal = () => {
-    if (modalType === 'success' || modalType === 'error') {
-        setShowModal(false);
-        setMintStep(0);
-        setHasPaid(false);
-        return;
-    }
     setShowModal(false);
-    setIsMinting(false);
-    setMintStep(0);
   };
 
-  const startMinting = async (tierLabel: string) => {
-    if (status !== 'available') {
-        setErrorMessage("Name is not available.");
-        setModalType('error');
-        setShowModal(true);
-        return;
-    }
-
-    setDebugLog([]); 
-    setErrorMessage('');
-    setTxHash('');
-    setIsMinting(true); 
-    setHasPaid(false);
-    setModalType('process');
-    setShowModal(true);
-    
-    const nameToMint = searchTerm.toUpperCase(); 
-
-    try {
-      if (!isConnected || !signer) {
-        addLog("Wallet not connected. Opening...");
-        await open();
-        setIsMinting(false);
-        return; 
-      }
-
-      const targetChainId = CHAIN_ID;
-      if (chain?.id !== targetChainId) {
-        addLog(`Wrong Network. Switching to Polygon...`);
-        await walletClient?.switchChain({ id: targetChainId });
-        await new Promise(r => setTimeout(r, 1500));
-      }
-
-      let tierId = 2; 
-      const lowerLabel = tierLabel.toLowerCase();
-      
-      if (lowerLabel === 'immortal') tierId = 0;
-      else if (lowerLabel === 'elite') tierId = 1;
-      else if (lowerLabel === 'founders') tierId = 2;
-
-      addLog("Generating Metadata...");
-      setMintStep(1);
-
-      const apiResponse = await fetch('/api/mint-prep', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: nameToMint, tier: lowerLabel })
-      });
-
-      const apiData = await apiResponse.json();
-
-      if (!apiData.success || !apiData.tokenUri) {
-        throw new Error(apiData.error || "Metadata Generation Failed");
-      }
-
-      const tokenURI = apiData.tokenUri;
-      addLog(`Metadata Ready.`);
-
-      setMintStep(2);
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
-      if (isAdmin) {
-          addLog("👑 Admin Identified: Initiating Free Mint...");
-          
-          const tx = await contract.reserveName(nameToMint, tierId, tokenURI);
-          
-          addLog(`Tx Sent: ${tx.hash}`);
-          setTxHash(tx.hash);
-          setMintStep(3); 
-          
-          await tx.wait(); 
-
-      } else {
-          addLog("Calculating Oracle Price...");
-          
-          let usdAmountWei;
-          if (tierId === 0) usdAmountWei = ethers.parseUnits("50", 18);
-          else if (tierId === 1) usdAmountWei = ethers.parseUnits("30", 18);
-          else usdAmountWei = ethers.parseUnits("10", 18);
-
-          const costInMatic = await contract.getMaticCost(usdAmountWei);
-          
-          // @ts-ignore
-          const buffer = (costInMatic * 102n) / 100n; 
-
-          addLog(`Price: ${ethers.formatEther(costInMatic)} MATIC`);
-          addLog("Requesting Wallet Signature...");
-
-          const tx = await contract.mintPublic(nameToMint, tierId, tokenURI, { 
-              value: buffer
-          });
-
-          setHasPaid(true);
-          setTxHash(tx.hash);
-          addLog(`Tx Sent: ${tx.hash}`);
-          setMintStep(3);
-          
-          await tx.wait();
-      }
-      
-      addLog("Transaction Confirmed on Blockchain!");
-      setMintStep(4);
-      setModalType('success'); 
-
-    } catch (error: any) {
-      console.error(error);
-      let errorMsg = error.reason || error.message || "Unknown Error";
-      
-      if (errorMsg.includes("rejected")) errorMsg = "Transaction cancelled by user.";
-      if (errorMsg.includes("insufficient funds")) errorMsg = "Insufficient MATIC balance for gas or price.";
-      
-      addLog(`ERROR: ${errorMsg}`);
-      setErrorMessage(errorMsg);
+  // 
+  const handleError = (err: any) => {
+      console.error(err);
+      setErrorMessage(err.message || "Transaction Failed");
       setModalType('error');
-    }
+      setShowModal(true);
   };
 
   const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
@@ -229,7 +99,7 @@ const MintContent = () => {
       
       {isAdmin && (
         <div 
-            title="Admin Mode: ReserveName Active"
+            title="Admin Mode: ReserveName Active (Free Mint)"
             style={{
                 position: 'fixed', top: '20px', right: '20px', width: '10px', height: '10px',
                 backgroundColor: '#00ff00', borderRadius: '50%', boxShadow: '0 0 10px #00ff00',
@@ -238,6 +108,7 @@ const MintContent = () => {
         ></div>
       )}
 
+      {/* Hero Section */}
       <div className="container hero-container text-center">
         <h1 className="text-white fw-bold mb-2" style={{ fontSize: '32px', fontFamily: 'serif', letterSpacing: '1px' }}>
           Claim Your <span style={{ color: '#FCD535' }}>Nexus Digital Name</span> Assets
@@ -247,6 +118,7 @@ const MintContent = () => {
         </p>
       </div>
 
+      {/* Search Section */}
       <div className="container mb-1">
         <div className="mx-auto position-relative" style={{ maxWidth: '600px' }}>
           <form onSubmit={checkAvailability} className="position-relative">
@@ -285,31 +157,33 @@ const MintContent = () => {
         </div>
       </div>
 
+      {/* Mint Cards Section */}
       <div className="container mt-0">
         <h5 className="text-white text-center mb-4 select-asset-title" style={{ letterSpacing: '2px', fontSize: '11px', textTransform: 'uppercase', color: '#888' }}>Select Asset Class</h5>
         <div className="row justify-content-center g-2 mobile-clean-stack"> 
-            <LuxuryIngot label="IMMORTAL" price="$50" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} isConnected={isConnected} onMint={() => startMinting('immortal')} connectWallet={open} showAlert={(msg: string) => { setErrorMessage(msg); setModalType('error'); setShowModal(true); }} />
-            <LuxuryIngot label="ELITE" price="$30" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} isConnected={isConnected} onMint={() => startMinting('elite')} connectWallet={open} showAlert={(msg: string) => { setErrorMessage(msg); setModalType('error'); setShowModal(true); }} />
-            <LuxuryIngot label="FOUNDERS" price="$10" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} isConnected={isConnected} onMint={() => startMinting('founders')} connectWallet={open} showAlert={(msg: string) => { setErrorMessage(msg); setModalType('error'); setShowModal(true); }} />
+            <LuxuryIngot 
+                label="IMMORTAL" price="$50" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
+                tierName="IMMORTAL" tierIndex={0} nameToMint={searchTerm} isAdmin={isAdmin} 
+                onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
+            />
+            <LuxuryIngot 
+                label="ELITE" price="$30" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
+                tierName="ELITE" tierIndex={1} nameToMint={searchTerm} isAdmin={isAdmin} 
+                onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
+            />
+            <LuxuryIngot 
+                label="FOUNDERS" price="$10" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
+                tierName="FOUNDER" tierIndex={2} nameToMint={searchTerm} isAdmin={isAdmin} 
+                onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
+            />
         </div>
       </div>
 
+      {/* Modal Section (Success / Error) */}
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
             <div style={{ width: '100%', maxWidth: '420px', backgroundColor: '#161b22', border: '1px solid #333', borderRadius: '20px', padding: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative' }}>
                 <button onClick={handleCloseModal} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#666', fontSize: '24px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
-
-                {modalType === 'process' && (
-                  <>
-                    <h4 className="text-white fw-bold mb-4">Securing Your Asset...</h4>
-                    <ProcessingStep label="Generating Visual ID" status={mintStep > 1 ? 'done' : (mintStep === 1 ? 'loading' : 'waiting')} icon="bi-cloud-upload" color="#FCD535" />
-                    <ProcessingStep label="Wallet Signature" status={mintStep > 2 ? 'done' : (mintStep === 2 ? 'loading' : 'waiting')} icon="bi-wallet2" color="#8247E5" />
-                    <ProcessingStep label="Blockchain Confirmation" status={mintStep > 3 ? 'done' : (mintStep === 3 ? 'loading' : 'waiting')} icon="bi-link-45deg" color="#0ecb81" />
-                    <div className="mt-4 p-2 rounded text-start" style={{ backgroundColor: 'rgba(0,0,0,0.3)', fontSize: '10px', color: '#666', fontFamily: 'monospace', maxHeight: '100px', overflowY: 'auto' }}>
-                        {debugLog.length > 0 ? debugLog[debugLog.length - 1] : 'Initializing...'}
-                    </div>
-                  </>
-                )}
 
                 {modalType === 'success' && (
                    <div className="fade-in">
@@ -335,6 +209,7 @@ const MintContent = () => {
         </div>
       )}
 
+      {/* Styles */}
       <style>{`
         .force-ltr { direction: ltr !important; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
@@ -361,36 +236,92 @@ const MintContent = () => {
   );
 }
 
-const LuxuryIngot = ({ label, price, gradient, isAvailable, isConnected, onMint, connectWallet, showAlert }: any) => {
-    const handleClick = () => { 
-        if (!isAvailable) { 
-            showAlert("Please check name availability first."); 
-        } else if (!isConnected) { 
-            connectWallet(); 
-        } else { 
-            onMint(); 
-        } 
-    };
+// ---  TransactionButton  onClick  ---
+const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex, nameToMint, isAdmin, onSuccess, onError }: any) => {
+    
     const btnOpacity = isAvailable ? 1 : 0.5;
+
     return (
         <div className="col-12 col-md-4 d-flex flex-column align-items-center ingot-wrapper">
             <div className="mb-2 d-flex justify-content-center align-items-baseline gap-2 price-top-container"><span className="text-white fw-bold" style={{ fontSize: '16px', fontFamily: 'sans-serif' }}>{price}</span></div>
             <div className="luxury-btn-container" style={{ width: '100%' }}>
-                <button onClick={handleClick} className="btn w-100 luxury-btn d-flex align-items-center justify-content-center" style={{ background: gradient, border: '1px solid #b3882a', color: '#000', borderRadius: '10px', height: '50px', boxShadow: '0 4px 15px rgba(252, 213, 53, 0.1)', transition: 'transform 0.2s, filter 0.2s', position: 'relative', padding: '0', opacity: btnOpacity }} onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.filter = 'brightness(1.1)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1)'; }}>{!isAvailable && ( <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.3)', zIndex: 1 }}></div> )}<span style={{ fontFamily: 'serif', fontSize: '18px', fontWeight: '800', letterSpacing: '2px' }}>{label}</span></button>
+                
+                {/* ر Thirdweb  */}
+                <TransactionButton
+                    transaction={async () => {
+                        if (!nameToMint) throw new Error("Please enter a name");
+                        
+                        // 1. Prepare Metadata
+                        const metadata = {
+                          name: nameToMint,
+                          description: `GEN-0 Genesis — NNM Protocol Record for ${nameToMint}`,
+                          image: MASTER_IMAGE_URI,
+                          attributes: [
+                            { trait_type: "Tier", value: tierName },
+                            { trait_type: "Mint Date", value: new Date().toISOString() },
+                            { trait_type: "Type", value: "Digital Name" }
+                          ]
+                        };
+                        
+                        // 2. Upload JSON to Thirdweb IPFS
+                        const uri = await upload({ client, files: [metadata] });
+
+                        // 3. Smart Contract Logic
+                        if (isAdmin) {
+                          // Admin Path (Free)
+                          return prepareContractCall({
+                            contract,
+                            method: "function reserveName(string _name, uint8 _tier, string _tokenURI)",
+                            params: [nameToMint, tierIndex, uri],
+                          });
+                        } else {
+                          // Public Path (Paid)
+                          const usdAmountWei = BigInt(tierName === "IMMORTAL" ? 50 : tierName === "ELITE" ? 30 : 10) * BigInt(10**18);
+                          const costInMatic = await readContract({
+                             contract,
+                             method: "function getMaticCost(uint256 usdAmount) view returns (uint256)",
+                             params: [usdAmountWei]
+                          });
+                          const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); // 1% Buffer
+                          
+                          return prepareContractCall({
+                            contract,
+                            method: "function mintPublic(string _name, uint8 _tier, string _tokenURI) payable",
+                            params: [nameToMint, tierIndex, uri],
+                            value: valueToSend, 
+                          });
+                        }
+                    }}
+                    onTransactionConfirmed={(tx) => {
+                        console.log("Success", tx);
+                        onSuccess();
+                    }}
+                    onError={(err) => {
+                        onError(err);
+                    }}
+                    style={{
+                        width: '100%',
+                        height: '50px',
+                        background: gradient,
+                        border: '1px solid #b3882a',
+                        color: '#000',
+                        borderRadius: '10px',
+                        fontFamily: 'serif',
+                        fontSize: '18px',
+                        fontWeight: '800',
+                        letterSpacing: '2px',
+                        opacity: btnOpacity,
+                        cursor: isAvailable ? 'pointer' : 'not-allowed'
+                    }}
+                    disabled={!isAvailable}
+                >
+                   {label}
+                </TransactionButton>
+                
             </div>
             <div className="mobile-price-display" style={{ display: 'none' }}><span style={{ display: 'block', fontSize: '16px', fontWeight: '700', color: '#fff' }}>{price}</span></div>
         </div>
     );
 };
 
-const ProcessingStep = ({ label, status, icon, color }: any) => {
-    return (
-        <div className="d-flex align-items-center justify-content-between mb-3 p-3 rounded" style={{ backgroundColor: status === 'waiting' ? 'transparent' : '#0d1117', border: '1px solid #222', transition: 'all 0.3s' }}>
-            <div className="d-flex align-items-center gap-3"><div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: status === 'waiting' ? '#222' : `${color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: status === 'waiting' ? '#555' : color }}> <i className={`bi ${icon}`} style={{ fontSize: '16px' }}></i> </div><span style={{ color: status === 'waiting' ? '#555' : '#fff', fontSize: '13px', fontWeight: '600' }}>{label}</span></div>
-            <div>{status === 'loading' && <div className="spinner-border spinner-border-sm text-secondary" role="status"></div>}{status === 'done' && <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '18px' }}></i>}{status === 'waiting' && <i className="bi bi-circle text-secondary" style={{ fontSize: '18px', opacity: 0.3 }}></i>}</div>
-        </div>
-    );
-};
-
 export default dynamicImport(() => Promise.resolve(MintContent), { ssr: false });
-
