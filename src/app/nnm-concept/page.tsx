@@ -302,7 +302,7 @@ export default function NNMConceptPage() {
                 <div className="mb-3">
                     <h3 className="text-white h5 mb-2 font-imperium fw-bold">Valuation Trajectory (2017–2030)</h3>
                     <p style={{ fontSize: '13px', color: TEXT_BODY_COLOR, lineHeight: '1.5' }}>
-                        Here is the historical and projected growth of NFTs, showing the path from early adoption to the global dominance of Imperium Assets by 2030.
+                        This visualization illustrates the historical growth of the NFT ecosystem and its projected evolution, highlighting the introduction of Imperium Assets in 2025 and their anticipated prominence as a foundational digital asset class by 2030.
                     </p>
                 </div>
 
@@ -316,10 +316,10 @@ export default function NNMConceptPage() {
                 {/* Text OUTSIDE and BELOW Chart */}
                 <div className="ps-2">
                     <p className="mt-2 mb-0" style={{ fontSize: '13px', color: TEXT_BODY_COLOR, fontStyle: 'italic', lineHeight: '1.5' }}>
-                        Graph illustrates NFT market growth from 2017 through 2030, highlighting the entry of Imperium Assets in 2025 and their expected prominence in 2026 and beyond.
+                        Historical trends are presented for contextual reference only. Projections are illustrative and hypothetical and do not imply guaranteed outcomes.
                     </p>
                     <p className="mt-2 mb-0" style={{ fontSize: '12px', color: TEXT_BODY_COLOR }}>
-                        <span className="text-white fw-bold">Note:</span> Past growth trends are presented for context. Future projections are hypothetical and illustrative, and do not represent guaranteed returns.
+                        <span className="text-white fw-bold"></span> This material is informational in nature and does not constitute financial advice. Ownership of digital assets does not guarantee financial returns.
                     </p>
                 </div>
 
