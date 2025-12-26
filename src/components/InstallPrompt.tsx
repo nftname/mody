@@ -12,8 +12,7 @@ export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [inCooldown, setInCooldown] = useState(false);
-  const LS_KEY = 'installPromptLastSeenAt';
+  const LS_KEY = 'banner_closed_time';
 
   // Detect standalone/PWA installed state
   useEffect(() => {
@@ -22,21 +21,7 @@ export default function InstallPrompt() {
     setIsStandalone(installed);
   }, []);
 
-  // Initialize cooldown status from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) {
-        const last = parseInt(raw, 10);
-        const twentyFourHours = 24 * 60 * 60 * 1000;
-        if (!Number.isNaN(last) && Date.now() - last < twentyFourHours) {
-          setInCooldown(true);
-        }
-      }
-    } catch {}
-  }, []);
-
-  // Listen for beforeinstallprompt event and cache it
+  // Listen for beforeinstallprompt event and cache it (for Install button)
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -50,24 +35,30 @@ export default function InstallPrompt() {
     };
   }, []);
 
-  // Decide when to show the banner: only on home, not installed, and not in cooldown
+  // Decide when to show the banner per spec
   useEffect(() => {
-    const onHome = pathname === '/';
-    if (!deferredPrompt) {
-      // Hide if we navigate away or no prompt available
-      if (showPrompt) setShowPrompt(false);
-      return;
-    }
-    if (onHome && !isStandalone && !inCooldown) {
-      setShowPrompt(true);
-      try {
-        localStorage.setItem(LS_KEY, Date.now().toString());
-        setInCooldown(true);
-      } catch {}
-    } else {
-      if (showPrompt) setShowPrompt(false);
-    }
-  }, [deferredPrompt, pathname, isStandalone, inCooldown]);
+    const isHome = pathname === '/';
+
+    let lastClosed: number | null = null;
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw !== null) {
+        const parsed = parseInt(raw, 10);
+        if (!Number.isNaN(parsed)) {
+          lastClosed = parsed;
+        }
+      }
+    } catch {}
+
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    const cooldownActive = lastClosed !== null && (Date.now() - lastClosed < twentyFourHours);
+    const shouldShow = isHome && !isStandalone && !cooldownActive;
+
+    // Temporary debug logging
+    console.log("Banner Check:", { isHome, lastClosed, shouldShow });
+
+    setShowPrompt(shouldShow);
+  }, [pathname, isStandalone]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -80,7 +71,6 @@ export default function InstallPrompt() {
       setDeferredPrompt(null);
       try {
         localStorage.setItem(LS_KEY, Date.now().toString());
-        setInCooldown(true);
       } catch {}
     }
   };
@@ -89,7 +79,6 @@ export default function InstallPrompt() {
     setShowPrompt(false);
     try {
       localStorage.setItem(LS_KEY, Date.now().toString());
-      setInCooldown(true);
     } catch {}
   };
 
