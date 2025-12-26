@@ -209,6 +209,10 @@ export default function NGXPage() {
                     </div>
                 </div>
 
+                <div className="text-muted fst-italic small mt-2">
+                   * NGX provides information only and does not guarantee financial returns.
+                </div>
+
             </div>
 
             <div className="col-lg-4">
