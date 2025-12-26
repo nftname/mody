@@ -77,9 +77,6 @@ const Navbar = () => {
   const goldGradient = 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)';
   const navbarBgColor = '#0b0e11';
 
-  // --- 1. تصميم الزر المخصص (الظاهر للمستخدم) ---
-  
-  // الحالة: غير متصل (ذهبي)
   const customDisconnectStyle = {
     background: goldGradient,
     color: '#000',
@@ -95,7 +92,6 @@ const Navbar = () => {
     cursor: 'pointer',
   };
 
-  // الحالة: متصل (رمادي + نقطة خضراء)
   const customConnectStyle = {
     background: '#21262d', 
     color: '#fff', 
@@ -127,16 +123,14 @@ const Navbar = () => {
 
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
 
-  // مكون الزر المخصص الذي سنعرضه بدلاً من زر الشركة
   const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
-    const height = isMobile ? '24px' : '27px'; // الارتفاعات المطلوبة
+    const height = isMobile ? '24px' : '27px'; 
     const minWidth = isMobile ? '90px' : '110px';
     const fontSize = isMobile ? '11px' : '12px';
 
     return (
       <div style={{ position: 'relative', height: height, minWidth: minWidth, display: 'inline-block' }}>
         
-        {/* الطبقة السفلية: الزر الذي صممناه بأيدينا */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
             {!account ? (
                 <div style={customDisconnectStyle}>Connect Wallet</div>
@@ -153,7 +147,6 @@ const Navbar = () => {
             )}
         </div>
 
-        {/* الطبقة العلوية: زر Thirdweb الحقيقي (شفاف تماماً) ليقوم بالوظيفة */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 10, opacity: 0, overflow: 'hidden' }}>
              <ConnectButton 
                 client={client}
@@ -161,7 +154,7 @@ const Navbar = () => {
                 chain={chain}
                 theme="dark"
                 connectButton={{
-                    style: { width: '100%', height: '100%' } // ملء المساحة
+                    style: { width: '100%', height: '100%' }
                 }}
             />
         </div>
@@ -244,7 +237,7 @@ const Navbar = () => {
              style={{ 
                  gap: '8px', 
                  overflow: 'visible',
-                 paddingRight: '10px' 
+                 paddingRight: '0px' 
              }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
@@ -255,7 +248,6 @@ const Navbar = () => {
                 <i className="bi bi-person-circle" style={{ fontSize: '22px', color: '#FCD535' }}></i>
             </button>
 
-            {/* استخدام المكون المخصص للجوال */}
             <CustomWalletTrigger isMobile={true} />
         </div>
 
@@ -313,7 +305,7 @@ const Navbar = () => {
 
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
                 
-                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '27px', flexShrink: 0 }}>
+                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '26px', flexShrink: 0 }}>
                    <input 
                         type="text" 
                         className="form-control search-input-custom text-white shadow-none" 
@@ -336,7 +328,6 @@ const Navbar = () => {
                     <i className="bi bi-person-circle" style={{fontSize: '28px'}}></i>
                 </button>
 
-                {/* استخدام المكون المخصص للكمبيوتر */}
                 <CustomWalletTrigger isMobile={false} />
 
             </div>
@@ -376,7 +367,6 @@ const Navbar = () => {
         .search-input-custom { background-color: #161b22 !important; transition: background-color 0.3s ease; }
         .search-input-custom:focus { background-color: ${navbarBgColor} !important; border-color: #FCD535 !important; }
 
-        /* جعل زر الثردويب الحقيقي يملأ الحاوية بالكامل ليكون قابلاً للنقر */
         .tw-connect-wallet {
             width: 100% !important;
             height: 100% !important;
