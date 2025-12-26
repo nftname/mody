@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAccount } from 'wagmi';
-import { ethers } from 'ethers';
+import { useActiveAccount } from "thirdweb/react";
+import { getContract, defineChain, readContract } from "thirdweb";
+import { client } from "@/lib/client";
 import { CONTRACT_ADDRESS } from '@/data/config';
-import ABI from '@/data/abi.json';
 
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
 export default function DashboardPage() {
-  const { address, isConnected } = useAccount();
+  const account = useActiveAccount();
+  const address = account?.address;
+  
   const [myAssets, setMyAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('ALL');
@@ -26,14 +28,18 @@ export default function DashboardPage() {
     return result;
   };
 
-  const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+  const CACHE_TTL = 1000 * 60 * 5; 
 
   const fetchAssets = async () => {
-    if (!address || !isConnected) return;
+    if (!address) return;
     setLoading(true);
     try {
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com');
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+      const contract = getContract({
+        client: client,
+        chain: defineChain(137), 
+        address: CONTRACT_ADDRESS,
+      });
+
       const cacheKey = `dashboard-assets:${address}`;
 
       try {
@@ -48,15 +54,27 @@ export default function DashboardPage() {
         console.warn('Cache read failed', err);
       }
 
-      const balance = await contract.balanceOf(address);
-      const count = Number(balance);
+      const balanceBigInt = await readContract({
+        contract,
+        method: "function balanceOf(address) view returns (uint256)",
+        params: [address],
+      });
+      
+      const count = Number(balanceBigInt);
+
       if (!count) {
         setMyAssets([]);
         return;
       }
 
       const tokenIds = await Promise.all(
-        Array.from({ length: count }, (_, i) => contract.tokenOfOwnerByIndex(address, i))
+        Array.from({ length: count }, (_, i) => 
+            readContract({
+                contract,
+                method: "function tokenOfOwnerByIndex(address, uint256) view returns (uint256)",
+                params: [address, BigInt(i)]
+            })
+        )
       );
 
       const batches = chunk(tokenIds, 5);
@@ -66,7 +84,12 @@ export default function DashboardPage() {
         const batchResults = await Promise.all(
           batch.map(async (tokenId) => {
             try {
-              const tokenURI = await contract.tokenURI(tokenId);
+              const tokenURI = await readContract({
+                  contract,
+                  method: "function tokenURI(uint256) view returns (string)",
+                  params: [tokenId]
+              });
+
               const metaRes = await fetch(resolveIPFS(tokenURI));
               const meta = metaRes.ok ? await metaRes.json() : {};
               return {
@@ -84,7 +107,7 @@ export default function DashboardPage() {
 
         const valid = batchResults.filter(Boolean) as any[];
         loaded.push(...valid);
-        setMyAssets([...loaded]); // progressive UI update
+        setMyAssets([...loaded]); 
       }
 
       try {
@@ -101,7 +124,7 @@ export default function DashboardPage() {
     }
   };
 
-  useEffect(() => { fetchAssets(); }, [address, isConnected]);
+  useEffect(() => { fetchAssets(); }, [address]);
 
   const filteredAssets = activeTab === 'ALL' 
     ? myAssets 
@@ -116,7 +139,7 @@ export default function DashboardPage() {
                 <h5 className="text-secondary text-uppercase mb-2" style={{ letterSpacing: '2px', fontSize: '12px' }}>Welcome Back</h5>
                 <h1 className="text-white fw-bold m-0" style={{ fontFamily: 'serif', fontSize: '36px' }}>My Portfolio</h1>
                 <div className="d-flex align-items-center gap-2 mt-2">
-                    <span className="badge bg-dark border border-secondary text-secondary px-3 py-2">{address?.slice(0,6)}...{address?.slice(-4)}</span>
+                    <span className="badge bg-dark border border-secondary text-secondary px-3 py-2">{address ? `${address.slice(0,6)}...${address.slice(-4)}` : 'Guest'}</span>
                     <span className="badge" style={{ backgroundColor: '#161b22', color: '#FCD535', border: '1px solid #FCD535' }}>VIP TRADER</span>
                 </div>
             </div>
