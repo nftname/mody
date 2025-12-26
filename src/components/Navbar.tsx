@@ -28,7 +28,6 @@ const Navbar = () => {
   const [drawerTranslate, setDrawerTranslate] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -59,10 +58,6 @@ const Navbar = () => {
   const closeDrawer = () => {
     setIsDrawerOpen(false);
     setDrawerTranslate(0);
-  };
-
-  const toggleAccordion = (section: string) => {
-    setExpandedSection(expandedSection === section ? null : section);
   };
 
   const handleNavClick = (item: string, e: React.MouseEvent) => {
@@ -97,8 +92,6 @@ const Navbar = () => {
     if (touchStart === null) return;
     const currentTouch = e.targetTouches[0].clientX;
     setTouchEnd(currentTouch);
-    
-    // Calculate distance moved (negative because swipe left closes)
     const diff = currentTouch - touchStart;
     if (diff < 0) {
         setDrawerTranslate(diff);
@@ -109,12 +102,12 @@ const Navbar = () => {
     setIsDragging(false);
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50; // Threshold to close
+    const isLeftSwipe = distance > 50; 
     
     if (isLeftSwipe) {
       closeDrawer();
     } else {
-      setDrawerTranslate(0); // Snap back
+      setDrawerTranslate(0); 
     }
     setTouchStart(null);
     setTouchEnd(null);
@@ -176,21 +169,7 @@ const Navbar = () => {
   };
 
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
-  
-  const drawerCategories = [
-      {
-          title: "Marketplace",
-          links: ["All NFTs", "Art", "Gaming", "Memberships"]
-      },
-      {
-          title: "Resources",
-          links: ["Help Center", "Partners", "Blog", "Newsletter"]
-      },
-      {
-          title: "Company",
-          links: ["About Us", "Careers", "Ventures", "Grants"]
-      }
-  ];
+  const secondaryLinks = ['Analytics', 'Newsletter', 'Blog', 'Careers', 'Partners'];
 
   const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
     const height = isMobile ? '24px' : '27px'; 
@@ -247,6 +226,7 @@ const Navbar = () => {
       
       <div className="container-fluid px-2 h-100 align-items-center d-flex flex-nowrap">
         
+        {/* Mobile Toggle */}
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
             <button className="navbar-toggler border-0 p-0 shadow-none" type="button" onClick={toggleDrawer} style={{ width: '24px' }}>
                 <i className="bi bi-list" style={{ fontSize: '26px', color: '#FCD535' }}></i>
@@ -274,6 +254,7 @@ const Navbar = () => {
             </Link>
         </div>
 
+        {/* Desktop Logo */}
         <div className="d-none d-lg-flex align-items-center" style={{ minWidth: '80px', flexShrink: 1, overflow:'hidden' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <svg width="29" height="29" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
@@ -301,6 +282,7 @@ const Navbar = () => {
             </Link>
         </div>
 
+        {/* Mobile Right */}
         <div className="d-flex d-lg-none align-items-center ms-auto" style={{ gap: '8px', overflow: 'visible', paddingRight: '0px' }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
@@ -314,6 +296,7 @@ const Navbar = () => {
             <CustomWalletTrigger isMobile={true} />
         </div>
 
+        {/* Desktop Nav */}
         <div className="collapse navbar-collapse flex-grow-1" id="navbarNav">
           <div className="d-flex flex-column flex-lg-row align-items-start w-100" style={{ paddingTop: '4px' }}>
             
@@ -344,7 +327,8 @@ const Navbar = () => {
                         {['How it Works', 'Contact'].map((subItem) => (
                             <li key={subItem}>
                                 <Link className="dropdown-item text-white py-2 px-3" href={`/${subItem.toLowerCase().replace(/\s+/g, '-')}`} 
-                                    style={{ fontSize: '12px', transition: '0.2s' }}>
+                                    style={{ fontSize: '14px', transition: '0.2s' }} 
+                                >
                                     {subItem}
                                 </Link>
                             </li>
@@ -375,7 +359,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* === MOBILE DRAWER (Touch Enabled) === */}
+      {/* === MOBILE DRAWER === */}
       <div 
         className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`} 
         style={{ transform: isDrawerOpen ? `translateX(${drawerTranslate}px)` : 'translateX(-100%)' }}
@@ -383,21 +367,25 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* Visual Handle for Finger */}
+          {/* Finger Handle */}
           <div style={{
               position: 'absolute',
               right: '4px',
               top: '50%',
               transform: 'translateY(-50%)',
               width: '4px',
-              height: '75px', // ~2cm
+              height: '75px', 
               backgroundColor: '#3a3a3a',
               borderRadius: '10px',
               zIndex: 10001
           }}></div>
 
-          <div className="drawer-header d-flex flex-column align-items-center pt-4 pb-0 w-100" style={{borderBottom: '1px solid #222'}}>
-              
+          <div className="drawer-header d-flex flex-column align-items-center pt-5 pb-2 w-100 mt-3 position-relative" style={{borderBottom: '1px solid #333'}}>
+              {/* Close Button Restored */}
+              <button onClick={closeDrawer} className="btn position-absolute top-0 end-0 m-3 text-secondary p-2">
+                  <i className="bi bi-x-lg" style={{ fontSize: '20px' }}></i>
+              </button>
+
               <div className="d-flex align-items-center gap-3 mb-3">
                 <svg width="34" height="34" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
@@ -420,43 +408,52 @@ const Navbar = () => {
           </div>
 
           <div className="drawer-content px-4 py-4 d-flex flex-column justify-content-between h-100">
-              <div className="d-flex flex-column gap-3">
-                  {['Home', 'Market', 'NGX', 'Mint', 'NNM Concept', 'How it Works', 'Contact'].map((item) => (
+              <div className="d-flex flex-column gap-2">
+                  {/* Main Links */}
+                  {menuItems.map((item) => (
                       <Link key={item} 
                             href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                             onClick={closeDrawer}
                             className="text-decoration-none fw-semibold"
-                            style={{ fontSize: '17px', color: '#e6e6e6', paddingBottom: '4px' }}>
+                            style={{ fontSize: '16px', color: '#e6e6e6', paddingBottom: '4px' }}>
                           {item}
+                      </Link>
+                  ))}
+                  
+                  <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-semibold" style={{ fontSize: '16px', color: '#e6e6e6', paddingBottom: '4px' }}>How it Works</Link>
+                  <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-semibold" style={{ fontSize: '16px', color: '#e6e6e6', paddingBottom: '4px' }}>Contact</Link>
+
+                  {/* Separator */}
+                  <hr className="border-secondary opacity-25 my-2" />
+
+                  {/* Secondary Links (No Arrows) */}
+                  {secondaryLinks.map((link) => (
+                      <Link key={link} 
+                            href={`/${link.toLowerCase()}`}
+                            onClick={closeDrawer}
+                            className="text-decoration-none"
+                            style={{ fontSize: '15px', color: '#e6e6e6', paddingBottom: '4px' }}>
+                          {link}
                       </Link>
                   ))}
               </div>
 
-              <div className="drawer-accordions mt-4">
-                  {drawerCategories.map((cat, idx) => (
-                      <div key={idx} className="mb-3">
-                          <div className="d-flex justify-content-between align-items-center" 
-                               onClick={() => toggleAccordion(cat.title)} style={{ cursor: 'pointer', color: '#e6e6e6' }}>
-                              <span className="fw-semibold" style={{ fontSize: '15px' }}>{cat.title}</span>
-                              <i className={`bi bi-chevron-${expandedSection === cat.title ? 'up' : 'down'}`} style={{ fontSize: '12px' }}></i>
-                          </div>
-                          {expandedSection === cat.title && (
-                              <div className="d-flex flex-column gap-2 mt-2 ps-3 border-start border-secondary">
-                                  {cat.links.map(link => (
-                                      <a key={link} href="#" className="text-decoration-none" style={{ fontSize: '13px', color: '#d0d0d0' }}>{link}</a>
-                                  ))}
-                              </div>
-                          )}
-                      </div>
-                  ))}
-              </div>
-
-              <div className="drawer-footer pt-3 border-top border-secondary mt-auto">
-                  <div className="d-flex justify-content-around w-100">
+              {/* Drawer Footer: Socials (80%) & Contact (20%) */}
+              <div className="drawer-footer pt-3 border-top border-secondary mt-auto d-flex align-items-center w-100">
+                  {/* 80% Width: 5 Social Icons */}
+                  <div className="d-flex justify-content-between align-items-center" style={{ width: '80%', paddingRight: '15px' }}>
                       <i className="bi bi-twitter-x text-gold" style={{ fontSize: '20px' }}></i>
                       <i className="bi bi-discord text-gold" style={{ fontSize: '20px' }}></i>
                       <i className="bi bi-instagram text-gold" style={{ fontSize: '20px' }}></i>
                       <i className="bi bi-telegram text-gold" style={{ fontSize: '20px' }}></i>
+                      <i className="bi bi-youtube text-gold" style={{ fontSize: '20px' }}></i>
+                  </div>
+                  
+                  {/* 20% Width: Contact Icon */}
+                  <div className="d-flex justify-content-center align-items-center" style={{ width: '20%', borderLeft: '1px solid #333' }}>
+                      <Link href="/contact" onClick={closeDrawer}>
+                        <i className="bi bi-envelope-fill text-gold" style={{ fontSize: '22px' }}></i>
+                      </Link>
                   </div>
               </div>
           </div>
@@ -500,13 +497,13 @@ const Navbar = () => {
             top: 0;
             left: 0;
             width: 100%;
-            height: 100vh; /* No scroll, fits screen */
+            height: 100vh;
             background-color: #0b0e11;
             z-index: 9999;
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* 10% Slower & Smoother */
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Prevent body scroll inside drawer */
+            overflow: hidden;
         }
       `}</style>
     </nav>
