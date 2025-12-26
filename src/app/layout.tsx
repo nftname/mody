@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
-import Web3Provider from "@/components/Web3Provider";
 import ClientNavbar from "@/components/ClientNavbar";
 import Footer from "@/components/Footer";
 import LegalModal from "@/components/LegalModal";
@@ -40,7 +39,6 @@ export default function RootLayout({
         />
 
         <ThirdwebProvider>
-          <Web3Provider>
             <div className="d-flex flex-column min-vh-100">
               <ClientNavbar />
               <InstallPrompt />
@@ -50,7 +48,6 @@ export default function RootLayout({
               </main>
               <Footer />
             </div>
-          </Web3Provider>
         </ThirdwebProvider>
 
         <Script
