@@ -9,8 +9,9 @@ import { keccak256, toBytes } from "thirdweb/utils";
 import { upload } from "thirdweb/storage";
 import { client } from "@/lib/client"; 
 
-const CONTRACT_ADDRESS = "0x8e46c897bc74405922871a8a6863ccf5cd1fc721";
-const CHAIN_ID = 137;
+// 
+const CONTRACT_ADDRESS = "0x8e46c897bc74405922871a8a6863ccf5cd1fc721"; // 
+const CHAIN_ID = 137; // Polygon
 const chain = defineChain(CHAIN_ID);
 const MASTER_IMAGE_URI = "ipfs://Bafkreiech2mqddofl5af7k24qglnbpxqmvmxaehbudrlxs2drhprxcsmvu";
 
@@ -285,14 +286,6 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                     }}
                     onError={(err) => {
                         onError(err);
-                    }}
-                    connectModal={{
-                        size: "compact",
-                        title: "Connect Wallet",
-                        welcomeScreen: {
-                            title: "Welcome to NNM Market",
-                            subtitle: "Connect your wallet to start minting assets.",
-                        }
                     }}
                     style={{
                         width: '100%',
