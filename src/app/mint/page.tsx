@@ -13,6 +13,7 @@ const CONTRACT_ADDRESS = "0x8e46c897bc74405922871a8a6863ccf5cd1fc721";
 const CHAIN_ID = 137;
 const chain = defineChain(CHAIN_ID);
 
+// روابط مباشرة وسريعة (Gateway)
 const TIER_IMAGES = {
     IMMORTAL: "https://gateway.pinata.cloud/ipfs/bafybeicutv6qgtmadglatfvdjew4evjoujifx2kykt4hf43jvayduefwtq", 
     ELITE: "https://gateway.pinata.cloud/ipfs/bafybeic6tzxkn7ikmd2tafrd5m35ayoylwp6obibv57z577h5rgtsvi4ue",    
@@ -297,16 +298,15 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                             if (tierName === "ELITE") selectedImage = TIER_IMAGES.ELITE;
                             if (tierName === "FOUNDER") selectedImage = TIER_IMAGES.FOUNDER;
 
-                            // Dynamic Date
                             const date = new Date();
                             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
                             const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 
-                            const metadata = {
+                            // Manual JSON construction to bypass automated processing that might break HTTPS links
+                            const metadataObject = {
                               name: nameToMint,
                               description: LONG_DESCRIPTION,
-                              image: selectedImage,
-                              // ترتيب OpenSea المطلوب
+                              image: selectedImage, // Using direct HTTPS gateway link
                               attributes: [
                                 { trait_type: "Asset Type", value: "Digital Name" },
                                 { trait_type: "Generation", value: "Gen-0" },
@@ -316,9 +316,11 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                                 { trait_type: "Mint Date", value: dynamicDate }
                               ]
                             };
-                            
-                            // Thirdweb upload handles formatting, but we provided https URL in TIER_IMAGES
-                            const uri = await upload({ client, files: [metadata] });
+
+                            // Upload as a simple JSON Blob to ensure raw link preservation
+                            const blob = new Blob([JSON.stringify(metadataObject)], { type: "application/json" });
+                            const file = new File([blob], "metadata.json");
+                            const uri = await upload({ client, files: [file] });
     
                             if (isAdmin) {
                               return prepareContractCall({
