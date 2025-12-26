@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Script from 'next/script';
 import MarketTicker from '@/components/MarketTicker';
-// تم حذف: import SupportBot from '@/components/SupportBot';
+// import SupportBot from '@/components/SupportBot';
 
 // --- CONSTANTS & STYLES ---
 const GOLD_BTN_PRIMARY = '#D4AF37';
@@ -214,7 +214,7 @@ export default function NNMConceptPage() {
       {/* --- HEADER SECTION --- */}
       <section className="container-fluid px-0 pt-5 pb-4">
           <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
-              <div className="text-start">
+              <div className="text-center mx-auto">
                   
                   {/* Main Title */}
                   <h1 style={{ 
@@ -238,7 +238,9 @@ export default function NNMConceptPage() {
                       marginTop: '15px', 
                       marginBottom: 0,
                       maxWidth: '900px',
-                      lineHeight: '1.6'
+                      lineHeight: '1.6',
+                      marginLeft: 'auto',
+                      marginRight: 'auto'
                   }}>
                       The <span className="text-gold fw-bold">Imperium Asset</span> represents the ultimate tier of digital name ownership, far beyond standard tokens. Each <span className="text-gold fw-bold">Imperium Name</span> establishes immutable priority within the Web3 ecosystem, securing a permanent place in digital history. As we approach 2026, these assets are poised to become the cornerstone of digital identity and value.
                   </p>
