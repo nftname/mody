@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useRef, useState, useEffect } from 'react';
 import { ConnectButton, useActiveAccount, useActiveWallet, useDisconnect } from "thirdweb/react";
 import { defineChain } from "thirdweb";
+import { createWallet, walletConnect } from "thirdweb/wallets"; 
 import { client } from "@/lib/client";
 
 const Navbar = () => {
@@ -13,7 +14,6 @@ const Navbar = () => {
   
   const account = useActiveAccount();
   const wallet = useActiveWallet();
-  const { disconnect } = useDisconnect();
   const chain = defineChain(137); 
 
   const [mounted, setMounted] = useState(false);
@@ -57,11 +57,14 @@ const Navbar = () => {
     closeMenu();
   };
 
-  const handleDisconnect = () => {
-    if (wallet) {
-        disconnect(wallet);
-    }
-  };
+  // 1. تم إزالة TrustWallet لتصحيح الخطأ (walletConnect يغطيها)
+  const wallets = [
+    createWallet("io.metamask"),
+    createWallet("com.coinbase.wallet"),
+    createWallet("me.rainbow"),
+    createWallet("io.rabby"),
+    walletConnect(),
+  ];
 
   // Styles
   const goldButtonStyle = {
@@ -75,10 +78,38 @@ const Navbar = () => {
     minWidth: '120px',
   };
 
-  // زر البروفايل الجديد (بدون حدود مربعة، فقط الأيقونة)
+  // 2. ستايل الزر المتصل (تم إضافة max-width لإجبار الحجم الصغير وإخفاء الرصيد)
+  const connectedButtonStyle = {
+    background: '#161b22',
+    color: '#fff',
+    border: '1px solid #333',
+    fontWeight: '600' as const,
+    fontSize: '13px',
+    height: '38px',
+    borderRadius: '8px',
+    minWidth: '120px',    // عرض أدنى ثابت
+    maxWidth: '140px',    // عرض أقصى (هذا سيمنع التمدد ويخفي الرصيد الطويل)
+    overflow: 'hidden',   // إخفاء الزيادات
+    whiteSpace: 'nowrap' as const,
+    textOverflow: 'ellipsis'
+  };
+  
+  const connectedButtonMobileStyle = {
+    background: '#161b22',
+    color: '#fff',
+    border: '1px solid #333',
+    fontWeight: '600' as const,
+    fontSize: '12px',
+    height: '32px',
+    borderRadius: '8px',
+    padding: '0 10px',
+    maxWidth: '120px',  // تحجيم للجوال أيضاً
+    overflow: 'hidden',
+  };
+
   const portfolioBtnStyle = {
     color: '#FCD535', 
-    border: 'none', // إزالة الحدود
+    border: 'none', 
     background: 'transparent', 
     padding: '0 8px', 
     display: 'flex', 
@@ -94,21 +125,26 @@ const Navbar = () => {
 
   return (
     <>
-    <nav className="navbar navbar-expand-lg sticky-top border-bottom border-secondary py-0 position-relative" 
-         style={{ backgroundColor: navbarBgColor, zIndex: 1050, height: '60px', paddingRight: '5px' }}>
+    <nav className="navbar navbar-expand-lg sticky-top py-0 position-relative" 
+         style={{ 
+             backgroundColor: navbarBgColor, 
+             zIndex: 1050, 
+             height: '60px', 
+             paddingRight: '5px',
+             borderBottom: '1px solid rgba(252, 213, 53, 0.5)',
+             boxShadow: '0 4px 15px rgba(252, 213, 53, 0.15)'
+         }}>
       
       <div className="container-fluid px-2 h-100 align-items-center d-flex flex-nowrap">
         
         {/* === Mobile Layout: Left Side (Toggler + Logo) === */}
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
-            {/* 1. Hamburger Menu (Now on Left) */}
             <button className="navbar-toggler border-0 p-0 shadow-none" type="button" onClick={toggleMenu} style={{ width: '24px' }}>
                 {isMenuOpen ? <i className="bi bi-x-lg text-white" style={{ fontSize: '24px' }}></i> : <i className="bi bi-list text-white" style={{ fontSize: '24px' }}></i>}
             </button>
 
-            {/* 2. Brand Logo (Next to Toggler) */}
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" onClick={closeMenu} style={{ textDecoration: 'none' }}> 
-              <svg width="24" height="24" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
+              <svg width="28" height="28" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
                 <defs>
                   <linearGradient id="blockGoldMobile" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#FFF5CC" />
@@ -125,7 +161,7 @@ const Navbar = () => {
                     <circle cx="256" cy="256" r="10" fill="#0b0e11" />
                 </g>
               </svg>
-              <span style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '18px', color: '#FCD535', letterSpacing: '1px', lineHeight: '1', marginTop: '1px' }}>NNM</span>
+              <span style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '21px', color: '#FCD535', letterSpacing: '1px', lineHeight: '1', marginTop: '1px' }}>NNM</span>
             </Link>
         </div>
 
@@ -163,36 +199,26 @@ const Navbar = () => {
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
             </button>
 
-            {/* Mobile Portfolio Icon - Updated Style */}
             <button className="btn p-0 d-flex align-items-center justify-content-center" onClick={handlePortfolioClick}
                 style={{ width: '32px', height: '32px', border: 'none', backgroundColor: 'transparent', flexShrink: 0 }}>
                 <i className="bi bi-person-circle" style={{ fontSize: '22px', color: '#FCD535' }}></i>
             </button>
 
             <div style={{ transform: 'scale(0.9)', transformOrigin: 'right center' }}>
-                {!account ? (
-                    <ConnectButton 
-                        client={client}
-                        chain={chain}
-                        theme="dark"
-                        connectButton={{
-                            label: "Connect",
-                            style: {
-                                ...goldButtonStyle,
-                                height: '32px',
-                                minWidth: 'auto',
-                                fontSize: '12px',
-                                padding: '0 10px'
-                            }
-                        }}
-                    />
-                ) : (
-                    // Custom Connected Button (Mobile)
-                    <button onClick={handleDisconnect} className="btn d-flex align-items-center gap-2 custom-connected-btn-mobile">
-                         <span className="green-dot"></span>
-                         <span className="text-white" style={{fontSize: '12px', fontWeight: 'bold'}}>{account.address.slice(0, 5)}</span>
-                    </button>
-                )}
+                 <ConnectButton 
+                    client={client}
+                    wallets={wallets}
+                    chain={chain}
+                    theme="dark"
+                    connectButton={{
+                        label: "Connect",
+                        style: { ...goldButtonStyle, height: '32px', minWidth: 'auto', fontSize: '12px', padding: '0 10px' }
+                    }}
+                    detailsButton={{
+                        style: connectedButtonMobileStyle,
+                        // تم إزالة showBalance لأننا نعتمد على الحجم الصغير لإخفاء الرصيد
+                    }}
+                />
             </div>
         </div>
 
@@ -251,13 +277,11 @@ const Navbar = () => {
 
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
                 
-                {/* Search Input - Increased Width */}
-                <div className="position-relative" style={{ width: '280px', height: '38px', flexShrink: 0 }}>
+                <div className="position-relative" style={{ width: '280px', height: '32px', flexShrink: 0 }}>
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." style={{ borderRadius: '8px', fontSize:'13px', height: '100%', paddingLeft: '30px', border: '1px solid rgba(252, 213, 53, 0.9)', boxShadow: '0 0 5px rgba(252, 213, 53, 0.1)', caretColor: '#FCD535' }} />
                    <i className="bi bi-search position-absolute text-secondary" style={{top: '50%', transform: 'translateY(-50%)', left: '10px', fontSize: '12px', color: '#FCD535 !important'}}></i>
                 </div>
                 
-                {/* Desktop Portfolio Button - Clean Style */}
                 <button 
                     onClick={handlePortfolioClick} 
                     className="btn" 
@@ -267,24 +291,21 @@ const Navbar = () => {
                     <i className="bi bi-person-circle" style={{fontSize: '28px'}}></i>
                 </button>
 
-                {/* Wallet Button Logic (Desktop) */}
-                {!account ? (
-                    <ConnectButton 
-                        client={client}
-                        chain={chain}
-                        theme="dark"
-                        connectButton={{
-                            style: goldButtonStyle,
-                            label: "Connect Wallet"
-                        }}
-                    />
-                ) : (
-                    // Custom Connected Button (Desktop) - Green Dot + Short ID
-                    <button onClick={handleDisconnect} className="btn custom-connected-btn">
-                         <span className="green-dot"></span>
-                         <span className="text-white fw-bold" style={{fontSize: '13px', fontFamily: 'monospace'}}>{account.address.slice(0, 6)}</span>
-                    </button>
-                )}
+                {/* زر سطح المكتب المتصل */}
+                <ConnectButton 
+                    client={client}
+                    wallets={wallets}
+                    chain={chain}
+                    theme="dark"
+                    connectButton={{
+                        style: goldButtonStyle,
+                        label: "Connect Wallet"
+                    }}
+                    detailsButton={{
+                        style: connectedButtonStyle,
+                        // تم إزالة showBalance المسبب للخطأ
+                    }}
+                />
 
             </div>
           </div>
@@ -292,7 +313,7 @@ const Navbar = () => {
       </div>
 
       {isMobileSearchOpen && (
-        <div className="d-lg-none position-absolute start-0 w-100 border-bottom border-secondary" style={{ top: '60px', zIndex: 1049, backgroundColor: navbarBgColor, padding: '12px 15px' }}>
+        <div className="d-lg-none position-absolute start-0 w-100" style={{ top: '60px', zIndex: 1049, backgroundColor: navbarBgColor, padding: '12px 15px', borderBottom: '1px solid rgba(252, 213, 53, 0.5)' }}>
             <div className="position-relative">
                 <input ref={mobileSearchInputRef} type="text" className="form-control bg-dark text-white shadow-none" placeholder="Search collections..." style={{ borderRadius: '4px', fontSize: '14px', height: '42px', paddingLeft: '38px', paddingRight: '35px', border: '1px solid var(--unified-gold-color)', caretColor: '#FCD535' }} />
                 <i className="bi bi-search position-absolute" style={{ top: '50%', left: '12px', transform: 'translateY(-50%)', fontSize: '16px', color: 'var(--unified-gold-color)' }}></i>
@@ -313,40 +334,9 @@ const Navbar = () => {
         .search-input-custom { background-color: #161b22 !important; transition: background-color 0.3s ease; }
         .search-input-custom:focus { background-color: ${navbarBgColor} !important; border-color: #FCD535 !important; }
         
-        /* Custom Connected Button Styles */
-        .custom-connected-btn {
-            background-color: #161b22;
-            border: 1px solid #333;
-            height: 38px;
-            padding: 0 15px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            min-width: 100px;
-        }
-        .custom-connected-btn:hover {
-            border-color: #FCD535;
-            background-color: #000;
-        }
-        
-        .custom-connected-btn-mobile {
-            background-color: #161b22;
-            border: 1px solid #333;
-            height: 32px;
-            padding: 0 10px;
-            border-radius: 8px;
-        }
-
-        .green-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #00ff00;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            box-shadow: 0 0 6px #00ff00;
+        /* هذا الجزء يخفي الرصيد بالقوة داخل زر الثردويب */
+        .tw-connected-wallet div:nth-child(2) {
+             display: none !important; 
         }
 
         @media (max-width: 991px) { 
