@@ -12,7 +12,19 @@ import { client } from "@/lib/client";
 const CONTRACT_ADDRESS = "0x8e46c897bc74405922871a8a6863ccf5cd1fc721";
 const CHAIN_ID = 137;
 const chain = defineChain(CHAIN_ID);
-const MASTER_IMAGE_URI = "ipfs://Bafkreiech2mqddofl5af7k24qglnbpxqmvmxaehbudrlxs2drhprxcsmvu";
+
+// روابط الصور (IPFS)
+const TIER_IMAGES = {
+    IMMORTAL: "ipfs://bafybeicutv6qgtmadglatfvdjew4evjoujifx2kykt4hf43jvayduefwtq", 
+    ELITE: "ipfs://bafybeic6tzxkn7ikmd2tafrd5m35ayoylwp6obibv57z577h5rgtsvi4ue",    
+    FOUNDER: "ipfs://bafybeidiqev65tophfnujp3mahes6lq55o47qeeb5qgeatzersehoaydue"   
+};
+
+const LONG_DESCRIPTION = `GEN-0 Genesis — NNM Protocol Record
+
+A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.
+
+It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol — a permanent, time-anchored digital inscription preserved on the blockchain.`;
 
 const contract = getContract({
   client: client,
@@ -216,7 +228,6 @@ const MintContent = () => {
         .hero-container { padding-top: 20px; padding-bottom: 0px; }
         .select-asset-title { margin-bottom: 2rem !important; }
 
-        /* ستايل مخصص لزر الاتصال ليطابق السبيكة */
         .custom-connect-btn .tw-connect-wallet {
             width: 100% !important;
             height: 50px !important;
@@ -247,10 +258,9 @@ const MintContent = () => {
   );
 }
 
-// ---  LuxuryIngot Component (The Bridge Logic) ---
 const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex, nameToMint, isAdmin, onSuccess, onError }: any) => {
     
-    const account = useActiveAccount(); // نتحقق من حالة الاتصال
+    const account = useActiveAccount(); 
     const btnOpacity = isAvailable ? 1 : 0.5;
 
     return (
@@ -259,13 +269,12 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
             <div className="luxury-btn-container" style={{ width: '100%' }}>
                 
                 {!account ? (
-                    // 1. إذا لم يكن متصلاً: اعرض زر الاتصال الرسمي بتصميم مخصص
                     <div className="custom-connect-btn" style={{ width: '100%' }}>
                         <ConnectButton 
                             client={client}
                             chain={chain}
                             connectButton={{
-                                label: label, // يظهر اسم السبيكة بدلاً من "Connect"
+                                label: label, 
                                 style: {
                                     width: '100%',
                                     height: '50px',
@@ -280,19 +289,31 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                         />
                     </div>
                 ) : (
-                    // 2. إذا كان متصلاً: اعرض زر الطباعة (Transaction Button)
                     <TransactionButton
                         transaction={async () => {
                             if (!nameToMint) throw new Error("Please enter a name");
                             
+                            let selectedImage = TIER_IMAGES.FOUNDER; 
+                            if (tierName === "IMMORTAL") selectedImage = TIER_IMAGES.IMMORTAL;
+                            if (tierName === "ELITE") selectedImage = TIER_IMAGES.ELITE;
+                            if (tierName === "FOUNDER") selectedImage = TIER_IMAGES.FOUNDER;
+
+                            // الحصول على التاريخ الديناميكي
+                            const date = new Date();
+                            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                            const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+
                             const metadata = {
                               name: nameToMint,
-                              description: `GEN-0 Genesis — NNM Protocol Record for ${nameToMint}`,
-                              image: MASTER_IMAGE_URI,
+                              description: LONG_DESCRIPTION,
+                              image: selectedImage,
                               attributes: [
-                                { trait_type: "Tier", value: tierName },
-                                { trait_type: "Mint Date", value: new Date().toISOString() },
-                                { trait_type: "Type", value: "Digital Name" }
+                                { trait_type: "Asset Type", value: "Digital Name" },
+                                { trait_type: "Collection", value: "Genesis - 001" },
+                                { trait_type: "Generation", value: "Gen-0" },
+                                { trait_type: "Mint Date", value: dynamicDate },
+                                { trait_type: "Platform", value: "NNM Registry" },
+                                { trait_type: "Tier", value: tierName }
                               ]
                             };
                             
