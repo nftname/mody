@@ -8,6 +8,7 @@ import ClientNavbar from "@/components/ClientNavbar";
 import Footer from "@/components/Footer";
 import LegalModal from "@/components/LegalModal";
 import InstallPrompt from "@/components/InstallPrompt";
+import { ThirdwebProvider } from "thirdweb/react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,8 +20,6 @@ export const metadata: Metadata = {
     apple: '/favicon.svg',
   },
   manifest: '/manifest.json',
-  // Reminder: Ensure `/icons/icon-512.png` used in the web manifest is a transparent PNG.
-  // If the current asset has a solid white background, replace it with a PNG that has transparency.
 };
 
 export default function RootLayout({
@@ -40,17 +39,19 @@ export default function RootLayout({
           strategy="beforeInteractive" 
         />
 
-        <Web3Provider>
-          <div className="d-flex flex-column min-vh-100">
-            <ClientNavbar />
-            <InstallPrompt />
-            <LegalModal />
-            <main className="flex-grow-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
-        </Web3Provider>
+        <ThirdwebProvider>
+          <Web3Provider>
+            <div className="d-flex flex-column min-vh-100">
+              <ClientNavbar />
+              <InstallPrompt />
+              <LegalModal />
+              <main className="flex-grow-1">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </Web3Provider>
+        </ThirdwebProvider>
 
         <Script
             id="tidio-script"
