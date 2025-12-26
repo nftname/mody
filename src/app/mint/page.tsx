@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useActiveAccount, TransactionButton, useReadContract } from "thirdweb/react";
@@ -9,11 +9,9 @@ import { keccak256, toBytes } from "thirdweb/utils";
 import { upload } from "thirdweb/storage";
 import { client } from "@/lib/client"; 
 
-// --- إعدادات العقد والمحرك الجديد ---
-const CONTRACT_ADDRESS = "0x8e46c897bc74405922871a8a6863ccf5cd1fc721"; // عنوان عقدك
-const CHAIN_ID = 137; // Polygon
+const CONTRACT_ADDRESS = "0x8e46c897bc74405922871a8a6863ccf5cd1fc721";
+const CHAIN_ID = 137;
 const chain = defineChain(CHAIN_ID);
-// 
 const MASTER_IMAGE_URI = "ipfs://Bafkreiech2mqddofl5af7k24qglnbpxqmvmxaehbudrlxs2drhprxcsmvu";
 
 const contract = getContract({
@@ -25,18 +23,19 @@ const contract = getContract({
 export const dynamic = 'force-dynamic';
 
 const MintContent = () => {
-  // Thirdweb Hooks
   const account = useActiveAccount();
-  
-  // State
   const [searchTerm, setSearchTerm] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'process' | 'error' | 'success'>('process');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
-  // 
   const { data: ownerAddress } = useReadContract({
     contract,
     method: "function owner() view returns (address)",
@@ -50,7 +49,6 @@ const MintContent = () => {
     setErrorMessage('');
   };
 
-  // -- Thirdweb ---
   const checkAvailability = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!searchTerm || searchTerm.length < 2) return;
@@ -74,7 +72,7 @@ const MintContent = () => {
 
     } catch (err: any) {
         console.error("Check Error:", err);
-        setStatus('available'); // Fallback logic
+        setStatus('available');
     } finally {
         setIsSearching(false);
     }
@@ -84,13 +82,14 @@ const MintContent = () => {
     setShowModal(false);
   };
 
-  // 
   const handleError = (err: any) => {
       console.error(err);
       setErrorMessage(err.message || "Transaction Failed");
       setModalType('error');
       setShowModal(true);
   };
+
+  if (!mounted) return null;
 
   const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
@@ -108,7 +107,6 @@ const MintContent = () => {
         ></div>
       )}
 
-      {/* Hero Section */}
       <div className="container hero-container text-center">
         <h1 className="text-white fw-bold mb-2" style={{ fontSize: '32px', fontFamily: 'serif', letterSpacing: '1px' }}>
           Claim Your <span style={{ color: '#FCD535' }}>Nexus Digital Name</span> Assets
@@ -118,7 +116,6 @@ const MintContent = () => {
         </p>
       </div>
 
-      {/* Search Section */}
       <div className="container mb-1">
         <div className="mx-auto position-relative" style={{ maxWidth: '600px' }}>
           <form onSubmit={checkAvailability} className="position-relative">
@@ -157,7 +154,6 @@ const MintContent = () => {
         </div>
       </div>
 
-      {/* Mint Cards Section */}
       <div className="container mt-0">
         <h5 className="text-white text-center mb-4 select-asset-title" style={{ letterSpacing: '2px', fontSize: '11px', textTransform: 'uppercase', color: '#888' }}>Select Asset Class</h5>
         <div className="row justify-content-center g-2 mobile-clean-stack"> 
@@ -179,7 +175,6 @@ const MintContent = () => {
         </div>
       </div>
 
-      {/* Modal Section (Success / Error) */}
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
             <div style={{ width: '100%', maxWidth: '420px', backgroundColor: '#161b22', border: '1px solid #333', borderRadius: '20px', padding: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative' }}>
@@ -209,7 +204,6 @@ const MintContent = () => {
         </div>
       )}
 
-      {/* Styles */}
       <style>{`
         .force-ltr { direction: ltr !important; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
@@ -236,7 +230,6 @@ const MintContent = () => {
   );
 }
 
-// ---  TransactionButton  onClick  ---
 const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex, nameToMint, isAdmin, onSuccess, onError }: any) => {
     
     const btnOpacity = isAvailable ? 1 : 0.5;
@@ -246,12 +239,10 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
             <div className="mb-2 d-flex justify-content-center align-items-baseline gap-2 price-top-container"><span className="text-white fw-bold" style={{ fontSize: '16px', fontFamily: 'sans-serif' }}>{price}</span></div>
             <div className="luxury-btn-container" style={{ width: '100%' }}>
                 
-                {/* ر Thirdweb  */}
                 <TransactionButton
                     transaction={async () => {
                         if (!nameToMint) throw new Error("Please enter a name");
                         
-                        // 1. Prepare Metadata
                         const metadata = {
                           name: nameToMint,
                           description: `GEN-0 Genesis — NNM Protocol Record for ${nameToMint}`,
@@ -263,26 +254,22 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                           ]
                         };
                         
-                        // 2. Upload JSON to Thirdweb IPFS
                         const uri = await upload({ client, files: [metadata] });
 
-                        // 3. Smart Contract Logic
                         if (isAdmin) {
-                          // Admin Path (Free)
                           return prepareContractCall({
                             contract,
                             method: "function reserveName(string _name, uint8 _tier, string _tokenURI)",
                             params: [nameToMint, tierIndex, uri],
                           });
                         } else {
-                          // Public Path (Paid)
                           const usdAmountWei = BigInt(tierName === "IMMORTAL" ? 50 : tierName === "ELITE" ? 30 : 10) * BigInt(10**18);
                           const costInMatic = await readContract({
                              contract,
                              method: "function getMaticCost(uint256 usdAmount) view returns (uint256)",
                              params: [usdAmountWei]
                           });
-                          const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); // 1% Buffer
+                          const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
                           
                           return prepareContractCall({
                             contract,
@@ -298,6 +285,14 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                     }}
                     onError={(err) => {
                         onError(err);
+                    }}
+                    connectModal={{
+                        size: "compact",
+                        title: "Connect Wallet",
+                        welcomeScreen: {
+                            title: "Welcome to NNM Market",
+                            subtitle: "Connect your wallet to start minting assets.",
+                        }
                     }}
                     style={{
                         width: '100%',
