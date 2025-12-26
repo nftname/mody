@@ -103,7 +103,7 @@ export default function ContactPage() {
                             <h3 className="h6 text-white m-0 fw-bold">Legal & Compliance</h3>
                         </div>
                         <p style={{ fontSize: '13px', color: '#848E9C', marginBottom: '15px' }}>
-                            For verified institutional inquiries onlyFor regulatory inquiries, IP rights, and compliance matters.
+                            For verified institutional inquiries only For regulatory inquiries, IP rights, and compliance matters.
                         </p>
                         <a href="mailto:legal@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#FCD535', fontSize: '14px' }}>
                             legal@yourdomain.com
