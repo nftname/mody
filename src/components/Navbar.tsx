@@ -14,12 +14,14 @@ const Navbar = () => {
   
   const account = useActiveAccount();
   const wallet = useActiveWallet();
+  const { disconnect } = useDisconnect();
   const chain = defineChain(137); 
 
   const [mounted, setMounted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -57,6 +59,20 @@ const Navbar = () => {
     closeMenu();
   };
 
+  const handleDisconnect = () => {
+    if (wallet) {
+        disconnect(wallet);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/market?search=${encodeURIComponent(searchQuery.trim())}`);
+      closeMenu();
+    }
+  };
+
   const wallets = [
     createWallet("io.metamask"),
     createWallet("com.coinbase.wallet"),
@@ -65,56 +81,60 @@ const Navbar = () => {
     walletConnect(),
   ];
 
+  const goldGradient = 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)';
+
   const goldButtonStyle = {
-    background: 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)',
+    background: goldGradient,
     color: '#000',
     border: '1px solid #b3882a',
     fontWeight: '700' as const,
-    fontSize: '12px',
-    height: '38px',
-    borderRadius: '8px',
-    minWidth: '120px',
+    fontSize: '11px',
+    height: '30px', 
+    borderRadius: '6px',
+    minWidth: '100px',
   };
 
-  const connectedButtonStyle = {
+  const connectedButtonStyleDesktop = {
     background: '#161b22',
     color: '#fff',
     border: '1px solid #333',
     fontWeight: '600' as const,
-    fontSize: '13px',
-    height: '38px',
-    borderRadius: '8px',
-    minWidth: '120px',
-    maxWidth: '140px',
+    fontSize: '12px',
+    height: '30px', 
+    borderRadius: '6px',
+    minWidth: '110px',
+    maxWidth: '130px',
     overflow: 'hidden',
     whiteSpace: 'nowrap' as const,
     textOverflow: 'ellipsis'
   };
-  
-  const connectedButtonMobileStyle = {
-    background: '#161b22',
-    color: '#fff',
-    border: '1px solid #333',
-    fontWeight: '600' as const,
-    fontSize: '12px',
-    height: '32px',
-    borderRadius: '8px',
-    padding: '0 10px',
-    maxWidth: '120px',
-    overflow: 'hidden',
+
+  const mobileConnectedGoldStyle = {
+    background: goldGradient,
+    color: '#000',
+    border: '1px solid #b3882a',
+    height: '28px',
+    padding: '0 8px',
+    borderRadius: '6px',
+    fontSize: '11px',
+    fontWeight: '800',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    maxWidth: '100px',
   };
 
   const portfolioBtnStyle = {
     color: '#FCD535', 
     border: 'none', 
     background: 'transparent', 
-    padding: '0 8px', 
+    padding: '0 6px',
     display: 'flex', 
     alignItems: 'center', 
     justifyContent: 'center', 
     cursor: 'pointer', 
     transition: 'all 0.2s', 
-    height: '38px',
+    height: '30px', 
   };
 
   const navbarBgColor = '#0b0e11';
@@ -136,7 +156,10 @@ const Navbar = () => {
         
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
             <button className="navbar-toggler border-0 p-0 shadow-none" type="button" onClick={toggleMenu} style={{ width: '24px' }}>
-                {isMenuOpen ? <i className="bi bi-x-lg text-white" style={{ fontSize: '24px' }}></i> : <i className="bi bi-list text-white" style={{ fontSize: '24px' }}></i>}
+                {isMenuOpen ? 
+                    <i className="bi bi-x-lg" style={{ fontSize: '24px', color: '#FCD535' }}></i> : 
+                    <i className="bi bi-list" style={{ fontSize: '24px', color: '#FCD535' }}></i>
+                }
             </button>
 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" onClick={closeMenu} style={{ textDecoration: 'none' }}> 
@@ -188,7 +211,7 @@ const Navbar = () => {
             </Link>
         </div>
 
-        <div className="d-flex d-lg-none align-items-center ms-auto gap-2 flex-nowrap" style={{ overflow: 'visible' }}>
+        <div className="d-flex d-lg-none align-items-center ms-auto" style={{ gap: '4px', overflow: 'visible' }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
             </button>
@@ -198,20 +221,27 @@ const Navbar = () => {
                 <i className="bi bi-person-circle" style={{ fontSize: '22px', color: '#FCD535' }}></i>
             </button>
 
-            <div style={{ transform: 'scale(0.9)', transformOrigin: 'right center' }}>
-                 <ConnectButton 
-                    client={client}
-                    wallets={wallets}
-                    chain={chain}
-                    theme="dark"
-                    connectButton={{
-                        label: "Connect",
-                        style: { ...goldButtonStyle, height: '32px', minWidth: 'auto', fontSize: '12px', padding: '0 10px' }
-                    }}
-                    detailsButton={{
-                        style: connectedButtonMobileStyle,
-                    }}
-                />
+            <div style={{ transform: 'scale(1)', transformOrigin: 'right center' }}>
+                {!account ? (
+                    <ConnectButton 
+                        client={client}
+                        wallets={wallets}
+                        chain={chain}
+                        theme="dark"
+                        connectButton={{
+                            label: "Connect",
+                            style: { ...goldButtonStyle, height: '28px', minWidth: 'auto', fontSize: '11px', padding: '0 8px' }
+                        }}
+                    />
+                ) : (
+                    <button onClick={handleDisconnect} style={mobileConnectedGoldStyle}>
+                         <div style={{
+                             width: '6px', height: '6px', borderRadius: '50%', 
+                             background: '#00c300', boxShadow: '0 0 4px #00c300', marginRight: '0px'
+                         }}></div>
+                         <span style={{ fontFamily: 'monospace' }}>{account.address.slice(0, 4)}..</span>
+                    </button>
+                )}
             </div>
         </div>
 
@@ -269,10 +299,19 @@ const Navbar = () => {
 
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
                 
-                <div className="position-relative" style={{ width: '280px', height: '32px', flexShrink: 0 }}>
-                   <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." style={{ borderRadius: '8px', fontSize:'13px', height: '100%', paddingLeft: '30px', border: '1px solid rgba(252, 213, 53, 0.9)', boxShadow: '0 0 5px rgba(252, 213, 53, 0.1)', caretColor: '#FCD535' }} />
-                   <i className="bi bi-search position-absolute text-secondary" style={{top: '50%', transform: 'translateY(-50%)', left: '10px', fontSize: '12px', color: '#FCD535 !important'}}></i>
-                </div>
+                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '30px', flexShrink: 0 }}>
+                   <input 
+                        type="text" 
+                        className="form-control search-input-custom text-white shadow-none" 
+                        placeholder="Search..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{ borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '30px', border: '1px solid rgba(252, 213, 53, 0.9)', boxShadow: '0 0 5px rgba(252, 213, 53, 0.1)', caretColor: '#FCD535' }} 
+                   />
+                   <button type="submit" className="btn p-0 position-absolute" style={{top: '50%', transform: 'translateY(-50%)', left: '10px', border:'none', background:'transparent'}}>
+                        <i className="bi bi-search text-secondary" style={{fontSize: '12px', color: '#FCD535 !important'}}></i>
+                   </button>
+                </form>
                 
                 <button 
                     onClick={handlePortfolioClick} 
@@ -293,7 +332,7 @@ const Navbar = () => {
                         label: "Connect Wallet"
                     }}
                     detailsButton={{
-                        style: connectedButtonStyle,
+                        style: connectedButtonStyleDesktop,
                     }}
                 />
 
@@ -304,11 +343,21 @@ const Navbar = () => {
 
       {isMobileSearchOpen && (
         <div className="d-lg-none position-absolute start-0 w-100" style={{ top: '60px', zIndex: 1049, backgroundColor: navbarBgColor, padding: '12px 15px', borderBottom: '1px solid rgba(252, 213, 53, 0.5)' }}>
-            <div className="position-relative">
-                <input ref={mobileSearchInputRef} type="text" className="form-control bg-dark text-white shadow-none" placeholder="Search collections..." style={{ borderRadius: '4px', fontSize: '14px', height: '42px', paddingLeft: '38px', paddingRight: '35px', border: '1px solid var(--unified-gold-color)', caretColor: '#FCD535' }} />
-                <i className="bi bi-search position-absolute" style={{ top: '50%', left: '12px', transform: 'translateY(-50%)', fontSize: '16px', color: 'var(--unified-gold-color)' }}></i>
-                <button onClick={() => setIsMobileSearchOpen(false)} className="btn btn-link position-absolute text-secondary text-decoration-none p-0" style={{ top: '50%', right: '12px', transform: 'translateY(-50%)' }}><i className="bi bi-x-lg" style={{ fontSize: '16px' }}></i></button>
-            </div>
+            <form onSubmit={handleSearch} className="position-relative">
+                <input 
+                    ref={mobileSearchInputRef} 
+                    type="text" 
+                    className="form-control bg-dark text-white shadow-none" 
+                    placeholder="Search collections..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ borderRadius: '4px', fontSize: '14px', height: '42px', paddingLeft: '38px', paddingRight: '35px', border: '1px solid var(--unified-gold-color)', caretColor: '#FCD535' }} 
+                />
+                <button type="submit" className="btn p-0 position-absolute" style={{ top: '50%', left: '12px', transform: 'translateY(-50%)', border:'none', background:'transparent' }}>
+                    <i className="bi bi-search" style={{ fontSize: '16px', color: 'var(--unified-gold-color)' }}></i>
+                </button>
+                <button type="button" onClick={() => setIsMobileSearchOpen(false)} className="btn btn-link position-absolute text-secondary text-decoration-none p-0" style={{ top: '50%', right: '12px', transform: 'translateY(-50%)' }}><i className="bi bi-x-lg" style={{ fontSize: '16px' }}></i></button>
+            </form>
         </div>
       )}
 
@@ -324,6 +373,10 @@ const Navbar = () => {
         .search-input-custom { background-color: #161b22 !important; transition: background-color 0.3s ease; }
         .search-input-custom:focus { background-color: ${navbarBgColor} !important; border-color: #FCD535 !important; }
         
+        .tw-connected-wallet div:nth-child(2) {
+             display: none !important; 
+        }
+
         @media (max-width: 991px) { 
             .nav-link { color: #ffffff !important; border-bottom: 1px solid #222; width: 100%; text-align: left; padding-left: 0 !important; }
             .nav-link:hover, .nav-link.active { color: #FCD535 !important; padding-left: 10px !important; transition: 0.3s; }
