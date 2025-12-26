@@ -57,7 +57,6 @@ const Navbar = () => {
     closeMenu();
   };
 
-  // 1. تم إزالة TrustWallet لتصحيح الخطأ (walletConnect يغطيها)
   const wallets = [
     createWallet("io.metamask"),
     createWallet("com.coinbase.wallet"),
@@ -66,7 +65,6 @@ const Navbar = () => {
     walletConnect(),
   ];
 
-  // Styles
   const goldButtonStyle = {
     background: 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)',
     color: '#000',
@@ -78,7 +76,6 @@ const Navbar = () => {
     minWidth: '120px',
   };
 
-  // 2. ستايل الزر المتصل (تم إضافة max-width لإجبار الحجم الصغير وإخفاء الرصيد)
   const connectedButtonStyle = {
     background: '#161b22',
     color: '#fff',
@@ -87,9 +84,9 @@ const Navbar = () => {
     fontSize: '13px',
     height: '38px',
     borderRadius: '8px',
-    minWidth: '120px',    // عرض أدنى ثابت
-    maxWidth: '140px',    // عرض أقصى (هذا سيمنع التمدد ويخفي الرصيد الطويل)
-    overflow: 'hidden',   // إخفاء الزيادات
+    minWidth: '120px',
+    maxWidth: '140px',
+    overflow: 'hidden',
     whiteSpace: 'nowrap' as const,
     textOverflow: 'ellipsis'
   };
@@ -103,7 +100,7 @@ const Navbar = () => {
     height: '32px',
     borderRadius: '8px',
     padding: '0 10px',
-    maxWidth: '120px',  // تحجيم للجوال أيضاً
+    maxWidth: '120px',
     overflow: 'hidden',
   };
 
@@ -137,7 +134,6 @@ const Navbar = () => {
       
       <div className="container-fluid px-2 h-100 align-items-center d-flex flex-nowrap">
         
-        {/* === Mobile Layout: Left Side (Toggler + Logo) === */}
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
             <button className="navbar-toggler border-0 p-0 shadow-none" type="button" onClick={toggleMenu} style={{ width: '24px' }}>
                 {isMenuOpen ? <i className="bi bi-x-lg text-white" style={{ fontSize: '24px' }}></i> : <i className="bi bi-list text-white" style={{ fontSize: '24px' }}></i>}
@@ -165,7 +161,6 @@ const Navbar = () => {
             </Link>
         </div>
 
-        {/* === Desktop Logo (Hidden on Mobile) === */}
         <div className="d-none d-lg-flex align-items-center" style={{ minWidth: '80px', flexShrink: 1, overflow:'hidden' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" onClick={closeMenu} style={{ textDecoration: 'none' }}> 
               <svg width="29" height="29" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
@@ -193,7 +188,6 @@ const Navbar = () => {
             </Link>
         </div>
 
-        {/* === Mobile Layout: Right Side (Icons + Wallet) === */}
         <div className="d-flex d-lg-none align-items-center ms-auto gap-2 flex-nowrap" style={{ overflow: 'visible' }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
@@ -216,13 +210,11 @@ const Navbar = () => {
                     }}
                     detailsButton={{
                         style: connectedButtonMobileStyle,
-                        // تم إزالة showBalance لأننا نعتمد على الحجم الصغير لإخفاء الرصيد
                     }}
                 />
             </div>
         </div>
 
-        {/* === Desktop Navigation & Right Side === */}
         <div className={`collapse navbar-collapse flex-grow-1 ${isMenuOpen ? 'show' : ''}`} id="navbarNav">
           <div className="d-flex flex-column flex-lg-row align-items-start w-100" style={{ paddingTop: '4px' }}>
             
@@ -291,7 +283,6 @@ const Navbar = () => {
                     <i className="bi bi-person-circle" style={{fontSize: '28px'}}></i>
                 </button>
 
-                {/* زر سطح المكتب المتصل */}
                 <ConnectButton 
                     client={client}
                     wallets={wallets}
@@ -303,7 +294,6 @@ const Navbar = () => {
                     }}
                     detailsButton={{
                         style: connectedButtonStyle,
-                        // تم إزالة showBalance المسبب للخطأ
                     }}
                 />
 
@@ -334,11 +324,6 @@ const Navbar = () => {
         .search-input-custom { background-color: #161b22 !important; transition: background-color 0.3s ease; }
         .search-input-custom:focus { background-color: ${navbarBgColor} !important; border-color: #FCD535 !important; }
         
-        /* هذا الجزء يخفي الرصيد بالقوة داخل زر الثردويب */
-        .tw-connected-wallet div:nth-child(2) {
-             display: none !important; 
-        }
-
         @media (max-width: 991px) { 
             .nav-link { color: #ffffff !important; border-bottom: 1px solid #222; width: 100%; text-align: left; padding-left: 0 !important; }
             .nav-link:hover, .nav-link.active { color: #FCD535 !important; padding-left: 10px !important; transition: 0.3s; }
