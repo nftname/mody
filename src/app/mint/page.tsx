@@ -13,7 +13,7 @@ const CONTRACT_ADDRESS = "0x8e46c897bc74405922871a8a6863ccf5cd1fc721";
 const CHAIN_ID = 137;
 const chain = defineChain(CHAIN_ID);
 
-// روابط مباشرة وسريعة (Gateway)
+// 1. استخدام روابط بوابة سريعة للصور (HTTPS)
 const TIER_IMAGES = {
     IMMORTAL: "https://gateway.pinata.cloud/ipfs/bafybeicutv6qgtmadglatfvdjew4evjoujifx2kykt4hf43jvayduefwtq", 
     ELITE: "https://gateway.pinata.cloud/ipfs/bafybeic6tzxkn7ikmd2tafrd5m35ayoylwp6obibv57z577h5rgtsvi4ue",    
@@ -302,11 +302,11 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
                             const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 
-                            // Manual JSON construction to bypass automated processing that might break HTTPS links
+                            // 2. بناء الميتاداتا يدوياً مع الترتيب الصحيح
                             const metadataObject = {
                               name: nameToMint,
                               description: LONG_DESCRIPTION,
-                              image: selectedImage, // Using direct HTTPS gateway link
+                              image: selectedImage, 
                               attributes: [
                                 { trait_type: "Asset Type", value: "Digital Name" },
                                 { trait_type: "Generation", value: "Gen-0" },
@@ -317,16 +317,21 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                               ]
                             };
 
-                            // Upload as a simple JSON Blob to ensure raw link preservation
                             const blob = new Blob([JSON.stringify(metadataObject)], { type: "application/json" });
                             const file = new File([blob], "metadata.json");
-                            const uri = await upload({ client, files: [file] });
+                            
+                            // رفع الملف والحصول على رابط IPFS
+                            const ipfsUri = await upload({ client, files: [file] });
+
+                            // 3. التحويل القسري للرابط النهائي إلى HTTPS قبل إرساله للعقد
+                            // هذا يحل مشكلة ميتا ماسك نهائياً لأن العقد سيسجل رابط HTTP مباشر
+                            const finalTokenURI = ipfsUri.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/");
     
                             if (isAdmin) {
                               return prepareContractCall({
                                 contract,
                                 method: "function reserveName(string _name, uint8 _tier, string _tokenURI)",
-                                params: [nameToMint, tierIndex, uri],
+                                params: [nameToMint, tierIndex, finalTokenURI],
                               });
                             } else {
                               const usdAmountWei = BigInt(tierName === "IMMORTAL" ? 50 : tierName === "ELITE" ? 30 : 10) * BigInt(10**18);
@@ -340,7 +345,7 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                               return prepareContractCall({
                                 contract,
                                 method: "function mintPublic(string _name, uint8 _tier, string _tokenURI) payable",
-                                params: [nameToMint, tierIndex, uri],
+                                params: [nameToMint, tierIndex, finalTokenURI],
                                 value: valueToSend, 
                               });
                             }
