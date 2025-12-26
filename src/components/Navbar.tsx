@@ -245,7 +245,7 @@ const Navbar = () => {
 
             <button className="btn p-0 d-flex align-items-center justify-content-center" onClick={handlePortfolioClick}
                 style={{ width: '32px', height: '32px', border: 'none', backgroundColor: 'transparent', flexShrink: 0 }}>
-                <i className="bi bi-person-circle" style={{ fontSize: '22px', color: '#FCD535' }}></i>
+                <i className="bi bi-person" style={{ fontSize: '24px', color: '#FCD535' }}></i>
             </button>
 
             <CustomWalletTrigger isMobile={true} />
@@ -292,7 +292,7 @@ const Navbar = () => {
                                     className="dropdown-item text-white py-2 px-3" 
                                     href={`/${subItem.toLowerCase().replace(/\s+/g, '-')}`} 
                                     onClick={closeMenu} 
-                                    style={{ fontSize: '12px', transition: '0.2s' }} 
+                                    style={{ fontSize: '14px', transition: '0.2s' }} 
                                 >
                                     {subItem}
                                 </Link>
@@ -305,7 +305,7 @@ const Navbar = () => {
 
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
                 
-                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '27px', flexShrink: 0 }}>
+                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '24px', flexShrink: 0 }}>
                    <input 
                         type="text" 
                         className="form-control search-input-custom text-white shadow-none" 
@@ -325,7 +325,7 @@ const Navbar = () => {
                     style={portfolioBtnStyle} 
                     title="Go to Dashboard"
                 >
-                    <i className="bi bi-person-circle" style={{fontSize: '28px'}}></i>
+                    <i className="bi bi-person" style={{fontSize: '30px', color: '#FCD535'}}></i>
                 </button>
 
                 <CustomWalletTrigger isMobile={false} />
