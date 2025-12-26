@@ -77,49 +77,43 @@ const Navbar = () => {
   const goldGradient = 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)';
   const navbarBgColor = '#0b0e11';
 
-  // --- Styles ---
-
-  // زر غير متصل (ذهبي) - مشترك
   const goldButtonStyle = {
     background: goldGradient,
     color: '#000',
     border: '1px solid #b3882a',
     fontWeight: '700' as const,
     fontSize: '11px',
-    height: '27px', // تعديل الكمبيوتر: تقليل الارتفاع 10%
+    height: '27px', 
     borderRadius: '6px',
     minWidth: '100px',
   };
 
-  // زر متصل (كمبيوتر) - أسود بالكامل (نفس لون النافبار)
   const connectedButtonStyleDesktop = {
-    background: navbarBgColor, // نفس لون النافبار لإخفاء الخلفية
-    color: '#fff', // لون رقم المحفظة أبيض
+    background: navbarBgColor, 
+    color: '#fff', 
     border: '1px solid #333',
     fontWeight: '600' as const,
     fontSize: '12px',
-    height: '27px', // تعديل الكمبيوتر: تقليل الارتفاع 10%
+    height: '27px', 
     borderRadius: '6px',
     minWidth: '110px',
-    maxWidth: '130px',
+    maxWidth: '140px', 
     overflow: 'hidden',
   };
 
-  // زر متصل (جوال) - ذهبي رشيق
   const connectedButtonStyleMobile = {
     background: goldGradient,
-    color: '#000', // لون رقم المحفظة أسود
+    color: '#000', 
     border: '1px solid #b3882a',
-    height: '24px', // تعديل الجوال: تقليل الارتفاع (أقل بـ 10%)
-    padding: '0 4px', // تعديل الجوال: تقليل الحواف الجانبية (رشاقة)
+    height: '24px', 
+    padding: '0 4px', 
     borderRadius: '6px',
     fontSize: '11px',
     fontWeight: '800',
-    minWidth: 'auto',
-    maxWidth: '110px', 
+    minWidth: '90px', 
+    maxWidth: '120px', 
   };
 
-  // زر البروفايل
   const portfolioBtnStyle = {
     color: '#FCD535', 
     border: 'none', 
@@ -130,7 +124,7 @@ const Navbar = () => {
     justifyContent: 'center', 
     cursor: 'pointer', 
     transition: 'all 0.2s', 
-    height: '27px', // نفس الارتفاع الجديد
+    height: '27px', 
   };
 
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
@@ -149,7 +143,6 @@ const Navbar = () => {
       
       <div className="container-fluid px-2 h-100 align-items-center d-flex flex-nowrap">
         
-        {/* === Mobile Layout: Left Side === */}
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
             <button className="navbar-toggler border-0 p-0 shadow-none" type="button" onClick={toggleMenu} style={{ width: '24px' }}>
                 {isMenuOpen ? 
@@ -180,7 +173,6 @@ const Navbar = () => {
             </Link>
         </div>
 
-        {/* === Desktop Logo === */}
         <div className="d-none d-lg-flex align-items-center" style={{ minWidth: '80px', flexShrink: 1, overflow:'hidden' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" onClick={closeMenu} style={{ textDecoration: 'none' }}> 
               <svg width="29" height="29" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
@@ -208,12 +200,11 @@ const Navbar = () => {
             </Link>
         </div>
 
-        {/* === Mobile Layout: Right Side === */}
         <div className="d-flex d-lg-none align-items-center ms-auto" 
              style={{ 
-                 gap: '8px', // تعديل الجوال: زيادة المسافة بنسبة 10%
+                 gap: '8px', 
                  overflow: 'visible',
-                 paddingRight: '5px'
+                 paddingRight: '10px' 
              }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
@@ -241,7 +232,6 @@ const Navbar = () => {
             </div>
         </div>
 
-        {/* === Desktop Navigation & Right Side === */}
         <div className={`collapse navbar-collapse flex-grow-1 ${isMenuOpen ? 'show' : ''}`} id="navbarNav">
           <div className="d-flex flex-column flex-lg-row align-items-start w-100" style={{ paddingTop: '4px' }}>
             
@@ -296,7 +286,6 @@ const Navbar = () => {
 
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
                 
-                {/* تعديل الكمبيوتر: ارتفاع البحث 27px */}
                 <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '27px', flexShrink: 0 }}>
                    <input 
                         type="text" 
@@ -311,7 +300,6 @@ const Navbar = () => {
                    </button>
                 </form>
                 
-                {/* تعديل الكمبيوتر: ارتفاع البروفايل 27px */}
                 <button 
                     onClick={handlePortfolioClick} 
                     className="btn" 
@@ -332,7 +320,7 @@ const Navbar = () => {
                             label: "Connect Wallet"
                         }}
                         detailsButton={{
-                            style: connectedButtonStyleDesktop, // أسود ومنخفض الارتفاع
+                            style: connectedButtonStyleDesktop,
                         }}
                     />
                 </div>
@@ -374,25 +362,8 @@ const Navbar = () => {
         .search-input-custom { background-color: #161b22 !important; transition: background-color 0.3s ease; }
         .search-input-custom:focus { background-color: ${navbarBgColor} !important; border-color: #FCD535 !important; }
         
-        /* CSS HACK: إخفاء الرصيد (العنصر الثاني في الزر)
-          وإضافة النقطة الخضراء يدوياً 
-        */
-
-        /* إخفاء الأيقونة الافتراضية للمحفظة */
         .tw-connected-wallet > div:first-child { display: none !important; } 
 
-        /* إخفاء الرصيد (يأتي عادة في div منفصل داخل الcontainer) */
-        .tw-connected-wallet > div:last-child > div:last-child { display: none !important; }
-        
-        /* تنسيق عام للزر من الداخل ليكون في المنتصف */
-        .tw-connected-wallet { 
-            padding: 0 !important; 
-            justify-content: center !important;
-            gap: 4px !important;
-            width: 100%;
-        }
-
-        /* إضافة النقطة الخضراء عبر CSS */
         .tw-connected-wallet::before {
             content: '';
             display: block;
@@ -405,13 +376,26 @@ const Navbar = () => {
             flex-shrink: 0;
         }
 
-        /* تخصيص للجوال: لون النص أسود */
+        .tw-connected-wallet { 
+            padding: 0 !important; 
+            justify-content: center !important;
+            gap: 2px !important;
+            width: 100%;
+        }
+
+        #desktop-wallet-wrapper .tw-connected-wallet > div:last-child > div:last-child {
+             display: none !important;
+        }
+        
+        #mobile-wallet-wrapper .tw-connected-wallet > div:last-child > div:last-child {
+             display: none !important;
+        }
+
         #mobile-wallet-wrapper button, 
         #mobile-wallet-wrapper .tw-connected-wallet {
             color: #000 !important;
         }
 
-        /* تخصيص للكمبيوتر: لون النص أبيض */
         #desktop-wallet-wrapper button,
         #desktop-wallet-wrapper .tw-connected-wallet {
             color: #fff !important;
@@ -431,3 +415,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
