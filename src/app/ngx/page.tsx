@@ -123,8 +123,8 @@ export default function NGXPage() {
         <div className="container-fluid">
             <div className="row align-items-center">
                 <div className="col-lg-7 mb-3 mb-lg-0">
-                    <h1 className="fw-bold text-navy-900 mb-2" style={{ fontSize: '1.5rem', letterSpacing: '-0.5px' }}>
-                        NGX NFT Index — The Global Benchmark <span className="text-gold-500">.</span>
+                    <h1 className="fw-bold text-navy-900 mb-2" style={{ fontSize: '1.65rem', letterSpacing: '-0.5px' }}>
+                        NGX NFT Index &mdash; The Global Benchmark <span className="text-gold-500">.</span>
                     </h1>
                     <p className="text-navy-600 mb-0" style={{ fontSize: '15px', maxWidth: '650px' }}>
                         The premier benchmark tracking the global NFT market, aggregating sentiment, liquidity, and rare digital name assets across all platforms.
@@ -179,7 +179,9 @@ export default function NGXPage() {
                         <div className="d-flex align-items-center gap-3 pt-3 border-top border-secondary">
                              <div className="d-flex align-items-center gap-2">
                                 <div className="bg-gold-500 rounded-circle" style={{ width: '8px', height: '8px' }}></div>
-                                <span className="small fw-bold text-uppercase" style={{ fontSize: '11px', letterSpacing: '1px' }}>{mainArticle.author}</span>
+                                <span className="small fw-bold text-uppercase" style={{ fontSize: '11px', letterSpacing: '1px' }}>
+                                    Chief Market Analyst &mdash; Market Briefing
+                                </span>
                              </div>
                         </div>
                     </div>
