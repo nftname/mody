@@ -1,24 +1,22 @@
 'use client';
+
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useWeb3Modal } from '@web3modal/wagmi/react';
-import { useAccount, useBalance } from 'wagmi';
 import { useRef, useState, useEffect } from 'react';
+import { ConnectButton, useActiveAccount } from "thirdweb/react";
+import { defineChain } from "thirdweb";
+import { client } from "@/lib/client";
 
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { open } = useWeb3Modal();
-  const { address, isConnected } = useAccount();
   
-  const { data: ethBalance } = useBalance({ address, chainId: 1 });
-  const { data: maticBalance } = useBalance({ address, chainId: 137 });
+  const account = useActiveAccount();
+  const chain = defineChain(137); 
 
   const [mounted, setMounted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const [showBalanceDropdown, setShowBalanceDropdown] = useState(false);
-  
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
   
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
@@ -33,11 +31,6 @@ const Navbar = () => {
     }
   }, [isMobileSearchOpen]);
 
-  const formatAddress = (addr: string | undefined) => {
-    if (!addr) return '';
-    return `${addr.substring(0, 4)}...${addr.substring(addr.length - 4)}`;
-  };
-
   const closeMenu = () => {
     setIsMenuOpen(false);
     setIsMobileSearchOpen(false);
@@ -51,22 +44,14 @@ const Navbar = () => {
   const handleNavClick = (item: string, e: React.MouseEvent) => {
     if (item === 'Portfolio') {
         e.preventDefault();
-        if (isConnected) {
-            router.push('/dashboard');
-        } else {
-            open();
-        }
+        router.push('/dashboard');
     }
     closeMenu();
   };
 
   const handlePortfolioClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (isConnected) {
-        router.push('/dashboard');
-    } else {
-        open();
-    }
+    router.push('/dashboard');
     closeMenu();
   };
 
@@ -74,23 +59,31 @@ const Navbar = () => {
     background: 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)',
     color: '#000',
     border: '1px solid #b3882a',
-    fontWeight: '700',
+    fontWeight: '700' as const,
     fontSize: '12px',
-    height: '25px',
-    borderRadius: '4px',
-    whiteSpace: 'nowrap' as const,
-    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: '0 9px', minWidth: '108px', position: 'relative' as const
-  };
-
-  const goldButtonStyleMobile = {
-    ...goldButtonStyle, height: '24px', fontSize: '10px', fontWeight: '800', padding: '0 5px', minWidth: 'auto', maxWidth: 'none', flexShrink: 0, boxShadow: '0 2px 5px rgba(252, 213, 53, 0.2)',
+    height: '38px',
+    borderRadius: '8px',
+    minWidth: '120px',
   };
 
   const portfolioBtnStyle = {
-    color: '#FCD535', border: '1px solid #FCD535', borderRadius: '4px', height: '28px', fontSize: '12px', fontWeight: '600', background: 'transparent', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', width: '90px', whiteSpace: 'nowrap' as const
+    color: '#FCD535', 
+    border: '1px solid #FCD535', 
+    borderRadius: '4px', 
+    height: '38px',
+    fontSize: '12px', 
+    fontWeight: '600', 
+    background: 'transparent', 
+    padding: '0 10px', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    cursor: 'pointer', 
+    transition: 'all 0.2s', 
+    width: '45px',
+    whiteSpace: 'nowrap' as const
   };
 
-  const portfolioBtnStyleConnected = { ...portfolioBtnStyle, width: '40px', padding: '0' };
   const navbarBgColor = '#0b0e11';
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
 
@@ -128,19 +121,41 @@ const Navbar = () => {
             </Link>
         </div>
 
-        <div className="d-flex d-lg-none align-items-center ms-auto gap-1 flex-nowrap" style={{ overflow: 'visible' }}>
+        <div className="d-flex d-lg-none align-items-center ms-auto gap-2 flex-nowrap" style={{ overflow: 'visible' }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
             </button>
 
             <button className="btn p-0 d-flex align-items-center justify-content-center" onClick={handlePortfolioClick}
-                style={{ width: '28px', height: '28px', border: '1px solid #FCD535', borderRadius: '4px', color: '#FCD535', backgroundColor: 'transparent', flexShrink: 0 }}>
-                {mounted && isConnected ? <i className="bi bi-person-circle" style={{ fontSize: '16px' }}></i> : <i className="bi bi-briefcase-fill" style={{ fontSize: '14px' }}></i>}
+                style={{ width: '32px', height: '32px', border: '1px solid #FCD535', borderRadius: '8px', color: '#FCD535', backgroundColor: 'transparent', flexShrink: 0 }}>
+                <i className="bi bi-person-circle" style={{ fontSize: '18px' }}></i>
             </button>
 
-            <button className="btn" style={goldButtonStyleMobile} onClick={() => open()}>
-                {mounted && isConnected ? formatAddress(address) : 'Connect Wallet'}
-            </button>
+            <div style={{ transform: 'scale(0.85)', transformOrigin: 'right center' }}>
+                <ConnectButton 
+                    client={client}
+                    chain={chain}
+                    theme="dark"
+                    connectButton={{
+                        label: "Connect",
+                        style: {
+                            ...goldButtonStyle,
+                            height: '32px',
+                            minWidth: 'auto',
+                            fontSize: '12px',
+                            padding: '0 10px'
+                        }
+                    }}
+                    detailsButton={{
+                        style: {
+                            ...goldButtonStyle,
+                            height: '32px',
+                            minWidth: 'auto',
+                            padding: '0 10px'
+                        }
+                    }}
+                />
+            </div>
 
             <button className="navbar-toggler border-0 p-0 shadow-none ms-1" type="button" onClick={toggleMenu} style={{ width: '24px' }}>
                 {isMenuOpen ? <i className="bi bi-x-lg text-white" style={{ fontSize: '24px' }}></i> : <i className="bi bi-list text-white" style={{ fontSize: '24px' }}></i>}
@@ -199,46 +214,35 @@ const Navbar = () => {
                 </ul>
             </div>
 
-            <div className="d-none d-lg-flex align-items-center justify-content-end gap-1" style={{ marginTop: '5px' }}> 
-                <div className="position-relative" style={{ width: '220px', height: '28px', flexShrink: 0 }}>
-                   <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." style={{ borderRadius: '4px', fontSize:'13px', height: '100%', paddingLeft: '30px', border: '1px solid rgba(252, 213, 53, 0.9)', boxShadow: '0 0 5px rgba(252, 213, 53, 0.1)', caretColor: '#FCD535' }} />
+            <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
+                
+                <div className="position-relative" style={{ width: '200px', height: '38px', flexShrink: 0 }}>
+                   <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." style={{ borderRadius: '8px', fontSize:'13px', height: '100%', paddingLeft: '30px', border: '1px solid rgba(252, 213, 53, 0.9)', boxShadow: '0 0 5px rgba(252, 213, 53, 0.1)', caretColor: '#FCD535' }} />
                    <i className="bi bi-search position-absolute text-secondary" style={{top: '50%', transform: 'translateY(-50%)', left: '10px', fontSize: '12px', color: '#FCD535 !important'}}></i>
                 </div>
                 
-                <div className="d-flex align-items-center justify-content-end gap-2" style={{ width: '240px', flexShrink: 0 }}>
-                    <button onClick={handlePortfolioClick} className="btn" style={mounted && isConnected ? portfolioBtnStyleConnected : portfolioBtnStyle} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'rgba(252, 213, 53, 0.1)'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
-                        {mounted && isConnected ? <i className="bi bi-person-circle" style={{fontSize: '16px'}}></i> : <><i className="bi bi-briefcase-fill me-2" style={{fontSize: '12px'}}></i> Portfolio</>}
-                    </button>
+                <button 
+                    onClick={handlePortfolioClick} 
+                    className="btn" 
+                    style={portfolioBtnStyle} 
+                    title="Go to Dashboard"
+                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'rgba(252, 213, 53, 0.1)'; }} 
+                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                >
+                    <i className="bi bi-person-circle" style={{fontSize: '20px'}}></i>
+                </button>
 
-                    <div className="position-relative" onMouseEnter={() => setShowBalanceDropdown(true)} onMouseLeave={() => setShowBalanceDropdown(false)}>
-                        <button className="btn" style={goldButtonStyle} onClick={() => open()}>
-                            {mounted && isConnected ? formatAddress(address) : 'Connect Wallet'}
-                        </button>
-                        {mounted && isConnected && showBalanceDropdown && (
-                            <div className="position-absolute end-0 pt-2" style={{ top: '100%', width: '200px', zIndex: 1060 }}>
-                                <div className="rounded-3 border border-warning shadow-lg overflow-hidden" style={{ backgroundColor: '#161b22', border: '1px solid #b3882a' }}>
-                                    <div className="px-3 py-2 border-bottom border-secondary bg-black bg-opacity-25">
-                                        <span className="text-secondary small fw-bold" style={{ fontSize: '10px', letterSpacing: '1px' }}>WALLET BALANCE</span>
-                                    </div>
-                                    <div className="d-flex justify-content-between align-items-center px-3 py-2 border-bottom border-secondary border-opacity-25">
-                                        <div className="d-flex align-items-center gap-2">
-                                            <div className="rounded-circle bg-light d-flex align-items-center justify-content-center" style={{ width: '20px', height: '20px' }}><i className="bi bi-currency-ethereum text-dark" style={{ fontSize: '14px' }}></i></div>
-                                            <span className="text-white fw-bold" style={{ fontSize: '12px' }}>ETH</span>
-                                        </div>
-                                        <span className="text-gold fw-bold" style={{ fontSize: '12px' }}>{ethBalance?.formatted ? parseFloat(ethBalance.formatted).toFixed(4) : '0.00'}</span>
-                                    </div>
-                                    <div className="d-flex justify-content-between align-items-center px-3 py-2">
-                                        <div className="d-flex align-items-center gap-2">
-                                            <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '20px', height: '20px', backgroundColor: '#8247E5' }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 19.5L21.5 12L16.5 4.5H7.5L2.5 12L7.5 19.5H16.5Z" fill="#fff" stroke="none"/></svg></div>
-                                            <span className="text-white fw-bold" style={{ fontSize: '12px' }}>POL</span>
-                                        </div>
-                                        <span className="text-gold fw-bold" style={{ fontSize: '12px' }}>{maticBalance?.formatted ? parseFloat(maticBalance.formatted).toFixed(4) : '0.00'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <ConnectButton 
+                    client={client}
+                    chain={chain}
+                    theme="dark"
+                    connectButton={{
+                        style: goldButtonStyle,
+                    }}
+                    detailsButton={{
+                        style: goldButtonStyle,
+                    }}
+                />
             </div>
           </div>
         </div>
