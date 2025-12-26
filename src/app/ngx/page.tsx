@@ -123,7 +123,7 @@ export default function NGXPage() {
         <div className="container-fluid">
             <div className="row align-items-center">
                 <div className="col-lg-7 mb-3 mb-lg-0">
-                    <h1 className="fw-bold text-navy-900 mb-2" style={{ fontSize: '2.2rem', letterSpacing: '-1px' }}>
+                    <h1 className="fw-bold text-navy-900 mb-2" style={{ fontSize: '1.5rem', letterSpacing: '-0.5px' }}>
                         NGX NFT Index — The Global Benchmark <span className="text-gold-500">.</span>
                     </h1>
                     <p className="text-navy-600 mb-0" style={{ fontSize: '15px', maxWidth: '650px' }}>
