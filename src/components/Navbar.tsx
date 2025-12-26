@@ -77,48 +77,39 @@ const Navbar = () => {
   const goldGradient = 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)';
   const navbarBgColor = '#0b0e11';
 
-  const goldButtonStyle = {
+  // --- 1. تصميم الزر المخصص (الظاهر للمستخدم) ---
+  
+  // الحالة: غير متصل (ذهبي)
+  const customDisconnectStyle = {
     background: goldGradient,
     color: '#000',
     border: '1px solid #b3882a',
     fontWeight: '700' as const,
     fontSize: '11px',
-    height: '27px', 
     borderRadius: '6px',
-    minWidth: '100px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+    cursor: 'pointer',
   };
 
-  const connectedButtonStyleDesktop = {
+  // الحالة: متصل (رمادي + نقطة خضراء)
+  const customConnectStyle = {
     background: '#21262d', 
     color: '#fff', 
     border: '1px solid rgba(252, 213, 53, 0.3)', 
     fontWeight: '600' as const,
     fontSize: '12px',
-    height: '27px', 
     borderRadius: '6px',
-    minWidth: '110px',
-    maxWidth: '125px', 
-    overflow: 'hidden',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-  };
-
-  const connectedButtonStyleMobile = {
-    background: '#21262d', 
-    color: '#fff', 
-    border: '1px solid rgba(252, 213, 53, 0.3)',
-    height: '24px', 
-    padding: '0 4px', 
-    borderRadius: '6px',
-    fontSize: '11px',
-    fontWeight: '600',
-    minWidth: '90px', 
-    maxWidth: '105px', 
-    overflow: 'hidden',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+    cursor: 'pointer',
+    gap: '6px',
   };
 
   const portfolioBtnStyle = {
@@ -135,6 +126,48 @@ const Navbar = () => {
   };
 
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
+
+  // مكون الزر المخصص الذي سنعرضه بدلاً من زر الشركة
+  const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
+    const height = isMobile ? '24px' : '27px'; // الارتفاعات المطلوبة
+    const minWidth = isMobile ? '90px' : '110px';
+    const fontSize = isMobile ? '11px' : '12px';
+
+    return (
+      <div style={{ position: 'relative', height: height, minWidth: minWidth, display: 'inline-block' }}>
+        
+        {/* الطبقة السفلية: الزر الذي صممناه بأيدينا */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+            {!account ? (
+                <div style={customDisconnectStyle}>Connect Wallet</div>
+            ) : (
+                <div style={{...customConnectStyle, fontSize}}>
+                    <div style={{
+                        width: '6px', height: '6px', borderRadius: '50%', 
+                        background: '#00ff00', boxShadow: '0 0 6px #00ff00', flexShrink: 0
+                    }}></div>
+                    <span style={{ fontFamily: 'monospace' }}>
+                        {account.address.slice(0, 4)}...{account.address.slice(-4)}
+                    </span>
+                </div>
+            )}
+        </div>
+
+        {/* الطبقة العلوية: زر Thirdweb الحقيقي (شفاف تماماً) ليقوم بالوظيفة */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 10, opacity: 0, overflow: 'hidden' }}>
+             <ConnectButton 
+                client={client}
+                wallets={wallets}
+                chain={chain}
+                theme="dark"
+                connectButton={{
+                    style: { width: '100%', height: '100%' } // ملء المساحة
+                }}
+            />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -222,21 +255,8 @@ const Navbar = () => {
                 <i className="bi bi-person-circle" style={{ fontSize: '22px', color: '#FCD535' }}></i>
             </button>
 
-            <div style={{ transform: 'scale(1)', transformOrigin: 'right center' }} id="mobile-wallet-wrapper">
-                <ConnectButton 
-                    client={client}
-                    wallets={wallets}
-                    chain={chain}
-                    theme="dark"
-                    connectButton={{
-                        label: "Connect",
-                        style: { ...goldButtonStyle, height: '24px', fontSize: '11px', padding: '0 8px' }
-                    }}
-                    detailsButton={{
-                        style: connectedButtonStyleMobile,
-                    }}
-                />
-            </div>
+            {/* استخدام المكون المخصص للجوال */}
+            <CustomWalletTrigger isMobile={true} />
         </div>
 
         <div className={`collapse navbar-collapse flex-grow-1 ${isMenuOpen ? 'show' : ''}`} id="navbarNav">
@@ -316,21 +336,8 @@ const Navbar = () => {
                     <i className="bi bi-person-circle" style={{fontSize: '28px'}}></i>
                 </button>
 
-                <div id="desktop-wallet-wrapper">
-                    <ConnectButton 
-                        client={client}
-                        wallets={wallets}
-                        chain={chain}
-                        theme="dark"
-                        connectButton={{
-                            style: goldButtonStyle,
-                            label: "Connect Wallet"
-                        }}
-                        detailsButton={{
-                            style: connectedButtonStyleDesktop,
-                        }}
-                    />
-                </div>
+                {/* استخدام المكون المخصص للكمبيوتر */}
+                <CustomWalletTrigger isMobile={false} />
 
             </div>
           </div>
@@ -368,33 +375,12 @@ const Navbar = () => {
         .navbar-toggler:focus { box-shadow: none !important; }
         .search-input-custom { background-color: #161b22 !important; transition: background-color 0.3s ease; }
         .search-input-custom:focus { background-color: ${navbarBgColor} !important; border-color: #FCD535 !important; }
-        
-        /* THE CRITICAL PART FOR "CLIPPING" & CAMOUFLAGE */
 
-        .tw-connected-wallet > div:first-child { display: none !important; } 
-
-        .tw-connected-wallet::before {
-            content: '';
-            display: block;
-            width: 6px;
-            height: 6px;
-            background-color: #00ff00;
-            border-radius: 50%;
-            box-shadow: 0 0 6px #00ff00;
-            margin-right: 4px;
-            flex-shrink: 0;
+        /* جعل زر الثردويب الحقيقي يملأ الحاوية بالكامل ليكون قابلاً للنقر */
+        .tw-connect-wallet {
+            width: 100% !important;
+            height: 100% !important;
         }
-
-        .tw-connected-wallet { 
-            padding: 0 !important; 
-            justify-content: center !important;
-            gap: 2px !important;
-            width: 100%;
-        }
-
-        /* Using max-width and overflow hidden on the container (applied via style prop) 
-           will cut off the balance text physically.
-        */
 
         @media (max-width: 991px) { 
             .nav-link { color: #ffffff !important; border-bottom: 1px solid #222; width: 100%; text-align: left; padding-left: 0 !important; }
