@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     apple: '/favicon.svg',
   },
   manifest: '/manifest.json',
+  // Reminder: Ensure `/icons/icon-512.png` used in the web manifest is a transparent PNG.
+  // If the current asset has a solid white background, replace it with a PNG that has transparency.
 };
 
 export default function RootLayout({
