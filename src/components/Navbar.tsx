@@ -14,7 +14,6 @@ const Navbar = () => {
   
   const account = useActiveAccount();
   const wallet = useActiveWallet();
-  const { disconnect } = useDisconnect();
   const chain = defineChain(137); 
 
   const [mounted, setMounted] = useState(false);
@@ -59,12 +58,6 @@ const Navbar = () => {
     closeMenu();
   };
 
-  const handleDisconnect = () => {
-    if (wallet) {
-        disconnect(wallet);
-    }
-  };
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -83,47 +76,49 @@ const Navbar = () => {
 
   const goldGradient = 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)';
 
+  // --- Styles ---
+
+  // زر غير متصل (ذهبي) - مشترك
   const goldButtonStyle = {
     background: goldGradient,
     color: '#000',
     border: '1px solid #b3882a',
     fontWeight: '700' as const,
     fontSize: '11px',
-    height: '30px', 
+    height: '29px', // تعديل الكمبيوتر: تقليل الارتفاع 10%
     borderRadius: '6px',
     minWidth: '100px',
   };
 
+  // زر متصل (كمبيوتر) - أسود
   const connectedButtonStyleDesktop = {
     background: '#161b22',
     color: '#fff',
     border: '1px solid #333',
     fontWeight: '600' as const,
     fontSize: '12px',
-    height: '30px', 
+    height: '29px', // تعديل الكمبيوتر: تقليل الارتفاع 10%
     borderRadius: '6px',
     minWidth: '110px',
     maxWidth: '130px',
     overflow: 'hidden',
-    whiteSpace: 'nowrap' as const,
-    textOverflow: 'ellipsis'
   };
 
-  const mobileConnectedGoldStyle = {
+  // زر متصل (جوال) - ذهبي
+  const connectedButtonStyleMobile = {
     background: goldGradient,
     color: '#000',
     border: '1px solid #b3882a',
-    height: '28px',
+    height: '25px', // تعديل الجوال: تقليل الارتفاع 10% (كان 28 أصبح 25)
     padding: '0 8px',
     borderRadius: '6px',
     fontSize: '11px',
     fontWeight: '800',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-    maxWidth: '100px',
+    minWidth: 'auto',
+    maxWidth: '120px', // تعديل الجوال: زيادة العرض 10%
   };
 
+  // زر البروفايل
   const portfolioBtnStyle = {
     color: '#FCD535', 
     border: 'none', 
@@ -134,7 +129,7 @@ const Navbar = () => {
     justifyContent: 'center', 
     cursor: 'pointer', 
     transition: 'all 0.2s', 
-    height: '30px', 
+    height: '29px', // تعديل الكمبيوتر: نفس ارتفاع زر المحفظة
   };
 
   const navbarBgColor = '#0b0e11';
@@ -154,6 +149,7 @@ const Navbar = () => {
       
       <div className="container-fluid px-2 h-100 align-items-center d-flex flex-nowrap">
         
+        {/* === Mobile Layout: Left Side === */}
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
             <button className="navbar-toggler border-0 p-0 shadow-none" type="button" onClick={toggleMenu} style={{ width: '24px' }}>
                 {isMenuOpen ? 
@@ -184,6 +180,7 @@ const Navbar = () => {
             </Link>
         </div>
 
+        {/* === Desktop Logo === */}
         <div className="d-none d-lg-flex align-items-center" style={{ minWidth: '80px', flexShrink: 1, overflow:'hidden' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" onClick={closeMenu} style={{ textDecoration: 'none' }}> 
               <svg width="29" height="29" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
@@ -211,7 +208,13 @@ const Navbar = () => {
             </Link>
         </div>
 
-        <div className="d-flex d-lg-none align-items-center ms-auto" style={{ gap: '4px', overflow: 'visible' }}>
+        {/* === Mobile Layout: Right Side === */}
+        <div className="d-flex d-lg-none align-items-center ms-auto" 
+             style={{ 
+                 gap: '6px', // تعديل الجوال: زيادة المسافة بين العناصر 10%
+                 overflow: 'visible',
+                 paddingRight: '5px' // تعديل الجوال: زيادة المسافة من الحافة اليمنى
+             }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
             </button>
@@ -222,29 +225,24 @@ const Navbar = () => {
             </button>
 
             <div style={{ transform: 'scale(1)', transformOrigin: 'right center' }}>
-                {!account ? (
-                    <ConnectButton 
-                        client={client}
-                        wallets={wallets}
-                        chain={chain}
-                        theme="dark"
-                        connectButton={{
-                            label: "Connect",
-                            style: { ...goldButtonStyle, height: '28px', minWidth: 'auto', fontSize: '11px', padding: '0 8px' }
-                        }}
-                    />
-                ) : (
-                    <button onClick={handleDisconnect} style={mobileConnectedGoldStyle}>
-                         <div style={{
-                             width: '6px', height: '6px', borderRadius: '50%', 
-                             background: '#00c300', boxShadow: '0 0 4px #00c300', marginRight: '0px'
-                         }}></div>
-                         <span style={{ fontFamily: 'monospace' }}>{account.address.slice(0, 4)}..</span>
-                    </button>
-                )}
+                {/* هنا نستخدم زر Thirdweb الرسمي للجوال لضمان فتح المودال */}
+                <ConnectButton 
+                    client={client}
+                    wallets={wallets}
+                    chain={chain}
+                    theme="dark"
+                    connectButton={{
+                        label: "Connect",
+                        style: { ...goldButtonStyle, height: '25px', fontSize: '11px', padding: '0 8px' } // تعديل الجوال: ارتفاع 25px
+                    }}
+                    detailsButton={{
+                        style: connectedButtonStyleMobile,
+                    }}
+                />
             </div>
         </div>
 
+        {/* === Desktop Navigation & Right Side === */}
         <div className={`collapse navbar-collapse flex-grow-1 ${isMenuOpen ? 'show' : ''}`} id="navbarNav">
           <div className="d-flex flex-column flex-lg-row align-items-start w-100" style={{ paddingTop: '4px' }}>
             
@@ -299,7 +297,8 @@ const Navbar = () => {
 
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
                 
-                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '30px', flexShrink: 0 }}>
+                {/* تعديل الكمبيوتر: ارتفاع البحث 29px */}
+                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '29px', flexShrink: 0 }}>
                    <input 
                         type="text" 
                         className="form-control search-input-custom text-white shadow-none" 
@@ -313,6 +312,7 @@ const Navbar = () => {
                    </button>
                 </form>
                 
+                {/* تعديل الكمبيوتر: ارتفاع البروفايل 29px */}
                 <button 
                     onClick={handlePortfolioClick} 
                     className="btn" 
@@ -322,17 +322,18 @@ const Navbar = () => {
                     <i className="bi bi-person-circle" style={{fontSize: '28px'}}></i>
                 </button>
 
+                {/* زر Thirdweb الرسمي للكمبيوتر */}
                 <ConnectButton 
                     client={client}
                     wallets={wallets}
                     chain={chain}
                     theme="dark"
                     connectButton={{
-                        style: goldButtonStyle,
+                        style: goldButtonStyle, // ارتفاع 29px
                         label: "Connect Wallet"
                     }}
                     detailsButton={{
-                        style: connectedButtonStyleDesktop,
+                        style: connectedButtonStyleDesktop, // ارتفاع 29px + أسود
                     }}
                 />
 
@@ -373,8 +374,27 @@ const Navbar = () => {
         .search-input-custom { background-color: #161b22 !important; transition: background-color 0.3s ease; }
         .search-input-custom:focus { background-color: ${navbarBgColor} !important; border-color: #FCD535 !important; }
         
-        .tw-connected-wallet div:nth-child(2) {
-             display: none !important; 
+        /* هذا الكود هو "الخدعة" التي تخفي الرصيد والأيقونة الكبيرة من زر Thirdweb الرسمي 
+          لكي نحصل على وظيفة فتح المودال مع شكل الزر الصغير الذي تريده
+        */
+        .tw-connected-wallet > div:first-child { display: none !important; } /* يخفي الأيقونة */
+        .tw-connected-wallet > div:last-child > div:last-child { display: none !important; } /* يخفي الرصيد */
+        .tw-connected-wallet { 
+            padding: 0 !important; 
+            justify-content: center !important;
+            gap: 4px !important;
+        }
+
+        /* إضافة النقطة الخضراء يدوياً عبر CSS لأننا أخفينا الأيقونة */
+        .tw-connected-wallet::before {
+            content: '';
+            display: block;
+            width: 6px;
+            height: 6px;
+            background-color: #00ff00;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #00ff00;
+            margin-right: 4px;
         }
 
         @media (max-width: 991px) { 
