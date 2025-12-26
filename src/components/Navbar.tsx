@@ -292,7 +292,7 @@ const Navbar = () => {
                                     className="dropdown-item text-white py-2 px-3" 
                                     href={`/${subItem.toLowerCase().replace(/\s+/g, '-')}`} 
                                     onClick={closeMenu} 
-                                    style={{ fontSize: '11px', transition: '0.2s' }}
+                                    style={{ fontSize: '12px', transition: '0.2s' }} 
                                 >
                                     {subItem}
                                 </Link>
@@ -305,7 +305,7 @@ const Navbar = () => {
 
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
                 
-                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '26px', flexShrink: 0 }}>
+                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '27px', flexShrink: 0 }}>
                    <input 
                         type="text" 
                         className="form-control search-input-custom text-white shadow-none" 
@@ -348,7 +348,7 @@ const Navbar = () => {
                     style={{ borderRadius: '4px', fontSize: '14px', height: '42px', paddingLeft: '38px', paddingRight: '35px', border: '1px solid var(--unified-gold-color)', caretColor: '#FCD535' }} 
                 />
                 <button type="submit" className="btn p-0 position-absolute" style={{ top: '50%', left: '12px', transform: 'translateY(-50%)', border:'none', background:'transparent' }}>
-                    <i className="bi bi-search" style={{ fontSize: '16px', color: 'var(--unified-gold-color)' }}></i>
+                    <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
                 </button>
                 <button type="button" onClick={() => setIsMobileSearchOpen(false)} className="btn btn-link position-absolute text-secondary text-decoration-none p-0" style={{ top: '50%', right: '12px', transform: 'translateY(-50%)' }}><i className="bi bi-x-lg" style={{ fontSize: '16px' }}></i></button>
             </form>
