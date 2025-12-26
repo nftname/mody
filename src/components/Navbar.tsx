@@ -75,6 +75,7 @@ const Navbar = () => {
   ];
 
   const goldGradient = 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)';
+  const navbarBgColor = '#0b0e11';
 
   // --- Styles ---
 
@@ -85,37 +86,37 @@ const Navbar = () => {
     border: '1px solid #b3882a',
     fontWeight: '700' as const,
     fontSize: '11px',
-    height: '29px', // تعديل الكمبيوتر: تقليل الارتفاع 10%
+    height: '27px', // تعديل الكمبيوتر: تقليل الارتفاع 10%
     borderRadius: '6px',
     minWidth: '100px',
   };
 
-  // زر متصل (كمبيوتر) - أسود
+  // زر متصل (كمبيوتر) - أسود بالكامل (نفس لون النافبار)
   const connectedButtonStyleDesktop = {
-    background: '#161b22',
-    color: '#fff',
+    background: navbarBgColor, // نفس لون النافبار لإخفاء الخلفية
+    color: '#fff', // لون رقم المحفظة أبيض
     border: '1px solid #333',
     fontWeight: '600' as const,
     fontSize: '12px',
-    height: '29px', // تعديل الكمبيوتر: تقليل الارتفاع 10%
+    height: '27px', // تعديل الكمبيوتر: تقليل الارتفاع 10%
     borderRadius: '6px',
     minWidth: '110px',
     maxWidth: '130px',
     overflow: 'hidden',
   };
 
-  // زر متصل (جوال) - ذهبي
+  // زر متصل (جوال) - ذهبي رشيق
   const connectedButtonStyleMobile = {
     background: goldGradient,
-    color: '#000',
+    color: '#000', // لون رقم المحفظة أسود
     border: '1px solid #b3882a',
-    height: '25px', // تعديل الجوال: تقليل الارتفاع 10% (كان 28 أصبح 25)
-    padding: '0 8px',
+    height: '24px', // تعديل الجوال: تقليل الارتفاع (أقل بـ 10%)
+    padding: '0 4px', // تعديل الجوال: تقليل الحواف الجانبية (رشاقة)
     borderRadius: '6px',
     fontSize: '11px',
     fontWeight: '800',
     minWidth: 'auto',
-    maxWidth: '120px', // تعديل الجوال: زيادة العرض 10%
+    maxWidth: '110px', 
   };
 
   // زر البروفايل
@@ -129,10 +130,9 @@ const Navbar = () => {
     justifyContent: 'center', 
     cursor: 'pointer', 
     transition: 'all 0.2s', 
-    height: '29px', // تعديل الكمبيوتر: نفس ارتفاع زر المحفظة
+    height: '27px', // نفس الارتفاع الجديد
   };
 
-  const navbarBgColor = '#0b0e11';
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
 
   return (
@@ -211,9 +211,9 @@ const Navbar = () => {
         {/* === Mobile Layout: Right Side === */}
         <div className="d-flex d-lg-none align-items-center ms-auto" 
              style={{ 
-                 gap: '6px', // تعديل الجوال: زيادة المسافة بين العناصر 10%
+                 gap: '8px', // تعديل الجوال: زيادة المسافة بنسبة 10%
                  overflow: 'visible',
-                 paddingRight: '5px' // تعديل الجوال: زيادة المسافة من الحافة اليمنى
+                 paddingRight: '5px'
              }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
@@ -224,8 +224,7 @@ const Navbar = () => {
                 <i className="bi bi-person-circle" style={{ fontSize: '22px', color: '#FCD535' }}></i>
             </button>
 
-            <div style={{ transform: 'scale(1)', transformOrigin: 'right center' }}>
-                {/* هنا نستخدم زر Thirdweb الرسمي للجوال لضمان فتح المودال */}
+            <div style={{ transform: 'scale(1)', transformOrigin: 'right center' }} id="mobile-wallet-wrapper">
                 <ConnectButton 
                     client={client}
                     wallets={wallets}
@@ -233,7 +232,7 @@ const Navbar = () => {
                     theme="dark"
                     connectButton={{
                         label: "Connect",
-                        style: { ...goldButtonStyle, height: '25px', fontSize: '11px', padding: '0 8px' } // تعديل الجوال: ارتفاع 25px
+                        style: { ...goldButtonStyle, height: '24px', fontSize: '11px', padding: '0 8px' }
                     }}
                     detailsButton={{
                         style: connectedButtonStyleMobile,
@@ -297,8 +296,8 @@ const Navbar = () => {
 
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
                 
-                {/* تعديل الكمبيوتر: ارتفاع البحث 29px */}
-                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '29px', flexShrink: 0 }}>
+                {/* تعديل الكمبيوتر: ارتفاع البحث 27px */}
+                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '27px', flexShrink: 0 }}>
                    <input 
                         type="text" 
                         className="form-control search-input-custom text-white shadow-none" 
@@ -312,7 +311,7 @@ const Navbar = () => {
                    </button>
                 </form>
                 
-                {/* تعديل الكمبيوتر: ارتفاع البروفايل 29px */}
+                {/* تعديل الكمبيوتر: ارتفاع البروفايل 27px */}
                 <button 
                     onClick={handlePortfolioClick} 
                     className="btn" 
@@ -322,20 +321,21 @@ const Navbar = () => {
                     <i className="bi bi-person-circle" style={{fontSize: '28px'}}></i>
                 </button>
 
-                {/* زر Thirdweb الرسمي للكمبيوتر */}
-                <ConnectButton 
-                    client={client}
-                    wallets={wallets}
-                    chain={chain}
-                    theme="dark"
-                    connectButton={{
-                        style: goldButtonStyle, // ارتفاع 29px
-                        label: "Connect Wallet"
-                    }}
-                    detailsButton={{
-                        style: connectedButtonStyleDesktop, // ارتفاع 29px + أسود
-                    }}
-                />
+                <div id="desktop-wallet-wrapper">
+                    <ConnectButton 
+                        client={client}
+                        wallets={wallets}
+                        chain={chain}
+                        theme="dark"
+                        connectButton={{
+                            style: goldButtonStyle,
+                            label: "Connect Wallet"
+                        }}
+                        detailsButton={{
+                            style: connectedButtonStyleDesktop, // أسود ومنخفض الارتفاع
+                        }}
+                    />
+                </div>
 
             </div>
           </div>
@@ -374,18 +374,25 @@ const Navbar = () => {
         .search-input-custom { background-color: #161b22 !important; transition: background-color 0.3s ease; }
         .search-input-custom:focus { background-color: ${navbarBgColor} !important; border-color: #FCD535 !important; }
         
-        /* هذا الكود هو "الخدعة" التي تخفي الرصيد والأيقونة الكبيرة من زر Thirdweb الرسمي 
-          لكي نحصل على وظيفة فتح المودال مع شكل الزر الصغير الذي تريده
+        /* CSS HACK: إخفاء الرصيد (العنصر الثاني في الزر)
+          وإضافة النقطة الخضراء يدوياً 
         */
-        .tw-connected-wallet > div:first-child { display: none !important; } /* يخفي الأيقونة */
-        .tw-connected-wallet > div:last-child > div:last-child { display: none !important; } /* يخفي الرصيد */
+
+        /* إخفاء الأيقونة الافتراضية للمحفظة */
+        .tw-connected-wallet > div:first-child { display: none !important; } 
+
+        /* إخفاء الرصيد (يأتي عادة في div منفصل داخل الcontainer) */
+        .tw-connected-wallet > div:last-child > div:last-child { display: none !important; }
+        
+        /* تنسيق عام للزر من الداخل ليكون في المنتصف */
         .tw-connected-wallet { 
             padding: 0 !important; 
             justify-content: center !important;
             gap: 4px !important;
+            width: 100%;
         }
 
-        /* إضافة النقطة الخضراء يدوياً عبر CSS لأننا أخفينا الأيقونة */
+        /* إضافة النقطة الخضراء عبر CSS */
         .tw-connected-wallet::before {
             content: '';
             display: block;
@@ -395,6 +402,19 @@ const Navbar = () => {
             border-radius: 50%;
             box-shadow: 0 0 6px #00ff00;
             margin-right: 4px;
+            flex-shrink: 0;
+        }
+
+        /* تخصيص للجوال: لون النص أسود */
+        #mobile-wallet-wrapper button, 
+        #mobile-wallet-wrapper .tw-connected-wallet {
+            color: #000 !important;
+        }
+
+        /* تخصيص للكمبيوتر: لون النص أبيض */
+        #desktop-wallet-wrapper button,
+        #desktop-wallet-wrapper .tw-connected-wallet {
+            color: #fff !important;
         }
 
         @media (max-width: 991px) { 
