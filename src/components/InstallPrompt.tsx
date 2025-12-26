@@ -75,6 +75,9 @@ export default function InstallPrompt() {
     }
   };
 
+  // Determine if beforeinstallprompt is available (browser supports install)
+  const canInstall = deferredPrompt !== null;
+
   const handleDismiss = () => {
     setShowPrompt(false);
     try {
@@ -139,30 +142,41 @@ export default function InstallPrompt() {
 
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
         <button
-          onClick={handleInstall}
+          onClick={deferredPrompt ? handleInstall : undefined}
+          disabled={!deferredPrompt}
           style={{
-            background: 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)',
-            color: '#000',
-            border: '1px solid #b3882a',
+            background: deferredPrompt 
+              ? 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)'
+              : '#555555',
+            color: deferredPrompt ? '#000' : '#aaa',
+            border: deferredPrompt ? '1px solid #b3882a' : '1px solid #333333',
             fontWeight: '700',
             fontSize: '13px',
             padding: '8px 16px',
             borderRadius: '6px',
-            cursor: 'pointer',
+            cursor: deferredPrompt ? 'pointer' : 'not-allowed',
             whiteSpace: 'nowrap',
-            boxShadow: '0 2px 8px rgba(252, 213, 53, 0.3)',
+            boxShadow: deferredPrompt 
+              ? '0 2px 8px rgba(252, 213, 53, 0.3)'
+              : 'none',
             transition: 'all 0.2s',
+            opacity: deferredPrompt ? 1 : 0.6,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(252, 213, 53, 0.4)';
+            if (deferredPrompt) {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(252, 213, 53, 0.4)';
+            }
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(252, 213, 53, 0.3)';
+            if (deferredPrompt) {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(252, 213, 53, 0.3)';
+            }
           }}
+          title={!deferredPrompt ? 'Open Browser Menu to Install (≡ > Install App)' : undefined}
         >
-          Install
+          {deferredPrompt ? 'Install' : 'Browser Menu to Install'}
         </button>
         
         <button
