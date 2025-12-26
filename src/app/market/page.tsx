@@ -3,8 +3,6 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
-import { useAccount } from 'wagmi';
-import { useWeb3Modal } from '@web3modal/wagmi/react';
 import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
 import { FULL_ASSET_LIST } from '@/data/assets';
@@ -75,9 +73,6 @@ function MarketPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
-  const { isConnected } = useAccount();
-  const { open } = useWeb3Modal();
-  
   const finalData = useMemo(() => {
       let processedData = [...FULL_ASSET_LIST];
       if (activeFilter === 'Watchlist') {
