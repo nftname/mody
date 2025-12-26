@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -7,23 +8,39 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function InstallPrompt() {
+  const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [inCooldown, setInCooldown] = useState(false);
+  const LS_KEY = 'installPromptLastSeenAt';
 
+  // Detect standalone/PWA installed state
   useEffect(() => {
-    // Check if already installed (standalone mode)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                         (window.navigator as any).standalone === true;
-    
-    if (isStandalone) {
-      return; // Don't show if already installed
-    }
+    const installed = window.matchMedia('(display-mode: standalone)').matches ||
+                      (window.navigator as any).standalone === true;
+    setIsStandalone(installed);
+  }, []);
 
-    // Listen for beforeinstallprompt event
+  // Initialize cooldown status from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const last = parseInt(raw, 10);
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        if (!Number.isNaN(last) && Date.now() - last < twentyFourHours) {
+          setInCooldown(true);
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Listen for beforeinstallprompt event and cache it
+  useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setShowPrompt(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -32,6 +49,25 @@ export default function InstallPrompt() {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
+
+  // Decide when to show the banner: only on home, not installed, and not in cooldown
+  useEffect(() => {
+    const onHome = pathname === '/';
+    if (!deferredPrompt) {
+      // Hide if we navigate away or no prompt available
+      if (showPrompt) setShowPrompt(false);
+      return;
+    }
+    if (onHome && !isStandalone && !inCooldown) {
+      setShowPrompt(true);
+      try {
+        localStorage.setItem(LS_KEY, Date.now().toString());
+        setInCooldown(true);
+      } catch {}
+    } else {
+      if (showPrompt) setShowPrompt(false);
+    }
+  }, [deferredPrompt, pathname, isStandalone, inCooldown]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -42,11 +78,19 @@ export default function InstallPrompt() {
     if (outcome === 'accepted') {
       setShowPrompt(false);
       setDeferredPrompt(null);
+      try {
+        localStorage.setItem(LS_KEY, Date.now().toString());
+        setInCooldown(true);
+      } catch {}
     }
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
+    try {
+      localStorage.setItem(LS_KEY, Date.now().toString());
+      setInCooldown(true);
+    } catch {}
   };
 
   if (!showPrompt) return null;
