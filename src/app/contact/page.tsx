@@ -74,7 +74,7 @@ export default function ContactPage() {
                             For platform assistance, account questions, or general information.
                         </p>
                         <a href="mailto:contact@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#FCD535', fontSize: '14px' }}>
-                            contact@yourdomain.com
+                            contact@nftnnm.com
                         </a>
                     </div>
 
@@ -90,7 +90,7 @@ export default function ContactPage() {
                             For press releases, institutional partnerships, and brand assets.
                         </p>
                         <a href="mailto:media@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#FCD535', fontSize: '14px' }}>
-                            media@yourdomain.com
+                            media@nftnnm.com
                         </a>
                     </div>
 
@@ -106,7 +106,7 @@ export default function ContactPage() {
                             For verified institutional inquiries only: Regulatory, IP rights, and compliance matters.
                         </p>
                         <a href="mailto:legal@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#FCD535', fontSize: '14px' }}>
-                            legal@yourdomain.com
+                            legal@nftnnm.com
                         </a>
                     </div>
 
@@ -146,7 +146,7 @@ export default function ContactPage() {
                                     value={formData.email}
                                     onChange={handleChange}
                                     style={inputStyle} 
-                                    placeholder="name@example.com" 
+                                    placeholder="nftnnm.com" 
                                     className="contact-input"
                                 />
                             </div>

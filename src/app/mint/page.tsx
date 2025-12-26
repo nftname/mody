@@ -3,15 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
-import { useActiveAccount, TransactionButton, useReadContract } from "thirdweb/react";
+import { useActiveAccount, TransactionButton, useReadContract, ConnectButton } from "thirdweb/react";
 import { prepareContractCall, readContract, getContract, defineChain } from "thirdweb";
 import { keccak256, toBytes } from "thirdweb/utils";
 import { upload } from "thirdweb/storage";
 import { client } from "@/lib/client"; 
 
-// 
-const CONTRACT_ADDRESS = "0x8e46c897bc74405922871a8a6863ccf5cd1fc721"; // 
-const CHAIN_ID = 137; // Polygon
+const CONTRACT_ADDRESS = "0x8e46c897bc74405922871a8a6863ccf5cd1fc721";
+const CHAIN_ID = 137;
 const chain = defineChain(CHAIN_ID);
 const MASTER_IMAGE_URI = "ipfs://Bafkreiech2mqddofl5af7k24qglnbpxqmvmxaehbudrlxs2drhprxcsmvu";
 
@@ -216,6 +215,23 @@ const MintContent = () => {
         .luxury-btn:hover::after { left: 100%; }
         .hero-container { padding-top: 20px; padding-bottom: 0px; }
         .select-asset-title { margin-bottom: 2rem !important; }
+
+        /* ستايل مخصص لزر الاتصال ليطابق السبيكة */
+        .custom-connect-btn .tw-connect-wallet {
+            width: 100% !important;
+            height: 50px !important;
+            background: linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%) !important;
+            color: #000 !important;
+            border: 1px solid #b3882a !important;
+            border-radius: 10px !important;
+            font-family: serif !important;
+            font-weight: 800 !important;
+            font-size: 18px !important;
+            letter-spacing: 2px !important;
+            text-transform: uppercase !important;
+            justify-content: center !important;
+        }
+
         @media (max-width: 768px) {
             .mobile-clean-stack { direction: ltr !important; display: flex !important; flex-direction: column !important; gap: 20px !important; width: 100% !important; padding: 0 20px !important; }
             .ingot-wrapper { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; }
@@ -231,8 +247,10 @@ const MintContent = () => {
   );
 }
 
+// ---  LuxuryIngot Component (The Bridge Logic) ---
 const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex, nameToMint, isAdmin, onSuccess, onError }: any) => {
     
+    const account = useActiveAccount(); // نتحقق من حالة الاتصال
     const btnOpacity = isAvailable ? 1 : 0.5;
 
     return (
@@ -240,71 +258,95 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
             <div className="mb-2 d-flex justify-content-center align-items-baseline gap-2 price-top-container"><span className="text-white fw-bold" style={{ fontSize: '16px', fontFamily: 'sans-serif' }}>{price}</span></div>
             <div className="luxury-btn-container" style={{ width: '100%' }}>
                 
-                <TransactionButton
-                    transaction={async () => {
-                        if (!nameToMint) throw new Error("Please enter a name");
-                        
-                        const metadata = {
-                          name: nameToMint,
-                          description: `GEN-0 Genesis — NNM Protocol Record for ${nameToMint}`,
-                          image: MASTER_IMAGE_URI,
-                          attributes: [
-                            { trait_type: "Tier", value: tierName },
-                            { trait_type: "Mint Date", value: new Date().toISOString() },
-                            { trait_type: "Type", value: "Digital Name" }
-                          ]
-                        };
-                        
-                        const uri = await upload({ client, files: [metadata] });
-
-                        if (isAdmin) {
-                          return prepareContractCall({
-                            contract,
-                            method: "function reserveName(string _name, uint8 _tier, string _tokenURI)",
-                            params: [nameToMint, tierIndex, uri],
-                          });
-                        } else {
-                          const usdAmountWei = BigInt(tierName === "IMMORTAL" ? 50 : tierName === "ELITE" ? 30 : 10) * BigInt(10**18);
-                          const costInMatic = await readContract({
-                             contract,
-                             method: "function getMaticCost(uint256 usdAmount) view returns (uint256)",
-                             params: [usdAmountWei]
-                          });
-                          const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
-                          
-                          return prepareContractCall({
-                            contract,
-                            method: "function mintPublic(string _name, uint8 _tier, string _tokenURI) payable",
-                            params: [nameToMint, tierIndex, uri],
-                            value: valueToSend, 
-                          });
-                        }
-                    }}
-                    onTransactionConfirmed={(tx) => {
-                        console.log("Success", tx);
-                        onSuccess();
-                    }}
-                    onError={(err) => {
-                        onError(err);
-                    }}
-                    style={{
-                        width: '100%',
-                        height: '50px',
-                        background: gradient,
-                        border: '1px solid #b3882a',
-                        color: '#000',
-                        borderRadius: '10px',
-                        fontFamily: 'serif',
-                        fontSize: '18px',
-                        fontWeight: '800',
-                        letterSpacing: '2px',
-                        opacity: btnOpacity,
-                        cursor: isAvailable ? 'pointer' : 'not-allowed'
-                    }}
-                    disabled={!isAvailable}
-                >
-                   {label}
-                </TransactionButton>
+                {!account ? (
+                    // 1. إذا لم يكن متصلاً: اعرض زر الاتصال الرسمي بتصميم مخصص
+                    <div className="custom-connect-btn" style={{ width: '100%' }}>
+                        <ConnectButton 
+                            client={client}
+                            chain={chain}
+                            connectButton={{
+                                label: label, // يظهر اسم السبيكة بدلاً من "Connect"
+                                style: {
+                                    width: '100%',
+                                    height: '50px',
+                                    background: gradient,
+                                    border: '1px solid #b3882a',
+                                    color: '#000',
+                                    borderRadius: '10px',
+                                    fontSize: '18px',
+                                    opacity: btnOpacity
+                                }
+                            }}
+                        />
+                    </div>
+                ) : (
+                    // 2. إذا كان متصلاً: اعرض زر الطباعة (Transaction Button)
+                    <TransactionButton
+                        transaction={async () => {
+                            if (!nameToMint) throw new Error("Please enter a name");
+                            
+                            const metadata = {
+                              name: nameToMint,
+                              description: `GEN-0 Genesis — NNM Protocol Record for ${nameToMint}`,
+                              image: MASTER_IMAGE_URI,
+                              attributes: [
+                                { trait_type: "Tier", value: tierName },
+                                { trait_type: "Mint Date", value: new Date().toISOString() },
+                                { trait_type: "Type", value: "Digital Name" }
+                              ]
+                            };
+                            
+                            const uri = await upload({ client, files: [metadata] });
+    
+                            if (isAdmin) {
+                              return prepareContractCall({
+                                contract,
+                                method: "function reserveName(string _name, uint8 _tier, string _tokenURI)",
+                                params: [nameToMint, tierIndex, uri],
+                              });
+                            } else {
+                              const usdAmountWei = BigInt(tierName === "IMMORTAL" ? 50 : tierName === "ELITE" ? 30 : 10) * BigInt(10**18);
+                              const costInMatic = await readContract({
+                                 contract,
+                                 method: "function getMaticCost(uint256 usdAmount) view returns (uint256)",
+                                 params: [usdAmountWei]
+                              });
+                              const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
+                              
+                              return prepareContractCall({
+                                contract,
+                                method: "function mintPublic(string _name, uint8 _tier, string _tokenURI) payable",
+                                params: [nameToMint, tierIndex, uri],
+                                value: valueToSend, 
+                              });
+                            }
+                        }}
+                        onTransactionConfirmed={(tx) => {
+                            console.log("Success", tx);
+                            onSuccess();
+                        }}
+                        onError={(err) => {
+                            onError(err);
+                        }}
+                        style={{
+                            width: '100%',
+                            height: '50px',
+                            background: gradient,
+                            border: '1px solid #b3882a',
+                            color: '#000',
+                            borderRadius: '10px',
+                            fontFamily: 'serif',
+                            fontSize: '18px',
+                            fontWeight: '800',
+                            letterSpacing: '2px',
+                            opacity: btnOpacity,
+                            cursor: isAvailable ? 'pointer' : 'not-allowed'
+                        }}
+                        disabled={!isAvailable}
+                    >
+                       {label}
+                    </TransactionButton>
+                )}
                 
             </div>
             <div className="mobile-price-display" style={{ display: 'none' }}><span style={{ display: 'block', fontSize: '16px', fontWeight: '700', color: '#fff' }}>{price}</span></div>
