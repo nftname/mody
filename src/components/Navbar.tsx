@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useRef, useState, useEffect } from 'react';
-import { ConnectButton, useActiveAccount, useActiveWallet, useDisconnect } from "thirdweb/react";
+import { ConnectButton, useActiveAccount, useActiveWallet } from "thirdweb/react";
 import { defineChain } from "thirdweb";
 import { createWallet, walletConnect } from "thirdweb/wallets"; 
 import { client } from "@/lib/client";
@@ -22,9 +22,13 @@ const Navbar = () => {
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // State for Mobile Accordions (Footer sections in drawer)
+  // Gesture State
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [drawerTranslate, setDrawerTranslate] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -37,7 +41,6 @@ const Navbar = () => {
     }
   }, [isMobileSearchOpen]);
 
-  // Disable body scroll when drawer is open
   useEffect(() => {
     if (isDrawerOpen) {
       document.body.style.overflow = 'hidden';
@@ -50,10 +53,12 @@ const Navbar = () => {
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen);
     setIsMobileSearchOpen(false);
+    setDrawerTranslate(0);
   };
 
   const closeDrawer = () => {
     setIsDrawerOpen(false);
+    setDrawerTranslate(0);
   };
 
   const toggleAccordion = (section: string) => {
@@ -82,6 +87,39 @@ const Navbar = () => {
     }
   };
 
+  // --- Touch Handlers ---
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsDragging(true);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const currentTouch = e.targetTouches[0].clientX;
+    setTouchEnd(currentTouch);
+    
+    // Calculate distance moved (negative because swipe left closes)
+    const diff = currentTouch - touchStart;
+    if (diff < 0) {
+        setDrawerTranslate(diff);
+    }
+  };
+
+  const onTouchEnd = () => {
+    setIsDragging(false);
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50; // Threshold to close
+    
+    if (isLeftSwipe) {
+      closeDrawer();
+    } else {
+      setDrawerTranslate(0); // Snap back
+    }
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
   const wallets = [
     createWallet("io.metamask"),
     createWallet("com.coinbase.wallet"),
@@ -92,8 +130,6 @@ const Navbar = () => {
 
   const goldGradient = 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)';
   const navbarBgColor = '#0b0e11';
-
-  // --- Styles ---
 
   const customDisconnectStyle = {
     background: goldGradient,
@@ -136,12 +172,11 @@ const Navbar = () => {
     justifyContent: 'center', 
     cursor: 'pointer', 
     transition: 'all 0.2s', 
-    height: '23px', // Matches the new reduced search height
+    height: '23px', 
   };
 
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
   
-  // Footer categories for Mobile Drawer
   const drawerCategories = [
       {
           title: "Marketplace",
@@ -192,7 +227,6 @@ const Navbar = () => {
     );
   };
 
-  // Modern Chic Abstract User Icon (SVG)
   const ChicProfileIcon = ({ size = 24, color = "#FCD535" }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 4V4.01C14.2 4.01 16 5.8 16 8C16 10.2 14.2 12 12 12C9.8 12 8 10.2 8 8C8 5.8 9.8 4 12 4ZM12 14C15.5 14 18.37 15.28 19.5 17.15C17.7 19.56 14.98 20.98 12 21V21C9.02 20.98 6.3 19.56 4.5 17.15C5.63 15.28 8.5 14 12 14Z" fill={color}/>
@@ -213,7 +247,6 @@ const Navbar = () => {
       
       <div className="container-fluid px-2 h-100 align-items-center d-flex flex-nowrap">
         
-        {/* === Mobile Drawer Toggle (Left) === */}
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
             <button className="navbar-toggler border-0 p-0 shadow-none" type="button" onClick={toggleDrawer} style={{ width: '24px' }}>
                 <i className="bi bi-list" style={{ fontSize: '26px', color: '#FCD535' }}></i>
@@ -241,7 +274,6 @@ const Navbar = () => {
             </Link>
         </div>
 
-        {/* === Desktop Logo === */}
         <div className="d-none d-lg-flex align-items-center" style={{ minWidth: '80px', flexShrink: 1, overflow:'hidden' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <svg width="29" height="29" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
@@ -269,7 +301,6 @@ const Navbar = () => {
             </Link>
         </div>
 
-        {/* === Mobile Right Side (Icons + Wallet) === */}
         <div className="d-flex d-lg-none align-items-center ms-auto" style={{ gap: '8px', overflow: 'visible', paddingRight: '0px' }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
@@ -277,18 +308,15 @@ const Navbar = () => {
 
             <button className="btn p-0 d-flex align-items-center justify-content-center" onClick={handlePortfolioClick}
                 style={{ width: '32px', height: '32px', border: 'none', backgroundColor: 'transparent', flexShrink: 0 }}>
-                {/* Modern Abstract Icon */}
                 <ChicProfileIcon size={24} color="#FCD535" />
             </button>
 
             <CustomWalletTrigger isMobile={true} />
         </div>
 
-        {/* === Desktop Nav & Right Side === */}
         <div className="collapse navbar-collapse flex-grow-1" id="navbarNav">
           <div className="d-flex flex-column flex-lg-row align-items-start w-100" style={{ paddingTop: '4px' }}>
             
-            {/* Desktop Links */}
             <div className="d-flex align-items-center me-auto ms-0 ms-lg-4"> 
                 <ul className="navbar-nav mb-2 mb-lg-0 gap-1 gap-lg-1 align-items-start align-items-lg-center w-100">
                     {menuItems.map((item) => (
@@ -326,7 +354,6 @@ const Navbar = () => {
                 </ul>
             </div>
 
-            {/* Desktop Right Side */}
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
                 <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '23px', flexShrink: 0 }}>
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." 
@@ -348,16 +375,31 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* === MOBILE DRAWER (Full Height Slide from Left) === */}
-      <div className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`}>
-          <div className="drawer-header d-flex flex-column align-items-center pt-5 pb-4">
-              <button onClick={closeDrawer} className="btn position-absolute top-0 end-0 m-3 text-gold">
-                  <i className="bi bi-x-lg" style={{ fontSize: '24px' }}></i>
-              </button>
+      {/* === MOBILE DRAWER (Touch Enabled) === */}
+      <div 
+        className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`} 
+        style={{ transform: isDrawerOpen ? `translateX(${drawerTranslate}px)` : 'translateX(-100%)' }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+          {/* Visual Handle for Finger */}
+          <div style={{
+              position: 'absolute',
+              right: '4px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '4px',
+              height: '75px', // ~2cm
+              backgroundColor: '#3a3a3a',
+              borderRadius: '10px',
+              zIndex: 10001
+          }}></div>
+
+          <div className="drawer-header d-flex flex-column align-items-center pt-4 pb-0 w-100" style={{borderBottom: '1px solid #222'}}>
               
-              {/* Drawer Logo */}
-              <div className="d-flex align-items-center gap-2 mb-2">
-                <svg width="40" height="40" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <div className="d-flex align-items-center gap-3 mb-3">
+                <svg width="34" height="34" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                       <linearGradient id="drawerGold" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stopColor="#FFF5CC" />
@@ -373,52 +415,49 @@ const Navbar = () => {
                         <path d="M392 156 L492 256 L392 356 L292 256 Z" fill="url(#drawerGold)" />
                     </g>
                 </svg>
-                <span style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '28px', color: '#FCD535', letterSpacing: '1px' }}>NNM</span>
+                <span style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '24px', color: '#FCD535', letterSpacing: '1px' }}>NNM</span>
               </div>
           </div>
 
-          <div className="drawer-content px-4">
-              {/* Main Links */}
-              <div className="d-flex flex-column gap-3 mb-5">
+          <div className="drawer-content px-4 py-4 d-flex flex-column justify-content-between h-100">
+              <div className="d-flex flex-column gap-3">
                   {['Home', 'Market', 'NGX', 'Mint', 'NNM Concept', 'How it Works', 'Contact'].map((item) => (
                       <Link key={item} 
                             href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                             onClick={closeDrawer}
-                            className="text-white text-decoration-none fw-bold"
-                            style={{ fontSize: '20px', borderBottom: '1px solid #222', paddingBottom: '10px' }}>
+                            className="text-decoration-none fw-semibold"
+                            style={{ fontSize: '17px', color: '#e6e6e6', paddingBottom: '4px' }}>
                           {item}
                       </Link>
                   ))}
               </div>
 
-              {/* Footer Accordions inside Drawer */}
-              <div className="drawer-accordions mb-auto">
+              <div className="drawer-accordions mt-4">
                   {drawerCategories.map((cat, idx) => (
                       <div key={idx} className="mb-3">
                           <div className="d-flex justify-content-between align-items-center" 
-                               onClick={() => toggleAccordion(cat.title)} style={{ cursor: 'pointer', color: '#FCD535' }}>
-                              <span className="fw-bold" style={{ fontSize: '16px' }}>{cat.title}</span>
-                              <i className={`bi bi-chevron-${expandedSection === cat.title ? 'up' : 'down'}`}></i>
+                               onClick={() => toggleAccordion(cat.title)} style={{ cursor: 'pointer', color: '#e6e6e6' }}>
+                              <span className="fw-semibold" style={{ fontSize: '15px' }}>{cat.title}</span>
+                              <i className={`bi bi-chevron-${expandedSection === cat.title ? 'up' : 'down'}`} style={{ fontSize: '12px' }}></i>
                           </div>
                           {expandedSection === cat.title && (
                               <div className="d-flex flex-column gap-2 mt-2 ps-3 border-start border-secondary">
                                   {cat.links.map(link => (
-                                      <a key={link} href="#" className="text-secondary text-decoration-none" style={{ fontSize: '14px' }}>{link}</a>
+                                      <a key={link} href="#" className="text-decoration-none" style={{ fontSize: '13px', color: '#d0d0d0' }}>{link}</a>
                                   ))}
                               </div>
                           )}
                       </div>
                   ))}
               </div>
-          </div>
 
-          {/* Social Icons at Bottom */}
-          <div className="drawer-footer mt-auto p-4 border-top border-secondary">
-              <div className="d-flex justify-content-around w-100">
-                  <i className="bi bi-twitter-x text-gold" style={{ fontSize: '20px' }}></i>
-                  <i className="bi bi-discord text-gold" style={{ fontSize: '20px' }}></i>
-                  <i className="bi bi-instagram text-gold" style={{ fontSize: '20px' }}></i>
-                  <i className="bi bi-telegram text-gold" style={{ fontSize: '20px' }}></i>
+              <div className="drawer-footer pt-3 border-top border-secondary mt-auto">
+                  <div className="d-flex justify-content-around w-100">
+                      <i className="bi bi-twitter-x text-gold" style={{ fontSize: '20px' }}></i>
+                      <i className="bi bi-discord text-gold" style={{ fontSize: '20px' }}></i>
+                      <i className="bi bi-instagram text-gold" style={{ fontSize: '20px' }}></i>
+                      <i className="bi bi-telegram text-gold" style={{ fontSize: '20px' }}></i>
+                  </div>
               </div>
           </div>
       </div>
@@ -450,22 +489,25 @@ const Navbar = () => {
 
         .tw-connect-wallet { width: 100% !important; height: 100% !important; }
 
+        /* Hide Footer on Mobile */
+        @media (max-width: 991px) {
+            footer, .footer { display: none !important; }
+        }
+
         /* Drawer Styles */
         .mobile-drawer {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100vh;
+            height: 100vh; /* No scroll, fits screen */
             background-color: #0b0e11;
             z-index: 9999;
-            transform: translateX(-100%);
-            transition: transform 0.3s cubic-bezier(0.77, 0, 0.175, 1);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* 10% Slower & Smoother */
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            overflow: hidden; /* Prevent body scroll inside drawer */
         }
-        .mobile-drawer.open { transform: translateX(0); }
       `}</style>
     </nav>
     </>
