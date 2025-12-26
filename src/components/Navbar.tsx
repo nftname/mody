@@ -89,29 +89,36 @@ const Navbar = () => {
   };
 
   const connectedButtonStyleDesktop = {
-    background: navbarBgColor, 
+    background: '#21262d', 
     color: '#fff', 
-    border: '1px solid #333',
+    border: '1px solid rgba(252, 213, 53, 0.3)', 
     fontWeight: '600' as const,
     fontSize: '12px',
     height: '27px', 
     borderRadius: '6px',
     minWidth: '110px',
-    maxWidth: '140px', 
+    maxWidth: '125px', 
     overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   };
 
   const connectedButtonStyleMobile = {
-    background: goldGradient,
-    color: '#000', 
-    border: '1px solid #b3882a',
+    background: '#21262d', 
+    color: '#fff', 
+    border: '1px solid rgba(252, 213, 53, 0.3)',
     height: '24px', 
     padding: '0 4px', 
     borderRadius: '6px',
     fontSize: '11px',
-    fontWeight: '800',
+    fontWeight: '600',
     minWidth: '90px', 
-    maxWidth: '120px', 
+    maxWidth: '105px', 
+    overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   };
 
   const portfolioBtnStyle = {
@@ -362,6 +369,8 @@ const Navbar = () => {
         .search-input-custom { background-color: #161b22 !important; transition: background-color 0.3s ease; }
         .search-input-custom:focus { background-color: ${navbarBgColor} !important; border-color: #FCD535 !important; }
         
+        /* THE CRITICAL PART FOR "CLIPPING" & CAMOUFLAGE */
+
         .tw-connected-wallet > div:first-child { display: none !important; } 
 
         .tw-connected-wallet::before {
@@ -383,23 +392,9 @@ const Navbar = () => {
             width: 100%;
         }
 
-        #desktop-wallet-wrapper .tw-connected-wallet > div:last-child > div:last-child {
-             display: none !important;
-        }
-        
-        #mobile-wallet-wrapper .tw-connected-wallet > div:last-child > div:last-child {
-             display: none !important;
-        }
-
-        #mobile-wallet-wrapper button, 
-        #mobile-wallet-wrapper .tw-connected-wallet {
-            color: #000 !important;
-        }
-
-        #desktop-wallet-wrapper button,
-        #desktop-wallet-wrapper .tw-connected-wallet {
-            color: #fff !important;
-        }
+        /* Using max-width and overflow hidden on the container (applied via style prop) 
+           will cut off the balance text physically.
+        */
 
         @media (max-width: 991px) { 
             .nav-link { color: #ffffff !important; border-bottom: 1px solid #222; width: 100%; text-align: left; padding-left: 0 !important; }
@@ -415,4 +410,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
