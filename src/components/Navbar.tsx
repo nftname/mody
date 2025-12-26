@@ -214,7 +214,6 @@ const Navbar = () => {
 
   return (
     <>
-    {/* التعديل هنا: استخدام fixed-top بدلاً من sticky-top وإزالة position-relative */}
     <nav className="navbar navbar-expand-lg fixed-top py-0" 
          style={{ 
              backgroundColor: navbarBgColor, 
@@ -508,6 +507,8 @@ const Navbar = () => {
         }
       `}</style>
     </nav>
+    
+    <div style={{ height: '60px' }}></div>
     </>
   );
 };
