@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useRef, useState, useEffect } from 'react';
-import { ConnectButton, useActiveAccount } from "thirdweb/react";
+import { ConnectButton, useActiveAccount, useActiveWallet, useDisconnect } from "thirdweb/react";
 import { defineChain } from "thirdweb";
 import { client } from "@/lib/client";
 
@@ -12,6 +12,8 @@ const Navbar = () => {
   const router = useRouter();
   
   const account = useActiveAccount();
+  const wallet = useActiveWallet();
+  const { disconnect } = useDisconnect();
   const chain = defineChain(137); 
 
   const [mounted, setMounted] = useState(false);
@@ -55,6 +57,13 @@ const Navbar = () => {
     closeMenu();
   };
 
+  const handleDisconnect = () => {
+    if (wallet) {
+        disconnect(wallet);
+    }
+  };
+
+  // Styles
   const goldButtonStyle = {
     background: 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)',
     color: '#000',
@@ -66,22 +75,18 @@ const Navbar = () => {
     minWidth: '120px',
   };
 
+  // زر البروفايل الجديد (بدون حدود مربعة، فقط الأيقونة)
   const portfolioBtnStyle = {
     color: '#FCD535', 
-    border: '1px solid #FCD535', 
-    borderRadius: '4px', 
-    height: '38px',
-    fontSize: '12px', 
-    fontWeight: '600', 
+    border: 'none', // إزالة الحدود
     background: 'transparent', 
-    padding: '0 10px', 
+    padding: '0 8px', 
     display: 'flex', 
     alignItems: 'center', 
     justifyContent: 'center', 
     cursor: 'pointer', 
     transition: 'all 0.2s', 
-    width: '45px',
-    whiteSpace: 'nowrap' as const
+    height: '38px',
   };
 
   const navbarBgColor = '#0b0e11';
@@ -94,7 +99,38 @@ const Navbar = () => {
       
       <div className="container-fluid px-2 h-100 align-items-center d-flex flex-nowrap">
         
-        <div className="d-flex align-items-center" style={{ minWidth: '80px', flexShrink: 1, overflow:'hidden' }}> 
+        {/* === Mobile Layout: Left Side (Toggler + Logo) === */}
+        <div className="d-flex align-items-center d-lg-none me-auto gap-2">
+            {/* 1. Hamburger Menu (Now on Left) */}
+            <button className="navbar-toggler border-0 p-0 shadow-none" type="button" onClick={toggleMenu} style={{ width: '24px' }}>
+                {isMenuOpen ? <i className="bi bi-x-lg text-white" style={{ fontSize: '24px' }}></i> : <i className="bi bi-list text-white" style={{ fontSize: '24px' }}></i>}
+            </button>
+
+            {/* 2. Brand Logo (Next to Toggler) */}
+            <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" onClick={closeMenu} style={{ textDecoration: 'none' }}> 
+              <svg width="24" height="24" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
+                <defs>
+                  <linearGradient id="blockGoldMobile" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#FFF5CC" />
+                    <stop offset="20%" stopColor="#FCD535" />
+                    <stop offset="80%" stopColor="#B3882A" />
+                  </linearGradient>
+                </defs>
+                <g>
+                    <path d="M256 20 L356 120 L256 220 L156 120 Z" fill="url(#blockGoldMobile)" />
+                    <path d="M156 120 L256 220 L256 240 L156 140 Z" fill="#9E7C0C" />
+                    <path d="M256 292 L356 392 L256 492 L156 392 Z" fill="url(#blockGoldMobile)" />
+                    <path d="M120 156 L220 256 L120 356 L20 256 Z" fill="url(#blockGoldMobile)" />
+                    <path d="M392 156 L492 256 L392 356 L292 256 Z" fill="url(#blockGoldMobile)" />
+                    <circle cx="256" cy="256" r="10" fill="#0b0e11" />
+                </g>
+              </svg>
+              <span style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '18px', color: '#FCD535', letterSpacing: '1px', lineHeight: '1', marginTop: '1px' }}>NNM</span>
+            </Link>
+        </div>
+
+        {/* === Desktop Logo (Hidden on Mobile) === */}
+        <div className="d-none d-lg-flex align-items-center" style={{ minWidth: '80px', flexShrink: 1, overflow:'hidden' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" onClick={closeMenu} style={{ textDecoration: 'none' }}> 
               <svg width="29" height="29" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
                 <defs>
@@ -121,47 +157,46 @@ const Navbar = () => {
             </Link>
         </div>
 
+        {/* === Mobile Layout: Right Side (Icons + Wallet) === */}
         <div className="d-flex d-lg-none align-items-center ms-auto gap-2 flex-nowrap" style={{ overflow: 'visible' }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
             </button>
 
+            {/* Mobile Portfolio Icon - Updated Style */}
             <button className="btn p-0 d-flex align-items-center justify-content-center" onClick={handlePortfolioClick}
-                style={{ width: '32px', height: '32px', border: '1px solid #FCD535', borderRadius: '8px', color: '#FCD535', backgroundColor: 'transparent', flexShrink: 0 }}>
-                <i className="bi bi-person-circle" style={{ fontSize: '18px' }}></i>
+                style={{ width: '32px', height: '32px', border: 'none', backgroundColor: 'transparent', flexShrink: 0 }}>
+                <i className="bi bi-person-circle" style={{ fontSize: '22px', color: '#FCD535' }}></i>
             </button>
 
-            <div style={{ transform: 'scale(0.85)', transformOrigin: 'right center' }}>
-                <ConnectButton 
-                    client={client}
-                    chain={chain}
-                    theme="dark"
-                    connectButton={{
-                        label: "Connect",
-                        style: {
-                            ...goldButtonStyle,
-                            height: '32px',
-                            minWidth: 'auto',
-                            fontSize: '12px',
-                            padding: '0 10px'
-                        }
-                    }}
-                    detailsButton={{
-                        style: {
-                            ...goldButtonStyle,
-                            height: '32px',
-                            minWidth: 'auto',
-                            padding: '0 10px'
-                        }
-                    }}
-                />
+            <div style={{ transform: 'scale(0.9)', transformOrigin: 'right center' }}>
+                {!account ? (
+                    <ConnectButton 
+                        client={client}
+                        chain={chain}
+                        theme="dark"
+                        connectButton={{
+                            label: "Connect",
+                            style: {
+                                ...goldButtonStyle,
+                                height: '32px',
+                                minWidth: 'auto',
+                                fontSize: '12px',
+                                padding: '0 10px'
+                            }
+                        }}
+                    />
+                ) : (
+                    // Custom Connected Button (Mobile)
+                    <button onClick={handleDisconnect} className="btn d-flex align-items-center gap-2 custom-connected-btn-mobile">
+                         <span className="green-dot"></span>
+                         <span className="text-white" style={{fontSize: '12px', fontWeight: 'bold'}}>{account.address.slice(0, 5)}</span>
+                    </button>
+                )}
             </div>
-
-            <button className="navbar-toggler border-0 p-0 shadow-none ms-1" type="button" onClick={toggleMenu} style={{ width: '24px' }}>
-                {isMenuOpen ? <i className="bi bi-x-lg text-white" style={{ fontSize: '24px' }}></i> : <i className="bi bi-list text-white" style={{ fontSize: '24px' }}></i>}
-            </button>
         </div>
 
+        {/* === Desktop Navigation & Right Side === */}
         <div className={`collapse navbar-collapse flex-grow-1 ${isMenuOpen ? 'show' : ''}`} id="navbarNav">
           <div className="d-flex flex-column flex-lg-row align-items-start w-100" style={{ paddingTop: '4px' }}>
             
@@ -216,33 +251,41 @@ const Navbar = () => {
 
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
                 
-                <div className="position-relative" style={{ width: '200px', height: '38px', flexShrink: 0 }}>
+                {/* Search Input - Increased Width */}
+                <div className="position-relative" style={{ width: '280px', height: '38px', flexShrink: 0 }}>
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." style={{ borderRadius: '8px', fontSize:'13px', height: '100%', paddingLeft: '30px', border: '1px solid rgba(252, 213, 53, 0.9)', boxShadow: '0 0 5px rgba(252, 213, 53, 0.1)', caretColor: '#FCD535' }} />
                    <i className="bi bi-search position-absolute text-secondary" style={{top: '50%', transform: 'translateY(-50%)', left: '10px', fontSize: '12px', color: '#FCD535 !important'}}></i>
                 </div>
                 
+                {/* Desktop Portfolio Button - Clean Style */}
                 <button 
                     onClick={handlePortfolioClick} 
                     className="btn" 
                     style={portfolioBtnStyle} 
                     title="Go to Dashboard"
-                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'rgba(252, 213, 53, 0.1)'; }} 
-                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                 >
-                    <i className="bi bi-person-circle" style={{fontSize: '20px'}}></i>
+                    <i className="bi bi-person-circle" style={{fontSize: '28px'}}></i>
                 </button>
 
-                <ConnectButton 
-                    client={client}
-                    chain={chain}
-                    theme="dark"
-                    connectButton={{
-                        style: goldButtonStyle,
-                    }}
-                    detailsButton={{
-                        style: goldButtonStyle,
-                    }}
-                />
+                {/* Wallet Button Logic (Desktop) */}
+                {!account ? (
+                    <ConnectButton 
+                        client={client}
+                        chain={chain}
+                        theme="dark"
+                        connectButton={{
+                            style: goldButtonStyle,
+                            label: "Connect Wallet"
+                        }}
+                    />
+                ) : (
+                    // Custom Connected Button (Desktop) - Green Dot + Short ID
+                    <button onClick={handleDisconnect} className="btn custom-connected-btn">
+                         <span className="green-dot"></span>
+                         <span className="text-white fw-bold" style={{fontSize: '13px', fontFamily: 'monospace'}}>{account.address.slice(0, 6)}</span>
+                    </button>
+                )}
+
             </div>
           </div>
         </div>
@@ -269,6 +312,43 @@ const Navbar = () => {
         .navbar-toggler:focus { box-shadow: none !important; }
         .search-input-custom { background-color: #161b22 !important; transition: background-color 0.3s ease; }
         .search-input-custom:focus { background-color: ${navbarBgColor} !important; border-color: #FCD535 !important; }
+        
+        /* Custom Connected Button Styles */
+        .custom-connected-btn {
+            background-color: #161b22;
+            border: 1px solid #333;
+            height: 38px;
+            padding: 0 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            min-width: 100px;
+        }
+        .custom-connected-btn:hover {
+            border-color: #FCD535;
+            background-color: #000;
+        }
+        
+        .custom-connected-btn-mobile {
+            background-color: #161b22;
+            border: 1px solid #333;
+            height: 32px;
+            padding: 0 10px;
+            border-radius: 8px;
+        }
+
+        .green-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #00ff00;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            box-shadow: 0 0 6px #00ff00;
+        }
+
         @media (max-width: 991px) { 
             .nav-link { color: #ffffff !important; border-bottom: 1px solid #222; width: 100%; text-align: left; padding-left: 0 !important; }
             .nav-link:hover, .nav-link.active { color: #FCD535 !important; padding-left: 10px !important; transition: 0.3s; }
