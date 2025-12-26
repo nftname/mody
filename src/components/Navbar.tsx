@@ -17,10 +17,13 @@ const Navbar = () => {
   const chain = defineChain(137); 
 
   const [mounted, setMounted] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // State for Mobile Accordions (Footer sections in drawer)
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,14 +37,27 @@ const Navbar = () => {
     }
   }, [isMobileSearchOpen]);
 
-  const closeMenu = () => {
-    setIsMenuOpen(false);
+  // Disable body scroll when drawer is open
+  useEffect(() => {
+    if (isDrawerOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isDrawerOpen]);
+
+  const toggleDrawer = () => {
+    setIsDrawerOpen(!isDrawerOpen);
     setIsMobileSearchOpen(false);
-    setIsInsightsOpen(false);
   };
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
+  };
+
+  const toggleAccordion = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
   };
 
   const handleNavClick = (item: string, e: React.MouseEvent) => {
@@ -49,20 +65,20 @@ const Navbar = () => {
         e.preventDefault();
         router.push('/dashboard');
     }
-    closeMenu();
+    closeDrawer();
   };
 
   const handlePortfolioClick = (e: React.MouseEvent) => {
     e.preventDefault();
     router.push('/dashboard');
-    closeMenu();
+    closeDrawer();
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/market?search=${encodeURIComponent(searchQuery.trim())}`);
-      closeMenu();
+      setIsMobileSearchOpen(false);
     }
   };
 
@@ -76,6 +92,8 @@ const Navbar = () => {
 
   const goldGradient = 'linear-gradient(135deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%)';
   const navbarBgColor = '#0b0e11';
+
+  // --- Styles ---
 
   const customDisconnectStyle = {
     background: goldGradient,
@@ -118,10 +136,26 @@ const Navbar = () => {
     justifyContent: 'center', 
     cursor: 'pointer', 
     transition: 'all 0.2s', 
-    height: '27px', 
+    height: '23px', // Matches the new reduced search height
   };
 
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
+  
+  // Footer categories for Mobile Drawer
+  const drawerCategories = [
+      {
+          title: "Marketplace",
+          links: ["All NFTs", "Art", "Gaming", "Memberships"]
+      },
+      {
+          title: "Resources",
+          links: ["Help Center", "Partners", "Blog", "Newsletter"]
+      },
+      {
+          title: "Company",
+          links: ["About Us", "Careers", "Ventures", "Grants"]
+      }
+  ];
 
   const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
     const height = isMobile ? '24px' : '27px'; 
@@ -130,7 +164,6 @@ const Navbar = () => {
 
     return (
       <div style={{ position: 'relative', height: height, minWidth: minWidth, display: 'inline-block' }}>
-        
         <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
             {!account ? (
                 <div style={customDisconnectStyle}>Connect Wallet</div>
@@ -146,21 +179,25 @@ const Navbar = () => {
                 </div>
             )}
         </div>
-
         <div style={{ position: 'absolute', inset: 0, zIndex: 10, opacity: 0, overflow: 'hidden' }}>
              <ConnectButton 
                 client={client}
                 wallets={wallets}
                 chain={chain}
                 theme="dark"
-                connectButton={{
-                    style: { width: '100%', height: '100%' }
-                }}
+                connectButton={{ style: { width: '100%', height: '100%' } }}
             />
         </div>
       </div>
     );
   };
+
+  // Modern Chic Abstract User Icon (SVG)
+  const ChicProfileIcon = ({ size = 24, color = "#FCD535" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 4V4.01C14.2 4.01 16 5.8 16 8C16 10.2 14.2 12 12 12C9.8 12 8 10.2 8 8C8 5.8 9.8 4 12 4ZM12 14C15.5 14 18.37 15.28 19.5 17.15C17.7 19.56 14.98 20.98 12 21V21C9.02 20.98 6.3 19.56 4.5 17.15C5.63 15.28 8.5 14 12 14Z" fill={color}/>
+    </svg>
+  );
 
   return (
     <>
@@ -176,15 +213,13 @@ const Navbar = () => {
       
       <div className="container-fluid px-2 h-100 align-items-center d-flex flex-nowrap">
         
+        {/* === Mobile Drawer Toggle (Left) === */}
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
-            <button className="navbar-toggler border-0 p-0 shadow-none" type="button" onClick={toggleMenu} style={{ width: '24px' }}>
-                {isMenuOpen ? 
-                    <i className="bi bi-x-lg" style={{ fontSize: '24px', color: '#FCD535' }}></i> : 
-                    <i className="bi bi-list" style={{ fontSize: '24px', color: '#FCD535' }}></i>
-                }
+            <button className="navbar-toggler border-0 p-0 shadow-none" type="button" onClick={toggleDrawer} style={{ width: '24px' }}>
+                <i className="bi bi-list" style={{ fontSize: '26px', color: '#FCD535' }}></i>
             </button>
 
-            <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" onClick={closeMenu} style={{ textDecoration: 'none' }}> 
+            <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <svg width="28" height="28" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
                 <defs>
                   <linearGradient id="blockGoldMobile" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -206,8 +241,9 @@ const Navbar = () => {
             </Link>
         </div>
 
+        {/* === Desktop Logo === */}
         <div className="d-none d-lg-flex align-items-center" style={{ minWidth: '80px', flexShrink: 1, overflow:'hidden' }}> 
-            <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" onClick={closeMenu} style={{ textDecoration: 'none' }}> 
+            <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <svg width="29" height="29" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
                 <defs>
                   <linearGradient id="blockGold" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -233,27 +269,26 @@ const Navbar = () => {
             </Link>
         </div>
 
-        <div className="d-flex d-lg-none align-items-center ms-auto" 
-             style={{ 
-                 gap: '8px', 
-                 overflow: 'visible',
-                 paddingRight: '0px' 
-             }}>
+        {/* === Mobile Right Side (Icons + Wallet) === */}
+        <div className="d-flex d-lg-none align-items-center ms-auto" style={{ gap: '8px', overflow: 'visible', paddingRight: '0px' }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: '#FCD535' }}></i>
             </button>
 
             <button className="btn p-0 d-flex align-items-center justify-content-center" onClick={handlePortfolioClick}
                 style={{ width: '32px', height: '32px', border: 'none', backgroundColor: 'transparent', flexShrink: 0 }}>
-                <i className="bi bi-person" style={{ fontSize: '24px', color: '#FCD535' }}></i>
+                {/* Modern Abstract Icon */}
+                <ChicProfileIcon size={24} color="#FCD535" />
             </button>
 
             <CustomWalletTrigger isMobile={true} />
         </div>
 
-        <div className={`collapse navbar-collapse flex-grow-1 ${isMenuOpen ? 'show' : ''}`} id="navbarNav">
+        {/* === Desktop Nav & Right Side === */}
+        <div className="collapse navbar-collapse flex-grow-1" id="navbarNav">
           <div className="d-flex flex-column flex-lg-row align-items-start w-100" style={{ paddingTop: '4px' }}>
             
+            {/* Desktop Links */}
             <div className="d-flex align-items-center me-auto ms-0 ms-lg-4"> 
                 <ul className="navbar-nav mb-2 mb-lg-0 gap-1 gap-lg-1 align-items-start align-items-lg-center w-100">
                     {menuItems.map((item) => (
@@ -268,32 +303,20 @@ const Navbar = () => {
                             </Link>
                         </li>
                     ))}
-                    
-                    <li 
-                        className="nav-item dropdown w-100 w-lg-auto" 
-                        style={{ zIndex: 1055 }}
+                    <li className="nav-item dropdown w-100 w-lg-auto" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsInsightsOpen(true)}
-                        onMouseLeave={() => setIsInsightsOpen(false)}
-                    >
-                      <a 
-                        className={`nav-link dropdown-toggle fw-semibold shadow-none desktop-nav-link ${isInsightsOpen ? 'show' : ''}`} 
-                        href="#" 
-                        role="button" 
-                        onClick={(e) => { e.preventDefault(); setIsInsightsOpen(!isInsightsOpen); }}
-                        style={{ fontSize: '13px', padding: '8px 8px', whiteSpace: 'nowrap' }}
-                      >
+                        onMouseLeave={() => setIsInsightsOpen(false)}>
+                      <a className={`nav-link dropdown-toggle fw-semibold shadow-none desktop-nav-link ${isInsightsOpen ? 'show' : ''}`} 
+                        href="#" role="button" onClick={(e) => { e.preventDefault(); setIsInsightsOpen(!isInsightsOpen); }}
+                        style={{ fontSize: '13px', padding: '8px 8px', whiteSpace: 'nowrap' }}>
                         Insights
                       </a>
                       <ul className={`dropdown-menu border-secondary shadow-lg py-1 ${isInsightsOpen ? 'show' : ''}`} 
                           style={{ backgroundColor: '#161b22', minWidth: '150px', marginTop: '0px', border: '1px solid #333' }}>
                         {['How it Works', 'Contact'].map((subItem) => (
                             <li key={subItem}>
-                                <Link 
-                                    className="dropdown-item text-white py-2 px-3" 
-                                    href={`/${subItem.toLowerCase().replace(/\s+/g, '-')}`} 
-                                    onClick={closeMenu} 
-                                    style={{ fontSize: '14px', transition: '0.2s' }} 
-                                >
+                                <Link className="dropdown-item text-white py-2 px-3" href={`/${subItem.toLowerCase().replace(/\s+/g, '-')}`} 
+                                    style={{ fontSize: '12px', transition: '0.2s' }}>
                                     {subItem}
                                 </Link>
                             </li>
@@ -303,15 +326,11 @@ const Navbar = () => {
                 </ul>
             </div>
 
+            {/* Desktop Right Side */}
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ marginTop: '5px' }}> 
-                
-                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '24px', flexShrink: 0 }}>
-                   <input 
-                        type="text" 
-                        className="form-control search-input-custom text-white shadow-none" 
-                        placeholder="Search..." 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                <form onSubmit={handleSearch} className="position-relative" style={{ width: '280px', height: '23px', flexShrink: 0 }}>
+                   <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." 
+                        value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                         style={{ borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '30px', border: '1px solid rgba(252, 213, 53, 0.9)', boxShadow: '0 0 5px rgba(252, 213, 53, 0.1)', caretColor: '#FCD535' }} 
                    />
                    <button type="submit" className="btn p-0 position-absolute" style={{top: '50%', transform: 'translateY(-50%)', left: '10px', border:'none', background:'transparent'}}>
@@ -319,32 +338,96 @@ const Navbar = () => {
                    </button>
                 </form>
                 
-                <button 
-                    onClick={handlePortfolioClick} 
-                    className="btn" 
-                    style={portfolioBtnStyle} 
-                    title="Go to Dashboard"
-                >
-                    <i className="bi bi-person" style={{fontSize: '30px', color: '#FCD535'}}></i>
+                <button onClick={handlePortfolioClick} className="btn" style={portfolioBtnStyle} title="Go to Dashboard">
+                    <ChicProfileIcon size={26} color="#FCD535" />
                 </button>
 
                 <CustomWalletTrigger isMobile={false} />
-
             </div>
           </div>
         </div>
       </div>
 
+      {/* === MOBILE DRAWER (Full Height Slide from Left) === */}
+      <div className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`}>
+          <div className="drawer-header d-flex flex-column align-items-center pt-5 pb-4">
+              <button onClick={closeDrawer} className="btn position-absolute top-0 end-0 m-3 text-gold">
+                  <i className="bi bi-x-lg" style={{ fontSize: '24px' }}></i>
+              </button>
+              
+              {/* Drawer Logo */}
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <svg width="40" height="40" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="drawerGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#FFF5CC" />
+                        <stop offset="20%" stopColor="#FCD535" />
+                        <stop offset="80%" stopColor="#B3882A" />
+                      </linearGradient>
+                    </defs>
+                    <g>
+                        <path d="M256 20 L356 120 L256 220 L156 120 Z" fill="url(#drawerGold)" />
+                        <path d="M156 120 L256 220 L256 240 L156 140 Z" fill="#9E7C0C" />
+                        <path d="M256 292 L356 392 L256 492 L156 392 Z" fill="url(#drawerGold)" />
+                        <path d="M120 156 L220 256 L120 356 L20 256 Z" fill="url(#drawerGold)" />
+                        <path d="M392 156 L492 256 L392 356 L292 256 Z" fill="url(#drawerGold)" />
+                    </g>
+                </svg>
+                <span style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '28px', color: '#FCD535', letterSpacing: '1px' }}>NNM</span>
+              </div>
+          </div>
+
+          <div className="drawer-content px-4">
+              {/* Main Links */}
+              <div className="d-flex flex-column gap-3 mb-5">
+                  {['Home', 'Market', 'NGX', 'Mint', 'NNM Concept', 'How it Works', 'Contact'].map((item) => (
+                      <Link key={item} 
+                            href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
+                            onClick={closeDrawer}
+                            className="text-white text-decoration-none fw-bold"
+                            style={{ fontSize: '20px', borderBottom: '1px solid #222', paddingBottom: '10px' }}>
+                          {item}
+                      </Link>
+                  ))}
+              </div>
+
+              {/* Footer Accordions inside Drawer */}
+              <div className="drawer-accordions mb-auto">
+                  {drawerCategories.map((cat, idx) => (
+                      <div key={idx} className="mb-3">
+                          <div className="d-flex justify-content-between align-items-center" 
+                               onClick={() => toggleAccordion(cat.title)} style={{ cursor: 'pointer', color: '#FCD535' }}>
+                              <span className="fw-bold" style={{ fontSize: '16px' }}>{cat.title}</span>
+                              <i className={`bi bi-chevron-${expandedSection === cat.title ? 'up' : 'down'}`}></i>
+                          </div>
+                          {expandedSection === cat.title && (
+                              <div className="d-flex flex-column gap-2 mt-2 ps-3 border-start border-secondary">
+                                  {cat.links.map(link => (
+                                      <a key={link} href="#" className="text-secondary text-decoration-none" style={{ fontSize: '14px' }}>{link}</a>
+                                  ))}
+                              </div>
+                          )}
+                      </div>
+                  ))}
+              </div>
+          </div>
+
+          {/* Social Icons at Bottom */}
+          <div className="drawer-footer mt-auto p-4 border-top border-secondary">
+              <div className="d-flex justify-content-around w-100">
+                  <i className="bi bi-twitter-x text-gold" style={{ fontSize: '20px' }}></i>
+                  <i className="bi bi-discord text-gold" style={{ fontSize: '20px' }}></i>
+                  <i className="bi bi-instagram text-gold" style={{ fontSize: '20px' }}></i>
+                  <i className="bi bi-telegram text-gold" style={{ fontSize: '20px' }}></i>
+              </div>
+          </div>
+      </div>
+
       {isMobileSearchOpen && (
         <div className="d-lg-none position-absolute start-0 w-100" style={{ top: '60px', zIndex: 1049, backgroundColor: navbarBgColor, padding: '12px 15px', borderBottom: '1px solid rgba(252, 213, 53, 0.5)' }}>
             <form onSubmit={handleSearch} className="position-relative">
-                <input 
-                    ref={mobileSearchInputRef} 
-                    type="text" 
-                    className="form-control bg-dark text-white shadow-none" 
-                    placeholder="Search collections..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                <input ref={mobileSearchInputRef} type="text" className="form-control bg-dark text-white shadow-none" placeholder="Search collections..." 
+                    value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                     style={{ borderRadius: '4px', fontSize: '14px', height: '42px', paddingLeft: '38px', paddingRight: '35px', border: '1px solid var(--unified-gold-color)', caretColor: '#FCD535' }} 
                 />
                 <button type="submit" className="btn p-0 position-absolute" style={{ top: '50%', left: '12px', transform: 'translateY(-50%)', border:'none', background:'transparent' }}>
@@ -354,8 +437,6 @@ const Navbar = () => {
             </form>
         </div>
       )}
-
-      {isMenuOpen && ( <div onClick={closeMenu} className="d-lg-none" style={{ position: 'fixed', top: '60px', left: 0, width: '100vw', height: 'calc(100vh - 60px)', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)', zIndex: 1040 }}></div> )}
 
       <style jsx global>{`
         .desktop-nav-link { color: #ffffff !important; transition: color 0.2s ease, padding 0.3s; }
@@ -367,18 +448,24 @@ const Navbar = () => {
         .search-input-custom { background-color: #161b22 !important; transition: background-color 0.3s ease; }
         .search-input-custom:focus { background-color: ${navbarBgColor} !important; border-color: #FCD535 !important; }
 
-        .tw-connect-wallet {
-            width: 100% !important;
-            height: 100% !important;
-        }
+        .tw-connect-wallet { width: 100% !important; height: 100% !important; }
 
-        @media (max-width: 991px) { 
-            .nav-link { color: #ffffff !important; border-bottom: 1px solid #222; width: 100%; text-align: left; padding-left: 0 !important; }
-            .nav-link:hover, .nav-link.active { color: #FCD535 !important; padding-left: 10px !important; transition: 0.3s; }
-            .navbar-collapse { background-color: ${navbarBgColor} !important; position: absolute; top: 60px; left: 0; width: 100%; padding: 20px; border-bottom: 2px solid #FCD535 !important; box-shadow: 0 20px 40px rgba(0,0,0,0.9); z-index: 9990; max-height: 50vh; overflow-y: auto; }
-            .dropdown-menu { background-color: #161b22 !important; border: 1px solid #333 !important; }
-            .dropdown-menu.show { display: block; position: static; width: 100%; margin-top: 5px; margin-bottom: 10px; }
+        /* Drawer Styles */
+        .mobile-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: #0b0e11;
+            z-index: 9999;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.77, 0, 0.175, 1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
+        .mobile-drawer.open { transform: translateX(0); }
       `}</style>
     </nav>
     </>
