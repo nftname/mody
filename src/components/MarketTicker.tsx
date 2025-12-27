@@ -151,7 +151,7 @@ export default function MarketTicker() {
 
       <style jsx>{`
         .ticker-track {
-          animation: scroll 75s linear infinite;
+          animation: scroll 60s linear infinite;
           width: max-content;
         }
         .ticker-track:hover {
