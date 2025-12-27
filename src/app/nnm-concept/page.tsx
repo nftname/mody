@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Script from 'next/script';
 import MarketTicker from '@/components/MarketTicker';
-// import SupportBot from '@/components/SupportBot';
 
 // --- CONSTANTS & STYLES ---
 const GOLD_BTN_PRIMARY = '#D4AF37';
@@ -200,7 +199,7 @@ export default function NNMConceptPage() {
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
         .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
-        .marquee-track { animation: scroll 60s linear infinite; width: max-content; }
+        .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
       `}</style>
 
       <Script 
@@ -212,9 +211,9 @@ export default function NNMConceptPage() {
       <MarketTicker />
 
       {/* --- HEADER SECTION --- */}
-      <section className="container-fluid px-0 pt-5 pb-4">
+      <section className="container-fluid px-0 pt-5" style={{ paddingBottom: '60px' }}>
           <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
-              <div className="text-center mx-auto">
+              <div className="text-start text-lg-center mx-auto">
                   
                   {/* Main Title */}
                   <h1 style={{ 
@@ -239,8 +238,9 @@ export default function NNMConceptPage() {
                       marginBottom: 0,
                       maxWidth: '900px',
                       lineHeight: '1.6',
-                      marginLeft: 'auto',
-                      marginRight: 'auto'
+                      marginLeft: 'auto', // Centering on Desktop
+                      marginRight: 'auto', // Centering on Desktop
+                      // Mobile reset for alignment happens via parent class 'text-start'
                   }}>
                       The <span className="text-gold fw-bold">Imperium Asset</span> represents the ultimate tier of digital name ownership, far beyond standard tokens. Each <span className="text-gold fw-bold">Imperium Name</span> establishes immutable priority within the Web3 ecosystem, securing a permanent place in digital history. As we approach 2026, these assets are poised to become the cornerstone of digital identity and value.
                   </p>
@@ -341,7 +341,7 @@ export default function NNMConceptPage() {
       </section>
 
       {/* --- BRAND TICKER --- */}
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '20px', backgroundColor: '#050505', maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '20px', backgroundColor: '#050505', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
