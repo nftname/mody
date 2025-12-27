@@ -1,20 +1,23 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
-import { FULL_ASSET_LIST } from '@/data/assets';
+import { getContract } from "thirdweb";
+import { getAllValidListings } from "thirdweb/extensions/marketplace";
+import { client } from "@/lib/client";
+import { MARKETPLACE_ADDRESS, NETWORK_CHAIN } from '@/data/config';
 
 const ITEMS_PER_PAGE = 30;
 const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #B3882A 100%)';
 
 const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     let bg = '#222';
-    if (tier === 'immortal') bg = 'linear-gradient(135deg, #333 0%, #111 100%)';
-    if (tier === 'elite') bg = 'linear-gradient(135deg, #4a0a0a 0%, #1a0000 100%)';
-    if (tier === 'prime') bg = 'linear-gradient(135deg, #004d40 0%, #002b36 100%)';
+    if (tier?.toLowerCase() === 'immortal') bg = 'linear-gradient(135deg, #333 0%, #111 100%)';
+    else if (tier?.toLowerCase() === 'elite') bg = 'linear-gradient(135deg, #4a0a0a 0%, #1a0000 100%)';
+    else if (tier?.toLowerCase() === 'founder' || tier?.toLowerCase() === 'founders') bg = 'linear-gradient(135deg, #004d40 0%, #002b36 100%)';
 
     return (
         <div style={{
@@ -29,7 +32,7 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
             color: '#FCD535', textShadow: '0 1px 2px rgba(0,0,0,0.8)',
             flexShrink: 0
         }}>
-            {name.charAt(0)}
+            {name ? name.charAt(0) : 'N'}
         </div>
     );
 };
@@ -70,14 +73,63 @@ function MarketPage() {
   const [currencyFilter, setCurrencyFilter] = useState('POL'); 
   const [watchlist, setWatchlist] = useState<number[]>([]); 
   
+  // Real Data State
+  const [realListings, setRealListings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
+  // 1. Fetch Data from Blockchain (Fixed)
+  useEffect(() => {
+    const fetchMarketData = async () => {
+        try {
+            const contract = getContract({ client, chain: NETWORK_CHAIN, address: MARKETPLACE_ADDRESS });
+            
+            // FIX: Removed queryParams wrapper, passing count directly
+            const listingsData = await getAllValidListings({ 
+                contract, 
+                count: BigInt(100),
+                start: 0
+            });
+            
+            const mappedData = listingsData.map((item, index) => {
+                const meta = item.asset.metadata || {};
+                const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
+
+                return {
+                    id: Number(item.asset.id),
+                    rank: index + 1,
+                    name: meta.name || `Asset #${item.asset.id}`,
+                    tier: tierAttr,
+                    floor: item.currencyValuePerToken.displayValue,
+                    lastSale: '---',
+                    volume: '---',
+                    listed: 'Now',
+                    change: 0,
+                    currencySymbol: item.currencyValuePerToken.symbol
+                };
+            });
+
+            setRealListings(mappedData);
+        } catch (error) {
+            console.error("Failed to fetch listings", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchMarketData();
+  }, []);
+
+  // 2. Filter & Sort Logic
   const finalData = useMemo(() => {
-      let processedData = [...FULL_ASSET_LIST];
+      let processedData = [...realListings];
+      
       if (activeFilter === 'Watchlist') {
           processedData = processedData.filter(item => watchlist.includes(item.id));
       }
+      
       if (sortConfig) {
           processedData.sort((a: any, b: any) => {
               const valA = isNaN(parseFloat(a[sortConfig.key])) ? a[sortConfig.key] : parseFloat(a[sortConfig.key]);
@@ -88,7 +140,7 @@ function MarketPage() {
           });
       }
       return processedData;
-  }, [activeFilter, watchlist, sortConfig]);
+  }, [activeFilter, watchlist, sortConfig, realListings]);
 
   const totalPages = Math.ceil(finalData.length / ITEMS_PER_PAGE);
   const currentTableData = finalData.slice(
@@ -112,14 +164,6 @@ function MarketPage() {
       if (page >= 1 && page <= totalPages) {
           setCurrentPage(page);
       }
-  };
-
-  const getConvertedPrice = (price: any) => {
-    const numPrice = Number(price);
-    if (currencyFilter === 'ETH') {
-        return (numPrice * 0.0004).toFixed(4); 
-    }
-    return numPrice.toFixed(2);
   };
 
   const getCurrencyLabel = () => currencyFilter === 'ETH' ? 'ETH' : 'POL';
@@ -229,11 +273,15 @@ function MarketPage() {
       <section className="container mt-5 pt-0">
           <div className="table-responsive no-scrollbar">
               
-              {activeFilter === 'Watchlist' && finalData.length === 0 ? (
+              {loading ? (
+                 <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
+              ) : activeFilter === 'Watchlist' && finalData.length === 0 ? (
                   <div className="text-center py-5 text-secondary">
                       <i className="bi bi-star" style={{ fontSize: '40px', marginBottom: '10px', display: 'block' }}></i>
-                      Your watchlist is empty. Star assets to track them here.
+                      Your watchlist is empty.
                   </div>
+              ) : finalData.length === 0 ? (
+                  <div className="text-center py-5 text-secondary">No items listed for sale yet.</div>
               ) : (
                   <table className="table align-middle mb-0" style={{ minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0' }}>
                       
@@ -246,16 +294,16 @@ function MarketPage() {
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
                               <th onClick={() => handleSort('floor')} style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
-                                  <div className="d-flex align-items-center justify-content-start">Floor Price <SortArrows active={sortConfig?.key === 'floor'} direction={sortConfig?.direction} /></div>
+                                  <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'floor'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('lastSale')} style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
-                                  <div className="d-flex align-items-center justify-content-end">Last Sale <SortArrows active={sortConfig?.key === 'lastSale'} direction={sortConfig?.direction} /></div>
+                              <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                  Last Sale
                               </th>
-                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
-                                  <div className="d-flex align-items-center justify-content-end">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
+                              <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                  Volume
                               </th>
-                              <th onClick={() => handleSort('listed')} style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
-                                  <div className="d-flex align-items-center justify-content-end">Listed <SortArrows active={sortConfig?.key === 'listed'} direction={sortConfig?.direction} /></div>
+                              <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                  Listed
                               </th>
                               <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'center', width: '140px', whiteSpace: 'nowrap' }}>
                                   Action
@@ -284,18 +332,16 @@ function MarketPage() {
                                   </td>
                                   <td className="text-start" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <div className="d-flex align-items-center justify-content-start gap-2">
-                                          <span className="fw-bold text-white" style={{ fontSize: '14px' }}>{getConvertedPrice(item.floor)}</span>
-                                          <span className="text-white" style={{ fontSize: '12px' }}>{getCurrencyLabel()}</span>
-                                          <span style={{ fontSize: '12px', color: item.change > 0 ? '#0ecb81' : '#f6465d' }}>
-                                            {item.change > 0 ? '+' : ''}{Number(item.change).toFixed(2)}%
-                                          </span>
+                                          <span className="fw-bold text-white" style={{ fontSize: '14px' }}>{item.floor}</span>
+                                          <span className="text-white" style={{ fontSize: '12px' }}>{item.currencySymbol || getCurrencyLabel()}</span>
+                                          <span style={{ fontSize: '12px', color: '#0ecb81' }}>+0.00%</span>
                                       </div>
                                   </td>
                                   <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '13px' }}>{getConvertedPrice(item.lastSale)} {getCurrencyLabel()}</span>
+                                      <span className="text-white" style={{ fontSize: '13px' }}>{item.lastSale}</span>
                                   </td>
                                   <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '13px' }}>{getConvertedPrice(item.volume)}</span>
+                                      <span className="text-white" style={{ fontSize: '13px' }}>{item.volume}</span>
                                   </td>
                                   <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <span className="text-white" style={{ fontSize: '12px' }}>{item.listed}</span>
