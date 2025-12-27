@@ -382,9 +382,6 @@ const Navbar = () => {
               borderBottom: '1px solid rgba(255, 215, 0, 0.1)',
               boxShadow: '-2px 0 8px rgba(255, 215, 0, 0.1)'
           }}>
-             <div style={{ width: '3px', height: '24px', backgroundColor: richGoldColor, borderRadius: '1.5px', opacity: 0.8 }}></div>
-             <div style={{ width: '3px', height: '24px', backgroundColor: richGoldColor, borderRadius: '1.5px', opacity: 0.8 }}></div>
-             <div style={{ width: '3px', height: '24px', backgroundColor: richGoldColor, borderRadius: '1.5px', opacity: 0.8 }}></div>
           </div>
 
           <div className="drawer-header d-flex flex-column align-items-start px-4 pt-5 pb-3 w-100 mt-4 position-relative" style={{borderBottom: '1px solid #1a1a1a'}}>
