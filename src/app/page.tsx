@@ -275,23 +275,23 @@ export default function Home() {
                   {newListingsItems.map((item) => (<div key={item.id} className="mobile-card-item" style={{ minWidth: '85%', flex: '0 0 85%' }}><AssetCard item={item} /></div>))}
               </div>
           </div>
+      </section>
 
-          <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: '5rem', marginBottom: '50px', backgroundColor: '#050505', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
-              <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
-              <div className="marquee-container overflow-hidden position-relative w-100">
-                  <div className="marquee-track d-flex align-items-center">
-                      {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (
-                          <div key={index} className="brand-item d-flex align-items-center justify-content-center mx-5" style={{ minWidth: '120px', transition: '0.4s' }}>
-                              <div className="brand-logo d-flex align-items-center gap-2" style={{ fontSize: '18px', fontWeight: '800', fontFamily: 'Montserrat, sans-serif', letterSpacing: '1px' }}>
-                                  <GoldIcon icon={brand.icon} isCustomSVG={brand.isCustom} />
-                                  <span className="brand-text-gold">{brand.name}</span>
-                              </div>
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: '5rem', marginBottom: '50px', backgroundColor: '#050505', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
+          <div className="marquee-container overflow-hidden position-relative w-100">
+              <div className="marquee-track d-flex align-items-center">
+                  {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (
+                      <div key={index} className="brand-item d-flex align-items-center justify-content-center mx-5" style={{ minWidth: '120px', transition: '0.4s' }}>
+                          <div className="brand-logo d-flex align-items-center gap-2" style={{ fontSize: '18px', fontWeight: '800', fontFamily: 'Montserrat, sans-serif', letterSpacing: '1px' }}>
+                              <GoldIcon icon={brand.icon} isCustomSVG={brand.isCustom} />
+                              <span className="brand-text-gold">{brand.name}</span>
                           </div>
-                      ))}
-                  </div>
+                      </div>
+                  ))}
               </div>
           </div>
-      </section>
+      </div>
 
       <style jsx global>{`
         .fw-light { font-weight: 300 !important; } .text-header-gray { color: #848E9C !important; } .cursor-pointer { cursor: pointer; } .hover-bg-gray:hover { background-color: #2B3139; }
@@ -299,7 +299,7 @@ export default function Home() {
         .static-asset { box-shadow: 0 15px 35px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(40, 40, 40, 0.5), inset 0 0 15px rgba(0,0,0,0.5); }
         @media (max-width: 991px) { .static-asset { box-shadow: 0 5px 15px rgba(0,0,0,0.9) !important; border: 1px solid rgba(30, 30, 30, 0.8) !important; } }
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
-        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .marquee-track { animation: scroll 66s linear infinite; width: max-content; }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
         .filter-tab-hover:hover { color: #fff !important; } .binance-filter-btn:hover { color: #fff !important; } .mobile-filter-gap { margin-bottom: 1rem !important; } @media (max-width: 991px) { .mobile-filter-gap { row-gap: 12px !important; --bs-gutter-y: 12px !important; margin-bottom: 0.55rem !important; } }
         .mobile-swipe-wrapper { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; gap: 40px; padding-bottom: 10px; align-items: flex-start; } .mobile-swipe-wrapper::-webkit-scrollbar { display: none; } .mobile-slide { min-width: 100%; flex: 0 0 100%; scroll-snap-align: center; }
         .binance-filter-group { border: 1px solid #333; background: transparent; padding: 4px; border-radius: 2px; gap: 2px; } .binance-filter-btn { border-radius: 2px; padding: 6px 12px; transition: all 0.2s; } .active-time, .active-currency { background-color: #2B3139 !important; color: #FCD535 !important; }
