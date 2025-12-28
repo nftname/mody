@@ -11,8 +11,8 @@ import {
     buyFromListing, 
     getAllValidListings 
 } from "thirdweb/extensions/marketplace";
+import { setApprovalForAll, isApprovedForAll } from "thirdweb/extensions/erc721";
 import { client } from "@/lib/client"; 
-// تأكد من أنك أنشأت ملف config.ts كما طلبت منك
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS, NETWORK_CHAIN } from '@/data/config';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -50,11 +50,11 @@ function AssetPage() {
     const [listing, setListing] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
+    const [isApproved, setIsApproved] = useState(false);
     
     const [sellPrice, setSellPrice] = useState('10');
     const [isListingMode, setIsListingMode] = useState(false);
 
-    // FIX: Ensure tokenId is strictly a string
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
@@ -79,6 +79,12 @@ function AssetPage() {
 
             if (account && owner.toLowerCase() === account.address.toLowerCase()) {
                 setIsOwner(true);
+                const approvedStatus = await isApprovedForAll({
+                    contract: nftContract,
+                    owner: account.address,
+                    operator: MARKETPLACE_ADDRESS
+                });
+                setIsApproved(approvedStatus);
             }
 
         } catch (error) {
@@ -89,7 +95,6 @@ function AssetPage() {
     const checkListing = async () => {
         if (!tokenId) return;
         try {
-            // FIX: Updated syntax for getAllValidListings
             const listings = await getAllValidListings({ 
                 contract: marketplaceContract, 
                 start: 0, 
@@ -144,7 +149,6 @@ function AssetPage() {
                             <div className="mt-4 pt-3 border-top border-secondary">
                                 <div className="d-flex justify-content-between mb-2">
                                     <span className="text-secondary small">Contract Address</span>
-                                    {/* FIX: Using NFT_COLLECTION_ADDRESS instead of undefined CONTRACT_ADDRESS */}
                                     <span className="text-gold small font-monospace">{NFT_COLLECTION_ADDRESS.slice(0,6)}...{NFT_COLLECTION_ADDRESS.slice(-4)}</span>
                                 </div>
                                 <div className="d-flex justify-content-between mb-2">
@@ -196,7 +200,7 @@ function AssetPage() {
                                                     contract: marketplaceContract,
                                                     listingId: listing.id,
                                                     recipient: account?.address || "",
-                                                    quantity: BigInt(1), // FIX: Use BigInt(1) instead of 1n
+                                                    quantity: BigInt(1),
                                                 })}
                                                 onTransactionConfirmed={() => { alert("Purchased Successfully!"); window.location.reload(); }}
                                                 onError={(e) => alert(e.message)}
@@ -217,22 +221,43 @@ function AssetPage() {
                                                 <div className="d-flex flex-column gap-2">
                                                     <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
                                                     <div className="d-flex gap-2">
-                                                        <TransactionButton
-                                                            transaction={() => {
-                                                                if (!tokenId) throw new Error("Invalid Token ID");
-                                                                return createListing({
-                                                                    contract: marketplaceContract,
-                                                                    assetContractAddress: NFT_COLLECTION_ADDRESS,
-                                                                    tokenId: BigInt(tokenId),
-                                                                    pricePerToken: sellPrice,
-                                                                    currencyContractAddress: "0x0000000000000000000000000000000000000000"
-                                                                });
-                                                            }}
-                                                            onTransactionConfirmed={() => { alert("Listed Successfully!"); window.location.reload(); }}
-                                                            style={{ ...GOLD_BTN_STYLE, flex: 1 }}
-                                                        >
-                                                            Confirm
-                                                        </TransactionButton>
+                                                        
+                                                        {!isApproved ? (
+                                                            <TransactionButton
+                                                                transaction={() => setApprovalForAll({
+                                                                    contract: nftContract,
+                                                                    operator: MARKETPLACE_ADDRESS,
+                                                                    approved: true
+                                                                })}
+                                                                onTransactionConfirmed={() => { 
+                                                                    alert("Marketplace Approved! Now you can list."); 
+                                                                    setIsApproved(true); 
+                                                                }}
+                                                                onError={(e) => alert("Approval Failed: " + e.message)}
+                                                                style={{ ...GOLD_BTN_STYLE, flex: 1, backgroundColor: '#fff', color: '#000' }}
+                                                            >
+                                                                1. Approve Market
+                                                            </TransactionButton>
+                                                        ) : (
+                                                            <TransactionButton
+                                                                transaction={() => {
+                                                                    if (!tokenId) throw new Error("Invalid Token ID");
+                                                                    return createListing({
+                                                                        contract: marketplaceContract,
+                                                                        assetContractAddress: NFT_COLLECTION_ADDRESS,
+                                                                        tokenId: BigInt(tokenId),
+                                                                        pricePerToken: sellPrice,
+                                                                        currencyContractAddress: "0x0000000000000000000000000000000000000000"
+                                                                    });
+                                                                }}
+                                                                onTransactionConfirmed={() => { alert("Listed Successfully!"); window.location.reload(); }}
+                                                                onError={(e) => alert("Listing Failed: " + e.message)}
+                                                                style={{ ...GOLD_BTN_STYLE, flex: 1 }}
+                                                            >
+                                                                2. Confirm List
+                                                            </TransactionButton>
+                                                        )}
+                                                        
                                                         <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                     </div>
                                                 </div>
