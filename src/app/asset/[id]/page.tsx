@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
-import { useActiveAccount, TransactionButton, useConnectModal, useSendTransaction } from "thirdweb/react";
+import { useActiveAccount, TransactionButton, useConnectModal, PayEmbed } from "thirdweb/react";
 import { getContract, readContract, prepareContractCall, toWei, toTokens, NATIVE_TOKEN_ADDRESS } from "thirdweb";
 import { createWallet, walletConnect } from "thirdweb/wallets"; 
 import { 
@@ -121,7 +121,6 @@ function AssetPage() {
     const router = useRouter();
     const account = useActiveAccount();
     const { connect } = useConnectModal();
-    const { mutate: sendTransaction } = useSendTransaction();
     
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
@@ -133,13 +132,10 @@ function AssetPage() {
     const [offerPrice, setOfferPrice] = useState('');
     const [isListingMode, setIsListingMode] = useState(false);
     const [isOfferMode, setIsOfferMode] = useState(false);
-    const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
     
-    // Optimistic UI States
     const [wpolBalance, setWpolBalance] = useState<number>(0);
-    const [wpolAllowance, setWpolAllowance] = useState<number>(0);
-    const [hasJustWrapped, setHasJustWrapped] = useState(false);
-    const [hasJustApproved, setHasJustApproved] = useState(false);
+    const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
+    const [showPayEmbed, setShowPayEmbed] = useState(false);
 
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -183,13 +179,6 @@ function AssetPage() {
             try {
                 const balanceBigInt = await balanceOf({ contract: wpolContract, address: account.address });
                 setWpolBalance(Number(toTokens(balanceBigInt, 18)));
-
-                const allowanceBigInt = await readContract({ 
-                    contract: wpolContract, 
-                    method: "function allowance(address, address) view returns (uint256)", 
-                    params: [account.address, MARKETPLACE_ADDRESS] 
-                });
-                setWpolAllowance(Number(toTokens(allowanceBigInt, 18)));
             } catch (e) { console.error("WPOL Refresh Error", e); }
         }
     }, [account]);
@@ -215,55 +204,12 @@ function AssetPage() {
     };
     const handleConnect = () => connect({ client, wallets });
 
-    // 1. Direct Wrap (Deposit) - Optimistic Update
-    const handleWrap = async () => {
-        if (!offerPrice) return;
-        try {
-            const amountWithBuffer = Number(offerPrice) * 1.01;
-            const transaction = prepareContractCall({
-                contract: wpolContract,
-                method: "function deposit() payable",
-                params: [],
-                value: toWei(amountWithBuffer.toFixed(18))
-            });
-            sendTransaction(transaction, {
-                onSuccess: () => {
-                    setHasJustWrapped(true); // Immediate UI update
-                },
-                onError: (e) => showModal('error', 'Wrap Failed', 'Ensure you have enough POL.')
-            });
-        } catch (e) { console.error(e); }
-    };
-
-    // 2. Direct Approve - Optimistic Update
-    const handleApprove = async () => {
-        if (!offerPrice) return;
-        try {
-            const transaction = prepareContractCall({
-                contract: wpolContract,
-                method: "function approve(address, uint256)",
-                params: [MARKETPLACE_ADDRESS, toWei((Number(offerPrice) * 10).toString())] // Approve ample amount
-            });
-            sendTransaction(transaction, {
-                onSuccess: () => {
-                    setHasJustApproved(true); // Immediate UI update
-                },
-                onError: (e) => showModal('error', 'Approval Failed', 'Please try again.')
-            });
-        } catch (e) { console.error(e); }
-    };
-
     if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
     if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
     
     const style = getHeroStyles(asset.tier);
-    
-    // Smart Logic with Optimistic Overrides
     const targetAmount = offerPrice ? Number(offerPrice) : 0;
-    
-    // FIX: Define boolean flags here to be accessible in JSX
-    const isBalanceSufficient = hasJustWrapped || wpolBalance >= targetAmount;
-    const isAllowanceSufficient = hasJustApproved || wpolAllowance >= targetAmount;
+    const needsWrap = targetAmount > wpolBalance;
 
     return (
         <main style={{ backgroundColor: '#0b0e11', minHeight: '100vh', paddingBottom: '80px', fontFamily: 'sans-serif' }}>
@@ -276,6 +222,43 @@ function AssetPage() {
                 onClose={closeModal}
                 onGoToMarket={modal.title.includes('Listed') ? goToMarket : undefined}
             />
+
+            {/* PayEmbed Modal Overlay */}
+            {showPayEmbed && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 9999,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                    <div style={{ position: 'relative', width: '100%', maxWidth: '450px', padding: '10px' }}>
+                        <button 
+                            onClick={() => {
+                                setShowPayEmbed(false);
+                                refreshWpolData(); // Refresh balance on close
+                            }} 
+                            style={{ 
+                                position: 'absolute', top: '-40px', right: '0', 
+                                background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer' 
+                            }}
+                        >
+                            <i className="bi bi-x-lg"></i> Close
+                        </button>
+                        <PayEmbed
+                            client={client}
+                            payOptions={{
+                                mode: "fund_wallet",
+                                prefillBuy: {
+                                    chain: NETWORK_CHAIN,
+                                    amount: (targetAmount - wpolBalance + 0.1).toString(),
+                                    token: { address: WPOL_ADDRESS, symbol: "WPOL", name: "Wrapped POL" }
+                                },
+                                buyWithCrypto: { testMode: false }
+                            }}
+                            theme="dark"
+                        />
+                    </div>
+                </div>
+            )}
 
             <div className="container py-3">
                 <div className="d-flex align-items-center gap-2 text-secondary mb-4" style={{ fontSize: '14px' }}>
@@ -368,30 +351,21 @@ function AssetPage() {
                                                             onChange={(e) => setOfferPrice(e.target.value)} 
                                                         />
                                                         
-                                                        {!isBalanceSufficient ? (
-                                                            // State 1: WRAP
+                                                        {needsWrap ? (
                                                             <div className="d-flex flex-column gap-2">
-                                                                <button onClick={handleWrap} className="btn fw-bold w-100" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', padding: '12px' }}>
-                                                                    Wrap {offerPrice ? (Number(offerPrice) * 1.01).toFixed(2) : '0'} POL
+                                                                <button 
+                                                                    onClick={() => setShowPayEmbed(true)}
+                                                                    className="btn fw-bold w-100" 
+                                                                    style={{ background: BTN_GRADIENT, border: 'none', color: '#000', padding: '12px' }}
+                                                                >
+                                                                    Get WPOL to Offer
                                                                 </button>
                                                                 <small className="text-secondary text-center" style={{ fontSize: '11px' }}>
-                                                                    Includes 1% safety buffer. Excess remains in your wallet.
-                                                                </small>
-                                                                <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary w-100 mt-2">Cancel</button>
-                                                            </div>
-                                                        ) : !isAllowanceSufficient ? (
-                                                            // State 2: APPROVE
-                                                            <div className="d-flex flex-column gap-2">
-                                                                <button onClick={handleApprove} className="btn fw-bold w-100" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', padding: '12px' }}>
-                                                                    Approve WPOL Usage
-                                                                </button>
-                                                                <small className="text-secondary text-center" style={{ fontSize: '11px' }}>
-                                                                    Authorize marketplace to access your WPOL.
+                                                                    Insufficient WPOL. Click to swap safely via Thirdweb.
                                                                 </small>
                                                                 <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary w-100 mt-2">Cancel</button>
                                                             </div>
                                                         ) : (
-                                                            // State 3: CONFIRM
                                                             <div className="d-flex gap-2">
                                                                 <TransactionButton
                                                                     transaction={async () => {
