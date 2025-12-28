@@ -15,7 +15,7 @@ import {
     makeOffer 
 } from "thirdweb/extensions/marketplace";
 import { setApprovalForAll, isApprovedForAll } from "thirdweb/extensions/erc721";
-import { balanceOf, approve } from "thirdweb/extensions/erc20";
+import { balanceOf } from "thirdweb/extensions/erc20";
 import { client } from "@/lib/client"; 
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS, NETWORK_CHAIN } from '@/data/config';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -135,8 +135,11 @@ function AssetPage() {
     const [isOfferMode, setIsOfferMode] = useState(false);
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
     
+    // Optimistic UI States
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
+    const [hasJustWrapped, setHasJustWrapped] = useState(false);
+    const [hasJustApproved, setHasJustApproved] = useState(false);
 
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -200,8 +203,6 @@ function AssetPage() {
     useEffect(() => {
         if (isOfferMode && account) {
             checkWpolStatus();
-            const interval = setInterval(checkWpolStatus, 3000); // Auto-refresh status
-            return () => clearInterval(interval);
         }
     }, [isOfferMode, account]);
 
@@ -216,6 +217,7 @@ function AssetPage() {
     };
     const handleConnect = () => connect({ client, wallets });
 
+    // 1. Direct Wrap (Deposit) - Optimistic Update
     const handleWrap = async () => {
         if (!offerPrice) return;
         try {
@@ -228,9 +230,27 @@ function AssetPage() {
             });
             sendTransaction(transaction, {
                 onSuccess: () => {
-                    checkWpolStatus();
+                    setHasJustWrapped(true); // Immediate UI update
                 },
                 onError: (e) => showModal('error', 'Wrap Failed', 'Ensure you have enough POL.')
+            });
+        } catch (e) { console.error(e); }
+    };
+
+    // 2. Direct Approve - Optimistic Update
+    const handleApprove = async () => {
+        if (!offerPrice) return;
+        try {
+            const transaction = prepareContractCall({
+                contract: wpolContract,
+                method: "function approve(address, uint256)",
+                params: [MARKETPLACE_ADDRESS, toWei((Number(offerPrice) * 10).toString())] // Approve ample amount
+            });
+            sendTransaction(transaction, {
+                onSuccess: () => {
+                    setHasJustApproved(true); // Immediate UI update
+                },
+                onError: (e) => showModal('error', 'Approval Failed', 'Please try again.')
             });
         } catch (e) { console.error(e); }
     };
@@ -240,10 +260,14 @@ function AssetPage() {
     
     const style = getHeroStyles(asset.tier);
     
-    // Logic: 1. Needs Wrap? 2. Needs Approval? 3. Ready to Offer
+    // Smart Logic with Optimistic Overrides
     const targetAmount = offerPrice ? Number(offerPrice) : 0;
-    const needsWrap = targetAmount > wpolBalance;
-    const needsApproval = !needsWrap && targetAmount > wpolAllowance;
+    
+    // If just wrapped, assume balance is sufficient. Else check actual balance.
+    const isBalanceSufficient = hasJustWrapped || wpolBalance >= targetAmount;
+    
+    // If just approved, assume allowance is sufficient. Else check actual allowance.
+    const isAllowanceSufficient = hasJustApproved || wpolAllowance >= targetAmount;
 
     return (
         <main style={{ backgroundColor: '#0b0e11', minHeight: '100vh', paddingBottom: '80px', fontFamily: 'sans-serif' }}>
@@ -348,41 +372,30 @@ function AssetPage() {
                                                             onChange={(e) => setOfferPrice(e.target.value)} 
                                                         />
                                                         
-                                                        {needsWrap ? (
-                                                            // Step 1: Wrap Logic
+                                                        {!isBalanceSufficient ? (
+                                                            // State 1: WRAP
                                                             <div className="d-flex flex-column gap-2">
                                                                 <button onClick={handleWrap} className="btn fw-bold w-100" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', padding: '12px' }}>
-                                                                    1. Wrap {offerPrice ? (Number(offerPrice) * 1.01).toFixed(2) : '0'} POL
+                                                                    Wrap {offerPrice ? (Number(offerPrice) * 1.01).toFixed(2) : '0'} POL
                                                                 </button>
                                                                 <small className="text-secondary text-center" style={{ fontSize: '11px' }}>
                                                                     Includes 1% safety buffer. Excess remains in your wallet.
                                                                 </small>
                                                                 <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary w-100 mt-2">Cancel</button>
                                                             </div>
-                                                        ) : needsApproval ? (
-                                                            // Step 2: Approve Logic (THE MISSING LINK)
+                                                        ) : !isAllowanceSufficient ? (
+                                                            // State 2: APPROVE (New Step)
                                                             <div className="d-flex flex-column gap-2">
-                                                                <TransactionButton
-                                                                    transaction={() => approve({ 
-                                                                        contract: wpolContract, 
-                                                                        spender: MARKETPLACE_ADDRESS, 
-                                                                        amount: offerPrice // Approve exact amount or more
-                                                                    })}
-                                                                    onTransactionConfirmed={() => {
-                                                                        checkWpolStatus();
-                                                                    }}
-                                                                    onError={(e) => console.error(e)}
-                                                                    style={{ background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', width: '100%' }}
-                                                                >
-                                                                    2. Approve WPOL
-                                                                </TransactionButton>
+                                                                <button onClick={handleApprove} className="btn fw-bold w-100" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', padding: '12px' }}>
+                                                                    Approve WPOL Usage
+                                                                </button>
                                                                 <small className="text-secondary text-center" style={{ fontSize: '11px' }}>
                                                                     Authorize marketplace to access your WPOL.
                                                                 </small>
                                                                 <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary w-100 mt-2">Cancel</button>
                                                             </div>
                                                         ) : (
-                                                            // Step 3: Offer Logic
+                                                            // State 3: CONFIRM
                                                             <div className="d-flex gap-2">
                                                                 <TransactionButton
                                                                     transaction={async () => {
@@ -403,7 +416,7 @@ function AssetPage() {
                                                                     onError={(e) => showModal('error', 'Offer Failed', 'Please try again.')}
                                                                     style={{ background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', flex: 1 }}
                                                                 >
-                                                                    3. Confirm Offer
+                                                                    Confirm Offer
                                                                 </TransactionButton>
                                                                 <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                             </div>
