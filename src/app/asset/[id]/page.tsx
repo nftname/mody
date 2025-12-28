@@ -6,6 +6,7 @@ import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useActiveAccount, TransactionButton, useConnectModal } from "thirdweb/react";
 import { getContract, readContract, NATIVE_TOKEN_ADDRESS } from "thirdweb";
+import { createWallet, walletConnect } from "thirdweb/wallets";
 import { 
     createListing, 
     buyFromListing, 
@@ -18,6 +19,15 @@ import { balanceOf } from "thirdweb/extensions/erc20";
 import { client } from "@/lib/client"; 
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS, NETWORK_CHAIN } from '@/data/config';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+// --- WALLET CONFIGURATION (Strict Mode - No Socials) ---
+const wallets = [
+  createWallet("io.metamask"),
+  createWallet("com.coinbase.wallet"),
+  createWallet("me.rainbow"),
+  createWallet("io.rabby"),
+  walletConnect(),
+];
 
 // --- CONSTANTS ---
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; // Polygon Wrapped Token
@@ -167,7 +177,11 @@ function AssetPage() {
         setModal({ ...modal, isOpen: false });
         router.push('/market');
     };
-    const handleConnect = () => connect({ client });
+    
+    // --- CONNECT WALLET (STRICT) ---
+    const handleConnect = () => {
+        connect({ client, wallets });
+    };
 
     if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
     if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
