@@ -29,15 +29,14 @@ const wallets = [
   walletConnect(),
 ];
 
-// --- CONFIGURATION & STYLES (MATCHING MINT PAGE IDENTITY) ---
+// --- CONFIGURATION & STYLES ---
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
-// Mint Page Colors
 const THEME_BG = '#0d1117'; 
 const CARD_BG = '#161b22';
 const BTN_GRADIENT = 'linear-gradient(135deg, #FBF5B7 0%, #BF953F 25%, #AA771C 50%, #BF953F 75%, #FBF5B7 100%)';
 
-// Updated CustomModal to match Mint Page (Glassmorphism + Styling)
-const CustomModal = ({ isOpen, type, title, message, actionBtn, onClose }: any) => {
+// --- IMPROVED MODAL ---
+const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, onClose }: any) => {
     if (!isOpen) return null;
     return (
         <div style={{
@@ -65,11 +64,15 @@ const CustomModal = ({ isOpen, type, title, message, actionBtn, onClose }: any) 
                 <h4 className="text-white fw-bold mb-3" style={{ fontSize: '22px' }}>{title}</h4>
                 <p className="text-secondary mb-4" style={{ fontSize: '15px', lineHeight: '1.6' }}>{message}</p>
                 
-                {actionBtn ? actionBtn : (
-                    <button onClick={onClose} className="btn w-100 fw-bold py-3" style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '8px' }}>
-                        Close
-                    </button>
-                )}
+                <div className="d-flex flex-column gap-2">
+                    {actionBtn}
+                    {secondaryBtn}
+                    {!actionBtn && !secondaryBtn && (
+                        <button onClick={onClose} className="btn w-100 fw-bold py-3" style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '8px' }}>
+                            Close
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -77,24 +80,9 @@ const CustomModal = ({ isOpen, type, title, message, actionBtn, onClose }: any) 
 
 const getHeroStyles = (tier: string) => {
     switch(tier?.toLowerCase()) {
-        case 'immortal': return { 
-            bg: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)', 
-            border: '1px solid #FCD535', 
-            textColor: '#FCD535',
-            shadow: '0 0 30px rgba(252, 213, 53, 0.15)'
-        };
-        case 'elite': return { 
-            bg: 'linear-gradient(135deg, #1a0505 0%, #2a0a0a 100%)', 
-            border: '1px solid #ff4d4d', 
-            textColor: '#ff4d4d',
-            shadow: '0 0 30px rgba(255, 77, 77, 0.15)'
-        };
-        default: return { 
-            bg: '#161b22', 
-            border: '1px solid #333', 
-            textColor: '#ffffff',
-            shadow: 'none'
-        };
+        case 'immortal': return { bg: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)', border: '1px solid #FCD535', textColor: '#FCD535', shadow: '0 0 30px rgba(252, 213, 53, 0.15)' };
+        case 'elite': return { bg: 'linear-gradient(135deg, #1a0505 0%, #2a0a0a 100%)', border: '1px solid #ff4d4d', textColor: '#ff4d4d', shadow: '0 0 30px rgba(255, 77, 77, 0.15)' };
+        default: return { bg: '#161b22', border: '1px solid #333', textColor: '#ffffff', shadow: 'none' };
     }
 };
 
@@ -129,8 +117,8 @@ function AssetPage() {
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
     
-    // Updated Modal State to accept Action Button
-    const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '', actionBtn: null as any });
+    // Modal State
+    const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '', actionBtn: null as any, secondaryBtn: null as any });
     const [offersList, setOffersList] = useState<any[]>([]);
 
     const rawId = params?.id;
@@ -159,13 +147,19 @@ function AssetPage() {
                 setIsApproved(approvedStatus);
             }
 
-            // Fixed: Actually fetch offers to display in the table
-            const allOffers = await getAllValidOffers({ contract: marketplaceContract });
-            const validOffers = allOffers.filter(o => 
-                o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
-                o.tokenId.toString() === tokenId.toString()
-            );
-            setOffersList(validOffers);
+            // SAFETY CHECK: Handle fetching offers safely to prevent crash
+            try {
+                const allOffers = await getAllValidOffers({ contract: marketplaceContract });
+                if (allOffers && Array.isArray(allOffers)) {
+                    const validOffers = allOffers.filter(o => 
+                        o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
+                        o.tokenId.toString() === tokenId.toString()
+                    );
+                    setOffersList(validOffers);
+                }
+            } catch (err) {
+                console.warn("Could not fetch offers yet:", err);
+            }
 
         } catch (error) { console.error("Failed to fetch asset", error); }
     };
@@ -182,10 +176,8 @@ function AssetPage() {
     const refreshWpolData = useCallback(async () => {
         if (account) {
             try {
-                // 1. Balance
                 const balanceBigInt = await balanceOf({ contract: wpolContract, address: account.address });
                 setWpolBalance(Number(toTokens(balanceBigInt, 18)));
-                // 2. Allowance
                 const allowanceBigInt = await readContract({
                     contract: wpolContract,
                     method: "function allowance(address, address) view returns (uint256)",
@@ -201,15 +193,18 @@ function AssetPage() {
     }, [tokenId, account]);
 
     useEffect(() => {
-        if (isOfferMode && account) {
-            refreshWpolData();
-        }
+        if (isOfferMode && account) refreshWpolData();
     }, [isOfferMode, account, refreshWpolData]);
 
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
-        if (modal.type === 'success') window.location.reload();
+        // Removed reload() to prevent crash. We just update the state.
+        if (modal.type === 'success') {
+            fetchAssetData(); // Refresh offers list
+            refreshWpolData(); // Refresh balance
+        }
     };
+
     const handleConnect = () => connect({ client, wallets });
 
     const handleApprove = async () => {
@@ -221,74 +216,63 @@ function AssetPage() {
         });
     };
 
-    // --- NEW MANUAL CHECK LOGIC (Replaces PayEmbed) ---
     const handleRecheckBalance = async () => {
         if (!account) return;
         const target = Number(offerPrice);
         
-        // 1. Fetch fresh balance direct from blockchain
         const bal = await balanceOf({ contract: wpolContract, address: account.address });
         const freshBalance = Number(toTokens(bal, 18));
-        setWpolBalance(freshBalance); // Update UI State
+        setWpolBalance(freshBalance); 
 
-        // 2. Compare
         if (freshBalance >= target) {
-            // Success: Close modal, user can now click Confirm
-            setModal({ isOpen: false, type: 'loading', title: '', message: '', actionBtn: null });
+            setModal({ isOpen: false, type: 'loading', title: '', message: '', actionBtn: null, secondaryBtn: null });
         } else {
-            // Still missing funds
             const missing = target - freshBalance;
             setModal({
                 isOpen: true,
-                type: 'info', // Keep info icon
-                title: 'Balance Still Insufficient',
-                message: `You currently have ${freshBalance.toFixed(2)} WPOL. You are still missing ${missing.toFixed(2)} WPOL. Please swap more POL to WPOL in your wallet and try again.`,
+                type: 'info',
+                title: 'Funds Still Missing',
+                message: `You have ${freshBalance.toFixed(2)} WPOL. You need ${missing.toFixed(2)} more. Please go to your wallet app and SWAP.`,
                 actionBtn: (
-                    <button 
-                        onClick={handleRecheck} 
-                        className="btn w-100 fw-bold py-3" 
-                        style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}
-                    >
-                        Check Again
+                    <button onClick={handleConnect} className="btn w-100 fw-bold py-3" style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '8px' }}>
+                        1. Open Wallet
+                    </button>
+                ),
+                secondaryBtn: (
+                    <button onClick={() => handleRecheckBalance()} className="btn w-100 fw-bold py-3" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}>
+                        2. I Swapped - Check Again
                     </button>
                 )
             });
         }
     };
-
-    // Wrapper to pass to onClick
-    const handleRecheck = () => handleRecheckBalance();
 
     const handlePreOfferCheck = () => {
         const target = Number(offerPrice);
-        if (wpolBalance >= target) {
-            // Good to go
-            return; 
-        } else {
-            // Show Instruction Modal
-            setModal({
-                isOpen: true,
-                type: 'info',
-                title: 'Action Required',
-                message: `Your WPOL balance is insufficient. You need ${target} WPOL but you have ${wpolBalance.toFixed(2)}. Offers require WPOL (Wrapped POL). Please go to your wallet and swap POL to WPOL (1:1), then click below.`,
-                actionBtn: (
-                    <button 
-                        onClick={handleRecheck} 
-                        className="btn w-100 fw-bold py-3" 
-                        style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}
-                    >
-                        I Swapped - Refresh Balance
-                    </button>
-                )
-            });
-        }
+        if (wpolBalance >= target) return; 
+
+        setModal({
+            isOpen: true,
+            type: 'info',
+            title: 'WPOL Required',
+            message: `Your balance: ${wpolBalance.toFixed(2)} WPOL. Required: ${target} WPOL. Please swap POL to WPOL in your wallet (1:1 ratio).`,
+            actionBtn: (
+                <button onClick={handleConnect} className="btn w-100 fw-bold py-3" style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '8px' }}>
+                    1. Open Wallet to Swap
+                </button>
+            ),
+            secondaryBtn: (
+                <button onClick={() => handleRecheckBalance()} className="btn w-100 fw-bold py-3" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}>
+                    2. I Swapped - Check Balance
+                </button>
+            )
+        });
     };
 
-    if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center text-secondary" style={{ backgroundColor: THEME_BG }}>Loading Asset...</div>;
+    if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center text-secondary" style={{ backgroundColor: THEME_BG }}>Loading...</div>;
     if (!asset) return <div className="vh-100 d-flex justify-content-center align-items-center text-white" style={{ backgroundColor: THEME_BG }}>Asset Not Found</div>;
     
     const style = getHeroStyles(asset.tier);
-    
     const targetAmount = offerPrice ? Number(offerPrice) : 0;
     const hasEnoughWPOL = wpolBalance >= targetAmount;
     const needsApproval = hasEnoughWPOL && wpolAllowance < targetAmount;
@@ -301,7 +285,8 @@ function AssetPage() {
                 type={modal.type} 
                 title={modal.title} 
                 message={modal.message} 
-                actionBtn={modal.actionBtn} 
+                actionBtn={modal.actionBtn}
+                secondaryBtn={modal.secondaryBtn} 
                 onClose={closeModal} 
             />
 
@@ -313,7 +298,7 @@ function AssetPage() {
                 </div>
 
                 <div className="row g-5">
-                    {/* LEFT COLUMN: Asset Image */}
+                    {/* LEFT COLUMN */}
                     <div className="col-lg-5">
                          <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" 
                               style={{ background: CARD_BG, border: '1px solid #333', minHeight: '500px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
@@ -321,7 +306,6 @@ function AssetPage() {
                                 <div style={{ textAlign: 'center' }}>
                                     <p style={{ fontSize: '10px', color: style.textColor, marginBottom: '10px' }}>GEN-0 #00{asset.id}</p>
                                     <h1 style={{ fontSize: '42px', fontFamily: 'serif', fontWeight: '900', color: style.textColor, margin: '10px 0' }}>{asset.name}</h1>
-                                    <p style={{ fontSize: '10px', color: style.textColor, marginTop: '10px' }}>2025 EDITION</p>
                                 </div>
                             </div>
                         </div>
@@ -334,7 +318,7 @@ function AssetPage() {
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: Actions */}
+                    {/* RIGHT COLUMN */}
                     <div className="col-lg-7">
                         <div className="mb-3">
                             <h1 className="text-white fw-bold mb-1" style={{ fontSize: '32px' }}>{asset.name}</h1>
@@ -367,8 +351,7 @@ function AssetPage() {
                                                                 quantity: BigInt(1),
                                                             });
                                                         }}
-                                                        onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Success', message: 'Asset Purchased!', actionBtn: null})}
-                                                        onError={() => setModal({isOpen: true, type: 'error', title: 'Error', message: 'Transaction Failed', actionBtn: null})}
+                                                        onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Success', message: 'Asset Purchased!', actionBtn: null, secondaryBtn: null})}
                                                         style={{ background: BTN_GRADIENT, color: '#000', fontWeight: 'bold', flex: 1, height: '50px', border: 'none', borderRadius: '10px' }}
                                                     >
                                                         Buy Now
@@ -392,13 +375,8 @@ function AssetPage() {
                                                         style={{ height: '50px', fontSize: '18px' }}
                                                     />
                                                     
-                                                    {/* LOGIC REPLACEMENT: MANUAL CHECK instead of PayEmbed */}
                                                     {!hasEnoughWPOL ? (
-                                                        <button 
-                                                            onClick={handlePreOfferCheck}
-                                                            className="btn w-100 fw-bold py-3" 
-                                                            style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}
-                                                        >
+                                                        <button onClick={handlePreOfferCheck} className="btn w-100 fw-bold py-3" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}>
                                                             Check Balance
                                                         </button>
                                                     ) : needsApproval ? (
@@ -407,41 +385,25 @@ function AssetPage() {
                                                             onTransactionConfirmed={() => refreshWpolData()}
                                                             style={{ width: '100%', background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', height: '50px' }}
                                                         >
-                                                            Approve WPOL Access
+                                                            Step 1: Approve WPOL
                                                         </TransactionButton>
                                                     ) : (
                                                         <TransactionButton
                                                             transaction={async () => {
                                                                 if (!offerPrice || !tokenId) throw new Error("Missing Parameters");
-                                                                return makeOffer({
-                                                                    contract: marketplaceContract,
-                                                                    assetContractAddress: NFT_COLLECTION_ADDRESS,
-                                                                    tokenId: BigInt(tokenId),
-                                                                    totalOffer: offerPrice,
-                                                                    currencyContractAddress: WPOL_ADDRESS,
-                                                                    offerExpiresAt: new Date(Date.now() + 3 * 86400000)
-                                                                });
+                                                                return makeOffer({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), totalOffer: offerPrice, currencyContractAddress: WPOL_ADDRESS, offerExpiresAt: new Date(Date.now() + 3 * 86400000) });
                                                             }}
-                                                            onTransactionConfirmed={() => { setModal({isOpen: true, type: 'success', title: 'Offer Sent', message: 'Your offer is active!', actionBtn: null}); setIsOfferMode(false); }}
-                                                            onError={() => setModal({isOpen: true, type: 'error', title: 'Error', message: 'Offer failed', actionBtn: null})}
+                                                            onTransactionConfirmed={() => { setModal({isOpen: true, type: 'success', title: 'Offer Sent', message: 'Your offer is active!', actionBtn: null, secondaryBtn: null}); setIsOfferMode(false); }}
                                                             style={{ width: '100%', background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', height: '50px' }}
                                                         >
-                                                            Confirm Offer
+                                                            Step 2: Confirm Offer
                                                         </TransactionButton>
                                                     )}
                                                     <button onClick={() => setIsOfferMode(false)} className="btn btn-link text-secondary w-100 text-decoration-none mt-2">Cancel</button>
                                                 </div>
                                             )
                                         ) : (
-                                            <TransactionButton 
-                                                transaction={async () => {
-                                                    if (!listing) throw new Error("No Listing");
-                                                    return cancelListing({ contract: marketplaceContract, listingId: listing.id });
-                                                }} 
-                                                style={{ width: '100%', background: '#333', color: '#fff', borderRadius: '10px', height: '50px' }}
-                                            >
-                                                Cancel Listing
-                                            </TransactionButton>
+                                            <TransactionButton transaction={() => cancelListing({ contract: marketplaceContract, listingId: listing.id })} style={{ width: '100%', background: '#333', color: '#fff', borderRadius: '10px', height: '50px' }}>Cancel Listing</TransactionButton>
                                         )
                                     ) : (
                                         isOwner ? (
@@ -459,7 +421,7 @@ function AssetPage() {
                                                                 if (!tokenId) throw new Error("No Token ID");
                                                                 return createListing({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), pricePerToken: sellPrice, currencyContractAddress: NATIVE_TOKEN_ADDRESS });
                                                             }}
-                                                            onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Listed', message: 'Asset Listed', actionBtn: null})}
+                                                            onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Listed', message: 'Asset Listed', actionBtn: null, secondaryBtn: null})}
                                                             style={{ flex: 1, background: BTN_GRADIENT, color: '#000', borderRadius: '10px', height: '50px' }}
                                                         >
                                                             Confirm
@@ -498,7 +460,6 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* OFFERS TABLE (Updated Style) */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul" style={{ color: '#FCD535' }}></i>
