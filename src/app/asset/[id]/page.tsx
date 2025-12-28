@@ -10,7 +10,8 @@ import {
     createListing, 
     buyFromListing, 
     getAllValidListings,
-    cancelListing
+    cancelListing,
+    makeOffer 
 } from "thirdweb/extensions/marketplace";
 import { setApprovalForAll, isApprovedForAll } from "thirdweb/extensions/erc721";
 import { client } from "@/lib/client"; 
@@ -19,8 +20,9 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const RICH_GOLD_GRADIENT_CSS = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
+const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
-// --- CUSTOM MODAL (Updated with Market Link) ---
+// --- CUSTOM MODAL ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: any) => {
     if (!isOpen) return null;
 
@@ -52,24 +54,11 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: an
                 
                 {type !== 'loading' && (
                     <div className="d-flex gap-2">
-                        <button 
-                            onClick={onClose}
-                            className="btn fw-bold flex-grow-1"
-                            style={{ 
-                                background: '#333', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px' 
-                            }}
-                        >
+                        <button onClick={onClose} className="btn fw-bold flex-grow-1" style={{ background: '#333', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px' }}>
                             {btnText}
                         </button>
                         {type === 'success' && onGoToMarket && (
-                            <button 
-                                onClick={onGoToMarket}
-                                className="btn fw-bold flex-grow-1"
-                                style={{ 
-                                    background: 'linear-gradient(90deg, #FFD700 0%, #FDB931 100%)', 
-                                    border: 'none', color: '#000', padding: '12px', borderRadius: '12px' 
-                                }}
-                            >
+                            <button onClick={onGoToMarket} className="btn fw-bold flex-grow-1" style={{ background: 'linear-gradient(90deg, #FFD700 0%, #FDB931 100%)', border: 'none', color: '#000', padding: '12px', borderRadius: '12px' }}>
                                 Go to Market <i className="bi bi-arrow-right ms-1"></i>
                             </button>
                         )}
@@ -80,6 +69,7 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: an
     );
 };
 
+// --- HELPER STYLES ---
 const getHeroStyles = (tier: string) => {
     switch(tier?.toLowerCase()) {
         case 'immortal': return { bg: 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)', border: '1px solid rgba(252, 213, 53, 0.5)', shadow: '0 0 80px rgba(252, 213, 53, 0.15), inset 0 0 40px rgba(0,0,0,0.8)', textColor: RICH_GOLD_GRADIENT_CSS, labelColor: '#FCD535' };
@@ -97,6 +87,7 @@ const resolveIPFS = (uri: string) => {
 
 const mockChartData = [ { name: 'Dec 1', price: 10 }, { name: 'Today', price: 12 } ];
 
+// --- CONTRACTS ---
 const marketplaceContract = getContract({ client, chain: NETWORK_CHAIN, address: MARKETPLACE_ADDRESS });
 const nftContract = getContract({ client, chain: NETWORK_CHAIN, address: NFT_COLLECTION_ADDRESS });
 
@@ -104,22 +95,28 @@ function AssetPage() {
     const params = useParams();
     const router = useRouter();
     const account = useActiveAccount();
-    const { connect, isConnecting } = useConnectModal(); // For visitor connection
+    const { connect } = useConnectModal(); 
     
+    // Data State
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     
+    // Interaction States
     const [sellPrice, setSellPrice] = useState('10');
+    const [offerPrice, setOfferPrice] = useState(''); // For Making Offer
+    
     const [isListingMode, setIsListingMode] = useState(false);
+    const [isOfferMode, setIsOfferMode] = useState(false); // For Toggling Offer Input
     
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
+    // --- FETCH DATA ---
     const fetchAssetData = async () => {
         if (!tokenId) return;
         try {
@@ -168,7 +165,6 @@ function AssetPage() {
         router.push('/market');
     };
 
-    // Helper for Visitor Connection
     const handleConnect = () => {
         connect({ client });
     };
@@ -244,105 +240,136 @@ function AssetPage() {
                                 <div className="col-md-6 mt-3 mt-md-0">
                                     {/* --- ACTION BUTTONS LOGIC --- */}
                                     
-                                    {/* 1. If Listed: Show Buy or Manage */}
-                                    {listing ? (
-                                        !account ? (
-                                            // VISITOR: Connect to Buy
-                                            <button 
-                                                onClick={handleConnect}
-                                                className="btn w-100 fw-bold"
-                                                style={{ ...GOLD_BTN_STYLE, height: '50px' }}
-                                            >
-                                                Connect Wallet to Buy
-                                            </button>
-                                        ) : !isOwner ? (
-                                            // BUYER: Buy Now
-                                            <TransactionButton
-                                                transaction={() => buyFromListing({
-                                                    contract: marketplaceContract,
-                                                    listingId: listing.id,
-                                                    recipient: account?.address || "",
-                                                    quantity: BigInt(1),
-                                                })}
-                                                onTransactionConfirmed={() => showModal('success', 'Purchase Successful!', 'You have successfully purchased this asset.')}
-                                                onError={(e) => showModal('error', 'Transaction Info', 'Please check your wallet balance.')}
-                                                style={{ ...GOLD_BTN_STYLE, width: '100%', height: '50px' }}
-                                            >
-                                                Buy Now
-                                            </TransactionButton>
-                                        ) : (
-                                            // OWNER: Cancel Listing
-                                            <TransactionButton
-                                                transaction={() => cancelListing({
-                                                    contract: marketplaceContract,
-                                                    listingId: listing.id,
-                                                })}
-                                                onTransactionConfirmed={() => showModal('success', 'Listing Cancelled', 'Your asset has been removed from the market.')}
-                                                onError={(e) => showModal('error', 'Cancellation Info', 'Failed to cancel listing.')}
-                                                style={{ ...GOLD_BTN_STYLE, width: '100%', height: '50px', background: '#333', color: '#fff', border: '1px solid #555' }}
-                                            >
-                                                Cancel Listing
-                                            </TransactionButton>
-                                        )
+                                    {/* A. VISITOR (Not Connected) */}
+                                    {!account ? (
+                                        <button onClick={handleConnect} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>
+                                            Connect Wallet to Buy
+                                        </button>
                                     ) : (
-                                        // 2. If Not Listed: Show List or Offer
-                                        isOwner ? (
-                                            !isListingMode ? (
-                                                <button onClick={() => setIsListingMode(true)} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>
-                                                    List for Sale
-                                                </button>
-                                            ) : (
-                                                <div className="d-flex flex-column gap-2">
-                                                    <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
+                                        // B. CONNECTED USER
+                                        listing ? (
+                                            !isOwner ? (
+                                                // BUYER VIEW: Buy OR Offer
+                                                !isOfferMode ? (
                                                     <div className="d-flex gap-2">
-                                                        {!isApproved ? (
+                                                        <TransactionButton
+                                                            transaction={() => buyFromListing({
+                                                                contract: marketplaceContract,
+                                                                listingId: listing.id,
+                                                                recipient: account?.address || "",
+                                                                quantity: BigInt(1),
+                                                            })}
+                                                            onTransactionConfirmed={() => showModal('success', 'Purchase Successful!', 'You have successfully purchased this asset.')}
+                                                            onError={(e) => showModal('error', 'Transaction Info', 'Please check your wallet balance.')}
+                                                            style={{ ...GOLD_BTN_STYLE, flex: 1, height: '50px' }}
+                                                        >
+                                                            Buy Now
+                                                        </TransactionButton>
+                                                        <button 
+                                                            onClick={() => setIsOfferMode(true)} 
+                                                            className="btn fw-bold flex-grow-1" 
+                                                            style={{ ...OUTLINE_BTN_STYLE, height: '50px' }}
+                                                        >
+                                                            Make Offer
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    // OFFER INPUT MODE
+                                                    <div className="d-flex flex-column gap-2">
+                                                        <input 
+                                                            type="number" 
+                                                            className="form-control bg-dark text-white border-secondary" 
+                                                            placeholder="Offer Price (POL)" 
+                                                            value={offerPrice} 
+                                                            onChange={(e) => setOfferPrice(e.target.value)} 
+                                                        />
+                                                        <div className="d-flex gap-2">
                                                             <TransactionButton
-                                                                transaction={() => setApprovalForAll({
-                                                                    contract: nftContract,
-                                                                    operator: MARKETPLACE_ADDRESS,
-                                                                    approved: true
+                                                                transaction={() => makeOffer({
+                                                                    contract: marketplaceContract,
+                                                                    assetContractAddress: NFT_COLLECTION_ADDRESS,
+                                                                    tokenId: BigInt(tokenId),
+                                                                    totalPrice: offerPrice,
+                                                                    currencyContractAddress: NATIVE_TOKEN_ADDRESS,
+                                                                    quantity: BigInt(1)
                                                                 })}
                                                                 onTransactionConfirmed={() => {
-                                                                    showModal('success', 'Market Approved', 'Your wallet is now ready to list items.');
-                                                                    setIsApproved(true);
+                                                                    showModal('success', 'Offer Sent!', 'Your offer has been submitted successfully.');
+                                                                    setIsOfferMode(false);
                                                                 }}
-                                                                onError={(e) => showModal('error', 'Approval Info', 'Approval cancelled.')}
-                                                                style={{ ...GOLD_BTN_STYLE, flex: 1, backgroundColor: '#fff', color: '#000' }}
-                                                            >
-                                                                1. Approve Market
-                                                            </TransactionButton>
-                                                        ) : (
-                                                            <TransactionButton
-                                                                transaction={() => {
-                                                                    if (!tokenId) throw new Error("Invalid Token ID");
-                                                                    const start = new Date();
-                                                                    const end = new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000);
-                                                                    return createListing({
-                                                                        contract: marketplaceContract,
-                                                                        assetContractAddress: NFT_COLLECTION_ADDRESS,
-                                                                        tokenId: BigInt(tokenId),
-                                                                        pricePerToken: sellPrice,
-                                                                        currencyContractAddress: NATIVE_TOKEN_ADDRESS,
-                                                                        startTimestamp: start,
-                                                                        endTimestamp: end
-                                                                    });
-                                                                }}
-                                                                onTransactionConfirmed={() => showModal('success', 'Asset Listed!', `Your asset is now listed for ${sellPrice} POL.`)}
-                                                                onError={(e) => showModal('error', 'Listing Info', 'Process interrupted.')}
+                                                                onError={(e) => showModal('error', 'Offer Info', 'Make sure you have enough balance/WETH.')}
                                                                 style={{ ...GOLD_BTN_STYLE, flex: 1 }}
                                                             >
-                                                                2. Confirm List
+                                                                Confirm Offer
                                                             </TransactionButton>
-                                                        )}
-                                                        <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary">Cancel</button>
+                                                            <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )
+                                            ) : (
+                                                // OWNER VIEW: Cancel Listing
+                                                <TransactionButton
+                                                    transaction={() => cancelListing({ contract: marketplaceContract, listingId: listing.id })}
+                                                    onTransactionConfirmed={() => showModal('success', 'Listing Cancelled', 'Your asset has been removed from the market.')}
+                                                    onError={(e) => showModal('error', 'Cancellation Info', 'Failed to cancel listing.')}
+                                                    style={{ ...GOLD_BTN_STYLE, width: '100%', height: '50px', background: '#333', color: '#fff', border: '1px solid #555' }}
+                                                >
+                                                    Cancel Listing
+                                                </TransactionButton>
                                             )
                                         ) : (
-                                            <div className="d-flex gap-2">
-                                                <button className="btn w-50 fw-bold disabled" style={{ height: '50px', background: '#333', color: '#888', border: 'none' }}>Not Listed</button>
-                                                <button className="btn w-50 fw-bold text-white disabled" style={{ height: '50px', background: 'transparent', border: '1px solid #2a2e35' }}>Make Offer</button>
-                                            </div>
+                                            // C. NOT LISTED (Owner Only)
+                                            isOwner ? (
+                                                !isListingMode ? (
+                                                    <button onClick={() => setIsListingMode(true)} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>
+                                                        List for Sale
+                                                    </button>
+                                                ) : (
+                                                    <div className="d-flex flex-column gap-2">
+                                                        <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
+                                                        <div className="d-flex gap-2">
+                                                            {!isApproved ? (
+                                                                <TransactionButton
+                                                                    transaction={() => setApprovalForAll({ contract: nftContract, operator: MARKETPLACE_ADDRESS, approved: true })}
+                                                                    onTransactionConfirmed={() => { showModal('success', 'Market Approved', 'Your wallet is now ready.'); setIsApproved(true); }}
+                                                                    onError={(e) => showModal('error', 'Approval Info', 'Approval cancelled.')}
+                                                                    style={{ ...GOLD_BTN_STYLE, flex: 1, backgroundColor: '#fff', color: '#000' }}
+                                                                >
+                                                                    1. Approve Market
+                                                                </TransactionButton>
+                                                            ) : (
+                                                                <TransactionButton
+                                                                    transaction={() => {
+                                                                        if (!tokenId) throw new Error("Invalid Token ID");
+                                                                        const start = new Date();
+                                                                        const end = new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000);
+                                                                        return createListing({
+                                                                            contract: marketplaceContract,
+                                                                            assetContractAddress: NFT_COLLECTION_ADDRESS,
+                                                                            tokenId: BigInt(tokenId),
+                                                                            pricePerToken: sellPrice,
+                                                                            currencyContractAddress: NATIVE_TOKEN_ADDRESS,
+                                                                            startTimestamp: start,
+                                                                            endTimestamp: end
+                                                                        });
+                                                                    }}
+                                                                    onTransactionConfirmed={() => showModal('success', 'Asset Listed!', `Your asset is now listed for ${sellPrice} POL.`)}
+                                                                    onError={(e) => { console.error(e); showModal('error', 'Listing Info', 'Process interrupted.'); }}
+                                                                    style={{ ...GOLD_BTN_STYLE, flex: 1 }}
+                                                                >
+                                                                    2. Confirm List
+                                                                </TransactionButton>
+                                                            )}
+                                                            <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary">Cancel</button>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            ) : (
+                                                <div className="d-flex gap-2">
+                                                    <button className="btn w-50 fw-bold disabled" style={{ height: '50px', background: '#333', color: '#888', border: 'none' }}>Not Listed</button>
+                                                    <button className="btn w-50 fw-bold text-white disabled" style={{ height: '50px', background: 'transparent', border: '1px solid #2a2e35' }}>Make Offer</button>
+                                                </div>
+                                            )
                                         )
                                     )}
                                 </div>
