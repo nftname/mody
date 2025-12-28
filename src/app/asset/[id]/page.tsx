@@ -30,13 +30,11 @@ const wallets = [
   walletConnect(),
 ];
 
-// --- CONFIGURATION ---
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 const THEME_BG = '#0d1117'; 
 const CARD_BG = '#161b22';
 const BTN_GRADIENT = 'linear-gradient(135deg, #FBF5B7 0%, #BF953F 25%, #AA771C 50%, #BF953F 75%, #FBF5B7 100%)';
 
-// --- DATA DEFINITION ---
 const mockChartData = [
   { name: 'Dec 1', price: 10 },
   { name: 'Dec 10', price: 12 },
@@ -44,10 +42,11 @@ const mockChartData = [
   { name: 'Today', price: 14 },
 ];
 
-// --- MODAL ---
 const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, onClose }: any) => {
     if (!isOpen) return null;
-    const borderStyle = type === 'success' ? '1px solid #FCD535' : '1px solid #333';
+    const isSuccess = type === 'success';
+    const borderStyle = isSuccess ? '1px solid #FCD535' : '1px solid #333';
+    const iconColor = isSuccess ? '#FCD535' : (type === 'error' ? '#dc3545' : '#FCD535');
 
     return (
         <div style={{
@@ -67,9 +66,10 @@ const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, on
                 </button>
 
                 <div className="mb-3">
-                    {type === 'success' && <i className="bi bi-check-circle-fill text-success" style={{fontSize: '3.5rem', color: '#FCD535'}}></i>}
-                    {type === 'error' && <i className="bi bi-exclamation-triangle-fill text-danger" style={{fontSize: '3.5rem'}}></i>}
-                    {type === 'info' && <i className="bi bi-info-circle-fill" style={{fontSize: '3.5rem', color: '#FCD535'}}></i>}
+                    {isSuccess ? 
+                        <i className="bi bi-check-circle-fill" style={{fontSize: '3.5rem', color: iconColor}}></i> : 
+                        <i className="bi bi-info-circle-fill" style={{fontSize: '3.5rem', color: iconColor}}></i>
+                    }
                 </div>
 
                 <h4 className="text-white fw-bold mb-3" style={{ fontSize: '22px' }}>{title}</h4>
@@ -79,8 +79,8 @@ const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, on
                     {actionBtn}
                     {secondaryBtn}
                     {!actionBtn && !secondaryBtn && (
-                        <button onClick={onClose} className="btn w-100 fw-bold py-3" style={{ background: type === 'success' ? BTN_GRADIENT : '#333', color: type === 'success' ? '#000' : '#fff', border: '1px solid #555', borderRadius: '8px' }}>
-                            {type === 'success' ? 'Continue' : 'Close'}
+                        <button onClick={onClose} className="btn w-100 fw-bold py-3" style={{ background: isSuccess ? BTN_GRADIENT : '#333', color: isSuccess ? '#000' : '#fff', border: '1px solid #555', borderRadius: '8px' }}>
+                            {isSuccess ? 'Continue' : 'Close'}
                         </button>
                     )}
                 </div>
@@ -109,7 +109,6 @@ const wpolContract = getContract({ client, chain: NETWORK_CHAIN, address: WPOL_A
 function AssetPage() {
     const params = useParams();
     const account = useActiveAccount();
-    // Removed manual useConnectModal
     
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
@@ -131,8 +130,7 @@ function AssetPage() {
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
-    // --- 1. DATA FETCHING ---
-    const fetchData = useCallback(async () => {
+    const fetchAssetData = async () => {
         if (!tokenId) return;
         try {
             const tokenURI = await readContract({ contract: nftContract, method: "function tokenURI(uint256) view returns (string)", params: [BigInt(tokenId)] });
@@ -154,16 +152,14 @@ function AssetPage() {
                 const approvedStatus = await isApprovedForAll({ contract: nftContract, owner: account.address, operator: MARKETPLACE_ADDRESS });
                 setIsApproved(approvedStatus);
             }
+        } catch (error) { console.error("Asset fetch error:", error); }
+    };
 
-            // LISTINGS (FIXED DUPLICATES)
-            const allListings = await getAllValidListings({ contract: marketplaceContract });
-            const tokenListings = allListings.filter(l => l.asset.id.toString() === tokenId.toString());
-            const latestListing = tokenListings.sort((a, b) => Number(b.id) - Number(a.id))[0];
-            setListing(latestListing || null);
-
-            // OFFERS
-            try {
-                const allOffers = await getAllValidOffers({ contract: marketplaceContract });
+    const fetchOffers = async () => {
+        if (!tokenId) return;
+        try {
+            const allOffers = await getAllValidOffers({ contract: marketplaceContract });
+            if (allOffers && Array.isArray(allOffers)) {
                 const validOffers = allOffers
                     .filter(o => 
                         o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
@@ -171,10 +167,14 @@ function AssetPage() {
                     )
                     .sort((a, b) => Number(b.id) - Number(a.id));
                 setOffersList(validOffers);
-            } catch (e) { setOffersList([]); }
-
-        } catch (error) { console.error("Data error", error); }
-    }, [tokenId, account]);
+            } else {
+                setOffersList([]);
+            }
+        } catch (e) {
+            console.warn("Offers fetch warning:", e);
+            setOffersList([]); 
+        }
+    };
 
     const checkListing = async () => {
         if (!tokenId) return;
@@ -187,28 +187,29 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     };
 
-    // --- 2. WALLET CHECK ---
     const refreshWpolData = useCallback(async () => {
         if (account) {
             try {
-                const bal = await balanceOf({ contract: wpolContract, address: account.address });
-                setWpolBalance(Number(toTokens(bal, 18)));
-                const allow = await readContract({
+                const balanceBigInt = await balanceOf({ contract: wpolContract, address: account.address });
+                setWpolBalance(Number(toTokens(balanceBigInt, 18)));
+                const allowanceBigInt = await readContract({
                     contract: wpolContract,
                     method: "function allowance(address, address) view returns (uint256)",
                     params: [account.address, MARKETPLACE_ADDRESS]
                 });
-                setWpolAllowance(Number(toTokens(allow, 18)));
-            } catch (e) { console.error("Wallet error", e); }
+                setWpolAllowance(Number(toTokens(allowanceBigInt, 18)));
+            } catch (e) { console.error("WPOL Error", e); }
         }
     }, [account]);
 
     useEffect(() => {
         if (tokenId) {
             setLoading(true);
-            fetchData().then(() => setLoading(false));
+            Promise.all([fetchAssetData(), checkListing(), fetchOffers()])
+                .then(() => setLoading(false))
+                .catch(() => setLoading(false));
         }
-    }, [fetchData, tokenId]);
+    }, [tokenId, account]);
 
     useEffect(() => {
         if (!account || !isOfferMode) return;
@@ -217,12 +218,12 @@ function AssetPage() {
         return () => clearInterval(interval);
     }, [isOfferMode, account, refreshWpolData]);
 
-    // --- ACTIONS ---
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
         if (modal.type === 'success') {
-            fetchData();
-            refreshWpolData();
+            fetchOffers(); 
+            fetchAssetData(); 
+            checkListing();
         }
     };
 
@@ -262,9 +263,7 @@ function AssetPage() {
     if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center text-secondary" style={{ backgroundColor: THEME_BG }}>Loading...</div>;
     if (!asset) return <div className="vh-100 d-flex justify-content-center align-items-center text-white" style={{ backgroundColor: THEME_BG }}>Asset Not Found</div>;
     
-    // --- THIS WAS MISSING BEFORE ---
-    const style = getHeroStyles(asset.tier || 'founder');
-    
+    const style = getHeroStyles(asset.tier);
     const targetAmount = offerPrice ? Number(offerPrice) : 0;
     const hasEnoughWPOL = wpolBalance >= targetAmount;
     const hasAllowance = hasEnoughWPOL && wpolAllowance >= targetAmount && targetAmount > 0;
@@ -329,7 +328,7 @@ function AssetPage() {
                                         client={client} 
                                         wallets={wallets}
                                         connectButton={{
-                                            style: { width: '100%', height: '50px', background: BTN_GRADIENT, color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '10px' },
+                                            style: { width: '100%', height: '50px', background: BTN_GRADIENT, color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '10px', fontSize: '16px' },
                                             label: "Connect Wallet"
                                         }}
                                     />
@@ -507,8 +506,12 @@ function AssetPage() {
                                                         <td className="text-center" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
                                                             <TransactionButton
                                                                 transaction={() => acceptOffer({ contract: marketplaceContract, offerId: offer.id })}
-                                                                // FIXED: Added secondaryBtn: null
-                                                                onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Sold!', message: 'Asset Sold Successfully', actionBtn: null, secondaryBtn: null})}
+                                                                onTransactionConfirmed={() => { 
+                                                                    setModal({isOpen: true, type: 'success', title: 'Sold!', message: 'Asset Sold Successfully', actionBtn: null, secondaryBtn: null});
+                                                                    fetchAssetData(); // Refresh asset info
+                                                                    fetchOffers();    // Refresh offers list
+                                                                    checkListing();   // Refresh listing status
+                                                                }}
                                                                 onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Accept Failed', actionBtn: null, secondaryBtn: null})}
                                                                 style={{ background: BTN_GRADIENT, color: '#000', fontWeight: 'bold', padding: '4px 10px', fontSize: '12px', borderRadius: '6px', border: 'none', minWidth: '60px', height: '32px' }}
                                                             >Accept</TransactionButton>
