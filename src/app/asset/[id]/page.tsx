@@ -35,7 +35,7 @@ const THEME_BG = '#0d1117';
 const CARD_BG = '#161b22';
 const BTN_GRADIENT = 'linear-gradient(135deg, #FBF5B7 0%, #BF953F 25%, #AA771C 50%, #BF953F 75%, #FBF5B7 100%)';
 
-// --- IMPROVED MODAL ---
+// --- MODAL COMPONENT ---
 const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, onClose }: any) => {
     if (!isOpen) return null;
     return (
@@ -99,7 +99,6 @@ const wpolContract = getContract({ client, chain: NETWORK_CHAIN, address: WPOL_A
 
 function AssetPage() {
     const params = useParams();
-    const router = useRouter();
     const account = useActiveAccount();
     const { connect } = useConnectModal();
     
@@ -117,7 +116,6 @@ function AssetPage() {
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
     
-    // Modal State
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '', actionBtn: null as any, secondaryBtn: null as any });
     const [offersList, setOffersList] = useState<any[]>([]);
 
@@ -147,7 +145,7 @@ function AssetPage() {
                 setIsApproved(approvedStatus);
             }
 
-            // SAFETY CHECK: Handle fetching offers safely to prevent crash
+            // --- CRITICAL FIX: Safe Fetching to prevent Application Error ---
             try {
                 const allOffers = await getAllValidOffers({ contract: marketplaceContract });
                 if (allOffers && Array.isArray(allOffers)) {
@@ -156,12 +154,17 @@ function AssetPage() {
                         o.tokenId.toString() === tokenId.toString()
                     );
                     setOffersList(validOffers);
+                } else {
+                    setOffersList([]);
                 }
             } catch (err) {
-                console.warn("Could not fetch offers yet:", err);
+                console.warn("Offers fetch warning:", err);
+                setOffersList([]); // Prevent crash, just show empty list
             }
 
-        } catch (error) { console.error("Failed to fetch asset", error); }
+        } catch (error) { 
+            console.error("Asset fetch error:", error);
+        }
     };
 
     const checkListing = async () => {
@@ -198,10 +201,10 @@ function AssetPage() {
 
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
-        // Removed reload() to prevent crash. We just update the state.
         if (modal.type === 'success') {
-            fetchAssetData(); // Refresh offers list
-            refreshWpolData(); // Refresh balance
+            // Soft refresh instead of reload
+            fetchAssetData();
+            refreshWpolData();
         }
     };
 
@@ -220,31 +223,36 @@ function AssetPage() {
         if (!account) return;
         const target = Number(offerPrice);
         
-        const bal = await balanceOf({ contract: wpolContract, address: account.address });
-        const freshBalance = Number(toTokens(bal, 18));
-        setWpolBalance(freshBalance); 
+        // 1. Get fresh balance
+        try {
+            const bal = await balanceOf({ contract: wpolContract, address: account.address });
+            const freshBalance = Number(toTokens(bal, 18));
+            setWpolBalance(freshBalance); 
 
-        if (freshBalance >= target) {
-            setModal({ isOpen: false, type: 'loading', title: '', message: '', actionBtn: null, secondaryBtn: null });
-        } else {
-            const missing = target - freshBalance;
-            setModal({
-                isOpen: true,
-                type: 'info',
-                title: 'Funds Still Missing',
-                message: `You have ${freshBalance.toFixed(2)} WPOL. You need ${missing.toFixed(2)} more. Please go to your wallet app and SWAP.`,
-                actionBtn: (
-                    <button onClick={handleConnect} className="btn w-100 fw-bold py-3" style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '8px' }}>
-                        1. Open Wallet
-                    </button>
-                ),
-                secondaryBtn: (
-                    <button onClick={() => handleRecheckBalance()} className="btn w-100 fw-bold py-3" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}>
-                        2. I Swapped - Check Again
-                    </button>
-                )
-            });
-        }
+            // 2. Compare
+            if (freshBalance >= target) {
+                // Close modal, now user can click buttons
+                setModal({ isOpen: false, type: 'loading', title: '', message: '', actionBtn: null, secondaryBtn: null });
+            } else {
+                const missing = target - freshBalance;
+                setModal({
+                    isOpen: true,
+                    type: 'info',
+                    title: 'Funds Still Missing',
+                    message: `Balance: ${freshBalance.toFixed(2)} WPOL. Missing: ${missing.toFixed(2)} WPOL. Please swap more in your wallet.`,
+                    actionBtn: (
+                        <button onClick={handleConnect} className="btn w-100 fw-bold py-3" style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '8px' }}>
+                            1. Open Wallet
+                        </button>
+                    ),
+                    secondaryBtn: (
+                        <button onClick={() => handleRecheckBalance()} className="btn w-100 fw-bold py-3" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}>
+                            2. Check Balance Again
+                        </button>
+                    )
+                });
+            }
+        } catch (e) { console.error("Recheck failed", e); }
     };
 
     const handlePreOfferCheck = () => {
@@ -255,7 +263,7 @@ function AssetPage() {
             isOpen: true,
             type: 'info',
             title: 'WPOL Required',
-            message: `Your balance: ${wpolBalance.toFixed(2)} WPOL. Required: ${target} WPOL. Please swap POL to WPOL in your wallet (1:1 ratio).`,
+            message: `Your WPOL balance is insufficient. You need ${target} WPOL. Please swap POL to WPOL (1:1) in your wallet.`,
             actionBtn: (
                 <button onClick={handleConnect} className="btn w-100 fw-bold py-3" style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '8px' }}>
                     1. Open Wallet to Swap
@@ -460,6 +468,7 @@ function AssetPage() {
                             </div>
                         </div>
 
+                        {/* OFFERS TABLE (Updated Style) */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul" style={{ color: '#FCD535' }}></i>
