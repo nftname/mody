@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams } from 'next/navigation';
-import { useActiveAccount, TransactionButton, useConnectModal } from "thirdweb/react";
+import { useActiveAccount, TransactionButton, ConnectButton } from "thirdweb/react";
 import { readContract, prepareContractCall, toWei, toTokens, NATIVE_TOKEN_ADDRESS, getContract } from "thirdweb";
 import { createWallet, walletConnect } from "thirdweb/wallets"; 
 import { 
@@ -109,9 +109,8 @@ const wpolContract = getContract({ client, chain: NETWORK_CHAIN, address: WPOL_A
 function AssetPage() {
     const params = useParams();
     const account = useActiveAccount();
-    const { connect } = useConnectModal();
+    // Removed manual useConnectModal
     
-    // Data State
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
@@ -133,7 +132,7 @@ function AssetPage() {
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
     // --- 1. DATA FETCHING ---
-    const fetchAssetData = async () => {
+    const fetchData = useCallback(async () => {
         if (!tokenId) return;
         try {
             const tokenURI = await readContract({ contract: nftContract, method: "function tokenURI(uint256) view returns (string)", params: [BigInt(tokenId)] });
@@ -155,76 +154,66 @@ function AssetPage() {
                 const approvedStatus = await isApprovedForAll({ contract: nftContract, owner: account.address, operator: MARKETPLACE_ADDRESS });
                 setIsApproved(approvedStatus);
             }
-        } catch (error) { console.error("Asset fetch error:", error); }
-    };
 
-    const fetchOffers = async () => {
-        if (!tokenId) return;
-        try {
-            const allOffers = await getAllValidOffers({ contract: marketplaceContract });
-            if (allOffers && Array.isArray(allOffers)) {
-                // FIXED: Removed status check to prevent type mismatch
+            // LISTINGS (FIXED DUPLICATES)
+            const allListings = await getAllValidListings({ contract: marketplaceContract });
+            const tokenListings = allListings.filter(l => l.asset.id.toString() === tokenId.toString());
+            const latestListing = tokenListings.sort((a, b) => Number(b.id) - Number(a.id))[0];
+            setListing(latestListing || null);
+
+            // OFFERS
+            try {
+                const allOffers = await getAllValidOffers({ contract: marketplaceContract });
                 const validOffers = allOffers
                     .filter(o => 
                         o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
                         o.tokenId.toString() === tokenId.toString()
                     )
                     .sort((a, b) => Number(b.id) - Number(a.id));
-                
                 setOffersList(validOffers);
-            } else {
-                setOffersList([]);
-            }
-        } catch (e) {
-            console.warn("Offers fetch warning:", e);
-            setOffersList([]); 
-        }
-    };
+            } catch (e) { setOffersList([]); }
+
+        } catch (error) { console.error("Data error", error); }
+    }, [tokenId, account]);
 
     const checkListing = async () => {
         if (!tokenId) return;
         try {
             const listings = await getAllValidListings({ contract: marketplaceContract, start: 0, count: BigInt(100) });
-            // FIXED: Removed status check to prevent type mismatch
             const foundListing = listings
                 .filter(l => l.asset.id.toString() === tokenId.toString())
                 .sort((a, b) => Number(b.id) - Number(a.id))[0];
-                
             setListing(foundListing || null);
         } catch (e) { console.error("Market Error", e); }
     };
 
-    // --- 2. WALLET & INTERVAL ---
+    // --- 2. WALLET CHECK ---
     const refreshWpolData = useCallback(async () => {
         if (account) {
             try {
-                const balanceBigInt = await balanceOf({ contract: wpolContract, address: account.address });
-                setWpolBalance(Number(toTokens(balanceBigInt, 18)));
-                const allowanceBigInt = await readContract({
+                const bal = await balanceOf({ contract: wpolContract, address: account.address });
+                setWpolBalance(Number(toTokens(bal, 18)));
+                const allow = await readContract({
                     contract: wpolContract,
                     method: "function allowance(address, address) view returns (uint256)",
                     params: [account.address, MARKETPLACE_ADDRESS]
                 });
-                setWpolAllowance(Number(toTokens(allowanceBigInt, 18)));
-            } catch (e) { console.error("WPOL Error", e); }
+                setWpolAllowance(Number(toTokens(allow, 18)));
+            } catch (e) { console.error("Wallet error", e); }
         }
     }, [account]);
 
     useEffect(() => {
         if (tokenId) {
             setLoading(true);
-            Promise.all([fetchAssetData(), checkListing(), fetchOffers()])
-                .then(() => setLoading(false))
-                .catch(() => setLoading(false));
+            fetchData().then(() => setLoading(false));
         }
-    }, [tokenId, account]);
+    }, [fetchData, tokenId]);
 
     useEffect(() => {
         if (!account || !isOfferMode) return;
-        
-        refreshWpolData(); 
-        const interval = setInterval(refreshWpolData, 5000); 
-        
+        refreshWpolData();
+        const interval = setInterval(refreshWpolData, 5000);
         return () => clearInterval(interval);
     }, [isOfferMode, account, refreshWpolData]);
 
@@ -232,13 +221,10 @@ function AssetPage() {
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
         if (modal.type === 'success') {
-            fetchOffers(); 
-            fetchAssetData(); 
-            checkListing();
+            fetchData();
+            refreshWpolData();
         }
     };
-
-    const handleConnect = () => connect({ client, wallets });
 
     const handleApprove = async () => {
         if (!offerPrice) throw new Error("Price missing");
@@ -251,34 +237,8 @@ function AssetPage() {
 
     const handleRecheckBalance = async () => {
         if (!account) return;
-        const target = Number(offerPrice);
-        try {
-            const bal = await balanceOf({ contract: wpolContract, address: account.address });
-            const freshBalance = Number(toTokens(bal, 18));
-            setWpolBalance(freshBalance); 
-
-            if (freshBalance >= target) {
-                setModal({ isOpen: false, type: 'loading', title: '', message: '', actionBtn: null, secondaryBtn: null });
-            } else {
-                const missing = target - freshBalance;
-                setModal({
-                    isOpen: true,
-                    type: 'info',
-                    title: 'Funds Still Missing',
-                    message: `You have ${freshBalance.toFixed(2)} WPOL. You need ${missing.toFixed(2)} more. Please go to your wallet app and SWAP.`,
-                    actionBtn: (
-                        <button onClick={handleConnect} className="btn w-100 fw-bold py-3" style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '8px' }}>
-                            1. Open Wallet
-                        </button>
-                    ),
-                    secondaryBtn: (
-                        <button onClick={() => handleRecheckBalance()} className="btn w-100 fw-bold py-3" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}>
-                            2. Check Balance Again
-                        </button>
-                    )
-                });
-            }
-        } catch (e) { console.error("Recheck error", e); }
+        await refreshWpolData();
+        setModal({ ...modal, isOpen: false }); 
     };
 
     const handlePreOfferCheck = () => {
@@ -288,16 +248,12 @@ function AssetPage() {
         setModal({
             isOpen: true,
             type: 'info',
-            title: 'WPOL Required',
-            message: `Your WPOL balance is insufficient. You need ${target} WPOL. Please swap POL to WPOL (1:1) in your wallet.`,
-            actionBtn: (
-                <button onClick={handleConnect} className="btn w-100 fw-bold py-3" style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '8px' }}>
-                    1. Open Wallet to Swap
-                </button>
-            ),
+            title: 'Insufficient WPOL',
+            message: `You need ${target} WPOL but have ${wpolBalance.toFixed(2)}. Please swap POL to WPOL in your wallet.`,
+            actionBtn: null,
             secondaryBtn: (
-                <button onClick={() => handleRecheckBalance()} className="btn w-100 fw-bold py-3" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}>
-                    2. I Swapped - Check Balance
+                <button onClick={handleRecheckBalance} className="btn w-100 fw-bold py-3" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}>
+                    I Swapped - Check Balance
                 </button>
             )
         });
@@ -306,10 +262,11 @@ function AssetPage() {
     if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center text-secondary" style={{ backgroundColor: THEME_BG }}>Loading...</div>;
     if (!asset) return <div className="vh-100 d-flex justify-content-center align-items-center text-white" style={{ backgroundColor: THEME_BG }}>Asset Not Found</div>;
     
-    const style = getHeroStyles(asset.tier);
+    // --- THIS WAS MISSING BEFORE ---
+    const style = getHeroStyles(asset.tier || 'founder');
+    
     const targetAmount = offerPrice ? Number(offerPrice) : 0;
     const hasEnoughWPOL = wpolBalance >= targetAmount;
-    
     const hasAllowance = hasEnoughWPOL && wpolAllowance >= targetAmount && targetAmount > 0;
 
     return (
@@ -337,10 +294,10 @@ function AssetPage() {
                     <div className="col-lg-5">
                          <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" 
                               style={{ background: CARD_BG, border: '1px solid #333', minHeight: '500px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
-                            <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg || '#161b22', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                 <div style={{ textAlign: 'center' }}>
-                                    <p style={{ fontSize: '10px', color: style.textColor, marginBottom: '10px' }}>GEN-0 #00{asset.id}</p>
-                                    <h1 style={{ fontSize: '42px', fontFamily: 'serif', fontWeight: '900', color: style.textColor, margin: '10px 0' }}>{asset.name}</h1>
+                                    <p style={{ fontSize: '10px', color: '#fff', marginBottom: '10px' }}>GEN-0 #00{asset.id}</p>
+                                    <h1 style={{ fontSize: '42px', fontFamily: 'serif', fontWeight: '900', color: '#fff', margin: '10px 0' }}>{asset.name}</h1>
                                 </div>
                             </div>
                         </div>
@@ -367,9 +324,16 @@ function AssetPage() {
                             </h2>
 
                             {!account ? (
-                                <button onClick={handleConnect} className="btn w-100 fw-bold text-dark" style={{ background: BTN_GRADIENT, border: 'none', height: '50px', borderRadius: '10px' }}>
-                                    Connect Wallet
-                                </button>
+                                <div style={{ width: '100%', height: '50px' }}>
+                                    <ConnectButton 
+                                        client={client} 
+                                        wallets={wallets}
+                                        connectButton={{
+                                            style: { width: '100%', height: '50px', background: BTN_GRADIENT, color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '10px' },
+                                            label: "Connect Wallet"
+                                        }}
+                                    />
+                                </div>
                             ) : (
                                 <div className="d-flex flex-column gap-3">
                                     {listing ? (
@@ -386,7 +350,6 @@ function AssetPage() {
                                                                 quantity: BigInt(1),
                                                             });
                                                         }}
-                                                        // FIXED: Added secondaryBtn: null to prevent type error
                                                         onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Success', message: 'Asset Purchased!', actionBtn: null, secondaryBtn: null})}
                                                         onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Purchase Failed', actionBtn: null, secondaryBtn: null})}
                                                         style={{ background: BTN_GRADIENT, color: '#000', fontWeight: 'bold', flex: 1, height: '50px', border: 'none', borderRadius: '10px' }}
@@ -420,7 +383,6 @@ function AssetPage() {
                                                         <TransactionButton
                                                             transaction={handleApprove}
                                                             onTransactionConfirmed={() => refreshWpolData()}
-                                                            // FIXED: Added secondaryBtn: null
                                                             onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Approval Failed', actionBtn: null, secondaryBtn: null})}
                                                             style={{ width: '100%', background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', height: '50px' }}
                                                         >
@@ -432,7 +394,6 @@ function AssetPage() {
                                                                 if (!offerPrice || !tokenId) throw new Error("Missing Parameters");
                                                                 return makeOffer({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), totalOffer: offerPrice, currencyContractAddress: WPOL_ADDRESS, offerExpiresAt: new Date(Date.now() + 3 * 86400000) });
                                                             }}
-                                                            // FIXED: Added secondaryBtn: null
                                                             onTransactionConfirmed={() => { setModal({isOpen: true, type: 'success', title: 'Offer Sent', message: 'Your offer is active!', actionBtn: null, secondaryBtn: null}); setIsOfferMode(false); }}
                                                             onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Offer Failed', actionBtn: null, secondaryBtn: null})}
                                                             style={{ width: '100%', background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', height: '50px' }}
@@ -446,7 +407,6 @@ function AssetPage() {
                                         ) : (
                                             <TransactionButton 
                                                 transaction={() => cancelListing({ contract: marketplaceContract, listingId: listing.id })} 
-                                                // FIXED: Added secondaryBtn: null
                                                 onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Cancel Failed', actionBtn: null, secondaryBtn: null})}
                                                 style={{ width: '100%', background: '#333', color: '#fff', borderRadius: '10px', height: '50px' }}
                                             >
@@ -469,7 +429,6 @@ function AssetPage() {
                                                                 if (!tokenId) throw new Error("No Token ID");
                                                                 return createListing({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), pricePerToken: sellPrice, currencyContractAddress: NATIVE_TOKEN_ADDRESS });
                                                             }}
-                                                            // FIXED: Added secondaryBtn: null
                                                             onTransactionConfirmed={() => { 
                                                                 setModal({isOpen: true, type: 'success', title: 'Listed', message: 'Asset Listed', actionBtn: null, secondaryBtn: null});
                                                                 setIsListingMode(false); 
