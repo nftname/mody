@@ -16,9 +16,60 @@ import { client } from "@/lib/client";
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS, NETWORK_CHAIN } from '@/data/config';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+// --- STYLES & CONSTANTS ---
 const RICH_GOLD_GRADIENT_CSS = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 
+// --- CUSTOM MODAL COMPONENT (Based on your Design) ---
+const CustomModal = ({ isOpen, type, title, message, onClose }: any) => {
+    if (!isOpen) return null;
+
+    // Gentle Design Logic: No Red, No Harsh Errors
+    let icon = <div className="spinner-border text-warning" role="status"></div>; // Default Loading
+    let btnText = "Processing...";
+    
+    if (type === 'success') {
+        icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '50px', color: '#28a745' }}></i>;
+        btnText = "Continue";
+    } else if (type === 'error') {
+        // Gentle Error: No Red, using muted gold/grey
+        icon = <i className="bi bi-info-circle-fill" style={{ fontSize: '50px', color: '#FCD535' }}></i>;
+        btnText = "Try Again";
+    }
+
+    return (
+        <div style={{
+            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+            backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+            <div style={{
+                backgroundColor: '#111', border: '1px solid #333', borderRadius: '20px',
+                padding: '30px', width: '90%', maxWidth: '400px', textAlign: 'center',
+                boxShadow: '0 0 50px rgba(0,0,0,0.5)'
+            }}>
+                <div className="mb-3">{icon}</div>
+                <h3 className="text-white fw-bold mb-2">{title}</h3>
+                <p className="text-secondary mb-4" style={{ fontSize: '15px' }}>{message}</p>
+                
+                {type !== 'loading' && (
+                    <button 
+                        onClick={onClose}
+                        className="btn w-100 fw-bold"
+                        style={{ 
+                            background: 'linear-gradient(90deg, #FFD700 0%, #FDB931 100%)', 
+                            border: 'none', color: '#000', padding: '12px', borderRadius: '12px' 
+                        }}
+                    >
+                        {btnText} <i className="bi bi-arrow-right ms-2"></i>
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// --- HELPER STYLES ---
 const getHeroStyles = (tier: string) => {
     switch(tier?.toLowerCase()) {
         case 'immortal': return { bg: 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)', border: '1px solid rgba(252, 213, 53, 0.5)', shadow: '0 0 80px rgba(252, 213, 53, 0.15), inset 0 0 40px rgba(0,0,0,0.8)', textColor: RICH_GOLD_GRADIENT_CSS, labelColor: '#FCD535' };
@@ -34,11 +85,9 @@ const resolveIPFS = (uri: string) => {
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
 };
 
-const mockChartData = [
-  { name: 'Dec 1', price: 10 },
-  { name: 'Today', price: 12 },
-];
+const mockChartData = [ { name: 'Dec 1', price: 10 }, { name: 'Today', price: 12 } ];
 
+// --- CONTRACTS ---
 const marketplaceContract = getContract({ client, chain: NETWORK_CHAIN, address: MARKETPLACE_ADDRESS });
 const nftContract = getContract({ client, chain: NETWORK_CHAIN, address: NFT_COLLECTION_ADDRESS });
 
@@ -46,26 +95,30 @@ function AssetPage() {
     const params = useParams();
     const account = useActiveAccount();
     
+    // Data State
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     
+    // UI State
     const [sellPrice, setSellPrice] = useState('10');
     const [isListingMode, setIsListingMode] = useState(false);
+    
+    // Modal State
+    const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
+    // --- FETCH DATA ---
     const fetchAssetData = async () => {
         if (!tokenId) return;
-
         try {
             const tokenURI = await readContract({ contract: nftContract, method: "function tokenURI(uint256) view returns (string)", params: [BigInt(tokenId)] });
             const metaRes = await fetch(resolveIPFS(tokenURI));
             const meta = metaRes.ok ? await metaRes.json() : {};
-            
             const owner = await readContract({ contract: nftContract, method: "function ownerOf(uint256) view returns (address)", params: [BigInt(tokenId)] });
 
             setAsset({
@@ -79,47 +132,49 @@ function AssetPage() {
 
             if (account && owner.toLowerCase() === account.address.toLowerCase()) {
                 setIsOwner(true);
-                const approvedStatus = await isApprovedForAll({
-                    contract: nftContract,
-                    owner: account.address,
-                    operator: MARKETPLACE_ADDRESS
-                });
+                const approvedStatus = await isApprovedForAll({ contract: nftContract, owner: account.address, operator: MARKETPLACE_ADDRESS });
                 setIsApproved(approvedStatus);
             }
-
-        } catch (error) {
-            console.error("Failed to fetch asset", error);
-        }
+        } catch (error) { console.error("Failed to fetch asset", error); }
     };
 
     const checkListing = async () => {
         if (!tokenId) return;
         try {
-            const listings = await getAllValidListings({ 
-                contract: marketplaceContract, 
-                start: 0, 
-                count: BigInt(100) 
-            });
+            const listings = await getAllValidListings({ contract: marketplaceContract, start: 0, count: BigInt(100) });
             const foundListing = listings.find(l => l.asset.id.toString() === tokenId.toString());
             setListing(foundListing || null);
         } catch (e) { console.error("Market Error", e); }
     };
 
     useEffect(() => {
-        if (tokenId) {
-            Promise.all([fetchAssetData(), checkListing()]).then(() => {
-                setLoading(false);
-            });
-        }
+        if (tokenId) { Promise.all([fetchAssetData(), checkListing()]).then(() => setLoading(false)); }
     }, [tokenId, account]);
 
-    if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading...</div>;
+    // --- HANDLERS ---
+    const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
+    const closeModal = () => {
+        setModal({ ...modal, isOpen: false });
+        if (modal.type === 'success') window.location.reload(); // Refresh on success
+    };
+
+    if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
     if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
     
     const style = getHeroStyles(asset.tier);
 
     return (
         <main style={{ backgroundColor: '#0b0e11', minHeight: '100vh', paddingBottom: '80px', fontFamily: 'sans-serif' }}>
+            
+            {/* Custom Modal */}
+            <CustomModal 
+                isOpen={modal.isOpen} 
+                type={modal.type} 
+                title={modal.title} 
+                message={modal.message} 
+                onClose={closeModal} 
+            />
+
             <div className="container py-3">
                 <div className="d-flex align-items-center gap-2 text-secondary mb-4" style={{ fontSize: '14px' }}>
                     <Link href="/market" className="text-decoration-none text-secondary hover-gold">Market</Link>
@@ -128,6 +183,7 @@ function AssetPage() {
                 </div>
 
                 <div className="row g-5">
+                    {/* Left Column */}
                     <div className="col-lg-5">
                          <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" style={{ background: 'radial-gradient(circle, #161b22 0%, #0b0e11 100%)', border: '1px solid #2a2e35', minHeight: '500px' }}>
                             <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
@@ -138,31 +194,16 @@ function AssetPage() {
                                 </div>
                             </div>
                         </div>
-
                         <div className="mt-4 p-4 rounded-3" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35' }}>
                              <div className="d-flex align-items-center gap-2 mb-3">
                                 <i className="bi bi-info-circle text-gold"></i>
                                 <span className="fw-bold text-white">Description</span>
                             </div>
                             <p className="text-secondary" style={{ fontSize: '14px', lineHeight: '1.6' }}>{asset.description}</p>
-                            
-                            <div className="mt-4 pt-3 border-top border-secondary">
-                                <div className="d-flex justify-content-between mb-2">
-                                    <span className="text-secondary small">Contract Address</span>
-                                    <span className="text-gold small font-monospace">{NFT_COLLECTION_ADDRESS.slice(0,6)}...{NFT_COLLECTION_ADDRESS.slice(-4)}</span>
-                                </div>
-                                <div className="d-flex justify-content-between mb-2">
-                                    <span className="text-secondary small">Token ID</span>
-                                    <span className="text-white small">{asset.id}</span>
-                                </div>
-                                <div className="d-flex justify-content-between">
-                                    <span className="text-secondary small">Blockchain</span>
-                                    <span className="text-white small">Polygon (POL)</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
+                    {/* Right Column */}
                     <div className="col-lg-7">
                         <div className="d-flex justify-content-between align-items-start mb-2">
                             <div>
@@ -171,13 +212,6 @@ function AssetPage() {
                                     <span className="badge bg-warning text-dark">Gen-0</span>
                                     <span className="text-secondary small">Owned by <span className="text-gold">{asset.owner.slice(0,6)}...{asset.owner.slice(-4)}</span></span>
                                 </div>
-                            </div>
-                            <div className="text-end">
-                                <div className="d-flex align-items-center justify-content-end gap-2 text-danger">
-                                    <i className="bi bi-caret-down-fill"></i>
-                                    <span className="fw-bold">2.4%</span>
-                                </div>
-                                <span className="text-secondary small">24h Change</span>
                             </div>
                         </div>
 
@@ -202,8 +236,8 @@ function AssetPage() {
                                                     recipient: account?.address || "",
                                                     quantity: BigInt(1),
                                                 })}
-                                                onTransactionConfirmed={() => { alert("Purchased Successfully!"); window.location.reload(); }}
-                                                onError={(e) => alert(e.message)}
+                                                onTransactionConfirmed={() => showModal('success', 'Purchase Successful!', 'You have successfully purchased this asset.')}
+                                                onError={(e) => showModal('error', 'Transaction Info', 'Please check your wallet balance and try again.')}
                                                 style={{ ...GOLD_BTN_STYLE, width: '100%', height: '50px' }}
                                             >
                                                 Buy Now
@@ -222,6 +256,7 @@ function AssetPage() {
                                                     <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
                                                     <div className="d-flex gap-2">
                                                         
+                                                        {/* Step 1: Approve (if needed) */}
                                                         {!isApproved ? (
                                                             <TransactionButton
                                                                 transaction={() => setApprovalForAll({
@@ -229,29 +264,39 @@ function AssetPage() {
                                                                     operator: MARKETPLACE_ADDRESS,
                                                                     approved: true
                                                                 })}
-                                                                onTransactionConfirmed={() => { 
-                                                                    alert("Marketplace Approved! Now you can list."); 
-                                                                    setIsApproved(true); 
+                                                                onTransactionConfirmed={() => {
+                                                                    showModal('success', 'Market Approved', 'Your wallet is now ready to list items.');
+                                                                    setIsApproved(true);
                                                                 }}
-                                                                onError={(e) => alert("Approval Failed: " + e.message)}
+                                                                onError={(e) => showModal('error', 'Approval Info', 'The approval process was cancelled. Please try again.')}
                                                                 style={{ ...GOLD_BTN_STYLE, flex: 1, backgroundColor: '#fff', color: '#000' }}
                                                             >
                                                                 1. Approve Market
                                                             </TransactionButton>
                                                         ) : (
+                                                            /* Step 2: List (Standard 6 Months Duration) */
                                                             <TransactionButton
                                                                 transaction={() => {
                                                                     if (!tokenId) throw new Error("Invalid Token ID");
+                                                                    // FIX: Adding Start and End Date to prevent Zero Data Error
+                                                                    const start = new Date();
+                                                                    const end = new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000); // 6 Months
+                                                                    
                                                                     return createListing({
                                                                         contract: marketplaceContract,
                                                                         assetContractAddress: NFT_COLLECTION_ADDRESS,
                                                                         tokenId: BigInt(tokenId),
                                                                         pricePerToken: sellPrice,
-                                                                        currencyContractAddress: "0x0000000000000000000000000000000000000000"
+                                                                        currencyContractAddress: "0x0000000000000000000000000000000000000000",
+                                                                        startTimestamp: start,
+                                                                        endTimestamp: end
                                                                     });
                                                                 }}
-                                                                onTransactionConfirmed={() => { alert("Listed Successfully!"); window.location.reload(); }}
-                                                                onError={(e) => alert("Listing Failed: " + e.message)}
+                                                                onTransactionConfirmed={() => showModal('success', 'Asset Listed!', `Your asset is now listed for ${sellPrice} POL.`)}
+                                                                onError={(e) => {
+                                                                    console.error(e); // Keep real error in console for debugging
+                                                                    showModal('error', 'Listing Info', 'The listing process was interrupted. Please try again later.');
+                                                                }}
                                                                 style={{ ...GOLD_BTN_STYLE, flex: 1 }}
                                                             >
                                                                 2. Confirm List
@@ -273,15 +318,9 @@ function AssetPage() {
                             </div>
                         </div>
 
+                        {/* Chart Area */}
                         <div className="mb-4">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h5 className="text-white fw-bold mb-0">Price History</h5>
-                                <div className="d-flex gap-2">
-                                    <button className="btn btn-sm btn-outline-secondary active">1M</button>
-                                    <button className="btn btn-sm btn-outline-secondary">3M</button>
-                                    <button className="btn btn-sm btn-outline-secondary">YTD</button>
-                                </div>
-                            </div>
+                            <h5 className="text-white fw-bold mb-3">Price History</h5>
                             <div className="rounded-3 p-3" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35', height: '300px' }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={mockChartData}>
@@ -294,43 +333,12 @@ function AssetPage() {
                                         <CartesianGrid strokeDasharray="3 3" stroke="#2a2e35" vertical={false} />
                                         <XAxis dataKey="name" stroke="#6c757d" fontSize={12} tickLine={false} axisLine={false} />
                                         <YAxis stroke="#6c757d" fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 2', 'dataMax + 2']} />
-                                        <Tooltip 
-                                            contentStyle={{ backgroundColor: '#1e2329', borderColor: '#2a2e35', color: '#fff' }}
-                                            itemStyle={{ color: '#FCD535' }}
-                                        />
+                                        <Tooltip contentStyle={{ backgroundColor: '#1e2329', borderColor: '#2a2e35', color: '#fff' }} />
                                         <Area type="monotone" dataKey="price" stroke="#FCD535" strokeWidth={2} fillOpacity={1} fill="url(#colorPrice)" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
                         </div>
-
-                        <div className="row g-3">
-                            <div className="col-md-3 col-6">
-                                <div className="p-3 rounded-3 text-center" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35' }}>
-                                    <div className="text-secondary small mb-1">Volume</div>
-                                    <div className="text-white fw-bold">2.5K POL</div>
-                                </div>
-                            </div>
-                            <div className="col-md-3 col-6">
-                                <div className="p-3 rounded-3 text-center" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35' }}>
-                                    <div className="text-secondary small mb-1">Royalty</div>
-                                    <div className="text-white fw-bold">1%</div>
-                                </div>
-                            </div>
-                            <div className="col-md-3 col-6">
-                                <div className="p-3 rounded-3 text-center" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35' }}>
-                                    <div className="text-secondary small mb-1">Listed</div>
-                                    <div className="text-white fw-bold">Dec 2025</div>
-                                </div>
-                            </div>
-                            <div className="col-md-3 col-6">
-                                <div className="p-3 rounded-3 text-center" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35' }}>
-                                    <div className="text-secondary small mb-1">Views</div>
-                                    <div className="text-white fw-bold">142</div>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
             </div>
