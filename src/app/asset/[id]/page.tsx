@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
-import { useParams } from 'next/navigation';
-import { useActiveAccount, TransactionButton } from "thirdweb/react";
+import { useParams, useRouter } from 'next/navigation';
+import { useActiveAccount, TransactionButton, useConnectModal } from "thirdweb/react";
 import { getContract, readContract, NATIVE_TOKEN_ADDRESS } from "thirdweb";
 import { 
     createListing, 
     buyFromListing, 
-    getAllValidListings 
+    getAllValidListings,
+    cancelListing
 } from "thirdweb/extensions/marketplace";
 import { setApprovalForAll, isApprovedForAll } from "thirdweb/extensions/erc721";
 import { client } from "@/lib/client"; 
@@ -19,7 +20,8 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const RICH_GOLD_GRADIENT_CSS = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 
-const CustomModal = ({ isOpen, type, title, message, onClose }: any) => {
+// --- CUSTOM MODAL (Updated with Market Link) ---
+const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: any) => {
     if (!isOpen) return null;
 
     let icon = <div className="spinner-border text-warning" role="status"></div>;
@@ -27,7 +29,7 @@ const CustomModal = ({ isOpen, type, title, message, onClose }: any) => {
     
     if (type === 'success') {
         icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '50px', color: '#28a745' }}></i>;
-        btnText = "Continue";
+        btnText = "Stay Here";
     } else if (type === 'error') {
         icon = <i className="bi bi-info-circle-fill" style={{ fontSize: '50px', color: '#FCD535' }}></i>;
         btnText = "Try Again";
@@ -49,16 +51,29 @@ const CustomModal = ({ isOpen, type, title, message, onClose }: any) => {
                 <p className="text-secondary mb-4" style={{ fontSize: '15px' }}>{message}</p>
                 
                 {type !== 'loading' && (
-                    <button 
-                        onClick={onClose}
-                        className="btn w-100 fw-bold"
-                        style={{ 
-                            background: 'linear-gradient(90deg, #FFD700 0%, #FDB931 100%)', 
-                            border: 'none', color: '#000', padding: '12px', borderRadius: '12px' 
-                        }}
-                    >
-                        {btnText} <i className="bi bi-arrow-right ms-2"></i>
-                    </button>
+                    <div className="d-flex gap-2">
+                        <button 
+                            onClick={onClose}
+                            className="btn fw-bold flex-grow-1"
+                            style={{ 
+                                background: '#333', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px' 
+                            }}
+                        >
+                            {btnText}
+                        </button>
+                        {type === 'success' && onGoToMarket && (
+                            <button 
+                                onClick={onGoToMarket}
+                                className="btn fw-bold flex-grow-1"
+                                style={{ 
+                                    background: 'linear-gradient(90deg, #FFD700 0%, #FDB931 100%)', 
+                                    border: 'none', color: '#000', padding: '12px', borderRadius: '12px' 
+                                }}
+                            >
+                                Go to Market <i className="bi bi-arrow-right ms-1"></i>
+                            </button>
+                        )}
+                    </div>
                 )}
             </div>
         </div>
@@ -87,7 +102,9 @@ const nftContract = getContract({ client, chain: NETWORK_CHAIN, address: NFT_COL
 
 function AssetPage() {
     const params = useParams();
+    const router = useRouter();
     const account = useActiveAccount();
+    const { connect, isConnecting } = useConnectModal(); // For visitor connection
     
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
@@ -146,6 +163,15 @@ function AssetPage() {
         setModal({ ...modal, isOpen: false });
         if (modal.type === 'success') window.location.reload();
     };
+    const goToMarket = () => {
+        setModal({ ...modal, isOpen: false });
+        router.push('/market');
+    };
+
+    // Helper for Visitor Connection
+    const handleConnect = () => {
+        connect({ client });
+    };
 
     if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
     if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
@@ -160,7 +186,8 @@ function AssetPage() {
                 type={modal.type} 
                 title={modal.title} 
                 message={modal.message} 
-                onClose={closeModal} 
+                onClose={closeModal}
+                onGoToMarket={modal.title.includes('Listed') ? goToMarket : undefined}
             />
 
             <div className="container py-3">
@@ -171,6 +198,7 @@ function AssetPage() {
                 </div>
 
                 <div className="row g-5">
+                    {/* Left Column (Image) */}
                     <div className="col-lg-5">
                          <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" style={{ background: 'radial-gradient(circle, #161b22 0%, #0b0e11 100%)', border: '1px solid #2a2e35', minHeight: '500px' }}>
                             <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
@@ -190,6 +218,7 @@ function AssetPage() {
                         </div>
                     </div>
 
+                    {/* Right Column (Actions) */}
                     <div className="col-lg-7">
                         <div className="d-flex justify-content-between align-items-start mb-2">
                             <div>
@@ -213,8 +242,21 @@ function AssetPage() {
                                     </div>
                                 </div>
                                 <div className="col-md-6 mt-3 mt-md-0">
+                                    {/* --- ACTION BUTTONS LOGIC --- */}
+                                    
+                                    {/* 1. If Listed: Show Buy or Manage */}
                                     {listing ? (
-                                        !isOwner ? (
+                                        !account ? (
+                                            // VISITOR: Connect to Buy
+                                            <button 
+                                                onClick={handleConnect}
+                                                className="btn w-100 fw-bold"
+                                                style={{ ...GOLD_BTN_STYLE, height: '50px' }}
+                                            >
+                                                Connect Wallet to Buy
+                                            </button>
+                                        ) : !isOwner ? (
+                                            // BUYER: Buy Now
                                             <TransactionButton
                                                 transaction={() => buyFromListing({
                                                     contract: marketplaceContract,
@@ -223,15 +265,27 @@ function AssetPage() {
                                                     quantity: BigInt(1),
                                                 })}
                                                 onTransactionConfirmed={() => showModal('success', 'Purchase Successful!', 'You have successfully purchased this asset.')}
-                                                onError={(e) => showModal('error', 'Transaction Info', 'Please check your wallet balance and try again.')}
+                                                onError={(e) => showModal('error', 'Transaction Info', 'Please check your wallet balance.')}
                                                 style={{ ...GOLD_BTN_STYLE, width: '100%', height: '50px' }}
                                             >
                                                 Buy Now
                                             </TransactionButton>
                                         ) : (
-                                            <div className="text-warning text-center small p-2 border border-warning rounded"><i className="bi bi-info-circle"></i> You are selling this item.</div>
+                                            // OWNER: Cancel Listing
+                                            <TransactionButton
+                                                transaction={() => cancelListing({
+                                                    contract: marketplaceContract,
+                                                    listingId: listing.id,
+                                                })}
+                                                onTransactionConfirmed={() => showModal('success', 'Listing Cancelled', 'Your asset has been removed from the market.')}
+                                                onError={(e) => showModal('error', 'Cancellation Info', 'Failed to cancel listing.')}
+                                                style={{ ...GOLD_BTN_STYLE, width: '100%', height: '50px', background: '#333', color: '#fff', border: '1px solid #555' }}
+                                            >
+                                                Cancel Listing
+                                            </TransactionButton>
                                         )
                                     ) : (
+                                        // 2. If Not Listed: Show List or Offer
                                         isOwner ? (
                                             !isListingMode ? (
                                                 <button onClick={() => setIsListingMode(true)} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>
@@ -241,7 +295,6 @@ function AssetPage() {
                                                 <div className="d-flex flex-column gap-2">
                                                     <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
                                                     <div className="d-flex gap-2">
-                                                        
                                                         {!isApproved ? (
                                                             <TransactionButton
                                                                 transaction={() => setApprovalForAll({
@@ -253,7 +306,7 @@ function AssetPage() {
                                                                     showModal('success', 'Market Approved', 'Your wallet is now ready to list items.');
                                                                     setIsApproved(true);
                                                                 }}
-                                                                onError={(e) => showModal('error', 'Approval Info', 'The approval process was cancelled. Please try again.')}
+                                                                onError={(e) => showModal('error', 'Approval Info', 'Approval cancelled.')}
                                                                 style={{ ...GOLD_BTN_STYLE, flex: 1, backgroundColor: '#fff', color: '#000' }}
                                                             >
                                                                 1. Approve Market
@@ -264,7 +317,6 @@ function AssetPage() {
                                                                     if (!tokenId) throw new Error("Invalid Token ID");
                                                                     const start = new Date();
                                                                     const end = new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000);
-                                                                    
                                                                     return createListing({
                                                                         contract: marketplaceContract,
                                                                         assetContractAddress: NFT_COLLECTION_ADDRESS,
@@ -276,16 +328,12 @@ function AssetPage() {
                                                                     });
                                                                 }}
                                                                 onTransactionConfirmed={() => showModal('success', 'Asset Listed!', `Your asset is now listed for ${sellPrice} POL.`)}
-                                                                onError={(e) => {
-                                                                    console.error(e);
-                                                                    showModal('error', 'Listing Info', 'The listing process was interrupted. Please try again later.');
-                                                                }}
+                                                                onError={(e) => showModal('error', 'Listing Info', 'Process interrupted.')}
                                                                 style={{ ...GOLD_BTN_STYLE, flex: 1 }}
                                                             >
                                                                 2. Confirm List
                                                             </TransactionButton>
                                                         )}
-                                                        
                                                         <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                     </div>
                                                 </div>
@@ -301,6 +349,7 @@ function AssetPage() {
                             </div>
                         </div>
 
+                        {/* Chart Area */}
                         <div className="mb-4">
                             <h5 className="text-white fw-bold mb-3">Price History</h5>
                             <div className="rounded-3 p-3" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35', height: '300px' }}>
