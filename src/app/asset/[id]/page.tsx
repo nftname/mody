@@ -123,7 +123,7 @@ function AssetPage() {
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
-    // 1. Fetch Asset Details Only
+    // 1. Fetch Asset Details
     const fetchAssetData = async () => {
         if (!tokenId) return;
         try {
@@ -149,13 +149,12 @@ function AssetPage() {
         } catch (error) { console.error("Asset fetch error:", error); }
     };
 
-    // 2. Separate Offers Fetching (Safeguarded)
+    // 2. Fetch Offers (Updated Keys for V5)
     const fetchOffers = async () => {
         if (!tokenId) return;
         try {
             const allOffers = await getAllValidOffers({ contract: marketplaceContract });
             if (allOffers && Array.isArray(allOffers)) {
-                // Safe filtering
                 const validOffers = allOffers.filter(o => 
                     o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
                     o.tokenId.toString() === tokenId.toString()
@@ -166,7 +165,7 @@ function AssetPage() {
             }
         } catch (e) {
             console.warn("Offers fetch failed safely:", e);
-            setOffersList([]); // Fallback to empty list so page doesn't crash
+            setOffersList([]); 
         }
     };
 
@@ -194,7 +193,6 @@ function AssetPage() {
         }
     }, [account]);
 
-    // Initial Load
     useEffect(() => {
         if (tokenId) {
             setLoading(true);
@@ -204,7 +202,6 @@ function AssetPage() {
         }
     }, [tokenId, account]);
 
-    // Refresh on Offer Mode
     useEffect(() => {
         if (isOfferMode && account) refreshWpolData();
     }, [isOfferMode, account, refreshWpolData]);
@@ -212,8 +209,8 @@ function AssetPage() {
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
         if (modal.type === 'success') {
-            fetchOffers(); // Refresh table only
-            refreshWpolData(); // Refresh balance
+            fetchOffers(); 
+            refreshWpolData();
         }
     };
 
@@ -473,7 +470,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* OFFERS TABLE (CRASH PROOF) */}
+                        {/* OFFERS TABLE (FIXED VARIABLES) */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul" style={{ color: '#FCD535' }}></i>
@@ -492,10 +489,16 @@ function AssetPage() {
                                         {offersList && offersList.length > 0 ? (
                                             offersList.map((offer, index) => (
                                                 <tr key={index}>
-                                                    {/* Safety Checks for every field to prevent crashes */}
-                                                    <td className="ps-3 fw-bold text-white">{offer?.totalOfferAmount ? toTokens(offer.totalOfferAmount, 18) : '0'} WPOL</td>
-                                                    <td style={{ color: '#FCD535' }}>{offer?.offeror ? `${offer.offeror.slice(0,6)}...${offer.offeror.slice(-4)}` : 'Unknown'}</td>
-                                                    <td className="text-end pe-3 text-secondary">{offer?.expirationTimestamp ? new Date(Number(offer.expirationTimestamp) * 1000).toLocaleDateString() : '-'}</td>
+                                                    {/* UPDATED VARIABLE NAMES FOR V5 */}
+                                                    <td className="ps-3 fw-bold text-white">
+                                                        {offer.currencyValue ? offer.currencyValue.displayValue : (offer.totalPrice ? toTokens(offer.totalPrice, 18) : '0')} WPOL
+                                                    </td>
+                                                    <td style={{ color: '#FCD535' }}>
+                                                        {offer.offerorAddress ? `${offer.offerorAddress.slice(0,6)}...${offer.offerorAddress.slice(-4)}` : 'Unknown'}
+                                                    </td>
+                                                    <td className="text-end pe-3 text-secondary">
+                                                        {offer.endTimeInSeconds ? new Date(Number(offer.endTimeInSeconds) * 1000).toLocaleDateString() : '-'}
+                                                    </td>
                                                 </tr>
                                             ))
                                         ) : (
