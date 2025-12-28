@@ -6,7 +6,7 @@ import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useActiveAccount, TransactionButton, useConnectModal } from "thirdweb/react";
 import { getContract, readContract, NATIVE_TOKEN_ADDRESS } from "thirdweb";
-import { createWallet, walletConnect } from "thirdweb/wallets";
+import { createWallet, walletConnect } from "thirdweb/wallets"; 
 import { 
     createListing, 
     buyFromListing, 
@@ -20,7 +20,7 @@ import { client } from "@/lib/client";
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS, NETWORK_CHAIN } from '@/data/config';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// --- WALLET CONFIGURATION (Strict Mode - No Socials) ---
+// --- WALLET CONFIGURATION (Strict Mode) ---
 const wallets = [
   createWallet("io.metamask"),
   createWallet("com.coinbase.wallet"),
@@ -178,7 +178,7 @@ function AssetPage() {
         router.push('/market');
     };
     
-    // --- CONNECT WALLET (STRICT) ---
+    // --- HANDLE CONNECT (STRICT WALLETS) ---
     const handleConnect = () => {
         connect({ client, wallets });
     };
@@ -303,14 +303,14 @@ function AssetPage() {
                                                                 transaction={async () => {
                                                                     if (!offerPrice || !tokenId) throw new Error("Missing Parameters");
                                                                     
-                                                                    // APPROVED SOLUTION: Using 'totalOffer' as per Thirdweb SDK v5 Docs
+                                                                    // UPDATED: Correct Thirdweb V5 Parameters
                                                                     return makeOffer({
                                                                         contract: marketplaceContract,
                                                                         assetContractAddress: NFT_COLLECTION_ADDRESS,
                                                                         tokenId: BigInt(tokenId),
-                                                                        totalOffer: offerPrice,
+                                                                        totalOffer: offerPrice, 
                                                                         currencyContractAddress: WPOL_ADDRESS,
-                                                                        offerExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3) // 3 Days Validity
+                                                                        offerExpiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 Days
                                                                     });
                                                                 }}
                                                                 onTransactionConfirmed={() => {
@@ -319,7 +319,7 @@ function AssetPage() {
                                                                 }}
                                                                 onError={(e) => {
                                                                     console.error(e);
-                                                                    showModal('error', 'Offer Failed', 'Ensure you have Wrapped POL (WPOL) or try Swapping first.');
+                                                                    showModal('error', 'Offer Failed', 'Check WPOL balance.');
                                                                 }}
                                                                 style={{ ...GOLD_BTN_STYLE, flex: 1 }}
                                                             >
