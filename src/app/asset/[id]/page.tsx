@@ -5,7 +5,7 @@ import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { useActiveAccount, TransactionButton } from "thirdweb/react";
-import { getContract, readContract } from "thirdweb";
+import { getContract, readContract, NATIVE_TOKEN_ADDRESS } from "thirdweb";
 import { 
     createListing, 
     buyFromListing, 
@@ -16,23 +16,19 @@ import { client } from "@/lib/client";
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS, NETWORK_CHAIN } from '@/data/config';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// --- STYLES & CONSTANTS ---
 const RICH_GOLD_GRADIENT_CSS = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 
-// --- CUSTOM MODAL COMPONENT (Based on your Design) ---
 const CustomModal = ({ isOpen, type, title, message, onClose }: any) => {
     if (!isOpen) return null;
 
-    // Gentle Design Logic: No Red, No Harsh Errors
-    let icon = <div className="spinner-border text-warning" role="status"></div>; // Default Loading
+    let icon = <div className="spinner-border text-warning" role="status"></div>;
     let btnText = "Processing...";
     
     if (type === 'success') {
         icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '50px', color: '#28a745' }}></i>;
         btnText = "Continue";
     } else if (type === 'error') {
-        // Gentle Error: No Red, using muted gold/grey
         icon = <i className="bi bi-info-circle-fill" style={{ fontSize: '50px', color: '#FCD535' }}></i>;
         btnText = "Try Again";
     }
@@ -69,7 +65,6 @@ const CustomModal = ({ isOpen, type, title, message, onClose }: any) => {
     );
 };
 
-// --- HELPER STYLES ---
 const getHeroStyles = (tier: string) => {
     switch(tier?.toLowerCase()) {
         case 'immortal': return { bg: 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)', border: '1px solid rgba(252, 213, 53, 0.5)', shadow: '0 0 80px rgba(252, 213, 53, 0.15), inset 0 0 40px rgba(0,0,0,0.8)', textColor: RICH_GOLD_GRADIENT_CSS, labelColor: '#FCD535' };
@@ -87,7 +82,6 @@ const resolveIPFS = (uri: string) => {
 
 const mockChartData = [ { name: 'Dec 1', price: 10 }, { name: 'Today', price: 12 } ];
 
-// --- CONTRACTS ---
 const marketplaceContract = getContract({ client, chain: NETWORK_CHAIN, address: MARKETPLACE_ADDRESS });
 const nftContract = getContract({ client, chain: NETWORK_CHAIN, address: NFT_COLLECTION_ADDRESS });
 
@@ -95,24 +89,20 @@ function AssetPage() {
     const params = useParams();
     const account = useActiveAccount();
     
-    // Data State
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     
-    // UI State
     const [sellPrice, setSellPrice] = useState('10');
     const [isListingMode, setIsListingMode] = useState(false);
     
-    // Modal State
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
-    // --- FETCH DATA ---
     const fetchAssetData = async () => {
         if (!tokenId) return;
         try {
@@ -151,11 +141,10 @@ function AssetPage() {
         if (tokenId) { Promise.all([fetchAssetData(), checkListing()]).then(() => setLoading(false)); }
     }, [tokenId, account]);
 
-    // --- HANDLERS ---
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
-        if (modal.type === 'success') window.location.reload(); // Refresh on success
+        if (modal.type === 'success') window.location.reload();
     };
 
     if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
@@ -166,7 +155,6 @@ function AssetPage() {
     return (
         <main style={{ backgroundColor: '#0b0e11', minHeight: '100vh', paddingBottom: '80px', fontFamily: 'sans-serif' }}>
             
-            {/* Custom Modal */}
             <CustomModal 
                 isOpen={modal.isOpen} 
                 type={modal.type} 
@@ -183,7 +171,6 @@ function AssetPage() {
                 </div>
 
                 <div className="row g-5">
-                    {/* Left Column */}
                     <div className="col-lg-5">
                          <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" style={{ background: 'radial-gradient(circle, #161b22 0%, #0b0e11 100%)', border: '1px solid #2a2e35', minHeight: '500px' }}>
                             <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
@@ -203,7 +190,6 @@ function AssetPage() {
                         </div>
                     </div>
 
-                    {/* Right Column */}
                     <div className="col-lg-7">
                         <div className="d-flex justify-content-between align-items-start mb-2">
                             <div>
@@ -256,7 +242,6 @@ function AssetPage() {
                                                     <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
                                                     <div className="d-flex gap-2">
                                                         
-                                                        {/* Step 1: Approve (if needed) */}
                                                         {!isApproved ? (
                                                             <TransactionButton
                                                                 transaction={() => setApprovalForAll({
@@ -274,27 +259,25 @@ function AssetPage() {
                                                                 1. Approve Market
                                                             </TransactionButton>
                                                         ) : (
-                                                            /* Step 2: List (Standard 6 Months Duration) */
                                                             <TransactionButton
                                                                 transaction={() => {
                                                                     if (!tokenId) throw new Error("Invalid Token ID");
-                                                                    // FIX: Adding Start and End Date to prevent Zero Data Error
                                                                     const start = new Date();
-                                                                    const end = new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000); // 6 Months
+                                                                    const end = new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000);
                                                                     
                                                                     return createListing({
                                                                         contract: marketplaceContract,
                                                                         assetContractAddress: NFT_COLLECTION_ADDRESS,
                                                                         tokenId: BigInt(tokenId),
                                                                         pricePerToken: sellPrice,
-                                                                        currencyContractAddress: "0x0000000000000000000000000000000000000000",
+                                                                        currencyContractAddress: NATIVE_TOKEN_ADDRESS,
                                                                         startTimestamp: start,
                                                                         endTimestamp: end
                                                                     });
                                                                 }}
                                                                 onTransactionConfirmed={() => showModal('success', 'Asset Listed!', `Your asset is now listed for ${sellPrice} POL.`)}
                                                                 onError={(e) => {
-                                                                    console.error(e); // Keep real error in console for debugging
+                                                                    console.error(e);
                                                                     showModal('error', 'Listing Info', 'The listing process was interrupted. Please try again later.');
                                                                 }}
                                                                 style={{ ...GOLD_BTN_STYLE, flex: 1 }}
@@ -318,7 +301,6 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* Chart Area */}
                         <div className="mb-4">
                             <h5 className="text-white fw-bold mb-3">Price History</h5>
                             <div className="rounded-3 p-3" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35', height: '300px' }}>
