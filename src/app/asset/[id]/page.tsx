@@ -35,39 +35,52 @@ const RICH_GOLD_GRADIENT_CSS = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 2
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
-// --- CUSTOM MODAL ---
+// --- CUSTOM MODAL (UPDATED UI) ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: any) => {
     if (!isOpen) return null;
 
-    let icon = <div className="spinner-border text-warning" role="status"></div>;
+    let icon = <div className="spinner-border text-dark" role="status" style={{ width: '3rem', height: '3rem' }}></div>;
     let btnText = "Processing...";
+    let btnStyle = { ...GOLD_BTN_STYLE, background: 'linear-gradient(180deg, #FFD700 0%, #FDB931 100%)' }; // Gold Bar Style
     
     if (type === 'success') {
         icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '50px', color: '#28a745' }}></i>;
         btnText = "Stay Here";
+        btnStyle = { background: '#333', color: '#fff', border: 'none', fontWeight: 'bold' as const };
     } else if (type === 'error') {
         icon = <i className="bi bi-info-circle-fill" style={{ fontSize: '50px', color: '#FCD535' }}></i>;
         btnText = "Try Again";
     }
 
     return (
-        <div style={{
+        // Overlay: Closes modal on click outside
+        <div onClick={onClose} style={{
             position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
             backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999,
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer'
         }}>
-            <div style={{
-                backgroundColor: '#111', border: '1px solid #333', borderRadius: '20px',
+            // Modal Content: Stops click propagation
+            <div onClick={(e) => e.stopPropagation()} style={{
+                backgroundColor: '#111', 
+                border: '1px solid #FCD535', // Gold Border
+                boxShadow: '0 0 20px rgba(252, 213, 53, 0.2)', // Soft Gold Glow
+                borderRadius: '20px',
                 padding: '30px', width: '90%', maxWidth: '400px', textAlign: 'center',
-                boxShadow: '0 0 50px rgba(0,0,0,0.5)'
+                position: 'relative', cursor: 'default'
             }}>
+                {/* Close Button (X) */}
+                <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#666', fontSize: '24px', cursor: 'pointer' }}>
+                    <i className="bi bi-x"></i>
+                </button>
+
                 <div className="mb-3">{icon}</div>
                 <h3 className="text-white fw-bold mb-2">{title}</h3>
                 <p className="text-secondary mb-4" style={{ fontSize: '15px' }}>{message}</p>
                 
                 {type !== 'loading' && (
                     <div className="d-flex gap-2">
-                        <button onClick={onClose} className="btn fw-bold flex-grow-1" style={{ background: '#333', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px' }}>
+                        <button onClick={onClose} className="btn fw-bold flex-grow-1" style={{ ...btnStyle, padding: '12px', borderRadius: '12px' }}>
                             {btnText}
                         </button>
                         {type === 'success' && onGoToMarket && (
@@ -171,6 +184,7 @@ function AssetPage() {
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
+        // Reload page only on success to reflect changes
         if (modal.type === 'success') window.location.reload();
     };
     const goToMarket = () => {
@@ -319,7 +333,8 @@ function AssetPage() {
                                                                 }}
                                                                 onError={(e) => {
                                                                     console.error(e);
-                                                                    showModal('error', 'Offer Failed', 'Check WPOL balance.');
+                                                                    // More informative error message
+                                                                    showModal('error', 'Offer Failed', 'Swap Failed or Insufficient POL for Gas. Please ensure you have enough POL and try wrapping manually.');
                                                                 }}
                                                                 style={{ ...GOLD_BTN_STYLE, flex: 1 }}
                                                             >
