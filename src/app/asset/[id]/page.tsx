@@ -36,11 +36,9 @@ const THEME_BG = '#0d1117';
 const CARD_BG = '#161b22';
 const BTN_GRADIENT = 'linear-gradient(135deg, #FBF5B7 0%, #BF953F 25%, #AA771C 50%, #BF953F 75%, #FBF5B7 100%)';
 
-// --- MODAL (UPDATED DESIGN) ---
+// --- MODAL ---
 const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, onClose }: any) => {
     if (!isOpen) return null;
-    
-    // Success Modal gets Gold Border, others get Dark Border
     const borderStyle = type === 'success' ? '1px solid #FCD535' : '1px solid #333';
 
     return (
@@ -154,7 +152,7 @@ function AssetPage() {
         } catch (error) { console.error("Asset fetch error:", error); }
     };
 
-    // 2. Fetch Offers
+    // 2. Fetch Offers (V5 Compatible Keys)
     const fetchOffers = async () => {
         if (!tokenId) return;
         try {
@@ -169,7 +167,7 @@ function AssetPage() {
                 setOffersList([]);
             }
         } catch (e) {
-            console.warn("Offers fetch failed safely:", e);
+            console.warn("Offers fetch warning:", e);
             setOffersList([]); 
         }
     };
@@ -216,6 +214,7 @@ function AssetPage() {
         if (modal.type === 'success') {
             fetchOffers(); 
             fetchAssetData(); 
+            refreshWpolData();
         }
     };
 
@@ -397,7 +396,10 @@ function AssetPage() {
                                                     ) : needsApproval ? (
                                                         <TransactionButton
                                                             transaction={handleApprove}
-                                                            onTransactionConfirmed={() => refreshWpolData()}
+                                                            onTransactionConfirmed={async () => { 
+                                                                // AUTO-REFRESH: Updates UI immediately after Approval
+                                                                await refreshWpolData(); 
+                                                            }}
                                                             style={{ width: '100%', background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', height: '50px' }}
                                                         >
                                                             Step 1: Approve WPOL
@@ -436,7 +438,11 @@ function AssetPage() {
                                                                 if (!tokenId) throw new Error("No Token ID");
                                                                 return createListing({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), pricePerToken: sellPrice, currencyContractAddress: NATIVE_TOKEN_ADDRESS });
                                                             }}
-                                                            onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Listed', message: 'Asset Listed', actionBtn: null, secondaryBtn: null})}
+                                                            onTransactionConfirmed={() => { 
+                                                                setModal({isOpen: true, type: 'success', title: 'Listed', message: 'Asset Listed', actionBtn: null, secondaryBtn: null});
+                                                                setIsListingMode(false); // FIXED: Stop Spinning immediately
+                                                                checkListing(); // Refresh Data immediately
+                                                            }}
                                                             style={{ flex: 1, background: BTN_GRADIENT, color: '#000', borderRadius: '10px', height: '50px' }}
                                                         >
                                                             Confirm
@@ -475,39 +481,39 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* OFFERS TABLE (STYLED CLEANER & COMPACT) */}
+                        {/* OFFERS TABLE (CLEAN & COMPACT) */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul" style={{ color: '#FCD535' }}></i>
                                 <h5 className="text-white fw-bold mb-0">Offers</h5>
                             </div>
                             
-                            {/* Scrollable Container for Mobile */}
+                            {/* Scrollable Container */}
                             <div className="rounded-3 overflow-auto" style={{ border: '1px solid #333', backgroundColor: CARD_BG }}>
-                                <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', width: '100%' }}>
+                                <table className="table mb-0" style={{ backgroundColor: 'transparent', width: '100%' }}>
                                     <thead>
                                         <tr style={{ borderBottom: '1px solid #333' }}>
-                                            <th className="fw-normal py-3 ps-3" style={{ border: 'none', color: '#888', fontSize: '13px' }}>Price</th>
-                                            <th className="fw-normal py-3" style={{ border: 'none', color: '#888', fontSize: '13px' }}>From</th>
-                                            <th className="fw-normal py-3 text-end pe-3" style={{ border: 'none', color: '#888', fontSize: '13px' }}>Date</th>
-                                            {isOwner && <th className="fw-normal py-3 text-center" style={{ border: 'none', color: '#888', fontSize: '13px' }}>Action</th>}
+                                            <th className="fw-normal py-3 ps-3" style={{ border: 'none', color: '#888', fontSize: '13px', background: 'transparent' }}>Price</th>
+                                            <th className="fw-normal py-3" style={{ border: 'none', color: '#888', fontSize: '13px', background: 'transparent' }}>From</th>
+                                            <th className="fw-normal py-3 text-end pe-3" style={{ border: 'none', color: '#888', fontSize: '13px', background: 'transparent' }}>Date</th>
+                                            {isOwner && <th className="fw-normal py-3 text-center" style={{ border: 'none', color: '#888', fontSize: '13px', background: 'transparent' }}>Action</th>}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {offersList && offersList.length > 0 ? (
                                             offersList.map((offer, index) => (
-                                                <tr key={index} style={{ borderBottom: '1px solid #333' }}>
-                                                    <td className="ps-3 fw-bold text-white" style={{ border: 'none', verticalAlign: 'middle' }}>
+                                                <tr key={index} style={{ borderBottom: '1px solid #333', background: 'transparent' }}>
+                                                    <td className="ps-3 fw-bold text-white" style={{ border: 'none', verticalAlign: 'middle', background: 'transparent' }}>
                                                         {offer.currencyValue ? offer.currencyValue.displayValue : (offer.totalPrice ? toTokens(offer.totalPrice, 18) : '0')} WPOL
                                                     </td>
-                                                    <td style={{ color: '#FCD535', border: 'none', verticalAlign: 'middle', fontSize: '13px' }}>
+                                                    <td style={{ color: '#FCD535', border: 'none', verticalAlign: 'middle', fontSize: '13px', background: 'transparent' }}>
                                                         {offer.offerorAddress ? `${offer.offerorAddress.slice(0,4)}..${offer.offerorAddress.slice(-4)}` : 'Unknown'}
                                                     </td>
-                                                    <td className="text-end pe-3 text-secondary" style={{ border: 'none', verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '11px' }}>
+                                                    <td className="text-end pe-3 text-secondary" style={{ border: 'none', verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '11px', background: 'transparent' }}>
                                                         {offer.endTimeInSeconds ? new Date(Number(offer.endTimeInSeconds) * 1000).toLocaleDateString('en-US') : '-'}
                                                     </td>
                                                     {isOwner && (
-                                                        <td className="text-center" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px' }}>
+                                                        <td className="text-center" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
                                                             <TransactionButton
                                                                 transaction={() => acceptOffer({
                                                                     contract: marketplaceContract,
@@ -520,7 +526,7 @@ function AssetPage() {
                                                                     fontWeight: 'bold', 
                                                                     padding: '4px 10px', 
                                                                     fontSize: '12px', 
-                                                                    borderRadius: '6px',
+                                                                    borderRadius: '6px', 
                                                                     border: 'none',
                                                                     minWidth: '60px',
                                                                     height: '32px'
@@ -534,7 +540,7 @@ function AssetPage() {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={isOwner ? 4 : 3} className="text-center py-5 text-secondary" style={{ border: 'none' }}>
+                                                <td colSpan={isOwner ? 4 : 3} className="text-center py-5 text-secondary" style={{ border: 'none', background: 'transparent' }}>
                                                     <i className="bi bi-inbox fs-3 d-block mb-2 opacity-50"></i>
                                                     No active offers yet
                                                 </td>
@@ -552,11 +558,7 @@ function AssetPage() {
             <style jsx global>{`
                 .btn:focus { box-shadow: none; }
                 input:focus { border-color: #FCD535 !important; box-shadow: none; }
-                /* Fix table row hover if bootstrap is interfering */
-                .table-hover > tbody > tr:hover {
-                    color: #fff;
-                    background-color: rgba(252, 213, 53, 0.05) !important;
-                }
+                tr, td, th { background-color: transparent !important; }
             `}</style>
         </main>
     );
