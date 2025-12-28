@@ -29,13 +29,13 @@ const wallets = [
   walletConnect(),
 ];
 
-// --- CONFIGURATION & STYLES ---
+// --- CONFIGURATION ---
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 const THEME_BG = '#0d1117'; 
 const CARD_BG = '#161b22';
 const BTN_GRADIENT = 'linear-gradient(135deg, #FBF5B7 0%, #BF953F 25%, #AA771C 50%, #BF953F 75%, #FBF5B7 100%)';
 
-// --- MODAL COMPONENT ---
+// --- MODAL ---
 const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, onClose }: any) => {
     if (!isOpen) return null;
     return (
@@ -99,6 +99,7 @@ const wpolContract = getContract({ client, chain: NETWORK_CHAIN, address: WPOL_A
 
 function AssetPage() {
     const params = useParams();
+    const router = useRouter();
     const account = useActiveAccount();
     const { connect } = useConnectModal();
     
@@ -122,6 +123,7 @@ function AssetPage() {
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
+    // 1. Fetch Asset Details Only
     const fetchAssetData = async () => {
         if (!tokenId) return;
         try {
@@ -144,26 +146,27 @@ function AssetPage() {
                 const approvedStatus = await isApprovedForAll({ contract: nftContract, owner: account.address, operator: MARKETPLACE_ADDRESS });
                 setIsApproved(approvedStatus);
             }
+        } catch (error) { console.error("Asset fetch error:", error); }
+    };
 
-            // --- CRITICAL FIX: Safe Fetching to prevent Application Error ---
-            try {
-                const allOffers = await getAllValidOffers({ contract: marketplaceContract });
-                if (allOffers && Array.isArray(allOffers)) {
-                    const validOffers = allOffers.filter(o => 
-                        o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
-                        o.tokenId.toString() === tokenId.toString()
-                    );
-                    setOffersList(validOffers);
-                } else {
-                    setOffersList([]);
-                }
-            } catch (err) {
-                console.warn("Offers fetch warning:", err);
-                setOffersList([]); // Prevent crash, just show empty list
+    // 2. Separate Offers Fetching (Safeguarded)
+    const fetchOffers = async () => {
+        if (!tokenId) return;
+        try {
+            const allOffers = await getAllValidOffers({ contract: marketplaceContract });
+            if (allOffers && Array.isArray(allOffers)) {
+                // Safe filtering
+                const validOffers = allOffers.filter(o => 
+                    o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
+                    o.tokenId.toString() === tokenId.toString()
+                );
+                setOffersList(validOffers);
+            } else {
+                setOffersList([]);
             }
-
-        } catch (error) { 
-            console.error("Asset fetch error:", error);
+        } catch (e) {
+            console.warn("Offers fetch failed safely:", e);
+            setOffersList([]); // Fallback to empty list so page doesn't crash
         }
     };
 
@@ -187,14 +190,21 @@ function AssetPage() {
                     params: [account.address, MARKETPLACE_ADDRESS]
                 });
                 setWpolAllowance(Number(toTokens(allowanceBigInt, 18)));
-            } catch (e) { console.error("WPOL Data Error", e); }
+            } catch (e) { console.error("WPOL Error", e); }
         }
     }, [account]);
 
+    // Initial Load
     useEffect(() => {
-        if (tokenId) { Promise.all([fetchAssetData(), checkListing()]).then(() => setLoading(false)); }
+        if (tokenId) {
+            setLoading(true);
+            Promise.all([fetchAssetData(), checkListing(), fetchOffers()])
+                .then(() => setLoading(false))
+                .catch(() => setLoading(false));
+        }
     }, [tokenId, account]);
 
+    // Refresh on Offer Mode
     useEffect(() => {
         if (isOfferMode && account) refreshWpolData();
     }, [isOfferMode, account, refreshWpolData]);
@@ -202,9 +212,8 @@ function AssetPage() {
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
         if (modal.type === 'success') {
-            // Soft refresh instead of reload
-            fetchAssetData();
-            refreshWpolData();
+            fetchOffers(); // Refresh table only
+            refreshWpolData(); // Refresh balance
         }
     };
 
@@ -222,16 +231,12 @@ function AssetPage() {
     const handleRecheckBalance = async () => {
         if (!account) return;
         const target = Number(offerPrice);
-        
-        // 1. Get fresh balance
         try {
             const bal = await balanceOf({ contract: wpolContract, address: account.address });
             const freshBalance = Number(toTokens(bal, 18));
             setWpolBalance(freshBalance); 
 
-            // 2. Compare
             if (freshBalance >= target) {
-                // Close modal, now user can click buttons
                 setModal({ isOpen: false, type: 'loading', title: '', message: '', actionBtn: null, secondaryBtn: null });
             } else {
                 const missing = target - freshBalance;
@@ -239,7 +244,7 @@ function AssetPage() {
                     isOpen: true,
                     type: 'info',
                     title: 'Funds Still Missing',
-                    message: `Balance: ${freshBalance.toFixed(2)} WPOL. Missing: ${missing.toFixed(2)} WPOL. Please swap more in your wallet.`,
+                    message: `You have ${freshBalance.toFixed(2)} WPOL. You need ${missing.toFixed(2)} more. Please go to your wallet app and SWAP.`,
                     actionBtn: (
                         <button onClick={handleConnect} className="btn w-100 fw-bold py-3" style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '8px' }}>
                             1. Open Wallet
@@ -252,7 +257,7 @@ function AssetPage() {
                     )
                 });
             }
-        } catch (e) { console.error("Recheck failed", e); }
+        } catch (e) { console.error("Recheck error", e); }
     };
 
     const handlePreOfferCheck = () => {
@@ -468,7 +473,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* OFFERS TABLE (Updated Style) */}
+                        {/* OFFERS TABLE (CRASH PROOF) */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul" style={{ color: '#FCD535' }}></i>
@@ -484,12 +489,13 @@ function AssetPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {offersList.length > 0 ? (
+                                        {offersList && offersList.length > 0 ? (
                                             offersList.map((offer, index) => (
                                                 <tr key={index}>
-                                                    <td className="ps-3 fw-bold text-white">{toTokens(offer.totalOfferAmount, 18)} WPOL</td>
-                                                    <td style={{ color: '#FCD535' }}>{offer.offeror.slice(0,6)}...{offer.offeror.slice(-4)}</td>
-                                                    <td className="text-end pe-3 text-secondary">{new Date(Number(offer.expirationTimestamp) * 1000).toLocaleDateString()}</td>
+                                                    {/* Safety Checks for every field to prevent crashes */}
+                                                    <td className="ps-3 fw-bold text-white">{offer?.totalOfferAmount ? toTokens(offer.totalOfferAmount, 18) : '0'} WPOL</td>
+                                                    <td style={{ color: '#FCD535' }}>{offer?.offeror ? `${offer.offeror.slice(0,6)}...${offer.offeror.slice(-4)}` : 'Unknown'}</td>
+                                                    <td className="text-end pe-3 text-secondary">{offer?.expirationTimestamp ? new Date(Number(offer.expirationTimestamp) * 1000).toLocaleDateString() : '-'}</td>
                                                 </tr>
                                             ))
                                         ) : (
