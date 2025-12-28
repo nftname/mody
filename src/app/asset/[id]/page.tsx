@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useActiveAccount, TransactionButton, useConnectModal } from "thirdweb/react";
-import { getContract, readContract, prepareContractCall, toWei, toTokens, NATIVE_TOKEN_ADDRESS } from "thirdweb";
+import { readContract, prepareContractCall, toWei, toTokens, NATIVE_TOKEN_ADDRESS, getContract } from "thirdweb";
 import { createWallet, walletConnect } from "thirdweb/wallets"; 
 import { 
     createListing, 
@@ -36,6 +36,14 @@ const THEME_BG = '#0d1117';
 const CARD_BG = '#161b22';
 const BTN_GRADIENT = 'linear-gradient(135deg, #FBF5B7 0%, #BF953F 25%, #AA771C 50%, #BF953F 75%, #FBF5B7 100%)';
 
+// --- DATA DEFINITION ---
+const mockChartData = [
+  { name: 'Dec 1', price: 10 },
+  { name: 'Dec 10', price: 12 },
+  { name: 'Dec 20', price: 11 },
+  { name: 'Today', price: 14 },
+];
+
 // --- MODAL ---
 const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, onClose }: any) => {
     if (!isOpen) return null;
@@ -44,7 +52,7 @@ const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, on
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-            backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 9999,
+            backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999,
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
         }}>
             <div style={{
@@ -94,18 +102,16 @@ const resolveIPFS = (uri: string) => {
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
 };
 
-const mockChartData = [ { name: 'Dec 1', price: 10 }, { name: 'Today', price: 12 } ];
-
 const marketplaceContract = getContract({ client, chain: NETWORK_CHAIN, address: MARKETPLACE_ADDRESS });
 const nftContract = getContract({ client, chain: NETWORK_CHAIN, address: NFT_COLLECTION_ADDRESS });
 const wpolContract = getContract({ client, chain: NETWORK_CHAIN, address: WPOL_ADDRESS });
 
 function AssetPage() {
     const params = useParams();
-    const router = useRouter();
     const account = useActiveAccount();
     const { connect } = useConnectModal();
     
+    // Data State
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
@@ -126,7 +132,7 @@ function AssetPage() {
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
-    // 1. Fetch Asset
+    // --- 1. DATA FETCHING ---
     const fetchAssetData = async () => {
         if (!tokenId) return;
         try {
@@ -152,16 +158,19 @@ function AssetPage() {
         } catch (error) { console.error("Asset fetch error:", error); }
     };
 
-    // 2. Fetch Offers (V5 Compatible Keys)
     const fetchOffers = async () => {
         if (!tokenId) return;
         try {
             const allOffers = await getAllValidOffers({ contract: marketplaceContract });
             if (allOffers && Array.isArray(allOffers)) {
-                const validOffers = allOffers.filter(o => 
-                    o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
-                    o.tokenId.toString() === tokenId.toString()
-                );
+                // FIXED: Removed status check to prevent type mismatch
+                const validOffers = allOffers
+                    .filter(o => 
+                        o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
+                        o.tokenId.toString() === tokenId.toString()
+                    )
+                    .sort((a, b) => Number(b.id) - Number(a.id));
+                
                 setOffersList(validOffers);
             } else {
                 setOffersList([]);
@@ -176,11 +185,16 @@ function AssetPage() {
         if (!tokenId) return;
         try {
             const listings = await getAllValidListings({ contract: marketplaceContract, start: 0, count: BigInt(100) });
-            const foundListing = listings.find(l => l.asset.id.toString() === tokenId.toString());
+            // FIXED: Removed status check to prevent type mismatch
+            const foundListing = listings
+                .filter(l => l.asset.id.toString() === tokenId.toString())
+                .sort((a, b) => Number(b.id) - Number(a.id))[0];
+                
             setListing(foundListing || null);
         } catch (e) { console.error("Market Error", e); }
     };
 
+    // --- 2. WALLET & INTERVAL ---
     const refreshWpolData = useCallback(async () => {
         if (account) {
             try {
@@ -206,15 +220,21 @@ function AssetPage() {
     }, [tokenId, account]);
 
     useEffect(() => {
-        if (isOfferMode && account) refreshWpolData();
+        if (!account || !isOfferMode) return;
+        
+        refreshWpolData(); 
+        const interval = setInterval(refreshWpolData, 5000); 
+        
+        return () => clearInterval(interval);
     }, [isOfferMode, account, refreshWpolData]);
 
+    // --- ACTIONS ---
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
         if (modal.type === 'success') {
             fetchOffers(); 
             fetchAssetData(); 
-            refreshWpolData();
+            checkListing();
         }
     };
 
@@ -225,7 +245,7 @@ function AssetPage() {
         return prepareContractCall({
             contract: wpolContract,
             method: "function approve(address, uint256)",
-            params: [MARKETPLACE_ADDRESS, toWei((Number(offerPrice) * 100).toString())]
+            params: [MARKETPLACE_ADDRESS, toWei(offerPrice.toString())] 
         });
     };
 
@@ -289,7 +309,8 @@ function AssetPage() {
     const style = getHeroStyles(asset.tier);
     const targetAmount = offerPrice ? Number(offerPrice) : 0;
     const hasEnoughWPOL = wpolBalance >= targetAmount;
-    const needsApproval = hasEnoughWPOL && wpolAllowance < targetAmount;
+    
+    const hasAllowance = hasEnoughWPOL && wpolAllowance >= targetAmount && targetAmount > 0;
 
     return (
         <main style={{ backgroundColor: THEME_BG, minHeight: '100vh', paddingBottom: '80px', fontFamily: 'sans-serif' }}>
@@ -365,7 +386,9 @@ function AssetPage() {
                                                                 quantity: BigInt(1),
                                                             });
                                                         }}
+                                                        // FIXED: Added secondaryBtn: null to prevent type error
                                                         onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Success', message: 'Asset Purchased!', actionBtn: null, secondaryBtn: null})}
+                                                        onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Purchase Failed', actionBtn: null, secondaryBtn: null})}
                                                         style={{ background: BTN_GRADIENT, color: '#000', fontWeight: 'bold', flex: 1, height: '50px', border: 'none', borderRadius: '10px' }}
                                                     >
                                                         Buy Now
@@ -393,13 +416,12 @@ function AssetPage() {
                                                         <button onClick={handlePreOfferCheck} className="btn w-100 fw-bold py-3" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', borderRadius: '8px' }}>
                                                             Check Balance
                                                         </button>
-                                                    ) : needsApproval ? (
+                                                    ) : !hasAllowance ? (
                                                         <TransactionButton
                                                             transaction={handleApprove}
-                                                            onTransactionConfirmed={async () => { 
-                                                                // AUTO-REFRESH: Updates UI immediately after Approval
-                                                                await refreshWpolData(); 
-                                                            }}
+                                                            onTransactionConfirmed={() => refreshWpolData()}
+                                                            // FIXED: Added secondaryBtn: null
+                                                            onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Approval Failed', actionBtn: null, secondaryBtn: null})}
                                                             style={{ width: '100%', background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', height: '50px' }}
                                                         >
                                                             Step 1: Approve WPOL
@@ -410,7 +432,9 @@ function AssetPage() {
                                                                 if (!offerPrice || !tokenId) throw new Error("Missing Parameters");
                                                                 return makeOffer({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), totalOffer: offerPrice, currencyContractAddress: WPOL_ADDRESS, offerExpiresAt: new Date(Date.now() + 3 * 86400000) });
                                                             }}
+                                                            // FIXED: Added secondaryBtn: null
                                                             onTransactionConfirmed={() => { setModal({isOpen: true, type: 'success', title: 'Offer Sent', message: 'Your offer is active!', actionBtn: null, secondaryBtn: null}); setIsOfferMode(false); }}
+                                                            onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Offer Failed', actionBtn: null, secondaryBtn: null})}
                                                             style={{ width: '100%', background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', height: '50px' }}
                                                         >
                                                             Step 2: Confirm Offer
@@ -420,7 +444,14 @@ function AssetPage() {
                                                 </div>
                                             )
                                         ) : (
-                                            <TransactionButton transaction={() => cancelListing({ contract: marketplaceContract, listingId: listing.id })} style={{ width: '100%', background: '#333', color: '#fff', borderRadius: '10px', height: '50px' }}>Cancel Listing</TransactionButton>
+                                            <TransactionButton 
+                                                transaction={() => cancelListing({ contract: marketplaceContract, listingId: listing.id })} 
+                                                // FIXED: Added secondaryBtn: null
+                                                onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Cancel Failed', actionBtn: null, secondaryBtn: null})}
+                                                style={{ width: '100%', background: '#333', color: '#fff', borderRadius: '10px', height: '50px' }}
+                                            >
+                                                Cancel Listing
+                                            </TransactionButton>
                                         )
                                     ) : (
                                         isOwner ? (
@@ -438,11 +469,13 @@ function AssetPage() {
                                                                 if (!tokenId) throw new Error("No Token ID");
                                                                 return createListing({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), pricePerToken: sellPrice, currencyContractAddress: NATIVE_TOKEN_ADDRESS });
                                                             }}
+                                                            // FIXED: Added secondaryBtn: null
                                                             onTransactionConfirmed={() => { 
                                                                 setModal({isOpen: true, type: 'success', title: 'Listed', message: 'Asset Listed', actionBtn: null, secondaryBtn: null});
-                                                                setIsListingMode(false); // FIXED: Stop Spinning immediately
-                                                                checkListing(); // Refresh Data immediately
+                                                                setIsListingMode(false); 
+                                                                checkListing(); 
                                                             }}
+                                                            onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Listing Failed', actionBtn: null, secondaryBtn: null})}
                                                             style={{ flex: 1, background: BTN_GRADIENT, color: '#000', borderRadius: '10px', height: '50px' }}
                                                         >
                                                             Confirm
@@ -460,6 +493,7 @@ function AssetPage() {
                             )}
                         </div>
 
+                        {/* CHART */}
                         <div className="mb-4">
                             <h5 className="text-white fw-bold mb-3">Price History</h5>
                             <div className="rounded-3 p-3" style={{ backgroundColor: CARD_BG, border: '1px solid #333', height: '250px' }}>
@@ -481,16 +515,14 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* OFFERS TABLE (CLEAN & COMPACT) */}
+                        {/* OFFERS TABLE */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul" style={{ color: '#FCD535' }}></i>
                                 <h5 className="text-white fw-bold mb-0">Offers</h5>
                             </div>
-                            
-                            {/* Scrollable Container */}
                             <div className="rounded-3 overflow-auto" style={{ border: '1px solid #333', backgroundColor: CARD_BG }}>
-                                <table className="table mb-0" style={{ backgroundColor: 'transparent', width: '100%' }}>
+                                <table className="table mb-0" style={{ width: '100%', backgroundColor: 'transparent' }}>
                                     <thead>
                                         <tr style={{ borderBottom: '1px solid #333' }}>
                                             <th className="fw-normal py-3 ps-3" style={{ border: 'none', color: '#888', fontSize: '13px', background: 'transparent' }}>Price</th>
@@ -515,25 +547,12 @@ function AssetPage() {
                                                     {isOwner && (
                                                         <td className="text-center" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
                                                             <TransactionButton
-                                                                transaction={() => acceptOffer({
-                                                                    contract: marketplaceContract,
-                                                                    offerId: offer.id,
-                                                                })}
-                                                                onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Offer Accepted', message: 'You have sold this asset!', actionBtn: null, secondaryBtn: null})}
-                                                                style={{ 
-                                                                    background: BTN_GRADIENT, 
-                                                                    color: '#000', 
-                                                                    fontWeight: 'bold', 
-                                                                    padding: '4px 10px', 
-                                                                    fontSize: '12px', 
-                                                                    borderRadius: '6px', 
-                                                                    border: 'none',
-                                                                    minWidth: '60px',
-                                                                    height: '32px'
-                                                                }}
-                                                            >
-                                                                Accept
-                                                            </TransactionButton>
+                                                                transaction={() => acceptOffer({ contract: marketplaceContract, offerId: offer.id })}
+                                                                // FIXED: Added secondaryBtn: null
+                                                                onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Sold!', message: 'Asset Sold Successfully', actionBtn: null, secondaryBtn: null})}
+                                                                onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Accept Failed', actionBtn: null, secondaryBtn: null})}
+                                                                style={{ background: BTN_GRADIENT, color: '#000', fontWeight: 'bold', padding: '4px 10px', fontSize: '12px', borderRadius: '6px', border: 'none', minWidth: '60px', height: '32px' }}
+                                                            >Accept</TransactionButton>
                                                         </td>
                                                     )}
                                                 </tr>
@@ -558,7 +577,7 @@ function AssetPage() {
             <style jsx global>{`
                 .btn:focus { box-shadow: none; }
                 input:focus { border-color: #FCD535 !important; box-shadow: none; }
-                tr, td, th { background-color: transparent !important; }
+                table, tr, td, th { background-color: transparent !important; }
             `}</style>
         </main>
     );
