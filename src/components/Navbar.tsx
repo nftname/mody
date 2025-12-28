@@ -8,6 +8,14 @@ import { defineChain } from "thirdweb";
 import { createWallet, walletConnect } from "thirdweb/wallets"; 
 import { client } from "@/lib/client";
 
+const wallets = [
+  createWallet("io.metamask"),
+  createWallet("com.coinbase.wallet"),
+  createWallet("me.rainbow"),
+  createWallet("io.rabby"),
+  walletConnect(),
+];
+
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -111,14 +119,6 @@ const Navbar = () => {
     setTouchEnd(null);
   };
 
-  const wallets = [
-    createWallet("io.metamask"),
-    createWallet("com.coinbase.wallet"),
-    createWallet("me.rainbow"),
-    createWallet("io.rabby"),
-    walletConnect(),
-  ];
-
   const goldGradient = 'linear-gradient(135deg, #FFD700 0%, #FCE570 50%, #FFD700 100%)';
   const navbarBgColor = '#0b0e11';
   const richGoldColor = '#FFD700';
@@ -199,6 +199,10 @@ const Navbar = () => {
                 chain={chain}
                 theme="dark"
                 connectButton={{ style: { width: '100%', height: '100%' } }}
+                connectModal={{
+                    size: "compact",
+                    showThirdwebBranding: false,
+                }}
             />
         </div>
       </div>

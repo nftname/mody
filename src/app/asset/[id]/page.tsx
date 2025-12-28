@@ -14,10 +14,13 @@ import {
     makeOffer 
 } from "thirdweb/extensions/marketplace";
 import { setApprovalForAll, isApprovedForAll } from "thirdweb/extensions/erc721";
+import { balanceOf } from "thirdweb/extensions/erc20";
 import { client } from "@/lib/client"; 
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS, NETWORK_CHAIN } from '@/data/config';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+// --- CONSTANTS ---
+const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; // Polygon Wrapped Token
 const RICH_GOLD_GRADIENT_CSS = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
@@ -69,7 +72,7 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: an
     );
 };
 
-// --- HELPER STYLES ---
+// --- STYLES HELPER ---
 const getHeroStyles = (tier: string) => {
     switch(tier?.toLowerCase()) {
         case 'immortal': return { bg: 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)', border: '1px solid rgba(252, 213, 53, 0.5)', shadow: '0 0 80px rgba(252, 213, 53, 0.15), inset 0 0 40px rgba(0,0,0,0.8)', textColor: RICH_GOLD_GRADIENT_CSS, labelColor: '#FCD535' };
@@ -87,15 +90,16 @@ const resolveIPFS = (uri: string) => {
 
 const mockChartData = [ { name: 'Dec 1', price: 10 }, { name: 'Today', price: 12 } ];
 
-// --- CONTRACTS ---
+// --- CONTRACT INITIALIZATION ---
 const marketplaceContract = getContract({ client, chain: NETWORK_CHAIN, address: MARKETPLACE_ADDRESS });
 const nftContract = getContract({ client, chain: NETWORK_CHAIN, address: NFT_COLLECTION_ADDRESS });
+const wpolContract = getContract({ client, chain: NETWORK_CHAIN, address: WPOL_ADDRESS });
 
 function AssetPage() {
     const params = useParams();
     const router = useRouter();
     const account = useActiveAccount();
-    const { connect } = useConnectModal(); 
+    const { connect } = useConnectModal();
     
     // Data State
     const [asset, setAsset] = useState<any | null>(null);
@@ -104,13 +108,11 @@ function AssetPage() {
     const [isOwner, setIsOwner] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     
-    // Interaction States
+    // UI State
     const [sellPrice, setSellPrice] = useState('10');
-    const [offerPrice, setOfferPrice] = useState(''); // For Making Offer
-    
+    const [offerPrice, setOfferPrice] = useState('');
     const [isListingMode, setIsListingMode] = useState(false);
-    const [isOfferMode, setIsOfferMode] = useState(false); // For Toggling Offer Input
-    
+    const [isOfferMode, setIsOfferMode] = useState(false);
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
     const rawId = params?.id;
@@ -155,6 +157,7 @@ function AssetPage() {
         if (tokenId) { Promise.all([fetchAssetData(), checkListing()]).then(() => setLoading(false)); }
     }, [tokenId, account]);
 
+    // --- HELPERS ---
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
@@ -164,10 +167,7 @@ function AssetPage() {
         setModal({ ...modal, isOpen: false });
         router.push('/market');
     };
-
-    const handleConnect = () => {
-        connect({ client });
-    };
+    const handleConnect = () => connect({ client });
 
     if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
     if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
@@ -238,6 +238,7 @@ function AssetPage() {
                                     </div>
                                 </div>
                                 <div className="col-md-6 mt-3 mt-md-0">
+                                    
                                     {/* --- ACTION BUTTONS LOGIC --- */}
                                     
                                     {/* A. VISITOR (Not Connected) */}
@@ -249,7 +250,7 @@ function AssetPage() {
                                         // B. CONNECTED USER
                                         listing ? (
                                             !isOwner ? (
-                                                // BUYER VIEW: Buy OR Offer
+                                                // BUYER VIEW
                                                 !isOfferMode ? (
                                                     <div className="d-flex gap-2">
                                                         <TransactionButton
@@ -260,7 +261,7 @@ function AssetPage() {
                                                                 quantity: BigInt(1),
                                                             })}
                                                             onTransactionConfirmed={() => showModal('success', 'Purchase Successful!', 'You have successfully purchased this asset.')}
-                                                            onError={(e) => showModal('error', 'Transaction Info', 'Please check your wallet balance.')}
+                                                            onError={(e) => showModal('error', 'Transaction Info', 'Check wallet balance.')}
                                                             style={{ ...GOLD_BTN_STYLE, flex: 1, height: '50px' }}
                                                         >
                                                             Buy Now
@@ -274,7 +275,7 @@ function AssetPage() {
                                                         </button>
                                                     </div>
                                                 ) : (
-                                                    // OFFER INPUT MODE
+                                                    // MAKE OFFER (SMART WRAP LOGIC)
                                                     <div className="d-flex flex-column gap-2">
                                                         <input 
                                                             type="number" 
@@ -285,19 +286,27 @@ function AssetPage() {
                                                         />
                                                         <div className="d-flex gap-2">
                                                             <TransactionButton
-                                                                transaction={() => makeOffer({
-                                                                    contract: marketplaceContract,
-                                                                    assetContractAddress: NFT_COLLECTION_ADDRESS,
-                                                                    tokenId: BigInt(tokenId),
-                                                                    totalPrice: offerPrice,
-                                                                    currencyContractAddress: NATIVE_TOKEN_ADDRESS,
-                                                                    quantity: BigInt(1)
-                                                                })}
+                                                                transaction={async () => {
+                                                                    if (!offerPrice || !tokenId) throw new Error("Missing Parameters");
+                                                                    
+                                                                    // APPROVED SOLUTION: Using 'totalOffer' as per Thirdweb SDK v5 Docs
+                                                                    return makeOffer({
+                                                                        contract: marketplaceContract,
+                                                                        assetContractAddress: NFT_COLLECTION_ADDRESS,
+                                                                        tokenId: BigInt(tokenId),
+                                                                        totalOffer: offerPrice,
+                                                                        currencyContractAddress: WPOL_ADDRESS,
+                                                                        offerExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3) // 3 Days Validity
+                                                                    });
+                                                                }}
                                                                 onTransactionConfirmed={() => {
                                                                     showModal('success', 'Offer Sent!', 'Your offer has been submitted successfully.');
                                                                     setIsOfferMode(false);
                                                                 }}
-                                                                onError={(e) => showModal('error', 'Offer Info', 'Make sure you have enough balance/WETH.')}
+                                                                onError={(e) => {
+                                                                    console.error(e);
+                                                                    showModal('error', 'Offer Failed', 'Ensure you have Wrapped POL (WPOL) or try Swapping first.');
+                                                                }}
                                                                 style={{ ...GOLD_BTN_STYLE, flex: 1 }}
                                                             >
                                                                 Confirm Offer
@@ -342,7 +351,7 @@ function AssetPage() {
                                                                     transaction={() => {
                                                                         if (!tokenId) throw new Error("Invalid Token ID");
                                                                         const start = new Date();
-                                                                        const end = new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000);
+                                                                        const end = new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000); 
                                                                         return createListing({
                                                                             contract: marketplaceContract,
                                                                             assetContractAddress: NFT_COLLECTION_ADDRESS,
@@ -376,7 +385,6 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* Chart Area */}
                         <div className="mb-4">
                             <h5 className="text-white fw-bold mb-3">Price History</h5>
                             <div className="rounded-3 p-3" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35', height: '300px' }}>
