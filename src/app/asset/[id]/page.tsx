@@ -13,6 +13,7 @@ import {
     getAllValidListings,
     cancelListing,
     makeOffer,
+    acceptOffer, // <--- New Import for Accepting Offers
     getAllValidOffers 
 } from "thirdweb/extensions/marketplace";
 import { setApprovalForAll, isApprovedForAll } from "thirdweb/extensions/erc721";
@@ -123,7 +124,7 @@ function AssetPage() {
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
-    // 1. Fetch Asset Details
+    // 1. Fetch Asset
     const fetchAssetData = async () => {
         if (!tokenId) return;
         try {
@@ -149,7 +150,7 @@ function AssetPage() {
         } catch (error) { console.error("Asset fetch error:", error); }
     };
 
-    // 2. Fetch Offers (Updated Keys for V5)
+    // 2. Fetch Offers
     const fetchOffers = async () => {
         if (!tokenId) return;
         try {
@@ -210,7 +211,7 @@ function AssetPage() {
         setModal({ ...modal, isOpen: false });
         if (modal.type === 'success') {
             fetchOffers(); 
-            refreshWpolData();
+            fetchAssetData(); // Update owner potentially if sold
         }
     };
 
@@ -470,7 +471,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* OFFERS TABLE (FIXED VARIABLES) */}
+                        {/* OFFERS TABLE (WITH ACCEPT BUTTON) */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul" style={{ color: '#FCD535' }}></i>
@@ -483,13 +484,13 @@ function AssetPage() {
                                             <th className="text-secondary fw-normal py-3 ps-3">Price</th>
                                             <th className="text-secondary fw-normal py-3">From</th>
                                             <th className="text-secondary fw-normal py-3 text-end pe-3">Expiration</th>
+                                            {isOwner && <th className="text-secondary fw-normal py-3 text-center">Action</th>}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {offersList && offersList.length > 0 ? (
                                             offersList.map((offer, index) => (
                                                 <tr key={index}>
-                                                    {/* UPDATED VARIABLE NAMES FOR V5 */}
                                                     <td className="ps-3 fw-bold text-white">
                                                         {offer.currencyValue ? offer.currencyValue.displayValue : (offer.totalPrice ? toTokens(offer.totalPrice, 18) : '0')} WPOL
                                                     </td>
@@ -499,11 +500,34 @@ function AssetPage() {
                                                     <td className="text-end pe-3 text-secondary">
                                                         {offer.endTimeInSeconds ? new Date(Number(offer.endTimeInSeconds) * 1000).toLocaleDateString() : '-'}
                                                     </td>
+                                                    {isOwner && (
+                                                        <td className="text-center">
+                                                            <TransactionButton
+                                                                transaction={() => acceptOffer({
+                                                                    contract: marketplaceContract,
+                                                                    offerId: offer.id,
+                                                                })}
+                                                                onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Offer Accepted', message: 'You have sold this asset!', actionBtn: null, secondaryBtn: null})}
+                                                                style={{ 
+                                                                    background: BTN_GRADIENT, 
+                                                                    color: '#000', 
+                                                                    fontWeight: 'bold', 
+                                                                    padding: '5px 15px', 
+                                                                    fontSize: '14px', 
+                                                                    borderRadius: '5px',
+                                                                    border: 'none',
+                                                                    minWidth: '80px'
+                                                                }}
+                                                            >
+                                                                Accept
+                                                            </TransactionButton>
+                                                        </td>
+                                                    )}
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={3} className="text-center py-5 text-secondary">
+                                                <td colSpan={isOwner ? 4 : 3} className="text-center py-5 text-secondary">
                                                     <i className="bi bi-inbox fs-3 d-block mb-2 opacity-50"></i>
                                                     No active offers yet
                                                 </td>
