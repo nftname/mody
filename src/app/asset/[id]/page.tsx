@@ -5,7 +5,7 @@ import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { useActiveAccount, TransactionButton, ConnectButton } from "thirdweb/react";
-import { prepareContractCall, toWei, toTokens, getContract, readContract, NATIVE_TOKEN_ADDRESS } from "thirdweb"; // Fixed: Added NATIVE_TOKEN_ADDRESS
+import { prepareContractCall, toWei, toTokens, getContract, readContract, NATIVE_TOKEN_ADDRESS } from "thirdweb";
 import { createWallet, walletConnect } from "thirdweb/wallets"; 
 import { 
     createListing, 
@@ -22,6 +22,7 @@ import { client } from "@/lib/client";
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS, NETWORK_CHAIN } from '@/data/config';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+// --- WALLET CONFIGURATION ---
 const wallets = [
   createWallet("io.metamask"),
   createWallet("com.coinbase.wallet"),
@@ -30,6 +31,7 @@ const wallets = [
   walletConnect(),
 ];
 
+// --- CONSTANTS & STYLES ---
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 const THEME_BG = '#0d1117'; 
 const CARD_BG = '#161b22';
@@ -37,12 +39,13 @@ const BTN_GRADIENT = 'linear-gradient(135deg, #FBF5B7 0%, #BF953F 25%, #AA771C 5
 
 const mockChartData = [
   { name: 'Dec 1', price: 10 },
+  { name: 'Dec 5', price: 10.5 },
   { name: 'Dec 10', price: 12 },
-  { name: 'Dec 20', price: 11 },
+  { name: 'Dec 15', price: 11 },
   { name: 'Today', price: 14 },
 ];
 
-// --- HELPER FUNCTION (Fixed: Re-added this function) ---
+// --- HELPER FUNCTIONS ---
 const getHeroStyles = (tier: string) => {
     switch(tier?.toLowerCase()) {
         case 'immortal': return { bg: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)', border: '1px solid #FCD535', textColor: '#FCD535', shadow: '0 0 30px rgba(252, 213, 53, 0.15)' };
@@ -56,8 +59,10 @@ const resolveIPFS = (uri: string) => {
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
 };
 
+// --- MODAL COMPONENT ---
 const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, onClose }: any) => {
     if (!isOpen) return null;
+    
     const isSuccess = type === 'success';
     const borderStyle = isSuccess ? '1px solid #FCD535' : '1px solid #333';
     const iconColor = isSuccess ? '#FCD535' : (type === 'error' ? '#dc3545' : '#FCD535');
@@ -103,6 +108,7 @@ const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, on
     );
 };
 
+// --- CONTRACT INITIALIZATION ---
 const marketplaceContract = getContract({ client, chain: NETWORK_CHAIN, address: MARKETPLACE_ADDRESS });
 const nftContract = getContract({ client, chain: NETWORK_CHAIN, address: NFT_COLLECTION_ADDRESS });
 const wpolContract = getContract({ client, chain: NETWORK_CHAIN, address: WPOL_ADDRESS });
@@ -111,26 +117,31 @@ function AssetPage() {
     const params = useParams();
     const account = useActiveAccount();
     
+    // 1. Data State
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
+    const [offersList, setOffersList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    
+    // 2. Permission State
     const [isOwner, setIsOwner] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     
+    // 3. UI State
     const [sellPrice, setSellPrice] = useState('10');
     const [offerPrice, setOfferPrice] = useState('');
     const [isListingMode, setIsListingMode] = useState(false);
     const [isOfferMode, setIsOfferMode] = useState(false);
     
+    // 4. Wallet State
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
-    
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '', actionBtn: null as any, secondaryBtn: null as any });
-    const [offersList, setOffersList] = useState<any[]>([]);
 
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
+    // --- FETCH FUNCTION 1: ASSET ---
     const fetchAssetData = async () => {
         if (!tokenId) return;
         try {
@@ -156,13 +167,15 @@ function AssetPage() {
         } catch (error) { console.error("Asset fetch error:", error); }
     };
 
+    // --- FETCH FUNCTION 2: OFFERS ---
     const fetchOffers = async () => {
         if (!tokenId) return;
         try {
             const allOffers = await getAllValidOffers({ contract: marketplaceContract });
             if (allOffers && Array.isArray(allOffers)) {
+                // Fixed: Removed 'status' check to prevent Type Error 2367
+                // 'getAllValidOffers' only returns valid offers by default
                 const validOffers = allOffers
-                    // Fixed: Removed status === 1 comparison to fix Type Error 2367
                     .filter(o => 
                         o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
                         o.tokenId.toString() === tokenId.toString()
@@ -178,18 +191,21 @@ function AssetPage() {
         }
     };
 
+    // --- FETCH FUNCTION 3: LISTINGS (Anti-Duplicate) ---
     const checkListing = async () => {
         if (!tokenId) return;
         try {
             const listings = await getAllValidListings({ contract: marketplaceContract, start: 0, count: BigInt(100) });
-            // Fixed: Removed status === 1 comparison to fix Type Error 2367
+            // Fixed: Removed 'status' check to prevent Type Error 2367
+            // Deduplication: Filter by Token ID, Sort by Descending ID, Take First
             const foundListing = listings
                 .filter(l => l.asset.id.toString() === tokenId.toString())
-                .sort((a, b) => Number(b.id) - Number(a.id))[0]; // Deduplicate: Take newest
+                .sort((a, b) => Number(b.id) - Number(a.id))[0];
             setListing(foundListing || null);
         } catch (e) { console.error("Market Error", e); }
     };
 
+    // --- WALLET REFRESH ---
     const refreshWpolData = useCallback(async () => {
         if (account) {
             try {
@@ -205,6 +221,7 @@ function AssetPage() {
         }
     }, [account]);
 
+    // --- EFFECTS ---
     useEffect(() => {
         if (tokenId) {
             setLoading(true);
@@ -224,15 +241,15 @@ function AssetPage() {
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
         if (modal.type === 'success') {
-            // Fixed: Replaced missing 'fetchData' with explicit function calls
             fetchOffers(); 
             fetchAssetData(); 
             checkListing();
         }
     };
 
+    // --- HANDLERS (Fixed Types) ---
     const handleApprove = async () => {
-        if (!offerPrice) throw new Error("Price missing");
+        if (!offerPrice) throw new Error("Price is missing"); // Fixed: Throw error instead of return undefined
         return prepareContractCall({
             contract: wpolContract,
             method: "function approve(address, uint256)",
@@ -267,7 +284,6 @@ function AssetPage() {
     if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center text-secondary" style={{ backgroundColor: THEME_BG }}>Loading...</div>;
     if (!asset) return <div className="vh-100 d-flex justify-content-center align-items-center text-white" style={{ backgroundColor: THEME_BG }}>Asset Not Found</div>;
     
-    // Fixed: Now 'getHeroStyles' is defined and won't cause error 2304
     const style = getHeroStyles(asset.tier);
     const targetAmount = offerPrice ? Number(offerPrice) : 0;
     const hasEnoughWPOL = wpolBalance >= targetAmount;
@@ -298,10 +314,10 @@ function AssetPage() {
                     <div className="col-lg-5">
                          <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" 
                               style={{ background: CARD_BG, border: '1px solid #333', minHeight: '500px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
-                            <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg || '#161b22', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                 <div style={{ textAlign: 'center' }}>
-                                    <p style={{ fontSize: '10px', color: '#fff', marginBottom: '10px' }}>GEN-0 #00{asset.id}</p>
-                                    <h1 style={{ fontSize: '42px', fontFamily: 'serif', fontWeight: '900', color: '#fff', margin: '10px 0' }}>{asset.name}</h1>
+                                    <p style={{ fontSize: '10px', color: style.textColor, marginBottom: '10px' }}>GEN-0 #00{asset.id}</p>
+                                    <h1 style={{ fontSize: '42px', fontFamily: 'serif', fontWeight: '900', color: style.textColor, margin: '10px 0' }}>{asset.name}</h1>
                                 </div>
                             </div>
                         </div>
@@ -328,6 +344,7 @@ function AssetPage() {
                             </h2>
 
                             {!account ? (
+                                // --- SOLUTION: OFFICIAL CONNECT BUTTON (SAFE AUTH) ---
                                 <div style={{ width: '100%', height: '50px' }}>
                                     <ConnectButton 
                                         client={client} 
@@ -431,7 +448,7 @@ function AssetPage() {
                                                         <TransactionButton 
                                                             transaction={() => {
                                                                 if (!tokenId) throw new Error("No Token ID");
-                                                                return createListing({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), pricePerToken: sellPrice, currencyContractAddress: NATIVE_TOKEN_ADDRESS }); // Fixed: Added NATIVE_TOKEN_ADDRESS
+                                                                return createListing({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), pricePerToken: sellPrice, currencyContractAddress: NATIVE_TOKEN_ADDRESS });
                                                             }}
                                                             onTransactionConfirmed={() => { 
                                                                 setModal({isOpen: true, type: 'success', title: 'Listed', message: 'Asset Listed', actionBtn: null, secondaryBtn: null});
@@ -505,13 +522,13 @@ function AssetPage() {
                                                         {offer.offerorAddress ? `${offer.offerorAddress.slice(0,4)}..${offer.offerorAddress.slice(-4)}` : 'Unknown'}
                                                     </td>
                                                     <td className="text-end pe-3 text-secondary" style={{ border: 'none', verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '11px', background: 'transparent' }}>
-                                                        {offer.endTimeInSeconds ? new Date(Number(offer.endTimeInSeconds) * 1000).toLocaleDateString('en-US') : '-'}
+                                                        {/* Fixed: Added fallback (|| 0) to solve Type Error 2345 */}
+                                                        {offer.endTimeInSeconds ? new Date(Number(offer.endTimeInSeconds || 0) * 1000).toLocaleDateString('en-US') : '-'}
                                                     </td>
                                                     {isOwner && (
                                                         <td className="text-center" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
                                                             <TransactionButton
                                                                 transaction={() => acceptOffer({ contract: marketplaceContract, offerId: offer.id })}
-                                                                // Fixed: Replaced missing 'fetchData' call with correct update functions
                                                                 onTransactionConfirmed={() => { 
                                                                     setModal({isOpen: true, type: 'success', title: 'Sold!', message: 'Asset Sold Successfully', actionBtn: null, secondaryBtn: null});
                                                                     fetchAssetData(); 
