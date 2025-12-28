@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
@@ -178,23 +178,21 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     };
 
-    const checkWpolStatus = async () => {
+    const refreshWpolData = useCallback(async () => {
         if (account) {
             try {
-                // Check Balance
                 const balanceBigInt = await balanceOf({ contract: wpolContract, address: account.address });
                 setWpolBalance(Number(toTokens(balanceBigInt, 18)));
 
-                // Check Allowance
                 const allowanceBigInt = await readContract({ 
                     contract: wpolContract, 
                     method: "function allowance(address, address) view returns (uint256)", 
                     params: [account.address, MARKETPLACE_ADDRESS] 
                 });
                 setWpolAllowance(Number(toTokens(allowanceBigInt, 18)));
-            } catch (e) { console.error("WPOL Check Error", e); }
+            } catch (e) { console.error("WPOL Refresh Error", e); }
         }
-    };
+    }, [account]);
 
     useEffect(() => {
         if (tokenId) { Promise.all([fetchAssetData(), checkListing()]).then(() => setLoading(false)); }
@@ -202,9 +200,9 @@ function AssetPage() {
 
     useEffect(() => {
         if (isOfferMode && account) {
-            checkWpolStatus();
+            refreshWpolData();
         }
-    }, [isOfferMode, account]);
+    }, [isOfferMode, account, refreshWpolData]);
 
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
     const closeModal = () => {
@@ -263,10 +261,8 @@ function AssetPage() {
     // Smart Logic with Optimistic Overrides
     const targetAmount = offerPrice ? Number(offerPrice) : 0;
     
-    // If just wrapped, assume balance is sufficient. Else check actual balance.
+    // FIX: Define boolean flags here to be accessible in JSX
     const isBalanceSufficient = hasJustWrapped || wpolBalance >= targetAmount;
-    
-    // If just approved, assume allowance is sufficient. Else check actual allowance.
     const isAllowanceSufficient = hasJustApproved || wpolAllowance >= targetAmount;
 
     return (
@@ -384,7 +380,7 @@ function AssetPage() {
                                                                 <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary w-100 mt-2">Cancel</button>
                                                             </div>
                                                         ) : !isAllowanceSufficient ? (
-                                                            // State 2: APPROVE (New Step)
+                                                            // State 2: APPROVE
                                                             <div className="d-flex flex-column gap-2">
                                                                 <button onClick={handleApprove} className="btn fw-bold w-100" style={{ background: BTN_GRADIENT, border: 'none', color: '#000', padding: '12px' }}>
                                                                     Approve WPOL Usage
