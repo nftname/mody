@@ -13,7 +13,7 @@ import {
     getAllValidListings,
     cancelListing,
     makeOffer,
-    acceptOffer, // <--- New Import for Accepting Offers
+    acceptOffer, 
     getAllValidOffers 
 } from "thirdweb/extensions/marketplace";
 import { setApprovalForAll, isApprovedForAll } from "thirdweb/extensions/erc721";
@@ -36,9 +36,13 @@ const THEME_BG = '#0d1117';
 const CARD_BG = '#161b22';
 const BTN_GRADIENT = 'linear-gradient(135deg, #FBF5B7 0%, #BF953F 25%, #AA771C 50%, #BF953F 75%, #FBF5B7 100%)';
 
-// --- MODAL ---
+// --- MODAL (UPDATED DESIGN) ---
 const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, onClose }: any) => {
     if (!isOpen) return null;
+    
+    // Success Modal gets Gold Border, others get Dark Border
+    const borderStyle = type === 'success' ? '1px solid #FCD535' : '1px solid #333';
+
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
@@ -47,7 +51,7 @@ const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, on
         }}>
             <div style={{
                 backgroundColor: CARD_BG, 
-                border: '1px solid #333',
+                border: borderStyle,
                 borderRadius: '20px',
                 padding: '30px', width: '100%', maxWidth: '420px', textAlign: 'center',
                 boxShadow: '0 20px 50px rgba(0,0,0,0.6)', position: 'relative'
@@ -57,7 +61,7 @@ const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, on
                 </button>
 
                 <div className="mb-3">
-                    {type === 'success' && <i className="bi bi-check-circle-fill text-success" style={{fontSize: '3.5rem'}}></i>}
+                    {type === 'success' && <i className="bi bi-check-circle-fill text-success" style={{fontSize: '3.5rem', color: '#FCD535'}}></i>}
                     {type === 'error' && <i className="bi bi-exclamation-triangle-fill text-danger" style={{fontSize: '3.5rem'}}></i>}
                     {type === 'info' && <i className="bi bi-info-circle-fill" style={{fontSize: '3.5rem', color: '#FCD535'}}></i>}
                 </div>
@@ -69,8 +73,8 @@ const CustomModal = ({ isOpen, type, title, message, actionBtn, secondaryBtn, on
                     {actionBtn}
                     {secondaryBtn}
                     {!actionBtn && !secondaryBtn && (
-                        <button onClick={onClose} className="btn w-100 fw-bold py-3" style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '8px' }}>
-                            Close
+                        <button onClick={onClose} className="btn w-100 fw-bold py-3" style={{ background: type === 'success' ? BTN_GRADIENT : '#333', color: type === 'success' ? '#000' : '#fff', border: '1px solid #555', borderRadius: '8px' }}>
+                            {type === 'success' ? 'Continue' : 'Close'}
                         </button>
                     )}
                 </div>
@@ -211,7 +215,7 @@ function AssetPage() {
         setModal({ ...modal, isOpen: false });
         if (modal.type === 'success') {
             fetchOffers(); 
-            fetchAssetData(); // Update owner potentially if sold
+            fetchAssetData(); 
         }
     };
 
@@ -471,37 +475,39 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* OFFERS TABLE (WITH ACCEPT BUTTON) */}
+                        {/* OFFERS TABLE (STYLED CLEANER & COMPACT) */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul" style={{ color: '#FCD535' }}></i>
                                 <h5 className="text-white fw-bold mb-0">Offers</h5>
                             </div>
-                            <div className="rounded-3 overflow-hidden" style={{ border: '1px solid #333' }}>
-                                <table className="table table-dark table-hover mb-0" style={{ backgroundColor: CARD_BG }}>
+                            
+                            {/* Scrollable Container for Mobile */}
+                            <div className="rounded-3 overflow-auto" style={{ border: '1px solid #333', backgroundColor: CARD_BG }}>
+                                <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', width: '100%' }}>
                                     <thead>
-                                        <tr>
-                                            <th className="text-secondary fw-normal py-3 ps-3">Price</th>
-                                            <th className="text-secondary fw-normal py-3">From</th>
-                                            <th className="text-secondary fw-normal py-3 text-end pe-3">Expiration</th>
-                                            {isOwner && <th className="text-secondary fw-normal py-3 text-center">Action</th>}
+                                        <tr style={{ borderBottom: '1px solid #333' }}>
+                                            <th className="fw-normal py-3 ps-3" style={{ border: 'none', color: '#888', fontSize: '13px' }}>Price</th>
+                                            <th className="fw-normal py-3" style={{ border: 'none', color: '#888', fontSize: '13px' }}>From</th>
+                                            <th className="fw-normal py-3 text-end pe-3" style={{ border: 'none', color: '#888', fontSize: '13px' }}>Date</th>
+                                            {isOwner && <th className="fw-normal py-3 text-center" style={{ border: 'none', color: '#888', fontSize: '13px' }}>Action</th>}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {offersList && offersList.length > 0 ? (
                                             offersList.map((offer, index) => (
-                                                <tr key={index}>
-                                                    <td className="ps-3 fw-bold text-white">
+                                                <tr key={index} style={{ borderBottom: '1px solid #333' }}>
+                                                    <td className="ps-3 fw-bold text-white" style={{ border: 'none', verticalAlign: 'middle' }}>
                                                         {offer.currencyValue ? offer.currencyValue.displayValue : (offer.totalPrice ? toTokens(offer.totalPrice, 18) : '0')} WPOL
                                                     </td>
-                                                    <td style={{ color: '#FCD535' }}>
-                                                        {offer.offerorAddress ? `${offer.offerorAddress.slice(0,6)}...${offer.offerorAddress.slice(-4)}` : 'Unknown'}
+                                                    <td style={{ color: '#FCD535', border: 'none', verticalAlign: 'middle', fontSize: '13px' }}>
+                                                        {offer.offerorAddress ? `${offer.offerorAddress.slice(0,4)}..${offer.offerorAddress.slice(-4)}` : 'Unknown'}
                                                     </td>
-                                                    <td className="text-end pe-3 text-secondary">
-                                                        {offer.endTimeInSeconds ? new Date(Number(offer.endTimeInSeconds) * 1000).toLocaleDateString() : '-'}
+                                                    <td className="text-end pe-3 text-secondary" style={{ border: 'none', verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '11px' }}>
+                                                        {offer.endTimeInSeconds ? new Date(Number(offer.endTimeInSeconds) * 1000).toLocaleDateString('en-US') : '-'}
                                                     </td>
                                                     {isOwner && (
-                                                        <td className="text-center">
+                                                        <td className="text-center" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px' }}>
                                                             <TransactionButton
                                                                 transaction={() => acceptOffer({
                                                                     contract: marketplaceContract,
@@ -512,11 +518,12 @@ function AssetPage() {
                                                                     background: BTN_GRADIENT, 
                                                                     color: '#000', 
                                                                     fontWeight: 'bold', 
-                                                                    padding: '5px 15px', 
-                                                                    fontSize: '14px', 
-                                                                    borderRadius: '5px',
+                                                                    padding: '4px 10px', 
+                                                                    fontSize: '12px', 
+                                                                    borderRadius: '6px',
                                                                     border: 'none',
-                                                                    minWidth: '80px'
+                                                                    minWidth: '60px',
+                                                                    height: '32px'
                                                                 }}
                                                             >
                                                                 Accept
@@ -527,7 +534,7 @@ function AssetPage() {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={isOwner ? 4 : 3} className="text-center py-5 text-secondary">
+                                                <td colSpan={isOwner ? 4 : 3} className="text-center py-5 text-secondary" style={{ border: 'none' }}>
                                                     <i className="bi bi-inbox fs-3 d-block mb-2 opacity-50"></i>
                                                     No active offers yet
                                                 </td>
@@ -545,6 +552,11 @@ function AssetPage() {
             <style jsx global>{`
                 .btn:focus { box-shadow: none; }
                 input:focus { border-color: #FCD535 !important; box-shadow: none; }
+                /* Fix table row hover if bootstrap is interfering */
+                .table-hover > tbody > tr:hover {
+                    color: #fff;
+                    background-color: rgba(252, 213, 53, 0.05) !important;
+                }
             `}</style>
         </main>
     );
