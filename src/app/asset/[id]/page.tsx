@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams } from 'next/navigation';
-import { useActiveAccount, TransactionButton, ConnectButton } from "thirdweb/react";
+// استبدلنا TransactionButton بـ useSendTransaction للتحكم اليدوي الكامل
+import { useActiveAccount, ConnectButton, useSendTransaction } from "thirdweb/react";
 import { prepareContractCall, toWei, toTokens, getContract, readContract, NATIVE_TOKEN_ADDRESS } from "thirdweb";
 import { createWallet, walletConnect } from "thirdweb/wallets"; 
 import { 
@@ -114,15 +115,18 @@ const wpolContract = getContract({ client, chain: NETWORK_CHAIN, address: WPOL_A
 function AssetPage() {
     const params = useParams();
     const account = useActiveAccount();
-    // REMOVED manual useConnectModal to prevent auto-triggering gas fees
     
+    // --- MANUAL TRANSACTION HOOK ---
+    // This is the key fix: We initiate transactions manually, preventing auto-gas checks.
+    const { mutate: sendTx, isPending } = useSendTransaction();
+
     // State
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
     const [offersList, setOffersList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     
-    // User Permissions
+    // Logic
     const [isOwner, setIsOwner] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     
@@ -227,7 +231,6 @@ function AssetPage() {
         }
     }, [tokenId, account]);
 
-    // Interval Guard: Only run when offer mode is active to prevent background gas calls
     useEffect(() => {
         if (!account || !isOfferMode) return;
         refreshWpolData();
@@ -244,14 +247,73 @@ function AssetPage() {
         }
     };
 
-    // --- HANDLERS (Safe Transaction Preparation) ---
-    const handleApprove = async () => {
-        if (!offerPrice) throw new Error("Price missing");
-        return prepareContractCall({
-            contract: wpolContract,
-            method: "function approve(address, uint256)",
-            params: [MARKETPLACE_ADDRESS, toWei(offerPrice.toString())] 
+    // --- HANDLERS (USING MANUAL SENDTX) ---
+    // This helper executes the transaction ONLY when called, preventing pre-flight gas checks.
+    const executeTx = (txPromise: Promise<any>, successMsg: string) => {
+        txPromise.then((tx) => {
+            sendTx(tx, {
+                onSuccess: () => {
+                    setModal({ isOpen: true, type: 'success', title: 'Success', message: successMsg, actionBtn: null, secondaryBtn: null });
+                    fetchAssetData();
+                    fetchOffers();
+                    checkListing();
+                    setIsListingMode(false);
+                    setIsOfferMode(false);
+                },
+                onError: (err) => {
+                    setModal({ isOpen: true, type: 'error', title: 'Failed', message: err.message, actionBtn: null, secondaryBtn: null });
+                }
+            });
+        }).catch((err) => {
+            console.error("Tx Prep Failed", err);
         });
+    };
+
+    const handleBuy = () => {
+        if (!listing || !account) return;
+        const tx = buyFromListing({ contract: marketplaceContract, listingId: listing.id, recipient: account.address, quantity: BigInt(1) });
+        executeTx(Promise.resolve(tx), "Asset Purchased Successfully!");
+    };
+
+    const handleApprove = () => {
+        if (!offerPrice) return;
+        const tx = prepareContractCall({ contract: wpolContract, method: "function approve(address, uint256)", params: [MARKETPLACE_ADDRESS, toWei(offerPrice.toString())] });
+        executeTx(Promise.resolve(tx), "WPOL Approved successfully!");
+    };
+
+    const handleOffer = () => {
+        if (!offerPrice || !tokenId) return;
+        const tx = makeOffer({
+            contract: marketplaceContract,
+            assetContractAddress: NFT_COLLECTION_ADDRESS,
+            tokenId: BigInt(tokenId),
+            totalOffer: offerPrice,
+            currencyContractAddress: WPOL_ADDRESS,
+            offerExpiresAt: new Date(Date.now() + 3 * 86400000)
+        });
+        executeTx(Promise.resolve(tx), "Offer Sent Successfully!");
+    };
+
+    const handleList = () => {
+        if (!tokenId || !sellPrice) return;
+        const tx = createListing({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), pricePerToken: sellPrice, currencyContractAddress: NATIVE_TOKEN_ADDRESS });
+        executeTx(Promise.resolve(tx), "Asset Listed Successfully!");
+    };
+
+    const handleApproveNft = () => {
+        const tx = setApprovalForAll({ contract: nftContract, operator: MARKETPLACE_ADDRESS, approved: true });
+        executeTx(Promise.resolve(tx), "NFT Approved for Listing!");
+    };
+
+    const handleCancelList = () => {
+        if (!listing) return;
+        const tx = cancelListing({ contract: marketplaceContract, listingId: listing.id });
+        executeTx(Promise.resolve(tx), "Listing Cancelled!");
+    };
+
+    const handleAcceptOffer = (offerId: bigint) => {
+        const tx = acceptOffer({ contract: marketplaceContract, offerId: offerId });
+        executeTx(Promise.resolve(tx), "Offer Accepted! Asset Sold.");
     };
 
     const handleRecheckBalance = async () => {
@@ -288,16 +350,7 @@ function AssetPage() {
 
     return (
         <main style={{ backgroundColor: THEME_BG, minHeight: '100vh', paddingBottom: '80px', fontFamily: 'sans-serif' }}>
-            
-            <CustomModal 
-                isOpen={modal.isOpen} 
-                type={modal.type} 
-                title={modal.title} 
-                message={modal.message} 
-                actionBtn={modal.actionBtn}
-                secondaryBtn={modal.secondaryBtn} 
-                onClose={closeModal} 
-            />
+            <CustomModal isOpen={modal.isOpen} type={modal.type} title={modal.title} message={modal.message} actionBtn={modal.actionBtn} secondaryBtn={modal.secondaryBtn} onClose={closeModal} />
 
             <div className="container py-4">
                 <div className="d-flex align-items-center gap-2 text-secondary mb-4" style={{ fontSize: '14px' }}>
@@ -311,7 +364,7 @@ function AssetPage() {
                     <div className="col-lg-5">
                          <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" 
                               style={{ background: CARD_BG, border: '1px solid #333', minHeight: '500px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
-                            <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                 <div style={{ textAlign: 'center' }}>
                                     <p style={{ fontSize: '10px', color: style.textColor, marginBottom: '10px' }}>GEN-0 #00{asset.id}</p>
                                     <h1 style={{ fontSize: '42px', fontFamily: 'serif', fontWeight: '900', color: style.textColor, margin: '10px 0' }}>{asset.name}</h1>
@@ -342,7 +395,6 @@ function AssetPage() {
 
                             {!account ? (
                                 <div style={{ width: '100%', height: '50px' }}>
-                                    {/* USE CONNECT BUTTON ONLY TO PREVENT AUTO-GAS REQUEST */}
                                     <ConnectButton 
                                         client={client} 
                                         wallets={wallets}
@@ -358,22 +410,9 @@ function AssetPage() {
                                         !isOwner ? (
                                             !isOfferMode ? (
                                                 <div className="d-flex gap-3">
-                                                    <TransactionButton
-                                                        transaction={async () => {
-                                                            if(!listing) throw new Error("Listing not found");
-                                                            return buyFromListing({
-                                                                contract: marketplaceContract,
-                                                                listingId: listing.id,
-                                                                recipient: account?.address || "",
-                                                                quantity: BigInt(1),
-                                                            });
-                                                        }}
-                                                        onTransactionConfirmed={() => setModal({isOpen: true, type: 'success', title: 'Success', message: 'Asset Purchased!', actionBtn: null, secondaryBtn: null})}
-                                                        onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Purchase Failed', actionBtn: null, secondaryBtn: null})}
-                                                        style={{ background: BTN_GRADIENT, color: '#000', fontWeight: 'bold', flex: 1, height: '50px', border: 'none', borderRadius: '10px' }}
-                                                    >
-                                                        Buy Now
-                                                    </TransactionButton>
+                                                    <button onClick={handleBuy} disabled={isPending} className="btn w-100 fw-bold" style={{ background: BTN_GRADIENT, color: '#000', height: '50px', borderRadius: '10px', flex: 1, border: 'none' }}>
+                                                        {isPending ? 'Processing...' : 'Buy Now'}
+                                                    </button>
                                                     <button onClick={() => setIsOfferMode(true)} className="btn fw-bold flex-grow-1 text-white" style={{ background: 'transparent', border: '1px solid #FCD535', height: '50px', borderRadius: '10px' }}>
                                                         Make Offer
                                                     </button>
@@ -398,38 +437,21 @@ function AssetPage() {
                                                             Check Balance
                                                         </button>
                                                     ) : !hasAllowance ? (
-                                                        <TransactionButton
-                                                            transaction={handleApprove}
-                                                            onTransactionConfirmed={() => refreshWpolData()}
-                                                            onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Approval Failed', actionBtn: null, secondaryBtn: null})}
-                                                            style={{ width: '100%', background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', height: '50px' }}
-                                                        >
-                                                            Step 1: Approve WPOL
-                                                        </TransactionButton>
+                                                        <button onClick={handleApprove} disabled={isPending} className="btn w-100 fw-bold" style={{ background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', height: '50px' }}>
+                                                            {isPending ? 'Approving...' : 'Step 1: Approve WPOL'}
+                                                        </button>
                                                     ) : (
-                                                        <TransactionButton
-                                                            transaction={async () => {
-                                                                if (!offerPrice || !tokenId) throw new Error("Missing Parameters");
-                                                                return makeOffer({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), totalOffer: offerPrice, currencyContractAddress: WPOL_ADDRESS, offerExpiresAt: new Date(Date.now() + 3 * 86400000) });
-                                                            }}
-                                                            onTransactionConfirmed={() => { setModal({isOpen: true, type: 'success', title: 'Offer Sent', message: 'Your offer is active!', actionBtn: null, secondaryBtn: null}); setIsOfferMode(false); }}
-                                                            onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Offer Failed', actionBtn: null, secondaryBtn: null})}
-                                                            style={{ width: '100%', background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', height: '50px' }}
-                                                        >
-                                                            Step 2: Confirm Offer
-                                                        </TransactionButton>
+                                                        <button onClick={handleOffer} disabled={isPending} className="btn w-100 fw-bold" style={{ background: BTN_GRADIENT, color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', height: '50px' }}>
+                                                            {isPending ? 'Sending...' : 'Step 2: Confirm Offer'}
+                                                        </button>
                                                     )}
                                                     <button onClick={() => setIsOfferMode(false)} className="btn btn-link text-secondary w-100 text-decoration-none mt-2">Cancel</button>
                                                 </div>
                                             )
                                         ) : (
-                                            <TransactionButton 
-                                                transaction={() => cancelListing({ contract: marketplaceContract, listingId: listing.id })} 
-                                                onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Cancel Failed', actionBtn: null, secondaryBtn: null})}
-                                                style={{ width: '100%', background: '#333', color: '#fff', borderRadius: '10px', height: '50px' }}
-                                            >
-                                                Cancel Listing
-                                            </TransactionButton>
+                                            <button onClick={handleCancelList} disabled={isPending} className="btn w-100" style={{ background: '#333', color: '#fff', borderRadius: '10px', height: '50px' }}>
+                                                {isPending ? 'Cancelling...' : 'Cancel Listing'}
+                                            </button>
                                         )
                                     ) : (
                                         isOwner ? (
@@ -440,23 +462,13 @@ function AssetPage() {
                                                     <input type="number" className="form-control bg-dark text-white" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} style={{ height: '50px' }} />
                                                     <div className="d-flex gap-2">
                                                     {!isApproved ? (
-                                                        <TransactionButton transaction={() => setApprovalForAll({ contract: nftContract, operator: MARKETPLACE_ADDRESS, approved: true })} onTransactionConfirmed={() => setIsApproved(true)} style={{ flex: 1, background: '#fff', color: '#000', borderRadius: '10px', height: '50px' }}>Approve</TransactionButton>
+                                                        <button onClick={handleApproveNft} disabled={isPending} className="btn" style={{ flex: 1, background: '#fff', color: '#000', borderRadius: '10px', height: '50px' }}>
+                                                            {isPending ? 'Approving...' : 'Approve'}
+                                                        </button>
                                                     ) : (
-                                                        <TransactionButton 
-                                                            transaction={() => {
-                                                                if (!tokenId) throw new Error("No Token ID");
-                                                                return createListing({ contract: marketplaceContract, assetContractAddress: NFT_COLLECTION_ADDRESS, tokenId: BigInt(tokenId), pricePerToken: sellPrice, currencyContractAddress: NATIVE_TOKEN_ADDRESS });
-                                                            }}
-                                                            onTransactionConfirmed={() => { 
-                                                                setModal({isOpen: true, type: 'success', title: 'Listed', message: 'Asset Listed', actionBtn: null, secondaryBtn: null});
-                                                                setIsListingMode(false); 
-                                                                checkListing(); 
-                                                            }}
-                                                            onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Listing Failed', actionBtn: null, secondaryBtn: null})}
-                                                            style={{ flex: 1, background: BTN_GRADIENT, color: '#000', borderRadius: '10px', height: '50px' }}
-                                                        >
-                                                            Confirm
-                                                        </TransactionButton>
+                                                        <button onClick={handleList} disabled={isPending} className="btn" style={{ flex: 1, background: BTN_GRADIENT, color: '#000', borderRadius: '10px', height: '50px' }}>
+                                                            {isPending ? 'Listing...' : 'Confirm'}
+                                                        </button>
                                                     )}
                                                     <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary" style={{ borderRadius: '10px', height: '50px' }}>Cancel</button>
                                                     </div>
@@ -523,17 +535,14 @@ function AssetPage() {
                                                     </td>
                                                     {isOwner && (
                                                         <td className="text-center" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
-                                                            <TransactionButton
-                                                                transaction={() => acceptOffer({ contract: marketplaceContract, offerId: offer.id })}
-                                                                onTransactionConfirmed={() => { 
-                                                                    setModal({isOpen: true, type: 'success', title: 'Sold!', message: 'Asset Sold Successfully', actionBtn: null, secondaryBtn: null});
-                                                                    fetchAssetData(); 
-                                                                    fetchOffers();    
-                                                                    checkListing();   
-                                                                }}
-                                                                onError={(e) => setModal({isOpen: true, type: 'error', title: 'Error', message: e.message || 'Accept Failed', actionBtn: null, secondaryBtn: null})}
+                                                            <button 
+                                                                onClick={() => handleAcceptOffer(offer.id)}
+                                                                disabled={isPending}
+                                                                className="btn"
                                                                 style={{ background: BTN_GRADIENT, color: '#000', fontWeight: 'bold', padding: '4px 10px', fontSize: '12px', borderRadius: '6px', border: 'none', minWidth: '60px', height: '32px' }}
-                                                            >Accept</TransactionButton>
+                                                            >
+                                                                {isPending ? '...' : 'Accept'}
+                                                            </button>
                                                         </td>
                                                     )}
                                                 </tr>
