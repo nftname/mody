@@ -39,7 +39,7 @@ const formatDuration = (seconds: number) => {
     return `${minutes}m`;
 };
 
-// --- Modal Component ---
+// --- Modal Component (Smart & Patient) ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: any) => {
     const [timer, setTimer] = useState(0);
 
@@ -50,6 +50,8 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: an
             interval = setInterval(() => {
                 setTimer((prev) => prev + 1);
             }, 1000);
+        } else {
+            setTimer(0);
         }
         return () => clearInterval(interval);
     }, [isOpen, type]);
@@ -61,11 +63,12 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: an
     let displayTitle = title;
     let displayMessage = message;
 
+    // Smart Timeout Logic: Don't fail, just warn
     if (timer >= 60 && type === 'loading') {
-        icon = <i className="bi bi-exclamation-circle text-warning" style={{ fontSize: '50px' }}></i>;
-        displayTitle = "Taking longer than usual";
-        displayMessage = "The transaction is taking time. You can close this window and check your wallet.";
-        btnText = "Close";
+        icon = <i className="bi bi-hourglass-split text-warning" style={{ fontSize: '50px' }}></i>;
+        displayTitle = "Still working...";
+        displayMessage = "The network is busy. Please check your wallet to confirm the transaction. Do not close this unless you want to cancel.";
+        btnText = "Close & Cancel";
     } else if (type === 'success') {
         icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '50px', color: '#28a745' }}></i>;
         displayTitle = "Success!";
@@ -75,28 +78,32 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: an
         btnText = "Try Again";
     }
 
-    const handleClose = () => {
-        setTimer(0);
-        onClose();
-    };
-
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '20px', padding: '30px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 0 50px rgba(0,0,0,0.5)', position: 'relative' }}>
-                <button onClick={handleClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#666', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}>
+                
+                {/* Close Button (X) - Always available to reset state */}
+                <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#666', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}>
                     <i className="bi bi-x-lg"></i>
                 </button>
+
                 <div className="mb-3">{icon}</div>
                 <h3 className="text-white fw-bold mb-2">{displayTitle}</h3>
                 <p className="text-secondary mb-4" style={{ fontSize: '15px' }}>{displayMessage}</p>
-                {(type !== 'loading' || timer >= 60) && (
-                    <div className="d-flex gap-2">
-                        <button onClick={handleClose} className="btn fw-bold flex-grow-1" style={{ background: '#333', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px' }}>{btnText === 'Processing...' ? 'Close' : btnText}</button>
-                        {type === 'success' && onGoToMarket && (
-                            <button onClick={onGoToMarket} className="btn fw-bold flex-grow-1" style={{ background: 'linear-gradient(90deg, #FFD700 0%, #FDB931 100%)', border: 'none', color: '#000', padding: '12px', borderRadius: '12px' }}>Go to Market <i className="bi bi-arrow-right ms-1"></i></button>
-                        )}
-                    </div>
-                )}
+                
+                {/* Buttons */}
+                <div className="d-flex gap-2">
+                    {(type !== 'loading' || timer >= 60) && (
+                        <button onClick={onClose} className="btn fw-bold flex-grow-1" style={{ background: '#333', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px' }}>
+                            {btnText === 'Processing...' ? 'Close' : btnText}
+                        </button>
+                    )}
+                    {type === 'success' && onGoToMarket && (
+                        <button onClick={onGoToMarket} className="btn fw-bold flex-grow-1" style={{ background: 'linear-gradient(90deg, #FFD700 0%, #FDB931 100%)', border: 'none', color: '#000', padding: '12px', borderRadius: '12px' }}>
+                            Go to Market <i className="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -135,16 +142,16 @@ function AssetPage() {
     // UI State
     const [loading, setLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
-    const [isApproved, setIsApproved] = useState(false);
+    const [isApproved, setIsApproved] = useState(false); // For Listing
     const [isPending, setIsPending] = useState(false);
     
-    // Action Inputs
+    // Inputs
     const [sellPrice, setSellPrice] = useState('10');
     const [offerPrice, setOfferPrice] = useState('');
     const [isListingMode, setIsListingMode] = useState(false);
     const [isOfferMode, setIsOfferMode] = useState(false);
     
-    // Wallet State
+    // Wallet Data
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
     
@@ -158,7 +165,7 @@ function AssetPage() {
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
-    // --- Fetchers ---
+    // --- Data Fetching ---
     const fetchAssetData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
@@ -206,6 +213,7 @@ function AssetPage() {
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
+            // Get logs to identify bidders
             const logs = await publicClient.getContractEvents({ 
                 address: MARKETPLACE_ADDRESS as `0x${string}`, 
                 abi: MARKETPLACE_ABI, 
@@ -217,12 +225,13 @@ function AssetPage() {
             const uniqueBidders = new Set<string>();
             const validOffers = [];
 
-            // Reversed loop for newest first
+            // Read backwards
             for (let i = logs.length - 1; i >= 0; i--) {
                 const bidder = logs[i].args.bidder;
                 if (bidder && !uniqueBidders.has(bidder)) {
                     uniqueBidders.add(bidder);
                     
+                    // Direct contract call for robust data
                     const offerData = await publicClient.readContract({ 
                         address: MARKETPLACE_ADDRESS as `0x${string}`, 
                         abi: MARKETPLACE_ABI, 
@@ -230,10 +239,10 @@ function AssetPage() {
                         args: [BigInt(tokenId), bidder] 
                     });
                     
-                    // offerData: [bidder, price, expiration]
                     const price = offerData[1];
                     const expiration = offerData[2];
 
+                    // Only show active offers
                     if (price > BigInt(0) && expiration > BigInt(Math.floor(Date.now()/1000))) {
                         validOffers.push({
                             bidder: bidder,
@@ -261,7 +270,6 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
-    // Initial Data Load
     useEffect(() => {
         if (tokenId && publicClient) {
             Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
@@ -272,20 +280,21 @@ function AssetPage() {
         if (isOfferMode && address) refreshWpolData();
     }, [isOfferMode, address, refreshWpolData]);
 
-    // --- Action Handlers ---
+    // --- Handlers ---
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
     
     const closeModal = () => {
+        setIsPending(false); // CRITICAL: Reset pending state so buttons work again
         setModal({ ...modal, isOpen: false });
         if (modal.type === 'success') {
-            fetchAssetData(); checkListing(); fetchOffers();
+            fetchAssetData(); checkListing(); fetchOffers(); refreshWpolData();
         }
     };
     
-    const goToMarket = () => { setModal({ ...modal, isOpen: false }); router.push('/market'); };
+    const goToMarket = () => { closeModal(); router.push('/market'); };
 
     const handleTx = async (action: string, fn: () => Promise<void>) => {
-        if (!publicClient) {
+        if (!publicClient || !address) {
             showModal('error', 'Connection Error', 'Please connect your wallet.');
             return;
         }
@@ -296,8 +305,10 @@ function AssetPage() {
             showModal('success', 'Success!', 'Transaction completed successfully.');
         } catch (err: any) {
             console.error(err);
-            showModal('error', 'Failed', err.message?.slice(0, 100) || "Transaction failed");
-        } finally { setIsPending(false); }
+            // Don't close modal immediately on error, let user see error
+            showModal('error', 'Failed', err.message?.slice(0, 100) || "Transaction failed or rejected.");
+            setIsPending(false);
+        }
     };
 
     const handleBuy = () => handleTx('Buying Asset', async () => {
@@ -313,6 +324,7 @@ function AssetPage() {
     });
 
     const handleApprove = () => handleTx('Approving WPOL', async () => {
+        if (!offerPrice) throw new Error("Enter a price first");
         const hash = await writeContractAsync({
             address: WPOL_ADDRESS as `0x${string}`,
             abi: erc20Abi,
@@ -324,12 +336,15 @@ function AssetPage() {
     });
 
     const handleOffer = () => handleTx('Sending Offer', async () => {
-        const duration = BigInt(180 * 24 * 60 * 60); // 180 Days
+        if (!offerPrice) throw new Error("Enter a price");
+        // FIXED: Do NOT send 'value' (ETH/POL) with makeOffer. Offers use WPOL allowance.
+        const duration = BigInt(180 * 24 * 60 * 60); 
         const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'makeOffer',
             args: [BigInt(tokenId), parseEther(offerPrice), duration]
+            // value: 0 is default, do not add value here
         });
         await publicClient!.waitForTransactionReceipt({ hash });
         setIsOfferMode(false);
@@ -390,10 +405,9 @@ function AssetPage() {
     const handleRecheckBalance = async () => {
         if (!address) return;
         await refreshWpolData();
-        setModal({ ...modal, isOpen: false }); 
     };
 
-    // Sort Handler
+    // Sort & Pagination Logic
     const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'desc';
         if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
@@ -402,7 +416,6 @@ function AssetPage() {
         setSortConfig({ key, direction });
     };
 
-    // Sorted Offers Logic
     const sortedOffers = useMemo(() => {
         let sortable = [...offersList];
         if (sortConfig !== null) {
@@ -431,7 +444,6 @@ function AssetPage() {
     const hasFunds = wpolBalance >= targetAmount;
     const hasAllowance = hasFunds && wpolAllowance >= targetAmount;
 
-    // Pagination Calculation
     const indexOfLastOffer = currentPage * offersPerPage;
     const indexOfFirstOffer = indexOfLastOffer - offersPerPage;
     const currentOffers = sortedOffers.slice(indexOfFirstOffer, indexOfLastOffer);
@@ -467,7 +479,7 @@ function AssetPage() {
                         </div>
                     </div>
 
-                    {/* Right Column: Details & Actions */}
+                    {/* Right Column */}
                     <div className="col-lg-7">
                         <div className="d-flex justify-content-between align-items-start mb-2">
                             <div>
@@ -479,7 +491,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* Price & Buttons */}
+                        {/* Price & Action Buttons */}
                         <div className="p-4 rounded-3 mt-4 mb-4" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35' }}>
                             <div className="row align-items-center">
                                 <div className="col-md-6">
@@ -505,7 +517,7 @@ function AssetPage() {
                                             !isOwner ? (
                                                 !isOfferMode ? (
                                                     <div className="d-flex gap-2">
-                                                        <button onClick={handleBuy} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>{isPending ? '...' : 'Buy Now'}</button>
+                                                        <button onClick={handleBuy} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>{isPending ? 'Processing...' : 'Buy Now'}</button>
                                                         <button onClick={() => setIsOfferMode(true)} className="btn fw-bold flex-grow-1" style={{ ...OUTLINE_BTN_STYLE, height: '50px' }}>Make Offer</button>
                                                     </div>
                                                 ) : (
@@ -518,9 +530,9 @@ function AssetPage() {
                                                         {!hasFunds ? (
                                                             <div className="text-center mt-1"><span className="text-danger small d-block mb-2">Insufficient WPOL Balance</span><button onClick={handleRecheckBalance} className="btn btn-sm btn-outline-warning w-100">Check Balance Again</button></div>
                                                         ) : !hasAllowance ? (
-                                                            <div className="d-flex gap-2"><button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, backgroundColor: '#fff', color: '#000' }}>{isPending ? '...' : '1. Approve WPOL'}</button><button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button></div>
+                                                            <div className="d-flex gap-2"><button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, backgroundColor: '#fff', color: '#000' }}>{isPending ? 'Processing...' : '1. Approve WPOL'}</button><button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button></div>
                                                         ) : (
-                                                            <div className="d-flex gap-2"><button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? '...' : '2. Confirm Offer'}</button><button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button></div>
+                                                            <div className="d-flex gap-2"><button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? 'Processing...' : '2. Confirm Offer'}</button><button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button></div>
                                                         )}
                                                     </div>
                                                 )
@@ -538,9 +550,9 @@ function AssetPage() {
                                                         <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
                                                         <div className="d-flex gap-2">
                                                             {!isApproved ? (
-                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, backgroundColor: '#fff', color: '#000' }}>{isPending ? '...' : '1. Unlock Selling 🔒'}</button>
+                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, backgroundColor: '#fff', color: '#000' }}>{isPending ? 'Processing...' : '1. Unlock Selling 🔒'}</button>
                                                             ) : (
-                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? '...' : '2. Complete Listing'}</button>
+                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? 'Processing...' : '2. Complete Listing'}</button>
                                                             )}
                                                             <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                         </div>
@@ -595,7 +607,7 @@ function AssetPage() {
                                                     const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
                                                     const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
                                                     
-                                                    // Secure Address Formatting (3 chars ... 4 chars)
+                                                    // Secure Address Formatting (4 chars ... 4 chars)
                                                     const shortAddress = offer.bidder ? `${offer.bidder.slice(0,4)}...${offer.bidder.slice(-4)}` : 'Unknown';
 
                                                     return (
