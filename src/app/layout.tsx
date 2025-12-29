@@ -3,12 +3,11 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
-import ClientNavbar from "@/components/ClientNavbar";
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LegalModal from "@/components/LegalModal";
 import InstallPrompt from "@/components/InstallPrompt";
-import { ThirdwebProvider } from "thirdweb/react";
-// حذفنا استيراد client من هنا لأنه غير مطلوب للمزود
+import { Providers } from "@/app/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,10 +38,9 @@ export default function RootLayout({
           strategy="beforeInteractive" 
         />
 
-        {/* التصحيح: حذفنا الخاصية client التي سببت الخطأ */}
-        <ThirdwebProvider>
+        <Providers>
             <div className="d-flex flex-column min-vh-100">
-              <ClientNavbar />
+              <Navbar />
               <InstallPrompt />
               <LegalModal />
               <main className="flex-grow-1">
@@ -50,7 +48,7 @@ export default function RootLayout({
               </main>
               <Footer />
             </div>
-        </ThirdwebProvider>
+        </Providers>
 
         <Script
             id="tidio-script"

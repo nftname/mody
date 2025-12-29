@@ -3,28 +3,12 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useRef, useState, useEffect } from 'react';
-import { ConnectButton, useActiveAccount, useActiveWallet } from "thirdweb/react";
-import { defineChain } from "thirdweb";
-import { createWallet, walletConnect } from "thirdweb/wallets"; 
-import { client } from "@/lib/client";
-
-const wallets = [
-  createWallet("io.metamask"),
-  createWallet("com.coinbase.wallet"),
-  createWallet("me.rainbow"),
-  createWallet("io.rabby"),
-  walletConnect(),
-];
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
   
-  const account = useActiveAccount();
-  const wallet = useActiveWallet();
-  const chain = defineChain(137); 
-
-  const [mounted, setMounted] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
@@ -36,10 +20,6 @@ const Navbar = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (isMobileSearchOpen && mobileSearchInputRef.current) {
@@ -136,6 +116,7 @@ const Navbar = () => {
     width: '100%',
     height: '100%',
     cursor: 'pointer',
+    padding: '0 8px'
   };
 
   const customConnectStyle = {
@@ -152,6 +133,7 @@ const Navbar = () => {
     height: '100%',
     cursor: 'pointer',
     gap: '6px',
+    padding: '0 8px'
   };
 
   const portfolioBtnStyle = {
@@ -177,34 +159,68 @@ const Navbar = () => {
 
     return (
       <div style={{ position: 'relative', height: height, minWidth: minWidth, display: 'inline-block' }}>
-        <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
-            {!account ? (
-                <div style={customDisconnectStyle}>Connect Wallet</div>
-            ) : (
-                <div style={{...customConnectStyle, fontSize}}>
-                    <div style={{
-                        width: '6px', height: '6px', borderRadius: '50%', 
-                        background: '#00ff00', boxShadow: '0 0 6px #00ff00', flexShrink: 0
-                    }}></div>
-                    <span style={{ fontFamily: 'monospace' }}>
-                        {account.address.slice(0, 4)}...{account.address.slice(-4)}
-                    </span>
-                </div>
-            )}
-        </div>
-        <div style={{ position: 'absolute', inset: 0, zIndex: 10, opacity: 0, overflow: 'hidden' }}>
-             <ConnectButton 
-                client={client}
-                wallets={wallets}
-                chain={chain}
-                theme="dark"
-                connectButton={{ style: { width: '100%', height: '100%' } }}
-                connectModal={{
-                    size: "compact",
-                    showThirdwebBranding: false,
-                }}
-            />
-        </div>
+        <ConnectButton.Custom>
+          {({
+            account,
+            chain,
+            openAccountModal,
+            openConnectModal,
+            authenticationStatus,
+            mounted,
+          }) => {
+            const ready = mounted && authenticationStatus !== 'loading';
+            const connected =
+              ready &&
+              account &&
+              chain &&
+              (!authenticationStatus ||
+                authenticationStatus === 'authenticated');
+
+            return (
+              <div
+                {...(!ready && {
+                  'aria-hidden': true,
+                  'style': {
+                    opacity: 0,
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                  },
+                })}
+                style={{ width: '100%', height: '100%' }}
+              >
+                {(() => {
+                  if (!connected) {
+                    return (
+                      <div onClick={openConnectModal} style={customDisconnectStyle}>
+                        Connect Wallet
+                      </div>
+                    );
+                  }
+
+                  if (chain.unsupported) {
+                    return (
+                      <div onClick={openConnectModal} style={{...customDisconnectStyle, background: '#ff4d4d', color: '#fff', border: '1px solid #ff0000'}}>
+                        Wrong Network
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div onClick={openAccountModal} style={{...customConnectStyle, fontSize}}>
+                        <div style={{
+                            width: '6px', height: '6px', borderRadius: '50%', 
+                            background: '#00ff00', boxShadow: '0 0 6px #00ff00', flexShrink: 0
+                        }}></div>
+                        <span style={{ fontFamily: 'monospace' }}>
+                            {account.displayName}
+                        </span>
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          }}
+        </ConnectButton.Custom>
       </div>
     );
   };

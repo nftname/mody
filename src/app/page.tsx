@@ -1,14 +1,28 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamicImport from 'next/dynamic';
 import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
-import { FULL_ASSET_LIST } from '@/data/assets';
+import { usePublicClient } from "wagmi";
+import { parseAbi, formatEther, erc721Abi } from 'viem';
+import { NFT_COLLECTION_ADDRESS } from '@/data/config';
+
+const MARKETPLACE_ADDRESS = "0x4b55f2e3ae747189539b956E42F36D46b4a7fE86";
+
+const MARKET_ABI = parseAbi([
+    "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
+]);
 
 const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #B3882A 100%)';
-
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
+
+const resolveIPFS = (uri: string) => {
+    if (!uri) return '';
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
+};
 
 const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: boolean }) => {
     if (isCustomSVG) {
@@ -28,7 +42,7 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
 };
 
 const getCardStyles = (tier: string) => {
-    switch(tier) {
+    switch(tier?.toLowerCase()) {
         case 'immortal': 
             return {
                 bg: 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)',
@@ -55,9 +69,9 @@ const getCardStyles = (tier: string) => {
 
 const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     let bg = '#222';
-    if (tier === 'immortal') bg = 'linear-gradient(135deg, #333 0%, #111 100%)';
-    if (tier === 'elite') bg = 'linear-gradient(135deg, #4a0a0a 0%, #1a0000 100%)';
-    if (tier === 'prime') bg = 'linear-gradient(135deg, #004d40 0%, #002b36 100%)';
+    if (tier?.toLowerCase() === 'immortal') bg = 'linear-gradient(135deg, #333 0%, #111 100%)';
+    else if (tier?.toLowerCase() === 'elite') bg = 'linear-gradient(135deg, #4a0a0a 0%, #1a0000 100%)';
+    else bg = 'linear-gradient(135deg, #004d40 0%, #002b36 100%)';
 
     return (
         <div style={{
@@ -72,7 +86,7 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
             color: '#FCD535', textShadow: '0 1px 2px rgba(0,0,0,0.8)',
             flexShrink: 0
         }}>
-            {name.charAt(0)}
+            {name ? name.charAt(0) : 'N'}
         </div>
     );
 };
@@ -86,23 +100,23 @@ const AssetCard = ({ item }: { item: any }) => {
               <div className="static-asset position-relative"
                    style={{ width: '90%', height: '65%', background: style.bg, border: style.border, borderRadius: '8px', overflow: 'hidden', marginTop: '10px', marginBottom: '10px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                    <div style={{ zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                       <p style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: '10px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '1px', margin: 0, paddingBottom: '4px', textTransform: 'uppercase' }}>GEN-0 #001 GENESIS</p>
+                       <p style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: '10px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '1px', margin: 0, paddingBottom: '4px', textTransform: 'uppercase' }}>GEN-0 #00{item.id}</p>
                        <h3 style={{ fontFamily: 'serif', fontWeight: '900', fontSize: '25px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0px 3px 3px rgba(0,0,0,0.9))', letterSpacing: '1.5px', margin: 0, textTransform: 'uppercase', lineHeight: '1.1' }}>{item.name}</h3>
-                       <p style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: '10px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '1px', margin: 0, paddingTop: '4px', textTransform: 'uppercase' }}>OWNED & MINTED - 2025</p>
+                       <p style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: '10px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '1px', margin: 0, paddingTop: '4px', textTransform: 'uppercase' }}>2025 EDITION</p>
                    </div>
                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 70%)', zIndex: 1 }}></div>
               </div>
               <div className="w-100 d-flex justify-content-between align-items-end px-2" style={{ marginTop: 'auto' }}>
                   <div className="text-start"><div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px', marginBottom: '4px' }}>Name</div><h5 className="fw-bold m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.name}</h5></div>
                   <div className="text-center"><div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px', marginBottom: '4px' }}>Price</div><div className="fw-bold" style={{ fontSize: '14px', color: '#0ecb81' }}>{Number(item.floor).toFixed(2)} <span style={{ fontSize: '9px', color: '#888' }}>POL</span></div></div>
-                  <div className="text-end"><div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px', marginBottom: '4px' }}>Vol</div><div className="fw-bold" style={{ fontSize: '14px', color: '#ffffff' }}>{Number(item.volume).toFixed(2)} <span style={{ fontSize: '9px', color: '#888' }}>POL</span></div></div>
+                  <div className="text-end"><div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px', marginBottom: '4px' }}>Vol</div><div className="fw-bold" style={{ fontSize: '14px', color: '#ffffff' }}>--- <span style={{ fontSize: '9px', color: '#888' }}>POL</span></div></div>
               </div>
           </Link>
       </div>
     );
 };
   
-export default function Home() {
+function Home() {
   
   const [activeTab, setActiveTab] = useState<'trending' | 'top'>('trending');
   const [timeFilter, setTimeFilter] = useState('1H');
@@ -110,9 +124,75 @@ export default function Home() {
   
   const [isMobileCurrencyOpen, setIsMobileCurrencyOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const [realListings, setRealListings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const publicClient = usePublicClient();
 
-  const featuredItems = FULL_ASSET_LIST.slice(0, 3);
-  const newListingsItems = FULL_ASSET_LIST.slice(3, 6);
+  useEffect(() => {
+    const fetchRealData = async () => {
+        if (!publicClient) return;
+        try {
+            const data = await publicClient.readContract({
+                address: MARKETPLACE_ADDRESS,
+                abi: MARKET_ABI,
+                functionName: 'getAllListings'
+            });
+
+            const [tokenIds, prices, sellers] = data;
+
+            if (tokenIds.length === 0) {
+                setRealListings([]);
+                setLoading(false);
+                return;
+            }
+
+            const items = await Promise.all(tokenIds.map(async (id, index) => {
+                try {
+                    const uri = await publicClient.readContract({
+                        address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                        abi: erc721Abi,
+                        functionName: 'tokenURI',
+                        args: [id]
+                    });
+                    
+                    const metaRes = await fetch(resolveIPFS(uri));
+                    const meta = metaRes.ok ? await metaRes.json() : {};
+                    const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
+
+                    return {
+                        id: Number(id),
+                        rank: index + 1,
+                        name: meta.name || `Asset #${id}`,
+                        tier: tierAttr,
+                        floor: formatEther(prices[index]),
+                        volume: '0', 
+                        change: 0 
+                    };
+                } catch (e) {
+                    return null;
+                }
+            }));
+
+            setRealListings(items.filter(i => i !== null));
+        } catch (error) {
+            console.error("Home Data Fetch Error", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchRealData();
+  }, [publicClient]);
+
+  const featuredItems = realListings.slice(0, 3);
+  const newListingsItems = realListings.slice(3, 6);
+  
+  const desktopLeftData = realListings.slice(0, 5);
+  const desktopRightData = realListings.slice(5, 10);
+  const mobileSlideOne = realListings.slice(0, 5);
+  const mobileSlideTwo = realListings.slice(5, 10);
   
   const trustedBrands = [ 
     { name: "POLYGON", icon: "bi-link-45deg", isCustom: false },
@@ -129,11 +209,6 @@ export default function Home() {
     { name: "ZKSYNC", icon: "bi-shield-check", isCustom: false },
     { name: "OPTIMISM", icon: "bi-graph-up-arrow", isCustom: false }
   ];
-  
-  const desktopLeftData = FULL_ASSET_LIST.slice(0, 5);
-  const desktopRightData = FULL_ASSET_LIST.slice(5, 10);
-  const mobileSlideOne = FULL_ASSET_LIST.slice(0, 5);
-  const mobileSlideTwo = FULL_ASSET_LIST.slice(5, 10);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -258,22 +333,24 @@ export default function Home() {
 
           <div className="mt-5 mb-5">
               <h3 className="text-white fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px' }}>Featured Assets</h3>
+              {loading ? <div className="text-secondary text-center">Loading Assets...</div> :
               <div className="row g-4 d-none d-lg-flex">
                   {featuredItems.map((item) => (<div key={item.id} className="col-lg-4 col-xl-4"><AssetCard item={item} /></div>))}
-              </div>
-              <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
+              </div>}
+              {!loading && <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
                   {featuredItems.map((item) => (<div key={item.id} className="mobile-card-item" style={{ minWidth: '85%', flex: '0 0 85%' }}><AssetCard item={item} /></div>))}
-              </div>
+              </div>}
           </div>
 
           <div style={{ marginTop: '5.25rem', marginBottom: '3rem' }}>
               <h3 className="text-white fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px' }}>New Listings</h3>
+              {loading ? <div className="text-secondary text-center">Loading Listings...</div> :
               <div className="row g-4 d-none d-lg-flex">
                   {newListingsItems.map((item) => (<div key={item.id} className="col-lg-4 col-xl-4"><AssetCard item={item} /></div>))}
-              </div>
-              <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
+              </div>}
+              {!loading && <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
                   {newListingsItems.map((item) => (<div key={item.id} className="mobile-card-item" style={{ minWidth: '85%', flex: '0 0 85%' }}><AssetCard item={item} /></div>))}
-              </div>
+              </div>}
           </div>
       </section>
 
@@ -325,7 +402,7 @@ export default function Home() {
 }
 
 function MobileTableHeader() { return ( <div className="d-flex justify-content-between mb-3 border-bottom border-secondary pb-2" style={{ borderColor: '#333 !important', height: '40px', alignItems: 'flex-end' }}> <div style={{ flex: 2 }}> <span style={{ fontSize: '13px', color: '#848E9C' }}>Name Asset</span> </div> <div style={{ flex: 2, display: 'flex', justifyContent: 'flex-end', gap: '10px' }}> <span style={{ fontSize: '13px', color: '#848E9C', width: '80px', textAlign: 'right' }}>Floor Price</span> <span style={{ fontSize: '13px', color: '#848E9C', width: '80px', textAlign: 'right' }}>Volume</span> </div> </div> ); }
-function MobileRow({ item, getColorClass, getRankStyle }: any) { return ( <Link href={`/asset/${item.id}`} className="text-decoration-none"> <div className="d-flex align-items-center justify-content-between py-3 binance-row" style={{ borderBottom: '1px solid #222' }}> <div className="d-flex align-items-center gap-3" style={{ flex: 2 }}> <div style={{ width: '20px', textAlign: 'center' }}> {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '18px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light">{item.rank}</span> )} </div> <CoinIcon name={item.name} tier={item.tier} /> <span className="text-white fw-light name-shake" style={{ fontSize: '14px' }}>{item.name}</span> </div> <div className="d-flex justify-content-end align-items-center" style={{ flex: 2, gap: '10px' }}> <div className="d-flex flex-column align-items-end" style={{ width: '80px' }}> <span className="fw-bold text-white" style={{ fontSize: '14px' }}>{Number(item.floor).toFixed(2)}</span> <span className={`small ${getColorClass(item.change)}`} style={{ fontSize: '10px' }}>{Number(item.change).toFixed(2)}%</span> </div> <div className="d-flex flex-column align-items-end" style={{ width: '80px' }}> <span className="small text-white" style={{ fontSize: '13px' }}>{Number(item.volume).toFixed(2)}</span> <span className={`small ${getColorClass(item.change)}`} style={{ fontSize: '10px' }}>{Number(item.change).toFixed(2)}%</span> </div> </div> </div> </Link> ); }
+function MobileRow({ item, getColorClass, getRankStyle }: any) { return ( <Link href={`/asset/${item.id}`} className="text-decoration-none"> <div className="d-flex align-items-center justify-content-between py-3 binance-row" style={{ borderBottom: '1px solid #222' }}> <div className="d-flex align-items-center gap-3" style={{ flex: 2 }}> <div style={{ width: '20px', textAlign: 'center' }}> {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '18px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light">{item.rank}</span> )} </div> <CoinIcon name={item.name} tier={item.tier} /> <span className="text-white fw-light name-shake" style={{ fontSize: '14px' }}>{item.name}</span> </div> <div className="d-flex justify-content-end align-items-center" style={{ flex: 2, gap: '10px' }}> <div className="d-flex flex-column align-items-end" style={{ width: '80px' }}> <span className="fw-bold text-white" style={{ fontSize: '14px' }}>{Number(item.floor).toFixed(2)}</span> <span className={`small ${getColorClass(item.change)}`} style={{ fontSize: '10px' }}>{Number(item.change).toFixed(2)}%</span> </div> <div className="d-flex flex-column align-items-end" style={{ width: '80px' }}> <span className="small text-white" style={{ fontSize: '13px' }}>---</span> <span className={`small ${getColorClass(item.change)}`} style={{ fontSize: '10px' }}>{Number(item.change).toFixed(2)}%</span> </div> </div> </div> </Link> ); }
 function DesktopTable({ data, getColorClass, getRankStyle }: any) {
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => { setIsMounted(true); }, []);
@@ -373,7 +450,7 @@ function DesktopTable({ data, getColorClass, getRankStyle }: any) {
                             <td className="text-end" style={{ verticalAlign: 'middle' }}>
                                 {isMounted ? (
                                     <>
-                                        <span className="text-white fw-bold me-2">{Number(item.volume).toFixed(2)}</span>
+                                        <span className="text-white fw-bold me-2">---</span>
                                         <span className={`small ${getColorClass(item.change)}`}>{item.change > 0 ? '+' : ''}{Number(item.change).toFixed(2)}%</span>
                                     </>
                                 ) : (
@@ -390,3 +467,5 @@ function DesktopTable({ data, getColorClass, getRankStyle }: any) {
         </div>
     );
 }
+
+export default dynamicImport(() => Promise.resolve(Home), { ssr: false });

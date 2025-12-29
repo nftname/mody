@@ -5,13 +5,23 @@ import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
-import { getContract } from "thirdweb";
-import { getAllValidListings } from "thirdweb/extensions/marketplace";
-import { client } from "@/lib/client";
-import { MARKETPLACE_ADDRESS, NETWORK_CHAIN } from '@/data/config';
+import { usePublicClient } from "wagmi";
+import { parseAbi, formatEther, erc721Abi } from 'viem';
+import { NFT_COLLECTION_ADDRESS } from '@/data/config';
+
+const MARKETPLACE_ADDRESS = "0x4b55f2e3ae747189539b956E42F36D46b4a7fE86";
+
+const MARKET_ABI = parseAbi([
+    "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
+]);
 
 const ITEMS_PER_PAGE = 30;
 const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #B3882A 100%)';
+
+const resolveIPFS = (uri: string) => {
+    if (!uri) return '';
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
+};
 
 const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     let bg = '#222';
@@ -73,60 +83,63 @@ function MarketPage() {
   const [currencyFilter, setCurrencyFilter] = useState('POL'); 
   const [watchlist, setWatchlist] = useState<number[]>([]); 
   
-  // Real Data State
   const [realListings, setRealListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
-  // 1. Fetch Data from Blockchain (WITH ANTI-DUPLICATE LOGIC)
+  const publicClient = usePublicClient();
+
   useEffect(() => {
     const fetchMarketData = async () => {
+        if (!publicClient) return;
         try {
-            const contract = getContract({ client, chain: NETWORK_CHAIN, address: MARKETPLACE_ADDRESS });
-            
-            // جلب البيانات الخام
-            const listingsData = await getAllValidListings({ 
-                contract, 
-                count: BigInt(100),
-                start: 0
+            const data = await publicClient.readContract({
+                address: MARKETPLACE_ADDRESS,
+                abi: MARKET_ABI,
+                functionName: 'getAllListings'
             });
-            
-            // --- بداية كود منع التكرار ---
-            const uniqueListingsMap = new Map();
 
-            listingsData.forEach((item) => {
-                const assetId = item.asset.id.toString();
-                // نحتفظ فقط بأحدث Listing ID لكل أصل
-                if (!uniqueListingsMap.has(assetId) || Number(item.id) > Number(uniqueListingsMap.get(assetId).id)) {
-                    uniqueListingsMap.set(assetId, item);
+            const [tokenIds, prices, sellers] = data;
+
+            if (tokenIds.length === 0) {
+                setRealListings([]);
+                setLoading(false);
+                return;
+            }
+
+            const items = await Promise.all(tokenIds.map(async (id, index) => {
+                try {
+                    const uri = await publicClient.readContract({
+                        address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                        abi: erc721Abi,
+                        functionName: 'tokenURI',
+                        args: [id]
+                    });
+                    
+                    const metaRes = await fetch(resolveIPFS(uri));
+                    const meta = metaRes.ok ? await metaRes.json() : {};
+                    const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
+
+                    return {
+                        id: Number(id),
+                        rank: index + 1, 
+                        name: meta.name || `Asset #${id}`,
+                        tier: tierAttr,
+                        floor: formatEther(prices[index]),
+                        lastSale: '---',
+                        volume: '---',
+                        listed: 'Now',
+                        change: 0,
+                        currencySymbol: 'POL'
+                    };
+                } catch (e) {
+                    return null;
                 }
-            });
+            }));
 
-            // تحويل الخريطة المصفاة إلى مصفوفة للتعامل معها
-            const uniqueListingsArray = Array.from(uniqueListingsMap.values());
-            // --- نهاية كود منع التكرار ---
-
-            const mappedData = uniqueListingsArray.map((item: any, index) => {
-                const meta = item.asset.metadata || {};
-                const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
-
-                return {
-                    id: Number(item.asset.id),
-                    rank: index + 1,
-                    name: meta.name || `Asset #${item.asset.id}`,
-                    tier: tierAttr,
-                    floor: item.currencyValuePerToken.displayValue,
-                    lastSale: '---',
-                    volume: '---',
-                    listed: 'Now',
-                    change: 0,
-                    currencySymbol: item.currencyValuePerToken.symbol
-                };
-            });
-
-            setRealListings(mappedData);
+            setRealListings(items.filter(i => i !== null));
         } catch (error) {
             console.error("Failed to fetch listings", error);
         } finally {
@@ -135,9 +148,8 @@ function MarketPage() {
     };
 
     fetchMarketData();
-  }, []);
+  }, [publicClient]);
 
-  // 2. Filter & Sort Logic
   const finalData = useMemo(() => {
       let processedData = [...realListings];
       

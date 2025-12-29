@@ -23,6 +23,7 @@ html, body {
   padding: 0;
   background-color: #0b0e11;
   color: white;
+  min-height: 100vh;
 }
 
 ::-webkit-scrollbar {

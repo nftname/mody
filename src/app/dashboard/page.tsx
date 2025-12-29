@@ -2,16 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useActiveAccount } from "thirdweb/react";
-import { getContract, defineChain, readContract } from "thirdweb";
-import { client } from "@/lib/client";
-import { CONTRACT_ADDRESS } from '@/data/config';
+import { useAccount } from "wagmi";
+import { createPublicClient, http, parseAbi } from 'viem';
+import { polygon } from 'viem/chains';
+import { NFT_COLLECTION_ADDRESS } from '@/data/config';
 
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
+const CONTRACT_ABI = parseAbi([
+  "function balanceOf(address) view returns (uint256)",
+  "function tokenOfOwnerByIndex(address, uint256) view returns (uint256)",
+  "function tokenURI(uint256) view returns (string)"
+]);
+
+const publicClient = createPublicClient({
+  chain: polygon,
+  transport: http()
+});
+
 export default function DashboardPage() {
-  const account = useActiveAccount();
-  const address = account?.address;
+  const { address, isConnected } = useAccount();
   
   const [myAssets, setMyAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,51 +38,32 @@ export default function DashboardPage() {
     return result;
   };
 
-  const CACHE_TTL = 1000 * 60 * 5; 
-
   const fetchAssets = async () => {
     if (!address) return;
     setLoading(true);
     try {
-      const contract = getContract({
-        client: client,
-        chain: defineChain(137), 
-        address: CONTRACT_ADDRESS,
-      });
-
-      const cacheKey = `dashboard-assets:${address}`;
-
-      try {
-        const cachedRaw = typeof window !== 'undefined' ? window.localStorage.getItem(cacheKey) : null;
-        if (cachedRaw) {
-          const cached = JSON.parse(cachedRaw);
-          if (cached.timestamp && Date.now() - cached.timestamp < CACHE_TTL && Array.isArray(cached.assets)) {
-            setMyAssets(cached.assets);
-          }
-        }
-      } catch (err) {
-        console.warn('Cache read failed', err);
-      }
-
-      const balanceBigInt = await readContract({
-        contract,
-        method: "function balanceOf(address) view returns (uint256)",
-        params: [address],
+      const balanceBigInt = await publicClient.readContract({
+        address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+        abi: CONTRACT_ABI,
+        functionName: 'balanceOf',
+        args: [address]
       });
       
       const count = Number(balanceBigInt);
 
       if (!count) {
         setMyAssets([]);
+        setLoading(false);
         return;
       }
 
       const tokenIds = await Promise.all(
         Array.from({ length: count }, (_, i) => 
-            readContract({
-                contract,
-                method: "function tokenOfOwnerByIndex(address, uint256) view returns (uint256)",
-                params: [address, BigInt(i)]
+            publicClient.readContract({
+                address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                abi: CONTRACT_ABI,
+                functionName: 'tokenOfOwnerByIndex',
+                args: [address, BigInt(i)]
             })
         )
       );
@@ -82,13 +73,13 @@ export default function DashboardPage() {
 
       for (const batch of batches) {
         const batchResults = await Promise.all(
-          // التصحيح هنا: أضفنا :any لتجاوز خطأ unknown
           batch.map(async (tokenId: any) => {
             try {
-              const tokenURI = await readContract({
-                  contract,
-                  method: "function tokenURI(uint256) view returns (string)",
-                  params: [tokenId]
+              const tokenURI = await publicClient.readContract({
+                  address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                  abi: CONTRACT_ABI,
+                  functionName: 'tokenURI',
+                  args: [tokenId]
               });
 
               const metaRes = await fetch(resolveIPFS(tokenURI));
@@ -110,14 +101,6 @@ export default function DashboardPage() {
         loaded.push(...valid);
         setMyAssets([...loaded]); 
       }
-
-      try {
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(cacheKey, JSON.stringify({ assets: loaded, timestamp: Date.now() }));
-        }
-      } catch (err) {
-        console.warn('Cache write failed', err);
-      }
     } catch (error) {
       console.error("Dashboard Engine Error:", error);
     } finally {
@@ -125,11 +108,22 @@ export default function DashboardPage() {
     }
   };
 
-  useEffect(() => { fetchAssets(); }, [address]);
+  useEffect(() => { if (isConnected) fetchAssets(); }, [address, isConnected]);
 
   const filteredAssets = activeTab === 'ALL' 
     ? myAssets 
     : myAssets.filter(asset => asset.tier.toUpperCase() === activeTab);
+
+  if (!isConnected) {
+    return (
+        <main style={{ backgroundColor: '#0d1117', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="text-center">
+                <h2 className="text-white mb-3">Connect Wallet to View Dashboard</h2>
+                <p className="text-secondary mb-4">Please connect your wallet to see your NNM assets.</p>
+            </div>
+        </main>
+    );
+  }
 
   return (
     <main style={{ backgroundColor: '#0d1117', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '80px' }}>
@@ -171,21 +165,29 @@ export default function DashboardPage() {
       </div>
 
       <div className="container">
-        <div className="row g-4">
-            {filteredAssets.map((asset) => (
-                <div key={asset.id} className="col-12 col-md-6 col-lg-4 col-xl-3">
-                   <DashboardAssetCard item={asset} />
+        {loading && myAssets.length === 0 ? (
+            <div className="text-center py-5">
+                <div className="spinner-border text-warning" role="status">
+                    <span className="visually-hidden">Loading...</span>
                 </div>
-            ))}
-            <div className="col-12 col-md-6 col-lg-4 col-xl-3">
-                <Link href="/mint" className="text-decoration-none">
-                    <div className="h-100 d-flex flex-column align-items-center justify-content-center p-4" style={{ border: '1px dashed #333', borderRadius: '12px', minHeight: '280px' }}>
-                        <i className="bi bi-plus-lg text-secondary mb-3" style={{ fontSize: '28px' }}></i>
-                        <span className="text-secondary fw-bold text-uppercase" style={{ fontSize: '12px' }}>Mint New Asset</span>
-                    </div>
-                </Link>
             </div>
-        </div>
+        ) : (
+            <div className="row g-4">
+                {filteredAssets.map((asset) => (
+                    <div key={asset.id} className="col-12 col-md-6 col-lg-4 col-xl-3">
+                    <DashboardAssetCard item={asset} />
+                    </div>
+                ))}
+                <div className="col-12 col-md-6 col-lg-4 col-xl-3">
+                    <Link href="/mint" className="text-decoration-none">
+                        <div className="h-100 d-flex flex-column align-items-center justify-content-center p-4" style={{ border: '1px dashed #333', borderRadius: '12px', minHeight: '280px', cursor: 'pointer', transition: '0.2s' }}>
+                            <i className="bi bi-plus-lg text-secondary mb-3" style={{ fontSize: '28px' }}></i>
+                            <span className="text-secondary fw-bold text-uppercase" style={{ fontSize: '12px' }}>Mint New Asset</span>
+                        </div>
+                    </Link>
+                </div>
+            </div>
+        )}
       </div>
     </main>
   );
@@ -222,7 +224,7 @@ const DashboardAssetCard = ({ item }: { item: any }) => {
 };
 
 const getCardStyles = (tier: string) => {
-    if (tier === 'immortal') return { bg: 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)', border: '1px solid #FCD535', shadow: '0 10px 30px rgba(0,0,0,0.8)', labelColor: '#FCD535' };
-    if (tier === 'elite') return { bg: 'linear-gradient(135deg, #2b0505 0%, #4a0a0a 100%)', border: '1px solid #ff3232', shadow: '0 10px 30px rgba(40,0,0,0.5)', labelColor: '#ff3232' };
+    if (tier?.toLowerCase() === 'immortal') return { bg: 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)', border: '1px solid #FCD535', shadow: '0 10px 30px rgba(0,0,0,0.8)', labelColor: '#FCD535' };
+    if (tier?.toLowerCase() === 'elite') return { bg: 'linear-gradient(135deg, #2b0505 0%, #4a0a0a 100%)', border: '1px solid #ff3232', shadow: '0 10px 30px rgba(40,0,0,0.5)', labelColor: '#ff3232' };
     return { bg: 'linear-gradient(135deg, #001f24 0%, #003840 100%)', border: '1px solid #008080', shadow: '0 10px 30px rgba(0,30,30,0.5)', labelColor: '#4db6ac' };
 };

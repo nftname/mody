@@ -2,18 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import dynamicImport from 'next/dynamic';
-import { useActiveAccount, TransactionButton, useReadContract, ConnectButton } from "thirdweb/react";
-import { prepareContractCall, readContract, getContract, defineChain } from "thirdweb";
-import { keccak256, toBytes } from "thirdweb/utils";
-import { upload } from "thirdweb/storage";
-import { client } from "@/lib/client"; 
+import dynamic from 'next/dynamic';
+import { useAccount, useWriteContract, useReadContract, usePublicClient } from "wagmi";
+import { parseAbi, keccak256, stringToBytes } from 'viem';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { CONTRACT_ADDRESS } from '@/data/config';
 
-const CONTRACT_ADDRESS = "0x8e46c897bc74405922871a8a6863ccf5cd1fc721";
-const CHAIN_ID = 137;
-const chain = defineChain(CHAIN_ID);
+// ABI for the NFT Registry Contract (Minting Logic)
+const CONTRACT_ABI = parseAbi([
+  "function owner() view returns (address)",
+  "function registeredNames(bytes32) view returns (bool)",
+  "function getMaticCost(uint256 usdAmount) view returns (uint256)",
+  "function mintPublic(string _name, uint8 _tier, string _tokenURI) payable",
+  "function reserveName(string _name, uint8 _tier, string _tokenURI)"
+]);
 
-// روابط مباشرة وسريعة (Gateway)
 const TIER_IMAGES = {
     IMMORTAL: "https://gateway.pinata.cloud/ipfs/bafybeicutv6qgtmadglatfvdjew4evjoujifx2kykt4hf43jvayduefwtq", 
     ELITE: "https://gateway.pinata.cloud/ipfs/bafybeic6tzxkn7ikmd2tafrd5m35ayoylwp6obibv57z577h5rgtsvi4ue",    
@@ -26,16 +29,11 @@ A singular, unreplicable digital artifact. This digital name is recorded on-chai
 
 It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol — a permanent, time-anchored digital inscription preserved on the blockchain.`;
 
-const contract = getContract({
-  client: client,
-  chain: chain,
-  address: CONTRACT_ADDRESS,
-});
-
-export const dynamic = 'force-dynamic';
-
 const MintContent = () => {
-  const account = useActiveAccount();
+  const { address } = useAccount();
+  const publicClient = usePublicClient();
+  const { writeContractAsync } = useWriteContract();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -44,17 +42,17 @@ const MintContent = () => {
   const [modalType, setModalType] = useState<'process' | 'error' | 'success'>('process');
   const [mounted, setMounted] = useState(false);
 
+  const { data: ownerAddress } = useReadContract({
+    address: CONTRACT_ADDRESS as `0x${string}`,
+    abi: CONTRACT_ABI,
+    functionName: 'owner',
+  });
+
+  const isAdmin = address && ownerAddress && (address.toLowerCase() === ownerAddress.toLowerCase());
+
   useEffect(() => {
     setMounted(true);
   }, []);
-  
-  const { data: ownerAddress } = useReadContract({
-    contract,
-    method: "function owner() view returns (address)",
-    params: [],
-  });
-
-  const isAdmin = account?.address && ownerAddress && (account.address.toLowerCase() === ownerAddress.toLowerCase());
 
   const handleInputFocus = () => {
     setStatus(null);   
@@ -72,11 +70,14 @@ const MintContent = () => {
     setStatus(null);
 
     try {
-        const nameHash = keccak256(toBytes(cleanName));
-        const isRegistered = await readContract({
-            contract,
-            method: "function registeredNames(bytes32) view returns (bool)",
-            params: [nameHash]
+        if (!publicClient) return;
+        
+        const nameHash = keccak256(stringToBytes(cleanName));
+        const isRegistered = await publicClient.readContract({
+            address: CONTRACT_ADDRESS as `0x${string}`,
+            abi: CONTRACT_ABI,
+            functionName: 'registeredNames',
+            args: [nameHash]
         });
         
         if (isRegistered) setStatus('taken');
@@ -84,7 +85,7 @@ const MintContent = () => {
 
     } catch (err: any) {
         console.error("Check Error:", err);
-        setStatus('available');
+        setStatus('available'); 
     } finally {
         setIsSearching(false);
     }
@@ -228,20 +229,7 @@ const MintContent = () => {
         .hero-container { padding-top: 20px; padding-bottom: 0px; }
         .select-asset-title { margin-bottom: 2rem !important; }
 
-        .custom-connect-btn .tw-connect-wallet {
-            width: 100% !important;
-            height: 50px !important;
-            background: linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%) !important;
-            color: #000 !important;
-            border: 1px solid #b3882a !important;
-            border-radius: 10px !important;
-            font-family: serif !important;
-            font-weight: 800 !important;
-            font-size: 18px !important;
-            letter-spacing: 2px !important;
-            text-transform: uppercase !important;
-            justify-content: center !important;
-        }
+        .custom-connect-btn { width: 100%; }
 
         @media (max-width: 768px) {
             .mobile-clean-stack { direction: ltr !important; display: flex !important; flex-direction: column !important; gap: 20px !important; width: 100% !important; padding: 0 20px !important; }
@@ -260,98 +248,113 @@ const MintContent = () => {
 
 const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex, nameToMint, isAdmin, onSuccess, onError }: any) => {
     
-    const account = useActiveAccount(); 
+    const { isConnected } = useAccount(); 
+    const { writeContractAsync } = useWriteContract();
+    const publicClient = usePublicClient();
+    const [isMinting, setIsMinting] = useState(false);
+    
     const btnOpacity = isAvailable ? 1 : 0.5;
+
+    const handleMintClick = async () => {
+        if (!nameToMint || !publicClient) return;
+        setIsMinting(true);
+        
+        try {
+            let selectedImage = TIER_IMAGES.FOUNDER; 
+            if (tierName === "IMMORTAL") selectedImage = TIER_IMAGES.IMMORTAL;
+            if (tierName === "ELITE") selectedImage = TIER_IMAGES.ELITE;
+
+            const date = new Date();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+
+            const metadataObject = {
+              name: nameToMint,
+              description: LONG_DESCRIPTION,
+              image: selectedImage,
+              attributes: [
+                { trait_type: "Asset Type", value: "Digital Name" },
+                { trait_type: "Generation", value: "Gen-0" },
+                { trait_type: "Tier", value: tierName },
+                { trait_type: "Platform", value: "NNM Registry" },
+                { trait_type: "Collection", value: "Genesis - 001" },
+                { trait_type: "Mint Date", value: dynamicDate }
+              ]
+            };
+
+            const jsonString = JSON.stringify(metadataObject);
+            // Use browser-safe base64 encoding
+            const tokenURI = `data:application/json;base64,${btoa(unescape(encodeURIComponent(jsonString)))}`;
+
+            if (isAdmin) {
+              await writeContractAsync({
+                address: CONTRACT_ADDRESS as `0x${string}`,
+                abi: CONTRACT_ABI,
+                functionName: 'reserveName',
+                args: [nameToMint, tierIndex, tokenURI],
+              });
+            } else {
+              const usdAmountWei = BigInt(tierName === "IMMORTAL" ? 50 : tierName === "ELITE" ? 30 : 10) * BigInt(10**18);
+              const costInMatic = await publicClient.readContract({
+                 address: CONTRACT_ADDRESS as `0x${string}`,
+                 abi: CONTRACT_ABI,
+                 functionName: 'getMaticCost',
+                 args: [usdAmountWei]
+              });
+              
+              const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
+              
+              await writeContractAsync({
+                address: CONTRACT_ADDRESS as `0x${string}`,
+                abi: CONTRACT_ABI,
+                functionName: 'mintPublic',
+                args: [nameToMint, tierIndex, tokenURI],
+                value: valueToSend, 
+              });
+            }
+            
+            onSuccess();
+        } catch (err) {
+            onError(err);
+        } finally {
+            setIsMinting(false);
+        }
+    };
 
     return (
         <div className="col-12 col-md-4 d-flex flex-column align-items-center ingot-wrapper">
             <div className="mb-2 d-flex justify-content-center align-items-baseline gap-2 price-top-container"><span className="text-white fw-bold" style={{ fontSize: '16px', fontFamily: 'sans-serif' }}>{price}</span></div>
             <div className="luxury-btn-container" style={{ width: '100%' }}>
                 
-                {!account ? (
+                {!isConnected ? (
                     <div className="custom-connect-btn" style={{ width: '100%' }}>
-                        <ConnectButton 
-                            client={client}
-                            chain={chain}
-                            connectButton={{
-                                label: label, 
-                                style: {
-                                    width: '100%',
-                                    height: '50px',
-                                    background: gradient,
-                                    border: '1px solid #b3882a',
-                                    color: '#000',
-                                    borderRadius: '10px',
-                                    fontSize: '18px',
-                                    opacity: btnOpacity
-                                }
-                            }}
-                        />
+                        <ConnectButton.Custom>
+                            {({ openConnectModal }) => (
+                                <button 
+                                    onClick={openConnectModal}
+                                    style={{
+                                        width: '100%',
+                                        height: '50px',
+                                        background: gradient,
+                                        border: '1px solid #b3882a',
+                                        color: '#000',
+                                        borderRadius: '10px',
+                                        fontSize: '18px',
+                                        fontFamily: 'serif',
+                                        fontWeight: '800',
+                                        opacity: btnOpacity,
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {label}
+                                </button>
+                            )}
+                        </ConnectButton.Custom>
                     </div>
                 ) : (
-                    <TransactionButton
-                        transaction={async () => {
-                            if (!nameToMint) throw new Error("Please enter a name");
-                            
-                            let selectedImage = TIER_IMAGES.FOUNDER; 
-                            if (tierName === "IMMORTAL") selectedImage = TIER_IMAGES.IMMORTAL;
-                            if (tierName === "ELITE") selectedImage = TIER_IMAGES.ELITE;
-                            if (tierName === "FOUNDER") selectedImage = TIER_IMAGES.FOUNDER;
-
-                            const date = new Date();
-                            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                            const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-
-                            // Manual JSON construction to bypass automated processing that might break HTTPS links
-                            const metadataObject = {
-                              name: nameToMint,
-                              description: LONG_DESCRIPTION,
-                              image: selectedImage, // Using direct HTTPS gateway link
-                              attributes: [
-                                { trait_type: "Asset Type", value: "Digital Name" },
-                                { trait_type: "Generation", value: "Gen-0" },
-                                { trait_type: "Tier", value: tierName },
-                                { trait_type: "Platform", value: "NNM Registry" },
-                                { trait_type: "Collection", value: "Genesis - 001" },
-                                { trait_type: "Mint Date", value: dynamicDate }
-                              ]
-                            };
-
-                            // Upload as a simple JSON Blob to ensure raw link preservation
-                            const blob = new Blob([JSON.stringify(metadataObject)], { type: "application/json" });
-                            const file = new File([blob], "metadata.json");
-                            const uri = await upload({ client, files: [file] });
-    
-                            if (isAdmin) {
-                              return prepareContractCall({
-                                contract,
-                                method: "function reserveName(string _name, uint8 _tier, string _tokenURI)",
-                                params: [nameToMint, tierIndex, uri],
-                              });
-                            } else {
-                              const usdAmountWei = BigInt(tierName === "IMMORTAL" ? 50 : tierName === "ELITE" ? 30 : 10) * BigInt(10**18);
-                              const costInMatic = await readContract({
-                                 contract,
-                                 method: "function getMaticCost(uint256 usdAmount) view returns (uint256)",
-                                 params: [usdAmountWei]
-                              });
-                              const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
-                              
-                              return prepareContractCall({
-                                contract,
-                                method: "function mintPublic(string _name, uint8 _tier, string _tokenURI) payable",
-                                params: [nameToMint, tierIndex, uri],
-                                value: valueToSend, 
-                              });
-                            }
-                        }}
-                        onTransactionConfirmed={(tx) => {
-                            console.log("Success", tx);
-                            onSuccess();
-                        }}
-                        onError={(err) => {
-                            onError(err);
-                        }}
+                    <button
+                        onClick={handleMintClick}
+                        disabled={!isAvailable || isMinting}
                         style={{
                             width: '100%',
                             height: '50px',
@@ -363,13 +366,13 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                             fontSize: '18px',
                             fontWeight: '800',
                             letterSpacing: '2px',
-                            opacity: btnOpacity,
-                            cursor: isAvailable ? 'pointer' : 'not-allowed'
+                            opacity: isMinting ? 0.7 : btnOpacity,
+                            cursor: isAvailable ? 'pointer' : 'not-allowed',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}
-                        disabled={!isAvailable}
                     >
-                       {label}
-                    </TransactionButton>
+                       {isMinting ? <div className="spinner-border spinner-border-sm" role="status"></div> : label}
+                    </button>
                 )}
                 
             </div>
@@ -378,4 +381,4 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
     );
 };
 
-export default dynamicImport(() => Promise.resolve(MintContent), { ssr: false });
+export default dynamic(() => Promise.resolve(MintContent), { ssr: false });
