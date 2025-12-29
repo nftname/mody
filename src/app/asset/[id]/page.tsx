@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams } from 'next/navigation';
-// استخدام النظام اليدوي useSendTransaction
+// استوردنا فقط ما نحتاجه (تم حذف TransactionButton من الاستيراد لأنه يسبب المشكلة)
 import { useActiveAccount, ConnectButton, useSendTransaction } from "thirdweb/react";
 import { prepareContractCall, toWei, toTokens, getContract, readContract, NATIVE_TOKEN_ADDRESS } from "thirdweb";
 import { createWallet, walletConnect } from "thirdweb/wallets"; 
@@ -117,6 +117,7 @@ function AssetPage() {
     const account = useActiveAccount();
     
     // --- MANUAL TRANSACTION HOOK ---
+    // الحل النهائي: نستخدم هذا الهوك لتنفيذ المعاملات يدوياً فقط
     const { mutate: sendTx, isPending } = useSendTransaction();
 
     // State
@@ -125,7 +126,7 @@ function AssetPage() {
     const [offersList, setOffersList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     
-    // Logic
+    // Permissions
     const [isOwner, setIsOwner] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     
@@ -171,29 +172,28 @@ function AssetPage() {
     };
 
     // --- 2. FETCH OFFERS (WITH DEDUPLICATION) ---
-    // هذا الجزء هو الذي يحل مشكلة تكرار الأسماء
     const fetchOffers = async () => {
         if (!tokenId) return;
         try {
             const allOffers = await getAllValidOffers({ contract: marketplaceContract });
             if (allOffers && Array.isArray(allOffers)) {
-                // 1. الفلترة حسب الرمز
+                // 1. تصفية العروض الخاصة بهذا الأصل فقط
                 const tokenOffers = allOffers.filter(o => 
                     o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
                     o.tokenId.toString() === tokenId.toString()
                 );
 
-                // 2. إزالة التكرار (يأخذ أحدث عرض لكل شخص فقط)
+                // 2. إزالة التكرار: نحتفظ فقط بأحدث عرض لكل محفظة
                 const uniqueOffersMap = new Map();
                 tokenOffers.forEach(offer => {
                     const address = offer.offerorAddress;
-                    // إذا لم يكن موجوداً أو إذا كان العرض الحالي أحدث (ID أكبر)
+                    // إذا كان العرض الجديد له ID أكبر (أحدث)، نستبدل القديم
                     if (!uniqueOffersMap.has(address) || Number(offer.id) > Number(uniqueOffersMap.get(address).id)) {
                         uniqueOffersMap.set(address, offer);
                     }
                 });
 
-                // 3. تحويل Map إلى مصفوفة وترتيبها
+                // 3. تحويل الـ Map إلى مصفوفة وترتيبها
                 const cleanedOffers = Array.from(uniqueOffersMap.values())
                     .sort((a: any, b: any) => Number(b.id) - Number(a.id));
 
@@ -212,6 +212,7 @@ function AssetPage() {
         if (!tokenId) return;
         try {
             const listings = await getAllValidListings({ contract: marketplaceContract, start: 0, count: BigInt(100) });
+            // Strict deduplication: Filter by ID, Sort Descending, Take First
             const foundListing = listings
                 .filter(l => l.asset.id.toString() === tokenId.toString())
                 .sort((a, b) => Number(b.id) - Number(a.id))[0];
@@ -244,6 +245,7 @@ function AssetPage() {
         }
     }, [tokenId, account]);
 
+    // Interval Guard: Only run when offer mode is active
     useEffect(() => {
         if (!account || !isOfferMode) return;
         refreshWpolData();
@@ -260,7 +262,8 @@ function AssetPage() {
         }
     };
 
-    // --- HANDLERS (MANUAL EXECUTION) ---
+    // --- HANDLERS (MANUAL EXECUTION ONLY) ---
+    // هذه الدوال تنفذ المعاملة فقط عند الاستدعاء اليدوي
     const executeTx = (txPromise: Promise<any>, successMsg: string) => {
         txPromise.then((tx) => {
             sendTx(tx, {
@@ -291,7 +294,7 @@ function AssetPage() {
     const handleApprove = () => {
         if (!offerPrice) return;
         const tx = prepareContractCall({ contract: wpolContract, method: "function approve(address, uint256)", params: [MARKETPLACE_ADDRESS, toWei(offerPrice.toString())] });
-        executeTx(Promise.resolve(tx), "WPOL Approved successfully!");
+        executeTx(Promise.resolve(tx), "WPOL Approved Successfully!");
     };
 
     const handleOffer = () => {
@@ -315,7 +318,7 @@ function AssetPage() {
 
     const handleApproveNft = () => {
         const tx = setApprovalForAll({ contract: nftContract, operator: MARKETPLACE_ADDRESS, approved: true });
-        executeTx(Promise.resolve(tx), "NFT Approved for Listing!");
+        executeTx(Promise.resolve(tx), "NFT Approved!");
     };
 
     const handleCancelList = () => {
@@ -377,7 +380,7 @@ function AssetPage() {
                     <div className="col-lg-5">
                          <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" 
                               style={{ background: CARD_BG, border: '1px solid #333', minHeight: '500px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
-                            <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                 <div style={{ textAlign: 'center' }}>
                                     <p style={{ fontSize: '10px', color: style.textColor, marginBottom: '10px' }}>GEN-0 #00{asset.id}</p>
                                     <h1 style={{ fontSize: '42px', fontFamily: 'serif', fontWeight: '900', color: style.textColor, margin: '10px 0' }}>{asset.name}</h1>
@@ -408,7 +411,7 @@ function AssetPage() {
 
                             {!account ? (
                                 <div style={{ width: '100%', height: '50px' }}>
-                                    {/* زر الاتصال الرسمي الآمن */}
+                                    {/* زر الاتصال النظيف */}
                                     <ConnectButton 
                                         client={client} 
                                         wallets={wallets}
@@ -518,7 +521,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* OFFERS TABLE (CLEANED) */}
+                        {/* OFFERS TABLE */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul" style={{ color: '#FCD535' }}></i>
@@ -587,4 +590,3 @@ function AssetPage() {
     );
 }
 export default dynamicImport(() => Promise.resolve(AssetPage), { ssr: false });
-
