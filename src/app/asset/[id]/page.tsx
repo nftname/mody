@@ -224,73 +224,86 @@ function AssetPage() {
     };
 
     const handleBuy = () => handleTx('Buying Asset', async () => {
-        if (!listing) return;
-        await writeContractAsync({
+        if (!listing || !publicClient) throw new Error("Client unavailable");
+        const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'buyItem',
             args: [BigInt(tokenId)],
             value: parseEther(listing.pricePerToken)
         });
+        await publicClient.waitForTransactionReceipt({ hash });
     });
 
     const handleApprove = () => handleTx('Approving WPOL', async () => {
-        await writeContractAsync({
+        if (!publicClient) throw new Error("Client unavailable");
+        const hash = await writeContractAsync({
             address: WPOL_ADDRESS as `0x${string}`,
             abi: erc20Abi,
             functionName: 'approve',
             args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)]
         });
+        await publicClient.waitForTransactionReceipt({ hash });
         await refreshWpolData();
     });
 
     const handleOffer = () => handleTx('Sending Offer', async () => {
+        if (!publicClient) throw new Error("Client unavailable");
         const duration = BigInt(3 * 24 * 60 * 60); 
-        await writeContractAsync({
+        const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'makeOffer',
             args: [BigInt(tokenId), parseEther(offerPrice), duration]
         });
+        await publicClient.waitForTransactionReceipt({ hash });
         setIsOfferMode(false);
     });
 
     const handleList = () => handleTx('Listing Asset', async () => {
-        await writeContractAsync({
+        if (!publicClient) throw new Error("Client unavailable");
+        const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'listItem',
             args: [BigInt(tokenId), parseEther(sellPrice)]
         });
+        await publicClient.waitForTransactionReceipt({ hash });
         setIsListingMode(false);
     });
 
     const handleApproveNft = () => handleTx('Approving Market', async () => {
-        await writeContractAsync({
+        if (!publicClient) throw new Error("Client unavailable");
+        const hash = await writeContractAsync({
             address: NFT_COLLECTION_ADDRESS as `0x${string}`,
             abi: erc721Abi,
             functionName: 'setApprovalForAll',
             args: [MARKETPLACE_ADDRESS as `0x${string}`, true]
         });
+        await publicClient.waitForTransactionReceipt({ hash });
         setIsApproved(true);
     });
 
     const handleCancelList = () => handleTx('Cancelling Listing', async () => {
-        await writeContractAsync({
+        if (!publicClient) throw new Error("Client unavailable");
+        const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'cancelListing',
             args: [BigInt(tokenId)]
         });
+        await publicClient.waitForTransactionReceipt({ hash });
     });
 
     const handleAcceptOffer = (bidder: string) => handleTx('Accepting Offer', async () => {
-        await writeContractAsync({
+        if (!publicClient) throw new Error("Client unavailable");
+        const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'acceptOffer',
             args: [BigInt(tokenId), bidder as `0x${string}`]
         });
+        await publicClient.waitForTransactionReceipt({ hash });
     });
 
     const handleRecheckBalance = async () => {
