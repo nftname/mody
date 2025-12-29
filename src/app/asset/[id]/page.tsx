@@ -39,6 +39,7 @@ const formatDuration = (seconds: number) => {
     return `${minutes}m`;
 };
 
+// --- Modal Component ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: any) => {
     const [timer, setTimer] = useState(0);
 
@@ -118,6 +119,7 @@ const resolveIPFS = (uri: string) => {
 
 const mockChartData = [ { name: 'Dec 1', price: 10 }, { name: 'Today', price: 12 } ];
 
+// --- Main Page Component ---
 function AssetPage() {
     const params = useParams();
     const router = useRouter();
@@ -125,22 +127,28 @@ function AssetPage() {
     const { writeContractAsync } = useWriteContract();
     const publicClient = usePublicClient();
     
+    // Data State
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
     const [offersList, setOffersList] = useState<any[]>([]);
+    
+    // UI State
     const [loading, setLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     const [isPending, setIsPending] = useState(false);
     
+    // Action Inputs
     const [sellPrice, setSellPrice] = useState('10');
     const [offerPrice, setOfferPrice] = useState('');
     const [isListingMode, setIsListingMode] = useState(false);
     const [isOfferMode, setIsOfferMode] = useState(false);
     
+    // Wallet State
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
     
+    // Pagination & Sort
     const [currentPage, setCurrentPage] = useState(1);
     const offersPerPage = 5;
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
@@ -150,6 +158,7 @@ function AssetPage() {
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
+    // --- Fetchers ---
     const fetchAssetData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
@@ -197,6 +206,7 @@ function AssetPage() {
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
+            // Get logs from earliest to ensure we capture the offer
             const logs = await publicClient.getContractEvents({ 
                 address: MARKETPLACE_ADDRESS as `0x${string}`, 
                 abi: MARKETPLACE_ABI, 
@@ -208,10 +218,12 @@ function AssetPage() {
             const uniqueBidders = new Set<string>();
             const validOffers = [];
 
+            // Iterate newest to oldest
             for (let i = logs.length - 1; i >= 0; i--) {
                 const bidder = logs[i].args.bidder;
                 if (bidder && !uniqueBidders.has(bidder)) {
                     uniqueBidders.add(bidder);
+                    // Check direct contract state
                     const offerData = await publicClient.readContract({ 
                         address: MARKETPLACE_ADDRESS as `0x${string}`, 
                         abi: MARKETPLACE_ABI, 
@@ -219,20 +231,25 @@ function AssetPage() {
                         args: [BigInt(tokenId), bidder] 
                     });
                     
-                    if (offerData[1] > BigInt(0) && offerData[2] > BigInt(Math.floor(Date.now()/1000))) {
+                    // offerData: [bidder, price, expiration]
+                    const price = offerData[1];
+                    const expiration = offerData[2];
+
+                    // Verify offer is active and not expired
+                    if (price > BigInt(0) && expiration > BigInt(Math.floor(Date.now()/1000))) {
                         validOffers.push({
                             bidder: bidder,
-                            price: formatEther(offerData[1]),
-                            expiration: Number(offerData[2]),
-                            totalPrice: offerData[1]
+                            price: formatEther(price),
+                            expiration: Number(expiration),
+                            totalPrice: price
                         });
                     }
                 }
             }
             setOffersList(validOffers);
         } catch (e) {
-            console.warn("Offers Warning", e);
-            setOffersList([]);
+            console.warn("Offers Fetch Warning", e);
+            // Don't clear list on error to avoid flickering if RPC fails briefly
         }
     }, [tokenId, publicClient]);
 
@@ -247,6 +264,7 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
+    // Initial Data Load
     useEffect(() => {
         if (tokenId && publicClient) {
             Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
@@ -257,6 +275,7 @@ function AssetPage() {
         if (isOfferMode && address) refreshWpolData();
     }, [isOfferMode, address, refreshWpolData]);
 
+    // --- Action Handlers ---
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
     
     const closeModal = () => {
@@ -308,7 +327,7 @@ function AssetPage() {
     });
 
     const handleOffer = () => handleTx('Sending Offer', async () => {
-        const duration = BigInt(180 * 24 * 60 * 60); 
+        const duration = BigInt(180 * 24 * 60 * 60); // 180 Days
         const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
@@ -377,6 +396,7 @@ function AssetPage() {
         setModal({ ...modal, isOpen: false }); 
     };
 
+    // Sort Handler
     const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'desc';
         if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
@@ -385,6 +405,7 @@ function AssetPage() {
         setSortConfig({ key, direction });
     };
 
+    // Sorted Offers Logic
     const sortedOffers = useMemo(() => {
         let sortable = [...offersList];
         if (sortConfig !== null) {
@@ -413,6 +434,7 @@ function AssetPage() {
     const hasFunds = wpolBalance >= targetAmount;
     const hasAllowance = hasFunds && wpolAllowance >= targetAmount;
 
+    // Pagination Calculation
     const indexOfLastOffer = currentPage * offersPerPage;
     const indexOfFirstOffer = indexOfLastOffer - offersPerPage;
     const currentOffers = sortedOffers.slice(indexOfFirstOffer, indexOfLastOffer);
@@ -428,6 +450,7 @@ function AssetPage() {
                     <span className="text-white">{asset.name}</span>
                 </div>
                 <div className="row g-5">
+                    {/* Left Column: Image */}
                     <div className="col-lg-5">
                          <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" style={{ background: 'radial-gradient(circle, #161b22 0%, #0b0e11 100%)', border: '1px solid #2a2e35', minHeight: '500px' }}>
                             <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
@@ -446,6 +469,8 @@ function AssetPage() {
                             <p className="text-secondary" style={{ fontSize: '14px', lineHeight: '1.6' }}>{asset.description}</p>
                         </div>
                     </div>
+
+                    {/* Right Column: Details & Actions */}
                     <div className="col-lg-7">
                         <div className="d-flex justify-content-between align-items-start mb-2">
                             <div>
@@ -456,6 +481,8 @@ function AssetPage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Price & Buttons */}
                         <div className="p-4 rounded-3 mt-4 mb-4" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35' }}>
                             <div className="row align-items-center">
                                 <div className="col-md-6">
@@ -506,7 +533,9 @@ function AssetPage() {
                                         ) : (
                                             isOwner ? (
                                                 !isListingMode ? (
-                                                    <button onClick={() => setIsListingMode(true)} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>List for Sale</button>
+                                                    <div className="d-flex flex-column gap-2">
+                                                        <button onClick={() => setIsListingMode(true)} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>List for Sale</button>
+                                                    </div>
                                                 ) : (
                                                     <div className="d-flex flex-column gap-2">
                                                         <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
@@ -529,6 +558,7 @@ function AssetPage() {
                             </div>
                         </div>
 
+                        {/* Chart */}
                         <div className="mb-4">
                             <h5 className="text-white fw-bold mb-3">Price History</h5>
                             <div className="rounded-3 p-3" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35', height: '300px' }}>
@@ -545,6 +575,7 @@ function AssetPage() {
                             </div>
                         </div>
 
+                        {/* Offers Table */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul text-gold"></i>
@@ -566,13 +597,17 @@ function AssetPage() {
                                                 currentOffers.map((offer, index) => {
                                                     const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
                                                     const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
+                                                    
+                                                    // Secure Address Formatting (3 chars ... 4 chars)
+                                                    const shortAddress = offer.bidder ? `${offer.bidder.slice(0,4)}...${offer.bidder.slice(-4)}` : 'Unknown';
+
                                                     return (
                                                         <tr key={index} style={{ borderBottom: '1px solid #2a2e35', background: 'transparent' }}>
                                                             <td className="ps-3 fw-bold text-white" style={{ border: 'none', verticalAlign: 'middle', background: 'transparent' }}>
                                                                 {parseFloat(offer.price).toFixed(2)} WPOL
                                                             </td>
                                                             <td className="text-gold" style={{ border: 'none', verticalAlign: 'middle', fontSize: '13px', background: 'transparent' }}>
-                                                                {isMyOffer ? 'You' : `${offer.bidder.slice(0,4)}..${offer.bidder.slice(-4)}`}
+                                                                {isMyOffer ? 'You' : shortAddress}
                                                             </td>
                                                             <td className="text-secondary" style={{ border: 'none', verticalAlign: 'middle', fontSize: '12px', background: 'transparent' }}>
                                                                 {formatDuration(timeRemaining)}
