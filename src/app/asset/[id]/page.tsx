@@ -7,7 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAccount, useWriteContract, usePublicClient } from "wagmi";
 import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { NFT_COLLECTION_ADDRESS, NETWORK_CHAIN } from '@/data/config';
+import { NFT_COLLECTION_ADDRESS } from '@/data/config';
 // @ts-ignore
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -30,25 +30,63 @@ const MARKETPLACE_ABI = parseAbi([
 ]);
 
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: any) => {
+    const [timer, setTimer] = useState(0);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isOpen && type === 'loading') {
+            setTimer(0);
+            interval = setInterval(() => {
+                setTimer((prev) => {
+                    if (prev >= 60) return prev; 
+                    return prev + 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isOpen, type]);
+
     if (!isOpen) return null;
+
     let icon = <div className="spinner-border text-warning" role="status"></div>;
     let btnText = "Processing...";
-    if (type === 'success') {
+    let displayTitle = title;
+    let displayMessage = message;
+
+    if (timer >= 60 && type === 'loading') {
+        icon = <i className="bi bi-exclamation-circle text-warning" style={{ fontSize: '50px' }}></i>;
+        displayTitle = "Taking longer than usual";
+        displayMessage = "The transaction is taking time. You can close and check your wallet.";
+        btnText = "Close";
+    } else if (type === 'success') {
         icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '50px', color: '#28a745' }}></i>;
+        displayTitle = "Success!";
         btnText = "Stay Here";
     } else if (type === 'error') {
         icon = <i className="bi bi-info-circle-fill" style={{ fontSize: '50px', color: '#FCD535' }}></i>;
         btnText = "Try Again";
     }
+
+    const handleClose = () => {
+        setTimer(0);
+        onClose();
+    };
+
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '20px', padding: '30px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 0 50px rgba(0,0,0,0.5)' }}>
+            <div style={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '20px', padding: '30px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 0 50px rgba(0,0,0,0.5)', position: 'relative' }}>
+                
+                <button onClick={handleClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#666', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}>
+                    <i className="bi bi-x-lg"></i>
+                </button>
+
                 <div className="mb-3">{icon}</div>
-                <h3 className="text-white fw-bold mb-2">{title}</h3>
-                <p className="text-secondary mb-4" style={{ fontSize: '15px' }}>{message}</p>
-                {type !== 'loading' && (
+                <h3 className="text-white fw-bold mb-2">{displayTitle}</h3>
+                <p className="text-secondary mb-4" style={{ fontSize: '15px' }}>{displayMessage}</p>
+                
+                {(type !== 'loading' || timer >= 60) && (
                     <div className="d-flex gap-2">
-                        <button onClick={onClose} className="btn fw-bold flex-grow-1" style={{ background: '#333', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px' }}>{btnText}</button>
+                        <button onClick={handleClose} className="btn fw-bold flex-grow-1" style={{ background: '#333', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px' }}>{btnText === 'Processing...' ? 'Close' : btnText}</button>
                         {type === 'success' && onGoToMarket && (
                             <button onClick={onGoToMarket} className="btn fw-bold flex-grow-1" style={{ background: 'linear-gradient(90deg, #FFD700 0%, #FDB931 100%)', border: 'none', color: '#000', padding: '12px', borderRadius: '12px' }}>Go to Market <i className="bi bi-arrow-right ms-1"></i></button>
                         )}
@@ -204,21 +242,29 @@ function AssetPage() {
     }, [isOfferMode, address, refreshWpolData]);
 
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
+    
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
+        // Refresh data on close if success
         if (modal.type === 'success') {
             fetchAssetData(); checkListing(); fetchOffers();
         }
     };
+    
     const goToMarket = () => { setModal({ ...modal, isOpen: false }); router.push('/market'); };
 
     const handleTx = async (action: string, fn: () => Promise<void>) => {
+        if (!publicClient) {
+            showModal('error', 'Connection Error', 'Please verify your wallet connection and try again.');
+            return;
+        }
         setIsPending(true);
         showModal('loading', action, 'Please confirm in wallet...');
         try {
             await fn();
             showModal('success', 'Success!', 'Transaction completed successfully.');
         } catch (err: any) {
+            console.error("Tx Error:", err);
             showModal('error', 'Failed', err.message?.slice(0, 100) || "Transaction failed");
         } finally { setIsPending(false); }
     };
@@ -281,7 +327,7 @@ function AssetPage() {
             args: [MARKETPLACE_ADDRESS as `0x${string}`, true]
         });
         await publicClient.waitForTransactionReceipt({ hash });
-        setIsApproved(true);
+        setIsApproved(true); 
     });
 
     const handleCancelList = () => handleTx('Cancelling Listing', async () => {
@@ -414,9 +460,9 @@ function AssetPage() {
                                                         <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
                                                         <div className="d-flex gap-2">
                                                             {!isApproved ? (
-                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, backgroundColor: '#fff', color: '#000' }}>{isPending ? '...' : '1. Approve Market'}</button>
+                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, backgroundColor: '#fff', color: '#000' }}>{isPending ? '...' : '1. Unlock Selling 🔒'}</button>
                                                             ) : (
-                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? '...' : '2. Confirm List'}</button>
+                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? '...' : '2. Complete Listing'}</button>
                                                             )}
                                                             <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                         </div>
