@@ -206,7 +206,6 @@ function AssetPage() {
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            // Get logs from earliest to ensure we capture the offer
             const logs = await publicClient.getContractEvents({ 
                 address: MARKETPLACE_ADDRESS as `0x${string}`, 
                 abi: MARKETPLACE_ABI, 
@@ -218,12 +217,12 @@ function AssetPage() {
             const uniqueBidders = new Set<string>();
             const validOffers = [];
 
-            // Iterate newest to oldest
+            // Reversed loop for newest first
             for (let i = logs.length - 1; i >= 0; i--) {
                 const bidder = logs[i].args.bidder;
                 if (bidder && !uniqueBidders.has(bidder)) {
                     uniqueBidders.add(bidder);
-                    // Check direct contract state
+                    
                     const offerData = await publicClient.readContract({ 
                         address: MARKETPLACE_ADDRESS as `0x${string}`, 
                         abi: MARKETPLACE_ABI, 
@@ -235,7 +234,6 @@ function AssetPage() {
                     const price = offerData[1];
                     const expiration = offerData[2];
 
-                    // Verify offer is active and not expired
                     if (price > BigInt(0) && expiration > BigInt(Math.floor(Date.now()/1000))) {
                         validOffers.push({
                             bidder: bidder,
@@ -249,7 +247,6 @@ function AssetPage() {
             setOffersList(validOffers);
         } catch (e) {
             console.warn("Offers Fetch Warning", e);
-            // Don't clear list on error to avoid flickering if RPC fails briefly
         }
     }, [tokenId, publicClient]);
 
