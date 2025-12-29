@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
@@ -29,6 +29,16 @@ const MARKETPLACE_ABI = parseAbi([
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
+const formatDuration = (seconds: number) => {
+    if (seconds <= 0) return "Expired";
+    const days = Math.floor(seconds / (3600 * 24));
+    if (days > 0) return `${days}d`;
+    const hours = Math.floor(seconds / 3600);
+    if (hours > 0) return `${hours}h`;
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}m`;
+};
+
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: any) => {
     const [timer, setTimer] = useState(0);
 
@@ -37,10 +47,7 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: an
         if (isOpen && type === 'loading') {
             setTimer(0);
             interval = setInterval(() => {
-                setTimer((prev) => {
-                    if (prev >= 60) return prev; 
-                    return prev + 1;
-                });
+                setTimer((prev) => prev + 1);
             }, 1000);
         }
         return () => clearInterval(interval);
@@ -56,7 +63,7 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: an
     if (timer >= 60 && type === 'loading') {
         icon = <i className="bi bi-exclamation-circle text-warning" style={{ fontSize: '50px' }}></i>;
         displayTitle = "Taking longer than usual";
-        displayMessage = "The transaction is taking time. You can close and check your wallet.";
+        displayMessage = "The transaction is taking time. You can close this window and check your wallet.";
         btnText = "Close";
     } else if (type === 'success') {
         icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '50px', color: '#28a745' }}></i>;
@@ -75,15 +82,12 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket }: an
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '20px', padding: '30px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 0 50px rgba(0,0,0,0.5)', position: 'relative' }}>
-                
                 <button onClick={handleClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#666', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}>
                     <i className="bi bi-x-lg"></i>
                 </button>
-
                 <div className="mb-3">{icon}</div>
                 <h3 className="text-white fw-bold mb-2">{displayTitle}</h3>
                 <p className="text-secondary mb-4" style={{ fontSize: '15px' }}>{displayMessage}</p>
-                
                 {(type !== 'loading' || timer >= 60) && (
                     <div className="d-flex gap-2">
                         <button onClick={handleClose} className="btn fw-bold flex-grow-1" style={{ background: '#333', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px' }}>{btnText === 'Processing...' ? 'Close' : btnText}</button>
@@ -137,6 +141,10 @@ function AssetPage() {
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
     
+    const [currentPage, setCurrentPage] = useState(1);
+    const offersPerPage = 5;
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
     const rawId = params?.id;
@@ -163,6 +171,8 @@ function AssetPage() {
                 setIsOwner(true);
                 const approvedStatus = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'isApprovedForAll', args: [address, MARKETPLACE_ADDRESS as `0x${string}`] });
                 setIsApproved(approvedStatus);
+            } else {
+                setIsOwner(false);
             }
         } catch (error) { console.error("Failed to fetch asset", error); }
     }, [tokenId, address, publicClient]);
@@ -171,7 +181,6 @@ function AssetPage() {
         if (!tokenId || !publicClient) return;
         try {
             const listingData = await publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] });
-            
             if (listingData[2] === true) {
                 setListing({
                     id: tokenId,
@@ -196,24 +205,31 @@ function AssetPage() {
                 fromBlock: 'earliest' 
             });
 
+            const uniqueBidders = new Set<string>();
             const validOffers = [];
-            for (const log of logs.reverse()) { 
-                const bidder = log.args.bidder!;
-                const offerData = await publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'offers', args: [BigInt(tokenId), bidder] });
-                
-                if (offerData[1] > BigInt(0) && offerData[2] > BigInt(Math.floor(Date.now()/1000))) {
-                    validOffers.push({
-                        bidder: bidder,
-                        price: formatEther(offerData[1]),
-                        expiration: Number(offerData[2]),
-                        totalPrice: offerData[1]
+
+            for (let i = logs.length - 1; i >= 0; i--) {
+                const bidder = logs[i].args.bidder;
+                if (bidder && !uniqueBidders.has(bidder)) {
+                    uniqueBidders.add(bidder);
+                    const offerData = await publicClient.readContract({ 
+                        address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                        abi: MARKETPLACE_ABI, 
+                        functionName: 'offers', 
+                        args: [BigInt(tokenId), bidder] 
                     });
+                    
+                    if (offerData[1] > BigInt(0) && offerData[2] > BigInt(Math.floor(Date.now()/1000))) {
+                        validOffers.push({
+                            bidder: bidder,
+                            price: formatEther(offerData[1]),
+                            expiration: Number(offerData[2]),
+                            totalPrice: offerData[1]
+                        });
+                    }
                 }
             }
-            
-            const uniqueOffers = Array.from(new Map(validOffers.map(item => [item.bidder, item])).values());
-            setOffersList(uniqueOffers);
-
+            setOffersList(validOffers);
         } catch (e) {
             console.warn("Offers Warning", e);
             setOffersList([]);
@@ -245,7 +261,6 @@ function AssetPage() {
     
     const closeModal = () => {
         setModal({ ...modal, isOpen: false });
-        // Refresh data on close if success
         if (modal.type === 'success') {
             fetchAssetData(); checkListing(); fetchOffers();
         }
@@ -255,7 +270,7 @@ function AssetPage() {
 
     const handleTx = async (action: string, fn: () => Promise<void>) => {
         if (!publicClient) {
-            showModal('error', 'Connection Error', 'Please verify your wallet connection and try again.');
+            showModal('error', 'Connection Error', 'Please connect your wallet.');
             return;
         }
         setIsPending(true);
@@ -264,13 +279,13 @@ function AssetPage() {
             await fn();
             showModal('success', 'Success!', 'Transaction completed successfully.');
         } catch (err: any) {
-            console.error("Tx Error:", err);
+            console.error(err);
             showModal('error', 'Failed', err.message?.slice(0, 100) || "Transaction failed");
         } finally { setIsPending(false); }
     };
 
     const handleBuy = () => handleTx('Buying Asset', async () => {
-        if (!listing || !publicClient) throw new Error("Client unavailable");
+        if (!listing) throw new Error("Item not listed");
         const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
@@ -278,78 +293,82 @@ function AssetPage() {
             args: [BigInt(tokenId)],
             value: parseEther(listing.pricePerToken)
         });
-        await publicClient.waitForTransactionReceipt({ hash });
+        await publicClient!.waitForTransactionReceipt({ hash });
     });
 
     const handleApprove = () => handleTx('Approving WPOL', async () => {
-        if (!publicClient) throw new Error("Client unavailable");
         const hash = await writeContractAsync({
             address: WPOL_ADDRESS as `0x${string}`,
             abi: erc20Abi,
             functionName: 'approve',
             args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)]
         });
-        await publicClient.waitForTransactionReceipt({ hash });
+        await publicClient!.waitForTransactionReceipt({ hash });
         await refreshWpolData();
     });
 
     const handleOffer = () => handleTx('Sending Offer', async () => {
-        if (!publicClient) throw new Error("Client unavailable");
-        const duration = BigInt(3 * 24 * 60 * 60); 
+        const duration = BigInt(180 * 24 * 60 * 60); 
         const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'makeOffer',
             args: [BigInt(tokenId), parseEther(offerPrice), duration]
         });
-        await publicClient.waitForTransactionReceipt({ hash });
+        await publicClient!.waitForTransactionReceipt({ hash });
         setIsOfferMode(false);
     });
 
     const handleList = () => handleTx('Listing Asset', async () => {
-        if (!publicClient) throw new Error("Client unavailable");
         const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'listItem',
             args: [BigInt(tokenId), parseEther(sellPrice)]
         });
-        await publicClient.waitForTransactionReceipt({ hash });
+        await publicClient!.waitForTransactionReceipt({ hash });
         setIsListingMode(false);
     });
 
     const handleApproveNft = () => handleTx('Approving Market', async () => {
-        if (!publicClient) throw new Error("Client unavailable");
         const hash = await writeContractAsync({
             address: NFT_COLLECTION_ADDRESS as `0x${string}`,
             abi: erc721Abi,
             functionName: 'setApprovalForAll',
             args: [MARKETPLACE_ADDRESS as `0x${string}`, true]
         });
-        await publicClient.waitForTransactionReceipt({ hash });
-        setIsApproved(true); 
+        await publicClient!.waitForTransactionReceipt({ hash });
+        setIsApproved(true);
     });
 
     const handleCancelList = () => handleTx('Cancelling Listing', async () => {
-        if (!publicClient) throw new Error("Client unavailable");
         const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'cancelListing',
             args: [BigInt(tokenId)]
         });
-        await publicClient.waitForTransactionReceipt({ hash });
+        await publicClient!.waitForTransactionReceipt({ hash });
     });
 
     const handleAcceptOffer = (bidder: string) => handleTx('Accepting Offer', async () => {
-        if (!publicClient) throw new Error("Client unavailable");
         const hash = await writeContractAsync({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'acceptOffer',
             args: [BigInt(tokenId), bidder as `0x${string}`]
         });
-        await publicClient.waitForTransactionReceipt({ hash });
+        await publicClient!.waitForTransactionReceipt({ hash });
+    });
+
+    const handleCancelOffer = () => handleTx('Cancelling Offer', async () => {
+        const hash = await writeContractAsync({
+            address: MARKETPLACE_ADDRESS as `0x${string}`,
+            abi: MARKETPLACE_ABI,
+            functionName: 'cancelOffer',
+            args: [BigInt(tokenId)]
+        });
+        await publicClient!.waitForTransactionReceipt({ hash });
     });
 
     const handleRecheckBalance = async () => {
@@ -358,6 +377,34 @@ function AssetPage() {
         setModal({ ...modal, isOpen: false }); 
     };
 
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'desc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
+            direction = 'asc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedOffers = useMemo(() => {
+        let sortable = [...offersList];
+        if (sortConfig !== null) {
+            sortable.sort((a, b) => {
+                if (sortConfig.key === 'price') {
+                    return sortConfig.direction === 'asc' 
+                        ? parseFloat(a.price) - parseFloat(b.price) 
+                        : parseFloat(b.price) - parseFloat(a.price);
+                }
+                if (sortConfig.key === 'expiration') {
+                    return sortConfig.direction === 'asc' 
+                        ? a.expiration - b.expiration 
+                        : b.expiration - a.expiration;
+                }
+                return 0;
+            });
+        }
+        return sortable;
+    }, [offersList, sortConfig]);
+
     if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
     if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
     
@@ -365,6 +412,11 @@ function AssetPage() {
     const targetAmount = Number(offerPrice) || 0;
     const hasFunds = wpolBalance >= targetAmount;
     const hasAllowance = hasFunds && wpolAllowance >= targetAmount;
+
+    const indexOfLastOffer = currentPage * offersPerPage;
+    const indexOfFirstOffer = indexOfLastOffer - offersPerPage;
+    const currentOffers = sortedOffers.slice(indexOfFirstOffer, indexOfLastOffer);
+    const totalPages = Math.ceil(offersList.length / offersPerPage);
 
     return (
         <main style={{ backgroundColor: '#0b0e11', minHeight: '100vh', paddingBottom: '80px', fontFamily: 'sans-serif' }}>
@@ -476,6 +528,7 @@ function AssetPage() {
                                 </div>
                             </div>
                         </div>
+
                         <div className="mb-4">
                             <h5 className="text-white fw-bold mb-3">Price History</h5>
                             <div className="rounded-3 p-3" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35', height: '300px' }}>
@@ -491,31 +544,88 @@ function AssetPage() {
                                 </ResponsiveContainer>
                             </div>
                         </div>
+
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul text-gold"></i>
                                 <h5 className="text-white fw-bold mb-0">Offers</h5>
                             </div>
-                            <div className="rounded-3 overflow-auto" style={{ border: '1px solid #333', backgroundColor: '#161b22' }}>
-                                <table className="table mb-0" style={{ width: '100%', backgroundColor: 'transparent' }}>
-                                    <thead><tr style={{ borderBottom: '1px solid #333' }}><th className="fw-normal py-3 ps-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>Price</th><th className="fw-normal py-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>From</th><th className="fw-normal py-3 text-end pe-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>Date</th>{isOwner && <th className="fw-normal py-3 text-center text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>Action</th>}</tr></thead>
-                                    <tbody>
-                                        {offersList && offersList.length > 0 ? (
-                                            offersList.map((offer, index) => (
-                                                <tr key={index} style={{ borderBottom: '1px solid #333', background: 'transparent' }}>
-                                                    <td className="ps-3 fw-bold text-white" style={{ border: 'none', verticalAlign: 'middle', background: 'transparent' }}>{formatEther(offer.totalPrice)} WPOL</td>
-                                                    <td className="text-gold" style={{ border: 'none', verticalAlign: 'middle', fontSize: '13px', background: 'transparent' }}>{offer.bidder ? `${offer.bidder.slice(0,4)}..${offer.bidder.slice(-4)}` : 'Unknown'}</td>
-                                                    <td className="text-end pe-3 text-secondary" style={{ border: 'none', verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '11px', background: 'transparent' }}>{offer.expiration ? new Date(Number(offer.expiration || 0) * 1000).toLocaleDateString('en-US') : '-'}</td>
-                                                    {isOwner && (<td className="text-center" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}><button onClick={() => handleAcceptOffer(offer.bidder)} disabled={isPending} className="btn" style={{ background: GOLD_GRADIENT, color: '#000', fontWeight: 'bold', padding: '4px 10px', fontSize: '12px', borderRadius: '6px', border: 'none', minWidth: '60px', height: '32px' }}>{isPending ? '...' : 'Accept'}</button></td>)}
+                            <div className="rounded-3 overflow-hidden" style={{ border: '1px solid #333', backgroundColor: '#161b22' }}>
+                                <div className="table-responsive">
+                                    <table className="table mb-0 text-white" style={{ backgroundColor: 'transparent' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '1px solid #333' }}>
+                                                <th onClick={() => handleSort('price')} className="fw-normal py-3 ps-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent', cursor: 'pointer' }}>Price <i className="bi bi-arrow-down-up ms-1" style={{ fontSize: '10px' }}></i></th>
+                                                <th className="fw-normal py-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>From</th>
+                                                <th onClick={() => handleSort('expiration')} className="fw-normal py-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent', cursor: 'pointer' }}>Expires <i className="bi bi-arrow-down-up ms-1" style={{ fontSize: '10px' }}></i></th>
+                                                <th className="fw-normal py-3 text-end pe-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {currentOffers && currentOffers.length > 0 ? (
+                                                currentOffers.map((offer, index) => {
+                                                    const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
+                                                    const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
+                                                    return (
+                                                        <tr key={index} style={{ borderBottom: '1px solid #2a2e35', background: 'transparent' }}>
+                                                            <td className="ps-3 fw-bold text-white" style={{ border: 'none', verticalAlign: 'middle', background: 'transparent' }}>
+                                                                {parseFloat(offer.price).toFixed(2)} WPOL
+                                                            </td>
+                                                            <td className="text-gold" style={{ border: 'none', verticalAlign: 'middle', fontSize: '13px', background: 'transparent' }}>
+                                                                {isMyOffer ? 'You' : `${offer.bidder.slice(0,4)}..${offer.bidder.slice(-4)}`}
+                                                            </td>
+                                                            <td className="text-secondary" style={{ border: 'none', verticalAlign: 'middle', fontSize: '12px', background: 'transparent' }}>
+                                                                {formatDuration(timeRemaining)}
+                                                            </td>
+                                                            <td className="text-end pe-3" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
+                                                                {isOwner ? (
+                                                                    <button onClick={() => handleAcceptOffer(offer.bidder)} disabled={isPending} className="btn btn-sm" style={{ background: GOLD_GRADIENT, color: '#000', fontWeight: 'bold', fontSize: '12px', borderRadius: '6px', border: 'none' }}>
+                                                                        {isPending ? '...' : 'Accept'}
+                                                                    </button>
+                                                                ) : isMyOffer ? (
+                                                                     <button onClick={handleCancelOffer} disabled={isPending} className="btn btn-sm btn-outline-danger" style={{ fontSize: '12px', borderRadius: '6px' }}>
+                                                                        Cancel
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="text-secondary" style={{ fontSize: '11px' }}>-</span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={4} className="text-center py-5 text-secondary" style={{ border: 'none', background: 'transparent' }}>
+                                                        <i className="bi bi-inbox fs-3 d-block mb-2 opacity-50"></i>
+                                                        No active offers yet
+                                                    </td>
                                                 </tr>
-                                            ))
-                                        ) : (
-                                            <tr><td colSpan={isOwner ? 4 : 3} className="text-center py-5 text-secondary" style={{ border: 'none', background: 'transparent' }}><i className="bi bi-inbox fs-3 d-block mb-2 opacity-50"></i>No active offers yet</td></tr>
-                                        )}
-                                    </tbody>
-                                </table>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {offersList.length > offersPerPage && (
+                                    <div className="d-flex justify-content-center align-items-center p-3 gap-3 border-top border-secondary border-opacity-25">
+                                        <button 
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                                            disabled={currentPage === 1}
+                                            className="btn btn-sm btn-outline-secondary border-0"
+                                        >
+                                            <i className="bi bi-chevron-left"></i>
+                                        </button>
+                                        <span className="text-secondary small">Page {currentPage} of {totalPages}</span>
+                                        <button 
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                                            disabled={currentPage === totalPages}
+                                            className="btn btn-sm btn-outline-secondary border-0"
+                                        >
+                                            <i className="bi bi-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -523,4 +633,5 @@ function AssetPage() {
         </main>
     );
 }
+
 export default dynamicImport(() => Promise.resolve(AssetPage), { ssr: false });
