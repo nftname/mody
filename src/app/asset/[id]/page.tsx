@@ -21,6 +21,7 @@ import { setApprovalForAll, isApprovedForAll } from "thirdweb/extensions/erc721"
 import { balanceOf } from "thirdweb/extensions/erc20";
 import { client } from "@/lib/client"; 
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS, NETWORK_CHAIN } from '@/data/config';
+// @ts-ignore
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // --- WALLET CONFIGURATION ---
@@ -34,7 +35,6 @@ const wallets = [
 
 // --- CONSTANTS ---
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
-// التصحيح هنا: توحيد اسم المتغير
 const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
@@ -264,11 +264,11 @@ function AssetPage() {
                     setIsListingMode(false);
                     setIsOfferMode(false);
                 },
-                onError: (err) => {
+                onError: (err: any) => { // FIX: Added type 'any'
                     showModal('error', 'Failed', err.message || "Transaction failed");
                 }
             });
-        }).catch((err) => {
+        }).catch((err: any) => { // FIX: Added type 'any'
             console.error("Tx Prep Failed", err);
             showModal('error', 'Error', "Failed to prepare transaction");
         });

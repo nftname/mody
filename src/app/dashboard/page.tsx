@@ -82,7 +82,8 @@ export default function DashboardPage() {
 
       for (const batch of batches) {
         const batchResults = await Promise.all(
-          batch.map(async (tokenId) => {
+          // التصحيح هنا: أضفنا :any لتجاوز خطأ unknown
+          batch.map(async (tokenId: any) => {
             try {
               const tokenURI = await readContract({
                   contract,

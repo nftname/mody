@@ -80,20 +80,35 @@ function MarketPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
-  // 1. Fetch Data from Blockchain (Fixed)
+  // 1. Fetch Data from Blockchain (WITH ANTI-DUPLICATE LOGIC)
   useEffect(() => {
     const fetchMarketData = async () => {
         try {
             const contract = getContract({ client, chain: NETWORK_CHAIN, address: MARKETPLACE_ADDRESS });
             
-            // FIX: Removed queryParams wrapper, passing count directly
+            // جلب البيانات الخام
             const listingsData = await getAllValidListings({ 
                 contract, 
                 count: BigInt(100),
                 start: 0
             });
             
-            const mappedData = listingsData.map((item, index) => {
+            // --- بداية كود منع التكرار ---
+            const uniqueListingsMap = new Map();
+
+            listingsData.forEach((item) => {
+                const assetId = item.asset.id.toString();
+                // نحتفظ فقط بأحدث Listing ID لكل أصل
+                if (!uniqueListingsMap.has(assetId) || Number(item.id) > Number(uniqueListingsMap.get(assetId).id)) {
+                    uniqueListingsMap.set(assetId, item);
+                }
+            });
+
+            // تحويل الخريطة المصفاة إلى مصفوفة للتعامل معها
+            const uniqueListingsArray = Array.from(uniqueListingsMap.values());
+            // --- نهاية كود منع التكرار ---
+
+            const mappedData = uniqueListingsArray.map((item: any, index) => {
                 const meta = item.asset.metadata || {};
                 const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
 
