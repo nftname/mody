@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams } from 'next/navigation';
-// استبدلنا TransactionButton بـ useSendTransaction لمنع الخصم التلقائي
+// استخدام النظام اليدوي useSendTransaction
 import { useActiveAccount, ConnectButton, useSendTransaction } from "thirdweb/react";
 import { prepareContractCall, toWei, toTokens, getContract, readContract, NATIVE_TOKEN_ADDRESS } from "thirdweb";
 import { createWallet, walletConnect } from "thirdweb/wallets"; 
@@ -116,8 +116,7 @@ function AssetPage() {
     const params = useParams();
     const account = useActiveAccount();
     
-    // --- MANUAL TRANSACTION HOOK (The Solution) ---
-    // هذا هو الحل السحري: نستخدم دالة الإرسال اليدوية بدلاً من الزر التلقائي
+    // --- MANUAL TRANSACTION HOOK ---
     const { mutate: sendTx, isPending } = useSendTransaction();
 
     // State
@@ -171,19 +170,34 @@ function AssetPage() {
         } catch (error) { console.error("Asset fetch error:", error); }
     };
 
-    // --- 2. FETCH OFFERS ---
+    // --- 2. FETCH OFFERS (WITH DEDUPLICATION) ---
+    // هذا الجزء هو الذي يحل مشكلة تكرار الأسماء
     const fetchOffers = async () => {
         if (!tokenId) return;
         try {
             const allOffers = await getAllValidOffers({ contract: marketplaceContract });
             if (allOffers && Array.isArray(allOffers)) {
-                const validOffers = allOffers
-                    .filter(o => 
-                        o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
-                        o.tokenId.toString() === tokenId.toString()
-                    )
-                    .sort((a, b) => Number(b.id) - Number(a.id));
-                setOffersList(validOffers);
+                // 1. الفلترة حسب الرمز
+                const tokenOffers = allOffers.filter(o => 
+                    o.assetContractAddress.toLowerCase() === NFT_COLLECTION_ADDRESS.toLowerCase() && 
+                    o.tokenId.toString() === tokenId.toString()
+                );
+
+                // 2. إزالة التكرار (يأخذ أحدث عرض لكل شخص فقط)
+                const uniqueOffersMap = new Map();
+                tokenOffers.forEach(offer => {
+                    const address = offer.offerorAddress;
+                    // إذا لم يكن موجوداً أو إذا كان العرض الحالي أحدث (ID أكبر)
+                    if (!uniqueOffersMap.has(address) || Number(offer.id) > Number(uniqueOffersMap.get(address).id)) {
+                        uniqueOffersMap.set(address, offer);
+                    }
+                });
+
+                // 3. تحويل Map إلى مصفوفة وترتيبها
+                const cleanedOffers = Array.from(uniqueOffersMap.values())
+                    .sort((a: any, b: any) => Number(b.id) - Number(a.id));
+
+                setOffersList(cleanedOffers);
             } else {
                 setOffersList([]);
             }
@@ -247,7 +261,6 @@ function AssetPage() {
     };
 
     // --- HANDLERS (MANUAL EXECUTION) ---
-    // هذه الدالة تنفذ المعاملة فقط عند الاستدعاء
     const executeTx = (txPromise: Promise<any>, successMsg: string) => {
         txPromise.then((tx) => {
             sendTx(tx, {
@@ -265,7 +278,7 @@ function AssetPage() {
                 }
             });
         }).catch((err) => {
-            console.error("Tx Preparation Failed", err);
+            console.error("Tx Prep Failed", err);
         });
     };
 
@@ -395,7 +408,7 @@ function AssetPage() {
 
                             {!account ? (
                                 <div style={{ width: '100%', height: '50px' }}>
-                                    {/* زر الاتصال الرسمي - لا يطلب غاز */}
+                                    {/* زر الاتصال الرسمي الآمن */}
                                     <ConnectButton 
                                         client={client} 
                                         wallets={wallets}
@@ -505,7 +518,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* OFFERS TABLE */}
+                        {/* OFFERS TABLE (CLEANED) */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul" style={{ color: '#FCD535' }}></i>
@@ -574,3 +587,4 @@ function AssetPage() {
     );
 }
 export default dynamicImport(() => Promise.resolve(AssetPage), { ssr: false });
+
