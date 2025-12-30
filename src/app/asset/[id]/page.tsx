@@ -29,6 +29,10 @@ const MARKETPLACE_ABI = parseAbi([
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
+const FALLBACK_ABI = parseAbi([
+    "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
+]);
+
 const formatDuration = (seconds: number) => {
     if (seconds <= 0) return "Expired";
     const days = Math.floor(seconds / (3600 * 24));
@@ -63,12 +67,11 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSw
     let displayTitle = title;
     let displayMessage = message;
 
-    // Logic for different states
     if (type === 'loading') {
         if (timer >= 60) {
             icon = <i className="bi bi-hourglass-split text-warning" style={{ fontSize: '50px' }}></i>;
             displayTitle = "Still working...";
-            displayMessage = "The network is busy. Please check your wallet to confirm. Do not close unless you want to cancel.";
+            displayMessage = "The network is busy. Please check your wallet. Do not close unless you want to cancel.";
             btnText = "Close";
         }
     } else if (type === 'success') {
@@ -80,21 +83,18 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSw
         btnText = "Try Again";
     } else if (type === 'swap') {
         icon = <i className="bi bi-wallet2 text-warning" style={{ fontSize: '50px' }}></i>;
-        btnText = "Check Wallet"; // Generic close
+        btnText = "Check Wallet";
     }
 
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '20px', padding: '30px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 0 50px rgba(0,0,0,0.5)', position: 'relative' }}>
-                
                 <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#666', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}>
                     <i className="bi bi-x-lg"></i>
                 </button>
-
                 <div className="mb-3">{icon}</div>
                 <h3 className="text-white fw-bold mb-2">{displayTitle}</h3>
                 <p className="text-secondary mb-4" style={{ fontSize: '15px' }}>{displayMessage}</p>
-                
                 <div className="d-flex gap-2 justify-content-center">
                     {(type !== 'loading' || timer >= 60) && (
                         <button onClick={onClose} className="btn fw-bold flex-grow-1" style={{ background: '#333', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px' }}>
@@ -221,43 +221,58 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
+    // --- REWRITTEN OFFERS FETCHER (PARALLEL SCANNING) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            // Get logs 
-            const logs = await publicClient.getContractEvents({ 
-                address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                abi: MARKETPLACE_ABI, 
-                eventName: 'OfferMade', 
-                args: { tokenId: BigInt(tokenId) }, 
-                fromBlock: 'earliest' 
-            });
+            let logs = [];
+            try {
+                logs = await publicClient.getContractEvents({ 
+                    address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                    abi: MARKETPLACE_ABI, 
+                    eventName: 'OfferMade', 
+                    args: { tokenId: BigInt(tokenId) }, 
+                    fromBlock: 'earliest' 
+                });
+            } catch (err) {
+                logs = await publicClient.getContractEvents({ 
+                    address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                    abi: FALLBACK_ABI, 
+                    eventName: 'OfferMade', 
+                    args: { tokenId: BigInt(tokenId) }, 
+                    fromBlock: 'earliest' 
+                });
+            }
 
             const uniqueBidders = new Set<string>();
-            const validOffers = [];
+            logs.forEach(log => {
+                if (log.args.bidder) uniqueBidders.add(log.args.bidder);
+            });
 
-            // Iterate newest to oldest
-            for (let i = logs.length - 1; i >= 0; i--) {
-                const bidder = logs[i].args.bidder;
-                if (bidder && !uniqueBidders.has(bidder)) {
-                    uniqueBidders.add(bidder);
-                    
+            const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
+                try {
                     const offerData = await publicClient.readContract({ 
                         address: MARKETPLACE_ADDRESS as `0x${string}`, 
                         abi: MARKETPLACE_ABI, 
                         functionName: 'offers', 
-                        args: [BigInt(tokenId), bidder] 
+                        args: [BigInt(tokenId), bidder as `0x${string}`] // FIXED TYPE HERE
                     });
-                    
-                    const price = offerData[1];
-                    const expiration = offerData[2];
+                    return { bidder, offerData };
+                } catch {
+                    return null;
+                }
+            });
 
-                    // SAFE TIME CHECK: Use Math.floor(Date.now() / 1000) for seconds
-                    const nowInSeconds = BigInt(Math.floor(Date.now() / 1000));
-                    
+            const results = await Promise.all(offerPromises);
+            const validOffers = [];
+            const nowInSeconds = BigInt(Math.floor(Date.now() / 1000));
+            
+            for (const res of results) {
+                if (res && res.offerData) {
+                    const [ , price, expiration] = res.offerData; 
                     if (price > BigInt(0) && expiration > nowInSeconds) {
                         validOffers.push({
-                            bidder: bidder,
+                            bidder: res.bidder,
                             price: formatEther(price),
                             expiration: Number(expiration),
                             totalPrice: price
@@ -265,9 +280,12 @@ function AssetPage() {
                     }
                 }
             }
+            
+            validOffers.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
             setOffersList(validOffers);
+
         } catch (e) {
-            console.warn("Offers Fetch Warning", e);
+            console.warn("Offers System Error:", e);
         }
     }, [tokenId, publicClient]);
 
@@ -299,7 +317,6 @@ function AssetPage() {
     const closeModal = () => {
         setIsPending(false); 
         setModal({ ...modal, isOpen: false });
-        // Auto refresh on success close
         if (modal.type === 'success') {
             fetchOffers(); refreshWpolData(); checkListing();
         }
@@ -316,8 +333,18 @@ function AssetPage() {
         showModal('loading', action, 'Please confirm in wallet...');
         try {
             await fn();
-            // Polling logic removed to avoid server crash. 
-            // We rely on user manual refresh or auto-refresh on modal close.
+            
+            // --- OPTIMISTIC UPDATE FOR OFFERS (FIXED TYPE) ---
+            if (action === 'Sending Offer' && address && offerPrice) {
+                const newOffer = {
+                    bidder: address as `0x${string}`, // FIXED TYPE HERE
+                    price: offerPrice, 
+                    expiration: Math.floor(Date.now() / 1000) + (180 * 24 * 60 * 60),
+                    totalPrice: parseEther(offerPrice)
+                };
+                setOffersList(prev => [newOffer, ...prev]);
+            }
+            
             showModal('success', 'Success!', 'Transaction completed successfully.');
         } catch (err: any) {
             console.error(err);
@@ -326,11 +353,8 @@ function AssetPage() {
         }
     };
 
-    // --- SMART BALANCE CHECKS ---
-
     const handleBuy = () => {
         if (!listing) return;
-        // 1. Check Native POL Balance
         const priceNeeded = parseFloat(listing.pricePerToken);
         const currentPol = polBalanceData ? parseFloat(polBalanceData.formatted) : 0;
 
@@ -366,12 +390,15 @@ function AssetPage() {
     const handleOffer = () => {
         if (!offerPrice) return;
         
-        // 1. Check WPOL Balance (Common UX Issue)
         const priceNeeded = parseFloat(offerPrice);
-        
         if (wpolBalance < priceNeeded) {
             showModal('swap', 'Insufficient WPOL', 'Offers require Wrapped POL (WPOL). You seem to have POL. Please swap POL to WPOL.');
             return;
+        }
+
+        if (wpolAllowance < priceNeeded) {
+             showModal('error', 'Approval Needed', 'You must approve WPOL usage before making an offer. Click "1. Approve WPOL" button.');
+             return;
         }
 
         handleTx('Sending Offer', async () => {
