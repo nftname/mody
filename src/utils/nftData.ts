@@ -1,9 +1,18 @@
-import { ethers } from 'ethers';
+import { createPublicClient, http, parseAbi } from 'viem';
+import { polygon } from 'viem/chains';
 import { CONTRACT_ADDRESS } from '@/data/config';
-import ABI from '@/data/abi.json';
 
-const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com';
-const READ_PROVIDER = new ethers.JsonRpcProvider(RPC_URL);
+// 1. Setup VIEM Client (Lightweight & Fast)
+const client = createPublicClient({
+  chain: polygon,
+  transport: http(process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com')
+});
+
+// Minimal ABI for reading assets
+const MINIMAL_ABI = parseAbi([
+  "function ownerOf(uint256 tokenId) view returns (address)",
+  "function tokenURI(uint256 tokenId) view returns (string)"
+]);
 
 export interface NFTData {
   id: number;
@@ -14,7 +23,7 @@ export interface NFTData {
   owner: string;
 }
 
-// 1. معالج الصور
+// Helper: Convert IPFS to HTTP
 export const resolveIPFS = (uri: string) => {
   if (!uri) return '';
   if (uri.startsWith('ipfs://')) {
@@ -23,53 +32,66 @@ export const resolveIPFS = (uri: string) => {
   return uri;
 };
 
-// 2. المحرك الجديد (نظام الماسح الضوئي - Scanner Mode)
+// 2. Main Function: Fetch User Assets using VIEM
 export const fetchUserAssets = async (userAddress: string): Promise<NFTData[]> => {
-  try {
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, READ_PROVIDER);
-    const myAssets: NFTData[] = [];
+  if (!userAddress || !CONTRACT_ADDRESS) return [];
 
-    // سنقوم بمسح أول 50 اسم في العقد بحثاً عن ممتلكاتك
-    // (يمكن زيادة الرقم لاحقاً مع نمو المشروع)
+  try {
+    // Determine contract address format
+    const contractAddr = CONTRACT_ADDRESS as `0x${string}`;
+    const userAddrLower = userAddress.toLowerCase();
+
+    // Scanner Settings
     const SCAN_LIMIT = 50; 
-    
-    // مصفوفة لتخزين عمليات البحث وتشغيلها بالتوازي للسرعة القصوى
     const promises = [];
 
+    // Create parallel fetch requests
     for (let i = 1; i <= SCAN_LIMIT; i++) {
         promises.push(
             (async () => {
                 try {
-                    // نسأل العقد: من يملك هذا الرقم؟
-                    const owner = await contract.ownerOf(i);
-                    
-                    // إذا كان المالك هو أنت (userAddress)
-                    if (owner.toLowerCase() === userAddress.toLowerCase()) {
-                        
-                        // نجلب رابط البيانات
-                        const uri = await contract.tokenURI(i);
-                        let metadata = { name: `GEN-0 #${i}`, image: '', attributes: [] };
+                    // Check Owner
+                    const owner = await client.readContract({
+                        address: contractAddr,
+                        abi: MINIMAL_ABI,
+                        functionName: 'ownerOf',
+                        args: [BigInt(i)]
+                    });
 
+                    // If matches user
+                    if (owner.toLowerCase() === userAddrLower) {
+                        // Get Metadata URI
+                        const tokenUri = await client.readContract({
+                            address: contractAddr,
+                            abi: MINIMAL_ABI,
+                            functionName: 'tokenURI',
+                            args: [BigInt(i)]
+                        });
+
+                        // Fetch Metadata JSON
+                        // FIX: Added ': any' to prevent TypeScript strict inference error
+                        let metadata: any = { name: `NNM #${i}`, image: '', description: '', attributes: [] };
+                        
                         try {
-                            const httpUri = resolveIPFS(uri);
+                            const httpUri = resolveIPFS(tokenUri);
                             const res = await fetch(httpUri);
                             if (res.ok) metadata = await res.json();
                         } catch (e) {
-                            console.warn(`Error fetching metadata for #${i}`);
+                            // Metadata fetch failed, use defaults
                         }
 
-                        // نضيف الكرت للقائمة
+                        // Return formatted NFT
                         return {
                             id: i,
                             name: metadata.name || `NNM #${i}`,
                             tier: metadata.attributes?.find((a: any) => a.trait_type === 'Tier')?.value || 'FOUNDER',
                             image: resolveIPFS(metadata.image),
-                            description: metadata.description,
+                            description: metadata.description || '',
                             owner: owner
                         } as NFTData;
                     }
                 } catch (err) {
-                    // نتجاهل الأرقام التي لم تصدر بعد
+                    // Token likely doesn't exist or error reading
                     return null;
                 }
                 return null;
@@ -77,17 +99,17 @@ export const fetchUserAssets = async (userAddress: string): Promise<NFTData[]> =
         );
     }
 
-    // تشغيل الماسح الضوئي
+    // Execute all requests
     const results = await Promise.all(promises);
 
-    // تصفية النتائج (حذف الفارغ والاحتفاظ بكروتك فقط)
+    // Filter valid results
     const finalAssets = results.filter((item) => item !== null) as NFTData[];
     
-    // ترتيب الكروت (1, 2, 3...)
+    // Sort by ID
     return finalAssets.sort((a, b) => a.id - b.id);
 
   } catch (error) {
-    console.error("Scanner Error:", error);
+    console.error("Asset Fetch Error:", error);
     return [];
   }
 };
