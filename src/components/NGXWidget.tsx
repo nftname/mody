@@ -182,13 +182,11 @@ export default function NGXWidget({
             width: 100%;
             max-width: 342px;
             transform: scale(0.9);
-            /* Mobile Default: Center Alignment */
             transform-origin: top center;
             margin-left: auto;
             margin-right: auto;
         }
 
-        /* Desktop: Right Alignment */
         @media (min-width: 992px) {
             .ngx-widget-container {
                 transform-origin: top right;
