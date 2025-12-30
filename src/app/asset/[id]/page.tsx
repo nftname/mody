@@ -29,6 +29,7 @@ const MARKETPLACE_ABI = parseAbi([
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
+// Fallback ABI for events
 const FALLBACK_ABI = parseAbi([
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
@@ -221,10 +222,11 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- REWRITTEN OFFERS FETCHER (PARALLEL SCANNING) ---
+    // --- REWRITTEN OFFERS FETCHER (PARALLEL SCANNING & TYPE FIX) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
+            // 1. Fetch Logs 
             let logs = [];
             try {
                 logs = await publicClient.getContractEvents({ 
@@ -244,18 +246,20 @@ function AssetPage() {
                 });
             }
 
+            // 2. Extract Unique Bidders
             const uniqueBidders = new Set<string>();
             logs.forEach(log => {
                 if (log.args.bidder) uniqueBidders.add(log.args.bidder);
             });
 
+            // 3. Parallel Verification (Fastest Method)
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
                         address: MARKETPLACE_ADDRESS as `0x${string}`, 
                         abi: MARKETPLACE_ABI, 
                         functionName: 'offers', 
-                        args: [BigInt(tokenId), bidder as `0x${string}`] // FIXED TYPE HERE
+                        args: [BigInt(tokenId), bidder as `0x${string}`] // FIXED: TS Error
                     });
                     return { bidder, offerData };
                 } catch {
@@ -272,7 +276,7 @@ function AssetPage() {
                     const [ , price, expiration] = res.offerData; 
                     if (price > BigInt(0) && expiration > nowInSeconds) {
                         validOffers.push({
-                            bidder: res.bidder,
+                            bidder: res.bidder as `0x${string}`,
                             price: formatEther(price),
                             expiration: Number(expiration),
                             totalPrice: price
@@ -334,10 +338,10 @@ function AssetPage() {
         try {
             await fn();
             
-            // --- OPTIMISTIC UPDATE FOR OFFERS (FIXED TYPE) ---
+            // --- OPTIMISTIC UPDATE FOR OFFERS (Safe Add) ---
             if (action === 'Sending Offer' && address && offerPrice) {
                 const newOffer = {
-                    bidder: address as `0x${string}`, // FIXED TYPE HERE
+                    bidder: address as `0x${string}`, // FIXED: TS Error
                     price: offerPrice, 
                     expiration: Math.floor(Date.now() / 1000) + (180 * 24 * 60 * 60),
                     totalPrice: parseEther(offerPrice)
@@ -396,6 +400,7 @@ function AssetPage() {
             return;
         }
 
+        // RED BUTTON FIX: Force Approval First
         if (wpolAllowance < priceNeeded) {
              showModal('error', 'Approval Needed', 'You must approve WPOL usage before making an offer. Click "1. Approve WPOL" button.');
              return;
