@@ -8,7 +8,7 @@ import { parseAbi, keccak256, stringToBytes } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { CONTRACT_ADDRESS } from '@/data/config';
 
-// ABI for the NFT Registry Contract (Minting Logic)
+// ABI for the NFT Registry Contract (Minting Logic - Updated for Registry 10)
 const CONTRACT_ABI = parseAbi([
   "function owner() view returns (address)",
   "function registeredNames(bytes32) view returns (bool)",
@@ -42,6 +42,7 @@ const MintContent = () => {
   const [modalType, setModalType] = useState<'process' | 'error' | 'success'>('process');
   const [mounted, setMounted] = useState(false);
 
+  // Read owner from the new contract
   const { data: ownerAddress } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,

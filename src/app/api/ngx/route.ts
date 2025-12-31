@@ -25,10 +25,12 @@ export async function GET() {
   }
 
   try {
-    // جلب سلة العملات الممثلة للقطاعات
     const response = await fetch(
       'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,matic-network,ethereum-name-service,apecoin,immutable-x&vs_currencies=usd&include_24hr_change=true',
-      { next: { revalidate: 60 }, headers: { 'Accept': 'application/json' } }
+      { 
+        next: { revalidate: 60 }, 
+        headers: { 'Accept': 'application/json' } 
+      }
     );
 
     if (!response.ok) {
@@ -37,22 +39,19 @@ export async function GET() {
 
     const prices = await response.json();
     
-    // استخراج نسب التغير
     const ethChange = prices.ethereum.usd_24h_change || 0;
     const maticChange = prices['matic-network'].usd_24h_change || 0;
     
-    const identitySector = prices['ethereum-name-service'].usd_24h_change || 0; // ENS (Identity 30%)
-    const artSector = prices.apecoin.usd_24h_change || 0; // APE (Art 25%)
-    const gamingSector = prices['immutable-x'].usd_24h_change || 0; // IMX (Gaming 25%)
+    const identitySector = prices['ethereum-name-service'].usd_24h_change || 0;
+    const artSector = prices.apecoin.usd_24h_change || 0;
+    const gamingSector = prices['immutable-x'].usd_24h_change || 0;
 
-    // المعادلة العالمية الجديدة
     const globalMomentum = 
         (identitySector * 0.30) + 
         (artSector * 0.25) + 
         (gamingSector * 0.25) + 
         (ethChange * 0.20);
     
-    // تحويل الزخم إلى رقم مؤشر (Base 50)
     let finalScore = 50 + (globalMomentum * 3.5);
     finalScore = Math.max(10, Math.min(95, finalScore));
 
@@ -79,13 +78,13 @@ export async function GET() {
 
   } catch (error) {
     return NextResponse.json(cachedData || {
-        score: 52.5,
+        score: 50.0,
         status: 'NEUTRAL',
-        change24h: 0.5,
+        change24h: 0,
         lastUpdate: new Date().toISOString(),
         crypto: {
-            eth: { price: 3200, change: 0 },
-            matic: { price: 0.5, change: 0 }
+            eth: { price: 0, change: 0 },
+            matic: { price: 0, change: 0 }
         }
     });
   }
