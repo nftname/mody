@@ -8,10 +8,8 @@ import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
 import { usePublicClient } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
-import { NFT_COLLECTION_ADDRESS } from '@/data/config';
-
-// Updated Marketplace Address (Market 10)
-const MARKETPLACE_ADDRESS = "0x3101689360A7954bB10D70f2B29432f483b3e6b7";
+// استيراد العناوين الصحيحة من ملف الكونفيج المركزي
+import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
@@ -135,8 +133,9 @@ function Home() {
     const fetchRealData = async () => {
         if (!publicClient) return;
         try {
+            // استخدام العنوان الصحيح من ملف الكونفيج
             const data = await publicClient.readContract({
-                address: MARKETPLACE_ADDRESS,
+                address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
                 functionName: 'getAllListings'
             });
