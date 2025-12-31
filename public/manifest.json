@@ -3,14 +3,14 @@
   "short_name": "NNM",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff40",
+  "background_color": "#0b1220",
   "theme_color": "#0b1220",
   "description": "Premium NFT marketplace for digital names and collectibles.",
   "icons": [
     {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }
