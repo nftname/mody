@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next"; // أضفنا Viewport
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -11,15 +11,26 @@ import { Providers } from "@/app/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
+export const viewport: Viewport = {
+  themeColor: "#0b1220",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "NNM Market",
   description: "Next-Gen NFT Marketplace",
-  icons: {
-    // التعديل هنا: توجيه المسار إلى الملف الصحيح داخل مجلد icons
-    icon: '/icons/icon.svg',
-    apple: '/icons/icon.svg',
-  },
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: ['/icons/icon.svg'],
+    apple: [
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
+    ],
+  },
 };
 
 export default function RootLayout({
