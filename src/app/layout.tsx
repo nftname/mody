@@ -15,8 +15,9 @@ export const metadata: Metadata = {
   title: "NNM Market",
   description: "Next-Gen NFT Marketplace",
   icons: {
-    icon: '/favicon.svg',
-    apple: '/favicon.svg',
+    // التعديل هنا: توجيه المسار إلى الملف الصحيح داخل مجلد icons
+    icon: '/icons/icon.svg',
+    apple: '/icons/icon.svg',
   },
   manifest: '/manifest.json',
 };

@@ -13,6 +13,10 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 const config = getDefaultConfig({
   appName: 'NNM Market',
+  appDescription: 'Nexus Digital Name NFTs Market',
+  appUrl: 'https://Nftnnm.com',
+  // التعديل هنا: وضعنا المسار الصحيح كما يظهر في صورتك (داخل مجلد icons)
+  appIcon: 'https://Nftnnm.com/icons/icon.svg', 
   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '9e2e602f47e436db24b660ee7f01f141',
   chains: [polygon],
   ssr: true,
