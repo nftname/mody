@@ -9,7 +9,8 @@ import { usePublicClient } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS } from '@/data/config';
 
-const MARKETPLACE_ADDRESS = "0x4b55f2e3ae747189539b956E42F36D46b4a7fE86";
+// Updated Marketplace Address (Market 10)
+const MARKETPLACE_ADDRESS = "0x3101689360A7954bB10D70f2B29432f483b3e6b7";
 
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
@@ -96,7 +97,7 @@ function MarketPage() {
         if (!publicClient) return;
         try {
             const data = await publicClient.readContract({
-                address: MARKETPLACE_ADDRESS,
+                address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
                 functionName: 'getAllListings'
             });

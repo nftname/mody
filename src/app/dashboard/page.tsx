@@ -9,6 +9,7 @@ import { NFT_COLLECTION_ADDRESS } from '@/data/config';
 
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
+// ABI متوافق مع Registry 10 (ERC721Enumerable)
 const CONTRACT_ABI = parseAbi([
   "function balanceOf(address) view returns (uint256)",
   "function tokenOfOwnerByIndex(address, uint256) view returns (uint256)",
@@ -42,6 +43,7 @@ export default function DashboardPage() {
     if (!address) return;
     setLoading(true);
     try {
+      // قراءة الرصيد من Registry 10
       const balanceBigInt = await publicClient.readContract({
         address: NFT_COLLECTION_ADDRESS as `0x${string}`,
         abi: CONTRACT_ABI,
@@ -57,6 +59,7 @@ export default function DashboardPage() {
         return;
       }
 
+      // جلب معرفات التوكن (Token IDs)
       const tokenIds = await Promise.all(
         Array.from({ length: count }, (_, i) => 
             publicClient.readContract({
@@ -84,6 +87,8 @@ export default function DashboardPage() {
 
               const metaRes = await fetch(resolveIPFS(tokenURI));
               const meta = metaRes.ok ? await metaRes.json() : {};
+              
+              // معالجة البيانات لتناسب هيكلية Metadata الجديدة
               return {
                 id: tokenId.toString(),
                 name: meta.name || `NNM #${tokenId.toString()}`,
