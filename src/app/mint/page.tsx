@@ -18,9 +18,9 @@ const CONTRACT_ABI = parseAbi([
 ]);
 
 const TIER_IMAGES = {
-    IMMORTAL: "https://gateway.pinata.cloud/ipfs/bafybeicutv6qgtmadglatfvdjew4evjoujifx2kykt4hf43jvayduefwtq", 
-    ELITE: "https://gateway.pinata.cloud/ipfs/bafybeic6tzxkn7ikmd2tafrd5m35ayoylwp6obibv57z577h5rgtsvi4ue",    
-    FOUNDER: "https://gateway.pinata.cloud/ipfs/bafybeidiqev65tophfnujp3mahes6lq55o47qeeb5qgeatzersehoaydue"   
+    IMMORTAL: "https://gateway.pinata.cloud/ipfs/bafkreib7mz6rnwk3ig7ft6ne5iuajlywkttv4zvjp5bbk7ssd5kaykjbsm", 
+    ELITE: "https://gateway.pinata.cloud/ipfs/bafkreiazhoyzkbenhbvjlltd6izwonwz3xikljtrrksual5ttzs4nyzbuu",    
+    FOUNDER: "https://gateway.pinata.cloud/ipfs/bafkreiagc35ykldllvd2knqcnei2ctmkps66byvjinlr7hmkgkdx5mhxqi"   
 };
 
 const LONG_DESCRIPTION = `GEN-0 Genesis — NNM Protocol Record
