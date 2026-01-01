@@ -27,6 +27,7 @@ const Navbar = () => {
     }
   }, [isMobileSearchOpen]);
 
+  // Prevent scrolling when drawer is open
   useEffect(() => {
     if (isDrawerOpen) {
       document.body.style.overflow = 'hidden';
@@ -36,10 +37,12 @@ const Navbar = () => {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isDrawerOpen]);
 
+  // Reset all states on route change
   useEffect(() => {
     setIsDrawerOpen(false);
     setDrawerTranslate(0);
     setIsMobileSearchOpen(false);
+    setIsInsightsOpen(false);
   }, [pathname]);
 
   const toggleDrawer = () => {
@@ -58,7 +61,7 @@ const Navbar = () => {
         e.preventDefault();
         router.push('/dashboard');
     }
-    closeDrawer(); // Close dropdown implicitly by navigation
+    closeDrawer(); 
     setIsInsightsOpen(false);
   };
 
@@ -76,7 +79,7 @@ const Navbar = () => {
     }
   };
 
-  // Swipe Logic
+  // --- Swipe Logic ---
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
     setIsDragging(true);
@@ -99,15 +102,18 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  // --- Palette & Dimensions ---
-  // Extracted Color from Drawer Image (Deep Dark Blue/Black)
-  const deepNavyColor = '#0b0e11'; 
+  // --- 🎨 The Exact Color Palette (From Image Analysis) ---
   
+  // The Exact Deep Night Blue/Black from your screenshot
+  const exactDarkColor = '#05070a'; 
+  
+  // Slightly lighter shade for PC Dropdown (to separate it visually)
+  const dropdownColor = '#0a0c10'; 
+
   const metallicGoldHex = '#F0C420'; 
-  const paleGoldHex = '#D4C49D'; // Lighter gold for social icons
+  const paleGoldHex = '#D4C49D'; 
   const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
 
-  // Reduced heights by ~10% (from 32px to 29px)
   const elementHeight = '29px'; 
   const elementFontSize = '11px';
 
@@ -133,7 +139,7 @@ const Navbar = () => {
   };
 
   const customConnectStyle = {
-    background: '#1A1A1A', 
+    background: '#141414', 
     color: '#E0E0E0', 
     border: `1px solid rgba(240, 196, 32, 0.3)`, 
     fontWeight: '500' as const,
@@ -208,7 +214,6 @@ const Navbar = () => {
   );
 
   const LogoSVG = ({ mobile = false }) => (
-    // Increased Mobile Size: 31px instead of 28px (+10%)
     <svg width={mobile ? "31" : "30"} height={mobile ? "31" : "30"} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
         <defs>
             <linearGradient id={mobile ? "goldGradMob" : "goldGradDesk"} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -227,10 +232,8 @@ const Navbar = () => {
     </svg>
   );
 
-  // Custom Tight Hamburger Icon (Reduced spacing by 25%)
   const CustomHamburger = () => (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Standard gap is ~8px. We reduce to ~6px */}
         <path d="M4 6H20" stroke={metallicGoldHex} strokeWidth="2" strokeLinecap="round"/>
         <path d="M4 12H20" stroke={metallicGoldHex} strokeWidth="2" strokeLinecap="round"/>
         <path d="M4 18H20" stroke={metallicGoldHex} strokeWidth="2" strokeLinecap="round"/>
@@ -241,10 +244,10 @@ const Navbar = () => {
     <>
     <nav className="navbar navbar-expand-lg fixed-top py-0" 
          style={{ 
-             // Unified Background Color (Extracted #0b0e11) with Glass Effect
-             backgroundColor: 'rgba(11, 14, 17, 0.92)', 
-             backdropFilter: 'blur(12px)',
-             WebkitBackdropFilter: 'blur(12px)',
+             // --- THE EXACT COLOR MATCH (#05070a) ---
+             backgroundColor: 'rgba(5, 7, 10, 0.95)', // 95% opacity for PC
+             backdropFilter: 'blur(10px)',
+             WebkitBackdropFilter: 'blur(10px)',
              zIndex: 1050, 
              height: '64px', 
              borderBottom: `1px solid ${subtleBorder}`,
@@ -265,7 +268,6 @@ const Navbar = () => {
 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <LogoSVG mobile={true} />
-              {/* Increased Mobile Font Size (+10% -> 22px) */}
               <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '22px', letterSpacing: '0.5px', marginTop: '1px' }}>NNM</span>
             </Link>
         </div>
@@ -281,7 +283,6 @@ const Navbar = () => {
         {/* Mobile Right Icons */}
         <div className="d-flex d-lg-none align-items-center ms-auto" style={{ gap: '8px', overflow: 'visible', paddingRight: '0px' }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
-                {/* Fixed Search Icon Color */}
                 <i className="bi bi-search" style={{ fontSize: '16px', color: metallicGoldHex }}></i>
             </button>
 
@@ -297,7 +298,6 @@ const Navbar = () => {
         <div className="collapse navbar-collapse flex-grow-1" id="navbarNav">
           <div className="d-flex flex-column flex-lg-row align-items-center w-100 justify-content-between">
             
-            {/* Menu Items - Moved down 10% (paddingTop: 5px) to Align with Logo Center */}
             <div className="d-flex align-items-center" style={{ flexShrink: 1, minWidth: 0, paddingTop: '5px' }}> 
                 <ul className="navbar-nav mb-2 mb-lg-0 gap-2 gap-xl-3 align-items-center">
                     {menuItems.map((item) => (
@@ -313,7 +313,6 @@ const Navbar = () => {
                         </li>
                     ))}
                     
-                    {/* Insights Dropdown (Fixed Hover) */}
                     <li className="nav-item dropdown" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsInsightsOpen(true)}
                         onMouseLeave={() => setIsInsightsOpen(false)}>
@@ -322,13 +321,13 @@ const Navbar = () => {
                         style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
                         Insights
                       </a>
-                      {/* Fixed: Dropdown attached to parent, added marginTop 0 */}
+                      {/* PC Dropdown Color */}
                       <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
                           style={{ 
-                              backgroundColor: deepNavyColor, 
+                              backgroundColor: dropdownColor, 
                               border: `1px solid ${subtleBorder}`, 
                               minWidth: '160px', 
-                              marginTop: '0px', // Removed gap causing closure
+                              marginTop: '0px', 
                               paddingTop: '8px', 
                               paddingBottom: '8px',
                               borderRadius: '8px'
@@ -340,7 +339,6 @@ const Navbar = () => {
                                         fontSize: '13px', 
                                         transition: '0.2s', 
                                         color: '#E0E0E0',
-                                        // Divider line between items (except last)
                                         borderBottom: idx !== arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
                                     }} 
                                 >
@@ -355,9 +353,7 @@ const Navbar = () => {
 
             <div style={{ flexGrow: 1 }}></div>
 
-            {/* Right Side - Reduced Heights */}
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ flexShrink: 0, marginLeft: '20px' }}> 
-                {/* Search Height Reduced (32px -> 29px) */}
                 <form onSubmit={handleSearch} className="position-relative" style={{ width: '240px', height: elementHeight }}>
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." 
                         value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
@@ -401,29 +397,28 @@ const Navbar = () => {
           }}>
           </div>
 
-          {/* Drawer Header - Matches Navbar Color exactly */}
+          {/* Drawer Header - EXACT Color Match */}
           <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-3 w-100 mt-0 position-relative" 
-               style={{ borderBottom: `1px solid ${subtleBorder}`, backgroundColor: deepNavyColor }}>
+               style={{ borderBottom: `1px solid ${subtleBorder}`, backgroundColor: exactDarkColor }}>
               
               <div className="d-flex align-items-center gap-3">
                  <LogoSVG mobile={true} />
                  <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '24px', letterSpacing: '0.5px' }}>NNM</span>
               </div>
 
-              {/* Close Button - Reduced Whiteness (opacity 0.5) */}
               <button onClick={closeDrawer} className="btn p-0 d-flex align-items-center justify-content-center" 
                       style={{ 
                           width: '36px', height: '36px', 
                           borderRadius: '50%', 
                           backgroundColor: 'transparent', 
-                          border: '1px solid rgba(255,255,255,0.3)', // Dimmer border
-                          color: 'rgba(255,255,255,0.5)' // Dimmer X
+                          border: '1px solid rgba(255,255,255,0.3)', 
+                          color: 'rgba(255,255,255,0.5)' 
                       }}>
                   <i className="bi bi-x" style={{ fontSize: '24px' }}></i>
               </button>
           </div>
 
-          <div className="drawer-content px-4 py-3 d-flex flex-column h-100" style={{ overflowY: 'auto', backgroundColor: deepNavyColor }}>
+          <div className="drawer-content px-4 py-3 d-flex flex-column h-100" style={{ overflowY: 'auto', backgroundColor: exactDarkColor }}>
               <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-3 mt-2">
                   <div className="d-flex flex-column gap-2">
                     {menuItems.map((item) => (
@@ -431,7 +426,6 @@ const Navbar = () => {
                                 href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                                 onClick={closeDrawer}
                                 className="text-decoration-none fw-bold py-2"
-                                // Reduced Text Brightness (0.85)
                                 style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', letterSpacing: '0.5px' }}>
                             {item}
                         </Link>
@@ -456,7 +450,6 @@ const Navbar = () => {
               </div>
 
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-4">
-                  {/* Social Icons: Added FB, Telegram. Pale Gold Color. 20% right padding. */}
                   <div className="d-flex justify-content-between align-items-center w-100 px-2" style={{ paddingRight: '20%' }}>
                       <i className="bi bi-twitter-x" style={{ fontSize: '18px', color: paleGoldHex }}></i>
                       <i className="bi bi-facebook" style={{ fontSize: '18px', color: paleGoldHex }}></i>
@@ -469,7 +462,7 @@ const Navbar = () => {
       </div>
 
       {isMobileSearchOpen && (
-        <div className="d-lg-none position-absolute start-0 w-100" style={{ top: '64px', zIndex: 1049, backgroundColor: deepNavyColor, padding: '12px 15px', borderBottom: `1px solid ${subtleBorder}` }}>
+        <div className="d-lg-none position-absolute start-0 w-100" style={{ top: '64px', zIndex: 1049, backgroundColor: exactDarkColor, padding: '12px 15px', borderBottom: `1px solid ${subtleBorder}` }}>
             <form onSubmit={handleSearch} className="position-relative">
                 <input ref={mobileSearchInputRef} type="text" className="form-control bg-dark text-white shadow-none" placeholder="Search..." 
                     value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
@@ -484,7 +477,6 @@ const Navbar = () => {
       )}
 
       <style jsx global>{`
-        /* --- METALLIC GOLD GRADIENT TEXT --- */
         .gold-text-gradient {
             background: linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #FFD700 100%);
             -webkit-background-clip: text;
@@ -496,7 +488,6 @@ const Navbar = () => {
         .desktop-nav-link { color: #ffffff !important; transition: color 0.3s ease; }
         .desktop-nav-link:hover, .desktop-nav-link.active { color: ${metallicGoldHex} !important; }
         
-        /* Dropdown Item Styling */
         .dropdown-link-custom:hover, .dropdown-link-custom:focus { 
             background-color: rgba(255, 255, 255, 0.05) !important; 
             color: ${metallicGoldHex} !important; 
@@ -513,7 +504,7 @@ const Navbar = () => {
             left: 0;
             width: 100%;
             height: 100vh;
-            background-color: ${deepNavyColor};
+            background-color: ${exactDarkColor};
             z-index: 9999;
             transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
