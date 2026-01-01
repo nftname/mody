@@ -27,6 +27,7 @@ const Navbar = () => {
     }
   }, [isMobileSearchOpen]);
 
+  // Prevent scrolling when drawer is open
   useEffect(() => {
     if (isDrawerOpen) {
       document.body.style.overflow = 'hidden';
@@ -35,6 +36,13 @@ const Navbar = () => {
     }
     return () => { document.body.style.overflow = 'unset'; };
   }, [isDrawerOpen]);
+
+  // Reset drawer state on route change (Full Reset)
+  useEffect(() => {
+    setIsDrawerOpen(false);
+    setDrawerTranslate(0);
+    setIsMobileSearchOpen(false);
+  }, [pathname]);
 
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen);
@@ -99,19 +107,20 @@ const Navbar = () => {
     setTouchEnd(null);
   };
 
-  // --- New Palette (Quiet Luxury) ---
-  const champagneGold = '#C8A27A'; // The new elegant gold
-  const navbarGlassBg = 'rgba(18, 18, 18, 0.85)'; // Dark Charcoal Glass
-  const solidDarkBg = '#121212'; // For solid elements like mobile drawer
-  const subtleBorder = 'rgba(255, 255, 255, 0.08)'; // Very subtle separation
+  // --- New Palette (Royal Metallic Gold) ---
+  // A gradient definition for CSS usage
+  const goldGradientCSS = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #FFD700 100%)'; 
+  const metallicGoldHex = '#F0C420'; // A rich solid gold fallback
+  const navbarGlassBg = 'rgba(18, 18, 18, 0.9)'; // Slightly darker glass for better contrast
+  const solidDarkBg = '#0b0e11'; // Main background
+  const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
 
-  // --- Connect Wallet Styles ---
+  // --- Styles ---
   
-  // 1. Disconnected: Ghost Button (Transparent with Champagne Border)
   const customDisconnectStyle = {
     background: 'transparent',
-    color: champagneGold,
-    border: `1px solid ${champagneGold}`,
+    color: metallicGoldHex,
+    border: `1px solid ${metallicGoldHex}`,
     fontWeight: '600' as const,
     fontSize: '12px',
     borderRadius: '6px',
@@ -126,11 +135,10 @@ const Navbar = () => {
     letterSpacing: '0.5px'
   };
 
-  // 2. Connected: Dark Pill with Subtle Border
   const customConnectStyle = {
     background: '#1A1A1A', 
     color: '#E0E0E0', 
-    border: `1px solid rgba(200, 162, 122, 0.3)`, // Subtle champagne border 
+    border: `1px solid rgba(240, 196, 32, 0.3)`, 
     fontWeight: '500' as const,
     fontSize: '12px',
     borderRadius: '6px',
@@ -145,7 +153,7 @@ const Navbar = () => {
   };
 
   const portfolioBtnStyle = {
-    color: champagneGold, 
+    color: metallicGoldHex, 
     border: 'none', 
     background: 'transparent', 
     padding: '0 6px',
@@ -233,9 +241,29 @@ const Navbar = () => {
     );
   };
 
-  const ChicProfileIcon = ({ size = 24, color = champagneGold }) => (
+  const ChicProfileIcon = ({ size = 24, color = metallicGoldHex }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 4V4.01C14.2 4.01 16 5.8 16 8C16 10.2 14.2 12 12 12C9.8 12 8 10.2 8 8C8 5.8 9.8 4 12 4ZM12 14C15.5 14 18.37 15.28 19.5 17.15C17.7 19.56 14.98 20.98 12 21V21C9.02 20.98 6.3 19.56 4.5 17.15C5.63 15.28 8.5 14 12 14Z" fill={color}/>
+    </svg>
+  );
+
+  // Logo Component to ensure consistency and full M visibility
+  const LogoSVG = ({ mobile = false }) => (
+    <svg width={mobile ? "28" : "30"} height={mobile ? "28" : "30"} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
+        <defs>
+            <linearGradient id={mobile ? "goldGradMob" : "goldGradDesk"} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FFD700" />
+            <stop offset="50%" stopColor="#FDB931" />
+            <stop offset="100%" stopColor="#FFD700" />
+            </linearGradient>
+        </defs>
+        <g>
+            <path d="M256 20 L356 120 L256 220 L156 120 Z" fill={`url(#${mobile ? "goldGradMob" : "goldGradDesk"})`} />
+            <path d="M156 120 L256 220 L256 240 L156 140 Z" fill="#B8860B" opacity="0.9" />
+            <path d="M256 292 L356 392 L256 492 L156 392 Z" fill={`url(#${mobile ? "goldGradMob" : "goldGradDesk"})`} />
+            <path d="M120 156 L220 256 L120 356 L20 256 Z" fill={`url(#${mobile ? "goldGradMob" : "goldGradDesk"})`} />
+            <path d="M392 156 L492 256 L392 356 L292 256 Z" fill={`url(#${mobile ? "goldGradMob" : "goldGradDesk"})`} />
+        </g>
     </svg>
   );
 
@@ -248,11 +276,14 @@ const Navbar = () => {
              WebkitBackdropFilter: 'blur(12px)',
              zIndex: 1050, 
              height: '64px', 
-             paddingRight: '5px',
              borderBottom: `1px solid ${subtleBorder}`,
+             width: '100%', // FORCE full width
+             top: 0,
+             left: 0
          }}>
       
-      <div className="container-fluid px-3 h-100 align-items-center d-flex flex-nowrap">
+      {/* Container Fluid with NO padding to ensure full width usage */}
+      <div className="container-fluid h-100 align-items-center d-flex flex-nowrap px-3 px-lg-4">
         
         {/* Mobile Toggle & Logo */}
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
@@ -261,48 +292,17 @@ const Navbar = () => {
             </button>
 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
-              {/* Logo SVG - Updated to Champagne Gold */}
-              <svg width="28" height="28" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
-                <defs>
-                  <linearGradient id="blockGoldMobile" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#C8A27A" />
-                    <stop offset="100%" stopColor="#E0C090" />
-                  </linearGradient>
-                </defs>
-                <g>
-                    <path d="M256 20 L356 120 L256 220 L156 120 Z" fill="url(#blockGoldMobile)" />
-                    <path d="M156 120 L256 220 L256 240 L156 140 Z" fill="#8B6508" opacity="0.8" />
-                    <path d="M256 292 L356 392 L256 492 L156 392 Z" fill="url(#blockGoldMobile)" />
-                    <path d="M120 156 L220 256 L120 356 L20 256 Z" fill="url(#blockGoldMobile)" />
-                    <path d="M392 156 L492 256 L392 356 L292 256 Z" fill="url(#blockGoldMobile)" />
-                    <circle cx="256" cy="256" r="10" fill={solidDarkBg} />
-                </g>
-              </svg>
-              <span style={{ fontFamily: 'sans-serif', fontWeight: '700', fontSize: '20px', color: '#FFF', letterSpacing: '0.5px', marginTop: '1px' }}>NNM</span>
+              <LogoSVG mobile={true} />
+              <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '20px', letterSpacing: '0.5px', marginTop: '1px' }}>NNM</span>
             </Link>
         </div>
 
-        {/* Desktop Logo */}
-        <div className="d-none d-lg-flex align-items-center" style={{ minWidth: '80px', flexShrink: 1, overflow:'hidden' }}> 
+        {/* Desktop Logo - REMOVED overflow hidden to fix 'M' cutoff */}
+        <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0 }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
-              <svg width="30" height="30" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
-                <defs>
-                  <linearGradient id="blockGold" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#C8A27A" />
-                    <stop offset="100%" stopColor="#DFC29B" />
-                  </linearGradient>
-                </defs>
-                <g>
-                    <path d="M256 20 L356 120 L256 220 L156 120 Z" fill="url(#blockGold)" />
-                    <path d="M156 120 L256 220 L256 240 L156 140 Z" fill="#8B6508" opacity="0.8" />
-                    <path d="M256 292 L356 392 L256 492 L156 392 Z" fill="url(#blockGold)" />
-                    <path d="M356 392 L256 492 L256 472 L356 372 Z" fill="#5A4010" opacity="0.4" />
-                    <path d="M120 156 L220 256 L120 356 L20 256 Z" fill="url(#blockGold)" />
-                    <path d="M392 156 L492 256 L392 356 L292 256 Z" fill="url(#blockGold)" />
-                    <circle cx="256" cy="256" r="10" fill={solidDarkBg} />
-                </g>
-              </svg>
-              <span style={{ fontFamily: 'sans-serif', fontWeight: '700', fontSize: '20px', color: '#FFF', letterSpacing: '1px', marginTop: '1px' }}>NNM</span>
+              <LogoSVG mobile={false} />
+              {/* Text is now Gold Gradient to match Logo */}
+              <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '22px', letterSpacing: '1px', marginTop: '1px' }}>NNM</span>
             </Link>
         </div>
 
@@ -314,7 +314,7 @@ const Navbar = () => {
 
             <button className="btn p-0 d-flex align-items-center justify-content-center" onClick={handlePortfolioClick}
                 style={{ width: '32px', height: '32px', border: 'none', backgroundColor: 'transparent', flexShrink: 0 }}>
-                <ChicProfileIcon size={24} color={champagneGold} />
+                <ChicProfileIcon size={24} color={metallicGoldHex} />
             </button>
 
             <CustomWalletTrigger isMobile={true} />
@@ -366,7 +366,7 @@ const Navbar = () => {
                 <form onSubmit={handleSearch} className="position-relative" style={{ width: '260px', height: '32px', flexShrink: 0 }}>
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." 
                         value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '34px', border: `1px solid ${subtleBorder}`, caretColor: champagneGold }} 
+                        style={{ borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '34px', border: `1px solid ${subtleBorder}`, caretColor: metallicGoldHex }} 
                    />
                    <button type="submit" className="btn p-0 position-absolute" style={{top: '50%', transform: 'translateY(-50%)', left: '10px', border:'none', background:'transparent'}}>
                         <i className="bi bi-search" style={{fontSize: '13px', color: '#888'}}></i>
@@ -374,7 +374,7 @@ const Navbar = () => {
                 </form>
                 
                 <button onClick={handlePortfolioClick} className="btn" style={portfolioBtnStyle} title="Go to Dashboard">
-                    <ChicProfileIcon size={26} color={champagneGold} />
+                    <ChicProfileIcon size={26} color={metallicGoldHex} />
                 </button>
 
                 <CustomWalletTrigger isMobile={false} />
@@ -383,7 +383,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer (Updated to match OpenSea Style) */}
       <div 
         className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`} 
         style={{ transform: isDrawerOpen ? `translateX(${drawerTranslate}px)` : 'translateX(-100%)' }}
@@ -391,56 +391,68 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* Decorative Side Bar */}
+          {/* Smaller Handle Bar (20% height) */}
           <div style={{
               position: 'absolute',
               right: '0',
               top: '50%',
               transform: 'translateY(-50%)',
               width: '4px',
-              height: '80px', 
-              backgroundColor: champagneGold,
+              height: '60px', // Smaller height as requested
+              backgroundColor: metallicGoldHex,
               borderTopLeftRadius: '4px',
               borderBottomLeftRadius: '4px',
-              opacity: 0.5
+              opacity: 0.6
           }}>
           </div>
 
-          <div className="drawer-header d-flex flex-column align-items-start px-4 pt-5 pb-3 w-100 mt-2 position-relative">
-              <button onClick={closeDrawer} className="btn position-absolute top-0 end-0 m-3 text-secondary p-2">
-                  <i className="bi bi-x-lg" style={{ fontSize: '24px', color: '#888' }}></i>
-              </button>
-
-              <div className="d-flex align-items-center gap-3 mb-2">
-                <span style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '28px', color: '#FFF', letterSpacing: '1px' }}>NNM</span>
+          <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-3 w-100 mt-0 position-relative" 
+               style={{ borderBottom: `1px solid ${subtleBorder}` }}>
+              
+              {/* Logo in Drawer */}
+              <div className="d-flex align-items-center gap-3">
+                 <LogoSVG mobile={true} />
+                 <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '24px', letterSpacing: '0.5px' }}>NNM</span>
               </div>
+
+              {/* OpenSea Style Close Button (Circle) */}
+              <button onClick={closeDrawer} className="btn p-0 d-flex align-items-center justify-content-center" 
+                      style={{ 
+                          width: '36px', height: '36px', 
+                          borderRadius: '50%', 
+                          backgroundColor: 'rgba(255,255,255,0.1)', 
+                          border: 'none',
+                          color: '#FFF'
+                      }}>
+                  <i className="bi bi-x" style={{ fontSize: '24px' }}></i>
+              </button>
           </div>
 
           <div className="drawer-content px-4 py-3 d-flex flex-column h-100" style={{ overflowY: 'auto' }}>
-              <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-4 mt-4">
-                  <div className="d-flex flex-column gap-3">
+              <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-3 mt-2">
+                  <div className="d-flex flex-column gap-2">
                     {menuItems.map((item) => (
                         <Link key={item} 
                                 href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                                 onClick={closeDrawer}
-                                className="text-decoration-none fw-medium"
-                                style={{ fontSize: '20px', color: '#FFF', letterSpacing: '0.5px' }}>
+                                className="text-decoration-none fw-bold py-2"
+                                style={{ fontSize: '18px', color: '#FFF', letterSpacing: '0.5px' }}>
                             {item}
                         </Link>
                     ))}
-                    <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-medium" style={{ fontSize: '20px', color: '#FFF', letterSpacing: '0.5px' }}>How it Works</Link>
-                    <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-medium" style={{ fontSize: '20px', color: '#FFF', letterSpacing: '0.5px' }}>Contact</Link>
+                    <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-bold py-2" style={{ fontSize: '18px', color: '#FFF', letterSpacing: '0.5px' }}>How it Works</Link>
+                    <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-bold py-2" style={{ fontSize: '18px', color: '#FFF', letterSpacing: '0.5px' }}>Contact</Link>
                   </div>
 
                   <hr className="border-secondary opacity-10 my-1 w-100" />
 
-                  <div className="d-flex flex-column gap-3">
+                  <div className="d-flex flex-column gap-2">
                     {secondaryLinks.map((link) => (
                         <Link key={link} 
                                 href={`/${link.toLowerCase()}`}
                                 onClick={closeDrawer}
-                                className="text-decoration-none fw-normal"
-                                style={{ fontSize: '16px', color: '#888' }}>
+                                className="text-decoration-none fw-normal py-1"
+                                style={{ fontSize: '15px', color: '#888' }}>
                             {link}
                         </Link>
                     ))}
@@ -463,7 +475,7 @@ const Navbar = () => {
             <form onSubmit={handleSearch} className="position-relative">
                 <input ref={mobileSearchInputRef} type="text" className="form-control bg-dark text-white shadow-none" placeholder="Search..." 
                     value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{ borderRadius: '4px', fontSize: '14px', height: '42px', paddingLeft: '38px', paddingRight: '35px', border: `1px solid ${subtleBorder}`, caretColor: champagneGold }} 
+                    style={{ borderRadius: '4px', fontSize: '14px', height: '42px', paddingLeft: '38px', paddingRight: '35px', border: `1px solid ${subtleBorder}`, caretColor: metallicGoldHex }} 
                 />
                 <button type="submit" className="btn p-0 position-absolute" style={{ top: '50%', left: '12px', transform: 'translateY(-50%)', border:'none', background:'transparent' }}>
                     <i className="bi bi-search" style={{ fontSize: '16px', color: '#888' }}></i>
@@ -474,15 +486,24 @@ const Navbar = () => {
       )}
 
       <style jsx global>{`
+        /* --- METALLIC GOLD GRADIENT TEXT --- */
+        .gold-text-gradient {
+            background: linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+
         .desktop-nav-link { color: #ffffff !important; transition: color 0.3s ease; }
-        .desktop-nav-link:hover, .desktop-nav-link.active { color: ${champagneGold} !important; }
+        .desktop-nav-link:hover, .desktop-nav-link.active { color: ${metallicGoldHex} !important; }
         
-        .dropdown-item:hover, .dropdown-item:focus { background-color: rgba(255, 255, 255, 0.05) !important; color: ${champagneGold} !important; }
+        .dropdown-item:hover, .dropdown-item:focus { background-color: rgba(255, 255, 255, 0.05) !important; color: ${metallicGoldHex} !important; }
         
         .search-input-custom { background-color: rgba(255, 255, 255, 0.05) !important; transition: all 0.3s ease; }
-        .search-input-custom:focus { background-color: rgba(255, 255, 255, 0.1) !important; border-color: ${champagneGold} !important; }
+        .search-input-custom:focus { background-color: rgba(255, 255, 255, 0.1) !important; border-color: ${metallicGoldHex} !important; }
 
-        .hover-effect-btn:hover { background-color: rgba(200, 162, 122, 0.1) !important; }
+        .hover-effect-btn:hover { background-color: rgba(240, 196, 32, 0.1) !important; }
 
         .mobile-drawer {
             position: fixed;
@@ -492,7 +513,7 @@ const Navbar = () => {
             height: 100vh;
             background-color: ${solidDarkBg};
             z-index: 9999;
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -500,6 +521,7 @@ const Navbar = () => {
       `}</style>
     </nav>
     
+    {/* Spacer to prevent content from jumping up behind fixed navbar */}
     <div style={{ height: '64px' }}></div>
     </>
   );
