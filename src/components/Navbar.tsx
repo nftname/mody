@@ -102,11 +102,9 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  // --- 🎨 THE EXACT COLOR (From Top of Image) ---
-  // This is the slightly lighter dark blue (#0b0e11) not the pitch black.
-  const exactDarkColor = '#0b0e11'; 
+  // --- 🎨 THE DARK BLUE COLOR (Requested) ---
+  const exactDarkColor = '#0b0e11'; // Dark Blue (Not Black)
   
-  // Secondary variables
   const dropdownColor = '#0a0c10'; 
   const metallicGoldHex = '#F0C420'; 
   const paleGoldHex = '#D4C49D'; 
@@ -242,7 +240,7 @@ const Navbar = () => {
     <>
     <nav className="navbar navbar-expand-lg fixed-top py-0" 
          style={{ 
-             // UPDATED COLOR TO #0b0e11 (The lighter top color)
+             // Using Dark Blue (#0b0e11)
              backgroundColor: 'rgba(11, 14, 17, 0.95)', 
              backdropFilter: 'blur(10px)',
              WebkitBackdropFilter: 'blur(10px)',
@@ -400,13 +398,14 @@ const Navbar = () => {
                  <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '24px', letterSpacing: '0.5px' }}>NNM</span>
               </div>
 
+              {/* Close Button: Gray border, Gray Icon */}
               <button onClick={closeDrawer} className="btn p-0 d-flex align-items-center justify-content-center" 
                       style={{ 
                           width: '36px', height: '36px', 
                           borderRadius: '50%', 
                           backgroundColor: 'transparent', 
-                          border: '1px solid rgba(255,255,255,0.3)', 
-                          color: 'rgba(255,255,255,0.5)' 
+                          border: '1px solid #333',  // Dark Gray Border
+                          color: '#777'              // Gray Icon
                       }}>
                   <i className="bi bi-x" style={{ fontSize: '24px' }}></i>
               </button>
@@ -444,8 +443,8 @@ const Navbar = () => {
               </div>
 
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-4">
-                  {/* CHANGED gap-4 to gap-2 (50% reduction) */}
-                  <div className="d-flex justify-content-start align-items-center gap-2 px-3" style={{ width: '80%' }}>
+                  {/* Spacing Increased: gap-4 (from gap-2) to double the space. Kept paddingRight 20% */}
+                  <div className="d-flex justify-content-start align-items-center gap-4 px-3" style={{ width: '80%' }}>
                       <i className="bi bi-twitter-x" style={{ fontSize: '18px', color: paleGoldHex }}></i>
                       <i className="bi bi-facebook" style={{ fontSize: '18px', color: paleGoldHex }}></i>
                       <i className="bi bi-discord" style={{ fontSize: '18px', color: paleGoldHex }}></i>
