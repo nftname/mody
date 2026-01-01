@@ -107,12 +107,10 @@ const Navbar = () => {
     setTouchEnd(null);
   };
 
-  // --- New Palette (Royal Metallic Gold) ---
-  // A gradient definition for CSS usage
-  const goldGradientCSS = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #FFD700 100%)'; 
-  const metallicGoldHex = '#F0C420'; // A rich solid gold fallback
-  const navbarGlassBg = 'rgba(18, 18, 18, 0.9)'; // Slightly darker glass for better contrast
-  const solidDarkBg = '#0b0e11'; // Main background
+  // --- Palette (Royal Metallic Gold) ---
+  const metallicGoldHex = '#F0C420'; 
+  const navbarGlassBg = 'rgba(18, 18, 18, 0.9)'; 
+  const solidDarkBg = '#0b0e11'; 
   const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
 
   // --- Styles ---
@@ -247,7 +245,6 @@ const Navbar = () => {
     </svg>
   );
 
-  // Logo Component to ensure consistency and full M visibility
   const LogoSVG = ({ mobile = false }) => (
     <svg width={mobile ? "28" : "30"} height={mobile ? "28" : "30"} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
         <defs>
@@ -277,12 +274,16 @@ const Navbar = () => {
              zIndex: 1050, 
              height: '64px', 
              borderBottom: `1px solid ${subtleBorder}`,
-             width: '100%', // FORCE full width
+             width: '100%', 
+             maxWidth: '100vw', // Ensure it never exceeds viewport width
+             overflowX: 'hidden', // Crop anything that tries to escape
              top: 0,
-             left: 0
+             left: 0,
+             // FORCE hardware acceleration to fix mobile sticky stutter
+             transform: 'translateZ(0)', 
+             willChange: 'transform'
          }}>
       
-      {/* Container Fluid with NO padding to ensure full width usage */}
       <div className="container-fluid h-100 align-items-center d-flex flex-nowrap px-3 px-lg-4">
         
         {/* Mobile Toggle & Logo */}
@@ -297,11 +298,10 @@ const Navbar = () => {
             </Link>
         </div>
 
-        {/* Desktop Logo - REMOVED overflow hidden to fix 'M' cutoff */}
+        {/* Desktop Logo */}
         <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0 }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <LogoSVG mobile={false} />
-              {/* Text is now Gold Gradient to match Logo */}
               <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '22px', letterSpacing: '1px', marginTop: '1px' }}>NNM</span>
             </Link>
         </div>
@@ -325,7 +325,8 @@ const Navbar = () => {
           <div className="d-flex flex-column flex-lg-row align-items-center w-100">
             
             <div className="d-flex align-items-center me-auto ms-0 ms-lg-5"> 
-                <ul className="navbar-nav mb-2 mb-lg-0 gap-3 align-items-center w-100">
+                {/* Reduced gap from gap-3 to gap-lg-2 for tighter spacing */}
+                <ul className="navbar-nav mb-2 mb-lg-0 gap-2 gap-lg-2 align-items-center w-100">
                     {menuItems.map((item) => (
                         <li className="nav-item" key={item}>
                             <Link 
@@ -364,12 +365,14 @@ const Navbar = () => {
 
             <div className="d-none d-lg-flex align-items-center justify-content-end gap-3"> 
                 <form onSubmit={handleSearch} className="position-relative" style={{ width: '260px', height: '32px', flexShrink: 0 }}>
+                   {/* Search Input with very subtle gold border (10% opacity) */}
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." 
                         value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '34px', border: `1px solid ${subtleBorder}`, caretColor: metallicGoldHex }} 
+                        style={{ borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '34px', border: `1px solid rgba(240, 196, 32, 0.1)`, caretColor: metallicGoldHex }} 
                    />
+                   {/* Search Icon with metallic gold color */}
                    <button type="submit" className="btn p-0 position-absolute" style={{top: '50%', transform: 'translateY(-50%)', left: '10px', border:'none', background:'transparent'}}>
-                        <i className="bi bi-search" style={{fontSize: '13px', color: '#888'}}></i>
+                        <i className="bi bi-search" style={{fontSize: '13px', color: metallicGoldHex}}></i>
                    </button>
                 </form>
                 
@@ -383,7 +386,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer (Updated to match OpenSea Style) */}
+      {/* Mobile Drawer */}
       <div 
         className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`} 
         style={{ transform: isDrawerOpen ? `translateX(${drawerTranslate}px)` : 'translateX(-100%)' }}
@@ -391,14 +394,14 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* Smaller Handle Bar (20% height) */}
+          {/* Smaller Handle Bar */}
           <div style={{
               position: 'absolute',
               right: '0',
               top: '50%',
               transform: 'translateY(-50%)',
               width: '4px',
-              height: '60px', // Smaller height as requested
+              height: '60px',
               backgroundColor: metallicGoldHex,
               borderTopLeftRadius: '4px',
               borderBottomLeftRadius: '4px',
@@ -409,20 +412,19 @@ const Navbar = () => {
           <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-3 w-100 mt-0 position-relative" 
                style={{ borderBottom: `1px solid ${subtleBorder}` }}>
               
-              {/* Logo in Drawer */}
               <div className="d-flex align-items-center gap-3">
                  <LogoSVG mobile={true} />
                  <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '24px', letterSpacing: '0.5px' }}>NNM</span>
               </div>
 
-              {/* OpenSea Style Close Button (Circle) */}
+              {/* Dimmed Close Button (No transparency, dim border/icon) */}
               <button onClick={closeDrawer} className="btn p-0 d-flex align-items-center justify-content-center" 
                       style={{ 
                           width: '36px', height: '36px', 
                           borderRadius: '50%', 
-                          backgroundColor: 'rgba(255,255,255,0.1)', 
-                          border: 'none',
-                          color: '#FFF'
+                          backgroundColor: 'transparent', // No transparency background
+                          border: '1px solid #777', // Dim border
+                          color: '#999' // Dim icon color
                       }}>
                   <i className="bi bi-x" style={{ fontSize: '24px' }}></i>
               </button>
@@ -478,7 +480,7 @@ const Navbar = () => {
                     style={{ borderRadius: '4px', fontSize: '14px', height: '42px', paddingLeft: '38px', paddingRight: '35px', border: `1px solid ${subtleBorder}`, caretColor: metallicGoldHex }} 
                 />
                 <button type="submit" className="btn p-0 position-absolute" style={{ top: '50%', left: '12px', transform: 'translateY(-50%)', border:'none', background:'transparent' }}>
-                    <i className="bi bi-search" style={{ fontSize: '16px', color: '#888' }}></i>
+                    <i className="bi bi-search" style={{ fontSize: '16px', color: '#E0E0E0' }}></i>
                 </button>
                 <button type="button" onClick={() => setIsMobileSearchOpen(false)} className="btn btn-link position-absolute text-secondary text-decoration-none p-0" style={{ top: '50%', right: '12px', transform: 'translateY(-50%)' }}><i className="bi bi-x-lg" style={{ fontSize: '16px' }}></i></button>
             </form>
@@ -521,7 +523,6 @@ const Navbar = () => {
       `}</style>
     </nav>
     
-    {/* Spacer to prevent content from jumping up behind fixed navbar */}
     <div style={{ height: '64px' }}></div>
     </>
   );
