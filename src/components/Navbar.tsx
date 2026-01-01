@@ -27,7 +27,6 @@ const Navbar = () => {
     }
   }, [isMobileSearchOpen]);
 
-  // Prevent scrolling when drawer is open
   useEffect(() => {
     if (isDrawerOpen) {
       document.body.style.overflow = 'hidden';
@@ -37,7 +36,6 @@ const Navbar = () => {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isDrawerOpen]);
 
-  // Reset all states on route change
   useEffect(() => {
     setIsDrawerOpen(false);
     setDrawerTranslate(0);
@@ -79,7 +77,6 @@ const Navbar = () => {
     }
   };
 
-  // --- Swipe Logic ---
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
     setIsDragging(true);
@@ -102,8 +99,9 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  // --- 🎨 THE DARK BLUE COLOR (Requested) ---
-  const exactDarkColor = '#0b0e11'; // Dark Blue (Not Black)
+  // --- 🎨 ALWAN (COLORS) ---
+  // The Requested Dark Blue (#0b0e11)
+  const exactDarkColor = '#0b0e11'; 
   
   const dropdownColor = '#0a0c10'; 
   const metallicGoldHex = '#F0C420'; 
@@ -240,7 +238,7 @@ const Navbar = () => {
     <>
     <nav className="navbar navbar-expand-lg fixed-top py-0" 
          style={{ 
-             // Using Dark Blue (#0b0e11)
+             // FIX: Manually set RGBA to match #0b0e11 (R:11, G:14, B:17)
              backgroundColor: 'rgba(11, 14, 17, 0.95)', 
              backdropFilter: 'blur(10px)',
              WebkitBackdropFilter: 'blur(10px)',
@@ -398,14 +396,14 @@ const Navbar = () => {
                  <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '24px', letterSpacing: '0.5px' }}>NNM</span>
               </div>
 
-              {/* Close Button: Gray border, Gray Icon */}
+              {/* Close Button: Dimmed Gray */}
               <button onClick={closeDrawer} className="btn p-0 d-flex align-items-center justify-content-center" 
                       style={{ 
                           width: '36px', height: '36px', 
                           borderRadius: '50%', 
                           backgroundColor: 'transparent', 
-                          border: '1px solid #333',  // Dark Gray Border
-                          color: '#777'              // Gray Icon
+                          border: '1px solid #333', 
+                          color: 'rgba(255,255,255,0.4)' // Much dimmer
                       }}>
                   <i className="bi bi-x" style={{ fontSize: '24px' }}></i>
               </button>
@@ -443,8 +441,8 @@ const Navbar = () => {
               </div>
 
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-4">
-                  {/* Spacing Increased: gap-4 (from gap-2) to double the space. Kept paddingRight 20% */}
-                  <div className="d-flex justify-content-start align-items-center gap-4 px-3" style={{ width: '80%' }}>
+                  {/* FULLY SPACED: Used justify-content-between inside 80% container */}
+                  <div className="d-flex justify-content-between align-items-center w-100 px-2" style={{ width: '80%', paddingRight: '20%' }}>
                       <i className="bi bi-twitter-x" style={{ fontSize: '18px', color: paleGoldHex }}></i>
                       <i className="bi bi-facebook" style={{ fontSize: '18px', color: paleGoldHex }}></i>
                       <i className="bi bi-discord" style={{ fontSize: '18px', color: paleGoldHex }}></i>
