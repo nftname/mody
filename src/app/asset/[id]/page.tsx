@@ -7,12 +7,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAccount, useWriteContract, usePublicClient, useBalance } from "wagmi";
 import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { NFT_COLLECTION_ADDRESS } from '@/data/config';
+// استيراد العناوين الصحيحة من ملف الكونفيج
+import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 // @ts-ignore
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// Updated Marketplace Address (Market 10)
-const MARKETPLACE_ADDRESS = "0x3101689360A7954bB10D70f2B29432f483b3e6b7";
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
