@@ -37,7 +37,7 @@ const Navbar = () => {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isDrawerOpen]);
 
-  // Reset drawer state on route change (Full Reset)
+  // Reset drawer state on route change
   useEffect(() => {
     setIsDrawerOpen(false);
     setDrawerTranslate(0);
@@ -109,7 +109,7 @@ const Navbar = () => {
 
   // --- Palette (Royal Metallic Gold) ---
   const metallicGoldHex = '#F0C420'; 
-  const navbarGlassBg = 'rgba(18, 18, 18, 0.9)'; 
+  const navbarGlassBg = 'rgba(18, 18, 18, 0.95)'; 
   const solidDarkBg = '#0b0e11'; 
   const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
 
@@ -120,7 +120,7 @@ const Navbar = () => {
     color: metallicGoldHex,
     border: `1px solid ${metallicGoldHex}`,
     fontWeight: '600' as const,
-    fontSize: '12px',
+    fontSize: '12px', // Slightly smaller text
     borderRadius: '6px',
     display: 'flex',
     alignItems: 'center',
@@ -128,9 +128,10 @@ const Navbar = () => {
     width: '100%',
     height: '100%',
     cursor: 'pointer',
-    padding: '0 12px',
+    padding: '0 8px', // Reduced padding to save width
     transition: 'all 0.2s ease',
-    letterSpacing: '0.5px'
+    letterSpacing: '0.5px',
+    whiteSpace: 'nowrap' as const // Prevent text wrap
   };
 
   const customConnectStyle = {
@@ -146,8 +147,8 @@ const Navbar = () => {
     width: '100%',
     height: '100%',
     cursor: 'pointer',
-    gap: '8px',
-    padding: '0 10px'
+    gap: '6px',
+    padding: '0 8px'
   };
 
   const portfolioBtnStyle = {
@@ -167,9 +168,12 @@ const Navbar = () => {
   const secondaryLinks = ['Analytics', 'Newsletter', 'Blog', 'Careers', 'Partners'];
 
   const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
+    // Mobile: Fixed small width for "Connect"
+    // Desktop: Fixed width for "Connect Wallet"
     const height = isMobile ? '28px' : '32px'; 
-    const minWidth = isMobile ? '100px' : '130px';
+    const minWidth = isMobile ? '80px' : '120px'; 
     const fontSize = isMobile ? '11px' : '12px';
+    const btnText = isMobile ? 'Connect' : 'Connect Wallet'; // CONDITIONAL TEXT
 
     return (
       <div style={{ position: 'relative', height: height, minWidth: minWidth, display: 'inline-block' }}>
@@ -206,7 +210,7 @@ const Navbar = () => {
                   if (!connected) {
                     return (
                       <div onClick={openConnectModal} style={customDisconnectStyle} className="hover-effect-btn">
-                        Connect Wallet
+                        {btnText}
                       </div>
                     );
                   }
@@ -214,7 +218,7 @@ const Navbar = () => {
                   if (chain.unsupported) {
                     return (
                       <div onClick={openConnectModal} style={{...customDisconnectStyle, borderColor: '#ff4d4d', color: '#ff4d4d'}}>
-                        Wrong Network
+                        Wrong Net
                       </div>
                     );
                   }
@@ -275,13 +279,12 @@ const Navbar = () => {
              height: '64px', 
              borderBottom: `1px solid ${subtleBorder}`,
              width: '100%', 
-             maxWidth: '100vw', // Ensure it never exceeds viewport width
-             overflowX: 'hidden', // Crop anything that tries to escape
              top: 0,
              left: 0,
-             // FORCE hardware acceleration to fix mobile sticky stutter
+             // Fix for mobile sticky stutter
              transform: 'translateZ(0)', 
              willChange: 'transform'
+             // Removed overflowX: hidden to allow dropdowns/drawer to show
          }}>
       
       <div className="container-fluid h-100 align-items-center d-flex flex-nowrap px-3 px-lg-4">
@@ -289,7 +292,8 @@ const Navbar = () => {
         {/* Mobile Toggle & Logo */}
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
             <button className="navbar-toggler border-0 p-0 shadow-none" type="button" onClick={toggleDrawer} style={{ width: '24px' }}>
-                <i className="bi bi-list" style={{ fontSize: '26px', color: '#E0E0E0' }}></i>
+                {/* Fixed: Hamburger color to Gold */}
+                <i className="bi bi-list" style={{ fontSize: '26px', color: metallicGoldHex }}></i>
             </button>
 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
@@ -299,7 +303,7 @@ const Navbar = () => {
         </div>
 
         {/* Desktop Logo */}
-        <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0 }}> 
+        <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0, marginRight: '15px' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <LogoSVG mobile={false} />
               <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '22px', letterSpacing: '1px', marginTop: '1px' }}>NNM</span>
@@ -322,29 +326,31 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <div className="collapse navbar-collapse flex-grow-1" id="navbarNav">
-          <div className="d-flex flex-column flex-lg-row align-items-center w-100">
+          <div className="d-flex flex-column flex-lg-row align-items-center w-100 justify-content-between">
             
-            <div className="d-flex align-items-center me-auto ms-0 ms-lg-5"> 
-                {/* Reduced gap from gap-3 to gap-lg-2 for tighter spacing */}
-                <ul className="navbar-nav mb-2 mb-lg-0 gap-2 gap-lg-2 align-items-center w-100">
+            {/* Menu Items - Reduced font size and added flex */}
+            <div className="d-flex align-items-center" style={{ flexShrink: 1, minWidth: 0 }}> 
+                <ul className="navbar-nav mb-2 mb-lg-0 gap-2 gap-xl-3 align-items-center">
                     {menuItems.map((item) => (
                         <li className="nav-item" key={item}>
                             <Link 
                                 href={item === 'Portfolio' ? '/dashboard' : (item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`)}
                                 onClick={(e) => handleNavClick(item, e)}
                                 className={`nav-link fw-medium desktop-nav-link ${pathname === (item === 'Home' ? '/' : `/${item.toLowerCase()}`) ? 'active' : ''}`}
-                                style={{ fontSize: '14px', whiteSpace: 'nowrap' }} 
+                                style={{ fontSize: '13px', whiteSpace: 'nowrap' }} 
                             >
                                 {item}
                             </Link>
                         </li>
                     ))}
+                    
+                    {/* Insights Dropdown */}
                     <li className="nav-item dropdown" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsInsightsOpen(true)}
                         onMouseLeave={() => setIsInsightsOpen(false)}>
                       <a className={`nav-link dropdown-toggle fw-medium shadow-none desktop-nav-link ${isInsightsOpen ? 'show' : ''}`} 
                         href="#" role="button" onClick={(e) => { e.preventDefault(); setIsInsightsOpen(!isInsightsOpen); }}
-                        style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>
+                        style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
                         Insights
                       </a>
                       <ul className={`dropdown-menu shadow-lg py-1 ${isInsightsOpen ? 'show' : ''}`} 
@@ -363,14 +369,16 @@ const Navbar = () => {
                 </ul>
             </div>
 
-            <div className="d-none d-lg-flex align-items-center justify-content-end gap-3"> 
-                <form onSubmit={handleSearch} className="position-relative" style={{ width: '260px', height: '32px', flexShrink: 0 }}>
-                   {/* Search Input with very subtle gold border (10% opacity) */}
+            {/* Spacer to push Search/Wallet to the right and create gap */}
+            <div style={{ flexGrow: 1 }}></div>
+
+            {/* Right Side (Search + Wallet) */}
+            <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ flexShrink: 0, marginLeft: '20px' }}> 
+                <form onSubmit={handleSearch} className="position-relative" style={{ width: '240px', height: '32px' }}>
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." 
                         value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                         style={{ borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '34px', border: `1px solid rgba(240, 196, 32, 0.1)`, caretColor: metallicGoldHex }} 
                    />
-                   {/* Search Icon with metallic gold color */}
                    <button type="submit" className="btn p-0 position-absolute" style={{top: '50%', transform: 'translateY(-50%)', left: '10px', border:'none', background:'transparent'}}>
                         <i className="bi bi-search" style={{fontSize: '13px', color: metallicGoldHex}}></i>
                    </button>
@@ -386,7 +394,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer - Fixed Visibility */}
       <div 
         className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`} 
         style={{ transform: isDrawerOpen ? `translateX(${drawerTranslate}px)` : 'translateX(-100%)' }}
@@ -394,18 +402,18 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* Smaller Handle Bar */}
+          {/* Handle Bar - Dark Gray & Taller */}
           <div style={{
               position: 'absolute',
               right: '0',
               top: '50%',
               transform: 'translateY(-50%)',
               width: '4px',
-              height: '60px',
-              backgroundColor: metallicGoldHex,
+              height: '80px', // Taller
+              backgroundColor: '#333', // Dark Gray, no Gold
               borderTopLeftRadius: '4px',
               borderBottomLeftRadius: '4px',
-              opacity: 0.6
+              opacity: 1
           }}>
           </div>
 
@@ -417,14 +425,13 @@ const Navbar = () => {
                  <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '24px', letterSpacing: '0.5px' }}>NNM</span>
               </div>
 
-              {/* Dimmed Close Button (No transparency, dim border/icon) */}
               <button onClick={closeDrawer} className="btn p-0 d-flex align-items-center justify-content-center" 
                       style={{ 
                           width: '36px', height: '36px', 
                           borderRadius: '50%', 
-                          backgroundColor: 'transparent', // No transparency background
-                          border: '1px solid #777', // Dim border
-                          color: '#999' // Dim icon color
+                          backgroundColor: 'transparent', 
+                          border: '1px solid #777', 
+                          color: '#999' 
                       }}>
                   <i className="bi bi-x" style={{ fontSize: '24px' }}></i>
               </button>
