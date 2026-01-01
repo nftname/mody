@@ -102,14 +102,11 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  // --- 🎨 The Exact Color Palette (From Image Analysis) ---
-  
-  // The Exact Deep Night Blue/Black from your screenshot
+  // --- 🎨 THE EXACT COLOR (Approved) ---
   const exactDarkColor = '#05070a'; 
   
-  // Slightly lighter shade for PC Dropdown (to separate it visually)
+  // Secondary variables
   const dropdownColor = '#0a0c10'; 
-
   const metallicGoldHex = '#F0C420'; 
   const paleGoldHex = '#D4C49D'; 
   const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
@@ -244,8 +241,8 @@ const Navbar = () => {
     <>
     <nav className="navbar navbar-expand-lg fixed-top py-0" 
          style={{ 
-             // --- THE EXACT COLOR MATCH (#05070a) ---
-             backgroundColor: 'rgba(5, 7, 10, 0.95)', // 95% opacity for PC
+             // EXACT COLOR #05070a applied here with high opacity for glass effect
+             backgroundColor: 'rgba(5, 7, 10, 0.95)', 
              backdropFilter: 'blur(10px)',
              WebkitBackdropFilter: 'blur(10px)',
              zIndex: 1050, 
@@ -321,7 +318,6 @@ const Navbar = () => {
                         style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
                         Insights
                       </a>
-                      {/* PC Dropdown Color */}
                       <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
                           style={{ 
                               backgroundColor: dropdownColor, 
@@ -374,7 +370,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
       <div 
         className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`} 
         style={{ transform: isDrawerOpen ? `translateX(${drawerTranslate}px)` : 'translateX(-100%)' }}
@@ -382,7 +377,6 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* Handle Bar */}
           <div style={{
               position: 'absolute',
               right: '0',
@@ -397,7 +391,6 @@ const Navbar = () => {
           }}>
           </div>
 
-          {/* Drawer Header - EXACT Color Match */}
           <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-3 w-100 mt-0 position-relative" 
                style={{ borderBottom: `1px solid ${subtleBorder}`, backgroundColor: exactDarkColor }}>
               
@@ -450,7 +443,8 @@ const Navbar = () => {
               </div>
 
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-4">
-                  <div className="d-flex justify-content-between align-items-center w-100 px-2" style={{ paddingRight: '20%' }}>
+                  {/* Reduced spacing: used justify-content-start + gap-4. Kept paddingRight 20% for floating icon */}
+                  <div className="d-flex justify-content-start align-items-center gap-4 w-100 px-2" style={{ paddingRight: '20%' }}>
                       <i className="bi bi-twitter-x" style={{ fontSize: '18px', color: paleGoldHex }}></i>
                       <i className="bi bi-facebook" style={{ fontSize: '18px', color: paleGoldHex }}></i>
                       <i className="bi bi-discord" style={{ fontSize: '18px', color: paleGoldHex }}></i>
