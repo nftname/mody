@@ -102,14 +102,9 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  // --- 🎨 The Exact Color Palette (From Image Analysis) ---
-  
-  // The Exact Deep Night Blue/Black from your screenshot
-  const exactDarkColor = '#05070a'; 
-  
-  // Slightly lighter shade for PC Dropdown (to separate it visually)
+  // --- 🎨 THE MASTER COLOR ---
+  const masterDarkColor = '#05070a'; 
   const dropdownColor = '#0a0c10'; 
-
   const metallicGoldHex = '#F0C420'; 
   const paleGoldHex = '#D4C49D'; 
   const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
@@ -244,8 +239,7 @@ const Navbar = () => {
     <>
     <nav className="navbar navbar-expand-lg fixed-top py-0" 
          style={{ 
-             // --- THE EXACT COLOR MATCH (#05070a) ---
-             backgroundColor: 'rgba(5, 7, 10, 0.95)', // 95% opacity for PC
+             backgroundColor: `rgba(5, 7, 10, 0.95)`, 
              backdropFilter: 'blur(10px)',
              WebkitBackdropFilter: 'blur(10px)',
              zIndex: 1050, 
@@ -321,7 +315,6 @@ const Navbar = () => {
                         style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
                         Insights
                       </a>
-                      {/* PC Dropdown Color */}
                       <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
                           style={{ 
                               backgroundColor: dropdownColor, 
@@ -374,7 +367,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
       <div 
         className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`} 
         style={{ transform: isDrawerOpen ? `translateX(${drawerTranslate}px)` : 'translateX(-100%)' }}
@@ -382,7 +374,6 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* Handle Bar */}
           <div style={{
               position: 'absolute',
               right: '0',
@@ -397,9 +388,8 @@ const Navbar = () => {
           }}>
           </div>
 
-          {/* Drawer Header - EXACT Color Match */}
           <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-3 w-100 mt-0 position-relative" 
-               style={{ borderBottom: `1px solid ${subtleBorder}`, backgroundColor: exactDarkColor }}>
+               style={{ borderBottom: `1px solid ${subtleBorder}`, backgroundColor: masterDarkColor }}>
               
               <div className="d-flex align-items-center gap-3">
                  <LogoSVG mobile={true} />
@@ -418,7 +408,7 @@ const Navbar = () => {
               </button>
           </div>
 
-          <div className="drawer-content px-4 py-3 d-flex flex-column h-100" style={{ overflowY: 'auto', backgroundColor: exactDarkColor }}>
+          <div className="drawer-content px-4 py-3 d-flex flex-column h-100" style={{ overflowY: 'auto', backgroundColor: masterDarkColor }}>
               <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-3 mt-2">
                   <div className="d-flex flex-column gap-2">
                     {menuItems.map((item) => (
@@ -450,7 +440,7 @@ const Navbar = () => {
               </div>
 
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-4">
-                  <div className="d-flex justify-content-between align-items-center w-100 px-2" style={{ paddingRight: '20%' }}>
+                  <div className="d-flex justify-content-start align-items-center gap-4 px-3" style={{ width: '80%' }}>
                       <i className="bi bi-twitter-x" style={{ fontSize: '18px', color: paleGoldHex }}></i>
                       <i className="bi bi-facebook" style={{ fontSize: '18px', color: paleGoldHex }}></i>
                       <i className="bi bi-discord" style={{ fontSize: '18px', color: paleGoldHex }}></i>
@@ -462,7 +452,7 @@ const Navbar = () => {
       </div>
 
       {isMobileSearchOpen && (
-        <div className="d-lg-none position-absolute start-0 w-100" style={{ top: '64px', zIndex: 1049, backgroundColor: exactDarkColor, padding: '12px 15px', borderBottom: `1px solid ${subtleBorder}` }}>
+        <div className="d-lg-none position-absolute start-0 w-100" style={{ top: '64px', zIndex: 1049, backgroundColor: masterDarkColor, padding: '12px 15px', borderBottom: `1px solid ${subtleBorder}` }}>
             <form onSubmit={handleSearch} className="position-relative">
                 <input ref={mobileSearchInputRef} type="text" className="form-control bg-dark text-white shadow-none" placeholder="Search..." 
                     value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
@@ -504,7 +494,7 @@ const Navbar = () => {
             left: 0;
             width: 100%;
             height: 100vh;
-            background-color: ${exactDarkColor};
+            background-color: ${masterDarkColor};
             z-index: 9999;
             transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
