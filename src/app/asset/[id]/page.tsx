@@ -5,20 +5,26 @@ import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useAccount, useWriteContract, usePublicClient, useBalance } from "wagmi";
-import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi } from 'viem';
+import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi, parseAbiItem } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { NFT_COLLECTION_ADDRESS } from '@/data/config';
+import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 // @ts-ignore
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// --- FIXED: NEW MARKETPLACE ADDRESS (V10) ---
-const MARKETPLACE_ADDRESS = "0x310165f25d0da0f51e0f6982ea1543dc4cb17069";
+// --- CONSTANTS ---
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
+// Market V10 Address
+const CURRENT_MARKET_ADDRESS = "0x310165f25d0da0f51e0f6982ea1543dc4cb17069";
+// Start Block for 2026 (Optimization) - FIXED SYNTAX
+const DEPLOYMENT_BLOCK = BigInt(81000000); 
+
 const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
-// --- FIXED: ADDED 'indexed' TO tokenId FOR V10 COMPATIBILITY ---
+// 30 Days in Seconds
+const OFFER_DURATION = 30 * 24 * 60 * 60; 
+
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
     "function buyItem(uint256 tokenId) external payable",
@@ -31,13 +37,12 @@ const MARKETPLACE_ABI = parseAbi([
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
-// --- FIXED: FALLBACK ABI UPDATED AS WELL ---
-const FALLBACK_ABI = parseAbi([
-    "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
-]);
+const formatDuration = (expirationTimestamp: number) => {
+    const now = Math.floor(Date.now() / 1000);
+    const seconds = expirationTimestamp - now;
 
-const formatDuration = (seconds: number) => {
     if (seconds <= 0) return "Expired";
+    
     const days = Math.floor(seconds / (3600 * 24));
     if (days > 0) return `${days}d`;
     const hours = Math.floor(seconds / 3600);
@@ -199,7 +204,7 @@ function AssetPage() {
 
             if (address && owner.toLowerCase() === address.toLowerCase()) {
                 setIsOwner(true);
-                const approvedStatus = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'isApprovedForAll', args: [address, MARKETPLACE_ADDRESS as `0x${string}`] });
+                const approvedStatus = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'isApprovedForAll', args: [address, CURRENT_MARKET_ADDRESS as `0x${string}`] });
                 setIsApproved(approvedStatus);
             } else {
                 setIsOwner(false);
@@ -210,7 +215,7 @@ function AssetPage() {
     const checkListing = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            const listingData = await publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] });
+            const listingData = await publicClient.readContract({ address: CURRENT_MARKET_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] });
             if (listingData[2] === true) {
                 setListing({
                     id: tokenId,
@@ -224,74 +229,73 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- REWRITTEN OFFERS FETCHER (PARALLEL SCANNING & TYPE FIX) ---
+    // --- EXPERT SOLUTION: OPTIMIZED FETCH OFFERS (FIXED SYNTAX) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            // 1. Fetch Logs 
-            let logs = [];
-            try {
-                logs = await publicClient.getContractEvents({ 
-                    address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                    abi: MARKETPLACE_ABI, 
-                    eventName: 'OfferMade', 
-                    args: { tokenId: BigInt(tokenId) }, 
-                    fromBlock: 'earliest' 
-                });
-            } catch (err) {
-                logs = await publicClient.getContractEvents({ 
-                    address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                    abi: FALLBACK_ABI, 
-                    eventName: 'OfferMade', 
-                    args: { tokenId: BigInt(tokenId) }, 
-                    fromBlock: 'earliest' 
-                });
-            }
+            // 1. Define Event Manually (Safe & Clean)
+            const offerEvent = parseAbiItem(
+                'event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)'
+            );
 
-            // 2. Extract Unique Bidders
-            const uniqueBidders = new Set<string>();
-            logs.forEach(log => {
-                if (log.args.bidder) uniqueBidders.add(log.args.bidder);
+            // 2. Fetch Logs with DEPLOYMENT_BLOCK (Optimized)
+            const logs = await publicClient.getLogs({
+                address: CURRENT_MARKET_ADDRESS as `0x${string}`,
+                event: offerEvent,
+                args: {
+                    tokenId: BigInt(tokenId)
+                },
+                fromBlock: DEPLOYMENT_BLOCK, // Using BigInt() wrapper
+                toBlock: 'latest'
             });
 
-            // 3. Parallel Verification (Fastest Method)
-            const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
+            if (!logs || logs.length === 0) {
+                setOffersList([]);
+                return;
+            }
+
+            // 3. Unique Bidders
+            const bidders = Array.from(new Set(logs.map((log: any) => log.args.bidder.toLowerCase())));
+
+            // 4. Verify Active Offers
+            const offerPromises = bidders.map(async (bidder) => {
                 try {
-                    const offerData = await publicClient.readContract({ 
-                        address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                        abi: MARKETPLACE_ABI, 
-                        functionName: 'offers', 
-                        args: [BigInt(tokenId), bidder as `0x${string}`] // FIXED: TS Error
+                    const data = await publicClient.readContract({
+                        address: CURRENT_MARKET_ADDRESS as `0x${string}`,
+                        abi: MARKETPLACE_ABI,
+                        functionName: 'offers',
+                        args: [BigInt(tokenId), bidder as `0x${string}`]
                     });
-                    return { bidder, offerData };
+                    
+                    const [ , price, expiration] = data; 
+                    
+                    // FIXED SYNTAX: price > BigInt(0)
+                    if (price > BigInt(0)) {
+                        return {
+                            bidder: bidder,
+                            price: formatEther(price),
+                            expiration: Number(expiration),
+                            totalPrice: price
+                        };
+                    }
+                    return null;
                 } catch {
                     return null;
                 }
             });
 
             const results = await Promise.all(offerPromises);
-            const validOffers = [];
-            const nowInSeconds = BigInt(Math.floor(Date.now() / 1000));
             
-            for (const res of results) {
-                if (res && res.offerData) {
-                    const [ , price, expiration] = res.offerData; 
-                    if (price > BigInt(0) && expiration > nowInSeconds) {
-                        validOffers.push({
-                            bidder: res.bidder as `0x${string}`,
-                            price: formatEther(price),
-                            expiration: Number(expiration),
-                            totalPrice: price
-                        });
-                    }
-                }
-            }
-            
-            validOffers.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+            // Filter nulls & Sort
+            const validOffers = results
+                .filter((o): o is any => o !== null)
+                .sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+
             setOffersList(validOffers);
 
         } catch (e) {
-            console.warn("Offers System Error:", e);
+            console.error("Expert Fetch Error:", e);
+            setOffersList([]);
         }
     }, [tokenId, publicClient]);
 
@@ -300,7 +304,7 @@ function AssetPage() {
             try {
                 const balanceBigInt = await publicClient.readContract({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'balanceOf', args: [address] });
                 setWpolBalance(Number(formatEther(balanceBigInt)));
-                const allowanceBigInt = await publicClient.readContract({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'allowance', args: [address, MARKETPLACE_ADDRESS as `0x${string}`] });
+                const allowanceBigInt = await publicClient.readContract({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'allowance', args: [address, CURRENT_MARKET_ADDRESS as `0x${string}`] });
                 setWpolAllowance(Number(formatEther(allowanceBigInt)));
             } catch (e) { console.error("WPOL Error", e); }
         }
@@ -343,9 +347,9 @@ function AssetPage() {
             // --- OPTIMISTIC UPDATE FOR OFFERS (Safe Add) ---
             if (action === 'Sending Offer' && address && offerPrice) {
                 const newOffer = {
-                    bidder: address as `0x${string}`, // FIXED: TS Error
+                    bidder: address as `0x${string}`,
                     price: offerPrice, 
-                    expiration: Math.floor(Date.now() / 1000) + (180 * 24 * 60 * 60),
+                    expiration: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60),
                     totalPrice: parseEther(offerPrice)
                 };
                 setOffersList(prev => [newOffer, ...prev]);
@@ -371,7 +375,7 @@ function AssetPage() {
 
         handleTx('Buying Asset', async () => {
             const hash = await writeContractAsync({
-                address: MARKETPLACE_ADDRESS as `0x${string}`,
+                address: CURRENT_MARKET_ADDRESS as `0x${string}`,
                 abi: MARKETPLACE_ABI,
                 functionName: 'buyItem',
                 args: [BigInt(tokenId)],
@@ -387,7 +391,7 @@ function AssetPage() {
             address: WPOL_ADDRESS as `0x${string}`,
             abi: erc20Abi,
             functionName: 'approve',
-            args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)]
+            args: [CURRENT_MARKET_ADDRESS as `0x${string}`, parseEther(offerPrice)]
         });
         await publicClient!.waitForTransactionReceipt({ hash });
         await refreshWpolData();
@@ -409,9 +413,10 @@ function AssetPage() {
         }
 
         handleTx('Sending Offer', async () => {
-            const duration = BigInt(180 * 24 * 60 * 60); 
+            // Updated Duration: 30 Days
+            const duration = BigInt(OFFER_DURATION); 
             const hash = await writeContractAsync({
-                address: MARKETPLACE_ADDRESS as `0x${string}`,
+                address: CURRENT_MARKET_ADDRESS as `0x${string}`,
                 abi: MARKETPLACE_ABI,
                 functionName: 'makeOffer',
                 args: [BigInt(tokenId), parseEther(offerPrice), duration]
@@ -423,7 +428,7 @@ function AssetPage() {
 
     const handleList = () => handleTx('Listing Asset', async () => {
         const hash = await writeContractAsync({
-            address: MARKETPLACE_ADDRESS as `0x${string}`,
+            address: CURRENT_MARKET_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'listItem',
             args: [BigInt(tokenId), parseEther(sellPrice)]
@@ -437,7 +442,7 @@ function AssetPage() {
             address: NFT_COLLECTION_ADDRESS as `0x${string}`,
             abi: erc721Abi,
             functionName: 'setApprovalForAll',
-            args: [MARKETPLACE_ADDRESS as `0x${string}`, true]
+            args: [CURRENT_MARKET_ADDRESS as `0x${string}`, true]
         });
         await publicClient!.waitForTransactionReceipt({ hash });
         setIsApproved(true);
@@ -445,7 +450,7 @@ function AssetPage() {
 
     const handleCancelList = () => handleTx('Cancelling Listing', async () => {
         const hash = await writeContractAsync({
-            address: MARKETPLACE_ADDRESS as `0x${string}`,
+            address: CURRENT_MARKET_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'cancelListing',
             args: [BigInt(tokenId)]
@@ -455,7 +460,7 @@ function AssetPage() {
 
     const handleAcceptOffer = (bidder: string) => handleTx('Accepting Offer', async () => {
         const hash = await writeContractAsync({
-            address: MARKETPLACE_ADDRESS as `0x${string}`,
+            address: CURRENT_MARKET_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'acceptOffer',
             args: [BigInt(tokenId), bidder as `0x${string}`]
@@ -465,7 +470,7 @@ function AssetPage() {
 
     const handleCancelOffer = () => handleTx('Cancelling Offer', async () => {
         const hash = await writeContractAsync({
-            address: MARKETPLACE_ADDRESS as `0x${string}`,
+            address: CURRENT_MARKET_ADDRESS as `0x${string}`,
             abi: MARKETPLACE_ABI,
             functionName: 'cancelOffer',
             args: [BigInt(tokenId)]
@@ -581,7 +586,7 @@ function AssetPage() {
                                         <h2 className="text-white fw-bold mb-0" style={{ fontSize: '36px' }}>
                                             {listing ? `${listing.pricePerToken} POL` : `${asset.price} POL`}
                                         </h2>
-                                        {!listing && <span className="text-secondary small">أ¢â€°ث† $12.50</span>}
+                                        {!listing && <span className="text-secondary small">â‰ˆ $12.50</span>}
                                     </div>
                                 </div>
                                 <div className="col-md-6 mt-3 mt-md-0">
@@ -610,10 +615,15 @@ function AssetPage() {
                                                         <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Offer Price (POL)" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
                                                         {!hasFunds ? (
                                                             <div className="text-center mt-1"><span className="text-danger small d-block mb-2">Insufficient WPOL Balance</span><button onClick={handleRecheckBalance} className="btn btn-sm btn-outline-warning w-100">Check Balance Again</button></div>
-                                                        ) : !hasAllowance ? (
-                                                            <div className="d-flex gap-2"><button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, backgroundColor: '#fff', color: '#000' }}>{isPending ? 'Processing...' : '1. Approve WPOL'}</button><button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button></div>
                                                         ) : (
-                                                            <div className="d-flex gap-2"><button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? 'Processing...' : '2. Confirm Offer'}</button><button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button></div>
+                                                            <div className="d-flex gap-2">
+                                                                {!hasAllowance ? (
+                                                                    <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : 'Approve'}</button>
+                                                                ) : (
+                                                                    <button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : 'Confirm'}</button>
+                                                                )}
+                                                                <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 )
@@ -687,6 +697,10 @@ function AssetPage() {
                                             {currentOffers && currentOffers.length > 0 ? (
                                                 currentOffers.map((offer, index) => {
                                                     const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
+                                                    
+                                                    // Ensure we use the isOwner from state
+                                                    const isOwnerOfAsset = isOwner; 
+                                                    
                                                     const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
                                                     
                                                     // Secure Address Formatting (4 chars ... 4 chars)
@@ -704,7 +718,7 @@ function AssetPage() {
                                                                 {formatDuration(timeRemaining)}
                                                             </td>
                                                             <td className="text-end pe-3" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
-                                                                {isOwner ? (
+                                                                {isOwnerOfAsset ? (
                                                                     <button onClick={() => handleAcceptOffer(offer.bidder)} disabled={isPending} className="btn btn-sm" style={{ background: GOLD_GRADIENT, color: '#000', fontWeight: 'bold', fontSize: '12px', borderRadius: '6px', border: 'none' }}>
                                                                         {isPending ? '...' : 'Accept'}
                                                                     </button>
