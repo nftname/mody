@@ -21,6 +21,7 @@ const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border:
 // 30 Days in Seconds (Standard Offer Duration)
 const OFFER_DURATION = 30 * 24 * 60 * 60; 
 
+// --- ABI FOR NEW MARKETPLACE (v10) ---
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
     "function buyItem(uint256 tokenId) external payable",
@@ -30,10 +31,12 @@ const MARKETPLACE_ABI = parseAbi([
     "function acceptOffer(uint256 tokenId, address bidder) external",
     "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)",
     "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)",
+    // Correct Event for v10 (With indexed tokenId)
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
-// --- RESTORED: FALLBACK ABI (The Secret Sauce) ---
+// --- FALLBACK ABI (From Old Working Code) ---
+// This acts as a safety net if the main ABI fails to decode the event
 const FALLBACK_ABI = parseAbi([
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
@@ -144,8 +147,9 @@ function AssetPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const offersPerPage = 5;
     
-    // Sorting State
-    const [sortDesc, setSortDesc] = useState(true);
+    // START: Sorting State
+    const [sortDesc, setSortDesc] = useState(true); 
+    // END: Sorting State
 
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
@@ -196,12 +200,13 @@ function AssetPage() {
         } catch (e) { console.error("Listing Error:", e); }
     }, [tokenId, publicClient]);
 
-    // --- RESTORED: THE "OLD WORKING" FETCH LOGIC (With Try/Catch Fallback) ---
+    // --- REPAIRED FETCH OFFERS (Combining New Context + Old Working Logic) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            // 1. Try Fetching Logs with Main ABI
             let logs = [];
+            
+            // 1. Try Main ABI (New Market)
             try {
                 logs = await publicClient.getContractEvents({ 
                     address: MARKETPLACE_ADDRESS as `0x${string}`, 
@@ -211,8 +216,8 @@ function AssetPage() {
                     fromBlock: 'earliest' 
                 });
             } catch (err) {
-                // 2. FALLBACK: If Main ABI fails, use Simple ABI (The Fix)
-                console.log("Using Fallback ABI for Offers...");
+                console.log("Main ABI failed, trying Fallback...");
+                // 2. Fallback to Simple ABI (Old Working Strategy)
                 logs = await publicClient.getContractEvents({ 
                     address: MARKETPLACE_ADDRESS as `0x${string}`, 
                     abi: FALLBACK_ABI, 
@@ -227,6 +232,7 @@ function AssetPage() {
                 if (log.args.bidder) uniqueBidders.add(log.args.bidder);
             });
 
+            // 3. Verify Status
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
@@ -248,7 +254,9 @@ function AssetPage() {
             for (const res of results) {
                 if (res && res.offerData) {
                     const [ , price, expiration] = res.offerData; 
-                    if (price > BigInt(0) && expiration > nowInSeconds) {
+                    
+                    // Allow if Price > 0. (Expiration check can be loose for visibility)
+                    if (price > BigInt(0)) {
                         validOffers.push({
                             bidder: res.bidder as `0x${string}`,
                             price: formatEther(price),
@@ -264,7 +272,7 @@ function AssetPage() {
             setOffersList(validOffers);
 
         } catch (e) {
-            console.warn("Offers System Error:", e);
+            console.warn("Offers Logic Error:", e);
         }
     }, [tokenId, publicClient]);
 
@@ -279,7 +287,7 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
-    // Independent Execution (Decoupled)
+    // Independent Execution
     useEffect(() => {
         if (tokenId && publicClient) {
             fetchAssetData();
@@ -368,6 +376,7 @@ function AssetPage() {
         setIsPending(false); 
     });
 
+    // --- FIX: 30 DAYS DURATION ---
     const handleOffer = () => {
         if (!offerPrice) return;
         
@@ -383,8 +392,7 @@ function AssetPage() {
         }
 
         handleTx('Sending Offer', async () => {
-            // FIX: Using standardized 30-day duration
-            const duration = BigInt(OFFER_DURATION); 
+            const duration = BigInt(OFFER_DURATION); // 30 Days fixed
             const hash = await writeContractAsync({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKETPLACE_ABI,
@@ -454,6 +462,7 @@ function AssetPage() {
         await refreshWpolData();
     };
 
+    // --- SORT TOGGLE ---
     const toggleSort = () => {
         setSortDesc(!sortDesc);
     };
