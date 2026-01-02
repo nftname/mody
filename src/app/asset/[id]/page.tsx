@@ -39,7 +39,7 @@ const formatDuration = (seconds: number) => {
     return `${minutes}m`;
 };
 
-// --- Simple Toast/Modal Component ---
+// --- Simple Toast/Modal Component (OpenSea Style) ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSwap }: any) => {
     if (!isOpen) return null;
 
@@ -180,13 +180,13 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- DEEP SCAN OFFERS FETCHER (Log Logic Fix) ---
+    // --- UNIVERSAL OFFERS FETCHER (Get All Offers for Token) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
             const uniqueBidders = new Set<string>();
 
-            // 1. Raw Log Scan (Most reliable method for Visitors)
+            // 1. Scan Logs for ANYONE who made an offer on this TokenID
             try {
                 const logs = await publicClient.getLogs({ 
                     address: MARKETPLACE_ADDRESS as `0x${string}`, 
@@ -202,7 +202,7 @@ function AssetPage() {
                 console.warn("Log fetch warning:", err);
             }
 
-            // 2. Fetch Active Data for found bidders
+            // 2. Fetch Active Status for all found bidders
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
@@ -264,7 +264,7 @@ function AssetPage() {
                 fetchAssetData();
                 checkListing();
                 fetchOffers();
-            }, 60000); 
+            }, 60000); // 60 seconds auto-refresh
 
             return () => clearInterval(interval);
         }
@@ -623,7 +623,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* Offers Table */}
+                        {/* Offers Table (Universal View) */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul text-gold"></i>
@@ -644,6 +644,7 @@ function AssetPage() {
                                         <tbody>
                                             {currentOffers && currentOffers.length > 0 ? (
                                                 currentOffers.map((offer, index) => {
+                                                    // Determine the role for this specific row
                                                     const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
                                                     const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
                                                     
@@ -661,6 +662,7 @@ function AssetPage() {
                                                                 {formatDuration(timeRemaining)}
                                                             </td>
                                                             <td className="text-end pe-3" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
+                                                                {/* LOGIC: Show buttons based on ROLE */}
                                                                 {isOwner ? (
                                                                     <button onClick={() => handleAcceptOffer(offer.bidder)} disabled={isPending} className="btn btn-sm" style={{ background: GOLD_GRADIENT, color: '#000', fontWeight: 'bold', fontSize: '12px', borderRadius: '6px', border: 'none' }}>
                                                                         {isPending ? '...' : 'Accept'}
@@ -670,7 +672,7 @@ function AssetPage() {
                                                                         Cancel
                                                                     </button>
                                                                 ) : (
-                                                                    <span className="text-secondary" style={{ fontSize: '11px' }}>-</span>
+                                                                    <span className="text-secondary" style={{ fontSize: '11px' }}>Active</span>
                                                                 )}
                                                             </td>
                                                         </tr>
