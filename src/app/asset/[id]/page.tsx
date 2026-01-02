@@ -17,6 +17,7 @@ const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B388
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
+// --- CORRECT ABI MATCHING SOURCE CODE (Line 39 of NNMMarketplace10.sol) ---
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
     "function buyItem(uint256 tokenId) external payable",
@@ -25,7 +26,9 @@ const MARKETPLACE_ABI = parseAbi([
     "function cancelOffer(uint256 tokenId) external",
     "function acceptOffer(uint256 tokenId, address bidder) external",
     "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)",
-    "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)"
+    "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)",
+    // Corrected Event Definition with 'indexed' for tokenId
+    "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
 const formatDuration = (seconds: number) => {
@@ -175,36 +178,32 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- STRATEGIC FIX: BROAD FETCH & LOCAL FILTER ---
-    // This bypasses the "Indexed Parameter" issue on Polygon RPC
+    // --- STANDARD FETCHING (Matching Source Code) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
             const uniqueBidders = new Set<string>();
 
+            // 1. Fetch Logs using Strict Signature (Now matches Solidity 100%)
+            // We use 'parseAbiItem' with 'indexed tokenId' to allow filtering by the specific Token ID.
             try {
-                // 1. Fetch ALL 'OfferMade' events from the Marketplace (No arguments filter)
-                // This guarantees we get the data even if 'tokenId' is not indexed in the contract.
                 const logs = await publicClient.getLogs({ 
                     address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                    event: parseAbiItem('event OfferMade(address indexed bidder, uint256 tokenId, uint256 price)'),
+                    event: parseAbiItem('event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)'),
+                    args: { 
+                        tokenId: BigInt(tokenId) // Strict Filter
+                    }, 
                     fromBlock: 'earliest' 
                 });
                 
-                // 2. Filter locally in JavaScript (Client-Side)
-                // We manually check if the log's tokenId matches our current page's tokenId
                 logs.forEach((log: any) => {
-                    const logTokenId = log.args.tokenId?.toString();
-                    if (logTokenId === tokenId.toString()) {
-                        uniqueBidders.add(log.args.bidder);
-                    }
+                    if (log.args && log.args.bidder) uniqueBidders.add(log.args.bidder);
                 });
-
             } catch (err) {
                 console.warn("Log fetch warning:", err);
             }
 
-            // 3. Fetch status for relevant bidders
+            // 2. Iterate and check status for EACH unique bidder
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
@@ -226,6 +225,7 @@ function AssetPage() {
             for (const res of results) {
                 if (res && res.offerData) {
                     const [ , price, expiration] = res.offerData; 
+                    // Filter: Must be > 0 and Not Expired
                     if (price > BigInt(0) && expiration > nowInSeconds) {
                         validOffers.push({
                             bidder: res.bidder as `0x${string}`,
@@ -256,7 +256,7 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
-    // Initial Load Only (No blocking intervals)
+    // Initial Load Only
     useEffect(() => {
         if (tokenId && publicClient) {
             Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
@@ -616,7 +616,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* Offers Table */}
+                        {/* Offers Table (Universal & Tri-State) */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul text-gold"></i>
@@ -637,7 +637,7 @@ function AssetPage() {
                                         <tbody>
                                             {currentOffers && currentOffers.length > 0 ? (
                                                 currentOffers.map((offer, index) => {
-                                                    // Strict comparison: Ensure both addresses are lowercase string to match
+                                                    // ROBUST ADDRESS COMPARISON (Lowercase to prevent mismatch)
                                                     const currentAddr = address ? address.toLowerCase() : '';
                                                     const bidderAddr = offer.bidder ? offer.bidder.toLowerCase() : '';
                                                     const ownerAddr = asset && asset.owner ? asset.owner.toLowerCase() : '';
@@ -660,6 +660,7 @@ function AssetPage() {
                                                                 {formatDuration(timeRemaining)}
                                                             </td>
                                                             <td className="text-end pe-3" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
+                                                                {/* LOGIC: Owner -> Accept, Bidder -> Cancel, Visitor -> Active */}
                                                                 {isOwnerOfAsset ? (
                                                                     <button onClick={() => handleAcceptOffer(offer.bidder)} disabled={isPending} className="btn btn-sm" style={{ background: GOLD_GRADIENT, color: '#000', fontWeight: 'bold', fontSize: '12px', borderRadius: '6px', border: 'none' }}>
                                                                         {isPending ? '...' : 'Accept'}
