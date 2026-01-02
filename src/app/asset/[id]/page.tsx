@@ -5,9 +5,8 @@ import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useAccount, useWriteContract, usePublicClient, useBalance } from "wagmi";
-import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi } from 'viem';
+import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi, parseAbiItem } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-// استيراد عقد الريجستري وعقد الماركت لضمان الربط
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 // @ts-ignore
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -15,7 +14,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 
-// Styles
+// --- Styles Definition (Standardized) ---
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
@@ -27,8 +26,7 @@ const MARKETPLACE_ABI = parseAbi([
     "function cancelOffer(uint256 tokenId) external",
     "function acceptOffer(uint256 tokenId, address bidder) external",
     "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)",
-    "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)",
-    "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
+    "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)"
 ]);
 
 const formatDuration = (seconds: number) => {
@@ -41,7 +39,7 @@ const formatDuration = (seconds: number) => {
     return `${minutes}m`;
 };
 
-// --- Modal Component ---
+// --- Standard UX Modal ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSwap }: any) => {
     if (!isOpen) return null;
 
@@ -138,7 +136,6 @@ function AssetPage() {
     const fetchAssetData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            // Using NFT_COLLECTION_ADDRESS (Registry) to get data
             const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [BigInt(tokenId)] });
             const metaRes = await fetch(resolveIPFS(tokenURI));
             const meta = metaRes.ok ? await metaRes.json() : {};
@@ -180,23 +177,23 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- UNIVERSAL OFFERS FETCHER (Corrected Logic) ---
+    // --- STANDARD VIEM FETCHING PATTERN (Strict Logs) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
             const uniqueBidders = new Set<string>();
 
-            // 1. Fetch ALL logs for this TokenID from the Marketplace Contract
-            // This links Marketplace Events -> Registry Token ID
+            // Step 1: Get Logs strictly for this TokenID
             try {
-                const logs = await publicClient.getContractEvents({ 
+                // Using parseAbiItem for strict event signature matching
+                const logs = await publicClient.getLogs({ 
                     address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                    abi: MARKETPLACE_ABI, 
-                    eventName: 'OfferMade', 
+                    event: parseAbiItem('event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)'),
                     args: { tokenId: BigInt(tokenId) }, 
-                    fromBlock: 'earliest' // Open search, no time barrier
+                    fromBlock: 'earliest' 
                 });
                 
+                // Extract unique bidders from logs
                 logs.forEach((log: any) => {
                     if (log.args && log.args.bidder) uniqueBidders.add(log.args.bidder);
                 });
@@ -204,7 +201,7 @@ function AssetPage() {
                 console.warn("Log fetch warning:", err);
             }
 
-            // 2. Iterate and check status for EACH bidder found
+            // Step 2: Fetch Current State for each Bidder
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
@@ -226,7 +223,7 @@ function AssetPage() {
             for (const res of results) {
                 if (res && res.offerData) {
                     const [ , price, expiration] = res.offerData; 
-                    // Only show active, non-expired offers
+                    // Verify offer is active and not expired
                     if (price > BigInt(0) && expiration > nowInSeconds) {
                         validOffers.push({
                             bidder: res.bidder as `0x${string}`,
@@ -257,7 +254,6 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
-    // Initial Load only (Removed 60s Interval)
     useEffect(() => {
         if (tokenId && publicClient) {
             Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
@@ -560,9 +556,9 @@ function AssetPage() {
                                                         ) : (
                                                             <div className="d-flex gap-2">
                                                                 {!hasAllowance ? (
-                                                                    <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : 'Approve'}</button>
+                                                                    <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : 'Approve WPOL'}</button>
                                                                 ) : (
-                                                                    <button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : 'Confirm'}</button>
+                                                                    <button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : 'Confirm Offer'}</button>
                                                                 )}
                                                                 <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                             </div>
@@ -638,7 +634,7 @@ function AssetPage() {
                                         <tbody>
                                             {currentOffers && currentOffers.length > 0 ? (
                                                 currentOffers.map((offer, index) => {
-                                                    // Strict comparison with toLowerCase()
+                                                    // Strict comparison with toLowerCase() to ensure matching
                                                     const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
                                                     const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
                                                     
