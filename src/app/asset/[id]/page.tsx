@@ -5,7 +5,7 @@ import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useAccount, useWriteContract, usePublicClient, useBalance } from "wagmi";
-import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi, parseAbiItem } from 'viem';
+import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 // @ts-ignore
@@ -17,6 +17,7 @@ const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B388
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
+// --- STANDARD ABI DEFINITION ---
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
     "function buyItem(uint256 tokenId) external payable",
@@ -132,6 +133,7 @@ function AssetPage() {
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
+    // --- 1. Fetch Asset (Standard ERC721) ---
     const fetchAssetData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
@@ -156,9 +158,10 @@ function AssetPage() {
             } else {
                 setIsOwner(false);
             }
-        } catch (error) { console.error("Failed to fetch asset", error); }
+        } catch (error) { console.error("Asset Error:", error); }
     }, [tokenId, address, publicClient]);
 
+    // --- 2. Fetch Listing (Standard View) ---
     const checkListing = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
@@ -173,37 +176,35 @@ function AssetPage() {
             } else {
                 setListing(null);
             }
-        } catch (e) { console.error("Market Error", e); }
+        } catch (e) { console.error("Listing Error:", e); }
     }, [tokenId, publicClient]);
 
-    // --- "THE NUCLEAR OPTION" FETCH (No Filtering Args) ---
-    // We fetch ALL logs and filter them in JavaScript to bypass RPC limitations
+    // --- 3. FETCH OFFERS (THE STANDARD VIEM PATTERN) ---
+    // We do NOT use 'args' to filter. We fetch ALL events and filter in JS.
+    // This is the fallback for when RPCs fail to index parameters.
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
+            // Step A: Get ALL 'OfferMade' events (No Filter Args)
+            const logs = await publicClient.getContractEvents({ 
+                address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                abi: MARKETPLACE_ABI, 
+                eventName: 'OfferMade',
+                fromBlock: 'earliest' 
+            });
+            
             const uniqueBidders = new Set<string>();
 
-            // 1. Fetch EVERYTHING (No args = No filter issues)
-            try {
-                const logs = await publicClient.getLogs({ 
-                    address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                    event: parseAbiItem('event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)'),
-                    fromBlock: 'earliest' 
-                });
-                
-                // 2. Client-Side Filtering (The "Wallet" Eye)
-                logs.forEach((log: any) => {
-                    // Manually check if this log belongs to our Token ID
-                    if (log.args && log.args.tokenId && log.args.tokenId.toString() === tokenId.toString()) {
-                        uniqueBidders.add(log.args.bidder);
-                    }
-                });
+            // Step B: Filter in Memory (Robust)
+            logs.forEach((log: any) => {
+                const logTokenId = log.args.tokenId;
+                // Convert both to string to be safe
+                if (logTokenId && logTokenId.toString() === tokenId.toString()) {
+                    uniqueBidders.add(log.args.bidder);
+                }
+            });
 
-            } catch (err) {
-                console.warn("Log fetch warning:", err);
-            }
-
-            // 3. Check Validity for found bidders
+            // Step C: Check Current Validity
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
@@ -240,7 +241,7 @@ function AssetPage() {
             setOffersList(validOffers);
 
         } catch (e) {
-            console.warn("Offers System Error:", e);
+            console.warn("Offers Logic Error:", e);
         }
     }, [tokenId, publicClient]);
 
@@ -255,9 +256,13 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
+    // Independent Execution (Decoupled)
     useEffect(() => {
         if (tokenId && publicClient) {
-            Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
+            fetchAssetData();
+            checkListing();
+            fetchOffers();
+            setLoading(false);
         }
     }, [tokenId, address, fetchAssetData, checkListing, fetchOffers, publicClient]);
 
@@ -635,12 +640,10 @@ function AssetPage() {
                                         <tbody>
                                             {currentOffers && currentOffers.length > 0 ? (
                                                 currentOffers.map((offer, index) => {
-                                                    // Ensure strict comparison using lowercase
                                                     const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
                                                     const isOwnerOfAsset = asset && address && asset.owner.toLowerCase() === address.toLowerCase();
                                                     
                                                     const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
-                                                    
                                                     const shortAddress = offer.bidder ? `${offer.bidder.slice(0,4)}...${offer.bidder.slice(-4)}` : 'Unknown';
 
                                                     return (
