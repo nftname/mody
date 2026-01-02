@@ -11,18 +11,18 @@ import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 // @ts-ignore
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// --- FIXED: V10 MARKETPLACE ADDRESS ---
+// --- CONFIGURATION ---
+// V10 Marketplace Address (The New Contract)
 const CURRENT_MARKET_ADDRESS = "0x310165f25d0da0f51e0f6982ea1543dc4cb17069";
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 
+// Optimization: Start searching from 2026 logs only
+const DEPLOYMENT_BLOCK = BigInt(81000000); 
+
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
-// --- CONSTANTS ---
-const OFFER_DURATION = 30 * 24 * 60 * 60; // 30 Days
-
-// ABI (Compatible with V10)
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
     "function buyItem(uint256 tokenId) external payable",
@@ -35,18 +35,13 @@ const MARKETPLACE_ABI = parseAbi([
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
-// Fallback ABI for Event Parsing
+// Fallback ABI for events
 const FALLBACK_ABI = parseAbi([
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
-// --- SMART COUNTDOWN FORMATTER ---
-const formatDuration = (expirationTimestamp: number) => {
-    const now = Math.floor(Date.now() / 1000);
-    const seconds = expirationTimestamp - now;
-
+const formatDuration = (seconds: number) => {
     if (seconds <= 0) return "Expired";
-    
     const days = Math.floor(seconds / (3600 * 24));
     if (days > 0) return `${days}d`;
     const hours = Math.floor(seconds / 3600);
@@ -55,42 +50,75 @@ const formatDuration = (expirationTimestamp: number) => {
     return `${minutes}m`;
 };
 
+// --- Modal Component ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSwap }: any) => {
+    const [timer, setTimer] = useState(0);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isOpen && type === 'loading') {
+            setTimer(0);
+            interval = setInterval(() => {
+                setTimer((prev) => prev + 1);
+            }, 1000);
+        } else {
+            setTimer(0);
+        }
+        return () => clearInterval(interval);
+    }, [isOpen, type]);
+
     if (!isOpen) return null;
 
     let icon = <div className="spinner-border text-warning" role="status"></div>;
-    let iconColor = '#FCD535';
+    let btnText = "Processing...";
+    let displayTitle = title;
+    let displayMessage = message;
 
-    if (type === 'success') {
-        icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '40px', color: '#28a745' }}></i>;
-        iconColor = '#28a745';
+    if (type === 'loading') {
+        if (timer >= 60) {
+            icon = <i className="bi bi-hourglass-split text-warning" style={{ fontSize: '50px' }}></i>;
+            displayTitle = "Still working...";
+            displayMessage = "The network is busy. Please check your wallet. Do not close unless you want to cancel.";
+            btnText = "Close";
+        }
+    } else if (type === 'success') {
+        icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '50px', color: '#28a745' }}></i>;
+        displayTitle = "Success!";
+        btnText = "Stay Here";
     } else if (type === 'error') {
-        icon = <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '40px', color: '#dc3545' }}></i>;
-        iconColor = '#dc3545';
+        icon = <i className="bi bi-info-circle-fill" style={{ fontSize: '50px', color: '#FCD535' }}></i>;
+        btnText = "Try Again";
     } else if (type === 'swap') {
-        icon = <i className="bi bi-wallet2" style={{ fontSize: '40px', color: '#FCD535' }}></i>;
+        icon = <i className="bi bi-wallet2 text-warning" style={{ fontSize: '50px' }}></i>;
+        btnText = "Check Wallet";
     }
 
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="fade-in" style={{ backgroundColor: '#161b22', border: `1px solid ${iconColor}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', textAlign: 'center', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative' }}>
-                <button onClick={onClose} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
+            <div style={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '20px', padding: '30px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 0 50px rgba(0,0,0,0.5)', position: 'relative' }}>
+                <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#666', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}>
+                    <i className="bi bi-x-lg"></i>
+                </button>
                 <div className="mb-3">{icon}</div>
-                <h4 className="text-white fw-bold mb-2">{title}</h4>
-                <p className="text-secondary mb-4" style={{ fontSize: '14px' }}>{message}</p>
-                {type === 'swap' && (
-                     <a href="https://app.uniswap.org/" target="_blank" rel="noopener noreferrer" className="btn w-100 fw-bold" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000', padding: '10px', borderRadius: '8px' }}>
-                        Swap on Uniswap <i className="bi bi-box-arrow-up-right ms-1"></i>
-                    </a>
-                )}
-                {type === 'error' && (
-                    <button onClick={onClose} className="btn w-100 btn-outline-secondary">Close</button>
-                )}
-                 {type === 'success' && (
-                    <div className="d-flex gap-2 justify-content-center">
-                        <button onClick={onClose} className="btn fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '8px', minWidth: '100px' }}>Done</button>
-                    </div>
-                )}
+                <h3 className="text-white fw-bold mb-2">{displayTitle}</h3>
+                <p className="text-secondary mb-4" style={{ fontSize: '15px' }}>{displayMessage}</p>
+                <div className="d-flex gap-2 justify-content-center">
+                    {(type !== 'loading' || timer >= 60) && (
+                        <button onClick={onClose} className="btn fw-bold flex-grow-1" style={{ background: '#333', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px' }}>
+                            {type === 'swap' ? 'Close' : (btnText === 'Processing...' ? 'Close' : btnText)}
+                        </button>
+                    )}
+                    {type === 'success' && onGoToMarket && (
+                        <button onClick={onGoToMarket} className="btn fw-bold flex-grow-1" style={{ background: 'linear-gradient(90deg, #FFD700 0%, #FDB931 100%)', border: 'none', color: '#000', padding: '12px', borderRadius: '12px' }}>
+                            Go to Market <i className="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    )}
+                     {type === 'swap' && onSwap && (
+                        <a href="https://app.uniswap.org/" target="_blank" rel="noopener noreferrer" className="btn fw-bold flex-grow-1" style={{ background: 'linear-gradient(90deg, #FFD700 0%, #FDB931 100%)', border: 'none', color: '#000', padding: '12px', borderRadius: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            Swap Now <i className="bi bi-box-arrow-up-right ms-1"></i>
+                        </a>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -121,25 +149,31 @@ function AssetPage() {
     const { writeContractAsync } = useWriteContract();
     const publicClient = usePublicClient();
     
+    // Get Native POL Balance
     const { data: polBalanceData } = useBalance({ address });
 
+    // State
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
     const [offersList, setOffersList] = useState<any[]>([]);
     
+    // UI State
     const [loading, setLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     const [isPending, setIsPending] = useState(false);
     
+    // Inputs
     const [sellPrice, setSellPrice] = useState('10');
     const [offerPrice, setOfferPrice] = useState('');
     const [isListingMode, setIsListingMode] = useState(false);
     const [isOfferMode, setIsOfferMode] = useState(false);
     
+    // WPOL State
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
     
+    // Pagination & Sort
     const [currentPage, setCurrentPage] = useState(1);
     const offersPerPage = 5;
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
@@ -174,7 +208,7 @@ function AssetPage() {
             } else {
                 setIsOwner(false);
             }
-        } catch (error) { console.error("Asset Error:", error); }
+        } catch (error) { console.error("Failed to fetch asset", error); }
     }, [tokenId, address, publicClient]);
 
     const checkListing = useCallback(async () => {
@@ -194,35 +228,46 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- REWRITTEN OFFERS FETCHER (THEORY: FORCE CHECK WALLET) ---
+    // --- EXPERT FETCH OFFERS (Scan + Wallet Check) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
             const uniqueBidders = new Set<string>();
 
-            // 1. Try to get logs from history (Fallback method)
+            // 1. BROAD SCAN (The Expert Fix: Scan Logs Safely)
             try {
-                const logs = await publicClient.getContractEvents({ 
-                    address: CURRENT_MARKET_ADDRESS as `0x${string}`, 
-                    abi: FALLBACK_ABI, 
-                    eventName: 'OfferMade', 
-                    args: { tokenId: BigInt(tokenId) }, 
-                    fromBlock: 'earliest' 
+                // Use parseAbiItem to target the exact event signature
+                const offerEvent = parseAbiItem('event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)');
+                
+                // Get Logs from start of 2026 (Deployment Block)
+                const logs = await publicClient.getLogs({
+                    address: CURRENT_MARKET_ADDRESS as `0x${string}`,
+                    event: offerEvent,
+                    // Note: We fetch ALL offers in this range to avoid indexing bugs, 
+                    // then filter locally in Javascript.
+                    fromBlock: DEPLOYMENT_BLOCK, 
+                    toBlock: 'latest'
                 });
+
+                // Javascript Filtering (100% Reliable)
                 logs.forEach((log: any) => {
-                    if (log.args.bidder) uniqueBidders.add(log.args.bidder.toLowerCase());
+                    const logTokenId = log.args.tokenId;
+                    // Ensure we only grab bidders for THIS token
+                    if (logTokenId && logTokenId.toString() === tokenId.toString()) {
+                        uniqueBidders.add(log.args.bidder.toLowerCase());
+                    }
                 });
             } catch (err) {
-                console.log("Log fetch failed, relying on direct check...");
+                console.warn("Log fetch warning (skipping to direct check):", err);
             }
 
-            // 2. [VITAL] Force Check Connected Wallet (Bridge Theory)
-            // Even if logs fail, if I am connected, check if I have an offer.
+            // 2. WALLET BRIDGE: FORCE CHECK CONNECTED USER
+            // This ensures that even if logs fail, the connected user sees their own data
             if (address) {
                 uniqueBidders.add(address.toLowerCase());
             }
 
-            // 3. Verify Data directly from Contract
+            // 3. FETCH DATA (Check Contract State for each Candidate)
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
@@ -244,8 +289,7 @@ function AssetPage() {
             for (const res of results) {
                 if (res && res.offerData) {
                     const [ , price, expiration] = res.offerData; 
-                    
-                    // Show offer if Price > 0
+                    // Show valid offers (Price > 0)
                     if (price > BigInt(0)) {
                         validOffers.push({
                             bidder: res.bidder as `0x${string}`,
@@ -257,13 +301,14 @@ function AssetPage() {
                 }
             }
             
+            // Sort
             validOffers.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
             setOffersList(validOffers);
 
         } catch (e) {
-            console.warn("Offers System Error:", e);
+            console.error("Offers System Error:", e);
         }
-    }, [tokenId, publicClient, address]); // Added address dependency
+    }, [tokenId, publicClient, address]); // Address dependency ensures re-check on connect
 
     const refreshWpolData = useCallback(async () => {
         if (address && publicClient) {
@@ -310,12 +355,12 @@ function AssetPage() {
         try {
             await fn();
             
-            // --- OPTIMISTIC UPDATE ---
+            // --- OPTIMISTIC UPDATE FOR OFFERS (Safe Add) ---
             if (action === 'Sending Offer' && address && offerPrice) {
                 const newOffer = {
-                    bidder: address as `0x${string}`, 
+                    bidder: address as `0x${string}`,
                     price: offerPrice, 
-                    expiration: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60),
+                    expiration: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 Days
                     totalPrice: parseEther(offerPrice)
                 };
                 setOffersList(prev => [newOffer, ...prev]);
@@ -365,17 +410,20 @@ function AssetPage() {
 
     const handleOffer = () => {
         if (!offerPrice) return;
+        
         const priceNeeded = parseFloat(offerPrice);
         if (wpolBalance < priceNeeded) {
             showModal('swap', 'Insufficient WPOL', 'Offers require Wrapped POL (WPOL). You seem to have POL. Please swap POL to WPOL.');
             return;
         }
+
         if (wpolAllowance < priceNeeded) {
              showModal('error', 'Approval Needed', 'You must approve WPOL usage before making an offer. Click "1. Approve WPOL" button.');
              return;
         }
+
         handleTx('Sending Offer', async () => {
-            const duration = BigInt(OFFER_DURATION); // 30 Days
+            const duration = BigInt(30 * 24 * 60 * 60); 
             const hash = await writeContractAsync({
                 address: CURRENT_MARKET_ADDRESS as `0x${string}`,
                 abi: MARKETPLACE_ABI,
@@ -658,7 +706,6 @@ function AssetPage() {
                                             {currentOffers && currentOffers.length > 0 ? (
                                                 currentOffers.map((offer, index) => {
                                                     const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
-                                                    // use state variable directly
                                                     const isOwnerOfAsset = isOwner; 
                                                     const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
                                                     
