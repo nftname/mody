@@ -14,7 +14,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 
-// Styles Definition
+// Styles
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
@@ -26,13 +26,22 @@ const MARKETPLACE_ABI = parseAbi([
     "function cancelOffer(uint256 tokenId) external",
     "function acceptOffer(uint256 tokenId, address bidder) external",
     "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)",
-    "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)",
-    "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
+    "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)"
 ]);
 
-const FALLBACK_ABI = parseAbi([
-    "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
-]);
+// EVENT ABI (JSON Format - More Robust)
+const EVENT_ABI = [
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "bidder", "type": "address" },
+      { "indexed": true, "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "price", "type": "uint256" }
+    ],
+    "name": "OfferMade",
+    "type": "event"
+  }
+];
 
 const formatDuration = (seconds: number) => {
     if (seconds <= 0) return "Expired";
@@ -44,7 +53,6 @@ const formatDuration = (seconds: number) => {
     return `${minutes}m`;
 };
 
-// --- Simple Toast/Modal Component (OpenSea Style) ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSwap }: any) => {
     if (!isOpen) return null;
 
@@ -185,31 +193,30 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- FORCE CHECK FUNCTION (Fixes Missing Offers) ---
+    // --- ENHANCED OFFERS FETCHER (Using JSON ABI) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
             const uniqueBidders = new Set<string>();
 
-            // 1. Force check current user (CRITICAL FIX)
-            if (address) {
-                uniqueBidders.add(address);
-            }
+            // 1. Always check current user
+            if (address) uniqueBidders.add(address);
 
-            // 2. Try to get history
+            // 2. Fetch History using robust JSON ABI
             try {
                 const logs = await publicClient.getContractEvents({ 
                     address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                    abi: MARKETPLACE_ABI, 
+                    abi: EVENT_ABI, 
                     eventName: 'OfferMade', 
                     args: { tokenId: BigInt(tokenId) }, 
                     fromBlock: 'earliest' 
                 });
-                logs.forEach(log => {
-                    if (log.args.bidder) uniqueBidders.add(log.args.bidder);
+                
+                logs.forEach((log: any) => {
+                    if (log.args && log.args.bidder) uniqueBidders.add(log.args.bidder);
                 });
             } catch (err) {
-                console.warn("Event logs fetch skipped, using direct check.");
+                console.warn("Event fetch warning:", err);
             }
 
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
@@ -278,7 +285,6 @@ function AssetPage() {
     const closeModal = () => {
         setIsPending(false); 
         setModal({ ...modal, isOpen: false });
-        // Refresh everything on close if successful
         if (modal.type === 'success') {
              fetchOffers(); refreshWpolData(); checkListing(); fetchAssetData();
              setIsListingMode(false);
@@ -298,14 +304,12 @@ function AssetPage() {
         showModal('loading', action, 'Confirm transaction in wallet...');
         try {
             await fn();
-            // Data refresh logic immediately
             fetchOffers(); refreshWpolData(); checkListing(); fetchAssetData();
             
             if (onSuccess) {
                 onSuccess();
             } else {
                  setModal({ isOpen: true, type: 'success', title: 'Complete!', message: 'Transaction confirmed on blockchain.' });
-                 // Auto close optional, but explicit close is better for UX confirmation
             }
         } catch (err: any) {
             console.error(err);
@@ -347,7 +351,7 @@ function AssetPage() {
         await publicClient!.waitForTransactionReceipt({ hash });
     }, async () => {
         await refreshWpolData();
-        setModal({ isOpen: false, type: '', title: '', message: '' }); // Close modal to show next step on button
+        setModal({ isOpen: false, type: '', title: '', message: '' }); 
         setIsPending(false); 
     });
 
@@ -397,7 +401,7 @@ function AssetPage() {
         await publicClient!.waitForTransactionReceipt({ hash });
     }, () => {
         setIsApproved(true);
-        setModal({ isOpen: false, type: '', title: '', message: '' }); // Close to show next step
+        setModal({ isOpen: false, type: '', title: '', message: '' }); 
         setIsPending(false); 
     });
 
