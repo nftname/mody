@@ -17,7 +17,6 @@ const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B388
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
-// --- CORRECT ABI MATCHING SOURCE CODE (Line 39 of NNMMarketplace10.sol) ---
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
     "function buyItem(uint256 tokenId) external payable",
@@ -27,7 +26,6 @@ const MARKETPLACE_ABI = parseAbi([
     "function acceptOffer(uint256 tokenId, address bidder) external",
     "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)",
     "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)",
-    // Corrected Event Definition with 'indexed' for tokenId
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
@@ -178,32 +176,34 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- STANDARD FETCHING (Matching Source Code) ---
+    // --- "THE NUCLEAR OPTION" FETCH (No Filtering Args) ---
+    // We fetch ALL logs and filter them in JavaScript to bypass RPC limitations
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
             const uniqueBidders = new Set<string>();
 
-            // 1. Fetch Logs using Strict Signature (Now matches Solidity 100%)
-            // We use 'parseAbiItem' with 'indexed tokenId' to allow filtering by the specific Token ID.
+            // 1. Fetch EVERYTHING (No args = No filter issues)
             try {
                 const logs = await publicClient.getLogs({ 
                     address: MARKETPLACE_ADDRESS as `0x${string}`, 
                     event: parseAbiItem('event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)'),
-                    args: { 
-                        tokenId: BigInt(tokenId) // Strict Filter
-                    }, 
                     fromBlock: 'earliest' 
                 });
                 
+                // 2. Client-Side Filtering (The "Wallet" Eye)
                 logs.forEach((log: any) => {
-                    if (log.args && log.args.bidder) uniqueBidders.add(log.args.bidder);
+                    // Manually check if this log belongs to our Token ID
+                    if (log.args && log.args.tokenId && log.args.tokenId.toString() === tokenId.toString()) {
+                        uniqueBidders.add(log.args.bidder);
+                    }
                 });
+
             } catch (err) {
                 console.warn("Log fetch warning:", err);
             }
 
-            // 2. Iterate and check status for EACH unique bidder
+            // 3. Check Validity for found bidders
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
@@ -225,7 +225,6 @@ function AssetPage() {
             for (const res of results) {
                 if (res && res.offerData) {
                     const [ , price, expiration] = res.offerData; 
-                    // Filter: Must be > 0 and Not Expired
                     if (price > BigInt(0) && expiration > nowInSeconds) {
                         validOffers.push({
                             bidder: res.bidder as `0x${string}`,
@@ -256,7 +255,6 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
-    // Initial Load Only
     useEffect(() => {
         if (tokenId && publicClient) {
             Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
@@ -559,9 +557,9 @@ function AssetPage() {
                                                         ) : (
                                                             <div className="d-flex gap-2">
                                                                 {!hasAllowance ? (
-                                                                    <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : '1. Approve'}</button>
+                                                                    <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : 'Approve'}</button>
                                                                 ) : (
-                                                                    <button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : '2. Confirm'}</button>
+                                                                    <button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : 'Confirm'}</button>
                                                                 )}
                                                                 <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                             </div>
@@ -582,9 +580,9 @@ function AssetPage() {
                                                         <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
                                                         <div className="d-flex gap-2">
                                                             {!isApproved ? (
-                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : '1. Approve'}</button>
+                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : 'Approve'}</button>
                                                             ) : (
-                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : '2. Confirm'}</button>
+                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : 'Confirm'}</button>
                                                             )}
                                                             <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                         </div>
@@ -616,7 +614,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* Offers Table (Universal & Tri-State) */}
+                        {/* Offers Table */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul text-gold"></i>
@@ -637,16 +635,13 @@ function AssetPage() {
                                         <tbody>
                                             {currentOffers && currentOffers.length > 0 ? (
                                                 currentOffers.map((offer, index) => {
-                                                    // ROBUST ADDRESS COMPARISON (Lowercase to prevent mismatch)
-                                                    const currentAddr = address ? address.toLowerCase() : '';
-                                                    const bidderAddr = offer.bidder ? offer.bidder.toLowerCase() : '';
-                                                    const ownerAddr = asset && asset.owner ? asset.owner.toLowerCase() : '';
-
-                                                    const isMyOffer = currentAddr === bidderAddr;
-                                                    const isOwnerOfAsset = currentAddr === ownerAddr;
-
+                                                    // Ensure strict comparison using lowercase
+                                                    const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
+                                                    const isOwnerOfAsset = asset && address && asset.owner.toLowerCase() === address.toLowerCase();
+                                                    
                                                     const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
-                                                    const shortAddress = bidderAddr ? `${bidderAddr.slice(0,4)}...${bidderAddr.slice(-4)}` : 'Unknown';
+                                                    
+                                                    const shortAddress = offer.bidder ? `${offer.bidder.slice(0,4)}...${offer.bidder.slice(-4)}` : 'Unknown';
 
                                                     return (
                                                         <tr key={index} style={{ borderBottom: '1px solid #2a2e35', background: 'transparent' }}>
@@ -660,7 +655,6 @@ function AssetPage() {
                                                                 {formatDuration(timeRemaining)}
                                                             </td>
                                                             <td className="text-end pe-3" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
-                                                                {/* LOGIC: Owner -> Accept, Bidder -> Cancel, Visitor -> Active */}
                                                                 {isOwnerOfAsset ? (
                                                                     <button onClick={() => handleAcceptOffer(offer.bidder)} disabled={isPending} className="btn btn-sm" style={{ background: GOLD_GRADIENT, color: '#000', fontWeight: 'bold', fontSize: '12px', borderRadius: '6px', border: 'none' }}>
                                                                         {isPending ? '...' : 'Accept'}
