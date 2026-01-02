@@ -5,7 +5,7 @@ import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useAccount, useWriteContract, usePublicClient, useBalance } from "wagmi";
-import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi, parseAbiItem } from 'viem'; // Added parseAbiItem
+import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi, parseAbiItem } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 // @ts-ignore
@@ -17,11 +17,9 @@ const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B388
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
-// --- OpenSea Table Constants ---
-const OS_HEADER_BG = '#262b2f'; 
-const OS_BODY_BG = '#202225';
-const OS_BORDER = '1px solid #353840';
-const OS_TEXT_SUB = '#8a939b';
+// --- CONSTANTS ---
+// 30 Days in Seconds (Standard Offer Duration)
+const OFFER_DURATION = 30 * 24 * 60 * 60; 
 
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
@@ -35,14 +33,23 @@ const MARKETPLACE_ABI = parseAbi([
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
-const formatDuration = (seconds: number) => {
+// --- SMART COUNTDOWN FORMATTER (OpenSea Style) ---
+const formatDuration = (expirationTimestamp: number) => {
     const now = Math.floor(Date.now() / 1000);
-    const diff = seconds - now;
-    if (diff <= 0) return "Expired";
-    const days = Math.floor(diff / (3600 * 24));
-    if (days > 0) return `in ${days} days`;
-    const hours = Math.floor(diff / 3600);
-    return `in ${hours} hours`;
+    const seconds = expirationTimestamp - now;
+
+    if (seconds <= 0) return "Expired";
+    
+    const days = Math.floor(seconds / (3600 * 24));
+    if (days > 0) return `${days}d`; // Example: 5d
+    
+    const hours = Math.floor(seconds / 3600);
+    if (hours > 0) return `${hours}h`; // Example: 20h
+    
+    const minutes = Math.floor(seconds / 60);
+    if (minutes > 0) return `${minutes}m`; // Example: 45m
+    
+    return `${seconds}s`; // Example: 30s
 };
 
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSwap }: any) => {
@@ -103,66 +110,6 @@ const resolveIPFS = (uri: string) => {
 
 const mockChartData = [ { name: 'Dec 1', price: 10 }, { name: 'Today', price: 12 } ];
 
-// --- NEW COMPONENT: OpenSea Style Accordion (Inserted into your original flow) ---
-const OffersAccordion = ({ offers, isLoading, userAddress, ownerAddress, onAccept, onCancel }: any) => {
-    const [isOpen, setIsOpen] = useState(true);
-
-    return (
-        <div className="rounded-3 overflow-hidden mt-4" style={{ border: OS_BORDER }}>
-            <div onClick={() => setIsOpen(!isOpen)} className="d-flex align-items-center justify-content-between p-3 select-none" style={{ backgroundColor: OS_HEADER_BG, cursor: 'pointer', borderBottom: isOpen ? OS_BORDER : 'none' }}>
-                <div className="d-flex align-items-center gap-2 fw-bold text-white"><i className="bi bi-tag-fill"></i> Offers</div>
-                <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'} text-white`}></i>
-            </div>
-            {isOpen && (
-                <div style={{ backgroundColor: OS_BODY_BG }}>
-                    {isLoading ? (
-                        <div className="p-5 text-center" style={{ color: OS_TEXT_SUB }}>Loading offers...</div>
-                    ) : offers.length === 0 ? (
-                        <div className="p-5 text-center d-flex flex-column align-items-center" style={{ color: OS_TEXT_SUB }}>
-                            <i className="bi bi-inbox fs-1 mb-3 opacity-50"></i><span>No offers yet</span>
-                        </div>
-                    ) : (
-                        <div className="table-responsive">
-                            <table className="table mb-0 text-white" style={{ fontSize: '14px' }}>
-                                <thead>
-                                    <tr>
-                                        <th className="py-3 ps-4 fw-normal" style={{ color: OS_TEXT_SUB, borderBottom: OS_BORDER }}>Price</th>
-                                        <th className="py-3 fw-normal" style={{ color: OS_TEXT_SUB, borderBottom: OS_BORDER }}>USD Price</th>
-                                        <th className="py-3 fw-normal" style={{ color: OS_TEXT_SUB, borderBottom: OS_BORDER }}>Expiration</th>
-                                        <th className="py-3 fw-normal" style={{ color: OS_TEXT_SUB, borderBottom: OS_BORDER }}>From</th>
-                                        <th className="py-3 pe-4 text-end fw-normal" style={{ color: OS_TEXT_SUB, borderBottom: OS_BORDER }}>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {offers.map((offer: any, idx: number) => {
-                                        const isMyOffer = userAddress && offer.bidder.toLowerCase() === userAddress.toLowerCase();
-                                        const isOwner = userAddress && ownerAddress && userAddress.toLowerCase() === ownerAddress.toLowerCase();
-                                        return (
-                                            <tr key={idx} style={{ borderBottom: idx === offers.length - 1 ? 'none' : '1px solid #2a2e35' }}>
-                                                <td className="ps-4 py-3 fw-bold align-middle">{parseFloat(offer.price).toFixed(2)} WPOL</td>
-                                                <td className="py-3 align-middle" style={{ color: OS_TEXT_SUB }}>${(parseFloat(offer.price) * 0.50).toFixed(2)}</td>
-                                                <td className="py-3 align-middle" style={{ color: OS_TEXT_SUB }}>{formatDuration(offer.expiration)}</td>
-                                                <td className="py-3 align-middle fw-bold"><span style={{ color: '#FCD535' }}>{isMyOffer ? 'you' : `${offer.bidder.slice(0,6)}...${offer.bidder.slice(-4)}`}</span></td>
-                                                <td className="pe-4 py-3 text-end align-middle">
-                                                    {isOwner ? (
-                                                        <button onClick={() => onAccept(offer.bidder)} className="btn btn-sm fw-bold px-3" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000' }}>Accept</button>
-                                                    ) : isMyOffer ? (
-                                                        <button onClick={onCancel} className="btn btn-sm btn-outline-danger px-3">Cancel</button>
-                                                    ) : (<span style={{ color: OS_TEXT_SUB }}>Active</span>)}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
-    );
-};
-
 function AssetPage() {
     const params = useParams();
     const router = useRouter();
@@ -177,8 +124,6 @@ function AssetPage() {
     const [offersList, setOffersList] = useState<any[]>([]);
     
     const [loading, setLoading] = useState(true);
-    const [offersLoading, setOffersLoading] = useState(true); // Separate loading for offers
-    
     const [isOwner, setIsOwner] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     const [isPending, setIsPending] = useState(false);
@@ -191,8 +136,12 @@ function AssetPage() {
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
     
-    // Kept for consistency, though Table handles sorting internally mostly
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const offersPerPage = 5;
+    
+    // START: Sorting State (New Feature)
+    const [sortDesc, setSortDesc] = useState(true); // Default High to Low
+    // END: Sorting State
 
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
@@ -223,7 +172,7 @@ function AssetPage() {
             } else {
                 setIsOwner(false);
             }
-        } catch (error) { console.error("Failed to fetch asset", error); }
+        } catch (error) { console.error("Asset Error:", error); }
     }, [tokenId, address, publicClient]);
 
     const checkListing = useCallback(async () => {
@@ -240,61 +189,72 @@ function AssetPage() {
             } else {
                 setListing(null);
             }
-        } catch (e) { console.error("Market Error", e); }
+        } catch (e) { console.error("Listing Error:", e); }
     }, [tokenId, publicClient]);
 
-    // --- REPLACED: NEW ROBUST OFFERS FETCHING ---
+    // --- FETCH OFFERS (The "Pro" Logic) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
-        setOffersLoading(true);
         try {
-            // 1. "Nuclear Option": Fetch ALL logs (no filters) to ensure we get data
-            const logs = await publicClient.getLogs({ 
+            // 1. Fetch ALL Logs (Bypassing Indexing Issues)
+            const logs = await publicClient.getContractEvents({ 
                 address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                event: parseAbiItem('event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)'),
+                abi: MARKETPLACE_ABI, 
+                eventName: 'OfferMade',
                 fromBlock: 'earliest' 
             });
-
-            const uniqueBidders = new Set<string>();
             
-            // 2. Filter locally in Browser (Robust against RPC indexing bugs)
+            const uniqueBidders = new Set<string>();
+
+            // 2. Filter Locally
             logs.forEach((log: any) => {
-                const logId = log.args.tokenId ? log.args.tokenId.toString() : null;
-                if (logId === tokenId.toString()) {
+                const logTokenId = log.args.tokenId;
+                if (logTokenId && logTokenId.toString() === tokenId.toString()) {
                     uniqueBidders.add(log.args.bidder);
                 }
             });
 
-            // 3. Fetch status
-            const activeOffers = [];
-            for (const bidder of Array.from(uniqueBidders)) {
+            // 3. Fetch Status & Timestamps
+            const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
-                    const offerData = await publicClient.readContract({
-                        address: MARKETPLACE_ADDRESS as `0x${string}`,
-                        abi: MARKETPLACE_ABI,
-                        functionName: 'offers',
+                    const offerData = await publicClient.readContract({ 
+                        address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                        abi: MARKETPLACE_ABI, 
+                        functionName: 'offers', 
                         args: [BigInt(tokenId), bidder as `0x${string}`]
                     });
-                    const [ , price, expiration] = offerData;
+                    return { bidder, offerData };
+                } catch {
+                    return null;
+                }
+            });
+
+            const results = await Promise.all(offerPromises);
+            const validOffers = [];
+            const nowInSeconds = BigInt(Math.floor(Date.now() / 1000));
+            
+            for (const res of results) {
+                if (res && res.offerData) {
+                    const [ , price, expiration] = res.offerData; 
                     
-                    // Filter: Price > 0 AND Not Expired
-                    if (price > BigInt(0) && expiration > BigInt(Math.floor(Date.now()/1000))) {
-                        activeOffers.push({
-                            bidder: bidder,
+                    // Allow if Price > 0. We show expired items with "Expired" label to debug.
+                    if (price > BigInt(0)) {
+                        validOffers.push({
+                            bidder: res.bidder as `0x${string}`,
                             price: formatEther(price),
-                            expiration: Number(expiration)
+                            expiration: Number(expiration), // Pass timestamp directly
+                            totalPrice: price
                         });
                     }
-                } catch (e) { /* skip invalid */ }
+                }
             }
             
-            activeOffers.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-            setOffersList(activeOffers);
+            // Sort initially (High to Low)
+            validOffers.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+            setOffersList(validOffers);
 
         } catch (e) {
             console.warn("Offers Logic Error:", e);
-        } finally {
-            setOffersLoading(false);
         }
     }, [tokenId, publicClient]);
 
@@ -314,7 +274,7 @@ function AssetPage() {
         if (tokenId && publicClient) {
             fetchAssetData();
             checkListing();
-            fetchOffers(); // Called independently
+            fetchOffers();
             setLoading(false);
         }
     }, [tokenId, address, fetchAssetData, checkListing, fetchOffers, publicClient]);
@@ -398,6 +358,7 @@ function AssetPage() {
         setIsPending(false); 
     });
 
+    // --- UPDATED: MAKE OFFER WITH 30 DAYS DURATION ---
     const handleOffer = () => {
         if (!offerPrice) return;
         
@@ -413,7 +374,8 @@ function AssetPage() {
         }
 
         handleTx('Sending Offer', async () => {
-            const duration = BigInt(180 * 24 * 60 * 60); 
+            // FIX: Using standardized 30-day duration
+            const duration = BigInt(OFFER_DURATION); 
             const hash = await writeContractAsync({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKETPLACE_ABI,
@@ -483,6 +445,22 @@ function AssetPage() {
         await refreshWpolData();
     };
 
+    // --- SORTING LOGIC ---
+    const toggleSort = () => {
+        setSortDesc(!sortDesc);
+    };
+
+    // UseMemo to handle sorting dynamically
+    const sortedOffers = useMemo(() => {
+        let sortable = [...offersList];
+        sortable.sort((a, b) => {
+            const pA = parseFloat(a.price);
+            const pB = parseFloat(b.price);
+            return sortDesc ? pB - pA : pA - pB;
+        });
+        return sortable;
+    }, [offersList, sortDesc]);
+
     if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
     if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
     
@@ -490,6 +468,11 @@ function AssetPage() {
     const targetAmount = Number(offerPrice) || 0;
     const hasFunds = wpolBalance >= targetAmount;
     const hasAllowance = hasFunds && wpolAllowance >= targetAmount;
+
+    const indexOfLastOffer = currentPage * offersPerPage;
+    const indexOfFirstOffer = indexOfLastOffer - offersPerPage;
+    const currentOffers = sortedOffers.slice(indexOfFirstOffer, indexOfLastOffer);
+    const totalPages = Math.ceil(offersList.length / offersPerPage);
 
     return (
         <main style={{ backgroundColor: '#0b0e11', minHeight: '100vh', paddingBottom: '80px', fontFamily: 'sans-serif' }}>
@@ -541,7 +524,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* Price & Action Buttons (Your Original Logic) */}
+                        {/* Price & Action Buttons */}
                         <div className="p-4 rounded-3 mt-4 mb-4" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35' }}>
                             <div className="row align-items-center">
                                 <div className="col-md-6">
@@ -639,31 +622,97 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* --- REPLACED TABLE: OpenSea Style Accordion (Inserted Here) --- */}
-                        <OffersAccordion 
-                            offers={offersList}
-                            isLoading={offersLoading}
-                            userAddress={address}
-                            ownerAddress={asset.owner}
-                            onAccept={(bidder: string) => handleTx('Accepting Offer', async () => {
-                                const hash = await writeContractAsync({
-                                    address: MARKETPLACE_ADDRESS as `0x${string}`,
-                                    abi: MARKETPLACE_ABI,
-                                    functionName: 'acceptOffer',
-                                    args: [BigInt(tokenId), bidder as `0x${string}`]
-                                });
-                                await publicClient!.waitForTransactionReceipt({ hash });
-                            })}
-                            onCancel={() => handleTx('Cancelling Offer', async () => {
-                                const hash = await writeContractAsync({
-                                    address: MARKETPLACE_ADDRESS as `0x${string}`,
-                                    abi: MARKETPLACE_ABI,
-                                    functionName: 'cancelOffer',
-                                    args: [BigInt(tokenId)]
-                                });
-                                await publicClient!.waitForTransactionReceipt({ hash });
-                            })}
-                        />
+                        {/* Offers Table */}
+                        <div className="mb-5">
+                            <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
+                                <i className="bi bi-list-ul text-gold"></i>
+                                <h5 className="text-white fw-bold mb-0">Offers</h5>
+                                <button onClick={fetchOffers} className="btn btn-sm btn-outline-secondary border-0 ms-auto" title="Refresh Offers"><i className="bi bi-arrow-clockwise"></i></button>
+                            </div>
+                            <div className="rounded-3 overflow-hidden" style={{ border: '1px solid #333', backgroundColor: '#161b22' }}>
+                                <div className="table-responsive">
+                                    <table className="table mb-0 text-white" style={{ backgroundColor: 'transparent' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '1px solid #333' }}>
+                                                {/* SORTABLE HEADER */}
+                                                <th onClick={toggleSort} className="fw-normal py-3 ps-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent', cursor: 'pointer' }}>
+                                                    Price {sortDesc ? <i className="bi bi-arrow-down"></i> : <i className="bi bi-arrow-up"></i>}
+                                                </th>
+                                                <th className="fw-normal py-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>From</th>
+                                                <th className="fw-normal py-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>Expires</th>
+                                                <th className="fw-normal py-3 text-end pe-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {currentOffers && currentOffers.length > 0 ? (
+                                                currentOffers.map((offer, index) => {
+                                                    const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
+                                                    const isOwnerOfAsset = asset && address && asset.owner.toLowerCase() === address.toLowerCase();
+                                                    
+                                                    // Pass timestamp to Smart Formatter
+                                                    const expirationText = formatDuration(offer.expiration); 
+                                                    const shortAddress = offer.bidder ? `${offer.bidder.slice(0,4)}...${offer.bidder.slice(-4)}` : 'Unknown';
+
+                                                    return (
+                                                        <tr key={index} style={{ borderBottom: '1px solid #2a2e35', background: 'transparent' }}>
+                                                            <td className="ps-3 fw-bold text-white" style={{ border: 'none', verticalAlign: 'middle', background: 'transparent' }}>
+                                                                {parseFloat(offer.price).toFixed(2)} WPOL
+                                                            </td>
+                                                            <td className="text-gold" style={{ border: 'none', verticalAlign: 'middle', fontSize: '13px', background: 'transparent' }}>
+                                                                {isMyOffer ? 'You' : shortAddress}
+                                                            </td>
+                                                            {/* Smart Countdown Display */}
+                                                            <td className="text-secondary" style={{ border: 'none', verticalAlign: 'middle', fontSize: '12px', background: 'transparent' }}>
+                                                                {expirationText}
+                                                            </td>
+                                                            <td className="text-end pe-3" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
+                                                                {isOwnerOfAsset ? (
+                                                                    <button onClick={() => handleAcceptOffer(offer.bidder)} disabled={isPending} className="btn btn-sm" style={{ background: GOLD_GRADIENT, color: '#000', fontWeight: 'bold', fontSize: '12px', borderRadius: '6px', border: 'none' }}>
+                                                                        {isPending ? '...' : 'Accept'}
+                                                                    </button>
+                                                                ) : isMyOffer ? (
+                                                                     <button onClick={handleCancelOffer} disabled={isPending} className="btn btn-sm btn-outline-danger" style={{ fontSize: '12px', borderRadius: '6px' }}>
+                                                                        Cancel
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="text-secondary" style={{ fontSize: '11px' }}>Active</span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={4} className="text-center py-5 text-secondary" style={{ border: 'none', background: 'transparent' }}>
+                                                        <i className="bi bi-inbox fs-3 d-block mb-2 opacity-50"></i>
+                                                        No active offers yet
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {offersList.length > offersPerPage && (
+                                    <div className="d-flex justify-content-center align-items-center p-3 gap-3 border-top border-secondary border-opacity-25">
+                                        <button 
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                                            disabled={currentPage === 1}
+                                            className="btn btn-sm btn-outline-secondary border-0"
+                                        >
+                                            <i className="bi bi-chevron-left"></i>
+                                        </button>
+                                        <span className="text-secondary small">Page {currentPage} of {totalPages}</span>
+                                        <button 
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                                            disabled={currentPage === totalPages}
+                                            className="btn btn-sm btn-outline-secondary border-0"
+                                        >
+                                            <i className="bi bi-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
                     </div>
                 </div>
