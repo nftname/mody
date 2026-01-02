@@ -14,7 +14,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 
-// Styles
+// --- Styles Definition ---
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
@@ -29,7 +29,7 @@ const MARKETPLACE_ABI = parseAbi([
     "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)"
 ]);
 
-// EVENT ABI (JSON Format - More Robust)
+// Robust JSON ABI for Events
 const EVENT_ABI = [
   {
     "anonymous": false,
@@ -53,6 +53,7 @@ const formatDuration = (seconds: number) => {
     return `${minutes}m`;
 };
 
+// --- Simple Toast/Modal Component (OpenSea Style) ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSwap }: any) => {
     if (!isOpen) return null;
 
@@ -193,7 +194,6 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- ENHANCED OFFERS FETCHER (Using JSON ABI) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
@@ -202,14 +202,14 @@ function AssetPage() {
             // 1. Always check current user
             if (address) uniqueBidders.add(address);
 
-            // 2. Fetch History using robust JSON ABI
+            // 2. Fetch History using JSON ABI and "earliest" as requested
             try {
                 const logs = await publicClient.getContractEvents({ 
                     address: MARKETPLACE_ADDRESS as `0x${string}`, 
                     abi: EVENT_ABI, 
                     eventName: 'OfferMade', 
                     args: { tokenId: BigInt(tokenId) }, 
-                    fromBlock: 'earliest' 
+                    fromBlock: 'earliest' // Reverted to earliest as requested
                 });
                 
                 logs.forEach((log: any) => {
@@ -270,9 +270,20 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
+    // Initial Load & Auto-Refresh Logic (Every 60 Seconds)
     useEffect(() => {
         if (tokenId && publicClient) {
+            // Fetch immediately
             Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
+
+            // Set up polling (Auto Refresh)
+            const interval = setInterval(() => {
+                fetchAssetData();
+                checkListing();
+                fetchOffers();
+            }, 60000); // 60 seconds
+
+            return () => clearInterval(interval);
         }
     }, [tokenId, address, fetchAssetData, checkListing, fetchOffers, publicClient]);
 
