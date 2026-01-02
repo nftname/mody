@@ -5,7 +5,7 @@ import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useAccount, useWriteContract, usePublicClient, useBalance } from "wagmi";
-import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi } from 'viem';
+import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi, parseAbiItem } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 // @ts-ignore
@@ -29,20 +29,6 @@ const MARKETPLACE_ABI = parseAbi([
     "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)"
 ]);
 
-// Robust JSON ABI for Events
-const EVENT_ABI = [
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": true, "internalType": "address", "name": "bidder", "type": "address" },
-      { "indexed": true, "internalType": "uint256", "name": "tokenId", "type": "uint256" },
-      { "indexed": false, "internalType": "uint256", "name": "price", "type": "uint256" }
-    ],
-    "name": "OfferMade",
-    "type": "event"
-  }
-];
-
 const formatDuration = (seconds: number) => {
     if (seconds <= 0) return "Expired";
     const days = Math.floor(seconds / (3600 * 24));
@@ -53,7 +39,7 @@ const formatDuration = (seconds: number) => {
     return `${minutes}m`;
 };
 
-// --- Simple Toast/Modal Component (OpenSea Style) ---
+// --- Simple Toast/Modal Component ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSwap }: any) => {
     if (!isOpen) return null;
 
@@ -194,31 +180,29 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
+    // --- DEEP SCAN OFFERS FETCHER (Log Logic Fix) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
             const uniqueBidders = new Set<string>();
 
-            // 1. Always check current user
-            if (address) uniqueBidders.add(address);
-
-            // 2. Fetch History using JSON ABI and "earliest" as requested
+            // 1. Raw Log Scan (Most reliable method for Visitors)
             try {
-                const logs = await publicClient.getContractEvents({ 
+                const logs = await publicClient.getLogs({ 
                     address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                    abi: EVENT_ABI, 
-                    eventName: 'OfferMade', 
+                    event: parseAbiItem('event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)'),
                     args: { tokenId: BigInt(tokenId) }, 
-                    fromBlock: 'earliest' // Reverted to earliest as requested
+                    fromBlock: 'earliest' 
                 });
                 
                 logs.forEach((log: any) => {
                     if (log.args && log.args.bidder) uniqueBidders.add(log.args.bidder);
                 });
             } catch (err) {
-                console.warn("Event fetch warning:", err);
+                console.warn("Log fetch warning:", err);
             }
 
+            // 2. Fetch Active Data for found bidders
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
@@ -240,6 +224,7 @@ function AssetPage() {
             for (const res of results) {
                 if (res && res.offerData) {
                     const [ , price, expiration] = res.offerData; 
+                    // Verify offer is active and not expired
                     if (price > BigInt(0) && expiration > nowInSeconds) {
                         validOffers.push({
                             bidder: res.bidder as `0x${string}`,
@@ -257,7 +242,7 @@ function AssetPage() {
         } catch (e) {
             console.warn("Offers System Error:", e);
         }
-    }, [tokenId, publicClient, address]);
+    }, [tokenId, publicClient]);
 
     const refreshWpolData = useCallback(async () => {
         if (address && publicClient) {
@@ -273,15 +258,13 @@ function AssetPage() {
     // Initial Load & Auto-Refresh Logic (Every 60 Seconds)
     useEffect(() => {
         if (tokenId && publicClient) {
-            // Fetch immediately
             Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
 
-            // Set up polling (Auto Refresh)
             const interval = setInterval(() => {
                 fetchAssetData();
                 checkListing();
                 fetchOffers();
-            }, 60000); // 60 seconds
+            }, 60000); 
 
             return () => clearInterval(interval);
         }
