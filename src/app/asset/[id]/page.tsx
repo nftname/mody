@@ -33,7 +33,12 @@ const MARKETPLACE_ABI = parseAbi([
     "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
-// --- SMART COUNTDOWN FORMATTER (OpenSea Style) ---
+// --- RESTORED: FALLBACK ABI (The Secret Sauce) ---
+const FALLBACK_ABI = parseAbi([
+    "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
+]);
+
+// --- SMART COUNTDOWN FORMATTER ---
 const formatDuration = (expirationTimestamp: number) => {
     const now = Math.floor(Date.now() / 1000);
     const seconds = expirationTimestamp - now;
@@ -41,15 +46,15 @@ const formatDuration = (expirationTimestamp: number) => {
     if (seconds <= 0) return "Expired";
     
     const days = Math.floor(seconds / (3600 * 24));
-    if (days > 0) return `${days}d`; // Example: 5d
+    if (days > 0) return `${days}d`;
     
     const hours = Math.floor(seconds / 3600);
-    if (hours > 0) return `${hours}h`; // Example: 20h
+    if (hours > 0) return `${hours}h`;
     
     const minutes = Math.floor(seconds / 60);
-    if (minutes > 0) return `${minutes}m`; // Example: 45m
+    if (minutes > 0) return `${minutes}m`;
     
-    return `${seconds}s`; // Example: 30s
+    return `${seconds}s`;
 };
 
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSwap }: any) => {
@@ -139,9 +144,8 @@ function AssetPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const offersPerPage = 5;
     
-    // START: Sorting State (New Feature)
-    const [sortDesc, setSortDesc] = useState(true); // Default High to Low
-    // END: Sorting State
+    // Sorting State
+    const [sortDesc, setSortDesc] = useState(true);
 
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
@@ -192,29 +196,37 @@ function AssetPage() {
         } catch (e) { console.error("Listing Error:", e); }
     }, [tokenId, publicClient]);
 
-    // --- FETCH OFFERS (The "Pro" Logic) ---
+    // --- RESTORED: THE "OLD WORKING" FETCH LOGIC (With Try/Catch Fallback) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            // 1. Fetch ALL Logs (Bypassing Indexing Issues)
-            const logs = await publicClient.getContractEvents({ 
-                address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                abi: MARKETPLACE_ABI, 
-                eventName: 'OfferMade',
-                fromBlock: 'earliest' 
-            });
-            
+            // 1. Try Fetching Logs with Main ABI
+            let logs = [];
+            try {
+                logs = await publicClient.getContractEvents({ 
+                    address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                    abi: MARKETPLACE_ABI, 
+                    eventName: 'OfferMade', 
+                    args: { tokenId: BigInt(tokenId) }, 
+                    fromBlock: 'earliest' 
+                });
+            } catch (err) {
+                // 2. FALLBACK: If Main ABI fails, use Simple ABI (The Fix)
+                console.log("Using Fallback ABI for Offers...");
+                logs = await publicClient.getContractEvents({ 
+                    address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                    abi: FALLBACK_ABI, 
+                    eventName: 'OfferMade', 
+                    args: { tokenId: BigInt(tokenId) }, 
+                    fromBlock: 'earliest' 
+                });
+            }
+
             const uniqueBidders = new Set<string>();
-
-            // 2. Filter Locally
             logs.forEach((log: any) => {
-                const logTokenId = log.args.tokenId;
-                if (logTokenId && logTokenId.toString() === tokenId.toString()) {
-                    uniqueBidders.add(log.args.bidder);
-                }
+                if (log.args.bidder) uniqueBidders.add(log.args.bidder);
             });
 
-            // 3. Fetch Status & Timestamps
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
@@ -236,25 +248,23 @@ function AssetPage() {
             for (const res of results) {
                 if (res && res.offerData) {
                     const [ , price, expiration] = res.offerData; 
-                    
-                    // Allow if Price > 0. We show expired items with "Expired" label to debug.
-                    if (price > BigInt(0)) {
+                    if (price > BigInt(0) && expiration > nowInSeconds) {
                         validOffers.push({
                             bidder: res.bidder as `0x${string}`,
                             price: formatEther(price),
-                            expiration: Number(expiration), // Pass timestamp directly
+                            expiration: Number(expiration),
                             totalPrice: price
                         });
                     }
                 }
             }
             
-            // Sort initially (High to Low)
+            // Initial Sort
             validOffers.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
             setOffersList(validOffers);
 
         } catch (e) {
-            console.warn("Offers Logic Error:", e);
+            console.warn("Offers System Error:", e);
         }
     }, [tokenId, publicClient]);
 
@@ -358,7 +368,6 @@ function AssetPage() {
         setIsPending(false); 
     });
 
-    // --- UPDATED: MAKE OFFER WITH 30 DAYS DURATION ---
     const handleOffer = () => {
         if (!offerPrice) return;
         
@@ -445,12 +454,10 @@ function AssetPage() {
         await refreshWpolData();
     };
 
-    // --- SORTING LOGIC ---
     const toggleSort = () => {
         setSortDesc(!sortDesc);
     };
 
-    // UseMemo to handle sorting dynamically
     const sortedOffers = useMemo(() => {
         let sortable = [...offersList];
         sortable.sort((a, b) => {
