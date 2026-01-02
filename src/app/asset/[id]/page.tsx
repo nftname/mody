@@ -5,8 +5,9 @@ import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useAccount, useWriteContract, usePublicClient, useBalance } from "wagmi";
-import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi, parseAbiItem } from 'viem';
+import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+// استيراد عقد الريجستري وعقد الماركت لضمان الربط
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 // @ts-ignore
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -14,7 +15,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 
-// --- Styles Definition ---
+// Styles
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
@@ -26,7 +27,8 @@ const MARKETPLACE_ABI = parseAbi([
     "function cancelOffer(uint256 tokenId) external",
     "function acceptOffer(uint256 tokenId, address bidder) external",
     "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)",
-    "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)"
+    "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)",
+    "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
 ]);
 
 const formatDuration = (seconds: number) => {
@@ -39,7 +41,7 @@ const formatDuration = (seconds: number) => {
     return `${minutes}m`;
 };
 
-// --- Simple Toast/Modal Component (OpenSea Style) ---
+// --- Modal Component ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSwap }: any) => {
     if (!isOpen) return null;
 
@@ -60,17 +62,14 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSw
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="fade-in" style={{ backgroundColor: '#161b22', border: `1px solid ${iconColor}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', textAlign: 'center', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative' }}>
                 <button onClick={onClose} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
-                
                 <div className="mb-3">{icon}</div>
                 <h4 className="text-white fw-bold mb-2">{title}</h4>
                 <p className="text-secondary mb-4" style={{ fontSize: '14px' }}>{message}</p>
-                
                 {type === 'swap' && (
                      <a href="https://app.uniswap.org/" target="_blank" rel="noopener noreferrer" className="btn w-100 fw-bold" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000', padding: '10px', borderRadius: '8px' }}>
                         Swap on Uniswap <i className="bi bi-box-arrow-up-right ms-1"></i>
                     </a>
                 )}
-                
                 {type === 'error' && (
                     <button onClick={onClose} className="btn w-100 btn-outline-secondary">Close</button>
                 )}
@@ -139,6 +138,7 @@ function AssetPage() {
     const fetchAssetData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
+            // Using NFT_COLLECTION_ADDRESS (Registry) to get data
             const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [BigInt(tokenId)] });
             const metaRes = await fetch(resolveIPFS(tokenURI));
             const meta = metaRes.ok ? await metaRes.json() : {};
@@ -180,19 +180,21 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- UNIVERSAL OFFERS FETCHER (Get All Offers for Token) ---
+    // --- UNIVERSAL OFFERS FETCHER (Corrected Logic) ---
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
             const uniqueBidders = new Set<string>();
 
-            // 1. Scan Logs for ANYONE who made an offer on this TokenID
+            // 1. Fetch ALL logs for this TokenID from the Marketplace Contract
+            // This links Marketplace Events -> Registry Token ID
             try {
-                const logs = await publicClient.getLogs({ 
+                const logs = await publicClient.getContractEvents({ 
                     address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                    event: parseAbiItem('event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)'),
+                    abi: MARKETPLACE_ABI, 
+                    eventName: 'OfferMade', 
                     args: { tokenId: BigInt(tokenId) }, 
-                    fromBlock: 'earliest' 
+                    fromBlock: 'earliest' // Open search, no time barrier
                 });
                 
                 logs.forEach((log: any) => {
@@ -202,7 +204,7 @@ function AssetPage() {
                 console.warn("Log fetch warning:", err);
             }
 
-            // 2. Fetch Active Status for all found bidders
+            // 2. Iterate and check status for EACH bidder found
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
@@ -224,7 +226,7 @@ function AssetPage() {
             for (const res of results) {
                 if (res && res.offerData) {
                     const [ , price, expiration] = res.offerData; 
-                    // Verify offer is active and not expired
+                    // Only show active, non-expired offers
                     if (price > BigInt(0) && expiration > nowInSeconds) {
                         validOffers.push({
                             bidder: res.bidder as `0x${string}`,
@@ -255,18 +257,10 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
-    // Initial Load & Auto-Refresh Logic (Every 60 Seconds)
+    // Initial Load only (Removed 60s Interval)
     useEffect(() => {
         if (tokenId && publicClient) {
             Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
-
-            const interval = setInterval(() => {
-                fetchAssetData();
-                checkListing();
-                fetchOffers();
-            }, 60000); // 60 seconds auto-refresh
-
-            return () => clearInterval(interval);
         }
     }, [tokenId, address, fetchAssetData, checkListing, fetchOffers, publicClient]);
 
@@ -566,9 +560,9 @@ function AssetPage() {
                                                         ) : (
                                                             <div className="d-flex gap-2">
                                                                 {!hasAllowance ? (
-                                                                    <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : '1. Approve WPOL'}</button>
+                                                                    <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : 'Approve'}</button>
                                                                 ) : (
-                                                                    <button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : '2. Confirm Offer'}</button>
+                                                                    <button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : 'Confirm'}</button>
                                                                 )}
                                                                 <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                             </div>
@@ -589,9 +583,9 @@ function AssetPage() {
                                                         <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
                                                         <div className="d-flex gap-2">
                                                             {!isApproved ? (
-                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : '1. Approve'}</button>
+                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : 'Approve'}</button>
                                                             ) : (
-                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : '2. Confirm'}</button>
+                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : 'Confirm'}</button>
                                                             )}
                                                             <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                         </div>
@@ -623,7 +617,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* Offers Table (Universal View) */}
+                        {/* Offers Table */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul text-gold"></i>
@@ -644,7 +638,7 @@ function AssetPage() {
                                         <tbody>
                                             {currentOffers && currentOffers.length > 0 ? (
                                                 currentOffers.map((offer, index) => {
-                                                    // Determine the role for this specific row
+                                                    // Strict comparison with toLowerCase()
                                                     const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
                                                     const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
                                                     
@@ -662,7 +656,6 @@ function AssetPage() {
                                                                 {formatDuration(timeRemaining)}
                                                             </td>
                                                             <td className="text-end pe-3" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
-                                                                {/* LOGIC: Show buttons based on ROLE */}
                                                                 {isOwner ? (
                                                                     <button onClick={() => handleAcceptOffer(offer.bidder)} disabled={isPending} className="btn btn-sm" style={{ background: GOLD_GRADIENT, color: '#000', fontWeight: 'bold', fontSize: '12px', borderRadius: '6px', border: 'none' }}>
                                                                         {isPending ? '...' : 'Accept'}
