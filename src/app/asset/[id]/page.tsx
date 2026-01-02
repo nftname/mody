@@ -14,7 +14,6 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 
-// --- Styles Definition (Standardized) ---
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
@@ -39,7 +38,6 @@ const formatDuration = (seconds: number) => {
     return `${minutes}m`;
 };
 
-// --- Standard UX Modal ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSwap }: any) => {
     if (!isOpen) return null;
 
@@ -177,31 +175,36 @@ function AssetPage() {
         } catch (e) { console.error("Market Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- STANDARD VIEM FETCHING PATTERN (Strict Logs) ---
+    // --- STRATEGIC FIX: BROAD FETCH & LOCAL FILTER ---
+    // This bypasses the "Indexed Parameter" issue on Polygon RPC
     const fetchOffers = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
             const uniqueBidders = new Set<string>();
 
-            // Step 1: Get Logs strictly for this TokenID
             try {
-                // Using parseAbiItem for strict event signature matching
+                // 1. Fetch ALL 'OfferMade' events from the Marketplace (No arguments filter)
+                // This guarantees we get the data even if 'tokenId' is not indexed in the contract.
                 const logs = await publicClient.getLogs({ 
                     address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                    event: parseAbiItem('event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)'),
-                    args: { tokenId: BigInt(tokenId) }, 
+                    event: parseAbiItem('event OfferMade(address indexed bidder, uint256 tokenId, uint256 price)'),
                     fromBlock: 'earliest' 
                 });
                 
-                // Extract unique bidders from logs
+                // 2. Filter locally in JavaScript (Client-Side)
+                // We manually check if the log's tokenId matches our current page's tokenId
                 logs.forEach((log: any) => {
-                    if (log.args && log.args.bidder) uniqueBidders.add(log.args.bidder);
+                    const logTokenId = log.args.tokenId?.toString();
+                    if (logTokenId === tokenId.toString()) {
+                        uniqueBidders.add(log.args.bidder);
+                    }
                 });
+
             } catch (err) {
                 console.warn("Log fetch warning:", err);
             }
 
-            // Step 2: Fetch Current State for each Bidder
+            // 3. Fetch status for relevant bidders
             const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
                 try {
                     const offerData = await publicClient.readContract({ 
@@ -223,7 +226,6 @@ function AssetPage() {
             for (const res of results) {
                 if (res && res.offerData) {
                     const [ , price, expiration] = res.offerData; 
-                    // Verify offer is active and not expired
                     if (price > BigInt(0) && expiration > nowInSeconds) {
                         validOffers.push({
                             bidder: res.bidder as `0x${string}`,
@@ -254,6 +256,7 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
+    // Initial Load Only (No blocking intervals)
     useEffect(() => {
         if (tokenId && publicClient) {
             Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
@@ -556,9 +559,9 @@ function AssetPage() {
                                                         ) : (
                                                             <div className="d-flex gap-2">
                                                                 {!hasAllowance ? (
-                                                                    <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : 'Approve WPOL'}</button>
+                                                                    <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : '1. Approve'}</button>
                                                                 ) : (
-                                                                    <button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : 'Confirm Offer'}</button>
+                                                                    <button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : '2. Confirm'}</button>
                                                                 )}
                                                                 <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                             </div>
@@ -579,9 +582,9 @@ function AssetPage() {
                                                         <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
                                                         <div className="d-flex gap-2">
                                                             {!isApproved ? (
-                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : 'Approve'}</button>
+                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : '1. Approve'}</button>
                                                             ) : (
-                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : 'Confirm'}</button>
+                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : '2. Confirm'}</button>
                                                             )}
                                                             <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                         </div>
@@ -634,11 +637,16 @@ function AssetPage() {
                                         <tbody>
                                             {currentOffers && currentOffers.length > 0 ? (
                                                 currentOffers.map((offer, index) => {
-                                                    // Strict comparison with toLowerCase() to ensure matching
-                                                    const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
+                                                    // Strict comparison: Ensure both addresses are lowercase string to match
+                                                    const currentAddr = address ? address.toLowerCase() : '';
+                                                    const bidderAddr = offer.bidder ? offer.bidder.toLowerCase() : '';
+                                                    const ownerAddr = asset && asset.owner ? asset.owner.toLowerCase() : '';
+
+                                                    const isMyOffer = currentAddr === bidderAddr;
+                                                    const isOwnerOfAsset = currentAddr === ownerAddr;
+
                                                     const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
-                                                    
-                                                    const shortAddress = offer.bidder ? `${offer.bidder.slice(0,4)}...${offer.bidder.slice(-4)}` : 'Unknown';
+                                                    const shortAddress = bidderAddr ? `${bidderAddr.slice(0,4)}...${bidderAddr.slice(-4)}` : 'Unknown';
 
                                                     return (
                                                         <tr key={index} style={{ borderBottom: '1px solid #2a2e35', background: 'transparent' }}>
@@ -652,7 +660,7 @@ function AssetPage() {
                                                                 {formatDuration(timeRemaining)}
                                                             </td>
                                                             <td className="text-end pe-3" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
-                                                                {isOwner ? (
+                                                                {isOwnerOfAsset ? (
                                                                     <button onClick={() => handleAcceptOffer(offer.bidder)} disabled={isPending} className="btn btn-sm" style={{ background: GOLD_GRADIENT, color: '#000', fontWeight: 'bold', fontSize: '12px', borderRadius: '6px', border: 'none' }}>
                                                                         {isPending ? '...' : 'Accept'}
                                                                     </button>
