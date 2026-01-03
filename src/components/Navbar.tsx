@@ -27,7 +27,6 @@ const Navbar = () => {
     }
   }, [isMobileSearchOpen]);
 
-  // Prevent scrolling when drawer is open
   useEffect(() => {
     if (isDrawerOpen) {
       document.body.style.overflow = 'hidden';
@@ -37,7 +36,6 @@ const Navbar = () => {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isDrawerOpen]);
 
-  // Reset all states on route change
   useEffect(() => {
     setIsDrawerOpen(false);
     setDrawerTranslate(0);
@@ -79,7 +77,6 @@ const Navbar = () => {
     }
   };
 
-  // --- Swipe Logic ---
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
     setIsDragging(true);
@@ -102,7 +99,6 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  // --- 🎨 THE EXACT DARK BLUE COLOR ---
   const exactDarkColor = '#0b0e11'; 
   
   const dropdownColor = '#0a0c10'; 
@@ -114,8 +110,6 @@ const Navbar = () => {
   const elementHeight = '29px'; 
   const elementFontSize = '11px';
 
-  // --- Styles ---
-  
   const customDisconnectStyle = {
     background: 'transparent',
     color: metallicGoldHex,
@@ -241,7 +235,6 @@ const Navbar = () => {
     <>
     <nav className="navbar navbar-expand-lg fixed-top py-0" 
          style={{ 
-             // FORCED TO EXACT VARIABLE (No manual RGBA)
              backgroundColor: exactDarkColor, 
              backdropFilter: 'blur(10px)',
              WebkitBackdropFilter: 'blur(10px)',
@@ -257,7 +250,6 @@ const Navbar = () => {
       
       <div className="container-fluid h-100 align-items-center d-flex flex-nowrap px-3 px-lg-4">
         
-        {/* Mobile Toggle & Logo */}
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
             <button className="navbar-toggler border-0 p-0 shadow-none d-flex align-items-center" type="button" onClick={toggleDrawer} style={{ width: 'auto' }}>
                 <CustomHamburger />
@@ -269,7 +261,6 @@ const Navbar = () => {
             </Link>
         </div>
 
-        {/* Desktop Logo */}
         <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0, marginRight: '15px' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <LogoSVG mobile={false} />
@@ -277,7 +268,6 @@ const Navbar = () => {
             </Link>
         </div>
 
-        {/* Mobile Right Icons */}
         <div className="d-flex d-lg-none align-items-center ms-auto" style={{ gap: '8px', overflow: 'visible', paddingRight: '0px' }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: metallicGoldHex }}></i>
@@ -291,7 +281,6 @@ const Navbar = () => {
             <CustomWalletTrigger isMobile={true} />
         </div>
 
-        {/* Desktop Menu */}
         <div className="collapse navbar-collapse flex-grow-1" id="navbarNav">
           <div className="d-flex flex-column flex-lg-row align-items-center w-100 justify-content-between">
             
@@ -375,13 +364,13 @@ const Navbar = () => {
         style={{ 
             transform: isDrawerOpen ? `translateX(${drawerTranslate}px)` : 'translateX(-100%)',
             boxShadow: 'none', 
-            borderRight: 'none' 
+            borderRight: 'none',
+            backgroundColor: exactDarkColor 
         }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* HANDLE: Small, Darker Gray (#1a1a1a), Centered */}
           <div style={{
               position: 'absolute',
               right: '0',
@@ -397,16 +386,14 @@ const Navbar = () => {
           }}>
           </div>
 
-          {/* HEADER: No top border, adjusted bottom padding for spacing */}
           <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-4 w-100 mt-0 position-relative" 
-               style={{ backgroundColor: exactDarkColor, borderTop: 'none', borderBottom: 'none' }}>
+               style={{ backgroundColor: 'transparent', borderTop: 'none', borderBottom: 'none' }}>
               
               <div className="d-flex align-items-center gap-3">
                  <LogoSVG mobile={true} />
                  <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '24px', letterSpacing: '0.5px' }}>NNM</span>
               </div>
 
-              {/* Close Button: Off-white X, Darker subtle border */}
               <button onClick={closeDrawer} className="btn p-0 d-flex align-items-center justify-content-center" 
                       style={{ 
                           width: '36px', height: '36px', 
@@ -419,11 +406,9 @@ const Navbar = () => {
               </button>
           </div>
           
-          {/* SEPARATOR: Width reduced to 85%, Centered, Space below increased */}
           <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
 
-          {/* CONTENT: Top padding increased (pt-3) to push first item down by ~20% */}
-          <div className="drawer-content px-4 pt-3 pb-3 d-flex flex-column h-100" style={{ overflowY: 'auto', backgroundColor: exactDarkColor }}>
+          <div className="drawer-content px-4 pt-3 pb-3 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
               <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-3 mt-2">
                   <div className="d-flex flex-column gap-2">
                     {menuItems.map((item) => (
@@ -454,7 +439,6 @@ const Navbar = () => {
                   </div>
               </div>
 
-              {/* FOOTER: Large icons, spaced out, padding right for widget safety */}
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-4">
                   <div className="d-flex justify-content-start align-items-center px-2" style={{ gap: '25px', paddingRight: '80px', width: '100%' }}>
                       <i className="bi bi-twitter-x" style={{ fontSize: '20px', color: paleGoldHex }}></i>
@@ -516,6 +500,16 @@ const Navbar = () => {
             display: flex;
             flex-direction: column;
             overflow: hidden;
+        }
+        
+        /* Hide Scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
         }
       `}</style>
     </nav>
