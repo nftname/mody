@@ -376,7 +376,7 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* UPDATED HANDLE: Small, Dark Gray, Centered */}
+          {/* UPDATED HANDLE: Small, Darker Gray (#1a1a1a), Centered */}
           <div style={{
               position: 'absolute',
               right: '0',
@@ -384,16 +384,17 @@ const Navbar = () => {
               transform: 'translateY(-50%)',
               width: '4px',
               height: '40px', 
-              backgroundColor: '#2d2d2d', 
+              backgroundColor: '#1a1a1a', 
               borderTopLeftRadius: '4px',
               borderBottomLeftRadius: '4px',
-              opacity: 1
+              opacity: 1,
+              zIndex: 1001
           }}>
           </div>
 
-          {/* UPDATED HEADER: With Very Subtle Divider */}
-          <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-3 w-100 mt-0 position-relative" 
-               style={{ backgroundColor: exactDarkColor, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          {/* UPDATED HEADER: Removed top border artifact, reduced bottom padding */}
+          <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-2 w-100 mt-0 position-relative" 
+               style={{ backgroundColor: exactDarkColor, borderTop: 'none' }}>
               
               <div className="d-flex align-items-center gap-3">
                  <LogoSVG mobile={true} />
@@ -412,8 +413,12 @@ const Navbar = () => {
                   <i className="bi bi-x" style={{ fontSize: '24px' }}></i>
               </button>
           </div>
+          
+          {/* NEW SEPARATOR: Explicit HR with tight spacing (m-0) */}
+          <hr className="w-100 m-0" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
 
-          <div className="drawer-content px-4 py-3 d-flex flex-column h-100" style={{ overflowY: 'auto', backgroundColor: exactDarkColor }}>
+          {/* UPDATED CONTENT: Reduced top padding (pt-2) for 50% less space */}
+          <div className="drawer-content px-4 pt-2 pb-3 d-flex flex-column h-100" style={{ overflowY: 'auto', backgroundColor: exactDarkColor }}>
               <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-3 mt-2">
                   <div className="d-flex flex-column gap-2">
                     {menuItems.map((item) => (
@@ -444,7 +449,7 @@ const Navbar = () => {
                   </div>
               </div>
 
-              {/* UPDATED FOOTER: Increased Size, Increased Gap, Padding Right for Chat Widget */}
+              {/* FOOTER (Maintained from previous agreement): Increased Size, Gap, and Padding Right */}
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-4">
                   <div className="d-flex justify-content-start align-items-center px-2" style={{ gap: '25px', paddingRight: '80px', width: '100%' }}>
                       <i className="bi bi-twitter-x" style={{ fontSize: '20px', color: paleGoldHex }}></i>
