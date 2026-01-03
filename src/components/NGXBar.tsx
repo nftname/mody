@@ -10,7 +10,7 @@ interface NGXData {
 export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' }) {
   const [data, setData] = useState<NGXData | null>(null);
 
-  // Gemini Dark Theme Colors
+  // Colors
   const bgColor = '#1E1F20'; 
   const dividerColor = '#363c45'; 
   const textColor = '#E6E8EA'; 
@@ -32,25 +32,22 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
   }, []);
 
   const formatCurrency = (val: number) => {
-    if (!val) return '$0.00';
+    if (!val) return '$0';
     if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
     if (val >= 1e6) return `$${(val / 1e6).toFixed(2)}M`;
     return `$${val.toFixed(0)}`;
   };
 
-  // --- Components ---
-
   const MarketCapSection = () => {
-    if (!data) return <div className="loading-txt">Loading...</div>;
+    if (!data) return <span className="loading-txt">Loading</span>;
     const isPos = data.marketCap.change >= 0;
     const color = isPos ? greenColor : redColor;
 
     return (
-      <div className="flex-col-center">
-        <span className="label-text">NFT MARKET CAP</span>
+      <div className="section-content">
+        <div className="top-label">NFT MARKET CAP</div>
         
-        {/* Progress Bar Area */}
-        <div className="visual-area">
+        <div className="mid-visual">
            <div className="cap-track">
               <div className="cap-fill" style={{ 
                   width: `${Math.min(100, Math.abs(data.marketCap.change) * 10 + 20)}%`, 
@@ -59,10 +56,9 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
            </div>
         </div>
 
-        {/* Values */}
-        <div className="value-area">
-           <span className="main-value">{formatCurrency(data.marketCap.total)}</span>
-           <span className="sub-value" style={{ color: color }}>
+        <div className="bot-value">
+           <span className="main-num">{formatCurrency(data.marketCap.total)}</span>
+           <span className="sub-num" style={{ color: color }}>
               {isPos ? '▲' : '▼'}{Math.abs(data.marketCap.change).toFixed(2)}%
            </span>
         </div>
@@ -71,18 +67,16 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
   };
 
   const VolumeSection = () => {
-    if (!data) return <div className="loading-txt">Loading...</div>;
+    if (!data) return <span className="loading-txt">Loading</span>;
     const bars = data.volume.sectors?.length === 4 ? data.volume.sectors : [20, 30, 25, 40];
     
     return (
-      <div className="flex-col-center">
-         <div className="label-row">
-            <span className="label-text">BUYING PRESSURE</span>
-            <span className="live-dot">●</span>
+      <div className="section-content">
+         <div className="top-label">
+            BUYING PRESSURE <span style={{ color: greenColor }}>●</span>
          </div>
 
-         {/* Chart Area */}
-         <div className="visual-area chart-area">
+         <div className="mid-visual chart-box">
               {bars.map((val, i) => (
                   <div key={i} className="chart-bar" style={{
                       height: `${Math.max(20, Math.min(100, val))}%`,
@@ -92,10 +86,9 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
               ))}
          </div>
 
-         {/* Values */}
-         <div className="value-area">
-            <span className="main-value">{formatCurrency(data.volume.total)}</span>
-            <span className="unit-text">Vol</span>
+         <div className="bot-value">
+            <span className="main-num">{formatCurrency(data.volume.total)}</span>
+            <span className="unit-txt">Vol</span>
          </div>
       </div>
     );
@@ -105,24 +98,24 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
     <div className="ngx-bar-wrapper">
         <div className="ngx-bar-container">
             
-            {/* Left: Widget */}
-            <div className="bar-section widget-section">
-                <div className="widget-scaler">
+            {/* LEFT: WIDGET (33%) */}
+            <div className="bar-column">
+                <div className="widget-wrapper">
                     <NGXWidget theme="dark" />
                 </div>
             </div>
 
             <div className="divider"></div>
 
-            {/* Middle: Cap */}
-            <div className="bar-section">
+            {/* MIDDLE: CAP (33%) */}
+            <div className="bar-column">
                 <MarketCapSection />
             </div>
 
             <div className="divider"></div>
 
-            {/* Right: Pressure */}
-            <div className="bar-section">
+            {/* RIGHT: VOLUME (33%) */}
+            <div className="bar-column">
                 <VolumeSection />
             </div>
 
@@ -135,26 +128,21 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 display: flex;
                 justify-content: center;
                 border-bottom: 1px solid ${dividerColor};
-                padding: 0;
             }
 
             .ngx-bar-container {
                 display: flex;
                 width: 100%;
                 max-width: 1400px;
-                height: 80px; /* Default height desktop */
+                height: 80px;
                 box-sizing: border-box;
-                overflow: hidden; /* Crucial */
             }
             
-            .bar-section {
+            .bar-column {
                 flex: 1;
                 width: 33.33%;
                 height: 100%;
                 position: relative;
-                display: flex;
-                align-items: center;
-                justify-content: center;
                 overflow: hidden;
             }
 
@@ -163,23 +151,21 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 height: 50%;
                 margin: auto 0;
                 background-color: ${dividerColor};
-                flex-shrink: 0;
             }
 
-            /* --- Flex Column Layout for Sections --- */
-            .flex-col-center {
+            /* --- FLEX LAYOUT SYSTEM --- */
+            .section-content {
                 display: flex;
                 flex-direction: column;
-                justify-content: center;
+                justify-content: space-evenly; /* Distributes space evenly */
                 align-items: center;
                 width: 100%;
                 height: 100%;
-                padding: 0 4px;
-                gap: 4px; /* Space between rows */
+                padding: 5px 2px;
             }
 
-            /* --- Typography --- */
-            .label-text {
+            /* --- TYPOGRAPHY (Desktop Default) --- */
+            .top-label {
                 font-size: 10px;
                 color: ${subTextColor};
                 font-weight: 600;
@@ -187,29 +173,28 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 text-transform: uppercase;
                 white-space: nowrap;
             }
-            .label-row { display: flex; align-items: center; gap: 4px; }
-            
-            .main-value {
-                font-size: 15px;
+            .main-num {
+                font-size: 16px;
                 font-weight: 700;
                 color: ${textColor};
                 line-height: 1;
                 white-space: nowrap;
             }
-            .sub-value { font-size: 10px; font-weight: 600; margin-left: 4px; white-space: nowrap; }
-            .unit-text { font-size: 10px; color: ${subTextColor}; margin-left: 2px; }
-            .value-area { display: flex; align-items: baseline; justify-content: center; }
+            .sub-num { font-size: 10px; font-weight: 600; margin-left: 4px; }
+            .unit-txt { font-size: 10px; color: ${subTextColor}; margin-left: 2px; }
+            .bot-value { display: flex; align-items: baseline; justify-content: center; }
+            .loading-txt { font-size: 10px; color: ${subTextColor}; }
 
-            /* --- Visual Elements --- */
-            .visual-area {
-                height: 20px; /* Fixed height for visuals */
+            /* --- VISUALS --- */
+            .mid-visual {
+                height: 25px;
                 width: 100%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
 
-            /* Market Cap Bar */
+            /* Market Cap Line */
             .cap-track {
                 width: 70%;
                 height: 4px;
@@ -219,13 +204,11 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
             }
             .cap-fill { height: 100%; border-radius: 2px; }
 
-            /* Volume Chart */
-            .chart-area {
-                display: flex;
-                align-items: flex-end; /* Align bars to bottom */
+            /* Volume Bars */
+            .chart-box {
+                align-items: flex-end;
                 gap: 4px;
                 width: 70%;
-                height: 24px;
             }
             .chart-bar {
                 flex: 1;
@@ -233,42 +216,38 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 transition: height 0.5s ease;
             }
 
-            .live-dot { font-size: 8px; color: ${greenColor}; animation: blink 2s infinite; }
-            .loading-txt { font-size: 10px; color: ${subTextColor}; }
-
-            /* --- Widget Scaler --- */
-            .widget-scaler {
-                transform: scale(0.85);
-                transform-origin: center;
+            /* --- WIDGET SCALING --- */
+            .widget-wrapper {
+                width: 100%;
+                height: 100%;
                 display: flex;
-                justify-content: center;
                 align-items: center;
+                justify-content: center;
+                transform: scale(0.85); /* Desktop Scale */
             }
 
-            /* --- MOBILE TWEAKS (Crucial for fixing your issue) --- */
+            /* =========================================
+               MOBILE OPTIMIZATION (CRITICAL FIXES)
+               ========================================= */
             @media (max-width: 768px) {
-                .ngx-bar-container { height: 60px; } /* Compact height */
+                .ngx-bar-container { height: 60px; }
                 
-                .widget-scaler { transform: scale(0.55); } /* Smaller widget */
-                
-                .flex-col-center { gap: 2px; } /* Less gap */
-                
-                /* Smaller Fonts to prevent overlapping */
-                .label-text { font-size: 8px; letter-spacing: 0; }
-                .main-value { font-size: 11px; }
-                .sub-value { font-size: 8px; margin-left: 2px; }
-                .unit-text { font-size: 8px; }
-                
-                /* Visual adjustments */
-                .visual-area { height: 14px; }
-                .cap-track { width: 80%; height: 3px; }
-                .chart-area { width: 85%; height: 18px; gap: 2px; }
-                .chart-bar { border-radius: 1px 1px 0 0; }
-            }
+                /* 1. Aggressive Font Downsizing to fit 33% width */
+                .top-label { font-size: 7px; letter-spacing: 0; }
+                .main-num { font-size: 11px; }
+                .sub-num { font-size: 8px; margin-left: 2px; }
+                .unit-txt { font-size: 7px; }
 
-            @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+                /* 2. Visual Adjustment */
+                .mid-visual { height: 16px; }
+                .cap-track { width: 85%; height: 3px; }
+                .chart-box { width: 90%; gap: 2px; }
+
+                /* 3. Widget Scaling for Mobile */
+                /* This forces the large widget to fit into the tiny 33% box */
+                .widget-wrapper { transform: scale(0.48); } 
+            }
         `}</style>
     </div>
   );
 }
- 
