@@ -1,37 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
+import NGXWidget from './NGXWidget';
 
 interface NGXData {
-  score: number;
-  status: string;
-  change24h: number;
   marketCap: { total: number; change: number };
   volume: { total: number; intensity: number; sectors: number[] };
-}
-
-function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
-  const angleInRadians = (angleInDegrees - 180) * Math.PI / 180.0;
-  return {
-    x: centerX + (radius * Math.cos(angleInRadians)),
-    y: centerY + (radius * Math.sin(angleInRadians))
-  };
-}
-
-function describeArc(x: number, y: number, radius: number, startAngle: number, endAngle: number) {
-    const start = polarToCartesian(x, y, radius, endAngle);
-    const end = polarToCartesian(x, y, radius, startAngle);
-    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-    return [
-        "M", start.x, start.y, 
-        "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
-    ].join(" ");
 }
 
 export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' }) {
   const [data, setData] = useState<NGXData | null>(null);
   const isLight = theme === 'light';
 
-  const bgColor = isLight ? '#FFFFFF' : '#0b0e11'; 
+  const bgColor = isLight ? '#FFFFFF' : '#0b0e11';
   const borderColor = isLight ? '#DEE2E6' : '#2b3139';
   const textColor = isLight ? '#0A192F' : '#E6E8EA';
   const subTextColor = isLight ? '#6c757d' : '#848E9C';
@@ -57,52 +37,14 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
     return `$${val.toFixed(0)}`;
   };
 
-  const GaugeSection = () => {
-    if (!data) return <div className="loading-pulse" />;
-    
-    const radius = 40; 
-    const stroke = 8;
-    const needleRotation = ((data.score / 100) * 180) - 90;
-    const isPos = data.change24h >= 0;
-
-    return (
-        <div className="section-content">
-            <div className="text-area">
-                <div className="label-row">
-                    <span className="label-text">NGX INDEX</span>
-                    <span className="live-badge">●</span>
-                </div>
-                <div className="value-row">
-                    <span className="big-value">{data.score.toFixed(1)}</span>
-                    <span className="small-change" style={{ color: isPos ? greenColor : redColor }}>
-                        {isPos ? '▲' : '▼'}{Math.abs(data.change24h)}%
-                    </span>
-                </div>
-            </div>
-            
-            <div className="gauge-area">
-                <svg viewBox="-50 -10 100 60" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-                    <path d={describeArc(0, 40, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} />
-                    <path d={describeArc(0, 40, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} />
-                    <path d={describeArc(0, 40, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} />
-                    <path d={describeArc(0, 40, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} />
-                    <path d={describeArc(0, 40, radius, 144, 180)} fill="none" stroke={greenColor} strokeWidth={stroke} />
-                    <line x1="0" y1="40" x2="0" y2="5" stroke={textColor} strokeWidth="3" transform={`rotate(${needleRotation}, 0, 40)`} style={{ transition: 'all 1s' }} />
-                    <circle cx="0" cy="40" r="4" fill={textColor} />
-                </svg>
-            </div>
-        </div>
-    );
-  };
-
   const MarketCapSection = () => {
     if (!data) return <div className="loading-pulse" />;
     const isPos = data.marketCap.change >= 0;
     
     return (
-      <div className="section-content center-aligned">
+      <div className="data-content">
         <div className="label-text mb-1">NFT MARKET CAP</div>
-        <div className="value-row centered">
+        <div className="value-row">
             <span className="big-value">{formatCurrency(data.marketCap.total)}</span>
         </div>
         <div className="progress-bar-container">
@@ -111,8 +53,8 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 backgroundColor: isPos ? greenColor : redColor 
             }}></div>
         </div>
-        <span className="small-change mt-1" style={{ color: isPos ? greenColor : redColor, fontSize: '10px' }}>
-             {isPos ? '+' : ''}{data.marketCap.change.toFixed(2)}% (24h)
+        <span className="small-change" style={{ color: isPos ? greenColor : redColor }}>
+             {isPos ? '▲' : '▼'} {Math.abs(data.marketCap.change).toFixed(2)}%
         </span>
       </div>
     );
@@ -123,17 +65,20 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
     const bars = data.volume.sectors || [20, 20, 20, 20];
     
     return (
-      <div className="section-content center-aligned">
-         <div className="label-text mb-1">BUYING PRESSURE</div>
+      <div className="data-content">
+         <div className="label-row mb-1">
+             <span className="label-text">BUYING PRESSURE</span>
+             <span className="live-dot">●</span>
+         </div>
          <div className="chart-row">
             {bars.map((val, i) => (
                 <div key={i} className="bar-stick" style={{
                     height: `${Math.max(15, Math.min(100, val))}%`,
-                    backgroundColor: i === 3 ? textColor : (val > 40 ? greenColor : '#888')
+                    backgroundColor: i === 3 ? textColor : (val > 40 ? greenColor : '#6c757d')
                 }}></div>
             ))}
          </div>
-         <div className="value-row centered mt-1">
+         <div className="value-row mt-1">
             <span className="small-value">{formatCurrency(data.volume.total)} Vol</span>
          </div>
       </div>
@@ -143,11 +88,25 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
   return (
     <div className="ngx-bar-wrapper">
         <div className="ngx-bar-container">
-            <div className="bar-column"><GaugeSection /></div>
+            
+            <div className="bar-column widget-column">
+                <div className="widget-transform-wrapper">
+                    <NGXWidget theme={theme} />
+                </div>
+            </div>
+
             <div className="divider"></div>
-            <div className="bar-column"><MarketCapSection /></div>
+
+            <div className="bar-column">
+                <MarketCapSection />
+            </div>
+
             <div className="divider"></div>
-            <div className="bar-column"><VolumeSection /></div>
+
+            <div className="bar-column">
+                <VolumeSection />
+            </div>
+
         </div>
 
         <style jsx>{`
@@ -167,7 +126,9 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 border-bottom: 1px solid ${borderColor};
                 border-top: 1px solid ${borderColor};
                 box-sizing: border-box;
+                overflow: hidden;
             }
+            
             .bar-column {
                 flex: 1;
                 width: 33.33%;
@@ -175,29 +136,37 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                padding: 0 12px;
                 position: relative;
+                overflow: hidden;
             }
+
+            .widget-transform-wrapper {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+                transform-origin: center;
+            }
+
             .divider {
                 width: 1px;
-                height: 50%;
+                height: 60%;
                 margin-top: auto;
                 margin-bottom: auto;
                 background-color: ${dividerColor};
                 flex-shrink: 0;
             }
-            .section-content {
+
+            .data-content {
                 display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
                 width: 100%;
                 height: 100%;
-                align-items: center;
-                justify-content: space-between;
             }
-            .section-content.center-aligned {
-                flex-direction: column;
-                justify-content: center;
-            }
-            
+
             .label-text {
                 font-size: 11px;
                 color: ${subTextColor};
@@ -206,54 +175,59 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 text-transform: uppercase;
                 white-space: nowrap;
             }
-            .live-badge {
-                font-size: 9px;
+            .label-row {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+            .live-dot {
+                font-size: 8px;
                 color: ${greenColor};
-                margin-left: 4px;
                 animation: blink 2s infinite;
             }
+
+            .value-row {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+            }
+
             .big-value {
                 font-size: 18px;
                 color: ${textColor};
                 font-weight: 800;
-                line-height: 1;
             }
             .small-value {
-                font-size: 12px;
+                font-size: 11px;
                 color: ${textColor};
                 font-weight: 600;
             }
-            .small-change {
-                font-size: 11px;
-                font-weight: 700;
-                margin-left: 6px;
-                white-space: nowrap;
-            }
-            
-            .text-area { display: flex; flex-direction: column; justify-content: center; width: 55%; }
-            .gauge-area { width: 45%; height: 100%; display: flex; align-items: center; justify-content: center; }
-            .label-row { display: flex; align-items: center; margin-bottom: 6px; }
-            .value-row { display: flex; align-items: baseline; }
-            .value-row.centered { justify-content: center; }
-            
+
             .progress-bar-container {
                 width: 70%;
                 height: 4px;
                 background: ${isLight ? '#E9ECEF' : '#333'};
                 border-radius: 2px;
-                margin-top: 6px;
+                margin-top: 5px;
+                margin-bottom: 3px;
                 overflow: hidden;
             }
             .progress-fill { height: 100%; border-radius: 2px; }
-            
+
+            .small-change {
+                font-size: 10px;
+                font-weight: 700;
+            }
+
             .chart-row {
                 display: flex;
                 align-items: flex-end;
-                gap: 6px;
-                height: 30px;
-                width: 80%;
+                gap: 4px;
+                height: 25px;
+                width: 70%;
                 justify-content: center;
-                padding-bottom: 2px;
+                margin-top: 2px;
             }
             .bar-stick { width: 14px; border-radius: 1px; transition: height 0.5s; }
 
@@ -263,18 +237,29 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 animation: pulse 1.5s infinite;
             }
 
+            @media (min-width: 769px) {
+                .widget-transform-wrapper {
+                    transform: scale(1.35);
+                }
+            }
+
             @media (max-width: 768px) {
                 .ngx-bar-container { height: 65px; }
-                .bar-column { padding: 0 4px; }
+                
+                .widget-transform-wrapper {
+                    transform: scale(0.65);
+                }
+                
+                .bar-column { padding: 0 2px; }
+                
                 .big-value { font-size: 13px; }
                 .label-text { font-size: 8px; }
-                .small-change { font-size: 8px; margin-left: 2px; }
                 .small-value { font-size: 9px; }
-                .gauge-area { width: 40%; }
-                .text-area { width: 60%; }
-                .chart-row { width: 90%; gap: 3px; height: 22px; }
+                .small-change { font-size: 8px; }
+                
+                .chart-row { width: 85%; height: 20px; gap: 2px; }
                 .bar-stick { width: 8px; }
-                .progress-bar-container { width: 80%; margin-top: 3px; }
+                .progress-bar-container { width: 80%; height: 3px; margin-top: 3px; }
                 .divider { height: 40%; }
             }
 
