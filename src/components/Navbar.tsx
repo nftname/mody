@@ -109,6 +109,7 @@ const Navbar = () => {
   const metallicGoldHex = '#F0C420'; 
   const paleGoldHex = '#D4C49D'; 
   const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
+  const offWhiteText = '#E0E0E0';
 
   const elementHeight = '29px'; 
   const elementFontSize = '11px';
@@ -371,12 +372,16 @@ const Navbar = () => {
 
       <div 
         className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`} 
-        style={{ transform: isDrawerOpen ? `translateX(${drawerTranslate}px)` : 'translateX(-100%)' }}
+        style={{ 
+            transform: isDrawerOpen ? `translateX(${drawerTranslate}px)` : 'translateX(-100%)',
+            boxShadow: 'none', 
+            borderRight: 'none' 
+        }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* UPDATED HANDLE: Small, Darker Gray (#1a1a1a), Centered */}
+          {/* HANDLE: Small, Darker Gray (#1a1a1a), Centered */}
           <div style={{
               position: 'absolute',
               right: '0',
@@ -392,33 +397,33 @@ const Navbar = () => {
           }}>
           </div>
 
-          {/* UPDATED HEADER: Removed top border artifact, reduced bottom padding */}
-          <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-2 w-100 mt-0 position-relative" 
-               style={{ backgroundColor: exactDarkColor, borderTop: 'none' }}>
+          {/* HEADER: No top border, adjusted bottom padding for spacing */}
+          <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-4 w-100 mt-0 position-relative" 
+               style={{ backgroundColor: exactDarkColor, borderTop: 'none', borderBottom: 'none' }}>
               
               <div className="d-flex align-items-center gap-3">
                  <LogoSVG mobile={true} />
                  <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '24px', letterSpacing: '0.5px' }}>NNM</span>
               </div>
 
-              {/* Close Button */}
+              {/* Close Button: Off-white X, Darker subtle border */}
               <button onClick={closeDrawer} className="btn p-0 d-flex align-items-center justify-content-center" 
                       style={{ 
                           width: '36px', height: '36px', 
                           borderRadius: '50%', 
                           backgroundColor: 'transparent', 
-                          border: '1px solid #333', 
-                          color: '#777' 
+                          border: '1px solid rgba(255,255,255,0.1)', 
+                          color: offWhiteText 
                       }}>
                   <i className="bi bi-x" style={{ fontSize: '24px' }}></i>
               </button>
           </div>
           
-          {/* NEW SEPARATOR: Explicit HR with tight spacing (m-0) */}
-          <hr className="w-100 m-0" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
+          {/* SEPARATOR: Width reduced to 85%, Centered, Space below increased */}
+          <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
 
-          {/* UPDATED CONTENT: Reduced top padding (pt-2) for 50% less space */}
-          <div className="drawer-content px-4 pt-2 pb-3 d-flex flex-column h-100" style={{ overflowY: 'auto', backgroundColor: exactDarkColor }}>
+          {/* CONTENT: Top padding increased (pt-3) to push first item down by ~20% */}
+          <div className="drawer-content px-4 pt-3 pb-3 d-flex flex-column h-100" style={{ overflowY: 'auto', backgroundColor: exactDarkColor }}>
               <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-3 mt-2">
                   <div className="d-flex flex-column gap-2">
                     {menuItems.map((item) => (
@@ -449,7 +454,7 @@ const Navbar = () => {
                   </div>
               </div>
 
-              {/* FOOTER (Maintained from previous agreement): Increased Size, Gap, and Padding Right */}
+              {/* FOOTER: Large icons, spaced out, padding right for widget safety */}
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-4">
                   <div className="d-flex justify-content-start align-items-center px-2" style={{ gap: '25px', paddingRight: '80px', width: '100%' }}>
                       <i className="bi bi-twitter-x" style={{ fontSize: '20px', color: paleGoldHex }}></i>
