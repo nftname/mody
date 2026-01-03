@@ -48,7 +48,7 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
       <div className="section-inner">
         {/* Top: Label */}
         <div className="row-top">
-          <span className="label-text">NFT MARKET CAP</span>
+          <span className="label-text">NFT CAP</span>
         </div>
 
         {/* Middle: Visual (Progress Line) */}
@@ -82,7 +82,7 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
       <div className="section-inner">
          {/* Top: Label */}
          <div className="row-top">
-            <span className="label-text">BUYING PRESSURE</span>
+            <span className="label-text">PRESSURE</span>
             <span className="live-dot">●</span>
          </div>
 
@@ -169,7 +169,7 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 margin-bottom: auto;
             }
 
-            /* --- Internal Structure (The Grid) --- */
+            /* --- Internal Structure (The Strict Grid) --- */
             .section-inner {
                 display: flex;
                 flex-direction: column;
@@ -181,22 +181,26 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
             }
 
             .row-top {
-                height: 20%;
+                height: 25%;
+                width: 100%;
                 display: flex;
                 align-items: center;
-                gap: 5px;
+                justify-content: center;
+                gap: 4px;
             }
             .row-middle {
-                height: 35%;
+                height: 40%;
                 width: 100%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
             .row-bottom {
-                height: 25%;
+                height: 35%;
+                width: 100%;
                 display: flex;
-                align-items: baseline; /* Aligns text properly */
+                align-items: center; /* Center vertically */
+                justify-content: center; /* Center horizontally */
                 gap: 4px;
             }
 
@@ -207,17 +211,19 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 font-weight: 600;
                 letter-spacing: 0.5px;
                 text-transform: uppercase;
-                white-space: nowrap;
+                white-space: nowrap; /* PREVENTS WRAPPING */
             }
             .main-value {
                 font-size: 16px;
                 font-weight: 700;
                 color: ${textColor};
                 line-height: 1;
+                white-space: nowrap;
             }
             .sub-value {
                 font-size: 10px;
                 font-weight: 600;
+                white-space: nowrap;
             }
             .unit-text {
                 font-size: 10px;
@@ -238,11 +244,12 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
             /* Volume Chart */
             .chart-container {
                 display: flex;
-                align-items: flex-end; /* This fixes the floating bars */
+                align-items: flex-end; /* Anchors bars to bottom */
                 gap: 4px;
-                height: 24px;
+                height: 100%; /* Fills the row-middle height */
                 width: 70%;
                 justify-content: center;
+                padding-bottom: 2px;
             }
             .chart-bar {
                 width: 12px;
@@ -269,7 +276,7 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
             }
             .widget-scaler {
                 /* Precise scaling to fit the 33% box without overflow */
-                transform: scale(0.9);
+                transform: scale(0.85); /* Slightly smaller to be safe */
                 transform-origin: center;
                 display: flex;
                 justify-content: center;
@@ -280,20 +287,17 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 .ngx-bar-container { height: 65px; }
 
                 /* Shrink scale more on mobile */
-                .widget-scaler { transform: scale(0.65); }
-                
-                /* Adjust Grid Heights for Mobile */
-                .row-middle { height: 30%; }
+                .widget-scaler { transform: scale(0.60); }
                 
                 /* Fonts */
                 .label-text { font-size: 8px; letter-spacing: 0; }
-                .main-value { font-size: 12px; }
-                .sub-value { font-size: 9px; }
+                .main-value { font-size: 11px; }
+                .sub-value { font-size: 8px; }
                 
                 /* Visuals */
-                .chart-container { width: 85%; height: 18px; gap: 2px; }
+                .chart-container { width: 90%; gap: 2px; }
                 .chart-bar { width: 6px; }
-                .cap-track { width: 80%; height: 3px; }
+                .cap-track { width: 85%; height: 3px; }
             }
 
             @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
