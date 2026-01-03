@@ -209,7 +209,7 @@ const Navbar = () => {
     </svg>
   );
 
-  const LogoSVG = ({ mobile = false }) => (
+  const LogoSVG = ({ mobile = false }: { mobile?: boolean }) => (
     <svg width={mobile ? "31" : "30"} height={mobile ? "31" : "30"} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
         <defs>
             <linearGradient id={mobile ? "goldGradMob" : "goldGradDesk"} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -376,22 +376,30 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
+          {/* MODIFIED HERE: 
+              - Height changed from '80px' to '20vh' (20% of viewport height).
+              - Background color changed to '#2d2d2d' (Dark Gray).
+          */}
           <div style={{
               position: 'absolute',
               right: '0',
               top: '50%',
               transform: 'translateY(-50%)',
               width: '4px',
-              height: '80px', 
-              backgroundColor: '#333', 
+              height: '20vh', 
+              backgroundColor: '#2d2d2d', 
               borderTopLeftRadius: '4px',
               borderBottomLeftRadius: '4px',
               opacity: 1
           }}>
           </div>
 
+          {/* MODIFIED HERE: 
+              - Removed 'borderBottom' to unify the look.
+              - Background remains 'exactDarkColor' to match the drawer content.
+          */}
           <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-3 w-100 mt-0 position-relative" 
-               style={{ borderBottom: `1px solid ${subtleBorder}`, backgroundColor: exactDarkColor }}>
+               style={{ backgroundColor: exactDarkColor }}>
               
               <div className="d-flex align-items-center gap-3">
                  <LogoSVG mobile={true} />
