@@ -2,14 +2,10 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-// --- 1. تعريف واجهة البيانات الموحدة (شاملة للمؤشر والبار) ---
 interface NGXData {
-  // بيانات المؤشر
   score: number;
   status: string;
   change24h: number;
-  lastUpdate: string;
-  // بيانات البار (الماركت كاب والقطاعات)
   marketCap: { total: number; change: number };
   volume: { total: number; intensity: number; sectors: number[] };
 }
@@ -18,7 +14,6 @@ interface WidgetProps {
   theme?: 'dark' | 'light';
 }
 
-// --- 2. دوال الرسم للمؤشر (Math Helpers) ---
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
   const angleInRadians = (angleInDegrees - 180) * Math.PI / 180.0;
   return {
@@ -37,20 +32,17 @@ function describeArc(x: number, y: number, radius: number, startAngle: number, e
     ].join(" ");
 }
 
-// --- 3. المكون الرئيسي ---
 export default function NGXWidget({ theme = 'dark' }: WidgetProps) {
   const [data, setData] = useState<NGXData | null>(null);
   const [mounted, setMounted] = useState(false);
   const isLight = theme === 'light';
 
-  // الألوان والتنسيقات المشتركة
-  const bgColor = isLight ? 'linear-gradient(145deg, #F8F9FA, #E9ECEF)' : 'linear-gradient(145deg, #13171c, #0b0e11)';
-  const borderColor = isLight ? '#DEE2E6' : '#2b3139';
+  const bgColor = isLight ? '#f8f9fa' : '#161b22'; // لون خلفية موحد
+  const borderColor = isLight ? '#DEE2E6' : '#30363d';
   const textColor = isLight ? '#0A192F' : '#E6E8EA';
-  const subTextColor = isLight ? '#6c757d' : '#848E9C';
-  const greenColor = '#0ecb81';
-  const redColor = '#f6465d';
-  const shadow = isLight ? '0 2px 8px rgba(0,0,0,0.05)' : 'none';
+  const subTextColor = isLight ? '#6c757d' : '#8b949e';
+  const greenColor = '#238636';
+  const redColor = '#da3633';
 
   useEffect(() => {
     setMounted(true);
@@ -67,7 +59,6 @@ export default function NGXWidget({ theme = 'dark' }: WidgetProps) {
 
   if (!mounted) return null;
 
-  // دالة تنسيق العملة
   const formatCurrency = (val: number) => {
     if (!val) return '$0';
     if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
@@ -75,110 +66,96 @@ export default function NGXWidget({ theme = 'dark' }: WidgetProps) {
     return `$${val.toFixed(0)}`;
   };
 
-  // --------------------------------------------------------
-  // الجزء الأول: رسم المؤشر (Gauge Logic)
-  // --------------------------------------------------------
+  // --- مكون الرسم (Gauge) ---
   const GaugeSection = () => {
-      if (!data) return <div className="pulse-loader" />;
+      // استخدام بيانات افتراضية للرسم حتى لو لم تأت البيانات بعد لكي لا يظهر فارغاً
+      const score = data ? data.score : 50;
+      const change = data ? data.change24h : 0;
       
-      const needleRotation = ((data.score / 100) * 180) - 90;
+      const needleRotation = ((score / 100) * 180) - 90;
       const currentStatus = (() => {
-        if (data.score < 20) return { color: '#e53935', text: 'S.SELL' }; // اختصار للنصوص للموبايل
-        if (data.score < 40) return { color: '#fb8c00', text: 'SELL' };
-        if (data.score < 60) return { color: '#fdd835', text: 'NEUTRAL' };
-        if (data.score < 80) return { color: '#7cb342', text: 'BUY' };
-        return { color: greenColor, text: 'S.BUY' };
+        if (score < 20) return { color: '#e53935', text: 'SELL' };
+        if (score < 40) return { color: '#fb8c00', text: 'SELL' };
+        if (score < 60) return { color: '#fdd835', text: 'HOLD' };
+        if (score < 80) return { color: '#7cb342', text: 'BUY' };
+        return { color: greenColor, text: 'BUY' };
       })();
 
       return (
-        <div className="inner-content gauge-layout">
-           {/* النصوص (يسار المؤشر) */}
-           <div className="gauge-text">
-              <div className="label-row">
-                 <span className="mini-label">NGX INDEX</span>
-                 <span className="live-badge">●</span>
-              </div>
-              <div className="score-value" style={{ color: isLight ? '#000' : '#fff' }}>
-                 {data.score.toFixed(0)}
-              </div>
-              <div className="status-text" style={{ color: currentStatus.color }}>
-                 {currentStatus.text}
-              </div>
+        <div className="d-flex align-items-center justify-content-between w-100 h-100 px-1">
+           {/* النصوص */}
+           <div className="d-flex flex-column justify-content-center" style={{ width: '40%' }}>
+              <span style={{ fontSize: '9px', fontWeight: '800', color: subTextColor }}>NGX</span>
+              <span style={{ fontSize: '15px', fontWeight: '900', color: textColor, lineHeight: '1.1' }}>{score.toFixed(0)}</span>
+              <span style={{ fontSize: '9px', fontWeight: '700', color: currentStatus.color }}>{currentStatus.text}</span>
            </div>
 
-           {/* الرسم (يمين المؤشر) */}
-           <div className="gauge-svg-wrapper">
-             <svg viewBox="-90 -20 180 110" width="100%" height="100%">
-                <path d={describeArc(0, 80, 80, 0, 36)} fill="none" stroke="#e53935" strokeWidth="20" />
-                <path d={describeArc(0, 80, 80, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth="20" />
-                <path d={describeArc(0, 80, 80, 72, 108)} fill="none" stroke="#fdd835" strokeWidth="20" />
-                <path d={describeArc(0, 80, 80, 108, 144)} fill="none" stroke="#7cb342" strokeWidth="20" />
-                <path d={describeArc(0, 80, 80, 144, 180)} fill="none" stroke={greenColor} strokeWidth="20" />
+           {/* الرسم SVG */}
+           <div style={{ width: '60%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center' }}>
+             <svg viewBox="-90 -15 180 95" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+                <path d={describeArc(0, 80, 80, 0, 36)} fill="none" stroke="#e53935" strokeWidth="18" />
+                <path d={describeArc(0, 80, 80, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth="18" />
+                <path d={describeArc(0, 80, 80, 72, 108)} fill="none" stroke="#fdd835" strokeWidth="18" />
+                <path d={describeArc(0, 80, 80, 108, 144)} fill="none" stroke="#7cb342" strokeWidth="18" />
+                <path d={describeArc(0, 80, 80, 144, 180)} fill="none" stroke={greenColor} strokeWidth="18" />
                 <line x1="0" y1="80" x2="0" y2="10" stroke={isLight ? "#000" : "#FFF"} strokeWidth="4" 
                       transform={`rotate(${needleRotation}, 0, 80)`} style={{ transition: 'transform 1s ease' }} />
-                <circle cx="0" cy="80" r="8" fill={isLight ? "#000" : "#fff"} />
+                <circle cx="0" cy="80" r="6" fill={isLight ? "#000" : "#fff"} />
              </svg>
            </div>
         </div>
       );
   };
 
-  // --------------------------------------------------------
-  // الجزء الثاني: الماركت كاب (Market Cap Logic)
-  // --------------------------------------------------------
+  // --- مكون الماركت كاب ---
   const MarketCapSection = () => {
-    if (!data) return <div className="pulse-loader" />;
+    if (!data) return <div className="pulse" />;
     const isUp = data.marketCap.change >= 0;
-    const color = isUp ? greenColor : redColor;
-
+    
     return (
-      <div className="inner-content">
-        <div className="label-row">
-           <span className="mini-label">NFT CAP</span>
-           <span className="change-text" style={{ color }}>
+      <div className="d-flex flex-column justify-content-between h-100 w-100">
+        <div className="d-flex justify-content-between align-items-center">
+           <span style={{ fontSize: '8px', fontWeight: '800', color: subTextColor }}>CAP</span>
+           <span style={{ fontSize: '9px', fontWeight: '700', color: isUp ? greenColor : redColor }}>
              {isUp ? '▲' : '▼'}{Math.abs(data.marketCap.change).toFixed(1)}%
            </span>
         </div>
         
-        <div className="main-number">
+        <div style={{ fontSize: '13px', fontWeight: '900', color: textColor, textAlign: 'center' }}>
             {formatCurrency(data.marketCap.total)}
         </div>
         
-        {/* Progress Line */}
-        <div className="progress-bg">
-            <div style={{ width: `${Math.min(100, Math.abs(data.marketCap.change) * 10)}%`, height: '100%', background: color }} />
+        <div style={{ width: '100%', height: '3px', background: isLight ? '#e9ecef' : '#21262d', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ width: `${Math.min(100, Math.abs(data.marketCap.change) * 10)}%`, height: '100%', background: isUp ? greenColor : redColor }} />
         </div>
       </div>
     );
   };
 
-  // --------------------------------------------------------
-  // الجزء الثالث: القطاعات (Sectors Logic)
-  // --------------------------------------------------------
+  // --- مكون القطاعات (الأعمدة) ---
   const VolumeSection = () => {
-    if (!data) return <div className="pulse-loader" />;
-    const bars = data.volume.sectors || [0, 0, 0, 0];
-    const labels = ['ID', 'ART', 'GM', 'VOL'];
+    // إذا لم تكن هناك بيانات، نضع بيانات افتراضية رمادية
+    const bars = data?.volume?.sectors ? data.volume.sectors : [20, 20, 20, 20];
+    const labels = ['ID', 'ART', 'GM', 'ALL'];
+    const hasData = !!data;
 
     return (
-      <div className="inner-content">
-         <div className="label-row centered">
-           <span className="mini-label">SECTOR VOL</span>
+      <div className="d-flex flex-column justify-content-between h-100 w-100">
+         <div className="d-flex justify-content-center">
+           <span style={{ fontSize: '8px', fontWeight: '800', color: subTextColor }}>VOL FLOW</span>
         </div>
         
-        <div className="bars-container">
+        <div className="d-flex justify-content-between align-items-end h-100 gap-1 pb-1">
             {bars.map((val, i) => (
-                <div key={i} className="bar-column">
-                    <div className="bar-track">
-                        <div style={{
-                            width: '100%',
-                            height: `${Math.max(15, Math.min(100, val))}%`,
-                            backgroundColor: i === 3 ? textColor : (val > 30 ? greenColor : '#555'),
-                            borderRadius: '1px',
-                            transition: 'height 0.5s ease'
-                        }}></div>
-                    </div>
-                    <span className="bar-lbl">{labels[i]}</span>
+                <div key={i} className="d-flex flex-column align-items-center justify-content-end" style={{ flex: 1, height: '100%' }}>
+                    <div style={{
+                        width: '4px',
+                        height: `${Math.max(15, Math.min(100, val))}%`,
+                        backgroundColor: !hasData ? '#333' : (i === 3 ? textColor : (val > 30 ? greenColor : '#555')),
+                        borderRadius: '1px',
+                        transition: 'height 0.5s ease'
+                    }}></div>
+                    <span style={{ fontSize: '5px', fontWeight: '700', color: subTextColor, marginTop: '2px' }}>{labels[i]}</span>
                 </div>
             ))}
         </div>
@@ -186,15 +163,12 @@ export default function NGXWidget({ theme = 'dark' }: WidgetProps) {
     );
   };
 
-  // --------------------------------------------------------
-  // العرض النهائي (Render)
-  // --------------------------------------------------------
   return (
-    <div className="ngx-combined-widget">
-        <div className="capsules-wrapper">
+    <div className="w-100 py-1" style={{ overflow: 'hidden' }}>
+        <div className="d-flex gap-2 w-100 justify-content-between" style={{ height: '58px' }}>
             
             {/* الكبسولة 1: المؤشر */}
-            <Link href="/ngx" className="capsule hover-effect">
+            <Link href="/ngx" className="capsule" style={{ textDecoration: 'none' }}>
                 <GaugeSection />
             </Link>
 
@@ -211,161 +185,25 @@ export default function NGXWidget({ theme = 'dark' }: WidgetProps) {
         </div>
 
         <style jsx>{`
-            .ngx-combined-widget {
-                width: 100%;
-                padding: 5px 0;
-                overflow: hidden;
-            }
-
-            .capsules-wrapper {
-                display: flex;
-                gap: 6px;
-                width: 100%;
-                height: 58px; /* ارتفاع ثابت للكبسولات */
-                justify-content: space-between;
-                align-items: stretch;
-            }
-
-            /* تصميم الكبسولة الموحد */
             .capsule {
-                flex: 1; /* تقسيم 33% لكل عنصر */
+                flex: 1;
                 background: ${bgColor};
                 border: 1px solid ${borderColor};
-                border-radius: 10px;
-                box-shadow: ${shadow};
-                padding: 4px 6px;
-                min-width: 0; /* يمنع الكسر في الموبايل */
+                border-radius: 8px;
+                padding: 4px 8px;
+                min-width: 0;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                text-decoration: none;
                 position: relative;
                 overflow: hidden;
             }
-
-            .hover-effect:hover {
-                border-color: ${subTextColor};
-            }
-
-            /* المحتوى الداخلي */
-            .inner-content {
-                width: 100%;
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-            }
-
-            /* تخطيط خاص للمؤشر */
-            .gauge-layout {
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-            }
-            .gauge-text {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                width: 45%;
-            }
-            .gauge-svg-wrapper {
-                width: 55%;
-                height: 100%;
-                display: flex;
-                align-items: center;
-            }
-
-            /* النصوص والأرقام */
-            .label-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 2px;
-            }
-            .label-row.centered { justify-content: center; }
-
-            .mini-label {
-                font-size: 8px;
-                font-weight: 800;
-                color: ${subTextColor};
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-
-            .live-badge { color: ${greenColor}; font-size: 8px; animation: blink 2s infinite; }
-            .change-text { font-size: 8px; font-weight: 700; }
-            .status-text { font-size: 8px; font-weight: 800; letter-spacing: 0.5px; }
-
-            .score-value {
-                font-size: 16px;
-                font-weight: 900;
-                line-height: 1.1;
-            }
-            .main-number {
-                font-size: 14px;
-                font-weight: 900;
-                color: ${textColor};
-                text-align: center;
-            }
-
-            /* شريط التقدم */
-            .progress-bg {
-                width: 100%;
-                height: 3px;
-                background: ${isLight ? '#e9ecef' : '#222'};
-                border-radius: 2px;
-                overflow: hidden;
-                margin-top: auto;
-            }
-
-            /* أعمدة الفوليوم */
-            .bars-container {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-end;
-                height: 25px;
-                gap: 2px;
-            }
-            .bar-column {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-end;
-                height: 100%;
-            }
-            .bar-track {
-                width: 5px;
-                height: 18px;
-                display: flex;
-                align-items: flex-end;
-                justify-content: center;
-            }
-            .bar-lbl {
-                font-size: 5px;
-                font-weight: 700;
-                color: ${subTextColor};
-                margin-top: 2px;
-            }
-
-            /* Loader Animation */
-            .pulse-loader {
+            .pulse {
                 width: 100%; height: 100%;
                 background: rgba(128,128,128,0.1);
                 animation: pulse 1.5s infinite;
-                border-radius: 6px;
             }
-
-            @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.3;} 100% {opacity: 1;} }
             @keyframes pulse { 0% {opacity: 0.6;} 50% {opacity: 1;} 100% {opacity: 0.6;} }
-
-            /* تحسينات للجوال */
-            @media (max-width: 400px) {
-                .main-number { font-size: 12px; }
-                .score-value { font-size: 14px; }
-                .mini-label { font-size: 7px; }
-                .bar-track { width: 3px; }
-            }
         `}</style>
     </div>
   );
