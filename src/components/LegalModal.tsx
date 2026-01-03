@@ -6,7 +6,8 @@ export default function LegalModal() {
 
   useEffect(() => {
     const checkTerms = () => {
-        const hasAccepted = localStorage.getItem('nnm_terms_accepted_v7');
+        // Updated version to v8 so users re-accept the new terms
+        const hasAccepted = localStorage.getItem('nnm_terms_accepted_v8');
         if (!hasAccepted) {
           setShowModal(true);
         }
@@ -15,7 +16,7 @@ export default function LegalModal() {
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem('nnm_terms_accepted_v7', 'true');
+    localStorage.setItem('nnm_terms_accepted_v8', 'true');
     setShowModal(false);
   };
 
@@ -98,24 +99,35 @@ export default function LegalModal() {
               <li><strong>Autonomous:</strong> The underlying smart contracts on Polygon remain fully autonomous and immutable.</li>
             </ul>
 
-            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>3. NO FINANCIAL, LEGAL, OR TAX ADVICE</p>
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>3. JURISDICTION-NEUTRAL OPERATION</p>
+            <p className="mb-3">
+              NNM operates as a decentralized, jurisdiction-agnostic protocol interface. The Site is not operated, managed, hosted, administered, or controlled from within any specific country or legal jurisdiction.
+            </p>
+            <p className="mb-3">
+              Access to the Site is global and passive in nature. NNM does not target, solicit, conduct, or carry on business activities within any particular jurisdiction, nor does it maintain a physical presence, establishment, or permanent operations in any country.
+            </p>
+            <p className="mb-3">
+              Any access or use of the Site occurs solely at the initiative of the user, who is fully responsible for ensuring compliance with the laws applicable in their own jurisdiction. NNM assumes no responsibility for jurisdiction-specific regulatory obligations arising from user access.
+            </p>
+
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>4. NO FINANCIAL, LEGAL, OR TAX ADVICE</p>
             <p className="mb-3">
               All content is for informational purposes only. Nothing on the Site constitutes investment advice. You should seek independent professional counsel. Your use of the Protocol is at your own risk.
             </p>
 
-            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>4. LIMITATION OF LIABILITY &mdash; &quot;AS IS&quot;</p>
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>5. LIMITATION OF LIABILITY &mdash; &quot;AS IS&quot;</p>
             <p className="mb-3">
               To the fullest extent permitted by law, <strong style={{ fontWeight: '500', color: '#E6E8EA' }}>NNM expressly disclaims all warranties</strong>. The Service is provided &quot;AS IS.&quot; NNM shall not be liable for any damages, lost profits, smart-contract vulnerabilities, gas fee losses, or unauthorized access. NNM&apos;s liability is limited to the maximum extent permitted by law.
             </p>
 
-            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>5. USER RESPONSIBILITY & INDEMNIFICATION</p>
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>6. USER RESPONSIBILITY & INDEMNIFICATION</p>
             <p className="mb-1">You accept full responsibility for any content you mint. NNM does not review or verify legality of user content.</p>
             <ul className="legal-ul">
               <li><strong>No Monitoring:</strong> The interface displays on-chain content as recorded.</li>
               <li><strong>Indemnification:</strong> You agree to indemnify and hold NNM harmless against any claims arising from your use or IP violations.</li>
             </ul>
 
-            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>6. ASSET CLASSIFICATION</p>
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>7. ASSET CLASSIFICATION</p>
             <p className="mb-1">NFTs are classified as <strong style={{ fontWeight: '500', color: '#E6E8EA' }}>&quot;Visual Identity Assets&quot;</strong>.</p>
             <ul className="legal-ul">
               <li><strong>No Commercial Rights:</strong> Minting does NOT grant trademark rights outside the blockchain.</li>
@@ -123,7 +135,7 @@ export default function LegalModal() {
               <li><strong>Tax Responsibility:</strong> You are solely responsible for all taxes.</li>
             </ul>
 
-            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>7. PROHIBITED ACTIVITIES</p>
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>8. PROHIBITED ACTIVITIES</p>
             <p className="mb-1">You agree not to use NNM for illegal purposes, including:</p>
             <ul className="legal-ul">
               <li>Money laundering, terrorist financing, or sanctions violations.</li>
@@ -132,7 +144,7 @@ export default function LegalModal() {
             </ul>
             <p className="mb-3">NNM reserves the right to restrict access to wallets suspected of prohibited activities.</p>
 
-            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>8. GOVERNING LAW & ARBITRATION</p>
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>9. GOVERNING LAW & ARBITRATION</p>
             <p className="mb-3">
               All disputes shall be resolved by binding individual arbitration. Class-actions are waived. Governed by the laws of <strong style={{ fontWeight: '500', color: '#E6E8EA' }}>Singapore</strong>.
             </p>
@@ -141,7 +153,7 @@ export default function LegalModal() {
 
             <h6 className="fw-bold mt-3 mb-2" style={{ fontSize: '13px', fontWeight: '600', color: '#E6E8EA' }}>II. PRIVACY POLICY</h6>
 
-            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>9. MAXIMUM PRIVACY / DATA POLICY</p>
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>10. MAXIMUM PRIVACY / DATA POLICY</p>
             <p className="mb-1">NNM uses a Zero-PII philosophy. We do not collect names, emails, or IP addresses.</p>
             <ul className="legal-ul">
               <li>No accounts or registrations required.</li>
@@ -154,7 +166,7 @@ export default function LegalModal() {
 
             <h6 className="fw-bold mt-3 mb-2" style={{ fontSize: '13px', fontWeight: '600', color: '#E6E8EA' }}>III. INTELLECTUAL PROPERTY</h6>
 
-            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>10. TAKEDOWN MECHANISM</p>
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>11. TAKEDOWN MECHANISM</p>
             <p className="mb-1">NNM respects IP rights. Upon valid notice (DMCA), we may:</p>
             <ul className="legal-ul">
               <li>Delist the NFT from the UI.</li>
