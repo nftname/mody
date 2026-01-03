@@ -122,8 +122,8 @@ export default function NGXWidget({
   };
 
   return (
-    <div className="ngx-widget-container" style={{ width: '171px', height: '59px', overflow: 'hidden' }}>
-    <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block', width: '342px', height: '117px', transform: 'scale(0.5)', transformOrigin: '0 0' }}>
+    <div className="ngx-widget-container" style={{ width: '153.9px', height: '52.65px', overflow: 'hidden' }}>
+    <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block', width: '342px', height: '117px', transform: 'scale(0.45)', transformOrigin: '0 0' }}>
       
       <div className="d-flex align-items-center justify-content-between px-3 py-2 rounded-3 position-relative overflow-hidden"
            style={{
