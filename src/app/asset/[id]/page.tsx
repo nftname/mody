@@ -4,11 +4,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
-import { useAccount, useWriteContract, usePublicClient, useBalance } from "wagmi";
+// أضفنا useSignTypedData للتوقيع المجاني
+import { useAccount, useWriteContract, usePublicClient, useBalance, useSignTypedData } from "wagmi";
 import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
-// استيراد ملف الاتصال بـ Supabase
 import { supabase } from '@/lib/supabase'; 
 // @ts-ignore
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -21,40 +21,49 @@ const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border:
 // مدة العرض (30 يوم)
 const OFFER_DURATION = 30 * 24 * 60 * 60; 
 
-// ABI مختصر للتعامل مع الماركت (للشراء والبيع فقط)
+// تحديث ABI ليشمل دالة قبول العروض بالتوقيع (acceptOffChainOffer)
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
     "function buyItem(uint256 tokenId) external payable",
     "function cancelListing(uint256 tokenId) external",
+    "function acceptOffChainOffer(uint256 tokenId, address bidder, uint256 price, uint256 expiration, bytes calldata signature) external",
     "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
-// --- Smart Countdown Formatter (نفس الكود الخاص بك بالضبط) ---
+// إعدادات التوقيع (EIP-712) - يجب أن تطابق العقد تماماً
+const domain = {
+    name: 'NNMMarketplace',
+    version: '11',
+    chainId: 137, // Polygon Mainnet ID
+    verifyingContract: MARKETPLACE_ADDRESS as `0x${string}`,
+} as const;
+
+const types = {
+    Offer: [
+        { name: 'bidder', type: 'address' },
+        { name: 'tokenId', type: 'uint256' },
+        { name: 'price', type: 'uint256' },
+        { name: 'expiration', type: 'uint256' },
+    ],
+} as const;
+
 const formatDuration = (expirationTimestamp: number) => {
     const now = Math.floor(Date.now() / 1000);
     const seconds = expirationTimestamp - now;
-
     if (seconds <= 0) return "Expired";
-    
     const days = Math.floor(seconds / (3600 * 24));
     if (days > 0) return `${days}d`; 
-    
     const hours = Math.floor(seconds / 3600);
     if (hours > 0) return `${hours}h`; 
-    
     const minutes = Math.floor(seconds / 60);
-    if (minutes > 0) return `${minutes}m`; 
-    
-    return `${seconds}s`;
+    return `${minutes}m`;
 };
 
-// Helper: معالجة صور IPFS
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
 };
 
-// مكون النافذة المنبثقة (Modal)
 const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => {
     if (!isOpen) return null;
     let icon = <div className="spinner-border text-warning" role="status"></div>;
@@ -94,12 +103,12 @@ const getHeroStyles = (tier: string) => {
 
 const mockChartData = [ { name: 'Dec 1', price: 10 }, { name: 'Today', price: 12 } ];
 
-// --- المكون الرئيسي ---
 function AssetPage() {
     const params = useParams();
     const router = useRouter();
     const { address, isConnected } = useAccount();
     const { writeContractAsync } = useWriteContract();
+    const { signTypedDataAsync } = useSignTypedData(); // هوك التوقيع الجديد
     const publicClient = usePublicClient();
     const { data: polBalanceData } = useBalance({ address });
     
@@ -118,6 +127,7 @@ function AssetPage() {
     const [isOfferMode, setIsOfferMode] = useState(false);
     const [offerPrice, setOfferPrice] = useState('');
     const [wpolBalance, setWpolBalance] = useState<number>(0);
+    const [wpolAllowance, setWpolAllowance] = useState<number>(0);
     
     const [currentPage, setCurrentPage] = useState(1);
     const offersPerPage = 5;
@@ -128,7 +138,7 @@ function AssetPage() {
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
-    // 1. جلب بيانات الأصل (Blockchain)
+    // 1. Fetch Asset Data
     const fetchAssetData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
@@ -156,7 +166,7 @@ function AssetPage() {
         } catch (error) { console.error("Asset Error:", error); }
     }, [tokenId, address, publicClient]);
 
-    // 2. التحقق من البيع (Blockchain)
+    // 2. Check Listings (On-Chain)
     const checkListing = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
@@ -174,7 +184,7 @@ function AssetPage() {
         } catch (e) { console.error("Listing Error", e); }
     }, [tokenId, publicClient]);
 
-    // 3. جلب العروض (Supabase - بديل البلوكشين البطيء)
+    // 3. Fetch Offers (Supabase) + Include Signature
     const fetchOffers = useCallback(async () => {
         if (!tokenId) return;
         try {
@@ -192,8 +202,9 @@ function AssetPage() {
                     id: offer.id,
                     bidder: offer.bidder_address,
                     price: offer.price.toString(),
-                    expiration: offer.expiration, // سيتم تنسيقه لاحقاً
+                    expiration: offer.expiration,
                     status: offer.status,
+                    signature: offer.signature, // جلب التوقيع لتنفيذ البيع لاحقاً
                     isMyOffer: address && offer.bidder_address.toLowerCase() === address.toLowerCase()
                 }));
                 setOffersList(formattedOffers);
@@ -201,12 +212,15 @@ function AssetPage() {
         } catch (e) { console.error("Supabase Error:", e); }
     }, [tokenId, address]);
 
-    // التحقق من الرصيد
+    // Check WPOL Balance & Allowance
     const refreshWpolData = useCallback(async () => {
         if (address && publicClient) {
             try {
                 const balanceBigInt = await publicClient.readContract({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'balanceOf', args: [address] });
                 setWpolBalance(Number(formatEther(balanceBigInt)));
+                
+                const allowanceBigInt = await publicClient.readContract({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'allowance', args: [address, MARKETPLACE_ADDRESS as `0x${string}`] });
+                setWpolAllowance(Number(formatEther(allowanceBigInt)));
             } catch (e) { console.error("WPOL Error", e); }
         }
     }, [address, publicClient]);
@@ -224,25 +238,61 @@ function AssetPage() {
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
     const closeModal = () => { setIsPending(false); setModal({ ...modal, isOpen: false }); if (modal.type === 'success') { fetchOffers(); checkListing(); setIsListingMode(false); setIsOfferMode(false); setOfferPrice(''); } };
 
-    // --- العمليات (Actions) ---
+    // --- ACTIONS ---
 
-    // تقديم عرض (Database)
+    // 1. APPROVE WPOL (On-Chain Transaction)
+    const handleApprove = async () => {
+        if (!offerPrice) return;
+        setIsPending(true);
+        showModal('loading', 'Approving WPOL', 'Please confirm in wallet...');
+        try {
+            const hash = await writeContractAsync({
+                address: WPOL_ADDRESS as `0x${string}`,
+                abi: erc20Abi,
+                functionName: 'approve',
+                args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)] // الموافقة على المبلغ المحدد فقط
+            });
+            await publicClient!.waitForTransactionReceipt({ hash });
+            await refreshWpolData();
+            showModal('success', 'Approved!', 'Now you can sign the offer for free.');
+        } catch (err: any) {
+            showModal('error', 'Failed', err.message?.slice(0, 100));
+            setIsPending(false);
+        }
+    };
+
+    // 2. MAKE OFFER (Off-Chain Signature - Free)
     const handleSubmitOffer = async () => {
         if (!address) return showModal('error', 'Connect Wallet', 'Please connect your wallet first.');
         if (!offerPrice) return;
 
         setIsPending(true);
-        showModal('loading', 'Checking Wallet...', 'Verifying WPOL balance...');
+        showModal('loading', 'Signing Offer...', 'Please sign the message in your wallet (Free).');
 
-        // التحقق من الرصيد
         if (wpolBalance < parseFloat(offerPrice)) {
-            showModal('swap', 'Insufficient Funds', 'You do not have enough WPOL. Please swap POL to WPOL first.');
+            showModal('swap', 'Insufficient Funds', 'You do not have enough WPOL.');
             setIsPending(false);
             return;
         }
 
         try {
-            // الحفظ في Supabase
+            const priceInWei = parseEther(offerPrice);
+            const expiration = BigInt(Math.floor(Date.now() / 1000) + OFFER_DURATION);
+            
+            // طلب التوقيع من المحفظة (EIP-712)
+            const signature = await signTypedDataAsync({
+                domain,
+                types,
+                primaryType: 'Offer',
+                message: {
+                    bidder: address,
+                    tokenId: BigInt(tokenId),
+                    price: priceInWei,
+                    expiration: expiration,
+                },
+            });
+
+            // حفظ العرض والتوقيع في Supabase
             const { error } = await supabase
                 .from('offers')
                 .insert([
@@ -250,13 +300,14 @@ function AssetPage() {
                         token_id: tokenId,
                         bidder_address: address,
                         price: parseFloat(offerPrice),
-                        expiration: Math.floor(Date.now() / 1000) + OFFER_DURATION, // استخدام مدة 30 يوم
-                        status: 'active'
+                        expiration: Number(expiration),
+                        status: 'active',
+                        signature: signature // الحقل الجديد
                     }
                 ]);
 
             if (error) throw error;
-            showModal('success', 'Offer Submitted!', 'Your offer is now live.');
+            showModal('success', 'Offer Submitted!', 'Your offer is live (Gas-free).');
         } catch (err: any) {
             console.error(err);
             showModal('error', 'Error', 'Failed to submit offer.');
@@ -265,26 +316,42 @@ function AssetPage() {
         }
     };
 
-    // قبول العرض
-    const handleAcceptOffer = async (offerId: number) => {
+    // 3. ACCEPT OFFER (On-Chain Transaction using Signature)
+    const handleAcceptOffer = async (offer: any) => {
         if (!isOwner) return;
         setIsPending(true);
-        showModal('loading', 'Processing...', 'Closing deal...');
+        showModal('loading', 'Accepting Offer', 'Confirm transaction to sell...');
+
         try {
-            const { error } = await supabase
-                .from('offers')
-                .update({ status: 'accepted' })
-                .eq('id', offerId);
-            if (error) throw error;
-            showModal('success', 'Offer Accepted!', 'Deal closed successfully.');
-        } catch (err) {
-            showModal('error', 'Error', 'Failed to accept offer.');
-        } finally {
+            if (!offer.signature) throw new Error("Signature missing");
+
+            const hash = await writeContractAsync({
+                address: MARKETPLACE_ADDRESS as `0x${string}`,
+                abi: MARKETPLACE_ABI,
+                functionName: 'acceptOffChainOffer',
+                args: [
+                    BigInt(tokenId),
+                    offer.bidder as `0x${string}`,
+                    parseEther(offer.price),
+                    BigInt(offer.expiration),
+                    offer.signature as `0x${string}`
+                ]
+            });
+
+            await publicClient!.waitForTransactionReceipt({ hash });
+
+            // تحديث الحالة في Supabase
+            await supabase.from('offers').update({ status: 'accepted' }).eq('id', offer.id);
+            
+            showModal('success', 'Sold!', 'Offer accepted and asset transferred.');
+        } catch (err: any) {
+            console.error(err);
+            showModal('error', 'Failed', err.message?.slice(0, 100) || "Transaction failed.");
             setIsPending(false);
         }
     };
 
-    // إلغاء العرض
+    // 4. CANCEL OFFER (Soft Cancel - Database Only - Free)
     const handleCancelOffer = async (offerId: number) => {
         setIsPending(true);
         try {
@@ -298,12 +365,11 @@ function AssetPage() {
         } catch(e) { console.error(e); setIsPending(false); }
     };
 
-    // الشراء (On-Chain)
+    // Standard Buy/List Functions (On-Chain)
     const handleBuy = async () => {
         if (!listing) return;
-        const priceNeeded = parseFloat(listing.pricePerToken);
         const currentPol = polBalanceData ? parseFloat(polBalanceData.formatted) : 0;
-        if (currentPol < priceNeeded) return showModal('swap', 'Insufficient POL', 'You need more POL.');
+        if (currentPol < parseFloat(listing.pricePerToken)) return showModal('swap', 'Insufficient POL', 'Need more POL.');
 
         setIsPending(true);
         showModal('loading', 'Buying Asset', 'Confirm in wallet...');
@@ -323,7 +389,6 @@ function AssetPage() {
         }
     };
 
-    // عرض للبيع (On-Chain)
     const handleList = async () => {
         setIsPending(true);
         showModal('loading', 'Listing Asset', 'Confirm in wallet...');
@@ -342,7 +407,6 @@ function AssetPage() {
         }
     };
 
-    // الموافقة (On-Chain)
     const handleApproveNft = async () => {
         setIsPending(true);
         showModal('loading', 'Approving Market', 'Confirm in wallet...');
@@ -362,7 +426,6 @@ function AssetPage() {
         }
     };
 
-    // إلغاء البيع (On-Chain)
     const handleCancelList = async () => {
         setIsPending(true);
         showModal('loading', 'Cancelling...', 'Confirm in wallet...');
@@ -396,6 +459,8 @@ function AssetPage() {
     const indexOfFirstOffer = indexOfLastOffer - offersPerPage;
     const currentOffers = sortedOffers.slice(indexOfFirstOffer, indexOfLastOffer);
     const totalPages = Math.ceil(offersList.length / offersPerPage);
+    const targetAmount = Number(offerPrice) || 0;
+    const hasAllowance = wpolAllowance >= targetAmount;
 
     if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
     if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
@@ -494,22 +559,27 @@ function AssetPage() {
                                 </div>
                             </div>
                             
-                            {/* إدخال العرض */}
+                            {/* إدخال العرض (OpenSea Style) */}
                             {isOfferMode && (
                                 <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
                                     <div className="d-flex justify-content-between text-secondary small mb-2">
                                         <span>Balance: {wpolBalance.toFixed(2)} WPOL</span>
+                                        <span>Allowance: {wpolAllowance.toFixed(2)} WPOL</span>
                                     </div>
                                     <input type="number" className="form-control bg-dark text-white border-secondary mb-2" placeholder="Amount (WPOL)" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
                                     <div className="d-flex gap-2">
-                                        <button onClick={handleSubmitOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? 'Saving...' : 'Confirm Offer'}</button>
+                                        {!hasAllowance ? (
+                                            <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? 'Approving...' : 'Approve WPOL First'}</button>
+                                        ) : (
+                                            <button onClick={handleSubmitOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? 'Signing...' : 'Sign Offer (Free)'}</button>
+                                        )}
                                         <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* Chart (نفسه لم يتغير) */}
+                        {/* Chart (نفسه) */}
                         <div className="mb-4">
                             <h5 className="text-white fw-bold mb-3">Price History</h5>
                             <div className="rounded-3 p-3" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35', height: '300px' }}>
@@ -526,7 +596,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* جدول العروض (Supabase) */}
+                        {/* جدول العروض */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul text-gold"></i>
@@ -557,7 +627,7 @@ function AssetPage() {
                                                             ) : (
                                                                 <>
                                                                     {isOwner && (
-                                                                        <button onClick={() => handleAcceptOffer(offer.id)} disabled={isPending} className="btn btn-sm" style={GOLD_BTN_STYLE}>Accept</button>
+                                                                        <button onClick={() => handleAcceptOffer(offer)} disabled={isPending} className="btn btn-sm" style={GOLD_BTN_STYLE}>Accept</button>
                                                                     )}
                                                                     {offer.isMyOffer && (
                                                                         <button onClick={() => handleCancelOffer(offer.id)} disabled={isPending} className="btn btn-sm btn-outline-danger">Cancel</button>
