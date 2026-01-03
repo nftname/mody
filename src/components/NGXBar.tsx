@@ -1,23 +1,43 @@
 'use client';
 import { useEffect, useState } from 'react';
-import NGXWidget from './NGXWidget';
 
 interface NGXData {
+  score: number;
+  status: string;
+  change24h: number;
   marketCap: { total: number; change: number };
   volume: { total: number; intensity: number; sectors: number[] };
+}
+
+function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
+  const angleInRadians = (angleInDegrees - 180) * Math.PI / 180.0;
+  return {
+    x: centerX + (radius * Math.cos(angleInRadians)),
+    y: centerY + (radius * Math.sin(angleInRadians))
+  };
+}
+
+function describeArc(x: number, y: number, radius: number, startAngle: number, endAngle: number) {
+    const start = polarToCartesian(x, y, radius, endAngle);
+    const end = polarToCartesian(x, y, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    return [
+        "M", start.x, start.y, 
+        "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+    ].join(" ");
 }
 
 export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' }) {
   const [data, setData] = useState<NGXData | null>(null);
   const isLight = theme === 'light';
 
-  const bgColor = isLight ? '#FFFFFF' : '#0b0e11'; // Solid background for the bar
+  const bgColor = isLight ? '#FFFFFF' : '#0b0e11'; 
   const borderColor = isLight ? '#DEE2E6' : '#2b3139';
   const textColor = isLight ? '#0A192F' : '#E6E8EA';
   const subTextColor = isLight ? '#6c757d' : '#848E9C';
+  const dividerColor = isLight ? '#E9ECEF' : '#2b3139';
   const greenColor = '#0ecb81';
   const redColor = '#f6465d';
-  const dividerColor = isLight ? '#E9ECEF' : '#2b3139';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,51 +57,85 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
     return `$${val.toFixed(0)}`;
   };
 
-  const MarketCapCard = () => {
+  const GaugeSection = () => {
     if (!data) return <div className="loading-pulse" />;
-    const isPositive = data.marketCap.change >= 0;
-    const color = isPositive ? greenColor : redColor;
+    
+    const radius = 36; 
+    const stroke = 8;
+    const needleRotation = ((data.score / 100) * 180) - 90;
+    const isPos = data.change24h >= 0;
+
+    return (
+        <div className="section-content">
+            <div className="text-area">
+                <div className="label-row">
+                    <span className="label-text">NGX INDEX</span>
+                    <span className="live-badge">● Live</span>
+                </div>
+                <div className="value-row">
+                    <span className="big-value">{data.score.toFixed(1)}</span>
+                    <span className="small-change" style={{ color: isPos ? greenColor : redColor }}>
+                        {isPos ? '▲' : '▼'} {Math.abs(data.change24h)}%
+                    </span>
+                </div>
+            </div>
+            
+            <div className="gauge-area">
+                <svg viewBox="-45 -5 90 50" width="100%" height="100%">
+                    <path d={describeArc(0, 36, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} />
+                    <path d={describeArc(0, 36, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} />
+                    <path d={describeArc(0, 36, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} />
+                    <path d={describeArc(0, 36, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} />
+                    <path d={describeArc(0, 36, radius, 144, 180)} fill="none" stroke={greenColor} strokeWidth={stroke} />
+                    <line x1="0" y1="36" x2="0" y2="5" stroke={textColor} strokeWidth="3" transform={`rotate(${needleRotation}, 0, 36)`} style={{ transition: 'all 1s' }} />
+                    <circle cx="0" cy="36" r="4" fill={textColor} />
+                </svg>
+            </div>
+        </div>
+    );
+  };
+
+  const MarketCapSection = () => {
+    if (!data) return <div className="loading-pulse" />;
+    const isPos = data.marketCap.change >= 0;
     
     return (
-      <div className="d-flex flex-column justify-content-center align-items-center h-100 w-100">
-        <div className="d-flex align-items-center gap-1 mb-1">
-             <span className="label-text">NFT CAP</span>
-             <span style={{ fontSize: '10px', color: color, fontWeight: '700' }}>
-               {isPositive ? '▲' : '▼'} {Math.abs(data.marketCap.change).toFixed(1)}%
-             </span>
+      <div className="section-content center-aligned">
+        <div className="label-text mb-1">NFT MARKET CAP</div>
+        <div className="value-row centered">
+            <span className="big-value">{formatCurrency(data.marketCap.total)}</span>
         </div>
-        <div className="value-text">
-            {formatCurrency(data.marketCap.total)}
+        <div className="progress-bar-container">
+            <div className="progress-fill" style={{ 
+                width: `${Math.min(100, Math.abs(data.marketCap.change) * 20)}%`, 
+                backgroundColor: isPos ? greenColor : redColor 
+            }}></div>
         </div>
-        {/* Simple progress line */}
-        <div className="progress-bg mt-1">
-            <div style={{ width: `${Math.min(100, Math.abs(data.marketCap.change) * 10)}%`, height: '100%', background: color }}></div>
-        </div>
+        <span className="small-change mt-1" style={{ color: isPos ? greenColor : redColor }}>
+             {isPos ? '+' : ''}{data.marketCap.change.toFixed(2)}%
+        </span>
       </div>
     );
   };
 
-  const PressureCard = () => {
+  const VolumeSection = () => {
     if (!data) return <div className="loading-pulse" />;
-    const bars = data.volume.sectors || [20, 20, 20, 20]; 
+    const bars = data.volume.sectors || [20, 20, 20, 20];
     
     return (
-      <div className="d-flex flex-column justify-content-center align-items-center h-100 w-100">
-         <div className="d-flex align-items-center gap-1 mb-1">
-           <span className="label-text">VOLUME</span>
-           <span className="blink-dot" style={{ fontSize: '8px', color: greenColor }}>●</span>
-        </div>
-        
-        {/* Adjusted Height to match text visual weight */}
-        <div className="chart-container">
+      <div className="section-content center-aligned">
+         <div className="label-text mb-1">BUYING PRESSURE</div>
+         <div className="chart-row">
             {bars.map((val, i) => (
-                <div key={i} className="chart-bar" style={{
-                    height: `${Math.max(20, Math.min(100, val))}%`, 
-                    backgroundColor: i === 3 ? textColor : (val > 30 ? greenColor : '#495057'),
+                <div key={i} className="bar-stick" style={{
+                    height: `${Math.max(20, Math.min(100, val))}%`,
+                    backgroundColor: i === 3 ? textColor : (val > 40 ? greenColor : '#555')
                 }}></div>
             ))}
-        </div>
-        <div className="value-text mt-1" style={{ fontSize: '11px' }}>{formatCurrency(data.volume.total)}</div>
+         </div>
+         <div className="value-row centered mt-1">
+            <span className="small-value">{formatCurrency(data.volume.total)} Vol</span>
+         </div>
       </div>
     );
   };
@@ -89,142 +143,135 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
   return (
     <div className="ngx-bar-wrapper">
         <div className="ngx-bar-container">
-            
-            {/* 1. NGX Widget (Left) */}
-            <div className="bar-section">
-                <div className="widget-scaler">
-                    <NGXWidget theme={theme} />
-                </div>
-            </div>
-
-            {/* Divider */}
-            <div className="bar-divider"></div>
-
-            {/* 2. Market Cap (Middle) */}
-            <div className="bar-section">
-                <MarketCapCard />
-            </div>
-
-            {/* Divider */}
-            <div className="bar-divider"></div>
-
-            {/* 3. Buying Pressure (Right) */}
-            <div className="bar-section">
-                <PressureCard />
-            </div>
-
+            <div className="bar-column"><GaugeSection /></div>
+            <div className="divider"></div>
+            <div className="bar-column"><MarketCapSection /></div>
+            <div className="divider"></div>
+            <div className="bar-column"><VolumeSection /></div>
         </div>
 
         <style jsx>{`
             .ngx-bar-wrapper {
                 width: 100%;
                 background: ${isLight ? '#F8F9FA' : '#000'};
-                padding: 10px 0;
+                padding: 0;
             }
-
             .ngx-bar-container {
                 display: flex;
-                align-items: center;
                 width: 100%;
-                max-width: 1200px;
-                height: 70px; /* Unified fixed height */
+                max-width: 1400px;
+                height: 85px;
                 margin: 0 auto;
                 background: ${bgColor};
-                border: 1px solid ${borderColor};
-                border-radius: 8px; /* Rounded corners for the whole bar */
-                box-shadow: ${isLight ? '0 2px 8px rgba(0,0,0,0.04)' : 'none'};
-                overflow: hidden;
+                border-bottom: 1px solid ${borderColor};
             }
-
-            /* Each section takes exactly 1/3 space */
-            .bar-section {
+            .bar-column {
                 flex: 1;
                 height: 100%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                position: relative;
                 overflow: hidden;
-                padding: 0 4px;
+                padding: 0 10px;
+                min-width: 0; 
             }
-
-            .bar-divider {
+            .divider {
                 width: 1px;
-                height: 60%; /* Divider doesn't touch edges */
+                height: 50%;
+                margin-top: auto;
+                margin-bottom: auto;
                 background-color: ${dividerColor};
             }
-
-            /* --- Desktop Styles --- */
-            .label-text {
-                font-size: 10px;
-                color: ${subTextColor};
-                font-weight: 600;
-                letter-spacing: 0.5px;
-            }
-            .value-text {
-                font-size: 15px;
-                color: ${textColor};
-                font-weight: 700;
-                line-height: 1;
-            }
-            .progress-bg {
-                width: 60%;
-                height: 3px;
-                background: ${isLight ? '#E9ECEF' : '#2B3139'};
-                border-radius: 2px;
-                overflow: hidden;
-            }
-            .chart-container {
+            .section-content {
                 display: flex;
-                align-items: flex-end;
+                width: 100%;
+                align-items: center;
                 justify-content: space-between;
-                width: 60%;
-                height: 22px; /* Fixed height to match neighbors */
-                gap: 2px;
             }
-            .chart-bar {
-                flex: 1;
-                border-radius: 1px;
-                transition: height 0.5s ease;
-            }
-            .widget-scaler {
-                transform: scale(0.9); /* Slight scale down for desktop alignment */
-                display: flex;
+            .section-content.center-aligned {
+                flex-direction: column;
                 justify-content: center;
             }
+            
+            /* Text Styles */
+            .label-text {
+                font-size: 11px;
+                color: ${subTextColor};
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
+            .live-badge {
+                font-size: 9px;
+                color: ${greenColor};
+                margin-left: 6px;
+                animation: blink 2s infinite;
+            }
+            .big-value {
+                font-size: 20px;
+                color: ${textColor};
+                font-weight: 800;
+                line-height: 1.1;
+            }
+            .small-value {
+                font-size: 12px;
+                color: ${textColor};
+                font-weight: 600;
+            }
+            .small-change {
+                font-size: 11px;
+                font-weight: 700;
+                margin-left: 6px;
+            }
+            
+            /* Layout Helpers */
+            .text-area { display: flex; flex-direction: column; justify-content: center; }
+            .gauge-area { width: 70px; height: 45px; margin-left: auto; }
+            .label-row { display: flex; align-items: center; margin-bottom: 4px; }
+            .value-row { display: flex; align-items: baseline; }
+            .value-row.centered { justify-content: center; }
+            
+            /* Visual Elements */
+            .progress-bar-container {
+                width: 60%;
+                height: 4px;
+                background: ${isLight ? '#E9ECEF' : '#333'};
+                border-radius: 2px;
+                margin-top: 4px;
+                overflow: hidden;
+            }
+            .progress-fill { height: 100%; border-radius: 2px; }
+            
+            .chart-row {
+                display: flex;
+                align-items: flex-end;
+                gap: 4px;
+                height: 25px;
+                width: 60%;
+                justify-content: center;
+            }
+            .bar-stick { width: 12px; border-radius: 1px; transition: height 0.5s; }
 
             .loading-pulse {
-                width: 50%;
-                height: 50%;
+                width: 60%; height: 20px;
                 background: rgba(128,128,128,0.1);
                 animation: pulse 1.5s infinite;
+                border-radius: 4px;
             }
 
-            /* --- Mobile Styles --- */
+            /* Mobile Adjustments */
             @media (max-width: 768px) {
-                .ngx-bar-wrapper {
-                    padding: 0; /* Full width on mobile */
-                }
-                .ngx-bar-container {
-                    border-radius: 0; /* Rectangular on mobile */
-                    border-left: none;
-                    border-right: none;
-                    height: 60px; /* Slightly shorter on mobile */
-                }
-                
-                .widget-scaler {
-                    transform: scale(0.7); /* Scale widget down to fit 1/3 screen */
-                }
-
-                .label-text { font-size: 8px; }
-                .value-text { font-size: 12px; }
-                
-                .chart-container { width: 80%; height: 18px; }
-                .progress-bg { width: 80%; }
+                .ngx-bar-container { height: 70px; }
+                .gauge-area { width: 50px; height: 35px; }
+                .big-value { font-size: 15px; }
+                .label-text { font-size: 9px; }
+                .small-change { font-size: 9px; margin-left: 2px; }
+                .bar-column { padding: 0 4px; }
+                .bar-stick { width: 8px; }
             }
 
             @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-            .blink-dot { animation: blink 2s infinite; }
             @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
         `}</style>
     </div>
