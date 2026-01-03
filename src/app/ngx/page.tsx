@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import NGXWidget from '@/components/NGXWidget';
 import MarketTicker from '@/components/MarketTicker';
+import NGXBar from '@/components/NGXBar';
 import Link from 'next/link';
 
 const historicalData = [
@@ -118,6 +119,10 @@ export default function NGXPage() {
     <main style={{ backgroundColor: '#E9ECEF', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif' }}>
       
       <MarketTicker />
+
+      <div className="w-100 border-bottom border-light" style={{ backgroundColor: '#F8F9FA' }}>
+        <NGXBar theme="light" />
+      </div>
 
       <div className="bg-card-white border-bottom border-light py-4 px-4 shadow-sm">
         <div className="container-fluid">
