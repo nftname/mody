@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import NGXWidget from './NGXWidget';
+import NGXWidget from './NGXWidget'; // تأكد أن هذا الملف يقبل أن يوضع في حاوية مرنة
 
 interface NGXData {
   marketCap: { total: number; change: number };
@@ -9,15 +9,15 @@ interface NGXData {
 
 export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' }) {
   const [data, setData] = useState<NGXData | null>(null);
+  const isLight = theme === 'light';
 
-  // Colors
-  const bgColor = '#1E1F20'; 
-  const dividerColor = '#363c45'; 
-  const textColor = '#E6E8EA'; 
-  const subTextColor = '#9AA0A6'; 
-  const greenColor = '#81c995'; 
-  const redColor = '#f28b82'; 
-  const barBaseColor = '#3c4043';
+  // الألوان والتنسيقات
+  const bgColor = isLight ? '#F8F9FA' : '#13171c'; // لون سادة أو تدرج خفيف
+  const borderColor = isLight ? '#DEE2E6' : '#2b3139';
+  const textColor = isLight ? '#0A192F' : '#E6E8EA';
+  const subTextColor = isLight ? '#6c757d' : '#848E9C';
+  const greenColor = '#0ecb81';
+  const redColor = '#f6465d';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,63 +33,61 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
 
   const formatCurrency = (val: number) => {
     if (!val) return '$0';
-    if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
-    if (val >= 1e6) return `$${(val / 1e6).toFixed(2)}M`;
+    if (val >= 1e9) return `$${(val / 1e9).toFixed(1)}B`;
+    if (val >= 1e6) return `$${(val / 1e6).toFixed(1)}M`;
     return `$${val.toFixed(0)}`;
   };
 
-  const MarketCapSection = () => {
-    if (!data) return <span className="loading-txt">Loading</span>;
-    const isPos = data.marketCap.change >= 0;
-    const color = isPos ? greenColor : redColor;
-
+  // --- المكون الأوسط: السيولة وحجم السوق ---
+  const MarketCapCard = () => {
+    if (!data) return <div className="loading-pulse" />;
+    const isPositive = data.marketCap.change >= 0;
+    const color = isPositive ? greenColor : redColor;
+    
     return (
-      <div className="section-content">
-        <div className="row-top">NFT MARKET CAP</div>
-        
-        <div className="row-mid">
-           <div className="cap-track">
-              <div className="cap-fill" style={{ 
-                  width: `${Math.min(100, Math.abs(data.marketCap.change) * 10 + 20)}%`, 
-                  backgroundColor: color 
-              }}></div>
-           </div>
-        </div>
-
-        <div className="row-bot">
-           <span className="main-num">{formatCurrency(data.marketCap.total)}</span>
-           <span className="sub-num" style={{ color: color }}>
-              {isPos ? '▲' : '▼'}{Math.abs(data.marketCap.change).toFixed(2)}%
+      <div className="inner-content">
+        <div className="label-row">
+           <span className="label-text">NFT CAP</span>
+           <span style={{ color: color, fontWeight: 'bold' }}>
+             {isPositive ? '▲' : '▼'} {Math.abs(data.marketCap.change).toFixed(1)}%
            </span>
+        </div>
+        <div className="value-text">
+            {formatCurrency(data.marketCap.total)}
+        </div>
+        {/* خط التقدم */}
+        <div className="progress-bg">
+            <div style={{ width: `${Math.min(100, Math.abs(data.marketCap.change) * 10)}%`, height: '100%', background: color }}></div>
         </div>
       </div>
     );
   };
 
-  const VolumeSection = () => {
-    if (!data) return <span className="loading-txt">Loading</span>;
-    const bars = data.volume.sectors?.length === 4 ? data.volume.sectors : [20, 30, 25, 40];
+  // --- المكون الأيمن: مؤشر القطاعات ---
+  const PressureCard = () => {
+    if (!data) return <div className="loading-pulse" />;
+    const bars = data.volume.sectors || [15, 40, 60, 30]; 
     
     return (
-      <div className="section-content">
-         <div className="row-top">
-            BUYING PRESSURE <span style={{ color: greenColor }}>●</span>
-         </div>
-
-         <div className="row-mid chart-box">
-              {bars.map((val, i) => (
-                  <div key={i} className="chart-bar" style={{
-                      height: `${Math.max(20, Math.min(100, val))}%`,
-                      backgroundColor: i === 3 ? textColor : (val > 40 ? greenColor : barBaseColor),
-                      opacity: i === 3 ? 1 : 0.8
-                  }}></div>
-              ))}
-         </div>
-
-         <div className="row-bot">
-            <span className="main-num">{formatCurrency(data.volume.total)}</span>
-            <span className="unit-txt">Vol</span>
-         </div>
+      <div className="inner-content">
+         <div className="label-row">
+           <span className="label-text">SECTORS</span>
+           <span className="blink-dot" style={{ color: greenColor }}>●</span>
+        </div>
+        
+        <div className="bars-container">
+            {bars.map((val, i) => (
+                <div key={i} className="bar-column">
+                    <div style={{
+                        width: '100%',
+                        height: `${Math.max(10, Math.min(100, val))}%`,
+                        backgroundColor: val > 50 ? greenColor : (isLight ? '#adb5bd' : '#495057'),
+                        borderRadius: '1px',
+                        transition: 'height 0.5s ease'
+                    }}></div>
+                </div>
+            ))}
+        </div>
       </div>
     );
   };
@@ -97,167 +95,147 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
   return (
     <div className="ngx-bar-wrapper">
         <div className="ngx-bar-container">
-            
-            {/* LEFT: WIDGET (33%) - Corrected Scaling */}
-            <div className="bar-column">
-                <div className="widget-wrapper">
-                    <NGXWidget theme="dark" />
+            {/* 1. Left: NGX Widget (33.3%) */}
+            <div className="bar-section left-section">
+                {/* تم وضع الودجت داخل حاوية لتملأ المساحة */}
+                <div className="widget-fill">
+                    <NGXWidget theme={theme} />
                 </div>
             </div>
 
-            <div className="divider"></div>
-
-            {/* MIDDLE: CAP (33%) */}
-            <div className="bar-column">
-                <MarketCapSection />
+            {/* 2. Middle: Market Cap (33.3%) */}
+            <div className="bar-section middle-section">
+                <MarketCapCard />
             </div>
 
-            <div className="divider"></div>
-
-            {/* RIGHT: VOLUME (33%) */}
-            <div className="bar-column">
-                <VolumeSection />
+            {/* 3. Right: Buying Pressure (33.3%) */}
+            <div className="bar-section right-section">
+                <PressureCard />
             </div>
-
         </div>
 
         <style jsx>{`
             .ngx-bar-wrapper {
                 width: 100%;
-                background: ${bgColor};
+                background: ${isLight ? '#fff' : '#0b0e11'};
+                border-bottom: 1px solid ${borderColor};
+                height: 70px; /* ارتفاع ثابت للبار */
                 display: flex;
-                justify-content: center;
-                border-bottom: 1px solid ${dividerColor};
+                align-items: center;
+                overflow: hidden; /* منع السكرول نهائيا */
             }
 
             .ngx-bar-container {
                 display: flex;
                 width: 100%;
-                max-width: 1400px;
-                height: 80px;
-                box-sizing: border-box;
-            }
-            
-            .bar-column {
-                flex: 1;
-                width: 33.33%;
                 height: 100%;
-                position: relative;
+                justify-content: space-between;
+                align-items: stretch;
+            }
+
+            .bar-section {
+                flex: 1; /* تقسيم متساوي 33% لكل قسم */
+                width: 33.33%;
+                padding: 4px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-right: 1px solid ${isLight ? '#eee' : '#1e2329'};
                 overflow: hidden;
             }
-
-            .divider {
-                width: 1px;
-                height: 60%;
-                margin: auto 0;
-                background-color: ${dividerColor};
+            .bar-section:last-child {
+                border-right: none;
             }
 
-            /* --- LAYOUT ROWS --- */
-            .section-content {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
+            /* Widget Helper */
+            .widget-fill {
                 width: 100%;
                 height: 100%;
-                padding: 0 4px;
-            }
-
-            .row-top {
-                flex: 1;
                 display: flex;
-                align-items: flex-end; /* Push label down slightly */
                 justify-content: center;
-                font-size: 10px;
-                color: ${subTextColor};
-                font-weight: 600;
-                letter-spacing: 0.5px;
-                text-transform: uppercase;
-                white-space: nowrap;
-                padding-bottom: 2px;
-            }
-            
-            .row-mid {
-                flex: 1.5; /* Give more space to visuals */
-                width: 100%;
-                display: flex;
                 align-items: center;
-                justify-content: center;
+                /* هنا نفترض أن الـ Widget سيتجاوب مع الحجم */
             }
 
-            .row-bot {
-                flex: 1;
+            /* Inner Content Styling */
+            .inner-content {
+                width: 100%;
+                height: 100%;
                 display: flex;
-                align-items: flex-start; /* Push values up slightly */
-                justify-content: center;
-                padding-top: 2px;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 2px 4px;
             }
 
-            /* --- TYPOGRAPHY --- */
-            .main-num {
-                font-size: 16px;
-                font-weight: 700;
-                color: ${textColor};
-                line-height: 1;
+            .label-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 10px;
+                font-weight: 600;
+            }
+            .label-text {
+                color: ${subTextColor};
                 white-space: nowrap;
             }
-            .sub-num { font-size: 10px; font-weight: 600; margin-left: 4px; white-space: nowrap; }
-            .unit-txt { font-size: 10px; color: ${subTextColor}; margin-left: 2px; white-space: nowrap; }
-            .loading-txt { font-size: 10px; color: ${subTextColor}; }
 
-            /* --- VISUALS --- */
-            .cap-track {
-                width: 70%;
-                height: 4px;
-                background-color: ${barBaseColor};
+            .value-text {
+                font-size: 15px;
+                font-weight: bold;
+                color: ${textColor};
+                text-align: center;
+                margin: 2px 0;
+            }
+
+            /* Progress Line (Middle) */
+            .progress-bg {
+                width: 100%;
+                height: 3px;
+                background: ${isLight ? '#e9ecef' : '#2B3139'};
                 border-radius: 2px;
                 overflow: hidden;
             }
-            .cap-fill { height: 100%; border-radius: 2px; }
 
-            .chart-box {
+            /* Bars (Right) */
+            .bars-container {
+                display: flex;
                 align-items: flex-end;
-                gap: 4px;
-                width: 70%;
-                height: 100%; /* Fill the row-mid */
-                max-height: 25px;
+                justify-content: space-between;
+                height: 25px;
+                gap: 2px;
             }
-            .chart-bar {
-                flex: 1;
-                border-radius: 2px 2px 0 0;
-                transition: height 0.5s ease;
-            }
-
-            /* --- WIDGET SCALING FIX --- */
-            .widget-wrapper {
-                width: 100%;
+            .bar-column {
+                width: 20%;
                 height: 100%;
                 display: flex;
-                align-items: center;
-                justify-content: center;
-                /* Reset to 1 first, then slight adjust for padding */
-                transform: scale(0.95); 
+                align-items: flex-end;
             }
 
-            /* =========================================
-               MOBILE OPTIMIZATION
-               ========================================= */
-            @media (max-width: 768px) {
-                .ngx-bar-container { height: 60px; }
-                
-                /* Widget Scale: Adjusted to not be too small, but fit 33% */
-                .widget-wrapper { transform: scale(0.55); } 
-                
-                /* Fonts */
-                .row-top { font-size: 8px; letter-spacing: 0; }
-                .main-num { font-size: 12px; }
-                .sub-num { font-size: 8px; margin-left: 2px; }
-                .unit-txt { font-size: 8px; }
+            .loading-pulse {
+                width: 100%;
+                height: 100%;
+                background: rgba(128,128,128,0.1);
+                animation: pulse 1.5s infinite;
+            }
 
-                /* Visuals */
-                .cap-track { width: 85%; height: 3px; }
-                .chart-box { width: 90%; gap: 2px; max-height: 18px; }
+            .blink-dot { animation: blink 2s infinite; font-size: 8px; }
+            @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+            @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+
+            /* Mobile Adjustments (لجعل الـ 3 أقسام تظهر بدون سكرول) */
+            @media (max-width: 768px) {
+                .ngx-bar-wrapper {
+                    height: 60px; /* تقليل الارتفاع قليلا للجوال */
+                }
+                .value-text {
+                    font-size: 12px; /* تصغير الخط */
+                }
+                .label-row {
+                    font-size: 8px;
+                }
+                .bar-section {
+                    padding: 2px; /* تقليل الحواف */
+                }
             }
         `}</style>
     </div>
