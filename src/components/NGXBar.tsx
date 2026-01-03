@@ -60,7 +60,7 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
   const GaugeSection = () => {
     if (!data) return <div className="loading-pulse" />;
     
-    const radius = 36; 
+    const radius = 40; 
     const stroke = 8;
     const needleRotation = ((data.score / 100) * 180) - 90;
     const isPos = data.change24h >= 0;
@@ -70,25 +70,25 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
             <div className="text-area">
                 <div className="label-row">
                     <span className="label-text">NGX INDEX</span>
-                    <span className="live-badge">● Live</span>
+                    <span className="live-badge">●</span>
                 </div>
                 <div className="value-row">
                     <span className="big-value">{data.score.toFixed(1)}</span>
                     <span className="small-change" style={{ color: isPos ? greenColor : redColor }}>
-                        {isPos ? '▲' : '▼'} {Math.abs(data.change24h)}%
+                        {isPos ? '▲' : '▼'}{Math.abs(data.change24h)}%
                     </span>
                 </div>
             </div>
             
             <div className="gauge-area">
-                <svg viewBox="-45 -5 90 50" width="100%" height="100%">
-                    <path d={describeArc(0, 36, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} />
-                    <path d={describeArc(0, 36, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} />
-                    <path d={describeArc(0, 36, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} />
-                    <path d={describeArc(0, 36, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} />
-                    <path d={describeArc(0, 36, radius, 144, 180)} fill="none" stroke={greenColor} strokeWidth={stroke} />
-                    <line x1="0" y1="36" x2="0" y2="5" stroke={textColor} strokeWidth="3" transform={`rotate(${needleRotation}, 0, 36)`} style={{ transition: 'all 1s' }} />
-                    <circle cx="0" cy="36" r="4" fill={textColor} />
+                <svg viewBox="-50 -10 100 60" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+                    <path d={describeArc(0, 40, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} />
+                    <path d={describeArc(0, 40, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} />
+                    <path d={describeArc(0, 40, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} />
+                    <path d={describeArc(0, 40, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} />
+                    <path d={describeArc(0, 40, radius, 144, 180)} fill="none" stroke={greenColor} strokeWidth={stroke} />
+                    <line x1="0" y1="40" x2="0" y2="5" stroke={textColor} strokeWidth="3" transform={`rotate(${needleRotation}, 0, 40)`} style={{ transition: 'all 1s' }} />
+                    <circle cx="0" cy="40" r="4" fill={textColor} />
                 </svg>
             </div>
         </div>
@@ -111,8 +111,8 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 backgroundColor: isPos ? greenColor : redColor 
             }}></div>
         </div>
-        <span className="small-change mt-1" style={{ color: isPos ? greenColor : redColor }}>
-             {isPos ? '+' : ''}{data.marketCap.change.toFixed(2)}%
+        <span className="small-change mt-1" style={{ color: isPos ? greenColor : redColor, fontSize: '10px' }}>
+             {isPos ? '+' : ''}{data.marketCap.change.toFixed(2)}% (24h)
         </span>
       </div>
     );
@@ -128,8 +128,8 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
          <div className="chart-row">
             {bars.map((val, i) => (
                 <div key={i} className="bar-stick" style={{
-                    height: `${Math.max(20, Math.min(100, val))}%`,
-                    backgroundColor: i === 3 ? textColor : (val > 40 ? greenColor : '#555')
+                    height: `${Math.max(15, Math.min(100, val))}%`,
+                    backgroundColor: i === 3 ? textColor : (val > 40 ? greenColor : '#888')
                 }}></div>
             ))}
          </div>
@@ -155,25 +155,28 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 width: 100%;
                 background: ${isLight ? '#F8F9FA' : '#000'};
                 padding: 0;
+                display: flex;
+                justify-content: center;
             }
             .ngx-bar-container {
                 display: flex;
                 width: 100%;
                 max-width: 1400px;
-                height: 85px;
-                margin: 0 auto;
+                height: 80px;
                 background: ${bgColor};
                 border-bottom: 1px solid ${borderColor};
+                border-top: 1px solid ${borderColor};
+                box-sizing: border-box;
             }
             .bar-column {
                 flex: 1;
+                width: 33.33%;
                 height: 100%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                overflow: hidden;
-                padding: 0 10px;
-                min-width: 0; 
+                padding: 0 12px;
+                position: relative;
             }
             .divider {
                 width: 1px;
@@ -181,10 +184,12 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 margin-top: auto;
                 margin-bottom: auto;
                 background-color: ${dividerColor};
+                flex-shrink: 0;
             }
             .section-content {
                 display: flex;
                 width: 100%;
+                height: 100%;
                 align-items: center;
                 justify-content: space-between;
             }
@@ -193,7 +198,6 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 justify-content: center;
             }
             
-            /* Text Styles */
             .label-text {
                 font-size: 11px;
                 color: ${subTextColor};
@@ -205,14 +209,14 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
             .live-badge {
                 font-size: 9px;
                 color: ${greenColor};
-                margin-left: 6px;
+                margin-left: 4px;
                 animation: blink 2s infinite;
             }
             .big-value {
-                font-size: 20px;
+                font-size: 18px;
                 color: ${textColor};
                 font-weight: 800;
-                line-height: 1.1;
+                line-height: 1;
             }
             .small-value {
                 font-size: 12px;
@@ -223,22 +227,21 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
                 font-size: 11px;
                 font-weight: 700;
                 margin-left: 6px;
+                white-space: nowrap;
             }
             
-            /* Layout Helpers */
-            .text-area { display: flex; flex-direction: column; justify-content: center; }
-            .gauge-area { width: 70px; height: 45px; margin-left: auto; }
-            .label-row { display: flex; align-items: center; margin-bottom: 4px; }
+            .text-area { display: flex; flex-direction: column; justify-content: center; width: 55%; }
+            .gauge-area { width: 45%; height: 100%; display: flex; align-items: center; justify-content: center; }
+            .label-row { display: flex; align-items: center; margin-bottom: 6px; }
             .value-row { display: flex; align-items: baseline; }
             .value-row.centered { justify-content: center; }
             
-            /* Visual Elements */
             .progress-bar-container {
-                width: 60%;
+                width: 70%;
                 height: 4px;
                 background: ${isLight ? '#E9ECEF' : '#333'};
                 border-radius: 2px;
-                margin-top: 4px;
+                margin-top: 6px;
                 overflow: hidden;
             }
             .progress-fill { height: 100%; border-radius: 2px; }
@@ -246,29 +249,33 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
             .chart-row {
                 display: flex;
                 align-items: flex-end;
-                gap: 4px;
-                height: 25px;
-                width: 60%;
+                gap: 6px;
+                height: 30px;
+                width: 80%;
                 justify-content: center;
+                padding-bottom: 2px;
             }
-            .bar-stick { width: 12px; border-radius: 1px; transition: height 0.5s; }
+            .bar-stick { width: 14px; border-radius: 1px; transition: height 0.5s; }
 
             .loading-pulse {
-                width: 60%; height: 20px;
-                background: rgba(128,128,128,0.1);
+                width: 100%; height: 100%;
+                background: rgba(128,128,128,0.05);
                 animation: pulse 1.5s infinite;
-                border-radius: 4px;
             }
 
-            /* Mobile Adjustments */
             @media (max-width: 768px) {
-                .ngx-bar-container { height: 70px; }
-                .gauge-area { width: 50px; height: 35px; }
-                .big-value { font-size: 15px; }
-                .label-text { font-size: 9px; }
-                .small-change { font-size: 9px; margin-left: 2px; }
+                .ngx-bar-container { height: 65px; }
                 .bar-column { padding: 0 4px; }
+                .big-value { font-size: 13px; }
+                .label-text { font-size: 8px; }
+                .small-change { font-size: 8px; margin-left: 2px; }
+                .small-value { font-size: 9px; }
+                .gauge-area { width: 40%; }
+                .text-area { width: 60%; }
+                .chart-row { width: 90%; gap: 3px; height: 22px; }
                 .bar-stick { width: 8px; }
+                .progress-bar-container { width: 80%; margin-top: 3px; }
+                .divider { height: 40%; }
             }
 
             @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
