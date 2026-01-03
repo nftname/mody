@@ -5,9 +5,9 @@ import {
 } from 'recharts';
 import NGXWidget from '@/components/NGXWidget';
 import MarketTicker from '@/components/MarketTicker';
-import NGXBar from '@/components/NGXBar';
 import Link from 'next/link';
 
+// --- بيانات ورسوم بيانية ثابتة ---
 const historicalData = [
   { date: '2017', value: 20 },
   { date: '2018', value: 45 },
@@ -118,29 +118,34 @@ export default function NGXPage() {
   return (
     <main style={{ backgroundColor: '#1E1F20', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', color: '#E6E8EA' }}>
       
+      {/* 1. الشريط الإخباري العلوي */}
       <MarketTicker />
 
-      <div className="w-100 border-bottom" style={{ backgroundColor: '#13171c', borderColor: '#2b3139' }}>
-        <NGXBar theme="dark" />
-      </div>
-
+      {/* 2. منطقة الهيرو (Hero) تحتوي الآن على المؤشر المدمج الجديد في الأعلى */}
       <div className="bg-card-dark border-bottom border-dark py-4 px-4 shadow-sm">
         <div className="container-fluid">
-            <div className="row align-items-center">
-                <div className="col-lg-7 mb-3 mb-lg-0">
-                    <h1 className="fw-bold mb-2" style={{ fontSize: '1.65rem', letterSpacing: '-0.5px', color: '#E6E8EA' }}>
-                        NGX NFT Index &mdash; The Global Benchmark <span className="text-gold-500">.</span>
-                    </h1>
-                    <p className="mb-0" style={{ fontSize: '15px', maxWidth: '650px', color: '#B7BDC6' }}>
-                        The premier benchmark tracking the global NFT market, aggregating sentiment, liquidity, and rare digital name assets across all platforms.
-                    </p>
-                </div>
-                <div className="col-lg-5 d-flex justify-content-lg-end">
-                   <div style={{ width: '100%', maxWidth: '340px' }}>
+            
+            {/* أ. شريط المؤشرات الجديد (3 كبسولات) - يظهر في الأعلى بعرض كامل */}
+            <div className="row mb-4">
+                <div className="col-12">
+                     <div style={{ width: '100%' }}>
                         <NGXWidget theme="dark" />
                    </div>
                 </div>
             </div>
+
+            {/* ب. عنوان الصفحة والشرح */}
+            <div className="row align-items-center">
+                <div className="col-lg-8">
+                    <h1 className="fw-bold mb-2" style={{ fontSize: '1.65rem', letterSpacing: '-0.5px', color: '#E6E8EA' }}>
+                        NGX NFT Index &mdash; The Global Benchmark <span className="text-gold-500">.</span>
+                    </h1>
+                    <p className="mb-0" style={{ fontSize: '15px', color: '#B7BDC6', maxWidth: '700px' }}>
+                        The premier benchmark tracking the global NFT market, aggregating sentiment, liquidity, and rare digital name assets across all platforms.
+                    </p>
+                </div>
+            </div>
+
         </div>
       </div>
 
@@ -148,8 +153,10 @@ export default function NGXPage() {
         
         <div className="row g-4">
             
+            {/* العمود الأيسر: الرسوم البيانية والمقالات */}
             <div className="col-lg-8">
                 
+                {/* الرسم البياني للأداء التاريخي */}
                 <div className="bg-card-dark p-4 mb-4 rounded-2 border border-dark shadow-sm">
                     <div className="d-flex justify-content-between align-items-center mb-3">
                         <SectionHeader title="Market Performance" />
@@ -174,6 +181,7 @@ export default function NGXPage() {
                     </div>
                 </div>
 
+                {/* المقال الرئيسي */}
                 <div className="p-4 mb-4 rounded-2 text-white position-relative overflow-hidden shadow-sm" 
                      style={{ background: 'linear-gradient(135deg, #2B3139 0%, #1A202C 100%)', border: '1px solid #363c45' }}>
                     <div className="position-relative z-1">
@@ -192,6 +200,7 @@ export default function NGXPage() {
                     </div>
                 </div>
 
+                {/* رسم التوقعات */}
                 <div className="bg-card-dark p-4 mb-2 rounded-2 border border-dark shadow-sm" style={{ borderTop: '3px solid #FCD535' }}>
                      <div className="d-flex justify-content-between align-items-center mb-3">
                         <SectionHeader title="Growth Forecast (2025 - 2026)" />
@@ -222,6 +231,7 @@ export default function NGXPage() {
 
             </div>
 
+            {/* العمود الأيمن: معلومات إضافية وتحليلات جانبية */}
             <div className="col-lg-4">
                 
                 <div className="bg-card-dark p-4 mb-4 rounded-2 border border-dark shadow-sm">
@@ -284,6 +294,7 @@ export default function NGXPage() {
 
         </div> 
         
+        {/* معلومات استخبارات السوق في الأسفل */}
         <div className="row mt-3 pt-3 border-top border-secondary">
             <div className="col-12 mb-4">
                  <h4 className="fw-bold m-0" style={{ color: '#E6E8EA' }}>Internal Market Intelligence</h4>

@@ -2,19 +2,23 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+// --- 1. تعريف واجهة البيانات الموحدة (شاملة للمؤشر والبار) ---
 interface NGXData {
+  // بيانات المؤشر
   score: number;
   status: string;
   change24h: number;
   lastUpdate: string;
+  // بيانات البار (الماركت كاب والقطاعات)
+  marketCap: { total: number; change: number };
+  volume: { total: number; intensity: number; sectors: number[] };
 }
 
 interface WidgetProps {
   theme?: 'dark' | 'light';
-  title?: string;
-  subtitle?: string;
 }
 
+// --- 2. دوال الرسم للمؤشر (Math Helpers) ---
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
   const angleInRadians = (angleInDegrees - 180) * Math.PI / 180.0;
   return {
@@ -33,159 +37,336 @@ function describeArc(x: number, y: number, radius: number, startAngle: number, e
     ].join(" ");
 }
 
-export default function NGXWidget({ 
-  theme = 'dark', 
-  title = 'NGX NFTs', 
-  subtitle = 'Global Index' 
-}: WidgetProps) {
+// --- 3. المكون الرئيسي ---
+export default function NGXWidget({ theme = 'dark' }: WidgetProps) {
   const [data, setData] = useState<NGXData | null>(null);
   const [mounted, setMounted] = useState(false);
-
   const isLight = theme === 'light';
-  
+
+  // الألوان والتنسيقات المشتركة
   const bgColor = isLight ? 'linear-gradient(145deg, #F8F9FA, #E9ECEF)' : 'linear-gradient(145deg, #13171c, #0b0e11)';
   const borderColor = isLight ? '#DEE2E6' : '#2b3139';
-  const mainTextColor = isLight ? '#0A192F' : '#ffffff'; 
-  const subTextColor = isLight ? '#495057' : '#848E9C';
-  const shadow = isLight ? '0 4px 12px rgba(0,0,0,0.08)' : 'none';
-  const titleColor = isLight ? '#0A192F' : '#FCD535'; 
-  const NEON_GREEN = '#0ecb81';
+  const textColor = isLight ? '#0A192F' : '#E6E8EA';
+  const subTextColor = isLight ? '#6c757d' : '#848E9C';
+  const greenColor = '#0ecb81';
+  const redColor = '#f6465d';
+  const shadow = isLight ? '0 2px 8px rgba(0,0,0,0.05)' : 'none';
 
   useEffect(() => {
     setMounted(true);
     const fetchData = async () => {
       try {
         const res = await fetch('/api/ngx');
-        if (!res.ok) throw new Error('Failed to fetch data');
-        const json = await res.json();
-        setData(json);
-      } catch (error) {
-        console.error('Error fetching NGX data:', error);
-      }
+        if (res.ok) setData(await res.json());
+      } catch (e) { console.error(e); }
     };
     fetchData();
-    const interval = setInterval(fetchData, 60000); 
+    const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  if (!mounted || !data) return null; 
+  if (!mounted) return null;
 
-  const TICKER_GREEN = '#0ecb81';
-  const TICKER_RED = '#f6465d';
-  const needleRotation = ((data.score / 100) * 180) - 90;
+  // دالة تنسيق العملة
+  const formatCurrency = (val: number) => {
+    if (!val) return '$0';
+    if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
+    if (val >= 1e6) return `$${(val / 1e6).toFixed(1)}M`;
+    return `$${val.toFixed(0)}`;
+  };
 
-  const currentStatus = (() => {
-      if (data.score < 20) return { color: '#e53935', text: 'STRONG SELL' }; 
-      if (data.score < 40) return { color: '#fb8c00', text: 'SELL' };        
-      if (data.score < 60) return { color: '#fdd835', text: 'NEUTRAL' };     
-      if (data.score < 80) return { color: '#7cb342', text: 'BUY' };         
-      return { color: TICKER_GREEN, text: 'STRONG BUY' };                  
-  })();
-
-  const changeColor = data.change24h >= 0 ? TICKER_GREEN : TICKER_RED;
-  const scoreStr = data.score.toFixed(1);
-  const [scoreInt, scoreDec] = scoreStr.split('.');
-
-  const GaugeSVG = () => {
-      const radius = 80;
-      const stroke = 20;
+  // --------------------------------------------------------
+  // الجزء الأول: رسم المؤشر (Gauge Logic)
+  // --------------------------------------------------------
+  const GaugeSection = () => {
+      if (!data) return <div className="pulse-loader" />;
       
+      const needleRotation = ((data.score / 100) * 180) - 90;
+      const currentStatus = (() => {
+        if (data.score < 20) return { color: '#e53935', text: 'S.SELL' }; // اختصار للنصوص للموبايل
+        if (data.score < 40) return { color: '#fb8c00', text: 'SELL' };
+        if (data.score < 60) return { color: '#fdd835', text: 'NEUTRAL' };
+        if (data.score < 80) return { color: '#7cb342', text: 'BUY' };
+        return { color: greenColor, text: 'S.BUY' };
+      })();
+
       return (
-        <svg viewBox="-90 -20 180 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
-            <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} />
+        <div className="inner-content gauge-layout">
+           {/* النصوص (يسار المؤشر) */}
+           <div className="gauge-text">
+              <div className="label-row">
+                 <span className="mini-label">NGX INDEX</span>
+                 <span className="live-badge">●</span>
+              </div>
+              <div className="score-value" style={{ color: isLight ? '#000' : '#fff' }}>
+                 {data.score.toFixed(0)}
+              </div>
+              <div className="status-text" style={{ color: currentStatus.color }}>
+                 {currentStatus.text}
+              </div>
+           </div>
 
-            <g fill={isLight ? "#0A192F" : "rgba(255,255,255,0.8)"} fontSize="10" fontFamily="sans-serif" fontWeight="700">
-                <text x="-95" y="85" textAnchor="middle">0</text>
-                <text x="-70" y="20" textAnchor="middle">20</text>
-                <text x="0" y="-8" textAnchor="middle">50</text>
-                <text x="70" y="20" textAnchor="middle">80</text>
-                <text x="95" y="85" textAnchor="middle">100</text>
-            </g>
-
-            <g fontSize="7" fontFamily="sans-serif" fontWeight="800" textAnchor="middle">
-                <text x="-50" y="65" fill="#e53935">SELL</text>
-                <text x="0" y="45" fill="#fdd835">NEUTRAL</text>
-                <text x="50" y="65" fill={TICKER_GREEN}>BUY</text>
-            </g>
-
-            <line x1="0" y1="80" x2="0" y2="10" stroke={isLight ? "#0A192F" : "#FFFFFF"} strokeWidth="4" 
-                  transform={`rotate(${needleRotation}, 0, 80)`} 
-                  style={{ transition: 'transform 1.5s cubic-bezier(0.23, 1, 0.32, 1)', filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }} />
-            
-            <circle cx="0" cy="80" r="12" fill={isLight ? "#0A192F" : "#fff"} stroke={isLight ? "#fff" : "#2b3139"} strokeWidth="2" />
-        </svg>
+           {/* الرسم (يمين المؤشر) */}
+           <div className="gauge-svg-wrapper">
+             <svg viewBox="-90 -20 180 110" width="100%" height="100%">
+                <path d={describeArc(0, 80, 80, 0, 36)} fill="none" stroke="#e53935" strokeWidth="20" />
+                <path d={describeArc(0, 80, 80, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth="20" />
+                <path d={describeArc(0, 80, 80, 72, 108)} fill="none" stroke="#fdd835" strokeWidth="20" />
+                <path d={describeArc(0, 80, 80, 108, 144)} fill="none" stroke="#7cb342" strokeWidth="20" />
+                <path d={describeArc(0, 80, 80, 144, 180)} fill="none" stroke={greenColor} strokeWidth="20" />
+                <line x1="0" y1="80" x2="0" y2="10" stroke={isLight ? "#000" : "#FFF"} strokeWidth="4" 
+                      transform={`rotate(${needleRotation}, 0, 80)`} style={{ transition: 'transform 1s ease' }} />
+                <circle cx="0" cy="80" r="8" fill={isLight ? "#000" : "#fff"} />
+             </svg>
+           </div>
+        </div>
       );
   };
 
-  return (
-    <div className="ngx-widget-container" style={{ width: '153.9px', height: '52.65px', overflow: 'hidden' }}>
-    <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block', width: '342px', height: '117px', transform: 'scale(0.45)', transformOrigin: '0 0' }}>
-      
-      <div className="d-flex align-items-center justify-content-between px-3 py-2 rounded-3 position-relative overflow-hidden"
-           style={{
-             background: bgColor,
-             border: `1px solid ${borderColor}`,
-             boxShadow: shadow,
-             height: '100%',
-             width: '100%'
-           }}>
-        
-        <div className="d-flex flex-column justify-content-center h-100 flex-shrink-0" style={{ zIndex: 2 }}>
-            <div className="mb-1">
-                <div className="d-flex align-items-center gap-2">
-                    <span className="fw-bold text-nowrap" style={{ color: titleColor, fontSize: '12.5px', letterSpacing: '0.5px' }}>{title}</span>
-                    
-                    <span className="badge pulse-neon" 
-                          style={{ 
-                              fontSize:'8px', 
-                              padding:'2px 4px', 
-                              color: NEON_GREEN, 
-                              border: 'none', 
-                              backgroundColor: 'rgba(14, 203, 129, 0.1)' 
-                          }}>LIVE</span>
-                </div>
-                <div style={{ fontSize: '9px', color: subTextColor, textTransform: 'uppercase' }}>
-                    {subtitle}
-                </div>
-            </div>
-            
-            <div>
-                <div className="d-flex align-items-end gap-1 mb-1">
-                    <div className="fw-bold lh-1" style={{ fontSize: '39px', color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}>
-                        {scoreInt}<span style={{ fontSize: '0.5em', opacity: 0.8 }}>.{scoreDec}</span>
-                    </div>
-                    <div className="fw-bold d-flex align-items-center gap-1 mb-2 ms-2" style={{ fontSize: '12px', color: changeColor }}>
-                        {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
-                    </div>
-                </div>
-                <div className="fw-bold text-uppercase" style={{ color: currentStatus.color, fontSize: '11px', letterSpacing: '0.5px' }}>
-                    {currentStatus.text}
-                </div>
-            </div>
-        </div>
+  // --------------------------------------------------------
+  // الجزء الثاني: الماركت كاب (Market Cap Logic)
+  // --------------------------------------------------------
+  const MarketCapSection = () => {
+    if (!data) return <div className="pulse-loader" />;
+    const isUp = data.marketCap.change >= 0;
+    const color = isUp ? greenColor : redColor;
 
-        <div className="d-flex align-items-center justify-content-center flex-grow-1 ms-2" style={{ zIndex: 1 }}>
-            <div style={{ width: '100%', height: '90px', position: 'relative' }}>
-                <GaugeSVG />
-            </div>
+    return (
+      <div className="inner-content">
+        <div className="label-row">
+           <span className="mini-label">NFT CAP</span>
+           <span className="change-text" style={{ color }}>
+             {isUp ? '▲' : '▼'}{Math.abs(data.marketCap.change).toFixed(1)}%
+           </span>
+        </div>
+        
+        <div className="main-number">
+            {formatCurrency(data.marketCap.total)}
+        </div>
+        
+        {/* Progress Line */}
+        <div className="progress-bg">
+            <div style={{ width: `${Math.min(100, Math.abs(data.marketCap.change) * 10)}%`, height: '100%', background: color }} />
         </div>
       </div>
-    </Link>
+    );
+  };
 
-    <style jsx>{`
-        .pulse-neon {
-            animation: pulse-neon-green 2s infinite ease-in-out;
-        }
-        @keyframes pulse-neon-green {
-            0% { text-shadow: 0 0 2px rgba(14, 203, 129, 0.1); opacity: 1; }
-            50% { text-shadow: 0 0 8px rgba(14, 203, 129, 0.6); opacity: 0.8; }
-            100% { text-shadow: 0 0 2px rgba(14, 203, 129, 0.1); opacity: 1; }
-        }
-    `}</style>
+  // --------------------------------------------------------
+  // الجزء الثالث: القطاعات (Sectors Logic)
+  // --------------------------------------------------------
+  const VolumeSection = () => {
+    if (!data) return <div className="pulse-loader" />;
+    const bars = data.volume.sectors || [0, 0, 0, 0];
+    const labels = ['ID', 'ART', 'GM', 'VOL'];
+
+    return (
+      <div className="inner-content">
+         <div className="label-row centered">
+           <span className="mini-label">SECTOR VOL</span>
+        </div>
+        
+        <div className="bars-container">
+            {bars.map((val, i) => (
+                <div key={i} className="bar-column">
+                    <div className="bar-track">
+                        <div style={{
+                            width: '100%',
+                            height: `${Math.max(15, Math.min(100, val))}%`,
+                            backgroundColor: i === 3 ? textColor : (val > 30 ? greenColor : '#555'),
+                            borderRadius: '1px',
+                            transition: 'height 0.5s ease'
+                        }}></div>
+                    </div>
+                    <span className="bar-lbl">{labels[i]}</span>
+                </div>
+            ))}
+        </div>
+      </div>
+    );
+  };
+
+  // --------------------------------------------------------
+  // العرض النهائي (Render)
+  // --------------------------------------------------------
+  return (
+    <div className="ngx-combined-widget">
+        <div className="capsules-wrapper">
+            
+            {/* الكبسولة 1: المؤشر */}
+            <Link href="/ngx" className="capsule hover-effect">
+                <GaugeSection />
+            </Link>
+
+            {/* الكبسولة 2: الماركت كاب */}
+            <div className="capsule">
+                <MarketCapSection />
+            </div>
+
+            {/* الكبسولة 3: الفوليوم */}
+            <div className="capsule">
+                <VolumeSection />
+            </div>
+
+        </div>
+
+        <style jsx>{`
+            .ngx-combined-widget {
+                width: 100%;
+                padding: 5px 0;
+                overflow: hidden;
+            }
+
+            .capsules-wrapper {
+                display: flex;
+                gap: 6px;
+                width: 100%;
+                height: 58px; /* ارتفاع ثابت للكبسولات */
+                justify-content: space-between;
+                align-items: stretch;
+            }
+
+            /* تصميم الكبسولة الموحد */
+            .capsule {
+                flex: 1; /* تقسيم 33% لكل عنصر */
+                background: ${bgColor};
+                border: 1px solid ${borderColor};
+                border-radius: 10px;
+                box-shadow: ${shadow};
+                padding: 4px 6px;
+                min-width: 0; /* يمنع الكسر في الموبايل */
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                text-decoration: none;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .hover-effect:hover {
+                border-color: ${subTextColor};
+            }
+
+            /* المحتوى الداخلي */
+            .inner-content {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            /* تخطيط خاص للمؤشر */
+            .gauge-layout {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .gauge-text {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                width: 45%;
+            }
+            .gauge-svg-wrapper {
+                width: 55%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+            }
+
+            /* النصوص والأرقام */
+            .label-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 2px;
+            }
+            .label-row.centered { justify-content: center; }
+
+            .mini-label {
+                font-size: 8px;
+                font-weight: 800;
+                color: ${subTextColor};
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .live-badge { color: ${greenColor}; font-size: 8px; animation: blink 2s infinite; }
+            .change-text { font-size: 8px; font-weight: 700; }
+            .status-text { font-size: 8px; font-weight: 800; letter-spacing: 0.5px; }
+
+            .score-value {
+                font-size: 16px;
+                font-weight: 900;
+                line-height: 1.1;
+            }
+            .main-number {
+                font-size: 14px;
+                font-weight: 900;
+                color: ${textColor};
+                text-align: center;
+            }
+
+            /* شريط التقدم */
+            .progress-bg {
+                width: 100%;
+                height: 3px;
+                background: ${isLight ? '#e9ecef' : '#222'};
+                border-radius: 2px;
+                overflow: hidden;
+                margin-top: auto;
+            }
+
+            /* أعمدة الفوليوم */
+            .bars-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                height: 25px;
+                gap: 2px;
+            }
+            .bar-column {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-end;
+                height: 100%;
+            }
+            .bar-track {
+                width: 5px;
+                height: 18px;
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+            }
+            .bar-lbl {
+                font-size: 5px;
+                font-weight: 700;
+                color: ${subTextColor};
+                margin-top: 2px;
+            }
+
+            /* Loader Animation */
+            .pulse-loader {
+                width: 100%; height: 100%;
+                background: rgba(128,128,128,0.1);
+                animation: pulse 1.5s infinite;
+                border-radius: 6px;
+            }
+
+            @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.3;} 100% {opacity: 1;} }
+            @keyframes pulse { 0% {opacity: 0.6;} 50% {opacity: 1;} 100% {opacity: 0.6;} }
+
+            /* تحسينات للجوال */
+            @media (max-width: 400px) {
+                .main-number { font-size: 12px; }
+                .score-value { font-size: 14px; }
+                .mini-label { font-size: 7px; }
+                .bar-track { width: 3px; }
+            }
+        `}</style>
     </div>
   );
 }
