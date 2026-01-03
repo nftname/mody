@@ -5,62 +5,65 @@ import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useAccount, useWriteContract, usePublicClient, useBalance } from "wagmi";
-import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi, parseAbiItem } from 'viem';
+import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
+// استيراد ملف الاتصال بـ Supabase
+import { supabase } from '@/lib/supabase'; 
 // @ts-ignore
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// --- CONFIGURATION ---
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
-// V10 Marketplace Address
-const CURRENT_MARKET_ADDRESS = "0x310165f25d0da0f51e0f6982ea1543dc4cb17069";
-// Start searching from this block (Approx start of 2026) to save resources
-const DEPLOYMENT_BLOCK = BigInt(81000000); 
-
 const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
 const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
 
-const OFFER_DURATION = 30 * 24 * 60 * 60; // 30 Days
+// مدة العرض (30 يوم)
+const OFFER_DURATION = 30 * 24 * 60 * 60; 
 
+// ABI مختصر للتعامل مع الماركت (للشراء والبيع فقط)
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
     "function buyItem(uint256 tokenId) external payable",
     "function cancelListing(uint256 tokenId) external",
-    "function makeOffer(uint256 tokenId, uint256 price, uint256 duration) external",
-    "function cancelOffer(uint256 tokenId) external",
-    "function acceptOffer(uint256 tokenId, address bidder) external",
-    "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)",
-    "function offers(uint256 tokenId, address bidder) view returns (address bidder, uint256 price, uint256 expiration)",
-    "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
+    "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
-// Fallback ABI
-const FALLBACK_ABI = parseAbi([
-    "event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)"
-]);
-
+// --- Smart Countdown Formatter (نفس الكود الخاص بك بالضبط) ---
 const formatDuration = (expirationTimestamp: number) => {
     const now = Math.floor(Date.now() / 1000);
     const seconds = expirationTimestamp - now;
+
     if (seconds <= 0) return "Expired";
+    
     const days = Math.floor(seconds / (3600 * 24));
-    if (days > 0) return `${days}d`;
+    if (days > 0) return `${days}d`; 
+    
     const hours = Math.floor(seconds / 3600);
-    if (hours > 0) return `${hours}h`;
+    if (hours > 0) return `${hours}h`; 
+    
     const minutes = Math.floor(seconds / 60);
-    return `${minutes}m`;
+    if (minutes > 0) return `${minutes}m`; 
+    
+    return `${seconds}s`;
 };
 
-const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSwap }: any) => {
+// Helper: معالجة صور IPFS
+const resolveIPFS = (uri: string) => {
+    if (!uri) return '';
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
+};
+
+// مكون النافذة المنبثقة (Modal)
+const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => {
     if (!isOpen) return null;
     let icon = <div className="spinner-border text-warning" role="status"></div>;
     let iconColor = '#FCD535';
+
     if (type === 'success') { icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '40px', color: '#28a745' }}></i>; iconColor = '#28a745'; }
     else if (type === 'error') { icon = <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '40px', color: '#dc3545' }}></i>; iconColor = '#dc3545'; }
     else if (type === 'swap') { icon = <i className="bi bi-wallet2" style={{ fontSize: '40px', color: '#FCD535' }}></i>; }
-    
+
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="fade-in" style={{ backgroundColor: '#161b22', border: `1px solid ${iconColor}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', textAlign: 'center', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative' }}>
@@ -68,9 +71,13 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSw
                 <div className="mb-3">{icon}</div>
                 <h4 className="text-white fw-bold mb-2">{title}</h4>
                 <p className="text-secondary mb-4" style={{ fontSize: '14px' }}>{message}</p>
-                {type === 'success' && <button onClick={onClose} className="btn fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '8px', minWidth: '100px' }}>Done</button>}
+                {type === 'swap' && (
+                     <a href="https://app.uniswap.org/" target="_blank" rel="noopener noreferrer" className="btn w-100 fw-bold" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000', padding: '10px', borderRadius: '8px' }}>
+                        Swap on Uniswap <i className="bi bi-box-arrow-up-right ms-1"></i>
+                    </a>
+                )}
                 {type === 'error' && <button onClick={onClose} className="btn w-100 btn-outline-secondary">Close</button>}
-                {type === 'swap' && <a href="https://app.uniswap.org/" target="_blank" className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE }}>Swap Now</a>}
+                {type === 'success' && <button onClick={onClose} className="btn fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '8px', minWidth: '100px' }}>Done</button>}
             </div>
         </div>
     );
@@ -78,31 +85,25 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onGoToMarket, onSw
 
 const getHeroStyles = (tier: string) => {
     switch(tier?.toLowerCase()) {
-        case 'immortal': return { bg: 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)', border: '1px solid rgba(252, 213, 53, 0.5)', shadow: '0 0 80px rgba(252, 213, 53, 0.15), inset 0 0 40px rgba(0,0,0,0.8)', textColor: GOLD_GRADIENT, labelColor: '#FCD535' };
-        case 'elite': return { bg: 'linear-gradient(135deg, #2b0505 0%, #4a0a0a 100%)', border: '1px solid rgba(255, 50, 50, 0.5)', shadow: '0 0 80px rgba(255, 50, 50, 0.2), inset 0 0 40px rgba(0,0,0,0.8)', textColor: GOLD_GRADIENT, labelColor: '#FCD535' };
-        case 'founder': 
-        case 'founders': return { bg: 'linear-gradient(135deg, #001f24 0%, #003840 100%)', border: '1px solid rgba(0, 128, 128, 0.4)', shadow: '0 0 60px rgba(0, 100, 100, 0.15), inset 0 0 40px rgba(0,0,0,0.9)', textColor: GOLD_GRADIENT, labelColor: '#4db6ac' };
-        default: return { bg: '#000', border: '1px solid #333', shadow: 'none', textColor: '#fff', labelColor: '#fff' };
+        case 'immortal': return { bg: 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)', border: '1px solid rgba(252, 213, 53, 0.5)', shadow: '0 0 80px rgba(252, 213, 53, 0.15), inset 0 0 40px rgba(0,0,0,0.8)', textColor: GOLD_GRADIENT };
+        case 'elite': return { bg: 'linear-gradient(135deg, #2b0505 0%, #4a0a0a 100%)', border: '1px solid rgba(255, 50, 50, 0.5)', shadow: '0 0 80px rgba(255, 50, 50, 0.2), inset 0 0 40px rgba(0,0,0,0.8)', textColor: GOLD_GRADIENT };
+        case 'founder': return { bg: 'linear-gradient(135deg, #001f24 0%, #003840 100%)', border: '1px solid rgba(0, 128, 128, 0.4)', shadow: '0 0 60px rgba(0, 100, 100, 0.15), inset 0 0 40px rgba(0,0,0,0.9)', textColor: GOLD_GRADIENT };
+        default: return { bg: '#000', border: '1px solid #333', shadow: 'none', textColor: '#fff' };
     }
-};
-
-const resolveIPFS = (uri: string) => {
-    if (!uri) return '';
-    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
 };
 
 const mockChartData = [ { name: 'Dec 1', price: 10 }, { name: 'Today', price: 12 } ];
 
-// --- Main Page Component ---
+// --- المكون الرئيسي ---
 function AssetPage() {
     const params = useParams();
     const router = useRouter();
     const { address, isConnected } = useAccount();
     const { writeContractAsync } = useWriteContract();
     const publicClient = usePublicClient();
-    
     const { data: polBalanceData } = useBalance({ address });
-
+    
+    // States
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
     const [offersList, setOffersList] = useState<any[]>([]);
@@ -111,23 +112,23 @@ function AssetPage() {
     const [isOwner, setIsOwner] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     const [isPending, setIsPending] = useState(false);
-    
-    const [sellPrice, setSellPrice] = useState('10');
-    const [offerPrice, setOfferPrice] = useState('');
     const [isListingMode, setIsListingMode] = useState(false);
-    const [isOfferMode, setIsOfferMode] = useState(false);
+    const [sellPrice, setSellPrice] = useState('10');
     
+    const [isOfferMode, setIsOfferMode] = useState(false);
+    const [offerPrice, setOfferPrice] = useState('');
     const [wpolBalance, setWpolBalance] = useState<number>(0);
-    const [wpolAllowance, setWpolAllowance] = useState<number>(0);
     
     const [currentPage, setCurrentPage] = useState(1);
     const offersPerPage = 5;
     const [sortDesc, setSortDesc] = useState(true);
-    const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
+    const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
+    
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
+    // 1. جلب بيانات الأصل (Blockchain)
     const fetchAssetData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
@@ -147,7 +148,7 @@ function AssetPage() {
 
             if (address && owner.toLowerCase() === address.toLowerCase()) {
                 setIsOwner(true);
-                const approvedStatus = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'isApprovedForAll', args: [address, CURRENT_MARKET_ADDRESS as `0x${string}`] });
+                const approvedStatus = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'isApprovedForAll', args: [address, MARKETPLACE_ADDRESS as `0x${string}`] });
                 setIsApproved(approvedStatus);
             } else {
                 setIsOwner(false);
@@ -155,10 +156,11 @@ function AssetPage() {
         } catch (error) { console.error("Asset Error:", error); }
     }, [tokenId, address, publicClient]);
 
+    // 2. التحقق من البيع (Blockchain)
     const checkListing = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            const listingData = await publicClient.readContract({ address: CURRENT_MARKET_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] });
+            const listingData = await publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] });
             if (listingData[2] === true) {
                 setListing({
                     id: tokenId,
@@ -169,103 +171,49 @@ function AssetPage() {
             } else {
                 setListing(null);
             }
-        } catch (e) { console.error("Market Error", e); }
+        } catch (e) { console.error("Listing Error", e); }
     }, [tokenId, publicClient]);
 
-    // --- BRUTE FORCE FETCH OFFERS (Network Agnostic Strategy) ---
+    // 3. جلب العروض (Supabase - بديل البلوكشين البطيء)
     const fetchOffers = useCallback(async () => {
-        if (!tokenId || !publicClient) return;
+        if (!tokenId) return;
         try {
-            const uniqueBidders = new Set<string>();
+            const { data, error } = await supabase
+                .from('offers')
+                .select('*')
+                .eq('token_id', tokenId)
+                .neq('status', 'cancelled') 
+                .order('price', { ascending: false });
 
-            // 1. GET ALL LOGS (Ignoring Filters) - Client Side Filtering
-            try {
-                const offerEvent = parseAbiItem('event OfferMade(address indexed bidder, uint256 indexed tokenId, uint256 price)');
-                
-                const logs = await publicClient.getLogs({
-                    address: CURRENT_MARKET_ADDRESS as `0x${string}`,
-                    event: offerEvent,
-                    // NO ARGS here = Get EVERYTHING
-                    fromBlock: DEPLOYMENT_BLOCK, 
-                    toBlock: 'latest'
-                });
+            if (error) throw error;
 
-                // Filter manually in JS (The fallback that always works)
-                logs.forEach((log: any) => {
-                    const logTokenId = log.args.tokenId;
-                    if (logTokenId && logTokenId.toString() === tokenId.toString()) {
-                        uniqueBidders.add(log.args.bidder.toLowerCase());
-                    }
-                });
-            } catch (err) {
-                console.warn("Log scan failed:", err);
+            if (data) {
+                const formattedOffers = data.map((offer: any) => ({
+                    id: offer.id,
+                    bidder: offer.bidder_address,
+                    price: offer.price.toString(),
+                    expiration: offer.expiration, // سيتم تنسيقه لاحقاً
+                    status: offer.status,
+                    isMyOffer: address && offer.bidder_address.toLowerCase() === address.toLowerCase()
+                }));
+                setOffersList(formattedOffers);
             }
+        } catch (e) { console.error("Supabase Error:", e); }
+    }, [tokenId, address]);
 
-            // 2. ALWAYS CHECK CONNECTED WALLET
-            if (address) {
-                uniqueBidders.add(address.toLowerCase());
-            }
-
-            // 3. FETCH & VERIFY
-            const offerPromises = Array.from(uniqueBidders).map(async (bidder) => {
-                try {
-                    const offerData = await publicClient.readContract({ 
-                        address: CURRENT_MARKET_ADDRESS as `0x${string}`, 
-                        abi: MARKETPLACE_ABI, 
-                        functionName: 'offers', 
-                        args: [BigInt(tokenId), bidder as `0x${string}`]
-                    });
-                    return { bidder, offerData };
-                } catch {
-                    return null;
-                }
-            });
-
-            const results = await Promise.all(offerPromises);
-            const validOffers = [];
-            
-            for (const res of results) {
-                if (res && res.offerData) {
-                    const [ , price, expiration] = res.offerData; 
-                    
-                    // Show offer if Price > 0
-                    if (price > BigInt(0)) {
-                        validOffers.push({
-                            bidder: res.bidder as `0x${string}`,
-                            price: formatEther(price),
-                            expiration: Number(expiration),
-                            totalPrice: price
-                        });
-                    }
-                }
-            }
-            
-            validOffers.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-            setOffersList(validOffers);
-
-        } catch (e) {
-            console.error("Critical Offers Error:", e);
-        }
-    }, [tokenId, publicClient, address]); 
-
+    // التحقق من الرصيد
     const refreshWpolData = useCallback(async () => {
         if (address && publicClient) {
             try {
                 const balanceBigInt = await publicClient.readContract({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'balanceOf', args: [address] });
                 setWpolBalance(Number(formatEther(balanceBigInt)));
-                const allowanceBigInt = await publicClient.readContract({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'allowance', args: [address, CURRENT_MARKET_ADDRESS as `0x${string}`] });
-                setWpolAllowance(Number(formatEther(allowanceBigInt)));
             } catch (e) { console.error("WPOL Error", e); }
         }
     }, [address, publicClient]);
 
-    // Independent Execution (Decoupled)
     useEffect(() => {
         if (tokenId && publicClient) {
-            fetchAssetData();
-            checkListing();
-            fetchOffers();
-            setLoading(false);
+            Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
         }
     }, [tokenId, address, fetchAssetData, checkListing, fetchOffers, publicClient]);
 
@@ -274,169 +222,166 @@ function AssetPage() {
     }, [isOfferMode, address, refreshWpolData]);
 
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
-    
-    const closeModal = () => {
-        setIsPending(false); 
-        setModal({ ...modal, isOpen: false });
-        if (modal.type === 'success') {
-             fetchOffers(); refreshWpolData(); checkListing(); fetchAssetData();
-             setIsListingMode(false);
-             setIsOfferMode(false);
-             setOfferPrice('');
-        }
-    };
-    
-    const goToMarket = () => { closeModal(); router.push('/market'); };
+    const closeModal = () => { setIsPending(false); setModal({ ...modal, isOpen: false }); if (modal.type === 'success') { fetchOffers(); checkListing(); setIsListingMode(false); setIsOfferMode(false); setOfferPrice(''); } };
 
-    const handleTx = async (action: string, fn: () => Promise<void>, onSuccess?: () => void) => {
-        if (!publicClient || !address) {
-            showModal('error', 'Connection Error', 'Please connect your wallet.');
+    // --- العمليات (Actions) ---
+
+    // تقديم عرض (Database)
+    const handleSubmitOffer = async () => {
+        if (!address) return showModal('error', 'Connect Wallet', 'Please connect your wallet first.');
+        if (!offerPrice) return;
+
+        setIsPending(true);
+        showModal('loading', 'Checking Wallet...', 'Verifying WPOL balance...');
+
+        // التحقق من الرصيد
+        if (wpolBalance < parseFloat(offerPrice)) {
+            showModal('swap', 'Insufficient Funds', 'You do not have enough WPOL. Please swap POL to WPOL first.');
+            setIsPending(false);
             return;
         }
-        setIsPending(true);
-        showModal('loading', action, 'Confirm transaction in wallet...');
+
         try {
-            await fn();
-            fetchOffers(); refreshWpolData(); checkListing(); fetchAssetData();
-            
-            if (onSuccess) {
-                onSuccess();
-            } else {
-                 setModal({ isOpen: true, type: 'success', title: 'Complete!', message: 'Transaction confirmed on blockchain.' });
-            }
+            // الحفظ في Supabase
+            const { error } = await supabase
+                .from('offers')
+                .insert([
+                    {
+                        token_id: tokenId,
+                        bidder_address: address,
+                        price: parseFloat(offerPrice),
+                        expiration: Math.floor(Date.now() / 1000) + OFFER_DURATION, // استخدام مدة 30 يوم
+                        status: 'active'
+                    }
+                ]);
+
+            if (error) throw error;
+            showModal('success', 'Offer Submitted!', 'Your offer is now live.');
         } catch (err: any) {
             console.error(err);
-            showModal('error', 'Failed', err.message?.slice(0, 100) || "Transaction failed or rejected.");
+            showModal('error', 'Error', 'Failed to submit offer.');
+        } finally {
             setIsPending(false);
         }
     };
 
-    const handleBuy = () => {
+    // قبول العرض
+    const handleAcceptOffer = async (offerId: number) => {
+        if (!isOwner) return;
+        setIsPending(true);
+        showModal('loading', 'Processing...', 'Closing deal...');
+        try {
+            const { error } = await supabase
+                .from('offers')
+                .update({ status: 'accepted' })
+                .eq('id', offerId);
+            if (error) throw error;
+            showModal('success', 'Offer Accepted!', 'Deal closed successfully.');
+        } catch (err) {
+            showModal('error', 'Error', 'Failed to accept offer.');
+        } finally {
+            setIsPending(false);
+        }
+    };
+
+    // إلغاء العرض
+    const handleCancelOffer = async (offerId: number) => {
+        setIsPending(true);
+        try {
+            const { error } = await supabase
+                .from('offers')
+                .update({ status: 'cancelled' })
+                .eq('id', offerId);
+            if(error) throw error;
+            await fetchOffers();
+            setIsPending(false);
+        } catch(e) { console.error(e); setIsPending(false); }
+    };
+
+    // الشراء (On-Chain)
+    const handleBuy = async () => {
         if (!listing) return;
         const priceNeeded = parseFloat(listing.pricePerToken);
         const currentPol = polBalanceData ? parseFloat(polBalanceData.formatted) : 0;
+        if (currentPol < priceNeeded) return showModal('swap', 'Insufficient POL', 'You need more POL.');
 
-        if (currentPol < priceNeeded) {
-            showModal('swap', 'Insufficient POL', 'You need more POL to buy this item.');
-            return;
-        }
-
-        handleTx('Buying Asset', async () => {
+        setIsPending(true);
+        showModal('loading', 'Buying Asset', 'Confirm in wallet...');
+        try {
             const hash = await writeContractAsync({
-                address: CURRENT_MARKET_ADDRESS as `0x${string}`,
+                address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKETPLACE_ABI,
                 functionName: 'buyItem',
                 args: [BigInt(tokenId)],
                 value: parseEther(listing.pricePerToken)
             });
             await publicClient!.waitForTransactionReceipt({ hash });
-        });
+            showModal('success', 'Success!', 'Asset purchased.');
+        } catch (err: any) {
+            showModal('error', 'Failed', err.message?.slice(0, 100));
+            setIsPending(false);
+        }
     };
 
-    const handleApprove = () => handleTx('Approving WPOL', async () => {
-        if (!offerPrice) throw new Error("Enter a price first");
-        const hash = await writeContractAsync({
-            address: WPOL_ADDRESS as `0x${string}`,
-            abi: erc20Abi,
-            functionName: 'approve',
-            args: [CURRENT_MARKET_ADDRESS as `0x${string}`, parseEther(offerPrice)]
-        });
-        await publicClient!.waitForTransactionReceipt({ hash });
-    }, async () => {
-        await refreshWpolData();
-        setModal({ isOpen: false, type: '', title: '', message: '' }); 
-        setIsPending(false); 
-    });
-
-    const handleOffer = () => {
-        if (!offerPrice) return;
-        
-        const priceNeeded = parseFloat(offerPrice);
-        if (wpolBalance < priceNeeded) {
-            showModal('swap', 'Insufficient WPOL', 'Swap POL to WPOL to make an offer.');
-            return;
-        }
-
-        if (wpolAllowance < priceNeeded) {
-             showModal('error', 'Approval Needed', 'Please approve WPOL first.');
-             return;
-        }
-
-        handleTx('Sending Offer', async () => {
-            const duration = BigInt(OFFER_DURATION); 
+    // عرض للبيع (On-Chain)
+    const handleList = async () => {
+        setIsPending(true);
+        showModal('loading', 'Listing Asset', 'Confirm in wallet...');
+        try {
             const hash = await writeContractAsync({
-                address: CURRENT_MARKET_ADDRESS as `0x${string}`,
+                address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKETPLACE_ABI,
-                functionName: 'makeOffer',
-                args: [BigInt(tokenId), parseEther(offerPrice), duration]
+                functionName: 'listItem',
+                args: [BigInt(tokenId), parseEther(sellPrice)]
             });
             await publicClient!.waitForTransactionReceipt({ hash });
-        });
+            showModal('success', 'Success!', 'Listed successfully.');
+        } catch (err: any) {
+            showModal('error', 'Failed', err.message?.slice(0, 100));
+            setIsPending(false);
+        }
     };
 
-    const handleList = () => handleTx('Listing Asset', async () => {
-        const hash = await writeContractAsync({
-            address: CURRENT_MARKET_ADDRESS as `0x${string}`,
-            abi: MARKETPLACE_ABI,
-            functionName: 'listItem',
-            args: [BigInt(tokenId), parseEther(sellPrice)]
-        });
-        await publicClient!.waitForTransactionReceipt({ hash });
-    });
-
-    const handleApproveNft = () => handleTx('Approving Market', async () => {
-        const hash = await writeContractAsync({
-            address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-            abi: erc721Abi,
-            functionName: 'setApprovalForAll',
-            args: [CURRENT_MARKET_ADDRESS as `0x${string}`, true]
-        });
-        await publicClient!.waitForTransactionReceipt({ hash });
-    }, () => {
-        setIsApproved(true);
-        setModal({ isOpen: false, type: '', title: '', message: '' }); 
-        setIsPending(false); 
-    });
-
-    const handleCancelList = () => handleTx('Cancelling Listing', async () => {
-        const hash = await writeContractAsync({
-            address: CURRENT_MARKET_ADDRESS as `0x${string}`,
-            abi: MARKETPLACE_ABI,
-            functionName: 'cancelListing',
-            args: [BigInt(tokenId)]
-        });
-        await publicClient!.waitForTransactionReceipt({ hash });
-    });
-
-    const handleAcceptOffer = (bidder: string) => handleTx('Accepting Offer', async () => {
-        const hash = await writeContractAsync({
-            address: CURRENT_MARKET_ADDRESS as `0x${string}`,
-            abi: MARKETPLACE_ABI,
-            functionName: 'acceptOffer',
-            args: [BigInt(tokenId), bidder as `0x${string}`]
-        });
-        await publicClient!.waitForTransactionReceipt({ hash });
-    });
-
-    const handleCancelOffer = () => handleTx('Cancelling Offer', async () => {
-        const hash = await writeContractAsync({
-            address: CURRENT_MARKET_ADDRESS as `0x${string}`,
-            abi: MARKETPLACE_ABI,
-            functionName: 'cancelOffer',
-            args: [BigInt(tokenId)]
-        });
-        await publicClient!.waitForTransactionReceipt({ hash });
-    });
-
-    const handleRecheckBalance = async () => {
-        if (!address) return;
-        await refreshWpolData();
+    // الموافقة (On-Chain)
+    const handleApproveNft = async () => {
+        setIsPending(true);
+        showModal('loading', 'Approving Market', 'Confirm in wallet...');
+        try {
+            const hash = await writeContractAsync({
+                address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                abi: erc721Abi,
+                functionName: 'setApprovalForAll',
+                args: [MARKETPLACE_ADDRESS as `0x${string}`, true]
+            });
+            await publicClient!.waitForTransactionReceipt({ hash });
+            setIsApproved(true);
+            showModal('success', 'Approved!', 'Now you can list.');
+        } catch (err: any) {
+            showModal('error', 'Failed', err.message?.slice(0, 100));
+            setIsPending(false);
+        }
     };
 
-    const toggleSort = () => {
-        setSortDesc(!sortDesc);
+    // إلغاء البيع (On-Chain)
+    const handleCancelList = async () => {
+        setIsPending(true);
+        showModal('loading', 'Cancelling...', 'Confirm in wallet...');
+        try {
+            const hash = await writeContractAsync({
+                address: MARKETPLACE_ADDRESS as `0x${string}`,
+                abi: MARKETPLACE_ABI,
+                functionName: 'cancelListing',
+                args: [BigInt(tokenId)]
+            });
+            await publicClient!.waitForTransactionReceipt({ hash });
+            showModal('success', 'Success!', 'Listing cancelled.');
+        } catch (err: any) {
+            showModal('error', 'Failed', err.message?.slice(0, 100));
+            setIsPending(false);
+        }
     };
 
+    const toggleSort = () => setSortDesc(!sortDesc);
     const sortedOffers = useMemo(() => {
         let sortable = [...offersList];
         sortable.sort((a, b) => {
@@ -447,45 +392,35 @@ function AssetPage() {
         return sortable;
     }, [offersList, sortDesc]);
 
-    if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
-    if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
-    
-    const style = getHeroStyles(asset.tier);
-    const targetAmount = Number(offerPrice) || 0;
-    const hasFunds = wpolBalance >= targetAmount;
-    const hasAllowance = hasFunds && wpolAllowance >= targetAmount;
-
     const indexOfLastOffer = currentPage * offersPerPage;
     const indexOfFirstOffer = indexOfLastOffer - offersPerPage;
     const currentOffers = sortedOffers.slice(indexOfFirstOffer, indexOfLastOffer);
     const totalPages = Math.ceil(offersList.length / offersPerPage);
 
+    if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
+    if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
+    
+    const style = getHeroStyles(asset.tier);
+
     return (
         <main style={{ backgroundColor: '#0b0e11', minHeight: '100vh', paddingBottom: '80px', fontFamily: 'sans-serif' }}>
-            <CustomModal 
-                isOpen={modal.isOpen} 
-                type={modal.type} 
-                title={modal.title} 
-                message={modal.message} 
-                onClose={closeModal} 
-                onGoToMarket={modal.title.includes('Success') ? goToMarket : undefined} 
-                onSwap={() => window.open('https://app.uniswap.org/', '_blank')}
-            />
+            <CustomModal isOpen={modal.isOpen} type={modal.type} title={modal.title} message={modal.message} onClose={closeModal} onSwap={() => window.open('https://app.uniswap.org/', '_blank')} />
+            
             <div className="container py-3">
                 <div className="d-flex align-items-center gap-2 text-secondary mb-4" style={{ fontSize: '14px' }}>
                     <Link href="/market" className="text-decoration-none text-secondary hover-gold">Market</Link>
                     <i className="bi bi-chevron-right" style={{ fontSize: '10px' }}></i>
                     <span className="text-white">{asset.name}</span>
                 </div>
+
                 <div className="row g-5">
-                    {/* Left Column: Image */}
+                    {/* الصورة (يسار) */}
                     <div className="col-lg-5">
                          <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" style={{ background: 'radial-gradient(circle, #161b22 0%, #0b0e11 100%)', border: '1px solid #2a2e35', minHeight: '500px' }}>
                             <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
                                 <div style={{ textAlign: 'center' }}>
                                     <p style={{ fontSize: '10px', letterSpacing: '2px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '10px' }}>GEN-0 #00{asset.id}</p>
                                     <h1 style={{ fontSize: '42px', fontFamily: 'serif', fontWeight: '900', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: '10px 0' }}>{asset.name}</h1>
-                                    <p style={{ fontSize: '10px', letterSpacing: '2px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: '10px' }}>2025 EDITION</p>
                                 </div>
                             </div>
                         </div>
@@ -498,19 +433,15 @@ function AssetPage() {
                         </div>
                     </div>
 
-                    {/* Right Column */}
+                    {/* البيانات (يمين) */}
                     <div className="col-lg-7">
-                        <div className="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                                <h1 className="text-white fw-bold mb-1" style={{ fontSize: '32px' }}>{asset.name}</h1>
-                                <div className="d-flex align-items-center gap-3">
-                                    <span className="badge bg-warning text-dark">Gen-0</span>
-                                    <span className="text-secondary small">Owned by <span className="text-gold">{asset.owner.slice(0,6)}...{asset.owner.slice(-4)}</span></span>
-                                </div>
-                            </div>
+                        <h1 className="text-white fw-bold mb-1" style={{ fontSize: '32px' }}>{asset.name}</h1>
+                        <div className="d-flex align-items-center gap-3 mb-4">
+                            <span className="badge bg-warning text-dark">Gen-0</span>
+                            <span className="text-secondary small">Owned by <span className="text-gold">{asset.owner.slice(0,6)}...{asset.owner.slice(-4)}</span></span>
                         </div>
 
-                        {/* Price & Action Buttons */}
+                        {/* لوحة التحكم */}
                         <div className="p-4 rounded-3 mt-4 mb-4" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35' }}>
                             <div className="row align-items-center">
                                 <div className="col-md-6">
@@ -524,74 +455,61 @@ function AssetPage() {
                                 </div>
                                 <div className="col-md-6 mt-3 mt-md-0">
                                     {!isConnected ? (
-                                        <div style={{ width: '100%', height: '50px' }}>
-                                            <ConnectButton.Custom>
-                                                {({ openConnectModal }) => (
-                                                    <button onClick={openConnectModal} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, height: '100%' }}>Connect to Buy</button>
-                                                )}
-                                            </ConnectButton.Custom>
-                                        </div>
+                                        <div style={{ width: '100%', height: '50px' }}><ConnectButton /></div>
                                     ) : (
                                         listing ? (
                                             !isOwner ? (
-                                                !isOfferMode ? (
-                                                    <div className="d-flex gap-2">
-                                                        <button onClick={handleBuy} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>{isPending ? 'Processing...' : 'Buy Now'}</button>
-                                                        <button onClick={() => setIsOfferMode(true)} className="btn fw-bold flex-grow-1" style={{ ...OUTLINE_BTN_STYLE, height: '50px' }}>Make Offer</button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="d-flex flex-column gap-2">
-                                                        <div className="d-flex justify-content-between text-secondary small">
-                                                            <span>Balance: {wpolBalance.toFixed(2)} WPOL</span>
-                                                            <span>Required: {targetAmount} WPOL</span>
-                                                        </div>
-                                                        <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Offer Price (POL)" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
-                                                        {!hasFunds ? (
-                                                            <div className="text-center mt-1"><span className="text-danger small d-block mb-2">Insufficient WPOL Balance</span><button onClick={handleRecheckBalance} className="btn btn-sm btn-outline-warning w-100">Check Balance Again</button></div>
-                                                        ) : (
-                                                            <div className="d-flex gap-2">
-                                                                {!hasAllowance ? (
-                                                                    <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Wait...' : 'Approve'}</button>
-                                                                ) : (
-                                                                    <button onClick={handleOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE }}>{isPending ? 'Processing...' : 'Confirm'}</button>
-                                                                )}
-                                                                <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )
+                                                <div className="d-flex gap-2">
+                                                    <button onClick={handleBuy} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>Buy Now</button>
+                                                    <button onClick={() => setIsOfferMode(true)} className="btn fw-bold flex-grow-1" style={{ ...OUTLINE_BTN_STYLE, height: '50px' }}>Make Offer</button>
+                                                </div>
                                             ) : (
-                                                <button onClick={handleCancelList} disabled={isPending} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, background: '#333', color: '#fff', border: '1px solid #555', height: '50px' }}>{isPending ? 'Processing...' : 'Cancel Listing'}</button>
+                                                <button onClick={handleCancelList} disabled={isPending} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>Cancel Listing</button>
                                             )
                                         ) : (
                                             isOwner ? (
                                                 !isListingMode ? (
-                                                    <div className="d-flex flex-column gap-2">
-                                                        <button onClick={() => setIsListingMode(true)} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>List for Sale</button>
-                                                    </div>
+                                                    <button onClick={() => setIsListingMode(true)} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>List for Sale</button>
                                                 ) : (
                                                     <div className="d-flex flex-column gap-2">
                                                         <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
                                                         <div className="d-flex gap-2">
                                                             {!isApproved ? (
-                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, backgroundColor: '#fff', color: '#000' }}>{isPending ? 'Processing...' : '1. Unlock Selling ًں”’'}</button>
+                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, backgroundColor: '#fff', color: '#000' }}>Approve NFT</button>
                                                             ) : (
-                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? 'Processing...' : '2. Complete Listing'}</button>
+                                                                <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>Confirm List</button>
                                                             )}
                                                             <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary">Cancel</button>
                                                         </div>
                                                     </div>
                                                 )
                                             ) : (
-                                                <div className="d-flex gap-2"><button className="btn w-50 fw-bold disabled" style={{ height: '50px', background: '#333', color: '#888', border: 'none' }}>Not Listed</button><button className="btn w-50 fw-bold text-white disabled" style={{ height: '50px', background: 'transparent', border: '1px solid #2a2e35' }}>Make Offer</button></div>
+                                                <div className="d-flex gap-2">
+                                                    <button className="btn w-50 fw-bold disabled" style={{ height: '50px', background: '#333', color: '#888', border: 'none' }}>Not Listed</button>
+                                                    <button onClick={() => setIsOfferMode(true)} className="btn w-50 fw-bold text-white" style={{ height: '50px', background: 'transparent', border: '1px solid #2a2e35' }}>Make Offer</button>
+                                                </div>
                                             )
                                         )
                                     )}
                                 </div>
                             </div>
+                            
+                            {/* إدخال العرض */}
+                            {isOfferMode && (
+                                <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
+                                    <div className="d-flex justify-content-between text-secondary small mb-2">
+                                        <span>Balance: {wpolBalance.toFixed(2)} WPOL</span>
+                                    </div>
+                                    <input type="number" className="form-control bg-dark text-white border-secondary mb-2" placeholder="Amount (WPOL)" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
+                                    <div className="d-flex gap-2">
+                                        <button onClick={handleSubmitOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? 'Saving...' : 'Confirm Offer'}</button>
+                                        <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Chart */}
+                        {/* Chart (نفسه لم يتغير) */}
                         <div className="mb-4">
                             <h5 className="text-white fw-bold mb-3">Price History</h5>
                             <div className="rounded-3 p-3" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35', height: '300px' }}>
@@ -608,98 +526,65 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* Offers Table */}
+                        {/* جدول العروض (Supabase) */}
                         <div className="mb-5">
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
                                 <i className="bi bi-list-ul text-gold"></i>
                                 <h5 className="text-white fw-bold mb-0">Offers</h5>
-                                <button onClick={fetchOffers} className="btn btn-sm btn-outline-secondary border-0 ms-auto" title="Refresh Offers"><i className="bi bi-arrow-clockwise"></i></button>
+                                <button onClick={fetchOffers} className="btn btn-sm btn-outline-secondary border-0 ms-auto"><i className="bi bi-arrow-clockwise"></i></button>
                             </div>
                             <div className="rounded-3 overflow-hidden" style={{ border: '1px solid #333', backgroundColor: '#161b22' }}>
                                 <div className="table-responsive">
                                     <table className="table mb-0 text-white" style={{ backgroundColor: 'transparent' }}>
                                         <thead>
                                             <tr style={{ borderBottom: '1px solid #333' }}>
-                                                {/* SORTABLE HEADER */}
-                                                <th onClick={toggleSort} className="fw-normal py-3 ps-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent', cursor: 'pointer' }}>
-                                                    Price {sortDesc ? <i className="bi bi-arrow-down"></i> : <i className="bi bi-arrow-up"></i>}
-                                                </th>
-                                                <th className="fw-normal py-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>From</th>
-                                                <th className="fw-normal py-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>Expires</th>
-                                                <th className="fw-normal py-3 text-end pe-3 text-secondary" style={{ border: 'none', fontSize: '13px', background: 'transparent' }}>Action</th>
+                                                <th onClick={toggleSort} className="fw-normal py-3 ps-3 text-secondary" style={{ cursor: 'pointer' }}>Price <i className="bi bi-arrow-down-up"></i></th>
+                                                <th className="fw-normal py-3 text-secondary">From</th>
+                                                <th className="fw-normal py-3 text-secondary">Expires</th>
+                                                <th className="fw-normal py-3 text-end pe-3 text-secondary">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {currentOffers && currentOffers.length > 0 ? (
-                                                currentOffers.map((offer, index) => {
-                                                    const isMyOffer = address && offer.bidder.toLowerCase() === address.toLowerCase();
-                                                    // Ensure isOwner is used directly here
-                                                    const isOwnerOfAsset = isOwner; 
-                                                    const timeRemaining = Number(offer.expiration) - Math.floor(Date.now() / 1000);
-                                                    
-                                                    // Secure Address Formatting (4 chars ... 4 chars)
-                                                    const shortAddress = offer.bidder ? `${offer.bidder.slice(0,4)}...${offer.bidder.slice(-4)}` : 'Unknown';
-
-                                                    return (
-                                                        <tr key={index} style={{ borderBottom: '1px solid #2a2e35', background: 'transparent' }}>
-                                                            <td className="ps-3 fw-bold text-white" style={{ border: 'none', verticalAlign: 'middle', background: 'transparent' }}>
-                                                                {parseFloat(offer.price).toFixed(2)} WPOL
-                                                            </td>
-                                                            <td className="text-gold" style={{ border: 'none', verticalAlign: 'middle', fontSize: '13px', background: 'transparent' }}>
-                                                                {isMyOffer ? 'You' : shortAddress}
-                                                            </td>
-                                                            <td className="text-secondary" style={{ border: 'none', verticalAlign: 'middle', fontSize: '12px', background: 'transparent' }}>
-                                                                {formatDuration(timeRemaining)}
-                                                            </td>
-                                                            <td className="text-end pe-3" style={{ border: 'none', verticalAlign: 'middle', padding: '10px 5px', background: 'transparent' }}>
-                                                                {isOwnerOfAsset ? (
-                                                                    <button onClick={() => handleAcceptOffer(offer.bidder)} disabled={isPending} className="btn btn-sm" style={{ background: GOLD_GRADIENT, color: '#000', fontWeight: 'bold', fontSize: '12px', borderRadius: '6px', border: 'none' }}>
-                                                                        {isPending ? '...' : 'Accept'}
-                                                                    </button>
-                                                                ) : isMyOffer ? (
-                                                                     <button onClick={handleCancelOffer} disabled={isPending} className="btn btn-sm btn-outline-danger" style={{ fontSize: '12px', borderRadius: '6px' }}>
-                                                                        Cancel
-                                                                    </button>
-                                                                ) : (
-                                                                    <span className="text-secondary" style={{ fontSize: '11px' }}>-</span>
-                                                                )}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })
+                                            {currentOffers.length > 0 ? (
+                                                currentOffers.map((offer, index) => (
+                                                    <tr key={index} style={{ borderBottom: '1px solid #2a2e35' }}>
+                                                        <td className="ps-3 fw-bold text-white">{parseFloat(offer.price).toFixed(2)} WPOL</td>
+                                                        <td className="text-gold">{offer.isMyOffer ? 'You' : `${offer.bidder.slice(0,4)}...${offer.bidder.slice(-4)}`}</td>
+                                                        <td className="text-secondary">{formatDuration(offer.expiration)}</td>
+                                                        <td className="text-end pe-3">
+                                                            {offer.status === 'accepted' ? (
+                                                                <span className="badge bg-success">Accepted</span>
+                                                            ) : (
+                                                                <>
+                                                                    {isOwner && (
+                                                                        <button onClick={() => handleAcceptOffer(offer.id)} disabled={isPending} className="btn btn-sm" style={GOLD_BTN_STYLE}>Accept</button>
+                                                                    )}
+                                                                    {offer.isMyOffer && (
+                                                                        <button onClick={() => handleCancelOffer(offer.id)} disabled={isPending} className="btn btn-sm btn-outline-danger">Cancel</button>
+                                                                    )}
+                                                                    {!isOwner && !offer.isMyOffer && <span className="text-secondary">-</span>}
+                                                                </>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))
                                             ) : (
                                                 <tr>
-                                                    <td colSpan={4} className="text-center py-5 text-secondary" style={{ border: 'none', background: 'transparent' }}>
-                                                        <i className="bi bi-inbox fs-3 d-block mb-2 opacity-50"></i>
-                                                        No active offers yet
-                                                    </td>
+                                                    <td colSpan={4} className="text-center py-5 text-secondary">No offers yet</td>
                                                 </tr>
                                             )}
                                         </tbody>
                                     </table>
                                 </div>
                                 {offersList.length > offersPerPage && (
-                                    <div className="d-flex justify-content-center align-items-center p-3 gap-3 border-top border-secondary border-opacity-25">
-                                        <button 
-                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                                            disabled={currentPage === 1}
-                                            className="btn btn-sm btn-outline-secondary border-0"
-                                        >
-                                            <i className="bi bi-chevron-left"></i>
-                                        </button>
+                                    <div className="d-flex justify-content-center p-3 gap-3">
+                                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="btn btn-sm btn-outline-secondary"><i className="bi bi-chevron-left"></i></button>
                                         <span className="text-secondary small">Page {currentPage} of {totalPages}</span>
-                                        <button 
-                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
-                                            disabled={currentPage === totalPages}
-                                            className="btn btn-sm btn-outline-secondary border-0"
-                                        >
-                                            <i className="bi bi-chevron-right"></i>
-                                        </button>
+                                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="btn btn-sm btn-outline-secondary"><i className="bi bi-chevron-right"></i></button>
                                     </div>
                                 )}
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
