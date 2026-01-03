@@ -122,15 +122,15 @@ export default function NGXWidget({
   };
 
   return (
-    <div className="ngx-widget-container">
-    <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
+    <div className="ngx-widget-container" style={{ width: '171px', height: '59px', overflow: 'hidden' }}>
+    <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block', width: '342px', height: '117px', transform: 'scale(0.5)', transformOrigin: '0 0' }}>
       
       <div className="d-flex align-items-center justify-content-between px-3 py-2 rounded-3 position-relative overflow-hidden"
            style={{
              background: bgColor,
              border: `1px solid ${borderColor}`,
              boxShadow: shadow,
-             height: '117px',
+             height: '100%',
              width: '100%'
            }}>
         
@@ -177,24 +177,6 @@ export default function NGXWidget({
     </Link>
 
     <style jsx>{`
-        .ngx-widget-container {
-            position: relative;
-            width: 100%;
-            max-width: 342px;
-            transform: scale(0.9);
-            transform-origin: top center;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        @media (min-width: 992px) {
-            .ngx-widget-container {
-                transform-origin: top right;
-                margin-left: auto;
-                margin-right: 0;
-            }
-        }
-
         .pulse-neon {
             animation: pulse-neon-green 2s infinite ease-in-out;
         }
