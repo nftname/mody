@@ -9,15 +9,15 @@ interface NGXData {
 
 export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' }) {
   const [data, setData] = useState<NGXData | null>(null);
-  const isLight = theme === 'light';
-
-  const bgColor = isLight ? '#FFFFFF' : '#0b0e11';
-  const borderColor = isLight ? '#DEE2E6' : '#2b3139';
-  const textColor = isLight ? '#0A192F' : '#E6E8EA';
-  const subTextColor = isLight ? '#6c757d' : '#848E9C';
-  const dividerColor = isLight ? '#E9ECEF' : '#2b3139';
-  const greenColor = '#0ecb81';
-  const redColor = '#f6465d';
+  
+  // Force Dark Mode Colors as requested (Gemini Style)
+  const bgColor = '#1E1F20'; 
+  const borderColor = '#363c45'; 
+  const textColor = '#E6E8EA'; 
+  const subTextColor = '#9AA0A6'; 
+  const dividerColor = '#363c45';
+  const greenColor = '#81c995'; // Softer green for dark mode
+  const redColor = '#f28b82';   // Softer red for dark mode
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,7 +43,7 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
     
     return (
       <div className="data-content">
-        <div className="label-text mb-1">NFT MARKET CAP</div>
+        <div className="label-text mb-2">NFT MARKET CAP</div>
         <div className="value-row">
             <span className="big-value">{formatCurrency(data.marketCap.total)}</span>
         </div>
@@ -66,7 +66,7 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
     
     return (
       <div className="data-content">
-         <div className="label-row mb-1">
+         <div className="label-row mb-2">
              <span className="label-text">BUYING PRESSURE</span>
              <span className="live-dot">●</span>
          </div>
@@ -74,11 +74,11 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
             {bars.map((val, i) => (
                 <div key={i} className="bar-stick" style={{
                     height: `${Math.max(15, Math.min(100, val))}%`,
-                    backgroundColor: i === 3 ? textColor : (val > 40 ? greenColor : '#6c757d')
+                    backgroundColor: i === 3 ? textColor : (val > 40 ? greenColor : '#5f6368')
                 }}></div>
             ))}
          </div>
-         <div className="value-row mt-1">
+         <div className="value-row mt-2">
             <span className="small-value">{formatCurrency(data.volume.total)} Vol</span>
          </div>
       </div>
@@ -91,7 +91,7 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
             
             <div className="bar-column widget-column">
                 <div className="widget-transform-wrapper">
-                    <NGXWidget theme={theme} />
+                    <NGXWidget theme="dark" />
                 </div>
             </div>
 
@@ -112,19 +112,18 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
         <style jsx>{`
             .ngx-bar-wrapper {
                 width: 100%;
-                background: ${isLight ? '#F8F9FA' : '#000'};
+                background: ${bgColor}; 
                 padding: 0;
                 display: flex;
                 justify-content: center;
+                border-bottom: 1px solid ${borderColor};
             }
             .ngx-bar-container {
                 display: flex;
                 width: 100%;
                 max-width: 1400px;
-                height: 80px;
+                height: 90px;
                 background: ${bgColor};
-                border-bottom: 1px solid ${borderColor};
-                border-top: 1px solid ${borderColor};
                 box-sizing: border-box;
                 overflow: hidden;
             }
@@ -170,15 +169,15 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
             .label-text {
                 font-size: 11px;
                 color: ${subTextColor};
-                font-weight: 700;
-                letter-spacing: 0.5px;
+                font-weight: 500;
+                letter-spacing: 0.8px;
                 text-transform: uppercase;
                 white-space: nowrap;
             }
             .label-row {
                 display: flex;
                 align-items: center;
-                gap: 4px;
+                gap: 6px;
             }
             .live-dot {
                 font-size: 8px;
@@ -194,72 +193,73 @@ export default function NGXBar({ theme = 'dark' }: { theme?: 'dark' | 'light' })
             }
 
             .big-value {
-                font-size: 18px;
-                color: ${textColor};
-                font-weight: 800;
-            }
-            .small-value {
-                font-size: 11px;
+                font-size: 22px;
                 color: ${textColor};
                 font-weight: 600;
+                letter-spacing: -0.5px;
+            }
+            .small-value {
+                font-size: 12px;
+                color: ${textColor};
+                font-weight: 500;
             }
 
             .progress-bar-container {
-                width: 70%;
+                width: 60%;
                 height: 4px;
-                background: ${isLight ? '#E9ECEF' : '#333'};
+                background: #3c4043;
                 border-radius: 2px;
-                margin-top: 5px;
-                margin-bottom: 3px;
+                margin-top: 8px;
+                margin-bottom: 4px;
                 overflow: hidden;
             }
             .progress-fill { height: 100%; border-radius: 2px; }
 
             .small-change {
-                font-size: 10px;
-                font-weight: 700;
+                font-size: 11px;
+                font-weight: 600;
             }
 
             .chart-row {
                 display: flex;
                 align-items: flex-end;
-                gap: 4px;
-                height: 25px;
-                width: 70%;
+                gap: 6px;
+                height: 28px;
+                width: 65%;
                 justify-content: center;
                 margin-top: 2px;
             }
-            .bar-stick { width: 14px; border-radius: 1px; transition: height 0.5s; }
+            .bar-stick { width: 14px; border-radius: 2px; transition: height 0.5s; }
 
             .loading-pulse {
                 width: 100%; height: 100%;
-                background: rgba(128,128,128,0.05);
+                background: rgba(255,255,255,0.05);
                 animation: pulse 1.5s infinite;
             }
 
             @media (min-width: 769px) {
                 .widget-transform-wrapper {
-                    transform: scale(1.35);
+                    transform: scale(1.4);
                 }
             }
 
             @media (max-width: 768px) {
-                .ngx-bar-container { height: 65px; }
+                .ngx-bar-container { height: 75px; }
                 
                 .widget-transform-wrapper {
-                    transform: scale(0.65);
+                    transform: scale(0.75);
                 }
                 
                 .bar-column { padding: 0 2px; }
                 
-                .big-value { font-size: 13px; }
-                .label-text { font-size: 8px; }
-                .small-value { font-size: 9px; }
-                .small-change { font-size: 8px; }
+                .big-value { font-size: 16px; }
+                .label-text { font-size: 9px; }
+                .small-value { font-size: 10px; }
+                .small-change { font-size: 9px; }
                 
-                .chart-row { width: 85%; height: 20px; gap: 2px; }
+                .chart-row { width: 85%; height: 22px; gap: 3px; }
                 .bar-stick { width: 8px; }
-                .progress-bar-container { width: 80%; height: 3px; margin-top: 3px; }
+                .progress-bar-container { width: 70%; height: 3px; margin-top: 4px; }
                 .divider { height: 40%; }
             }
 
