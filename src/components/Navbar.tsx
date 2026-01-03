@@ -376,17 +376,14 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* MODIFIED HERE: 
-              - Height changed from '80px' to '20vh' (20% of viewport height).
-              - Background color changed to '#2d2d2d' (Dark Gray).
-          */}
+          {/* UPDATED HANDLE: Small, Dark Gray, Centered */}
           <div style={{
               position: 'absolute',
               right: '0',
               top: '50%',
               transform: 'translateY(-50%)',
               width: '4px',
-              height: '20vh', 
+              height: '40px', 
               backgroundColor: '#2d2d2d', 
               borderTopLeftRadius: '4px',
               borderBottomLeftRadius: '4px',
@@ -394,12 +391,9 @@ const Navbar = () => {
           }}>
           </div>
 
-          {/* MODIFIED HERE: 
-              - Removed 'borderBottom' to unify the look.
-              - Background remains 'exactDarkColor' to match the drawer content.
-          */}
+          {/* UPDATED HEADER: With Very Subtle Divider */}
           <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-3 w-100 mt-0 position-relative" 
-               style={{ backgroundColor: exactDarkColor }}>
+               style={{ backgroundColor: exactDarkColor, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               
               <div className="d-flex align-items-center gap-3">
                  <LogoSVG mobile={true} />
@@ -450,14 +444,14 @@ const Navbar = () => {
                   </div>
               </div>
 
+              {/* UPDATED FOOTER: Increased Size, Increased Gap, Padding Right for Chat Widget */}
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-4">
-                  {/* REDUCED SPACING: Changed gap-4 to gap-2 (50% less) */}
-                  <div className="d-flex justify-content-start align-items-center gap-2 px-3" style={{ width: '80%' }}>
-                      <i className="bi bi-twitter-x" style={{ fontSize: '18px', color: paleGoldHex }}></i>
-                      <i className="bi bi-facebook" style={{ fontSize: '18px', color: paleGoldHex }}></i>
-                      <i className="bi bi-discord" style={{ fontSize: '18px', color: paleGoldHex }}></i>
-                      <i className="bi bi-telegram" style={{ fontSize: '18px', color: paleGoldHex }}></i>
-                      <i className="bi bi-instagram" style={{ fontSize: '18px', color: paleGoldHex }}></i>
+                  <div className="d-flex justify-content-start align-items-center px-2" style={{ gap: '25px', paddingRight: '80px', width: '100%' }}>
+                      <i className="bi bi-twitter-x" style={{ fontSize: '20px', color: paleGoldHex }}></i>
+                      <i className="bi bi-facebook" style={{ fontSize: '20px', color: paleGoldHex }}></i>
+                      <i className="bi bi-discord" style={{ fontSize: '20px', color: paleGoldHex }}></i>
+                      <i className="bi bi-telegram" style={{ fontSize: '20px', color: paleGoldHex }}></i>
+                      <i className="bi bi-instagram" style={{ fontSize: '20px', color: paleGoldHex }}></i>
                   </div>
               </div>
           </div>
