@@ -49,7 +49,7 @@ export default function NGXWidget({
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
     border: isLight ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.08)',
-    boxShadow: 'none', // الشادو ملغي تماماً
+    boxShadow: 'none', // لا يوجد شادو نهائياً
   };
 
   const mainTextColor = isLight ? '#0A192F' : '#ffffff'; 
@@ -107,19 +107,12 @@ export default function NGXWidget({
       
       return (
         <svg viewBox="-90 -20 180 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
-            {/* Arcs */}
-            <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} 
-                  onMouseEnter={() => setHoveredInfo('Strong Sell Zone (0-20)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
-            <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} 
-                  onMouseEnter={() => setHoveredInfo('Sell Zone (20-40)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
-            <path d={describeArc(0, 80, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} 
-                  onMouseEnter={() => setHoveredInfo('Neutral Zone (40-60)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
-            <path d={describeArc(0, 80, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} 
-                  onMouseEnter={() => setHoveredInfo('Buy Zone (60-80)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
-            <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} 
-                  onMouseEnter={() => setHoveredInfo('Strong Buy Zone (80-100)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
+            <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} />
+            <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} />
+            <path d={describeArc(0, 80, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} />
+            <path d={describeArc(0, 80, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} />
+            <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} />
 
-            {/* Scale Numbers */}
             <g fill={isLight ? "#0A192F" : "rgba(255,255,255,0.8)"} fontSize="10" fontFamily="sans-serif" fontWeight="700">
                 <text x="-95" y="85" textAnchor="middle">0</text>
                 <text x="-70" y="20" textAnchor="middle">20</text>
@@ -128,14 +121,12 @@ export default function NGXWidget({
                 <text x="95" y="85" textAnchor="middle">100</text>
             </g>
 
-            {/* Inner Labels */}
             <g fontSize="8" fontFamily="sans-serif" fontWeight="700" opacity="0.9">
                 <text x="-55" y="55" fill="#e53935" textAnchor="middle">SELL</text>
                 <text x="0" y="30" fill="#fdd835" textAnchor="middle">NEUTRAL</text>
                 <text x="55" y="55" fill={TICKER_GREEN} textAnchor="middle">BUY</text>
             </g>
 
-            {/* Needle */}
             <line x1="0" y1="80" x2="0" y2="10" stroke={isLight ? "#0A192F" : "#FFFFFF"} strokeWidth="3" 
                   transform={`rotate(${needleRotation}, 0, 80)`} 
                   style={{ transition: 'transform 1.5s cubic-bezier(0.23, 1, 0.32, 1)', filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }} />
@@ -149,21 +140,18 @@ export default function NGXWidget({
     <div className="ngx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
     <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
       
-      <div className="d-flex flex-column justify-content-between px-3 py-2 rounded-3 position-relative overflow-hidden"
-           style={{
-             ...glassStyle,
-             height: '82px',
-             width: '100%',
-             // تمت زيادة الإزاحة اليسرى إلى 46 بكسل لتحريك المجموعة للداخل بنسبة 20% إضافية
-             paddingLeft: '46px', 
-             paddingRight: '15px'
-           }}>
+      <div className="glass-container d-flex flex-column justify-content-between rounded-3 position-relative overflow-hidden"
+           style={{ ...glassStyle }}>
         
         {/* Header Row */}
         <div className="d-flex align-items-center justify-content-between w-100" style={{ zIndex: 2 }}>
-            <div className="d-flex align-items-center gap-2"
-                 onMouseEnter={() => setHoveredInfo('NGX Indicator')} onMouseLeave={() => setHoveredInfo(null)}>
-                <span className="fw-bold text-nowrap" style={{ color: titleColor, fontSize: '9px', letterSpacing: '0.5px' }}>{title}</span>
+            <div className="d-flex align-items-center gap-2">
+                <span className="fw-bold text-nowrap title-text" style={{ color: titleColor }}>{title}</span>
+                
+                {/* Mobile Only: Percentage moved to header */}
+                <div className="mobile-percentage fw-bold d-flex align-items-center" style={{ fontSize: '9px', color: changeColor, display: 'none' }}>
+                    {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
+                </div>
             </div>
             
             <span className="badge pulse-neon" 
@@ -177,29 +165,27 @@ export default function NGXWidget({
         </div>
 
         {/* Content Row */}
-        <div className="d-flex align-items-center justify-content-between w-100" style={{ height: '100%', marginTop: '-5px' }}>
+        <div className="content-row d-flex align-items-center w-100" style={{ height: '100%' }}>
             
             {/* Left Side: Number & Info */}
-            <div className="d-flex flex-column justify-content-center" style={{ zIndex: 2 }}>
-                <div className="d-flex align-items-end gap-2 mb-1">
-                    <div className="fw-bold lh-1" style={{ fontSize: '24px', color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}
-                         onMouseEnter={() => setHoveredInfo(`Current NGX Score: ${data.score}`)} onMouseLeave={() => setHoveredInfo(null)}>
+            <div className="text-block d-flex flex-column justify-content-center" style={{ zIndex: 2 }}>
+                <div className="d-flex align-items-end gap-2 mb-1 mobile-text-row">
+                    <div className="fw-bold lh-1 main-score" style={{ color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}>
                         {scoreInt}<span style={{ fontSize: '0.5em', opacity: 0.8 }}>.{scoreDec}</span>
                     </div>
-                    <div className="fw-bold d-flex align-items-center mb-1" style={{ fontSize: '9px', color: changeColor }}
-                         onMouseEnter={() => setHoveredInfo(`24h Market Change: ${data.change24h}%`)} onMouseLeave={() => setHoveredInfo(null)}>
+                    {/* Desktop Only: Percentage stays here */}
+                    <div className="desktop-percentage fw-bold d-flex align-items-center mb-1" style={{ fontSize: '9px', color: changeColor }}>
                         {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
                     </div>
                 </div>
-                <div className="fw-bold text-uppercase" style={{ color: currentStatus.color, fontSize: '8px', letterSpacing: '0.5px' }}
-                     onMouseEnter={() => setHoveredInfo('Overall Market Sentiment')} onMouseLeave={() => setHoveredInfo(null)}>
+                <div className="status-text fw-bold text-uppercase" style={{ color: currentStatus.color, letterSpacing: '0.5px' }}>
                     {currentStatus.text}
                 </div>
             </div>
 
             {/* Right Side: Gauge */}
-            <div className="d-flex align-items-center justify-content-center" style={{ zIndex: 1, width: '55%' }}>
-                <div style={{ width: '100%', height: '60px', position: 'relative' }}>
+            <div className="gauge-block d-flex align-items-center justify-content-center" style={{ zIndex: 1 }}>
+                <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                     <GaugeSVG />
                 </div>
             </div>
@@ -208,19 +194,78 @@ export default function NGXWidget({
       </div>
     </Link>
 
-    {hoveredInfo && (
-        <div className="ngx-tooltip" style={{ top: mousePos.y + 15, left: mousePos.x + 15 }}>
-            {hoveredInfo}
-        </div>
-    )}
-
     <style jsx>{`
+        /* --- GENERAL & DESKTOP STYLES (Default) --- */
         .ngx-widget-container {
             position: relative;
             width: 100%;
-            max-width: 310px;
+            max-width: 310px; /* Desktop width */
             margin-left: auto;
             margin-right: auto;
+        }
+        .glass-container {
+            height: 82px;
+            /* Desktop Shift: 46px padding-left */
+            padding-left: 46px; 
+            padding-right: 15px;
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+        .title-text {
+            font-size: 9px;
+            letter-spacing: 0.5px;
+        }
+        .main-score {
+            font-size: 24px;
+        }
+        .status-text {
+            font-size: 8px;
+            margin-top: 2px;
+        }
+        .gauge-block {
+            width: 55%;
+            height: 60px;
+        }
+        .desktop-percentage {
+            display: flex;
+        }
+        .mobile-percentage {
+            display: none !important;
+        }
+
+        /* --- MOBILE STYLES (Compact Mode) --- */
+        @media (max-width: 768px) {
+            .glass-container {
+                /* Reset Desktop Padding */
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+                /* Compressed Height */
+                height: 70px !important; 
+            }
+            
+            .content-row {
+                /* GAP: 1px (Tight packing) */
+                gap: 1px !important; 
+                justify-content: space-between;
+            }
+
+            .main-score {
+                font-size: 20px !important; /* Slightly smaller for mobile */
+            }
+
+            /* Move Percentage to Header on Mobile */
+            .desktop-percentage {
+                display: none !important;
+            }
+            .mobile-percentage {
+                display: flex !important;
+            }
+
+            /* Adjust Gauge Size for Mobile */
+            .gauge-block {
+                width: 70px !important; 
+                height: 45px !important;
+            }
         }
 
         @media (min-width: 992px) {
@@ -237,21 +282,6 @@ export default function NGXWidget({
             0% { text-shadow: 0 0 2px rgba(14, 203, 129, 0.1); opacity: 1; }
             50% { text-shadow: 0 0 8px rgba(14, 203, 129, 0.6); opacity: 0.8; }
             100% { text-shadow: 0 0 2px rgba(14, 203, 129, 0.1); opacity: 1; }
-        }
-
-        .ngx-tooltip {
-            position: absolute;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 500;
-            pointer-events: none;
-            z-index: 100;
-            white-space: nowrap;
-            background: ${isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(11, 14, 17, 0.95)'};
-            color: ${isLight ? '#000' : '#fff'};
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border: 1px solid ${isLight ? '#eee' : 'rgba(255,255,255,0.1)'};
         }
     `}</style>
     </div>
