@@ -47,7 +47,7 @@ export default function ContactPage() {
         
         <div className="row justify-content-center mb-5">
             <div className="col-12 col-lg-10 text-center text-md-start">
-                <h1 className="fw-bold text-white mb-3" style={{ fontSize: '2.5rem', letterSpacing: '-0.5px', color: '#E0E0E0' }}>
+                <h1 className="fw-bold text-white mb-3" style={{ fontSize: '2.0rem', letterSpacing: '-0.5px', color: '#E0E0E0' }}>
                     Contact <span style={{ color: '#FDB931' }}>NNM</span>
                 </h1>
                 <p style={{ maxWidth: '700px', lineHeight: '1.6' }}>
