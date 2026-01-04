@@ -376,15 +376,21 @@ const Navbar = () => {
               right: '0',
               top: '50%',
               transform: 'translateY(-50%)',
-              width: '6px',
-              height: '64px', 
-              backgroundColor: '#2d2d2d', 
+              width: '12px',
+              height: '60px', 
+              backgroundColor: '#252525', 
               borderTopLeftRadius: '6px',
               borderBottomLeftRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '2px',
+              boxShadow: '-1px 0 4px rgba(0,0,0,0.3)',
               opacity: 1,
-              zIndex: 1001,
-              boxShadow: 'inset 1px 0 2px rgba(0,0,0,0.2)'
+              zIndex: 1001
           }}>
+              <div style={{ width: '2px', height: '24px', backgroundColor: '#000', borderRadius: '1px', opacity: 0.6 }}></div>
+              <div style={{ width: '2px', height: '24px', backgroundColor: '#000', borderRadius: '1px', opacity: 0.6 }}></div>
           </div>
 
           <div className="drawer-header d-flex align-items-center justify-content-between px-4 pt-4 pb-4 w-100 mt-0 position-relative" 
