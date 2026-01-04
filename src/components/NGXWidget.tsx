@@ -121,7 +121,7 @@ export default function NGXWidget({
             <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} 
                   onMouseEnter={() => setHoveredInfo('Strong Buy Zone (80-100)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
 
-            {/* Scale Numbers (0, 20, 50, 80, 100) */}
+            {/* Scale Numbers */}
             <g fill={isLight ? "#0A192F" : "rgba(255,255,255,0.8)"} fontSize="10" fontFamily="sans-serif" fontWeight="700">
                 <text x="-95" y="85" textAnchor="middle">0</text>
                 <text x="-70" y="20" textAnchor="middle">20</text>
@@ -130,7 +130,7 @@ export default function NGXWidget({
                 <text x="95" y="85" textAnchor="middle">100</text>
             </g>
 
-            {/* Inner Labels (SELL, NEUTRAL, BUY) */}
+            {/* Inner Labels */}
             <g fontSize="8" fontFamily="sans-serif" fontWeight="700" opacity="0.9">
                 <text x="-55" y="55" fill="#e53935" textAnchor="middle">SELL</text>
                 <text x="0" y="30" fill="#fdd835" textAnchor="middle">NEUTRAL</text>
@@ -156,11 +156,12 @@ export default function NGXWidget({
              ...glassStyle,
              height: '82px',
              width: '100%',
-             paddingLeft: '25px', 
+             // Increased paddingLeft from 25px to 32px to shift text inward and reduce gap by ~25%
+             paddingLeft: '32px', 
              paddingRight: '10px'
            }}>
         
-        {/* Header Row - Aligned exactly like NGXCapWidget */}
+        {/* Header Row */}
         <div className="d-flex align-items-center justify-content-between w-100" style={{ zIndex: 2 }}>
             <div className="d-flex align-items-center gap-2"
                  onMouseEnter={() => setHoveredInfo('NGX Indicator')} onMouseLeave={() => setHoveredInfo(null)}>
@@ -177,10 +178,10 @@ export default function NGXWidget({
                     }}>LIVE</span>
         </div>
 
-        {/* Content Row - Flex container to match layout */}
+        {/* Content Row */}
         <div className="d-flex align-items-center justify-content-between w-100" style={{ height: '100%', marginTop: '-5px' }}>
             
-            {/* Left Side: Number & Info */}
+            {/* Left Side: Number & Info - Shifted right by padding */}
             <div className="d-flex flex-column justify-content-center" style={{ zIndex: 2 }}>
                 <div className="d-flex align-items-end gap-2 mb-1">
                     <div className="fw-bold lh-1" style={{ fontSize: '24px', color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}
@@ -198,7 +199,7 @@ export default function NGXWidget({
                 </div>
             </div>
 
-            {/* Right Side: Gauge */}
+            {/* Right Side: Gauge - Distance reduced due to left side shift */}
             <div className="d-flex align-items-center justify-content-center" style={{ zIndex: 1, width: '55%' }}>
                 <div style={{ width: '100%', height: '60px', position: 'relative' }}>
                     <GaugeSVG />
