@@ -4,6 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell
 } from 'recharts';
 import NGXWidget from '@/components/NGXWidget';
+import NGXCapWidget from '@/components/NGXCapWidget'; // تم استيراد المؤشر الجديد
 import MarketTicker from '@/components/MarketTicker';
 import Link from 'next/link';
 
@@ -37,7 +38,7 @@ const forecastData = [
 const mainArticle = {
     title: "Why 'Sovereign Digital Name Assets' Are Becoming The New NFT Gold Standard",
     content: "The era of renting digital presence is over. We are entering the 'Ownership Phase' for all NFT markets. Global institutions are recognizing tokenized names (Name Assets) as liquid, valuable digital assets. The NGX index now tracks market-wide trends, reflecting the future of rare NFT ownership. 2026 is projected as the pivotal year for mainstream adoption and recognition of premium digital name assets.",
-    author: "Chief Market Analyst â€” Market Briefing",
+    author: "Chief Market Analyst — Market Briefing",
     date: "" 
 };
 
@@ -127,21 +128,29 @@ export default function NGXPage() {
       
       <MarketTicker />
 
-            <div className="py-4 px-4 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}` }}>
+      {/* Header Section Modified: Widgets moved to top left and center */}
+      <div className="py-4 px-4 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}` }}>
         <div className="container-fluid">
+            
+            {/* Widgets Row */}
+            <div className="d-flex flex-wrap align-items-center gap-4 mb-4">
+                <div style={{ width: '240px' }}>
+                     <NGXWidget theme="dark" />
+                </div>
+                <div style={{ width: '240px' }}>
+                     <NGXCapWidget theme="dark" />
+                </div>
+            </div>
+
+            {/* Title Row */}
             <div className="row align-items-center">
-                <div className="col-lg-7 mb-3 mb-lg-0">
-                                        <h1 className="fw-bold mb-2" style={{ fontSize: '1.65rem', letterSpacing: '-0.5px', color: TEXT_PRIMARY }}>
-                                                NGX NFT Index &mdash; The Global Benchmark <span className="text-gold-500"></span>
+                <div className="col-lg-12">
+                    <h1 className="fw-bold mb-2" style={{ fontSize: '1.65rem', letterSpacing: '-0.5px', color: TEXT_PRIMARY }}>
+                            NGX NFT Index — The Global Benchmark <span className="text-gold-500"></span>
                     </h1>
-                                        <p className="mb-0" style={{ fontSize: '15px', maxWidth: '650px', color: TEXT_MUTED }}>
+                    <p className="mb-0" style={{ fontSize: '15px', maxWidth: '650px', color: TEXT_MUTED }}>
                         The premier benchmark tracking the global NFT market, aggregating sentiment, liquidity, and rare digital name assets across all platforms.
                     </p>
-                </div>
-                <div className="col-lg-5 d-flex justify-content-lg-end">
-                   <div style={{ width: '100%', maxWidth: '340px' }}>
-                                                <NGXWidget theme="dark" />
-                   </div>
                 </div>
             </div>
         </div>
