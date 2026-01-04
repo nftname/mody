@@ -108,7 +108,7 @@ const MintContent = () => {
   const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
   return (
-    <main dir="ltr" style={{ backgroundColor: '#0d1117', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
+    <main dir="ltr" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
       
       {isAdmin && (
         <div 
@@ -122,8 +122,16 @@ const MintContent = () => {
       )}
 
       <div className="container hero-container text-center">
-        <h1 className="text-white fw-bold mb-2" style={{ fontSize: '32px', fontFamily: 'serif', letterSpacing: '1px' }}>
-          Claim Your <span style={{ color: '#FCD535' }}>Nexus Digital Name</span> Assets
+        <h1
+          className="text-white fw-bold mb-2"
+          style={{
+            fontSize: '32px',
+            fontFamily: 'serif',
+            letterSpacing: '1px',
+            color: '#E0E0E0'
+          }}
+        >
+          Claim Your <span style={{ background: 'linear-gradient(180deg, #FFD700 0%, #F0C420 45%, #FDB931 75%, #B8860B 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Nexus Digital Name</span> Assets
         </h1>
         <p
           className="mx-auto"
