@@ -12,7 +12,6 @@ interface NGXData {
 interface WidgetProps {
   theme?: 'dark' | 'light';
   title?: string;
-  subtitle?: string;
 }
 
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
@@ -35,8 +34,7 @@ function describeArc(x: number, y: number, radius: number, startAngle: number, e
 
 export default function NGXWidget({ 
   theme = 'dark', 
-  title = 'NGX NFTs', 
-  subtitle = 'Global Index' 
+  title = 'NGX NFTs' 
 }: WidgetProps) {
   const [data, setData] = useState<NGXData | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -51,7 +49,7 @@ export default function NGXWidget({
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
     border: isLight ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.08)',
-    boxShadow: 'none', 
+    boxShadow: 'none', // الشادو ملغي تماماً
   };
 
   const mainTextColor = isLight ? '#0A192F' : '#ffffff'; 
@@ -156,7 +154,8 @@ export default function NGXWidget({
              ...glassStyle,
              height: '82px',
              width: '100%',
-             paddingLeft: '38px', 
+             // تمت زيادة الإزاحة اليسرى إلى 46 بكسل لتحريك المجموعة للداخل بنسبة 20% إضافية
+             paddingLeft: '46px', 
              paddingRight: '15px'
            }}>
         
