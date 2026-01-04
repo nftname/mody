@@ -5,8 +5,8 @@ import { useState } from 'react';
 const BACKGROUND_DARK = '#1E1E1E';
 const SURFACE_DARK = '#242424';
 const BORDER_COLOR = '#2E2E2E';
-const TEXT_PRIMARY = '#E0E0E0';
-const TEXT_MUTED = '#B0B0B0';
+const TEXT_PRIMARY = '#F5F5F0';
+const TEXT_MUTED = '#F5F5F0';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
 const BODY_TEXT_STYLE = {
     fontSize: '15px',
@@ -77,10 +77,10 @@ export default function ContactPage() {
                     <div className="p-4 rounded-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, color: TEXT_PRIMARY }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
                                <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                                   style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: TEXT_PRIMARY }}>
+                                   style={{ width: '40px', height: '40px', backgroundColor: 'rgba(245, 245, 240, 0.08)', color: TEXT_PRIMARY }}>
                                 <i className="bi bi-chat-text-fill"></i>
                             </div>
-                            <h3 className="h6 text-white m-0 fw-bold">General Inquiries</h3>
+                            <h3 className="h6 m-0 fw-bold" style={{ color: TEXT_PRIMARY }}>General Inquiries</h3>
                         </div>
                         <p style={{ ...BODY_TEXT_STYLE, fontSize: '14px', marginBottom: '15px' }}>
                           For platform assistance, account questions, or general information.
@@ -93,10 +93,10 @@ export default function ContactPage() {
                     <div className="p-4 rounded-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, color: TEXT_PRIMARY }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
                                <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                                   style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: TEXT_PRIMARY }}>
+                                   style={{ width: '40px', height: '40px', backgroundColor: 'rgba(245, 245, 240, 0.08)', color: TEXT_PRIMARY }}>
                                 <i className="bi bi-megaphone-fill"></i>
                             </div>
-                            <h3 className="h6 text-white m-0 fw-bold">Media & Partnerships</h3>
+                            <h3 className="h6 m-0 fw-bold" style={{ color: TEXT_PRIMARY }}>Media & Partnerships</h3>
                         </div>
                         <p style={{ ...BODY_TEXT_STYLE, fontSize: '14px', marginBottom: '15px' }}>
                           For press releases, institutional partnerships, and brand assets.
@@ -109,10 +109,10 @@ export default function ContactPage() {
                     <div className="p-4 rounded-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, color: TEXT_PRIMARY }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
                                <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                                   style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: TEXT_PRIMARY }}>
+                                   style={{ width: '40px', height: '40px', backgroundColor: 'rgba(245, 245, 240, 0.08)', color: TEXT_PRIMARY }}>
                                 <i className="bi bi-shield-fill-check"></i>
                             </div>
-                            <h3 className="h6 text-white m-0 fw-bold">Legal & Compliance</h3>
+                            <h3 className="h6 m-0 fw-bold" style={{ color: TEXT_PRIMARY }}>Legal & Compliance</h3>
                         </div>
                         <p style={{ ...BODY_TEXT_STYLE, fontSize: '14px', marginBottom: '15px' }}>
                           For verified institutional inquiries only: Regulatory, IP rights, and compliance matters.
@@ -197,7 +197,7 @@ export default function ContactPage() {
                                         className="btn w-100 fw-bold py-3"
                                         style={{ 
                                             background: GOLD_GRADIENT, 
-                                            color: '#000', 
+                                            color: TEXT_PRIMARY, 
                                             border: 'none',
                                             borderRadius: '6px'
                                         }}>
@@ -222,8 +222,8 @@ export default function ContactPage() {
 
       <style jsx>{`
         .contact-input:focus {
-            border-color: #F0C420 !important;
-            box-shadow: 0 0 0 2px rgba(240, 196, 32, 0.15);
+            border-color: ${TEXT_PRIMARY} !important;
+            box-shadow: 0 0 0 2px rgba(245, 245, 240, 0.15);
         }
       `}</style>
     </main>

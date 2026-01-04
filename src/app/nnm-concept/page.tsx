@@ -8,11 +8,11 @@ import MarketTicker from '@/components/MarketTicker';
 const BACKGROUND_DARK = '#1E1E1E';
 const SURFACE_DARK = '#242424';
 const BORDER_COLOR = '#2E2E2E';
-const TEXT_PRIMARY = '#E0E0E0';
-const TEXT_BODY_COLOR = '#B0B0B0';
-const TEXT_MUTED = '#B0B0B0';
-const TEXT_HEADER_GRAY = '#B0B0B0';
-const TEXT_OFF_WHITE = '#E0E0E0';
+const TEXT_PRIMARY = '#F5F5F0';
+const TEXT_BODY_COLOR = '#F5F5F0';
+const TEXT_MUTED = '#F5F5F0';
+const TEXT_HEADER_GRAY = '#F5F5F0';
+const TEXT_OFF_WHITE = '#F5F5F0';
 const GOLD_SOLID = '#F0C420';
 const GOLD_BTN_PRIMARY = '#FDB931';
 const GOLD_BTN_HIGHLIGHT = '#FFD700';
@@ -101,7 +101,7 @@ export default function NNMConceptPage() {
                   enabled: true,
                   backgroundColor: 'rgba(0,0,0,0.95)',
                   titleColor: TEXT_PRIMARY,
-                  bodyColor: '#fff',
+                  bodyColor: TEXT_PRIMARY,
                   borderColor: BORDER_COLOR,
                   borderWidth: 1,
                   padding: 10,
@@ -173,7 +173,7 @@ export default function NNMConceptPage() {
         .btn-ingot {
           background: ${GOLD_GRADIENT};
             border: 1px solid ${GOLD_BTN_SHADOW};
-            color: #2b1d00;
+            color: ${TEXT_PRIMARY};
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 1px;
@@ -187,7 +187,7 @@ export default function NNMConceptPage() {
         .btn-ingot:hover {
             filter: brightness(1.08);
             transform: translateY(-1px);
-            color: #1a1100;
+            color: ${TEXT_PRIMARY};
         }
         
         /* Mobile specific adjustments */
