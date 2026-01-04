@@ -1,4 +1,5 @@
 'use client';
+
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 
@@ -12,7 +13,7 @@ interface WidgetProps {
   type?: 'sentiment' | 'cap' | 'assets';
   title?: string;
   subtitle?: string;
-  theme?: 'dark' | 'light'; // Added to fix build error
+  theme?: 'dark' | 'light';
 }
 
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
@@ -125,10 +126,10 @@ export default function NGXWidget({
   };
 
   return (
-    <div className="ngx-widget-wrapper" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
+    <div style={{ width: '100%', maxWidth: '240px', height: '82px', position: 'relative' }} ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
         <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block', height: '100%' }}>
         
-        <div className="widget-glass d-flex align-items-center justify-content-between px-2 py-1 position-relative overflow-hidden"
+        <div className="widget-glass d-flex align-items-center justify-content-between px-3 py-2 position-relative overflow-hidden"
             style={{
                 ...glassStyle,
                 height: '100%',
@@ -166,7 +167,7 @@ export default function NGXWidget({
                 </div>
             </div>
 
-            <div className="d-flex align-items-center justify-content-center flex-grow-1" style={{ zIndex: 1, height: '100%' }}>
+            <div className="d-flex align-items-center justify-content-center flex-grow-1" style={{ zIndex: 1, height: '100%', marginLeft: '10px' }}>
                 <div style={{ width: '100%', height: '85%', position: 'relative', transform: 'translateY(5px)' }}>
                     <GaugeSVG />
                 </div>
@@ -213,11 +214,11 @@ export default function NGXWidget({
                 }
             }
 
-            .widget-title { font-size: 10px; letter-spacing: 0.3px; }
-            .widget-subtitle { font-size: 7px; text-transform: uppercase; }
-            .widget-score { font-size: 20px; }
-            .widget-change { font-size: 8px; }
-            .widget-status { font-size: 8px; letter-spacing: 0.3px; text-transform: uppercase; }
+            .widget-title { font-size: 11px; letter-spacing: 0.3px; }
+            .widget-subtitle { font-size: 8px; text-transform: uppercase; }
+            .widget-score { font-size: 24px; }
+            .widget-change { font-size: 9px; }
+            .widget-status { font-size: 9px; letter-spacing: 0.3px; text-transform: uppercase; }
 
             .pulse-dot {
                 width: 4px; height: 4px; background-color: #0ecb81; border-radius: 50%;
@@ -228,13 +229,6 @@ export default function NGXWidget({
                 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; }
             }
 
-            .ngx-widget-wrapper {
-                width: 100%;
-                height: 100%;
-                min-width: 0;
-                position: relative;
-            }
-
             .ngx-tooltip {
                 position: absolute;
                 padding: 4px 8px;
@@ -242,7 +236,7 @@ export default function NGXWidget({
                 font-size: 10px;
                 font-weight: 500;
                 pointer-events: none;
-                z-index: 100;
+                z-index: 9999;
                 white-space: nowrap;
                 transform: translateZ(0);
             }
