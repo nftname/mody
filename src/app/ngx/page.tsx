@@ -132,7 +132,7 @@ export default function NGXPage() {
             <div className="row align-items-center">
                 <div className="col-lg-7 mb-3 mb-lg-0">
                                         <h1 className="fw-bold mb-2" style={{ fontSize: '1.65rem', letterSpacing: '-0.5px', color: TEXT_PRIMARY }}>
-                                                NGX NFT Index &mdash; The Global Benchmark <span className="text-gold-500">.</span>
+                                                NGX NFT Index &mdash; The Global Benchmark <span className="text-gold-500"></span>
                     </h1>
                                         <p className="mb-0" style={{ fontSize: '15px', maxWidth: '650px', color: TEXT_MUTED }}>
                         The premier benchmark tracking the global NFT market, aggregating sentiment, liquidity, and rare digital name assets across all platforms.
