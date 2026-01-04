@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار أيقونة MetaMask - NNM Market</title>
+    
+    <!-- MetaMask Icon Requirements (EXACT ORDER MATTERS) -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/icons/icon-96x96.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="manifest" href="/manifest.json">
+    
+    <meta name="theme-color" content="#0b1220">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0b1220 0%, #1a2332 100%);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FCD535;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(252, 213, 53, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .section h2 {
+            color: #FCD535;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            border-bottom: 2px solid rgba(252, 213, 53, 0.2);
+            padding-bottom: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #FCD535 0%, #B3882A 100%);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            color: #4ade80;
+        }
+        
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        
+        .status.info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #3b82f6;
+        }
+        
+        .icon-test {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .icon-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .icon-card img {
+            width: 96px;
+            height: 96px;
+            margin-bottom: 10px;
+        }
+        
+        .icon-card .label {
+            color: #FCD535;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .icon-card .size {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8em;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 12px;
+            margin: 8px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            line-height: 1.6;
+        }
+        
+        .checklist li::before {
+            content: "✓";
+            color: #4ade80;
+            font-weight: bold;
+            font-size: 1.3em;
+            flex-shrink: 0;
+        }
+        
+        code {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #FCD535;
+            font-size: 0.9em;
+        }
+        
+        .warning {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            color: #fbbf24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .info-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info-card .title {
+            color: #FCD535;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .info-card .value {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦊 اختبار أيقونة MetaMask</h1>
+        
+        <div class="warning">
+            <strong>⚠️ مهم:</strong> إذا كانت الأيقونة لا تزال لا تظهر، اتبع الخطوات أدناه بالترتيب
+        </div>
+        
+        <div class="section">
+            <h2>1️⃣ معلومات الأيقونات</h2>
+            
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="title">النوع</div>
+                    <div class="value">PNG 32-bit RGBA</div>
+                </div>
+                <div class="info-card">
+                    <div class="title">الحجم الرئيسي</div>
+                    <div class="value">192×192 px</div>
+                </div>
+                <div class="info-card">
+                    <div class="title">الشفافية</div>
+                    <div class="value">Alpha Channel</div>
+                </div>
+                <div class="info-card">
+                    <div class="title">الحالة</div>
+                    <div class="value" id="iconStatus">⏳ جاري الفحص...</div>
+                </div>
+            </div>
+            
+            <div class="icon-test">
+                <div class="icon-card">
+                    <img src="/icons/icon-192x192.png" alt="192x192" id="img192">
+                    <div class="label">MetaMask Primary</div>
+                    <div class="size">192×192</div>
+                </div>
+                <div class="icon-card">
+                    <img src="/icons/icon-96x96.png" alt="96x96" id="img96">
+                    <div class="label">Android Chrome</div>
+                    <div class="size">96×96</div>
+                </div>
+                <div class="icon-card">
+                    <img src="/icons/apple-touch-icon.png" alt="180x180" id="img180">
+                    <div class="label">iOS Safari</div>
+                    <div class="size">180×180</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>2️⃣ اتصال MetaMask</h2>
+            
+            <button class="btn" id="connectBtn" onclick="connectWallet()">
+                🦊 اتصل بـ MetaMask
+            </button>
+            
+            <div id="walletStatus" class="status info">
+                <strong>الحالة:</strong> غير متصل
+            </div>
+            
+            <div id="accountInfo" style="display: none;">
+                <div class="info-card">
+                    <div class="title">العنوان المتصل</div>
+                    <div class="value" id="accountAddress" style="word-break: break-all;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>3️⃣ خطوات إصلاح المشكلة</h2>
+            
+            <ul class="checklist">
+                <li><strong>افصل الموقع من MetaMask</strong><br>
+                    Settings → Connected sites → ابحث عن موقعك → Disconnect
+                </li>
+                
+                <li><strong>امسح cache في MetaMask</strong><br>
+                    Settings → Advanced → Clear activity tab data
+                </li>
+                
+                <li><strong>امسح cache المتصفح</strong><br>
+                    اضغط <code>Ctrl+Shift+Delete</code> → Clear browsing data → All time
+                </li>
+                
+                <li><strong>أعد تحميل الصفحة</strong><br>
+                    اضغط <code>Ctrl+F5</code> أو <code>Cmd+Shift+R</code>
+                </li>
+                
+                <li><strong>أعد الاتصال</strong><br>
+                    اضغط زر "اتصل بـ MetaMask" أعلاه
+                </li>
+                
+                <li><strong>تحقق من الأيقونة</strong><br>
+                    افتح MetaMask → Settings → Connected sites → يجب أن ترى الأيقونة الذهبية
+                </li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>4️⃣ اختبار تقني</h2>
+            
+            <button class="btn" onclick="testIconUrls()">
+                🔍 فحص روابط الأيقونات
+            </button>
+            
+            <div id="testResults" style="margin-top: 15px;"></div>
+        </div>
+        
+        <div class="section">
+            <h2>5️⃣ معلومات إضافية</h2>
+            
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="title">Domain</div>
+                    <div class="value" id="domainInfo">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="title">Protocol</div>
+                    <div class="value" id="protocolInfo">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="title">MetaMask</div>
+                    <div class="value" id="metamaskInfo">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="title">Network</div>
+                    <div class="value" id="networkInfo">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Check if images load
+        ['img192', 'img96', 'img180'].forEach(id => {
+            const img = document.getElementById(id);
+            img.onerror = () => {
+                img.parentElement.style.border = '2px solid #ef4444';
+                document.getElementById('iconStatus').textContent = '❌ فشل التحميل';
+                document.getElementById('iconStatus').style.color = '#ef4444';
+            };
+            img.onload = () => {
+                img.parentElement.style.border = '2px solid #4ade80';
+            };
+        });
+        
+        // Display page info
+        document.getElementById('domainInfo').textContent = window.location.hostname;
+        document.getElementById('protocolInfo').textContent = window.location.protocol;
+        document.getElementById('metamaskInfo').textContent = typeof window.ethereum !== 'undefined' ? '✅ متوفر' : '❌ غير متوفر';
+        
+        // Connect wallet function
+        async function connectWallet() {
+            const statusEl = document.getElementById('walletStatus');
+            const connectBtn = document.getElementById('connectBtn');
+            const accountInfo = document.getElementById('accountInfo');
+            
+            if (typeof window.ethereum === 'undefined') {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = '<strong>خطأ:</strong> MetaMask غير مثبت. قم بتثبيته من <a href="https://metamask.io" style="color: #FCD535;">metamask.io</a>';
+                return;
+            }
+            
+            try {
+                connectBtn.disabled = true;
+                connectBtn.textContent = '⏳ جاري الاتصال...';
+                
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                if (accounts.length > 0) {
+                    statusEl.className = 'status success';
+                    statusEl.innerHTML = '<strong>✅ متصل بنجاح!</strong><br>الآن افتح MetaMask وتحقق من قائمة المواقع المتصلة - يجب أن ترى الأيقونة الذهبية';
+                    
+                    document.getElementById('accountAddress').textContent = accounts[0];
+                    accountInfo.style.display = 'block';
+                    
+                    connectBtn.textContent = '✅ متصل';
+                    
+                    // Get network
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    document.getElementById('networkInfo').textContent = `Chain ID: ${parseInt(chainId, 16)}`;
+                    
+                    setTimeout(() => {
+                        alert('✅ الاتصال نجح!\n\nالخطوات التالية:\n1. افتح MetaMask\n2. اذهب إلى Settings → Connected sites\n3. تحقق من ظهور الأيقونة الذهبية بجانب اسم الموقع\n\nإذا لم تظهر:\n• امسح cache MetaMask\n• افصل وأعد الاتصال\n• أعد تشغيل MetaMask');
+                    }, 1000);
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = `<strong>❌ خطأ:</strong> ${error.message}`;
+                connectBtn.disabled = false;
+                connectBtn.textContent = '🦊 اتصل بـ MetaMask';
+            }
+        }
+        
+        // Test icon URLs
+        async function testIconUrls() {
+            const resultsEl = document.getElementById('testResults');
+            resultsEl.innerHTML = '<div class="status info">⏳ جاري الفحص...</div>';
+            
+            const icons = [
+                { url: '/icons/icon-192x192.png', name: '192×192 (MetaMask Primary)' },
+                { url: '/icons/icon-96x96.png', name: '96×96 (Android)' },
+                { url: '/icons/apple-touch-icon.png', name: '180×180 (iOS)' },
+                { url: '/favicon.ico', name: 'Favicon' },
+                { url: '/manifest.json', name: 'Manifest' }
+            ];
+            
+            let results = '';
+            
+            for (const icon of icons) {
+                try {
+                    const response = await fetch(icon.url, { method: 'HEAD' });
+                    const status = response.ok ? '✅' : '❌';
+                    const color = response.ok ? '#4ade80' : '#ef4444';
+                    results += `<div style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.3); margin: 5px 0;">
+                        <span style="color: ${color}">${status}</span> ${icon.name}: <code>${icon.url}</code>
+                    </div>`;
+                } catch (error) {
+                    results += `<div style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.3); margin: 5px 0;">
+                        <span style="color: #ef4444">❌</span> ${icon.name}: خطأ
+                    </div>`;
+                }
+            }
+            
+            resultsEl.innerHTML = results;
+        }
+        
+        // Auto-check icon status
+        setTimeout(() => {
+            const allLoaded = ['img192', 'img96', 'img180'].every(id => 
+                document.getElementById(id).complete && document.getElementById(id).naturalWidth > 0
+            );
+            
+            if (allLoaded) {
+                document.getElementById('iconStatus').textContent = '✅ جميع الأيقونات تعمل';
+                document.getElementById('iconStatus').style.color = '#4ade80';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

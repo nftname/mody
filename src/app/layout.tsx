@@ -62,9 +62,10 @@ export default function RootLayout({
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         
-        {/* PNG Favicons for modern browsers */}
+        {/* PNG Favicons for modern browsers & Web3 Wallets */}
         <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/icons/icon-96x96.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
         
         {/* Apple Touch Icon */}
