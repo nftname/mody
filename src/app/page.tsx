@@ -92,7 +92,7 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '12px', 
             fontWeight: 'bold', fontFamily: 'serif',
-            color: '#F0C420', textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+            color: TEXT_PRIMARY, textShadow: 'none',
             flexShrink: 0
         }}>
             {name ? name.charAt(0) : 'N'}
@@ -230,8 +230,11 @@ function Home() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const getColorClass = (change: number) => { return change >= 0 ? 'text-success' : 'text-danger'; };
-    const getRankStyle = (rank: number) => { const baseStyle = { fontStyle: 'italic', fontWeight: '700', fontSize: '20px', paddingBottom: '2px' }; if (rank === 1) return { ...baseStyle, color: '#FFD700', textShadow: '0 0 10px rgba(253, 185, 49, 0.4)' }; if (rank === 2) return { ...baseStyle, color: '#FDB931', textShadow: '0 0 10px rgba(240, 196, 32, 0.3)' }; if (rank === 3) return { ...baseStyle, color: '#F0C420', textShadow: '0 0 10px rgba(184, 134, 11, 0.25)' }; return { color: '#E0E0E0', fontWeight: '300', fontSize: '20px' }; };
+    const getColorClass = (change: number) => { return change >= 0 ? 'text-success' : 'text-danger'; };
+        const getRankStyle = (rank: number) => {
+            const baseStyle = { fontStyle: 'italic', fontWeight: '700', fontSize: '20px', paddingBottom: '2px' };
+            return { ...baseStyle, color: TEXT_PRIMARY, textShadow: 'none' };
+        };
   const handleMobileCurrencySelect = (c: string) => { setCurrencyFilter(c); setIsMobileCurrencyOpen(false); };
 
   return (
@@ -253,7 +256,7 @@ function Home() {
                           margin: 0,
                           lineHeight: '1.3'
                       }}>
-                        NNM &mdash; The Global Market for <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital<br />Name NFTs</span>
+                        NNM &mdash; The Global Market for <span style={{ color: TEXT_PRIMARY }}>Nexus Rare Digital<br />Name NFTs</span>
                       </h1>
                       
                       <p style={{ 
@@ -275,8 +278,8 @@ function Home() {
       </section>
 
       <section className="d-block d-md-none pt-3 pb-2 px-3">
-          <h1 className="fw-bold h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: TEXT_PRIMARY }}>
-             NNM &mdash; The Global Market of <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital Name NFTs.</span>
+             <h1 className="fw-bold h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: TEXT_PRIMARY }}>
+                 NNM &mdash; The Global Market of <span style={{ color: TEXT_PRIMARY }}>Nexus Rare Digital Name NFTs.</span>
           </h1>
           <p style={{ 
               ...BODY_TEXT_STYLE,
@@ -381,13 +384,13 @@ function Home() {
         .mobile-card-wrapper::-webkit-scrollbar { display: none; } .mobile-card-wrapper { -ms-overflow-style: none; scrollbar-width: none; scroll-snap-type: x mandatory; } .mobile-card-item { scroll-snap-align: start; }
         .static-asset { box-shadow: 0 15px 35px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(40, 40, 40, 0.5), inset 0 0 15px rgba(0,0,0,0.5); }
         @media (max-width: 991px) { .static-asset { box-shadow: 0 5px 15px rgba(0,0,0,0.9) !important; border: 1px solid rgba(30, 30, 30, 0.8) !important; } }
-        .brand-text-gold { background: linear-gradient(to bottom, #FFD700 0%, #B8860B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(255, 215, 0, 0.2); } .brand-icon-gold { color: #F0C420; text-shadow: 0 0 10px rgba(240, 196, 32, 0.4); }
+        .brand-text-gold { color: ${TEXT_PRIMARY}; text-shadow: none; background: none; -webkit-text-fill-color: ${TEXT_PRIMARY}; } .brand-icon-gold { color: ${TEXT_PRIMARY}; text-shadow: none; }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
         .filter-tab-hover:hover { color: #E0E0E0 !important; } .binance-filter-btn:hover { color: #E0E0E0 !important; } .mobile-filter-gap { margin-bottom: 1rem !important; } @media (max-width: 991px) { .mobile-filter-gap { row-gap: 12px !important; --bs-gutter-y: 12px !important; margin-bottom: 0.55rem !important; } }
         .mobile-swipe-wrapper { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; gap: 40px; padding-bottom: 10px; align-items: flex-start; } .mobile-swipe-wrapper::-webkit-scrollbar { display: none; } .mobile-slide { min-width: 100%; flex: 0 0 100%; scroll-snap-align: center; }
-        .binance-filter-group { border: 1px solid #333; background: transparent; padding: 4px; border-radius: 2px; gap: 2px; } .binance-filter-btn { border-radius: 2px; padding: 6px 12px; transition: all 0.2s; } .active-time, .active-currency { background-color: #2B3139 !important; color: #F0C420 !important; }
+        .binance-filter-group { border: 1px solid #333; background: transparent; padding: 4px; border-radius: 2px; gap: 2px; } .binance-filter-btn { border-radius: 2px; padding: 6px 12px; transition: all 0.2s; } .active-time, .active-currency { background-color: #2B3139 !important; color: ${TEXT_PRIMARY} !important; }
         .table { --bs-table-bg: transparent; --bs-table-color: #E0E0E0; } .table > :not(caption) > * > * { background-color: transparent !important; box-shadow: none !important; border-bottom-color: #222; } .binance-row { transition: background-color 0.2s; cursor: pointer; } .binance-row:hover { background-color: #1E2329 !important; }
-        @keyframes subtleShake { 0% { transform: translateX(0); } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 75% { transform: translateX(1px); } 100% { transform: translateX(0); } } .name-shake { display: inline-block; transition: color 0.3s; } .binance-row:hover .name-shake { animation: subtleShake 0.4s ease-in-out; color: #F0C420 !important; }
+        @keyframes subtleShake { 0% { transform: translateX(0); } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 75% { transform: translateX(1px); } 100% { transform: translateX(0); } } .name-shake { display: inline-block; transition: color 0.3s; } .binance-row:hover .name-shake { animation: subtleShake 0.4s ease-in-out; color: ${TEXT_PRIMARY} !important; }
         .view-all-btn { background-color: #2B2B2B; border: none; } .view-all-btn:hover, .view-all-btn:active { background-color: #474D57 !important; color: #E0E0E0 !important; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
         .hero-grid-system { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; } 
         @media (max-width: 991px) { 

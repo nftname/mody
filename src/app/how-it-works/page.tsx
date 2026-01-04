@@ -74,7 +74,7 @@ const OwnershipFlowDiagram = () => {
           <path d="M0 -25 L-15 -15 V5 C-15 15 0 25 0 25 C0 25 15 15 15 5 V-15 Z" fill="none" stroke={GOLD_SOLID} strokeWidth="2" />
           <path d="M-5 0 L0 5 L5 -5" fill="none" stroke={GOLD_SOLID} strokeWidth="2" />
           <text y="25" textAnchor="middle" fill={TEXT_PRIMARY} fontSize="14" fontWeight="600" fontFamily="Inter, sans-serif">Sovereign Asset</text>
-          <text y="42" textAnchor="middle" fill={GOLD_SOLID} fontSize="11" fontFamily="Inter, sans-serif" fontWeight="500">100% Owned</text>
+          <text y="42" textAnchor="middle" fill={TEXT_PRIMARY} fontSize="11" fontFamily="Inter, sans-serif" fontWeight="500">100% Owned</text>
         </g>
       </svg>
     </div>
@@ -150,7 +150,7 @@ const FAQSection = () => {
                             className="w-100 d-flex justify-content-between align-items-center p-3 text-start bg-transparent border-0"
                             style={{ cursor: 'pointer', outline: 'none' }}
                         >
-                  <span className="fw-semibold" style={{ color: openIndex === index ? GOLD_SOLID : TEXT_PRIMARY, fontSize: '15px' }}>
+                  <span className="fw-semibold" style={{ color: TEXT_PRIMARY, fontSize: '15px' }}>
                                 {item.q}
                             </span>
                             <i className={`bi bi-chevron-down`} 
@@ -196,7 +196,7 @@ export default function HowItWorksPage() {
                       lineHeight: '1.2',
                       color: TEXT_PRIMARY
                   }}>
-                How <span style={{ color: GOLD_SOLID }}>NNM</span> Works
+                How <span style={{ color: TEXT_PRIMARY }}>NNM</span> Works
               </h1>
               <p style={{ 
                   fontSize: '15px', 
@@ -212,7 +212,7 @@ export default function HowItWorksPage() {
             {/* SECTIONS */}
             <section className="mb-5 ps-lg-3">
               <h2 className="fw-bold mb-3" style={{ fontSize: '1.25rem', color: TEXT_PRIMARY }}>
-                What Are <span style={{ color: GOLD_SOLID }}>Digital Name Assets</span>?
+                What Are <span style={{ color: TEXT_PRIMARY }}>Digital Name Assets</span>?
               </h2>
               <p style={{ fontSize: '15px', color: TEXT_MUTED, lineHeight: '1.6', marginBottom: '14px' }}>
                 Digital Name Assets are unique, non-fungible blockchain assets that represent rare digital identifiers. They are not identities, domains, or credentials. They are collectible, ownable digital assets secured by decentralized networks and verifiable on-chain.
@@ -224,7 +224,7 @@ export default function HowItWorksPage() {
 
             <section className="mb-5 ps-lg-3">
               <h2 className="fw-bold mb-3" style={{ fontSize: '1.25rem', color: TEXT_PRIMARY }}>
-                The <span style={{ color: GOLD_SOLID }}>NNM Marketplace</span>
+                The <span style={{ color: TEXT_PRIMARY }}>NNM Marketplace</span>
               </h2>
               <p style={{ fontSize: '15px', color: TEXT_MUTED, lineHeight: '1.6', marginBottom: '14px' }}>
                 NNM operates as an open marketplace where users can discover, list, and exchange Digital Name Assets directly with one another. The platform does not act as a broker, advisor, or custodian.
@@ -247,7 +247,7 @@ export default function HowItWorksPage() {
                        color: TEXT_MUTED 
                    }}>
                 <div className="text-center">
-                    <i className="bi bi-play-circle d-block mb-2" style={{ fontSize: '30px', color: GOLD_SOLID }}></i>
+                    <i className="bi bi-play-circle d-block mb-2" style={{ fontSize: '30px', color: TEXT_PRIMARY }}></i>
                     <span style={{ color: TEXT_MUTED }}>Platform Video Guide Coming Soon</span>
                 </div>
               </div>

@@ -100,7 +100,7 @@ export default function NNMConceptPage() {
               tooltip: {
                   enabled: true,
                   backgroundColor: 'rgba(0,0,0,0.95)',
-                  titleColor: GOLD_SOLID,
+                  titleColor: TEXT_PRIMARY,
                   bodyColor: '#fff',
                   borderColor: BORDER_COLOR,
                   borderWidth: 1,
@@ -144,7 +144,7 @@ export default function NNMConceptPage() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
         .font-imperium { font-family: 'Cinzel', serif; }
-        .text-gold { color: ${GOLD_SOLID} !important; }
+        .text-gold { color: ${TEXT_PRIMARY} !important; }
         
         /* Static Cards */
         .info-card-static {
@@ -204,8 +204,8 @@ export default function NNMConceptPage() {
         }
 
         /* Ticker Animations */
-        .brand-text-gold { background: ${GOLD_GRADIENT}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(240, 196, 32, 0.25); } 
-        .brand-icon-gold { color: ${GOLD_SOLID}; text-shadow: 0 0 10px rgba(240, 196, 32, 0.35); }
+        .brand-text-gold { color: ${TEXT_PRIMARY}; text-shadow: none; background: none; -webkit-text-fill-color: ${TEXT_PRIMARY}; } 
+        .brand-icon-gold { color: ${TEXT_PRIMARY}; text-shadow: none; }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
       `}</style>
@@ -233,7 +233,7 @@ export default function NNMConceptPage() {
                       margin: 0,
                       lineHeight: '1.2'
                   }}>
-                      NNM — The <span style={{ color: GOLD_SOLID }}>Imperium</span> <span style={{ color: TEXT_OFF_WHITE }}>Digital Name Asset Concept</span>
+                      NNM — The <span style={{ color: TEXT_PRIMARY }}>Imperium</span> <span style={{ color: TEXT_OFF_WHITE }}>Digital Name Asset Concept</span>
                   </h1>
                   
                   {/* Main Subtext */}
@@ -266,7 +266,7 @@ export default function NNMConceptPage() {
                 
                 {/* Authority Section */}
                 <div className="mb-5">
-                  <h2 className="h5 mb-3 fw-bold font-imperium" style={{ color: GOLD_SOLID }}>Authority & Scarcity</h2>
+                  <h2 className="h5 mb-3 fw-bold font-imperium" style={{ color: TEXT_PRIMARY }}>Authority & Scarcity</h2>
                   <p style={{ color: TEXT_BODY_COLOR, fontSize: '14px', lineHeight: '1.7', maxWidth: '95%' }}>
                     Owning an Imperium Asset means more than participation — it means defining the future trajectory of high-value digital names. Scarcity, authenticity, and historical priority converge to create an asset of unparalleled distinction. This is the digital asset for those who aspire to permanence, recognition, and exclusivity.
                   </p>
@@ -296,7 +296,7 @@ export default function NNMConceptPage() {
                 <div className="info-card-static">
                   <h3 className="h6 mb-3 fw-bold" style={{ color: TEXT_PRIMARY, borderBottom: `1px solid ${BORDER_COLOR}`, paddingBottom: '8px' }}>Asset Class Hierarchy</h3>
                   <ul className="list-unstyled mb-0" style={{ fontSize: '14px', color: TEXT_BODY_COLOR }}>
-                    <li className="mb-2"><span style={{ color: GOLD_SOLID, fontWeight: 'bold' }}>- Imperium Name Assets — </span> Immutable Priority</li>
+                    <li className="mb-2"><span style={{ color: TEXT_PRIMARY, fontWeight: 'bold' }}>- Imperium Name Assets — </span> Immutable Priority</li>
                     <li className="mb-2"><span style={{ color: TEXT_PRIMARY }}>- Art NFTs — </span> Collectibles</li>
                     <li className="mb-2"><span style={{ color: TEXT_PRIMARY }}>- Utility NFTs — </span> Access Mechanisms</li>
                     <li className="mb-2"><span style={{ color: TEXT_PRIMARY }}>- Gaming NFTs — </span> Interactive Assets</li>

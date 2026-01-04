@@ -11,7 +11,7 @@ const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 
 const BODY_TEXT_STYLE = {
     fontSize: '15px',
     lineHeight: '1.6',
-    color: TEXT_MUTED,
+    color: TEXT_PRIMARY,
     fontFamily: '"Inter", "Segoe UI", sans-serif'
 };
 
@@ -61,7 +61,7 @@ export default function ContactPage() {
         <div className="row justify-content-center mb-5">
             <div className="col-12 col-lg-10 text-center text-md-start">
                 <h1 className="fw-bold mb-3" style={{ fontSize: '2.5rem', letterSpacing: '-0.5px', color: TEXT_PRIMARY }}>
-                    Contact <span style={{ color: '#FFD700' }}>NNM</span>
+                    Contact <span style={{ color: TEXT_PRIMARY }}>NNM</span>
                 </h1>
                 <p style={{ ...BODY_TEXT_STYLE, maxWidth: '700px' }}>
                   We are here to assist with your sovereign asset journey. Please select the appropriate channel below to ensure your inquiry is routed to the correct team.
@@ -76,8 +76,8 @@ export default function ContactPage() {
                     
                     <div className="p-4 rounded-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, color: TEXT_PRIMARY }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
-                            <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                                 style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: '#F0C420' }}>
+                               <div className="rounded-circle d-flex align-items-center justify-content-center" 
+                                   style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: TEXT_PRIMARY }}>
                                 <i className="bi bi-chat-text-fill"></i>
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">General Inquiries</h3>
@@ -85,15 +85,15 @@ export default function ContactPage() {
                         <p style={{ ...BODY_TEXT_STYLE, fontSize: '14px', marginBottom: '15px' }}>
                           For platform assistance, account questions, or general information.
                         </p>
-                        <a href="mailto:contact@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
+                        <a href="mailto:contact@nnm.com" className="text-decoration-none fw-bold" style={{ color: TEXT_PRIMARY, fontSize: '14px' }}>
                             contact@nftnnm.com
                         </a>
                     </div>
 
                     <div className="p-4 rounded-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, color: TEXT_PRIMARY }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
-                            <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                                 style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: '#F0C420' }}>
+                               <div className="rounded-circle d-flex align-items-center justify-content-center" 
+                                   style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: TEXT_PRIMARY }}>
                                 <i className="bi bi-megaphone-fill"></i>
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">Media & Partnerships</h3>
@@ -101,15 +101,15 @@ export default function ContactPage() {
                         <p style={{ ...BODY_TEXT_STYLE, fontSize: '14px', marginBottom: '15px' }}>
                           For press releases, institutional partnerships, and brand assets.
                         </p>
-                        <a href="mailto:media@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
+                        <a href="mailto:media@nnm.com" className="text-decoration-none fw-bold" style={{ color: TEXT_PRIMARY, fontSize: '14px' }}>
                             media@nftnnm.com
                         </a>
                     </div>
 
                     <div className="p-4 rounded-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, color: TEXT_PRIMARY }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
-                            <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                                 style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: '#F0C420' }}>
+                               <div className="rounded-circle d-flex align-items-center justify-content-center" 
+                                   style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: TEXT_PRIMARY }}>
                                 <i className="bi bi-shield-fill-check"></i>
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">Legal & Compliance</h3>
@@ -117,7 +117,7 @@ export default function ContactPage() {
                         <p style={{ ...BODY_TEXT_STYLE, fontSize: '14px', marginBottom: '15px' }}>
                           For verified institutional inquiries only: Regulatory, IP rights, and compliance matters.
                         </p>
-                        <a href="mailto:legal@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
+                        <a href="mailto:legal@nnm.com" className="text-decoration-none fw-bold" style={{ color: TEXT_PRIMARY, fontSize: '14px' }}>
                             legal@nftnnm.com
                         </a>
                     </div>
@@ -208,7 +208,7 @@ export default function ContactPage() {
                     </form>
 
                     <div className="mt-4 pt-3 border-top border-secondary border-opacity-25 text-center">
-                        <p style={{ ...BODY_TEXT_STYLE, fontSize: '12px', margin: 0, color: TEXT_MUTED }}>
+                        <p style={{ ...BODY_TEXT_STYLE, fontSize: '12px', margin: 0, color: TEXT_PRIMARY }}>
                             <i className="bi bi-lock-fill me-1"></i>
                             Information submitted here is encrypted at rest. A team member will respond via your selected channel.
                         </p>
