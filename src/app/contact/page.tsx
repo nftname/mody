@@ -183,7 +183,7 @@ export default function ContactPage() {
                                 <button type="submit" 
                                         className="btn w-100 fw-bold py-3"
                                         style={{ 
-                                            background: 'linear-gradient(135deg, #F0C420 0%, #F0C420 100%)', 
+                                            background: 'linear-gradient(135deg, #E6C76C 0%, #D9B24C 100%)', 
                                             color: '#000', 
                                             border: 'none',
                                             borderRadius: '6px'
