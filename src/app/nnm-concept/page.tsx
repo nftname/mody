@@ -101,7 +101,7 @@ export default function NNMConceptPage() {
                   enabled: true,
                   backgroundColor: 'rgba(0,0,0,0.95)',
                   titleColor: TEXT_PRIMARY,
-                  bodyColor: TEXT_PRIMARY,
+                  bodyColor: '#fff',
                   borderColor: BORDER_COLOR,
                   borderWidth: 1,
                   padding: 10,
@@ -173,7 +173,7 @@ export default function NNMConceptPage() {
         .btn-ingot {
           background: ${GOLD_GRADIENT};
             border: 1px solid ${GOLD_BTN_SHADOW};
-            color: ${TEXT_PRIMARY};
+            color: #2b1d00;
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 1px;
@@ -187,7 +187,7 @@ export default function NNMConceptPage() {
         .btn-ingot:hover {
             filter: brightness(1.08);
             transform: translateY(-1px);
-            color: ${TEXT_PRIMARY};
+            color: #1a1100;
         }
         
         /* Mobile specific adjustments */

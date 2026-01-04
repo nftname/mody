@@ -197,7 +197,7 @@ export default function ContactPage() {
                                         className="btn w-100 fw-bold py-3"
                                         style={{ 
                                             background: GOLD_GRADIENT, 
-                                            color: TEXT_PRIMARY, 
+                                            color: '#000', 
                                             border: 'none',
                                             borderRadius: '6px'
                                         }}>

@@ -5,8 +5,8 @@ import { useState } from 'react';
 const BACKGROUND_DARK = '#1E1E1E';
 const SURFACE_DARK = '#242424';
 const BORDER_COLOR = '#2E2E2E';
-const TEXT_PRIMARY = '#F5F5F0';
-const TEXT_MUTED = '#F5F5F0';
+const TEXT_PRIMARY = '#E0E0E0';
+const TEXT_MUTED = '#B0B0B0';
 const GOLD_SOLID = '#F0C420';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
 
