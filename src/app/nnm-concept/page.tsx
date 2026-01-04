@@ -351,32 +351,7 @@ export default function NNMConceptPage() {
               </div>
           </div>
       </div>
-        <style jsx global>{`
-          .concept-page p,
-          .concept-page li,
-          .concept-page small,
-          .concept-page .small,
-          .concept-page label {
-            font-family: "Inter", "Segoe UI", sans-serif;
-            font-size: 15px;
-            color: #B0B0B0;
-          }
-          .concept-page h1,
-          .concept-page h2,
-          .concept-page h3,
-          .concept-page h4,
-          .concept-page h5,
-          .concept-page h6,
-          .concept-page .text-white {
-            color: #E0E0E0 !important;
-          }
-          .concept-page .text-gold,
-          .concept-page .gold,
-          .concept-page .highlight-gold,
-          .concept-page a.text-decoration-none.fw-bold {
-            color: ${GOLD_BASE} !important;
-          }
-        `}</style>
+      
     </main>
   );
 }
