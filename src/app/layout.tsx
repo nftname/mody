@@ -19,6 +19,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://mody-4rxy3vp4m-nftnames-projects.vercel.app'),
   title: "NNM Market",
   description: "Next-Gen NFT Marketplace",
   manifest: '/manifest.json',
