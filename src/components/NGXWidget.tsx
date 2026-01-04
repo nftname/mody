@@ -152,7 +152,7 @@ export default function NGXWidget({
         <div className="d-flex flex-column justify-content-center h-100 flex-shrink-0" style={{ zIndex: 2 }}>
             <div className="mb-1">
                 <div className="d-flex align-items-center gap-2"
-                     onMouseEnter={() => setHoveredInfo('Index Name')} onMouseLeave={() => setHoveredInfo(null)}>
+                     onMouseEnter={() => setHoveredInfo('NGX Indicator')} onMouseLeave={() => setHoveredInfo(null)}>
                     <span className="fw-bold text-nowrap" style={{ color: titleColor, fontSize: '9px', letterSpacing: '0.5px' }}>{title}</span>
                     
                     <span className="badge pulse-neon" 
@@ -165,7 +165,7 @@ export default function NGXWidget({
                           }}>LIVE</span>
                 </div>
                 <div style={{ fontSize: '7px', color: subTextColor, textTransform: 'uppercase' }}
-                     onMouseEnter={() => setHoveredInfo('Index Type')} onMouseLeave={() => setHoveredInfo(null)}>
+                     onMouseEnter={() => setHoveredInfo('Indicator Type')} onMouseLeave={() => setHoveredInfo(null)}>
                     {subtitle}
                 </div>
             </div>
@@ -173,16 +173,16 @@ export default function NGXWidget({
             <div>
                 <div className="d-flex align-items-end gap-1 mb-1">
                     <div className="fw-bold lh-1" style={{ fontSize: '27px', color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}
-                         onMouseEnter={() => setHoveredInfo(`Current Score: ${data.score}`)} onMouseLeave={() => setHoveredInfo(null)}>
+                         onMouseEnter={() => setHoveredInfo(`Current NGX Score: ${data.score}`)} onMouseLeave={() => setHoveredInfo(null)}>
                         {scoreInt}<span style={{ fontSize: '0.5em', opacity: 0.8 }}>.{scoreDec}</span>
                     </div>
                     <div className="fw-bold d-flex align-items-center gap-1 mb-2 ms-2" style={{ fontSize: '9px', color: changeColor }}
-                         onMouseEnter={() => setHoveredInfo(`24h Change: ${data.change24h}%`)} onMouseLeave={() => setHoveredInfo(null)}>
+                         onMouseEnter={() => setHoveredInfo(`24h Market Change: ${data.change24h}%`)} onMouseLeave={() => setHoveredInfo(null)}>
                         {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
                     </div>
                 </div>
                 <div className="fw-bold text-uppercase" style={{ color: currentStatus.color, fontSize: '8px', letterSpacing: '0.5px' }}
-                     onMouseEnter={() => setHoveredInfo('Market Sentiment')} onMouseLeave={() => setHoveredInfo(null)}>
+                     onMouseEnter={() => setHoveredInfo('Overall Market Sentiment')} onMouseLeave={() => setHoveredInfo(null)}>
                     {currentStatus.text}
                 </div>
             </div>
