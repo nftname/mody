@@ -376,9 +376,9 @@ const Navbar = () => {
               right: '0',
               top: '50%',
               transform: 'translateY(-50%)',
-              width: '4px',
-              height: '40px', 
-              backgroundColor: '#1a1a1a', 
+              width: '5px',
+              height: '48px', 
+              backgroundColor: '#2d2d2d', 
               borderTopLeftRadius: '4px',
               borderBottomLeftRadius: '4px',
               opacity: 1,
@@ -409,30 +409,30 @@ const Navbar = () => {
           <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
 
           <div className="drawer-content px-4 pt-3 pb-3 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
-              <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-3 mt-2">
-                  <div className="d-flex flex-column gap-2">
+              <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-1 mt-1">
+                  <div className="d-flex flex-column gap-1">
                     {menuItems.map((item) => (
                         <Link key={item} 
                                 href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                                 onClick={closeDrawer}
-                                className="text-decoration-none fw-bold py-2"
-                                style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', letterSpacing: '0.5px' }}>
+                                className="text-decoration-none fw-bold py-1"
+                                style={{ fontSize: '15px', color: 'rgba(255,255,255,0.85)', letterSpacing: '0.5px' }}>
                             {item}
                         </Link>
                     ))}
-                    <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-bold py-2" style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', letterSpacing: '0.5px' }}>How it Works</Link>
-                    <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-bold py-2" style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', letterSpacing: '0.5px' }}>Contact</Link>
+                    <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-bold py-1" style={{ fontSize: '15px', color: 'rgba(255,255,255,0.85)', letterSpacing: '0.5px' }}>How it Works</Link>
+                    <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-bold py-1" style={{ fontSize: '15px', color: 'rgba(255,255,255,0.85)', letterSpacing: '0.5px' }}>Contact</Link>
                   </div>
 
-                  <hr className="border-secondary opacity-10 my-1 w-100" />
+                  <hr className="m-0 my-2" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
 
-                  <div className="d-flex flex-column gap-2">
+                  <div className="d-flex flex-column gap-1">
                     {secondaryLinks.map((link) => (
                         <Link key={link} 
                                 href={`/${link.toLowerCase()}`}
                                 onClick={closeDrawer}
                                 className="text-decoration-none fw-normal py-1"
-                                style={{ fontSize: '15px', color: '#888' }}>
+                                style={{ fontSize: '12px', color: '#888' }}>
                             {link}
                         </Link>
                     ))}
@@ -502,14 +502,12 @@ const Navbar = () => {
             overflow: hidden;
         }
         
-        /* Hide Scrollbar for Chrome, Safari and Opera */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
-        /* Hide scrollbar for IE, Edge and Firefox */
         .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none; 
+            scrollbar-width: none; 
         }
       `}</style>
     </nav>
