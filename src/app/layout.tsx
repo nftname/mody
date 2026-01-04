@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next"; // أضفنا Viewport
+import type { Metadata, Viewport } from "next"; // ط£ط¶ظپظ†ط§ Viewport
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -19,35 +19,17 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://mody-4rxy3vp4m-nftnames-projects.vercel.app'),
   title: "NNM Market",
   description: "Next-Gen NFT Marketplace",
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icons/icon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/icons/icon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
     ],
-    shortcut: ['/favicon.ico'],
+    shortcut: ['/icons/icon.svg'],
     apple: [
-      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
     ],
-    other: [
-      {
-        rel: 'mask-icon',
-        url: '/icons/icon.svg',
-        color: '#FCD535',
-      },
-    ],
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'NNM Market',
   },
 };
 
@@ -59,33 +41,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Critical Favicon - Must be first */}
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-        
-        {/* PNG Favicons for modern browsers & Web3 Wallets */}
-        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="96x96" href="/icons/icon-96x96.png" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
-        
-        {/* Apple Touch Icon */}
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
-        
-        {/* PWA Manifest */}
-        <link rel="manifest" href="/manifest.json" />
-        
-        {/* Theme Colors */}
-        <meta name="theme-color" content="#0b1220" />
-        <meta name="msapplication-TileColor" content="#0b1220" />
-        <meta name="msapplication-TileImage" content="/icons/icon-192x192.png" />
-        
-        {/* Apple Web App */}
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="NNM Market" />
-        
-        {/* Bootstrap Icons */}
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
       </head>
       <body className={inter.className}>
