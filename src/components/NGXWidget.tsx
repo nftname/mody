@@ -55,7 +55,6 @@ export default function NGXWidget({
   };
 
   const mainTextColor = isLight ? '#0A192F' : '#ffffff'; 
-  const subTextColor = isLight ? '#495057' : '#848E9C';
   const titleColor = isLight ? '#0A192F' : '#FCD535'; 
   const NEON_GREEN = '#0ecb81';
 
@@ -150,7 +149,7 @@ export default function NGXWidget({
            }}>
         
         <div className="d-flex flex-column justify-content-center h-100 flex-shrink-0" style={{ zIndex: 2 }}>
-            <div className="mb-1">
+            <div className="mb-0"> {/* Margin reduced to pull content closer */}
                 <div className="d-flex align-items-center gap-2"
                      onMouseEnter={() => setHoveredInfo('NGX Indicator')} onMouseLeave={() => setHoveredInfo(null)}>
                     <span className="fw-bold text-nowrap" style={{ color: titleColor, fontSize: '9px', letterSpacing: '0.5px' }}>{title}</span>
@@ -164,10 +163,7 @@ export default function NGXWidget({
                               backgroundColor: 'rgba(14, 203, 129, 0.1)' 
                           }}>LIVE</span>
                 </div>
-                <div style={{ fontSize: '7px', color: subTextColor, textTransform: 'uppercase' }}
-                     onMouseEnter={() => setHoveredInfo('Indicator Type')} onMouseLeave={() => setHoveredInfo(null)}>
-                    {subtitle}
-                </div>
+                {/* Subtitle removed here as requested */}
             </div>
             
             <div>
@@ -206,7 +202,7 @@ export default function NGXWidget({
         .ngx-widget-container {
             position: relative;
             width: 100%;
-            max-width: 240px;
+            max-width: 310px; /* Adjusted to 310px to match NGXCapWidget */
             margin-left: auto;
             margin-right: auto;
         }
