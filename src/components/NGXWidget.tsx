@@ -12,6 +12,7 @@ interface NGXData {
 interface WidgetProps {
   theme?: 'dark' | 'light';
   title?: string;
+  subtitle?: string;
 }
 
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
@@ -34,7 +35,8 @@ function describeArc(x: number, y: number, radius: number, startAngle: number, e
 
 export default function NGXWidget({ 
   theme = 'dark', 
-  title = 'NGX NFTs' 
+  title = 'NGX NFTs', 
+  subtitle = 'Global Index' 
 }: WidgetProps) {
   const [data, setData] = useState<NGXData | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -49,8 +51,7 @@ export default function NGXWidget({
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
     border: isLight ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.08)',
-    // تعديل 3: إزالة الشادو نهائياً ليتطابق مع كبسولة الماركت كاب
-    boxShadow: 'none',
+    boxShadow: 'none', 
   };
 
   const mainTextColor = isLight ? '#0A192F' : '#ffffff'; 
@@ -150,17 +151,17 @@ export default function NGXWidget({
     <div className="ngx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
     <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
       
-      <div className="d-flex flex-column justify-content-between rounded-3 position-relative overflow-hidden"
+      <div className="d-flex flex-column justify-content-between px-3 py-2 rounded-3 position-relative overflow-hidden"
            style={{
              ...glassStyle,
              height: '82px',
              width: '100%',
-             // تعديل 1: تقليل الحشو الداخلي لتقريب العناصر
-             padding: '8px 12px', 
+             paddingLeft: '38px', 
+             paddingRight: '15px'
            }}>
         
         {/* Header Row */}
-        <div className="d-flex align-items-center justify-content-between w-100" style={{ zIndex: 2, marginBottom: '2px' }}>
+        <div className="d-flex align-items-center justify-content-between w-100" style={{ zIndex: 2 }}>
             <div className="d-flex align-items-center gap-2"
                  onMouseEnter={() => setHoveredInfo('NGX Indicator')} onMouseLeave={() => setHoveredInfo(null)}>
                 <span className="fw-bold text-nowrap" style={{ color: titleColor, fontSize: '9px', letterSpacing: '0.5px' }}>{title}</span>
@@ -176,12 +177,12 @@ export default function NGXWidget({
                     }}>LIVE</span>
         </div>
 
-        {/* Content Row - تعديل 1: استخدام gap لتقريب العناصر بدلاً من التباعد الأقصى */}
-        <div className="d-flex align-items-center w-100" style={{ height: '100%', gap: '15px' }}>
+        {/* Content Row */}
+        <div className="d-flex align-items-center justify-content-between w-100" style={{ height: '100%', marginTop: '-5px' }}>
             
             {/* Left Side: Number & Info */}
             <div className="d-flex flex-column justify-content-center" style={{ zIndex: 2 }}>
-                <div className="d-flex align-items-end gap-1 mb-0">
+                <div className="d-flex align-items-end gap-2 mb-1">
                     <div className="fw-bold lh-1" style={{ fontSize: '24px', color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}
                          onMouseEnter={() => setHoveredInfo(`Current NGX Score: ${data.score}`)} onMouseLeave={() => setHoveredInfo(null)}>
                         {scoreInt}<span style={{ fontSize: '0.5em', opacity: 0.8 }}>.{scoreDec}</span>
@@ -191,16 +192,15 @@ export default function NGXWidget({
                         {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
                     </div>
                 </div>
-                {/* تعديل 2: إضافة هامش علوي بسيط لإنزال كلمة NEUTRAL */}
-                <div className="fw-bold text-uppercase" style={{ color: currentStatus.color, fontSize: '8px', letterSpacing: '0.5px', marginTop: '2px' }}
+                <div className="fw-bold text-uppercase" style={{ color: currentStatus.color, fontSize: '8px', letterSpacing: '0.5px' }}
                      onMouseEnter={() => setHoveredInfo('Overall Market Sentiment')} onMouseLeave={() => setHoveredInfo(null)}>
                     {currentStatus.text}
                 </div>
             </div>
 
             {/* Right Side: Gauge */}
-            <div className="d-flex align-items-center justify-content-center flex-grow-1" style={{ zIndex: 1 }}>
-                <div style={{ width: '100%', height: '55px', position: 'relative' }}>
+            <div className="d-flex align-items-center justify-content-center" style={{ zIndex: 1, width: '55%' }}>
+                <div style={{ width: '100%', height: '60px', position: 'relative' }}>
                     <GaugeSVG />
                 </div>
             </div>
