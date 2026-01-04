@@ -3,10 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 224, 224, 224;
-  --background-start-rgb: 30, 30, 30;
-  --background-end-rgb: 30, 30, 30;
-  --gold-metallic: #F0C420;
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 11, 14, 17;
+  --background-end-rgb: 11, 14, 17;
 }
 
 *, *::before, *::after {
@@ -22,8 +21,8 @@ html, body {
   overflow-x: hidden;
   margin: 0;
   padding: 0;
-  background-color: #1E1E1E;
-  color: #E0E0E0;
+  background-color: #0b0e11;
+  color: white;
   min-height: 100vh;
 }
 
@@ -32,7 +31,7 @@ html, body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1E1E1E; 
+  background: #0b0e11; 
 }
 
 ::-webkit-scrollbar-thumb {
@@ -44,22 +43,6 @@ html, body {
   background: #555; 
 }
 
-.text-gold-gradient {
-  background: linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #FFD700 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-}
-
-.text-gold-metallic {
-  color: #F0C420 !important;
-}
-
-.border-gold-metallic {
-  border-color: #F0C420 !important;
-}
-
 .footer-link-item {
   color: rgba(255, 255, 255, 0.5) !important;
   transition: all 0.2s ease-in-out !important;
@@ -68,7 +51,7 @@ html, body {
 }
 
 .footer-link-item:hover {
-  color: #E0E0E0 !important;
+  color: #ffffff !important;
   transform: translateX(3px);
 }
 
@@ -79,7 +62,7 @@ html, body {
 }
 
 .footer-social-icon:hover {
-  color: #E0E0E0 !important;
+  color: #ffffff !important;
   transform: scale(1.1);
 }
 
@@ -94,9 +77,9 @@ html, body {
 }
 
 .footer-social-row:hover {
-  color: #E0E0E0;
+  color: #fff;
   padding-left: 5px;
 }
 
-.footer-social-row i { color: #F0C420; } 
-.footer-social-row:hover i { color: #E0E0E0; }
+.footer-social-row i { color: #FCD535; } 
+.footer-social-row:hover i { color: #fff; }
