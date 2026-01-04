@@ -105,7 +105,7 @@ export default function NGXWidget({
 
   const GaugeSVG = () => {
       const radius = 80;
-      const stroke = 20;
+      const stroke = 16; // Reduced stroke width by ~20% (from 20 to 16) to make it look smaller/lighter
       
       return (
         <svg viewBox="-90 -20 180 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
@@ -120,19 +120,18 @@ export default function NGXWidget({
             <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} 
                   onMouseEnter={() => setHoveredInfo('Strong Buy Zone (80-100)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
 
-            <g fill={isLight ? "#0A192F" : "rgba(255,255,255,0.8)"} fontSize="10" fontFamily="sans-serif" fontWeight="700">
-                <text x="-95" y="85" textAnchor="middle">0</text>
-                <text x="-70" y="20" textAnchor="middle">20</text>
-                <text x="0" y="-8" textAnchor="middle">50</text>
-                <text x="70" y="20" textAnchor="middle">80</text>
-                <text x="95" y="85" textAnchor="middle">100</text>
+            {/* Scale Labels inside the gauge */}
+            <g fontSize="8" fontFamily="sans-serif" fontWeight="700" opacity="0.9">
+                <text x="-55" y="55" fill="#e53935" textAnchor="middle">SELL</text>
+                <text x="0" y="30" fill="#fdd835" textAnchor="middle">NEUTRAL</text>
+                <text x="55" y="55" fill={TICKER_GREEN} textAnchor="middle">BUY</text>
             </g>
 
-            <line x1="0" y1="80" x2="0" y2="10" stroke={isLight ? "#0A192F" : "#FFFFFF"} strokeWidth="4" 
+            <line x1="0" y1="80" x2="0" y2="10" stroke={isLight ? "#0A192F" : "#FFFFFF"} strokeWidth="3" 
                   transform={`rotate(${needleRotation}, 0, 80)`} 
                   style={{ transition: 'transform 1.5s cubic-bezier(0.23, 1, 0.32, 1)', filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }} />
             
-            <circle cx="0" cy="80" r="12" fill={isLight ? "#0A192F" : "#fff"} stroke={isLight ? "#fff" : "#2b3139"} strokeWidth="2" />
+            <circle cx="0" cy="80" r="10" fill={isLight ? "#0A192F" : "#fff"} stroke={isLight ? "#fff" : "#2b3139"} strokeWidth="2" />
         </svg>
       );
   };
@@ -141,15 +140,19 @@ export default function NGXWidget({
     <div className="ngx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
     <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
       
-      <div className="d-flex align-items-center justify-content-between px-3 py-2 rounded-3 position-relative overflow-hidden"
+      <div className="d-flex align-items-center rounded-3 position-relative overflow-hidden"
            style={{
              ...glassStyle,
              height: '82px',
-             width: '100%'
+             width: '100%',
+             // Shifting content right: Added significant padding-left and reduced padding-right
+             paddingLeft: '25px', 
+             paddingRight: '10px',
+             justifyContent: 'space-between'
            }}>
         
         <div className="d-flex flex-column justify-content-center h-100 flex-shrink-0" style={{ zIndex: 2 }}>
-            <div className="mb-0"> {/* Margin reduced to pull content closer */}
+            <div className="mb-0">
                 <div className="d-flex align-items-center gap-2"
                      onMouseEnter={() => setHoveredInfo('NGX Indicator')} onMouseLeave={() => setHoveredInfo(null)}>
                     <span className="fw-bold text-nowrap" style={{ color: titleColor, fontSize: '9px', letterSpacing: '0.5px' }}>{title}</span>
@@ -163,7 +166,6 @@ export default function NGXWidget({
                               backgroundColor: 'rgba(14, 203, 129, 0.1)' 
                           }}>LIVE</span>
                 </div>
-                {/* Subtitle removed here as requested */}
             </div>
             
             <div>
@@ -184,8 +186,9 @@ export default function NGXWidget({
             </div>
         </div>
 
-        <div className="d-flex align-items-center justify-content-center flex-grow-1 ms-2" style={{ zIndex: 1 }}>
-            <div style={{ width: '100%', height: '63px', position: 'relative' }}>
+        <div className="d-flex align-items-center justify-content-center flex-grow-1" style={{ zIndex: 1 }}>
+            {/* Reduced width to 90% and height to 60px to shrink gauge by ~10% */}
+            <div style={{ width: '90%', height: '60px', position: 'relative' }}>
                 <GaugeSVG />
             </div>
         </div>
@@ -202,7 +205,7 @@ export default function NGXWidget({
         .ngx-widget-container {
             position: relative;
             width: 100%;
-            max-width: 310px; /* Adjusted to 310px to match NGXCapWidget */
+            max-width: 310px;
             margin-left: auto;
             margin-right: auto;
         }
