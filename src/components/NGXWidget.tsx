@@ -1,8 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
-// تعريف البيانات (سنستخدمها لاحقاً لجميع المؤشرات)
 interface NGXData {
   score: number;
   status: string;
@@ -10,12 +9,12 @@ interface NGXData {
 }
 
 interface WidgetProps {
-  type?: 'sentiment' | 'cap' | 'assets'; // لنحدد نوع المؤشر لاحقاً
-  title?: string;     // العنوان العلوي (مثل NGX Sentiment)
-  subtitle?: string;  // العنوان الفرعي (مثل Market Mood)
+  type?: 'sentiment' | 'cap' | 'assets';
+  title?: string;
+  subtitle?: string;
+  theme?: 'dark' | 'light'; // Added to fix build error
 }
 
-// دالة رسم القوس (للعداد)
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
   const angleInRadians = (angleInDegrees - 180) * Math.PI / 180.0;
   return {
@@ -36,18 +35,20 @@ function describeArc(x: number, y: number, radius: number, startAngle: number, e
 
 export default function NGXWidget({ 
   title = 'NGX Sentiment', 
-  subtitle = 'Market Mood' 
+  subtitle = 'Market Mood',
+  theme 
 }: WidgetProps) {
   const [data, setData] = useState<NGXData | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [hoveredInfo, setHoveredInfo] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // الألوان والستايل الزجاجي المتجاوب (Auto Dark/Light)
-  // نستخدم CSS Variables أو ألوان RGBA مع Blur للشفافية
   const glassStyle = {
-    background: 'rgba(11, 14, 17, 0.4)', // لون داكن شفاف جداً افتراضياً
-    backdropFilter: 'blur(8px)',          // تأثير الزجاج المغبش
+    background: 'rgba(11, 14, 17, 0.4)',
+    backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
-    border: '1px solid rgba(255, 255, 255, 0.08)', // حدود خفيفة جداً
+    border: '1px solid rgba(255, 255, 255, 0.08)',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
   };
 
@@ -55,7 +56,6 @@ export default function NGXWidget({
 
   useEffect(() => {
     setMounted(true);
-    // محاكاة جلب البيانات (سنربطها بالـ API الحقيقي لاحقاً)
     const fetchData = async () => {
       try {
         const res = await fetch('/api/ngx'); 
@@ -71,16 +71,24 @@ export default function NGXWidget({
     return () => clearInterval(interval);
   }, []);
 
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setMousePos({
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        });
+    }
+  };
+
   if (!mounted || !data) return null; 
 
-  // ألوان المؤشرات
   const TICKER_GREEN = '#0ecb81';
   const TICKER_RED = '#f6465d';
   const needleRotation = ((data.score / 100) * 180) - 90;
 
-  // تحديد الحالة واللون
   const currentStatus = (() => {
-      if (data.score < 20) return { color: '#e53935', text: 'S.SELL' }; // اختصار الكلمات للجوال
+      if (data.score < 20) return { color: '#e53935', text: 'S.SELL' };
       if (data.score < 40) return { color: '#fb8c00', text: 'SELL' };        
       if (data.score < 60) return { color: '#fdd835', text: 'NEUT' };     
       if (data.score < 80) return { color: '#7cb342', text: 'BUY' };         
@@ -91,21 +99,23 @@ export default function NGXWidget({
   const scoreStr = data.score.toFixed(1);
   const [scoreInt, scoreDec] = scoreStr.split('.');
 
-  // رسم العداد (تم تصغيره ليتناسب مع الحجم الجديد)
   const GaugeSVG = () => {
       const radius = 80;
-      const stroke = 22; // سمك الخط ليكون واضحاً في الحجم الصغير
+      const stroke = 22;
       
       return (
         <svg viewBox="-90 -20 180 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
-            {/* الخلفية الملونة للأقواس */}
-            <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} opacity="0.9" />
-            <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} opacity="0.9" />
-            <path d={describeArc(0, 80, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} opacity="0.9" />
-            <path d={describeArc(0, 80, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} opacity="0.9" />
-            <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} opacity="0.9" />
+            <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} opacity="0.9" 
+                  onMouseEnter={() => setHoveredInfo('Strong Sell Zone (0-20)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
+            <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} opacity="0.9" 
+                  onMouseEnter={() => setHoveredInfo('Sell Zone (20-40)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
+            <path d={describeArc(0, 80, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} opacity="0.9" 
+                  onMouseEnter={() => setHoveredInfo('Neutral Zone (40-60)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
+            <path d={describeArc(0, 80, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} opacity="0.9" 
+                  onMouseEnter={() => setHoveredInfo('Buy Zone (60-80)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
+            <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} opacity="0.9" 
+                  onMouseEnter={() => setHoveredInfo('Strong Buy Zone (80-100)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
 
-            {/* الإبرة */}
             <line x1="0" y1="80" x2="0" y2="10" stroke="#FFFFFF" strokeWidth="5" 
                   transform={`rotate(${needleRotation}, 0, 80)`} 
                   style={{ transition: 'transform 1.5s cubic-bezier(0.23, 1, 0.32, 1)', filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }} />
@@ -115,39 +125,39 @@ export default function NGXWidget({
   };
 
   return (
-    <div className="ngx-widget-wrapper">
+    <div className="ngx-widget-wrapper" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
         <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block', height: '100%' }}>
         
-        {/* الكبسولة الزجاجية */}
         <div className="widget-glass d-flex align-items-center justify-content-between px-2 py-1 position-relative overflow-hidden"
             style={{
                 ...glassStyle,
-                height: '100%', // يأخذ ارتفاع الكونتينر الأب
+                height: '100%',
                 width: '100%',
-                borderRadius: '8px', // حواف ناعمة
+                borderRadius: '8px',
             }}>
             
-            {/* القسم النصي (يسار) */}
             <div className="d-flex flex-column justify-content-center h-100 flex-shrink-0" style={{ zIndex: 2, maxWidth: '55%' }}>
-                
-                {/* العنوان + Live */}
-                <div className="d-flex align-items-center gap-1 mb-0">
+                <div className="d-flex align-items-center gap-1 mb-0" 
+                     onMouseEnter={() => setHoveredInfo('Composite Index Name')} onMouseLeave={() => setHoveredInfo(null)}>
                     <span className="fw-bold text-nowrap widget-title">{title}</span>
                     <span className="pulse-dot"></span>
                 </div>
-                <div className="widget-subtitle mb-1">{subtitle}</div>
+                <div className="widget-subtitle mb-1" 
+                     onMouseEnter={() => setHoveredInfo('Indicator Type')} onMouseLeave={() => setHoveredInfo(null)}>
+                    {subtitle}
+                </div>
                 
-                {/* الأرقام */}
                 <div>
-                    <div className="d-flex align-items-baseline gap-1" style={{ lineHeight: '1' }}>
+                    <div className="d-flex align-items-baseline gap-1" style={{ lineHeight: '1' }}
+                         onMouseEnter={() => setHoveredInfo(`Live Score: ${data.score}`)} onMouseLeave={() => setHoveredInfo(null)}>
                         <div className="fw-bold widget-score">
                             {scoreInt}<span style={{ fontSize: '0.6em', opacity: 0.8 }}>.{scoreDec}</span>
                         </div>
                     </div>
-                    {/* التغير والحالة */}
-                    <div className="d-flex align-items-center gap-1 mt-1">
+                    <div className="d-flex align-items-center gap-1 mt-1"
+                         onMouseEnter={() => setHoveredInfo(`24h Change: ${data.change24h}%`)} onMouseLeave={() => setHoveredInfo(null)}>
                         <span className="fw-bold widget-change" style={{ color: changeColor }}>
-                            {data.change24h >= 0 ? 'â–²' : 'â–¼'}
+                            {data.change24h >= 0 ? '▲' : '▼'}
                         </span>
                         <span className="fw-bold widget-status" style={{ color: currentStatus.color }}>
                             {currentStatus.text}
@@ -156,7 +166,6 @@ export default function NGXWidget({
                 </div>
             </div>
 
-            {/* قسم الرسم البياني (يمين) */}
             <div className="d-flex align-items-center justify-content-center flex-grow-1" style={{ zIndex: 1, height: '100%' }}>
                 <div style={{ width: '100%', height: '85%', position: 'relative', transform: 'translateY(5px)' }}>
                     <GaugeSVG />
@@ -165,8 +174,13 @@ export default function NGXWidget({
         </div>
         </Link>
 
+        {hoveredInfo && (
+            <div className="ngx-tooltip" style={{ top: mousePos.y + 15, left: mousePos.x + 15 }}>
+                {hoveredInfo}
+            </div>
+        )}
+
         <style jsx global>{`
-            /* التحكم في الألوان حسب وضع الجهاز (Dark/Light) */
             @media (prefers-color-scheme: light) {
                 .widget-glass {
                     background: rgba(255, 255, 255, 0.6) !important;
@@ -175,6 +189,12 @@ export default function NGXWidget({
                 .widget-title { color: #0A192F !important; }
                 .widget-subtitle { color: #555 !important; }
                 .widget-score { color: #0A192F !important; }
+                .ngx-tooltip {
+                    background: rgba(255, 255, 255, 0.95);
+                    color: #000;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                    border: 1px solid #eee;
+                }
             }
 
             @media (prefers-color-scheme: dark) {
@@ -182,15 +202,20 @@ export default function NGXWidget({
                     background: rgba(11, 14, 17, 0.4) !important;
                     border: 1px solid rgba(255, 255, 255, 0.08) !important;
                 }
-                .widget-title { color: #FCD535 !important; } /* لون ذهبي للعنوان في الدارك */
+                .widget-title { color: #FCD535 !important; }
                 .widget-subtitle { color: #848E9C !important; }
                 .widget-score { color: #FFFFFF !important; }
+                .ngx-tooltip {
+                    background: rgba(11, 14, 17, 0.95);
+                    color: #fff;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                    border: 1px solid rgba(255,255,255,0.1);
+                }
             }
 
-            /* أحجام الخطوط المصغرة (Compact Typography) */
             .widget-title { font-size: 10px; letter-spacing: 0.3px; }
             .widget-subtitle { font-size: 7px; text-transform: uppercase; }
-            .widget-score { font-size: 20px; } /* تم التصغير من 39 */
+            .widget-score { font-size: 20px; }
             .widget-change { font-size: 8px; }
             .widget-status { font-size: 8px; letter-spacing: 0.3px; text-transform: uppercase; }
 
@@ -206,8 +231,20 @@ export default function NGXWidget({
             .ngx-widget-wrapper {
                 width: 100%;
                 height: 100%;
-                /* هذه هي النقطة السحرية: نمنع العناصر من التمدد خارج حدودها */
-                min-width: 0; 
+                min-width: 0;
+                position: relative;
+            }
+
+            .ngx-tooltip {
+                position: absolute;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 10px;
+                font-weight: 500;
+                pointer-events: none;
+                z-index: 100;
+                white-space: nowrap;
+                transform: translateZ(0);
             }
         `}</style>
     </div>
