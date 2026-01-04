@@ -8,6 +8,14 @@ import { parseAbi, keccak256, stringToBytes } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { CONTRACT_ADDRESS } from '@/data/config';
 
+const BACKGROUND_DARK = '#1E1E1E';
+const SURFACE_DARK = '#242424';
+const BORDER_COLOR = '#2E2E2E';
+const TEXT_PRIMARY = '#E0E0E0';
+const TEXT_MUTED = '#B0B0B0';
+const GOLD_SOLID = '#F0C420';
+const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
+
 // ABI for the NFT Registry Contract (Minting Logic - Updated for Registry 10)
 const CONTRACT_ABI = parseAbi([
   "function owner() view returns (address)",
@@ -105,10 +113,8 @@ const MintContent = () => {
 
   if (!mounted) return null;
 
-  const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
-
   return (
-    <main dir="ltr" style={{ backgroundColor: '#0d1117', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
+    <main dir="ltr" style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr', color: TEXT_PRIMARY }}>
       
       {isAdmin && (
         <div 

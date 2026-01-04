@@ -14,9 +14,15 @@ import { supabase } from '@/lib/supabase';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
-const GOLD_GRADIENT = 'linear-gradient(to bottom, #FFD700 0%, #E6BE03 25%, #B3882A 50%, #E6BE03 75%, #FFD700 100%)';
-const GOLD_BTN_STYLE = { background: '#FCD535', color: '#000', border: 'none', fontWeight: 'bold' as const };
-const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FCD535', border: '1px solid #FCD535', fontWeight: 'bold' as const };
+const BACKGROUND_DARK = '#1E1E1E';
+const SURFACE_DARK = '#242424';
+const BORDER_COLOR = '#2E2E2E';
+const TEXT_PRIMARY = '#E0E0E0';
+const TEXT_MUTED = '#B0B0B0';
+const GOLD_SOLID = '#F0C420';
+const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
+const GOLD_BTN_STYLE = { background: GOLD_GRADIENT, color: '#1a1200', border: 'none', fontWeight: 'bold' as const };
+const OUTLINE_BTN_STYLE = { background: 'transparent', color: GOLD_SOLID, border: `1px solid ${GOLD_SOLID}`, fontWeight: 'bold' as const };
 
 // مدة العرض (30 يوم)
 const OFFER_DURATION = 30 * 24 * 60 * 60; 
@@ -66,26 +72,26 @@ const resolveIPFS = (uri: string) => {
 
 const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => {
     if (!isOpen) return null;
-    let icon = <div className="spinner-border text-warning" role="status"></div>;
-    let iconColor = '#FCD535';
+    let icon = <div className="spinner-border" style={{ color: GOLD_SOLID }} role="status"></div>;
+    let iconColor = GOLD_SOLID;
 
     if (type === 'success') { icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '40px', color: '#28a745' }}></i>; iconColor = '#28a745'; }
     else if (type === 'error') { icon = <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '40px', color: '#dc3545' }}></i>; iconColor = '#dc3545'; }
-    else if (type === 'swap') { icon = <i className="bi bi-wallet2" style={{ fontSize: '40px', color: '#FCD535' }}></i>; }
+    else if (type === 'swap') { icon = <i className="bi bi-wallet2" style={{ fontSize: '40px', color: GOLD_SOLID }}></i>; }
 
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="fade-in" style={{ backgroundColor: '#161b22', border: `1px solid ${iconColor}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', textAlign: 'center', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative' }}>
-                <button onClick={onClose} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
+            <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${iconColor}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', textAlign: 'center', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
+                <button onClick={onClose} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
                 <div className="mb-3">{icon}</div>
-                <h4 className="text-white fw-bold mb-2">{title}</h4>
-                <p className="text-secondary mb-4" style={{ fontSize: '14px' }}>{message}</p>
+                <h4 className="fw-bold mb-2" style={{ color: TEXT_PRIMARY }}>{title}</h4>
+                <p className="mb-4" style={{ fontSize: '14px', color: TEXT_MUTED }}>{message}</p>
                 {type === 'swap' && (
-                     <a href="https://app.uniswap.org/" target="_blank" rel="noopener noreferrer" className="btn w-100 fw-bold" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000', padding: '10px', borderRadius: '8px' }}>
+                     <a href="https://app.uniswap.org/" target="_blank" rel="noopener noreferrer" className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, padding: '10px', borderRadius: '8px' }}>
                         Swap on Uniswap <i className="bi bi-box-arrow-up-right ms-1"></i>
                     </a>
                 )}
-                {type === 'error' && <button onClick={onClose} className="btn w-100 btn-outline-secondary">Close</button>}
+                {type === 'error' && <button onClick={onClose} className="btn w-100 btn-outline-secondary" style={{ color: TEXT_PRIMARY, borderColor: BORDER_COLOR }}>Close</button>}
                 {type === 'success' && <button onClick={onClose} className="btn fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '8px', minWidth: '100px' }}>Done</button>}
             </div>
         </div>
@@ -462,26 +468,26 @@ function AssetPage() {
     const targetAmount = Number(offerPrice) || 0;
     const hasAllowance = wpolAllowance >= targetAmount;
 
-    if (loading) return <div className="vh-100 bg-black text-secondary d-flex justify-content-center align-items-center">Loading Asset...</div>;
-    if (!asset) return <div className="vh-100 bg-black text-white d-flex justify-content-center align-items-center">Asset Not Found</div>;
+    if (loading) return <div className="vh-100" style={{ backgroundColor: BACKGROUND_DARK, color: TEXT_MUTED }}><div className="d-flex justify-content-center align-items-center h-100">Loading Asset...</div></div>;
+    if (!asset) return <div className="vh-100" style={{ backgroundColor: BACKGROUND_DARK, color: TEXT_PRIMARY }}><div className="d-flex justify-content-center align-items-center h-100">Asset Not Found</div></div>;
     
     const style = getHeroStyles(asset.tier);
 
     return (
-        <main style={{ backgroundColor: '#0b0e11', minHeight: '100vh', paddingBottom: '80px', fontFamily: 'sans-serif' }}>
+        <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', paddingBottom: '80px', fontFamily: 'sans-serif', color: TEXT_PRIMARY }}>
             <CustomModal isOpen={modal.isOpen} type={modal.type} title={modal.title} message={modal.message} onClose={closeModal} onSwap={() => window.open('https://app.uniswap.org/', '_blank')} />
             
             <div className="container py-3">
-                <div className="d-flex align-items-center gap-2 text-secondary mb-4" style={{ fontSize: '14px' }}>
-                    <Link href="/market" className="text-decoration-none text-secondary hover-gold">Market</Link>
+                <div className="d-flex align-items-center gap-2 mb-4" style={{ fontSize: '14px', color: TEXT_MUTED }}>
+                    <Link href="/market" className="text-decoration-none hover-gold" style={{ color: TEXT_MUTED }}>Market</Link>
                     <i className="bi bi-chevron-right" style={{ fontSize: '10px' }}></i>
-                    <span className="text-white">{asset.name}</span>
+                    <span style={{ color: TEXT_PRIMARY }}>{asset.name}</span>
                 </div>
 
                 <div className="row g-5">
                     {/* الصورة (يسار) */}
                     <div className="col-lg-5">
-                         <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" style={{ background: 'radial-gradient(circle, #161b22 0%, #0b0e11 100%)', border: '1px solid #2a2e35', minHeight: '500px' }}>
+                         <div className="rounded-4 d-flex justify-content-center align-items-center position-relative overflow-hidden" style={{ background: 'radial-gradient(circle, #2a2a2a 0%, #1E1E1E 100%)', border: `1px solid ${BORDER_COLOR}`, minHeight: '500px' }}>
                             <div style={{ width: '85%', aspectRatio: '1/1', background: style.bg, border: style.border, borderRadius: '16px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
                                 <div style={{ textAlign: 'center' }}>
                                     <p style={{ fontSize: '10px', letterSpacing: '2px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '10px' }}>GEN-0 #00{asset.id}</p>
@@ -489,33 +495,33 @@ function AssetPage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="mt-4 p-4 rounded-3" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35' }}>
+                        <div className="mt-4 p-4 rounded-3" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${BORDER_COLOR}`, color: TEXT_PRIMARY }}>
                              <div className="d-flex align-items-center gap-2 mb-3">
                                 <i className="bi bi-info-circle text-gold"></i>
-                                <span className="fw-bold text-white">Description</span>
+                                <span className="fw-bold" style={{ color: TEXT_PRIMARY }}>Description</span>
                             </div>
-                            <p className="text-secondary" style={{ fontSize: '14px', lineHeight: '1.6' }}>{asset.description}</p>
+                            <p style={{ fontSize: '14px', lineHeight: '1.6', color: TEXT_MUTED }}>{asset.description}</p>
                         </div>
                     </div>
 
                     {/* البيانات (يمين) */}
                     <div className="col-lg-7">
-                        <h1 className="text-white fw-bold mb-1" style={{ fontSize: '32px' }}>{asset.name}</h1>
+                        <h1 className="fw-bold mb-1" style={{ fontSize: '32px', color: TEXT_PRIMARY }}>{asset.name}</h1>
                         <div className="d-flex align-items-center gap-3 mb-4">
-                            <span className="badge bg-warning text-dark">Gen-0</span>
-                            <span className="text-secondary small">Owned by <span className="text-gold">{asset.owner.slice(0,6)}...{asset.owner.slice(-4)}</span></span>
+                            <span className="badge" style={{ background: GOLD_GRADIENT, color: '#1a1200', border: 'none' }}>Gen-0</span>
+                            <span className="small" style={{ color: TEXT_MUTED }}>Owned by <span className="text-gold">{asset.owner.slice(0,6)}...{asset.owner.slice(-4)}</span></span>
                         </div>
 
                         {/* لوحة التحكم */}
-                        <div className="p-4 rounded-3 mt-4 mb-4" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35' }}>
+                        <div className="p-4 rounded-3 mt-4 mb-4" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${BORDER_COLOR}` }}>
                             <div className="row align-items-center">
                                 <div className="col-md-6">
-                                    <span className="text-secondary small d-block mb-1">Current Price</span>
+                                    <span className="small d-block mb-1" style={{ color: TEXT_MUTED }}>Current Price</span>
                                     <div className="d-flex align-items-baseline gap-2">
-                                        <h2 className="text-white fw-bold mb-0" style={{ fontSize: '36px' }}>
+                                        <h2 className="fw-bold mb-0" style={{ fontSize: '36px', color: TEXT_PRIMARY }}>
                                             {listing ? `${listing.pricePerToken} POL` : `${asset.price} POL`}
                                         </h2>
-                                        {!listing && <span className="text-secondary small">â‰ˆ $12.50</span>}
+                                        {!listing && <span className="small" style={{ color: TEXT_MUTED }}>≈ $12.50</span>}
                                     </div>
                                 </div>
                                 <div className="col-md-6 mt-3 mt-md-0">
@@ -537,21 +543,21 @@ function AssetPage() {
                                                     <button onClick={() => setIsListingMode(true)} className="btn w-100 fw-bold" style={{ ...GOLD_BTN_STYLE, height: '50px' }}>List for Sale</button>
                                                 ) : (
                                                     <div className="d-flex flex-column gap-2">
-                                                        <input type="number" className="form-control bg-dark text-white border-secondary" placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
+                                                        <input type="number" className="form-control" style={{ background: BACKGROUND_DARK, color: TEXT_PRIMARY, borderColor: BORDER_COLOR }} placeholder="Price (POL)" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
                                                         <div className="d-flex gap-2">
                                                             {!isApproved ? (
-                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, backgroundColor: '#fff', color: '#000' }}>Approve NFT</button>
+                                                                <button onClick={handleApproveNft} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>Approve NFT</button>
                                                             ) : (
                                                                 <button onClick={handleList} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>Confirm List</button>
                                                             )}
-                                                            <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary">Cancel</button>
+                                                            <button onClick={() => setIsListingMode(false)} className="btn btn-outline-secondary" style={{ color: TEXT_PRIMARY, borderColor: BORDER_COLOR }}>Cancel</button>
                                                         </div>
                                                     </div>
                                                 )
                                             ) : (
                                                 <div className="d-flex gap-2">
-                                                    <button className="btn w-50 fw-bold disabled" style={{ height: '50px', background: '#333', color: '#888', border: 'none' }}>Not Listed</button>
-                                                    <button onClick={() => setIsOfferMode(true)} className="btn w-50 fw-bold text-white" style={{ height: '50px', background: 'transparent', border: '1px solid #2a2e35' }}>Make Offer</button>
+                                                    <button className="btn w-50 fw-bold disabled" style={{ height: '50px', background: BORDER_COLOR, color: TEXT_MUTED, border: 'none' }}>Not Listed</button>
+                                                    <button onClick={() => setIsOfferMode(true)} className="btn w-50 fw-bold" style={{ height: '50px', background: 'transparent', border: `1px solid ${BORDER_COLOR}`, color: TEXT_PRIMARY }}>Make Offer</button>
                                                 </div>
                                             )
                                         )
@@ -562,18 +568,18 @@ function AssetPage() {
                             {/* إدخال العرض (OpenSea Style) */}
                             {isOfferMode && (
                                 <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
-                                    <div className="d-flex justify-content-between text-secondary small mb-2">
+                                    <div className="d-flex justify-content-between small mb-2" style={{ color: TEXT_MUTED }}>
                                         <span>Balance: {wpolBalance.toFixed(2)} WPOL</span>
                                         <span>Allowance: {wpolAllowance.toFixed(2)} WPOL</span>
                                     </div>
-                                    <input type="number" className="form-control bg-dark text-white border-secondary mb-2" placeholder="Amount (WPOL)" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
+                                    <input type="number" className="form-control mb-2" style={{ background: BACKGROUND_DARK, color: TEXT_PRIMARY, borderColor: BORDER_COLOR }} placeholder="Amount (WPOL)" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
                                     <div className="d-flex gap-2">
                                         {!hasAllowance ? (
                                             <button onClick={handleApprove} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? 'Approving...' : 'Approve WPOL First'}</button>
                                         ) : (
                                             <button onClick={handleSubmitOffer} disabled={isPending} className="btn fw-bold flex-grow-1" style={GOLD_BTN_STYLE}>{isPending ? 'Signing...' : 'Sign Offer (Free)'}</button>
                                         )}
-                                        <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary">Cancel</button>
+                                        <button onClick={() => setIsOfferMode(false)} className="btn btn-outline-secondary" style={{ color: TEXT_PRIMARY, borderColor: BORDER_COLOR }}>Cancel</button>
                                     </div>
                                 </div>
                             )}
@@ -581,16 +587,16 @@ function AssetPage() {
 
                         {/* Chart (نفسه) */}
                         <div className="mb-4">
-                            <h5 className="text-white fw-bold mb-3">Price History</h5>
-                            <div className="rounded-3 p-3" style={{ backgroundColor: '#161b22', border: '1px solid #2a2e35', height: '300px' }}>
+                            <h5 className="fw-bold mb-3" style={{ color: TEXT_PRIMARY }}>Price History</h5>
+                            <div className="rounded-3 p-3" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${BORDER_COLOR}`, height: '300px' }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={mockChartData}>
-                                        <defs><linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#FCD535" stopOpacity={0.3}/><stop offset="95%" stopColor="#FCD535" stopOpacity={0}/></linearGradient></defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#2a2e35" vertical={false} />
-                                        <XAxis dataKey="name" stroke="#6c757d" fontSize={12} tickLine={false} axisLine={false} />
-                                        <YAxis stroke="#6c757d" fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 2', 'dataMax + 2']} />
-                                        <Tooltip contentStyle={{ backgroundColor: '#1e2329', borderColor: '#2a2e35', color: '#fff' }} />
-                                        <Area type="monotone" dataKey="price" stroke="#FCD535" strokeWidth={2} fillOpacity={1} fill="url(#colorPrice)" />
+                                        <defs><linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={GOLD_SOLID} stopOpacity={0.35}/><stop offset="95%" stopColor={GOLD_SOLID} stopOpacity={0}/></linearGradient></defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={BORDER_COLOR} vertical={false} />
+                                        <XAxis dataKey="name" stroke={TEXT_MUTED} fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis stroke={TEXT_MUTED} fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 2', 'dataMax + 2']} />
+                                        <Tooltip contentStyle={{ backgroundColor: SURFACE_DARK, borderColor: BORDER_COLOR, color: TEXT_PRIMARY }} />
+                                        <Area type="monotone" dataKey="price" stroke={GOLD_SOLID} strokeWidth={2} fillOpacity={1} fill="url(#colorPrice)" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
@@ -598,30 +604,30 @@ function AssetPage() {
 
                         {/* جدول العروض */}
                         <div className="mb-5">
-                            <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
+                            <div className="d-flex align-items-center gap-2 mb-3 pb-2" style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>
                                 <i className="bi bi-list-ul text-gold"></i>
-                                <h5 className="text-white fw-bold mb-0">Offers</h5>
-                                <button onClick={fetchOffers} className="btn btn-sm btn-outline-secondary border-0 ms-auto"><i className="bi bi-arrow-clockwise"></i></button>
+                                <h5 className="fw-bold mb-0" style={{ color: TEXT_PRIMARY }}>Offers</h5>
+                                <button onClick={fetchOffers} className="btn btn-sm border-0 ms-auto" style={{ color: TEXT_MUTED }}><i className="bi bi-arrow-clockwise"></i></button>
                             </div>
-                            <div className="rounded-3 overflow-hidden" style={{ border: '1px solid #333', backgroundColor: '#161b22' }}>
+                            <div className="rounded-3 overflow-hidden" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK }}>
                                 <div className="table-responsive">
-                                    <table className="table mb-0 text-white" style={{ backgroundColor: 'transparent' }}>
+                                    <table className="table mb-0" style={{ backgroundColor: 'transparent', color: TEXT_PRIMARY }}>
                                         <thead>
-                                            <tr style={{ borderBottom: '1px solid #333' }}>
-                                                <th onClick={toggleSort} className="fw-normal py-3 ps-3 text-secondary" style={{ cursor: 'pointer' }}>Price <i className="bi bi-arrow-down-up"></i></th>
-                                                <th className="fw-normal py-3 text-secondary">From</th>
-                                                <th className="fw-normal py-3 text-secondary">Expires</th>
-                                                <th className="fw-normal py-3 text-end pe-3 text-secondary">Action</th>
+                                            <tr style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>
+                                                <th onClick={toggleSort} className="fw-normal py-3 ps-3" style={{ cursor: 'pointer', color: TEXT_MUTED }}>Price <i className="bi bi-arrow-down-up"></i></th>
+                                                <th className="fw-normal py-3" style={{ color: TEXT_MUTED }}>From</th>
+                                                <th className="fw-normal py-3" style={{ color: TEXT_MUTED }}>Expires</th>
+                                                <th className="fw-normal py-3 text-end pe-3" style={{ color: TEXT_MUTED }}>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {currentOffers.length > 0 ? (
                                                 currentOffers.map((offer, index) => (
-                                                    <tr key={index} style={{ borderBottom: '1px solid #2a2e35' }}>
-                                                        <td className="ps-3 fw-bold text-white">{parseFloat(offer.price).toFixed(2)} WPOL</td>
+                                                    <tr key={index} style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>
+                                                        <td className="ps-3 fw-bold" style={{ color: TEXT_PRIMARY }}>{parseFloat(offer.price).toFixed(2)} WPOL</td>
                                                         <td className="text-gold">{offer.isMyOffer ? 'You' : `${offer.bidder.slice(0,4)}...${offer.bidder.slice(-4)}`}</td>
-                                                        <td className="text-secondary">{formatDuration(offer.expiration)}</td>
-                                                        <td className="text-end pe-3">
+                                                        <td style={{ color: TEXT_MUTED }}>{formatDuration(offer.expiration)}</td>
+                                                        <td className="text-end pe-3" style={{ color: TEXT_PRIMARY }}>
                                                             {offer.status === 'accepted' ? (
                                                                 <span className="badge bg-success">Accepted</span>
                                                             ) : (
@@ -632,7 +638,7 @@ function AssetPage() {
                                                                     {offer.isMyOffer && (
                                                                         <button onClick={() => handleCancelOffer(offer.id)} disabled={isPending} className="btn btn-sm btn-outline-danger">Cancel</button>
                                                                     )}
-                                                                    {!isOwner && !offer.isMyOffer && <span className="text-secondary">-</span>}
+                                                                    {!isOwner && !offer.isMyOffer && <span style={{ color: TEXT_MUTED }}>-</span>}
                                                                 </>
                                                             )}
                                                         </td>
@@ -640,7 +646,7 @@ function AssetPage() {
                                                 ))
                                             ) : (
                                                 <tr>
-                                                    <td colSpan={4} className="text-center py-5 text-secondary">No offers yet</td>
+                                                    <td colSpan={4} className="text-center py-5" style={{ color: TEXT_MUTED }}>No offers yet</td>
                                                 </tr>
                                             )}
                                         </tbody>
@@ -648,9 +654,9 @@ function AssetPage() {
                                 </div>
                                 {offersList.length > offersPerPage && (
                                     <div className="d-flex justify-content-center p-3 gap-3">
-                                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="btn btn-sm btn-outline-secondary"><i className="bi bi-chevron-left"></i></button>
-                                        <span className="text-secondary small">Page {currentPage} of {totalPages}</span>
-                                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="btn btn-sm btn-outline-secondary"><i className="bi bi-chevron-right"></i></button>
+                                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="btn btn-sm btn-outline-secondary" style={{ color: TEXT_PRIMARY, borderColor: BORDER_COLOR }}><i className="bi bi-chevron-left"></i></button>
+                                        <span className="small" style={{ color: TEXT_MUTED }}>Page {currentPage} of {totalPages}</span>
+                                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="btn btn-sm btn-outline-secondary" style={{ color: TEXT_PRIMARY, borderColor: BORDER_COLOR }}><i className="bi bi-chevron-right"></i></button>
                                     </div>
                                 )}
                             </div>
@@ -658,7 +664,7 @@ function AssetPage() {
                     </div>
                 </div>
             </div>
-            <style jsx global>{` .text-gold { color: #FCD535 !important; } .hover-gold:hover { color: #FCD535 !important; transition: 0.2s; } `}</style>
+            <style jsx global>{` .text-gold { color: ${GOLD_SOLID} !important; } .hover-gold:hover { color: ${GOLD_SOLID} !important; transition: 0.2s; } `}</style>
         </main>
     );
 }
