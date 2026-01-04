@@ -2,19 +2,20 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+// تعريف البيانات (سنستخدمها لاحقاً لجميع المؤشرات)
 interface NGXData {
   score: number;
   status: string;
   change24h: number;
-  lastUpdate: string;
 }
 
 interface WidgetProps {
-  theme?: 'dark' | 'light';
-  title?: string;
-  subtitle?: string;
+  type?: 'sentiment' | 'cap' | 'assets'; // لنحدد نوع المؤشر لاحقاً
+  title?: string;     // العنوان العلوي (مثل NGX Sentiment)
+  subtitle?: string;  // العنوان الفرعي (مثل Market Mood)
 }
 
+// دالة رسم القوس (للعداد)
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
   const angleInRadians = (angleInDegrees - 180) * Math.PI / 180.0;
   return {
@@ -34,33 +35,35 @@ function describeArc(x: number, y: number, radius: number, startAngle: number, e
 }
 
 export default function NGXWidget({ 
-  theme = 'dark', 
-  title = 'NGX NFTs', 
-  subtitle = 'Global Index' 
+  title = 'NGX Sentiment', 
+  subtitle = 'Market Mood' 
 }: WidgetProps) {
   const [data, setData] = useState<NGXData | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  const isLight = theme === 'light';
-  
-  const bgColor = isLight ? 'linear-gradient(145deg, #F8F9FA, #E9ECEF)' : 'linear-gradient(145deg, #13171c, #0b0e11)';
-  const borderColor = isLight ? '#DEE2E6' : '#2b3139';
-  const mainTextColor = isLight ? '#0A192F' : '#ffffff'; 
-  const subTextColor = isLight ? '#495057' : '#848E9C';
-  const shadow = isLight ? '0 4px 12px rgba(0,0,0,0.08)' : 'none';
-  const titleColor = isLight ? '#0A192F' : '#FCD535'; 
+  // الألوان والستايل الزجاجي المتجاوب (Auto Dark/Light)
+  // نستخدم CSS Variables أو ألوان RGBA مع Blur للشفافية
+  const glassStyle = {
+    background: 'rgba(11, 14, 17, 0.4)', // لون داكن شفاف جداً افتراضياً
+    backdropFilter: 'blur(8px)',          // تأثير الزجاج المغبش
+    WebkitBackdropFilter: 'blur(8px)',
+    border: '1px solid rgba(255, 255, 255, 0.08)', // حدود خفيفة جداً
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+  };
+
   const NEON_GREEN = '#0ecb81';
 
   useEffect(() => {
     setMounted(true);
+    // محاكاة جلب البيانات (سنربطها بالـ API الحقيقي لاحقاً)
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/ngx');
-        if (!res.ok) throw new Error('Failed to fetch data');
+        const res = await fetch('/api/ngx'); 
+        if (!res.ok) throw new Error('Fetch failed');
         const json = await res.json();
         setData(json);
       } catch (error) {
-        console.error('Error fetching NGX data:', error);
+        console.error(error);
       }
     };
     fetchData();
@@ -70,140 +73,143 @@ export default function NGXWidget({
 
   if (!mounted || !data) return null; 
 
+  // ألوان المؤشرات
   const TICKER_GREEN = '#0ecb81';
   const TICKER_RED = '#f6465d';
   const needleRotation = ((data.score / 100) * 180) - 90;
 
+  // تحديد الحالة واللون
   const currentStatus = (() => {
-      if (data.score < 20) return { color: '#e53935', text: 'STRONG SELL' }; 
+      if (data.score < 20) return { color: '#e53935', text: 'S.SELL' }; // اختصار الكلمات للجوال
       if (data.score < 40) return { color: '#fb8c00', text: 'SELL' };        
-      if (data.score < 60) return { color: '#fdd835', text: 'NEUTRAL' };     
+      if (data.score < 60) return { color: '#fdd835', text: 'NEUT' };     
       if (data.score < 80) return { color: '#7cb342', text: 'BUY' };         
-      return { color: TICKER_GREEN, text: 'STRONG BUY' };                  
+      return { color: TICKER_GREEN, text: 'S.BUY' };                  
   })();
 
   const changeColor = data.change24h >= 0 ? TICKER_GREEN : TICKER_RED;
   const scoreStr = data.score.toFixed(1);
   const [scoreInt, scoreDec] = scoreStr.split('.');
 
+  // رسم العداد (تم تصغيره ليتناسب مع الحجم الجديد)
   const GaugeSVG = () => {
       const radius = 80;
-      const stroke = 20;
+      const stroke = 22; // سمك الخط ليكون واضحاً في الحجم الصغير
       
       return (
         <svg viewBox="-90 -20 180 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
-            <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} />
+            {/* الخلفية الملونة للأقواس */}
+            <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} opacity="0.9" />
+            <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} opacity="0.9" />
+            <path d={describeArc(0, 80, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} opacity="0.9" />
+            <path d={describeArc(0, 80, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} opacity="0.9" />
+            <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} opacity="0.9" />
 
-            <g fill={isLight ? "#0A192F" : "rgba(255,255,255,0.8)"} fontSize="10" fontFamily="sans-serif" fontWeight="700">
-                <text x="-95" y="85" textAnchor="middle">0</text>
-                <text x="-70" y="20" textAnchor="middle">20</text>
-                <text x="0" y="-8" textAnchor="middle">50</text>
-                <text x="70" y="20" textAnchor="middle">80</text>
-                <text x="95" y="85" textAnchor="middle">100</text>
-            </g>
-
-            <g fontSize="7" fontFamily="sans-serif" fontWeight="800" textAnchor="middle">
-                <text x="-50" y="65" fill="#e53935">SELL</text>
-                <text x="0" y="45" fill="#fdd835">NEUTRAL</text>
-                <text x="50" y="65" fill={TICKER_GREEN}>BUY</text>
-            </g>
-
-            <line x1="0" y1="80" x2="0" y2="10" stroke={isLight ? "#0A192F" : "#FFFFFF"} strokeWidth="4" 
+            {/* الإبرة */}
+            <line x1="0" y1="80" x2="0" y2="10" stroke="#FFFFFF" strokeWidth="5" 
                   transform={`rotate(${needleRotation}, 0, 80)`} 
                   style={{ transition: 'transform 1.5s cubic-bezier(0.23, 1, 0.32, 1)', filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }} />
-            
-            <circle cx="0" cy="80" r="12" fill={isLight ? "#0A192F" : "#fff"} stroke={isLight ? "#fff" : "#2b3139"} strokeWidth="2" />
+            <circle cx="0" cy="80" r="10" fill="#FFFFFF" />
         </svg>
       );
   };
 
   return (
-    <div className="ngx-widget-container">
-    <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
-      
-      <div className="d-flex align-items-center justify-content-between px-3 py-2 rounded-3 position-relative overflow-hidden"
-           style={{
-             background: bgColor,
-             border: `1px solid ${borderColor}`,
-             boxShadow: shadow,
-             height: '117px',
-             width: '100%'
-           }}>
+    <div className="ngx-widget-wrapper">
+        <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block', height: '100%' }}>
         
-        <div className="d-flex flex-column justify-content-center h-100 flex-shrink-0" style={{ zIndex: 2 }}>
-            <div className="mb-1">
-                <div className="d-flex align-items-center gap-2">
-                    <span className="fw-bold text-nowrap" style={{ color: titleColor, fontSize: '12.5px', letterSpacing: '0.5px' }}>{title}</span>
-                    
-                    <span className="badge pulse-neon" 
-                          style={{ 
-                              fontSize:'8px', 
-                              padding:'2px 4px', 
-                              color: NEON_GREEN, 
-                              border: 'none', 
-                              backgroundColor: 'rgba(14, 203, 129, 0.1)' 
-                          }}>LIVE</span>
-                </div>
-                <div style={{ fontSize: '9px', color: subTextColor, textTransform: 'uppercase' }}>
-                    {subtitle}
-                </div>
-            </div>
+        {/* الكبسولة الزجاجية */}
+        <div className="widget-glass d-flex align-items-center justify-content-between px-2 py-1 position-relative overflow-hidden"
+            style={{
+                ...glassStyle,
+                height: '100%', // يأخذ ارتفاع الكونتينر الأب
+                width: '100%',
+                borderRadius: '8px', // حواف ناعمة
+            }}>
             
-            <div>
-                <div className="d-flex align-items-end gap-1 mb-1">
-                    <div className="fw-bold lh-1" style={{ fontSize: '39px', color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}>
-                        {scoreInt}<span style={{ fontSize: '0.5em', opacity: 0.8 }}>.{scoreDec}</span>
+            {/* القسم النصي (يسار) */}
+            <div className="d-flex flex-column justify-content-center h-100 flex-shrink-0" style={{ zIndex: 2, maxWidth: '55%' }}>
+                
+                {/* العنوان + Live */}
+                <div className="d-flex align-items-center gap-1 mb-0">
+                    <span className="fw-bold text-nowrap widget-title">{title}</span>
+                    <span className="pulse-dot"></span>
+                </div>
+                <div className="widget-subtitle mb-1">{subtitle}</div>
+                
+                {/* الأرقام */}
+                <div>
+                    <div className="d-flex align-items-baseline gap-1" style={{ lineHeight: '1' }}>
+                        <div className="fw-bold widget-score">
+                            {scoreInt}<span style={{ fontSize: '0.6em', opacity: 0.8 }}>.{scoreDec}</span>
+                        </div>
                     </div>
-                    <div className="fw-bold d-flex align-items-center gap-1 mb-2 ms-2" style={{ fontSize: '12px', color: changeColor }}>
-                        {data.change24h >= 0 ? 'â–²' : 'â–¼'} {Math.abs(data.change24h)}%
+                    {/* التغير والحالة */}
+                    <div className="d-flex align-items-center gap-1 mt-1">
+                        <span className="fw-bold widget-change" style={{ color: changeColor }}>
+                            {data.change24h >= 0 ? 'â–²' : 'â–¼'}
+                        </span>
+                        <span className="fw-bold widget-status" style={{ color: currentStatus.color }}>
+                            {currentStatus.text}
+                        </span>
                     </div>
                 </div>
-                <div className="fw-bold text-uppercase" style={{ color: currentStatus.color, fontSize: '11px', letterSpacing: '0.5px' }}>
-                    {currentStatus.text}
+            </div>
+
+            {/* قسم الرسم البياني (يمين) */}
+            <div className="d-flex align-items-center justify-content-center flex-grow-1" style={{ zIndex: 1, height: '100%' }}>
+                <div style={{ width: '100%', height: '85%', position: 'relative', transform: 'translateY(5px)' }}>
+                    <GaugeSVG />
                 </div>
             </div>
         </div>
+        </Link>
 
-        <div className="d-flex align-items-center justify-content-center flex-grow-1 ms-2" style={{ zIndex: 1 }}>
-            <div style={{ width: '100%', height: '90px', position: 'relative' }}>
-                <GaugeSVG />
-            </div>
-        </div>
-      </div>
-    </Link>
-
-    <style jsx>{`
-        .ngx-widget-container {
-            position: relative;
-            width: 100%;
-            max-width: 342px;
-            transform: scale(0.9);
-            transform-origin: top center;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        @media (min-width: 992px) {
-            .ngx-widget-container {
-                transform-origin: top right;
-                margin-left: auto;
-                margin-right: 0;
+        <style jsx global>{`
+            /* التحكم في الألوان حسب وضع الجهاز (Dark/Light) */
+            @media (prefers-color-scheme: light) {
+                .widget-glass {
+                    background: rgba(255, 255, 255, 0.6) !important;
+                    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+                }
+                .widget-title { color: #0A192F !important; }
+                .widget-subtitle { color: #555 !important; }
+                .widget-score { color: #0A192F !important; }
             }
-        }
 
-        .pulse-neon {
-            animation: pulse-neon-green 2s infinite ease-in-out;
-        }
-        @keyframes pulse-neon-green {
-            0% { text-shadow: 0 0 2px rgba(14, 203, 129, 0.1); opacity: 1; }
-            50% { text-shadow: 0 0 8px rgba(14, 203, 129, 0.6); opacity: 0.8; }
-            100% { text-shadow: 0 0 2px rgba(14, 203, 129, 0.1); opacity: 1; }
-        }
-    `}</style>
+            @media (prefers-color-scheme: dark) {
+                .widget-glass {
+                    background: rgba(11, 14, 17, 0.4) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                }
+                .widget-title { color: #FCD535 !important; } /* لون ذهبي للعنوان في الدارك */
+                .widget-subtitle { color: #848E9C !important; }
+                .widget-score { color: #FFFFFF !important; }
+            }
+
+            /* أحجام الخطوط المصغرة (Compact Typography) */
+            .widget-title { font-size: 10px; letter-spacing: 0.3px; }
+            .widget-subtitle { font-size: 7px; text-transform: uppercase; }
+            .widget-score { font-size: 20px; } /* تم التصغير من 39 */
+            .widget-change { font-size: 8px; }
+            .widget-status { font-size: 8px; letter-spacing: 0.3px; text-transform: uppercase; }
+
+            .pulse-dot {
+                width: 4px; height: 4px; background-color: #0ecb81; border-radius: 50%;
+                box-shadow: 0 0 4px #0ecb81;
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; }
+            }
+
+            .ngx-widget-wrapper {
+                width: 100%;
+                height: 100%;
+                /* هذه هي النقطة السحرية: نمنع العناصر من التمدد خارج حدودها */
+                min-width: 0; 
+            }
+        `}</style>
     </div>
   );
 }
