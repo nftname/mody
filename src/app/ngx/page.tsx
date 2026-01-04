@@ -128,20 +128,24 @@ export default function NGXPage() {
       
       <MarketTicker />
 
-      {/* Header Section: Adjusted Containers for Widgets */}
+      {/* Header Section */}
       <div className="py-4 px-4 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}` }}>
         <div className="container-fluid">
             
-            {/* Widgets Row */}
-            <div className="d-flex flex-wrap align-items-center gap-4 mb-4">
-                {/* Original NGX Widget Container - Fixed at 240px */}
-                <div style={{ width: '240px' }}>
+            {/* Widgets Row - Unified Size (310px) */}
+            <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
+                {/* 1. NGX Sentiment Widget - Expanded Container */}
+                <div style={{ width: '310px' }}>
                      <NGXWidget theme="dark" />
                 </div>
-                {/* New NGX Cap Widget Container - Increased to 310px */}
+
+                {/* 2. NGX Market Cap Widget - Expanded Container */}
                 <div style={{ width: '310px' }}>
                      <NGXCapWidget theme="dark" />
                 </div>
+                
+                {/* 3. Placeholder for NGX Assets (Future) - Ready for same size */}
+                {/* <div style={{ width: '310px' }}> <NGXAssetsWidget theme="dark" /> </div> */}
             </div>
 
             {/* Title Row */}
