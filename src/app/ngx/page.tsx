@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell
 } from 'recharts';
 import NGXWidget from '@/components/NGXWidget';
-import NGXCapWidget from '@/components/NGXCapWidget'; // تم استيراد المؤشر الجديد
+import NGXCapWidget from '@/components/NGXCapWidget';
 import MarketTicker from '@/components/MarketTicker';
 import Link from 'next/link';
 
@@ -128,16 +128,18 @@ export default function NGXPage() {
       
       <MarketTicker />
 
-      {/* Header Section Modified: Widgets moved to top left and center */}
+      {/* Header Section: Adjusted Containers for Widgets */}
       <div className="py-4 px-4 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}` }}>
         <div className="container-fluid">
             
             {/* Widgets Row */}
             <div className="d-flex flex-wrap align-items-center gap-4 mb-4">
+                {/* Original NGX Widget Container - Fixed at 240px */}
                 <div style={{ width: '240px' }}>
                      <NGXWidget theme="dark" />
                 </div>
-                <div style={{ width: '240px' }}>
+                {/* New NGX Cap Widget Container - Increased to 310px */}
+                <div style={{ width: '310px' }}>
                      <NGXCapWidget theme="dark" />
                 </div>
             </div>
