@@ -49,7 +49,7 @@ export default function NGXWidget({
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
     border: isLight ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.08)',
-    boxShadow: 'none', // لا يوجد شادو نهائياً
+    boxShadow: 'none', 
   };
 
   const mainTextColor = isLight ? '#0A192F' : '#ffffff'; 
@@ -165,7 +165,7 @@ export default function NGXWidget({
         </div>
 
         {/* Content Row */}
-        <div className="content-row d-flex align-items-center w-100" style={{ height: '100%' }}>
+        <div className="content-row d-flex align-items-start w-100" style={{ height: '100%' }}>
             
             {/* Left Side: Number & Info */}
             <div className="text-block d-flex flex-column justify-content-center" style={{ zIndex: 2 }}>
@@ -205,7 +205,6 @@ export default function NGXWidget({
         }
         .glass-container {
             height: 82px;
-            /* Desktop Shift: 46px padding-left */
             padding-left: 46px; 
             padding-right: 15px;
             padding-top: 8px;
@@ -215,6 +214,9 @@ export default function NGXWidget({
             font-size: 9px;
             letter-spacing: 0.5px;
         }
+        .text-block {
+            padding-top: 4px; /* Align text center with new gauge position */
+        }
         .main-score {
             font-size: 24px;
         }
@@ -223,8 +225,8 @@ export default function NGXWidget({
             margin-top: 2px;
         }
         .gauge-block {
-            width: 55%;
-            height: 60px;
+            width: 45%; /* Reduced from 55% by ~20% */
+            height: 50px; /* Reduced from 60px */
         }
         .desktop-percentage {
             display: flex;
@@ -235,25 +237,28 @@ export default function NGXWidget({
 
         /* --- MOBILE STYLES (Compact Mode) --- */
         @media (max-width: 768px) {
+            .ngx-widget-container {
+                max-width: 125px !important; /* Force ~30% width */
+                margin-right: auto !important; /* Left align */
+            }
             .glass-container {
-                /* Reset Desktop Padding */
-                padding-left: 8px !important;
-                padding-right: 8px !important;
-                /* Compressed Height */
+                padding: 4px !important;
                 height: 70px !important; 
             }
             
             .content-row {
-                /* GAP: 1px (Tight packing) */
                 gap: 1px !important; 
                 justify-content: space-between;
+                align-items: center !important; /* Re-center vertically for mobile */
+            }
+            .text-block {
+                padding-top: 0 !important; /* Reset desktop padding */
             }
 
             .main-score {
-                font-size: 20px !important; /* Slightly smaller for mobile */
+                font-size: 18px !important; /* Smaller for mobile */
             }
 
-            /* Move Percentage to Header on Mobile */
             .desktop-percentage {
                 display: none !important;
             }
@@ -261,10 +266,9 @@ export default function NGXWidget({
                 display: flex !important;
             }
 
-            /* Adjust Gauge Size for Mobile */
             .gauge-block {
-                width: 70px !important; 
-                height: 45px !important;
+                width: 60px !important; 
+                height: 40px !important;
             }
         }
 
