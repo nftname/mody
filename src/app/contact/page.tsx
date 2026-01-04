@@ -135,12 +135,12 @@ export default function ContactPage() {
                      }}>
                     
                     <h2 className="h4 fw-bold mb-4" style={{ color: TEXT_PRIMARY }}>Send a message</h2>
-                                        style={{ 
-                                            background: GOLD_GRADIENT, 
-                                            color: '#000', 
-                                            border: 'none',
-                                            borderRadius: '6px'
-                                        }}>
+                    
+                    <form onSubmit={handleSubmit}>
+                        <div className="row g-3">
+                            <div className="col-12 col-md-6">
+                                <label style={labelStyle}>Name / Organization</label>
+                                <input 
                                     type="text" 
                                     name="name"
                                     value={formData.name}
@@ -148,7 +148,7 @@ export default function ContactPage() {
                                     style={inputStyle} 
                                     placeholder="Enter your name" 
                                     className="contact-input"
-                        <p style={{ ...BODY_TEXT_STYLE, fontSize: '12px', margin: 0, color: TEXT_MUTED }}>
+                                />
                             </div>
 
                             <div className="col-12 col-md-6">
@@ -196,7 +196,7 @@ export default function ContactPage() {
                                 <button type="submit" 
                                         className="btn w-100 fw-bold py-3"
                                         style={{ 
-                                            background: 'linear-gradient(180deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)', 
+                                            background: GOLD_GRADIENT, 
                                             color: '#000', 
                                             border: 'none',
                                             borderRadius: '6px'
@@ -208,9 +208,9 @@ export default function ContactPage() {
                     </form>
 
                     <div className="mt-4 pt-3 border-top border-secondary border-opacity-25 text-center">
-                        <p style={{ fontSize: '12px', color: '#E0E0E0', margin: 0 }}>
+                        <p style={{ ...BODY_TEXT_STYLE, fontSize: '12px', margin: 0, color: TEXT_MUTED }}>
                             <i className="bi bi-lock-fill me-1"></i>
-                            Security Note: NNM support will <strong>never</strong> ask for your private keys or seed phrase.
+                            Information submitted here is encrypted at rest. A team member will respond via your selected channel.
                         </p>
                     </div>
 
