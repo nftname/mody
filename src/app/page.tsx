@@ -225,7 +225,7 @@ function Home() {
   const handleMobileCurrencySelect = (c: string) => { setCurrencyFilter(c); setIsMobileCurrencyOpen(false); };
 
   return (
-    <main style={{ backgroundColor: '#0d1117', minHeight: '100vh', paddingBottom: '0px', fontFamily: '"Inter", "Segoe UI", sans-serif', overflowX: 'hidden' }}>
+    <main style={{ minHeight: '100vh', paddingBottom: '0px', fontFamily: '"Inter", "Segoe UI", sans-serif', overflowX: 'hidden' }}>
       
       <MarketTicker />
 
