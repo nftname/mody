@@ -200,6 +200,32 @@ export default function NNMConceptPage() {
         .brand-icon-gold { color: ${GOLD_BASE}; text-shadow: 0 0 10px rgba(240, 196, 32, 0.35); }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
+
+        /* Page Typography (content shell only) */
+        .concept-shell p,
+        .concept-shell li,
+        .concept-shell small,
+        .concept-shell .small,
+        .concept-shell label {
+          font-family: "Inter", "Segoe UI", sans-serif;
+          font-size: 15px;
+          color: #B0B0B0;
+        }
+        .concept-shell h1,
+        .concept-shell h2,
+        .concept-shell h3,
+        .concept-shell h4,
+        .concept-shell h5,
+        .concept-shell h6,
+        .concept-shell .text-white {
+          color: #E0E0E0 !important;
+        }
+        .concept-shell .text-gold,
+        .concept-shell .gold,
+        .concept-shell .highlight-gold,
+        .concept-shell a.text-decoration-none.fw-bold {
+          color: ${GOLD_BASE} !important;
+        }
         `}</style>
 
       <Script 
@@ -210,6 +236,7 @@ export default function NNMConceptPage() {
 
       <MarketTicker />
 
+      <div className="concept-shell">
       {/* --- HEADER SECTION --- */}
         <section className="container-fluid px-0 pt-5" style={{ paddingBottom: '60px' }}>
           <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
@@ -334,6 +361,7 @@ export default function NNMConceptPage() {
             </div>
         </div>
       </section>
+          </div>
 
       {/* --- BRAND TICKER --- */}
         <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#2E2E2E', marginTop: 'auto', marginBottom: '20px', backgroundColor: '#1E1E1E', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
