@@ -196,7 +196,7 @@ function MarketPage() {
   const getCurrencyLabel = () => currencyFilter === 'ETH' ? 'ETH' : 'POL';
 
   return (
-    <main style={{ backgroundColor: '#0d1117', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px' }}>
+    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px' }}>
       
       <MarketTicker />
 
@@ -209,9 +209,10 @@ function MarketPage() {
                           fontSize: '1.53rem', 
                           fontWeight: '700', 
                           letterSpacing: '-1px', 
-                          lineHeight: '1.2' 
+                          lineHeight: '1.2',
+                          color: '#E0E0E0'
                       }}>
-                      Buy & Sell <span style={{ color: '#FCD535' }}>Nexus Rare</span> Digital Name Assets NFTs
+                      Buy & Sell <span style={{ color: '#E0E0E0' }}>Nexus Rare</span> Digital Name Assets NFTs
                   </h1>
                   
                   <p style={{ 
@@ -220,7 +221,7 @@ function MarketPage() {
                       fontWeight: '400', 
                       lineHeight: '1.6', 
                       maxWidth: '650px', 
-                      color: '#848E9C', 
+                      color: '#B0B0B0', 
                       marginTop: '10px',
                       marginBottom: 0,
                   }}>
@@ -235,13 +236,13 @@ function MarketPage() {
 
       <section className="d-block d-md-none pt-3 pb-2 px-3 text-start">
           <h1 className="fw-bold text-white h4 text-start m-0" 
-              style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', letterSpacing: '-0.5px', lineHeight: '1.3' }}>
-              Buy & Sell <span style={{ color: '#FCD535' }}>Nexus Rare</span> Digital Name Assets NFTs.
+              style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>
+              Buy & Sell <span style={{ color: '#E0E0E0' }}>Nexus Rare</span> Digital Name Assets NFTs.
           </h1>
           <p className="text-start" style={{ 
               fontFamily: '"Inter", "Segoe UI", sans-serif', 
-              fontSize: '13px', 
-              color: '#848E9C', 
+              fontSize: '15px', 
+              color: '#B0B0B0', 
               marginTop: '8px',
               marginBottom: 0,
               lineHeight: '1.5'
@@ -312,27 +313,27 @@ function MarketPage() {
               ) : (
                   <table className="table align-middle mb-0" style={{ minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0' }}>
                       
-                      <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#0d1117' }}>
+                      <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#1E1E1E' }}>
                           <tr style={{ borderBottom: '1px solid #333' }}>
-                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '80px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '80px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', minWidth: '220px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', minWidth: '220px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('floor')} style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('floor')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'floor'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                   Last Sale
                               </th>
-                              <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                   Volume
                               </th>
-                              <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                   Listed
                               </th>
-                              <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'center', width: '140px', whiteSpace: 'nowrap' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'center', width: '140px', whiteSpace: 'nowrap' }}>
                                   Action
                               </th>
                           </tr>
@@ -354,24 +355,24 @@ function MarketPage() {
                                   <td style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <Link href={`/asset/${item.id}`} className="d-flex align-items-center gap-3 text-decoration-none group">
                                           <CoinIcon name={item.name} tier={item.tier} />
-                                          <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px' }}>{item.name}</span>
+                                          <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
                                       </Link>
                                   </td>
                                   <td className="text-start" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <div className="d-flex align-items-center justify-content-start gap-2">
-                                          <span className="fw-bold text-white" style={{ fontSize: '14px' }}>{item.floor}</span>
-                                          <span className="text-white" style={{ fontSize: '12px' }}>{item.currencySymbol || getCurrencyLabel()}</span>
+                                          <span className="fw-bold text-white" style={{ fontSize: '14px', color: '#E0E0E0' }}>{item.floor}</span>
+                                          <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{item.currencySymbol || getCurrencyLabel()}</span>
                                           <span style={{ fontSize: '12px', color: '#0ecb81' }}>+0.00%</span>
                                       </div>
                                   </td>
                                   <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '13px' }}>{item.lastSale}</span>
+                                      <span className="text-white" style={{ fontSize: '13px', color: '#E0E0E0' }}>{item.lastSale}</span>
                                   </td>
                                   <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '13px' }}>{item.volume}</span>
+                                      <span className="text-white" style={{ fontSize: '13px', color: '#E0E0E0' }}>{item.volume}</span>
                                   </td>
                                   <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '12px' }}>{item.listed}</span>
+                                      <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{item.listed}</span>
                                   </td>
                                   <td className="text-center" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <div className="d-flex justify-content-center gap-2">
