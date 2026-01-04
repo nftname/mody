@@ -376,13 +376,14 @@ const Navbar = () => {
               right: '0',
               top: '50%',
               transform: 'translateY(-50%)',
-              width: '5px',
-              height: '48px', 
+              width: '6px',
+              height: '64px', 
               backgroundColor: '#2d2d2d', 
-              borderTopLeftRadius: '4px',
-              borderBottomLeftRadius: '4px',
+              borderTopLeftRadius: '6px',
+              borderBottomLeftRadius: '6px',
               opacity: 1,
-              zIndex: 1001
+              zIndex: 1001,
+              boxShadow: 'inset 1px 0 2px rgba(0,0,0,0.2)'
           }}>
           </div>
 
@@ -424,7 +425,7 @@ const Navbar = () => {
                     <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-bold py-1" style={{ fontSize: '15px', color: 'rgba(255,255,255,0.85)', letterSpacing: '0.5px' }}>Contact</Link>
                   </div>
 
-                  <hr className="m-0 my-2" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
+                  <hr className="m-0 my-2" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.03)', opacity: 1 }} />
 
                   <div className="d-flex flex-column gap-1">
                     {secondaryLinks.map((link) => (
