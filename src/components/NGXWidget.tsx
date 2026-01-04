@@ -121,7 +121,7 @@ export default function NGXWidget({
             <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} 
                   onMouseEnter={() => setHoveredInfo('Strong Buy Zone (80-100)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
 
-            {/* RESTORED: Scale Numbers (0, 20, 50, 80, 100) */}
+            {/* Scale Numbers (0, 20, 50, 80, 100) */}
             <g fill={isLight ? "#0A192F" : "rgba(255,255,255,0.8)"} fontSize="10" fontFamily="sans-serif" fontWeight="700">
                 <text x="-95" y="85" textAnchor="middle">0</text>
                 <text x="-70" y="20" textAnchor="middle">20</text>
@@ -151,40 +151,43 @@ export default function NGXWidget({
     <div className="ngx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
     <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
       
-      <div className="d-flex align-items-center rounded-3 position-relative overflow-hidden"
+      <div className="d-flex flex-column justify-content-between px-3 py-2 rounded-3 position-relative overflow-hidden"
            style={{
              ...glassStyle,
              height: '82px',
              width: '100%',
              paddingLeft: '25px', 
-             paddingRight: '10px',
-             justifyContent: 'space-between'
+             paddingRight: '10px'
            }}>
         
-        <div className="d-flex flex-column justify-content-center h-100 flex-shrink-0" style={{ zIndex: 2 }}>
-            <div className="mb-0">
-                <div className="d-flex align-items-center gap-2"
-                     onMouseEnter={() => setHoveredInfo('NGX Indicator')} onMouseLeave={() => setHoveredInfo(null)}>
-                    <span className="fw-bold text-nowrap" style={{ color: titleColor, fontSize: '9px', letterSpacing: '0.5px' }}>{title}</span>
-                    
-                    <span className="badge pulse-neon" 
-                          style={{ 
-                              fontSize:'6px', 
-                              padding:'2px 4px', 
-                              color: NEON_GREEN, 
-                              border: 'none', 
-                              backgroundColor: 'rgba(14, 203, 129, 0.1)' 
-                          }}>LIVE</span>
-                </div>
+        {/* Header Row - Aligned exactly like NGXCapWidget */}
+        <div className="d-flex align-items-center justify-content-between w-100" style={{ zIndex: 2 }}>
+            <div className="d-flex align-items-center gap-2"
+                 onMouseEnter={() => setHoveredInfo('NGX Indicator')} onMouseLeave={() => setHoveredInfo(null)}>
+                <span className="fw-bold text-nowrap" style={{ color: titleColor, fontSize: '9px', letterSpacing: '0.5px' }}>{title}</span>
             </div>
             
-            <div>
-                <div className="d-flex align-items-end gap-1 mb-1">
-                    <div className="fw-bold lh-1" style={{ fontSize: '27px', color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}
+            <span className="badge pulse-neon" 
+                    style={{ 
+                        fontSize:'6px', 
+                        padding:'2px 4px', 
+                        color: NEON_GREEN, 
+                        border: 'none', 
+                        backgroundColor: 'rgba(14, 203, 129, 0.1)' 
+                    }}>LIVE</span>
+        </div>
+
+        {/* Content Row - Flex container to match layout */}
+        <div className="d-flex align-items-center justify-content-between w-100" style={{ height: '100%', marginTop: '-5px' }}>
+            
+            {/* Left Side: Number & Info */}
+            <div className="d-flex flex-column justify-content-center" style={{ zIndex: 2 }}>
+                <div className="d-flex align-items-end gap-2 mb-1">
+                    <div className="fw-bold lh-1" style={{ fontSize: '24px', color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}
                          onMouseEnter={() => setHoveredInfo(`Current NGX Score: ${data.score}`)} onMouseLeave={() => setHoveredInfo(null)}>
                         {scoreInt}<span style={{ fontSize: '0.5em', opacity: 0.8 }}>.{scoreDec}</span>
                     </div>
-                    <div className="fw-bold d-flex align-items-center gap-1 mb-2 ms-2" style={{ fontSize: '9px', color: changeColor }}
+                    <div className="fw-bold d-flex align-items-center mb-1" style={{ fontSize: '9px', color: changeColor }}
                          onMouseEnter={() => setHoveredInfo(`24h Market Change: ${data.change24h}%`)} onMouseLeave={() => setHoveredInfo(null)}>
                         {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
                     </div>
@@ -194,12 +197,14 @@ export default function NGXWidget({
                     {currentStatus.text}
                 </div>
             </div>
-        </div>
 
-        <div className="d-flex align-items-center justify-content-center flex-grow-1" style={{ zIndex: 1 }}>
-            <div style={{ width: '90%', height: '60px', position: 'relative' }}>
-                <GaugeSVG />
+            {/* Right Side: Gauge */}
+            <div className="d-flex align-items-center justify-content-center" style={{ zIndex: 1, width: '55%' }}>
+                <div style={{ width: '100%', height: '60px', position: 'relative' }}>
+                    <GaugeSVG />
+                </div>
             </div>
+
         </div>
       </div>
     </Link>
