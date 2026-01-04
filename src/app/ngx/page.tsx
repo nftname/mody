@@ -123,7 +123,7 @@ export default function NGXPage() {
   if (!mounted) return <div className="p-5 text-center">Loading Analytics...</div>;
 
     return (
-        <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', color: TEXT_PRIMARY }}>
+        <main className="ngx-page" style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', color: TEXT_PRIMARY }}>
       
       <MarketTicker />
 
@@ -336,6 +336,14 @@ export default function NGXPage() {
                 .bg-navy-900 { background-color: ${SURFACE_DARK} !important; }
                 @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
                 .blink-text { animation: blink 2s infinite; }
+                .ngx-page p,
+                .ngx-page li,
+                .ngx-page small,
+                .ngx-page .small {
+                    font-family: "Inter", "Segoe UI", sans-serif;
+                    font-size: 15px;
+                    color: ${TEXT_MUTED};
+                }
             `}</style>
     </main>
   );
