@@ -105,10 +105,11 @@ export default function NGXWidget({
 
   const GaugeSVG = () => {
       const radius = 80;
-      const stroke = 16; // Reduced stroke width by ~20% (from 20 to 16) to make it look smaller/lighter
+      const stroke = 16; 
       
       return (
         <svg viewBox="-90 -20 180 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
+            {/* Arcs */}
             <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} 
                   onMouseEnter={() => setHoveredInfo('Strong Sell Zone (0-20)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
             <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} 
@@ -120,13 +121,23 @@ export default function NGXWidget({
             <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} 
                   onMouseEnter={() => setHoveredInfo('Strong Buy Zone (80-100)')} onMouseLeave={() => setHoveredInfo(null)} style={{cursor: 'help'}} />
 
-            {/* Scale Labels inside the gauge */}
+            {/* RESTORED: Scale Numbers (0, 20, 50, 80, 100) */}
+            <g fill={isLight ? "#0A192F" : "rgba(255,255,255,0.8)"} fontSize="10" fontFamily="sans-serif" fontWeight="700">
+                <text x="-95" y="85" textAnchor="middle">0</text>
+                <text x="-70" y="20" textAnchor="middle">20</text>
+                <text x="0" y="-8" textAnchor="middle">50</text>
+                <text x="70" y="20" textAnchor="middle">80</text>
+                <text x="95" y="85" textAnchor="middle">100</text>
+            </g>
+
+            {/* Inner Labels (SELL, NEUTRAL, BUY) */}
             <g fontSize="8" fontFamily="sans-serif" fontWeight="700" opacity="0.9">
                 <text x="-55" y="55" fill="#e53935" textAnchor="middle">SELL</text>
                 <text x="0" y="30" fill="#fdd835" textAnchor="middle">NEUTRAL</text>
                 <text x="55" y="55" fill={TICKER_GREEN} textAnchor="middle">BUY</text>
             </g>
 
+            {/* Needle */}
             <line x1="0" y1="80" x2="0" y2="10" stroke={isLight ? "#0A192F" : "#FFFFFF"} strokeWidth="3" 
                   transform={`rotate(${needleRotation}, 0, 80)`} 
                   style={{ transition: 'transform 1.5s cubic-bezier(0.23, 1, 0.32, 1)', filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }} />
@@ -145,7 +156,6 @@ export default function NGXWidget({
              ...glassStyle,
              height: '82px',
              width: '100%',
-             // Shifting content right: Added significant padding-left and reduced padding-right
              paddingLeft: '25px', 
              paddingRight: '10px',
              justifyContent: 'space-between'
@@ -187,7 +197,6 @@ export default function NGXWidget({
         </div>
 
         <div className="d-flex align-items-center justify-content-center flex-grow-1" style={{ zIndex: 1 }}>
-            {/* Reduced width to 90% and height to 60px to shrink gauge by ~10% */}
             <div style={{ width: '90%', height: '60px', position: 'relative' }}>
                 <GaugeSVG />
             </div>
