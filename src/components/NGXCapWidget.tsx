@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 interface NGXCapData {
   marketCap: string;
   change24h: number;
-  rangeProgress: number; // 0 to 100
+  rangeProgress: number; 
 }
 
 interface WidgetProps {
@@ -36,7 +36,6 @@ export default function NGXCapWidget({
   };
 
   const mainTextColor = isLight ? '#0A192F' : '#ffffff'; 
-  const subTextColor = isLight ? '#495057' : '#848E9C';
   const titleColor = isLight ? '#0A192F' : '#FCD535'; 
   const NEON_GREEN = '#0ecb81';
   const TICKER_RED = '#f6465d';
@@ -51,7 +50,6 @@ export default function NGXCapWidget({
         setData(json);
       } catch (error) {
         console.error('Error fetching NGX Cap data:', error);
-        // Default Fallback
         setData({
             marketCap: '$2.14T',
             change24h: 1.25,
@@ -89,7 +87,6 @@ export default function NGXCapWidget({
              width: '100%'
            }}>
         
-        {/* Header Row */}
         <div className="d-flex align-items-center justify-content-between w-100" style={{ zIndex: 2 }}>
             <div className="d-flex align-items-center gap-2"
                  onMouseEnter={() => setHoveredInfo('Index Name')} onMouseLeave={() => setHoveredInfo(null)}>
@@ -106,9 +103,8 @@ export default function NGXCapWidget({
                     }}>LIVE</span>
         </div>
 
-        {/* Main Value Row */}
         <div className="d-flex align-items-end gap-2 w-100" style={{ zIndex: 2, marginTop: '-2px' }}>
-            <div className="fw-bold lh-1" style={{ fontSize: '27px', color: mainTextColor, letterSpacing: '-0.5px' }}
+            <div className="fw-bold lh-1" style={{ fontSize: '24px', color: mainTextColor, letterSpacing: '-0.5px' }}
                  onMouseEnter={() => setHoveredInfo(`Total Market Cap: ${data.marketCap}`)} onMouseLeave={() => setHoveredInfo(null)}>
                 {data.marketCap}
             </div>
@@ -118,14 +114,13 @@ export default function NGXCapWidget({
             </div>
         </div>
 
-        {/* Range Bar Row */}
         <div className="w-100 d-flex align-items-center" style={{ height: '12px', zIndex: 1 }}
              onMouseEnter={() => setHoveredInfo('7-Day High/Low Range')} onMouseLeave={() => setHoveredInfo(null)}>
             <div style={{ 
                 width: '100%', 
                 height: '6px', 
                 borderRadius: '10px', 
-                background: 'linear-gradient(to right, #2962FF, #82B1FF, #FFE082, #FF8F00)',
+                background: 'linear-gradient(90deg, #f6465d 0%, #fdd835 50%, #0ecb81 100%)',
                 position: 'relative'
             }}>
                 <div style={{
@@ -156,7 +151,7 @@ export default function NGXCapWidget({
         .ngx-widget-container {
             position: relative;
             width: 100%;
-            max-width: 240px;
+            max-width: 300px;
             margin-left: auto;
             margin-right: auto;
         }
