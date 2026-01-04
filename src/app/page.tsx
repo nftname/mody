@@ -225,7 +225,7 @@ function Home() {
   const handleMobileCurrencySelect = (c: string) => { setCurrencyFilter(c); setIsMobileCurrencyOpen(false); };
 
   return (
-    <main style={{ backgroundColor: '#0d1117', minHeight: '100vh', paddingBottom: '0px', fontFamily: '"Inter", "Segoe UI", sans-serif', overflowX: 'hidden' }}>
+    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', paddingBottom: '0px', fontFamily: '"Inter", "Segoe UI", sans-serif', overflowX: 'hidden' }}>
       
       <MarketTicker />
 
@@ -239,18 +239,18 @@ function Home() {
                           fontSize: '1.53rem', 
                           fontWeight: '700',
                           letterSpacing: '-1px', 
-                          color: '#FFFFFF', 
+                          color: '#E0E0E0', 
                           margin: 0,
                           lineHeight: '1.3'
                       }}>
-                          NNM &mdash; The Global Market for <span style={{ color: '#FCD535' }}>Nexus Rare Digital<br />Name NFTs</span>
+                          NNM &mdash; The Global Market for <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital<br />Name NFTs</span>
                       </h1>
                       
                       <p style={{ 
                           fontFamily: '"Inter", "Segoe UI", sans-serif', 
                           fontSize: '15px', 
                           fontWeight: '400',
-                          color: '#B0B3B8', 
+                          color: '#B0B0B0', 
                           marginTop: '10px', 
                           marginBottom: 0,
                           maxWidth: '650px' 
@@ -268,13 +268,13 @@ function Home() {
       </section>
 
       <section className="d-block d-md-none pt-3 pb-2 px-3">
-          <h1 className="fw-bold text-white h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3' }}>
-              NNM &mdash; The Global Market of <span style={{ color: '#FCD535' }}>Nexus Rare Digital Name NFTs.</span>
+          <h1 className="fw-bold text-white h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>
+              NNM &mdash; The Global Market of <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital Name NFTs.</span>
           </h1>
           <p style={{ 
               fontFamily: '"Inter", "Segoe UI", sans-serif', 
-              fontSize: '13px', 
-              color: '#B0B3B8', 
+              fontSize: '15px', 
+              color: '#B0B0B0', 
               marginTop: '8px',
               marginBottom: 0
           }}>
