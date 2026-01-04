@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 const Footer = () => {
   return (
-    <footer style={{ backgroundColor: '#0b0e11', borderTop: '1px solid #111', padding: '30px 0 15px', marginTop: 'auto' }}>
+    <footer className="desktop-only-footer" style={{ backgroundColor: '#0b0e11', borderTop: '1px solid #111', padding: '30px 0 15px', marginTop: 'auto' }}>
         <div className="container">
             <div className="row g-4">
                 
@@ -69,6 +69,10 @@ const Footer = () => {
             .footer-social-row:hover i { color: #fff; }
             .footer-link-item { text-decoration: none; color: rgba(255, 255, 255, 0.6); transition: color 0.2s; }
             .footer-link-item:hover { color: #FCD535; }
+            
+            @media (max-width: 768px) {
+                .desktop-only-footer { display: none !important; }
+            }
         `}</style>
     </footer>
   );
