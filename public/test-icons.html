@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار الأيقونات والـ PWA - NNM Market</title>
+    
+    <!-- Favicon Tests -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    
+    <meta name="theme-color" content="#0b1220">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0b1220 0%, #1a2332 100%);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+            direction: rtl;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FCD535;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(252, 213, 53, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h2 {
+            color: #FCD535;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(252, 213, 53, 0.2);
+            padding-bottom: 10px;
+        }
+        
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .icon-test {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .icon-test img {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 10px;
+            image-rendering: crisp-edges;
+        }
+        
+        .icon-test .size {
+            color: #FCD535;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .icon-test .status {
+            margin-top: 8px;
+            font-size: 0.8em;
+        }
+        
+        .status.success {
+            color: #4ade80;
+        }
+        
+        .status.error {
+            color: #ef4444;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #FCD535 0%, #B3882A 100%);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .info-box {
+            background: rgba(252, 213, 53, 0.1);
+            border: 1px solid rgba(252, 213, 53, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .info-box p {
+            margin: 5px 0;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        
+        .cache-warning {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        code {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #FCD535;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checklist li::before {
+            content: "✓";
+            color: #4ade80;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 اختبار الأيقونات والـ PWA</h1>
+        
+        <div class="cache-warning">
+            <strong>⚠️ تحذير:</strong> إذا كنت لا ترى التغييرات، قم بمسح الـ Cache:<br>
+            <code>Ctrl+Shift+Delete</code> أو <code>Cmd+Shift+Delete</code>
+        </div>
+        
+        <div class="test-section">
+            <h2>1️⃣ اختبار الأيقونات</h2>
+            <div class="icon-grid">
+                <div class="icon-test">
+                    <img src="/favicon.ico" alt="favicon" onerror="this.parentElement.querySelector('.status').className='status error'; this.parentElement.querySelector('.status').textContent='❌ فشل التحميل';" onload="this.parentElement.querySelector('.status').className='status success'; this.parentElement.querySelector('.status').textContent='✅ تم التحميل';">
+                    <div class="size">favicon.ico</div>
+                    <div class="status">⏳ جاري التحميل...</div>
+                </div>
+                
+                <div class="icon-test">
+                    <img src="/icons/icon-16x16.png" alt="16x16" onerror="this.parentElement.querySelector('.status').className='status error'; this.parentElement.querySelector('.status').textContent='❌ فشل';" onload="this.parentElement.querySelector('.status').className='status success'; this.parentElement.querySelector('.status').textContent='✅ نجح';">
+                    <div class="size">16×16</div>
+                    <div class="status">⏳ جاري...</div>
+                </div>
+                
+                <div class="icon-test">
+                    <img src="/icons/icon-32x32.png" alt="32x32" onerror="this.parentElement.querySelector('.status').className='status error'; this.parentElement.querySelector('.status').textContent='❌ فشل';" onload="this.parentElement.querySelector('.status').className='status success'; this.parentElement.querySelector('.status').textContent='✅ نجح';">
+                    <div class="size">32×32</div>
+                    <div class="status">⏳ جاري...</div>
+                </div>
+                
+                <div class="icon-test">
+                    <img src="/icons/icon-192x192.png" alt="192x192" onerror="this.parentElement.querySelector('.status').className='status error'; this.parentElement.querySelector('.status').textContent='❌ فشل';" onload="this.parentElement.querySelector('.status').className='status success'; this.parentElement.querySelector('.status').textContent='✅ نجح';">
+                    <div class="size">192×192</div>
+                    <div class="status">⏳ جاري...</div>
+                </div>
+                
+                <div class="icon-test">
+                    <img src="/icons/icon-512x512.png" alt="512x512" onerror="this.parentElement.querySelector('.status').className='status error'; this.parentElement.querySelector('.status').textContent='❌ فشل';" onload="this.parentElement.querySelector('.status').className='status success'; this.parentElement.querySelector('.status').textContent='✅ نجح';">
+                    <div class="size">512×512</div>
+                    <div class="status">⏳ جاري...</div>
+                </div>
+                
+                <div class="icon-test">
+                    <img src="/icons/apple-touch-icon.png" alt="apple" onerror="this.parentElement.querySelector('.status').className='status error'; this.parentElement.querySelector('.status').textContent='❌ فشل';" onload="this.parentElement.querySelector('.status').className='status success'; this.parentElement.querySelector('.status').textContent='✅ نجح';">
+                    <div class="size">Apple 180×180</div>
+                    <div class="status">⏳ جاري...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2️⃣ اختبار تثبيت PWA</h2>
+            <button class="btn" id="installBtn" onclick="installPWA()">
+                📱 تثبيت التطبيق (PWA)
+            </button>
+            <div class="info-box" id="installInfo">
+                <p><strong>حالة التثبيت:</strong> <span id="installStatus">جاري الفحص...</span></p>
+                <p><strong>ملاحظة:</strong> يجب أن يتم عرض النافذة المنبثقة للتثبيت مع الأيقونة الذهبية</p>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3️⃣ قائمة التحقق</h2>
+            <ul class="checklist">
+                <li>الأيقونة تظهر في تاب المتصفح</li>
+                <li>الأيقونة تظهر في الوضع الخفي</li>
+                <li>الأيقونة تظهر في نافذة التثبيت</li>
+                <li>الأيقونة تظهر في محافظ Web3</li>
+                <li>الألوان الذهبية واضحة</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h2>4️⃣ معلومات تقنية</h2>
+            <div class="info-box">
+                <p><strong>Manifest URL:</strong> <a href="/manifest.json" style="color: #FCD535;">/manifest.json</a></p>
+                <p><strong>Favicon Path:</strong> <code>/favicon.ico</code></p>
+                <p><strong>Icons Path:</strong> <code>/icons/*.png</code></p>
+                <p id="manifestStatus"><strong>Manifest Status:</strong> ⏳ جاري الفحص...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let deferredPrompt;
+        
+        // Check if PWA is already installed
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            document.getElementById('installStatus').textContent = '✅ التطبيق مثبت بالفعل';
+            document.getElementById('installBtn').disabled = true;
+            document.getElementById('installBtn').textContent = '✅ مثبت مسبقاً';
+        } else {
+            document.getElementById('installStatus').textContent = '⏳ في انتظار الحدث...';
+        }
+        
+        // Listen for install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBtn').disabled = false;
+            document.getElementById('installStatus').textContent = '✅ جاهز للتثبيت! اضغط الزر أدناه';
+        });
+        
+        // Install PWA function
+        async function installPWA() {
+            if (!deferredPrompt) {
+                document.getElementById('installStatus').innerHTML = '❌ لم يتم اكتشاف حدث التثبيت<br><small>قد تحتاج إلى:</small><br>• استخدام HTTPS<br>• مسح الـ Cache<br>• إعادة تحميل الصفحة';
+                return;
+            }
+            
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                document.getElementById('installStatus').textContent = '✅ تم التثبيت بنجاح!';
+                document.getElementById('installBtn').textContent = '✅ تم التثبيت';
+                document.getElementById('installBtn').disabled = true;
+            } else {
+                document.getElementById('installStatus').textContent = '❌ تم إلغاء التثبيت';
+            }
+            
+            deferredPrompt = null;
+        }
+        
+        // Check manifest
+        fetch('/manifest.json')
+            .then(response => response.json())
+            .then(data => {
+                const iconCount = data.icons ? data.icons.length : 0;
+                document.getElementById('manifestStatus').innerHTML = 
+                    `<strong>Manifest Status:</strong> ✅ موجود (${iconCount} أيقونة)`;
+            })
+            .catch(error => {
+                document.getElementById('manifestStatus').innerHTML = 
+                    `<strong>Manifest Status:</strong> ❌ خطأ: ${error.message}`;
+            });
+        
+        // Log service worker status
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                console.log('Service Workers:', registrations.length);
+            });
+        }
+    </script>
+</body>
+</html>
