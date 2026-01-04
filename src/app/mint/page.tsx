@@ -125,7 +125,16 @@ const MintContent = () => {
         <h1 className="text-white fw-bold mb-2" style={{ fontSize: '32px', fontFamily: 'serif', letterSpacing: '1px' }}>
           Claim Your <span style={{ color: '#FCD535' }}>Nexus Digital Name</span> Assets
         </h1>
-        <p className="mx-auto" style={{ maxWidth: '600px', fontSize: '14px', lineHeight: '1.6', color: '#B0B3B8' }}>
+        <p
+          className="mx-auto"
+          style={{
+            maxWidth: '600px',
+            fontFamily: '"Inter", "Segoe UI", sans-serif',
+            fontSize: '15px',
+            lineHeight: '1.6',
+            color: '#B0B0B0'
+          }}
+        >
           Mint your visual Nexus Name asset on the Polygon network. First-come, first-served. Immutable. Global. Yours forever.
         </p>
       </div>
