@@ -15,7 +15,7 @@ const MARKET_ABI = parseAbi([
 ]);
 
 const ITEMS_PER_PAGE = 30;
-const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #B3882A 100%)';
+const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
 
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
@@ -38,7 +38,7 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '16px', 
             fontWeight: 'bold', fontFamily: 'serif',
-            color: '#FCD535', textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+            color: '#F0C420', textShadow: '0 1px 2px rgba(0,0,0,0.8)',
             flexShrink: 0
         }}>
             {name ? name.charAt(0) : 'N'}
@@ -62,10 +62,10 @@ const ActionButton = ({ text }: { text: string }) => (
 
 const getRankStyle = (rank: number) => {
     const baseStyle = { fontStyle: 'italic', fontWeight: '800', fontSize: '18px' };
-    if (rank === 1) return { ...baseStyle, color: '#FF9900', textShadow: '0 0 10px rgba(255, 153, 0, 0.4)' };
-    if (rank === 2) return { ...baseStyle, color: '#FFC233', textShadow: '0 0 10px rgba(255, 194, 51, 0.3)' };
-    if (rank === 3) return { ...baseStyle, color: '#FCD535', textShadow: '0 0 10px rgba(252, 213, 53, 0.2)' };
-    return { color: '#fff', fontWeight: '500', fontSize: '14px', fontStyle: 'normal' };
+    if (rank === 1) return { ...baseStyle, color: '#FFD700', textShadow: '0 0 10px rgba(253, 185, 49, 0.4)' };
+    if (rank === 2) return { ...baseStyle, color: '#FDB931', textShadow: '0 0 10px rgba(240, 196, 32, 0.3)' };
+    if (rank === 3) return { ...baseStyle, color: '#F0C420', textShadow: '0 0 10px rgba(184, 134, 11, 0.25)' };
+    return { color: '#E0E0E0', fontWeight: '500', fontSize: '14px', fontStyle: 'normal' };
 };
 
 const SortArrows = ({ active, direction, onClick }: any) => (
@@ -195,23 +195,24 @@ function MarketPage() {
 
   const getCurrencyLabel = () => currencyFilter === 'ETH' ? 'ETH' : 'POL';
 
-  return (
-    <main style={{ backgroundColor: '#0d1117', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px' }}>
+    return (
+        <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', color: '#E0E0E0' }}>
       
       <MarketTicker />
 
       <section className="container pt-3 pb-3 d-none d-md-block">
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-4">
               <div className="text-center text-lg-start pt-2" style={{ flex: 1 }}>
-                  <h1 className="fw-bold text-white mb-2 text-nowrap-desktop" 
+                  <h1 className="fw-bold mb-2 text-nowrap-desktop" 
                       style={{ 
                           fontFamily: '"Inter", "Segoe UI", sans-serif', 
                           fontSize: '1.53rem', 
                           fontWeight: '700', 
                           letterSpacing: '-1px', 
-                          lineHeight: '1.2' 
+                          lineHeight: '1.2',
+                          color: '#E0E0E0' 
                       }}>
-                      Buy & Sell <span style={{ color: '#FCD535' }}>Nexus Rare</span> Digital Name Assets NFTs
+                      Buy & Sell Nexus Rare Digital Name Assets NFTs
                   </h1>
                   
                   <p style={{ 
@@ -220,7 +221,7 @@ function MarketPage() {
                       fontWeight: '400', 
                       lineHeight: '1.6', 
                       maxWidth: '650px', 
-                      color: '#848E9C', 
+                      color: '#E0E0E0', 
                       marginTop: '10px',
                       marginBottom: 0,
                   }}>
@@ -234,14 +235,14 @@ function MarketPage() {
       </section>
 
       <section className="d-block d-md-none pt-3 pb-2 px-3 text-start">
-          <h1 className="fw-bold text-white h4 text-start m-0" 
-              style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', letterSpacing: '-0.5px', lineHeight: '1.3' }}>
-              Buy & Sell <span style={{ color: '#FCD535' }}>Nexus Rare</span> Digital Name Assets NFTs.
+          <h1 className="fw-bold h4 text-start m-0" 
+              style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>
+              Buy & Sell Nexus Rare Digital Name Assets NFTs.
           </h1>
           <p className="text-start" style={{ 
               fontFamily: '"Inter", "Segoe UI", sans-serif', 
               fontSize: '13px', 
-              color: '#848E9C', 
+              color: '#E0E0E0', 
               marginTop: '8px',
               marginBottom: 0,
               lineHeight: '1.5'
@@ -261,14 +262,14 @@ function MarketPage() {
                   <div 
                     onClick={() => setActiveFilter('Watchlist')}
                     className={`d-flex align-items-center gap-1 cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : ''}`}
-                    style={{ fontSize: '16px', fontWeight: 'bold', color: activeFilter === 'Watchlist' ? '#fff' : '#FCD535', paddingBottom: '4px' }}
+                    style={{ fontSize: '16px', fontWeight: 'bold', color: activeFilter === 'Watchlist' ? '#E0E0E0' : '#F0C420', paddingBottom: '4px' }}
                   >
                       <i className={`bi ${activeFilter === 'Watchlist' ? 'bi-star-fill text-warning' : 'bi-star-fill'}`}></i> Watchlist
                   </div>
                   {['Trending', 'Top', 'All Assets'].map(f => (
                       <div key={f} onClick={() => setActiveFilter(f)} 
-                           className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`}
-                           style={{ fontSize: '16px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
+                          className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'active' : 'text-header-gray'} desktop-nowrap`}
+                          style={{ fontSize: '16px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px', color: activeFilter === f ? '#E0E0E0' : '#848E9C' }}>
                           {f}
                       </div>
                   ))}
@@ -310,29 +311,29 @@ function MarketPage() {
               ) : finalData.length === 0 ? (
                   <div className="text-center py-5 text-secondary">No items listed for sale yet.</div>
               ) : (
-                  <table className="table align-middle mb-0" style={{ minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0' }}>
+                  <table className="table align-middle mb-0" style={{ minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0', color: '#E0E0E0' }}>
                       
-                      <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#0d1117' }}>
+                      <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#1E1E1E' }}>
                           <tr style={{ borderBottom: '1px solid #333' }}>
-                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '80px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#E0E0E0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '80px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', minWidth: '220px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#E0E0E0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', minWidth: '220px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('floor')} style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('floor')} style={{ backgroundColor: '#1E1E1E', color: '#E0E0E0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'floor'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#E0E0E0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                   Last Sale
                               </th>
-                              <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#E0E0E0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                   Volume
                               </th>
-                              <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#E0E0E0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                   Listed
                               </th>
-                              <th style={{ backgroundColor: '#0d1117', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'center', width: '140px', whiteSpace: 'nowrap' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#E0E0E0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'center', width: '140px', whiteSpace: 'nowrap' }}>
                                   Action
                               </th>
                           </tr>
@@ -354,24 +355,24 @@ function MarketPage() {
                                   <td style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <Link href={`/asset/${item.id}`} className="d-flex align-items-center gap-3 text-decoration-none group">
                                           <CoinIcon name={item.name} tier={item.tier} />
-                                          <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px' }}>{item.name}</span>
+                                          <span className="fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
                                       </Link>
                                   </td>
                                   <td className="text-start" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <div className="d-flex align-items-center justify-content-start gap-2">
-                                          <span className="fw-bold text-white" style={{ fontSize: '14px' }}>{item.floor}</span>
-                                          <span className="text-white" style={{ fontSize: '12px' }}>{item.currencySymbol || getCurrencyLabel()}</span>
+                                          <span className="fw-bold" style={{ fontSize: '14px', color: '#E0E0E0' }}>{item.floor}</span>
+                                          <span style={{ fontSize: '12px', color: '#E0E0E0' }}>{item.currencySymbol || getCurrencyLabel()}</span>
                                           <span style={{ fontSize: '12px', color: '#0ecb81' }}>+0.00%</span>
                                       </div>
                                   </td>
                                   <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '13px' }}>{item.lastSale}</span>
+                                      <span style={{ fontSize: '13px', color: '#E0E0E0' }}>{item.lastSale}</span>
                                   </td>
                                   <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '13px' }}>{item.volume}</span>
+                                      <span style={{ fontSize: '13px', color: '#E0E0E0' }}>{item.volume}</span>
                                   </td>
                                   <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '12px' }}>{item.listed}</span>
+                                      <span style={{ fontSize: '12px', color: '#E0E0E0' }}>{item.listed}</span>
                                   </td>
                                   <td className="text-center" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <div className="d-flex justify-content-center gap-2">
@@ -379,7 +380,7 @@ function MarketPage() {
                                               <ActionButton text="Buy" />
                                           </Link>
                                           <Link href={`/asset/${item.id}`} className="text-decoration-none">
-                                              <button className="btn btn-sm text-white-50 border-secondary hover-white" style={{ fontSize: '10px', padding: '4px 10px', borderRadius: '2px', background: 'transparent' }}>Bid</button>
+                                              <button className="btn btn-sm border-secondary hover-white" style={{ fontSize: '10px', padding: '4px 10px', borderRadius: '2px', background: 'transparent', color: '#E0E0E0' }}>Bid</button>
                                           </Link>
                                       </div>
                                   </td>
@@ -394,6 +395,7 @@ function MarketPage() {
               <div className="d-flex justify-content-center align-items-center gap-3 mt-5 text-secondary" style={{ fontSize: '14px' }}>
                   <i 
                       className={`bi bi-chevron-left ${currentPage === 1 ? 'text-muted' : 'cursor-pointer hover-white'}`}
+                      style={{ color: currentPage === 1 ? '#666' : '#E0E0E0' }}
                       onClick={() => goToPage(currentPage - 1)}
                   ></i>
                   
@@ -401,8 +403,8 @@ function MarketPage() {
                       <span 
                           key={page}
                           onClick={() => goToPage(page)}
-                          className={`cursor-pointer ${currentPage === page ? 'text-white fw-bold' : 'hover-white'}`}
-                          style={{ padding: '0 5px' }}
+                          className={`cursor-pointer ${currentPage === page ? 'fw-bold' : 'hover-white'}`}
+                          style={{ padding: '0 5px', color: '#E0E0E0' }}
                       >
                           {page}
                       </span>
@@ -410,6 +412,7 @@ function MarketPage() {
 
                   <i 
                       className={`bi bi-chevron-right ${currentPage === totalPages ? 'text-muted' : 'cursor-pointer hover-white'}`}
+                      style={{ color: currentPage === totalPages ? '#666' : '#E0E0E0' }}
                       onClick={() => goToPage(currentPage + 1)}
                   ></i>
               </div>
@@ -423,23 +426,23 @@ function MarketPage() {
         
         .market-row:hover td { background-color: rgba(255, 255, 255, 0.03) !important; }
         
-        .name-hover:hover { color: #FCD535; text-decoration: none !important; }
+        .name-hover:hover { color: #F0C420; text-decoration: none !important; }
         
         @keyframes subtleShake { 0% { transform: translateX(0); } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 75% { transform: translateX(1px); } 100% { transform: translateX(0); } }
-        .market-row:hover .name-shake { animation: subtleShake 0.4s ease-in-out; color: #FCD535 !important; }
+        .market-row:hover .name-shake { animation: subtleShake 0.4s ease-in-out; color: #F0C420 !important; }
 
         .filter-item { border-bottom: 2px solid transparent; transition: all 0.2s; cursor: pointer; padding-bottom: 4px; }
-        .filter-item:hover, .filter-item.active { color: #fff !important; border-bottom: 2px solid #FCD535; }
+        .filter-item:hover, .filter-item.active { color: #E0E0E0 !important; border-bottom: 2px solid #F0C420; }
         
         .binance-filter-btn { border-radius: 2px; padding: 6px 12px; transition: all 0.2s; }
         .binance-filter-group { border: 1px solid #333; background: transparent; padding: 4px; border-radius: 2px; gap: 2px; }
-        .active-time, .active-currency { background-color: #2B3139 !important; color: #FCD535 !important; }
+        .active-time, .active-currency { background-color: #2B3139 !important; color: #F0C420 !important; }
         .text-header-gray { color: #848E9C !important; }
 
-        .hover-gold-text:hover:not(.active-time):not(.active-currency) { color: #FCD535 !important; }
+        .hover-gold-text:hover:not(.active-time):not(.active-currency) { color: #F0C420 !important; }
         
-        .hover-gold:hover { color: #FCD535 !important; }
-        .hover-white:hover { color: #fff !important; border-color: #fff !important; }
+        .hover-gold:hover { color: #F0C420 !important; }
+        .hover-white:hover { color: #E0E0E0 !important; border-color: #E0E0E0 !important; }
         .mobile-filter-gap { margin-bottom: 1rem !important; }
         .cursor-pointer { cursor: pointer; }
 
