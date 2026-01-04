@@ -40,8 +40,8 @@ export default function ContactPage() {
     color: '#848E9C'
   };
 
-  return (
-    <main style={{ backgroundColor: '#0d1117', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px' }}>
+    return (
+        <main className="contact-page" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px' }}>
       
       <div className="container pt-5">
         
@@ -207,12 +207,23 @@ export default function ContactPage() {
         </div>
       </div>
 
-      <style jsx>{`
-        .contact-input:focus {
-            border-color: #FCD535 !important;
-            box-shadow: 0 0 0 2px rgba(252, 213, 53, 0.1);
-        }
-      `}</style>
+            <style jsx>{`
+                .contact-input:focus {
+                        border-color: #FCD535 !important;
+                        box-shadow: 0 0 0 2px rgba(252, 213, 53, 0.1);
+                }
+            `}</style>
+            <style jsx global>{`
+                .contact-page p,
+                .contact-page li,
+                .contact-page small,
+                .contact-page .small,
+                .contact-page label {
+                        font-family: "Inter", "Segoe UI", sans-serif;
+                        font-size: 15px;
+                        color: #B0B0B0;
+                }
+            `}</style>
     </main>
   );
 }
