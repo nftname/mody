@@ -9,8 +9,6 @@ export default {
     extend: {
       colors: {
         'gold-metallic': '#F0C420',
-        background: '#1E1E1E',
-        foreground: '#E0E0E0',
       },
     },
   },
