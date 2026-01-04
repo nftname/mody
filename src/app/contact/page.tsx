@@ -48,7 +48,7 @@ export default function ContactPage() {
         <div className="row justify-content-center mb-5">
             <div className="col-12 col-lg-10 text-center text-md-start">
                 <h1 className="fw-bold text-white mb-3" style={{ fontSize: '2.5rem', letterSpacing: '-0.5px', color: '#E0E0E0' }}>
-                    Contact <span style={{ color: '#F0C420' }}>NNM</span>
+                    Contact <span style={{ color: '#FDB931' }}>NNM</span>
                 </h1>
                 <p style={{ maxWidth: '700px', lineHeight: '1.6' }}>
                     We are here to assist with your sovereign asset journey. 
@@ -65,7 +65,7 @@ export default function ContactPage() {
                     <div className="p-4 rounded-3" style={{ border: '1px solid #2E2E2E', backgroundColor: '#242424' }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
                             <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                                 style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.12)', color: '#F0C420' }}>
+                                 style={{ width: '40px', height: '40px', backgroundColor: 'rgba(253, 185, 49, 0.12)', color: '#FDB931' }}>
                                 <i className="bi bi-chat-text-fill"></i>
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">General Inquiries</h3>
@@ -73,7 +73,7 @@ export default function ContactPage() {
                         <p style={{ marginBottom: '15px' }}>
                             For platform assistance, account questions, or general information.
                         </p>
-                        <a href="mailto:contact@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
+                        <a href="mailto:contact@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#FDB931', fontSize: '14px' }}>
                             contact@nftnnm.com
                         </a>
                     </div>
@@ -81,7 +81,7 @@ export default function ContactPage() {
                     <div className="p-4 rounded-3" style={{ border: '1px solid #2E2E2E', backgroundColor: '#242424' }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
                             <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                                 style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.12)', color: '#F0C420' }}>
+                                 style={{ width: '40px', height: '40px', backgroundColor: 'rgba(253, 185, 49, 0.12)', color: '#FDB931' }}>
                                 <i className="bi bi-megaphone-fill"></i>
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">Media & Partnerships</h3>
@@ -89,7 +89,7 @@ export default function ContactPage() {
                         <p style={{ marginBottom: '15px' }}>
                             For press releases, institutional partnerships, and brand assets.
                         </p>
-                        <a href="mailto:media@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
+                        <a href="mailto:media@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#FDB931', fontSize: '14px' }}>
                             media@nftnnm.com
                         </a>
                     </div>
@@ -97,7 +97,7 @@ export default function ContactPage() {
                     <div className="p-4 rounded-3" style={{ border: '1px solid #2E2E2E', backgroundColor: '#242424' }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
                             <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                                 style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.12)', color: '#F0C420' }}>
+                                 style={{ width: '40px', height: '40px', backgroundColor: 'rgba(253, 185, 49, 0.12)', color: '#FDB931' }}>
                                 <i className="bi bi-shield-fill-check"></i>
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">Legal & Compliance</h3>
@@ -105,7 +105,7 @@ export default function ContactPage() {
                         <p style={{ marginBottom: '15px' }}>
                             For verified institutional inquiries only: Regulatory, IP rights, and compliance matters.
                         </p>
-                        <a href="mailto:legal@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
+                        <a href="mailto:legal@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#FDB931', fontSize: '14px' }}>
                             legal@nftnnm.com
                         </a>
                     </div>
@@ -209,8 +209,8 @@ export default function ContactPage() {
 
             <style jsx>{`
                 .contact-input:focus {
-                    border-color: #F0C420 !important;
-                    box-shadow: 0 0 0 2px rgba(240, 196, 32, 0.12);
+                    border-color: #FDB931 !important;
+                    box-shadow: 0 0 0 2px rgba(253, 185, 49, 0.12);
                 }
             `}</style>
             <style jsx global>{`
@@ -235,7 +235,7 @@ export default function ContactPage() {
                 .contact-page .text-gold,
                 .contact-page .highlight-gold,
                 .contact-page a.text-decoration-none.fw-bold {
-                    color: #F0C420 !important;
+                    color: #FDB931 !important;
                 }
             `}</style>
     </main>
