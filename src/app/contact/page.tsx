@@ -50,7 +50,7 @@ export default function ContactPage() {
                 <h1 className="fw-bold text-white mb-3" style={{ fontSize: '2.5rem', letterSpacing: '-0.5px', color: '#E0E0E0' }}>
                     Contact <span style={{ color: '#F0C420' }}>NNM</span>
                 </h1>
-                <p style={{ fontSize: '16px', color: '#B0B0B0', maxWidth: '700px', lineHeight: '1.6' }}>
+                <p style={{ maxWidth: '700px', lineHeight: '1.6' }}>
                     We are here to assist with your sovereign asset journey. 
                     Please select the appropriate channel below to ensure your inquiry is routed to the correct team.
                 </p>
@@ -70,7 +70,7 @@ export default function ContactPage() {
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">General Inquiries</h3>
                         </div>
-                        <p style={{ fontSize: '13px', color: '#B0B0B0', marginBottom: '15px' }}>
+                        <p style={{ marginBottom: '15px' }}>
                             For platform assistance, account questions, or general information.
                         </p>
                         <a href="mailto:contact@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
@@ -86,7 +86,7 @@ export default function ContactPage() {
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">Media & Partnerships</h3>
                         </div>
-                        <p style={{ fontSize: '13px', color: '#B0B0B0', marginBottom: '15px' }}>
+                        <p style={{ marginBottom: '15px' }}>
                             For press releases, institutional partnerships, and brand assets.
                         </p>
                         <a href="mailto:media@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
@@ -102,7 +102,7 @@ export default function ContactPage() {
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">Legal & Compliance</h3>
                         </div>
-                        <p style={{ fontSize: '13px', color: '#B0B0B0', marginBottom: '15px' }}>
+                        <p style={{ marginBottom: '15px' }}>
                             For verified institutional inquiries only: Regulatory, IP rights, and compliance matters.
                         </p>
                         <a href="mailto:legal@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
@@ -195,7 +195,7 @@ export default function ContactPage() {
                     </form>
 
                     <div className="mt-4 pt-3 border-top border-secondary border-opacity-25 text-center">
-                        <p style={{ fontSize: '12px', color: '#B0B0B0', margin: 0 }}>
+                        <p style={{ margin: 0 }}>
                             <i className="bi bi-lock-fill me-1"></i>
                             Security Note: NNM support will <strong>never</strong> ask for your private keys or seed phrase.
                         </p>
