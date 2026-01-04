@@ -11,11 +11,21 @@ import { parseAbi, formatEther, erc721Abi } from 'viem';
 // استيراد العناوين الصحيحة من ملف الكونفيج المركزي
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 
+const BACKGROUND_DARK = '#1E1E1E';
+const TEXT_PRIMARY = '#E0E0E0';
+const TEXT_MUTED = '#B0B0B0';
+
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
 const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
+const BODY_TEXT_STYLE = {
+    fontSize: '15px',
+    lineHeight: '1.6',
+    color: TEXT_MUTED,
+    fontFamily: '"Inter", "Segoe UI", sans-serif'
+};
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
 const resolveIPFS = (uri: string) => {
@@ -225,7 +235,7 @@ function Home() {
   const handleMobileCurrencySelect = (c: string) => { setCurrencyFilter(c); setIsMobileCurrencyOpen(false); };
 
   return (
-    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', paddingBottom: '0px', fontFamily: '"Inter", "Segoe UI", sans-serif', overflowX: 'hidden', color: '#E0E0E0' }}>
+    <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', paddingBottom: '0px', fontFamily: '"Inter", "Segoe UI", sans-serif', overflowX: 'hidden', color: TEXT_PRIMARY }}>
       
       <MarketTicker />
 
@@ -239,7 +249,7 @@ function Home() {
                           fontSize: '1.53rem', 
                           fontWeight: '700',
                           letterSpacing: '-1px', 
-                          color: '#E0E0E0', 
+                          color: TEXT_PRIMARY, 
                           margin: 0,
                           lineHeight: '1.3'
                       }}>
@@ -247,10 +257,7 @@ function Home() {
                       </h1>
                       
                       <p style={{ 
-                          fontFamily: '"Inter", "Segoe UI", sans-serif', 
-                          fontSize: '15px', 
-                          fontWeight: '400',
-                          color: '#E0E0E0', 
+                          ...BODY_TEXT_STYLE,
                           marginTop: '10px', 
                           marginBottom: 0,
                           maxWidth: '650px' 
@@ -268,13 +275,12 @@ function Home() {
       </section>
 
       <section className="d-block d-md-none pt-3 pb-2 px-3">
-          <h1 className="fw-bold h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>
+          <h1 className="fw-bold h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: TEXT_PRIMARY }}>
              NNM &mdash; The Global Market of <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital Name NFTs.</span>
           </h1>
           <p style={{ 
-              fontFamily: '"Inter", "Segoe UI", sans-serif', 
-              fontSize: '13px', 
-              color: '#E0E0E0', 
+              ...BODY_TEXT_STYLE,
+              fontSize: '14px', 
               marginTop: '8px',
               marginBottom: 0
           }}>

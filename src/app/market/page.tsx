@@ -10,12 +10,21 @@ import { parseAbi, formatEther, erc721Abi } from 'viem';
 // استيراد العنوان الصحيح من ملف الكونفيج
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 
+const BACKGROUND_DARK = '#1E1E1E';
+const TEXT_PRIMARY = '#E0E0E0';
+const TEXT_MUTED = '#B0B0B0';
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
 const ITEMS_PER_PAGE = 30;
 const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
+const BODY_TEXT_STYLE = {
+    fontSize: '15px',
+    lineHeight: '1.6',
+    color: TEXT_MUTED,
+    fontFamily: '"Inter", "Segoe UI", sans-serif'
+};
 
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
@@ -196,7 +205,7 @@ function MarketPage() {
   const getCurrencyLabel = () => currencyFilter === 'ETH' ? 'ETH' : 'POL';
 
     return (
-        <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', color: '#E0E0E0' }}>
+        <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', color: TEXT_PRIMARY }}>
       
       <MarketTicker />
 
@@ -210,18 +219,14 @@ function MarketPage() {
                           fontWeight: '700', 
                           letterSpacing: '-1px', 
                           lineHeight: '1.2',
-                          color: '#E0E0E0' 
+                          color: TEXT_PRIMARY 
                       }}>
                       Buy & Sell Nexus Rare Digital Name Assets NFTs
                   </h1>
                   
                   <p style={{ 
-                      fontSize: '15px', 
-                      fontFamily: '"Inter", "Segoe UI", sans-serif', 
-                      fontWeight: '400', 
-                      lineHeight: '1.6', 
+                      ...BODY_TEXT_STYLE,
                       maxWidth: '650px', 
-                      color: '#E0E0E0', 
                       marginTop: '10px',
                       marginBottom: 0,
                   }}>
@@ -236,16 +241,14 @@ function MarketPage() {
 
       <section className="d-block d-md-none pt-3 pb-2 px-3 text-start">
           <h1 className="fw-bold h4 text-start m-0" 
-              style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>
+              style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', letterSpacing: '-0.5px', lineHeight: '1.3', color: TEXT_PRIMARY }}>
               Buy & Sell Nexus Rare Digital Name Assets NFTs.
           </h1>
           <p className="text-start" style={{ 
-              fontFamily: '"Inter", "Segoe UI", sans-serif', 
-              fontSize: '13px', 
-              color: '#E0E0E0', 
+              ...BODY_TEXT_STYLE,
+              fontSize: '14px',
               marginTop: '8px',
-              marginBottom: 0,
-              lineHeight: '1.5'
+              marginBottom: 0
           }}>
               Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets. Turn your NFTs into liquid financial power.
           </p>

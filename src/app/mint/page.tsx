@@ -15,6 +15,12 @@ const TEXT_PRIMARY = '#E0E0E0';
 const TEXT_MUTED = '#B0B0B0';
 const GOLD_SOLID = '#F0C420';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
+const BODY_TEXT_STYLE = {
+  fontSize: '15px',
+  lineHeight: '1.6',
+  color: TEXT_MUTED,
+  fontFamily: '"Inter", "Segoe UI", sans-serif'
+};
 
 // ABI for the NFT Registry Contract (Minting Logic - Updated for Registry 10)
 const CONTRACT_ABI = parseAbi([
@@ -131,7 +137,7 @@ const MintContent = () => {
         <h1 className="text-white fw-bold mb-2" style={{ fontSize: '32px', fontFamily: 'serif', letterSpacing: '1px' }}>
           Claim Your <span style={{ color: '#FCD535' }}>Nexus Digital Name</span> Assets
         </h1>
-        <p className="mx-auto" style={{ maxWidth: '600px', fontSize: '14px', lineHeight: '1.6', color: '#B0B3B8' }}>
+        <p className="mx-auto" style={{ ...BODY_TEXT_STYLE, maxWidth: '650px' }}>
           Mint your visual Nexus Name asset on the Polygon network. First-come, first-served. Immutable. Global. Yours forever.
         </p>
       </div>

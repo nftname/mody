@@ -2,6 +2,19 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
+const BACKGROUND_DARK = '#1E1E1E';
+const SURFACE_DARK = '#242424';
+const BORDER_COLOR = '#2E2E2E';
+const TEXT_PRIMARY = '#E0E0E0';
+const TEXT_MUTED = '#B0B0B0';
+const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
+const BODY_TEXT_STYLE = {
+    fontSize: '15px',
+    lineHeight: '1.6',
+    color: TEXT_MUTED,
+    fontFamily: '"Inter", "Segoe UI", sans-serif'
+};
+
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: '',
@@ -20,39 +33,38 @@ export default function ContactPage() {
   };
 
     const inputStyle = {
-        backgroundColor: '#161b22',
-        border: '1px solid #30363d',
-        color: '#E0E0E0',
-    width: '100%',
-    padding: '12px 16px',
-    borderRadius: '6px',
-    fontSize: '14px',
-    outline: 'none',
-    transition: 'border-color 0.2s',
-    fontFamily: 'inherit'
-  };
+        backgroundColor: SURFACE_DARK,
+        border: `1px solid ${BORDER_COLOR}`,
+        color: TEXT_PRIMARY,
+        width: '100%',
+        padding: '12px 16px',
+        borderRadius: '6px',
+        fontSize: '14px',
+        outline: 'none',
+        transition: 'border-color 0.2s',
+        fontFamily: 'inherit'
+    };
 
   const labelStyle = {
     display: 'block',
     marginBottom: '8px',
     fontSize: '13px',
     fontWeight: '600',
-        color: '#E0E0E0'
+    color: TEXT_PRIMARY
   };
 
   return (
-    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px', color: '#E0E0E0' }}>
+    <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px', color: TEXT_PRIMARY }}>
       
       <div className="container pt-5">
         
         <div className="row justify-content-center mb-5">
             <div className="col-12 col-lg-10 text-center text-md-start">
-                <h1 className="fw-bold mb-3" style={{ fontSize: '2.5rem', letterSpacing: '-0.5px', color: '#E0E0E0' }}>
+                <h1 className="fw-bold mb-3" style={{ fontSize: '2.5rem', letterSpacing: '-0.5px', color: TEXT_PRIMARY }}>
                     Contact <span style={{ color: '#FFD700' }}>NNM</span>
                 </h1>
-                <p style={{ fontSize: '16px', color: '#E0E0E0', maxWidth: '700px', lineHeight: '1.6' }}>
-                    We are here to assist with your sovereign asset journey. 
-                    Please select the appropriate channel below to ensure your inquiry is routed to the correct team.
+                <p style={{ ...BODY_TEXT_STYLE, maxWidth: '700px' }}>
+                  We are here to assist with your sovereign asset journey. Please select the appropriate channel below to ensure your inquiry is routed to the correct team.
                 </p>
             </div>
         </div>
@@ -62,7 +74,7 @@ export default function ContactPage() {
             <div className="col-12 col-lg-4">
                 <div className="d-flex flex-column gap-4">
                     
-                    <div className="p-4 rounded-3" style={{ border: '1px solid #30363d', backgroundColor: '#161b22', color: '#E0E0E0' }}>
+                    <div className="p-4 rounded-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, color: TEXT_PRIMARY }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
                             <div className="rounded-circle d-flex align-items-center justify-content-center" 
                                  style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: '#F0C420' }}>
@@ -70,15 +82,15 @@ export default function ContactPage() {
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">General Inquiries</h3>
                         </div>
-                        <p style={{ fontSize: '13px', color: '#E0E0E0', marginBottom: '15px' }}>
-                            For platform assistance, account questions, or general information.
+                        <p style={{ ...BODY_TEXT_STYLE, fontSize: '14px', marginBottom: '15px' }}>
+                          For platform assistance, account questions, or general information.
                         </p>
                         <a href="mailto:contact@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
                             contact@nftnnm.com
                         </a>
                     </div>
 
-                    <div className="p-4 rounded-3" style={{ border: '1px solid #30363d', backgroundColor: '#161b22', color: '#E0E0E0' }}>
+                    <div className="p-4 rounded-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, color: TEXT_PRIMARY }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
                             <div className="rounded-circle d-flex align-items-center justify-content-center" 
                                  style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: '#F0C420' }}>
@@ -86,15 +98,15 @@ export default function ContactPage() {
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">Media & Partnerships</h3>
                         </div>
-                        <p style={{ fontSize: '13px', color: '#E0E0E0', marginBottom: '15px' }}>
-                            For press releases, institutional partnerships, and brand assets.
+                        <p style={{ ...BODY_TEXT_STYLE, fontSize: '14px', marginBottom: '15px' }}>
+                          For press releases, institutional partnerships, and brand assets.
                         </p>
                         <a href="mailto:media@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
                             media@nftnnm.com
                         </a>
                     </div>
 
-                    <div className="p-4 rounded-3" style={{ border: '1px solid #30363d', backgroundColor: '#161b22', color: '#E0E0E0' }}>
+                    <div className="p-4 rounded-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, color: TEXT_PRIMARY }}>
                         <div className="d-flex align-items-center gap-3 mb-3">
                             <div className="rounded-circle d-flex align-items-center justify-content-center" 
                                  style={{ width: '40px', height: '40px', backgroundColor: 'rgba(240, 196, 32, 0.1)', color: '#F0C420' }}>
@@ -102,8 +114,8 @@ export default function ContactPage() {
                             </div>
                             <h3 className="h6 text-white m-0 fw-bold">Legal & Compliance</h3>
                         </div>
-                        <p style={{ fontSize: '13px', color: '#E0E0E0', marginBottom: '15px' }}>
-                            For verified institutional inquiries only: Regulatory, IP rights, and compliance matters.
+                        <p style={{ ...BODY_TEXT_STYLE, fontSize: '14px', marginBottom: '15px' }}>
+                          For verified institutional inquiries only: Regulatory, IP rights, and compliance matters.
                         </p>
                         <a href="mailto:legal@nnm.com" className="text-decoration-none fw-bold" style={{ color: '#F0C420', fontSize: '14px' }}>
                             legal@nftnnm.com
@@ -116,19 +128,19 @@ export default function ContactPage() {
             <div className="col-12 col-lg-6">
                 <div className="p-4 p-md-5 rounded-4" 
                      style={{ 
-                         backgroundColor: '#1E1E1E', 
-                         border: '1px solid #30363d',
+                         backgroundColor: BACKGROUND_DARK, 
+                         border: `1px solid ${BORDER_COLOR}`,
                          boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-                         color: '#E0E0E0'
+                         color: TEXT_PRIMARY
                      }}>
                     
-                    <h2 className="h4 fw-bold mb-4" style={{ color: '#E0E0E0' }}>Send a message</h2>
-                    
-                    <form onSubmit={handleSubmit}>
-                        <div className="row g-3">
-                            <div className="col-12 col-md-6">
-                                <label style={labelStyle}>Name / Organization</label>
-                                <input 
+                    <h2 className="h4 fw-bold mb-4" style={{ color: TEXT_PRIMARY }}>Send a message</h2>
+                                        style={{ 
+                                            background: GOLD_GRADIENT, 
+                                            color: '#000', 
+                                            border: 'none',
+                                            borderRadius: '6px'
+                                        }}>
                                     type="text" 
                                     name="name"
                                     value={formData.name}
@@ -136,7 +148,7 @@ export default function ContactPage() {
                                     style={inputStyle} 
                                     placeholder="Enter your name" 
                                     className="contact-input"
-                                />
+                        <p style={{ ...BODY_TEXT_STYLE, fontSize: '12px', margin: 0, color: TEXT_MUTED }}>
                             </div>
 
                             <div className="col-12 col-md-6">
