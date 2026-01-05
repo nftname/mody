@@ -44,6 +44,7 @@ export default function NGXAssetsWidget({
   const titleColor = isLight ? '#0A192F' : '#FCD535'; 
   const NEON_GREEN = '#0ecb81';
   const TICKER_RED = '#f6465d';
+  const SUB_TEXT = '#B0B0B0';
 
   useEffect(() => {
     setMounted(true);
@@ -60,7 +61,6 @@ export default function NGXAssetsWidget({
     fetchData();
     const interval = setInterval(fetchData, 60000); 
     
-    // Ticker animation for mobile/desktop stats switching
     const tickerInterval = setInterval(() => {
         setTickerIndex((prev) => (prev === 0 ? 1 : 0));
     }, 4000);
@@ -90,46 +90,52 @@ export default function NGXAssetsWidget({
     <div className="ngx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
     <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
       
-      <div className="glass-container d-flex flex-column justify-content-between rounded-3 position-relative overflow-hidden"
+      <div className="glass-container d-flex align-items-center justify-content-between rounded-3 position-relative overflow-hidden"
            style={{ ...glassStyle }}>
         
-        {/* Header Row */}
-        <div className="d-flex align-items-center justify-content-between w-100" style={{ zIndex: 2, height: '20px' }}>
-            <div className="d-flex align-items-center gap-2 overflow-hidden" style={{ width: '100%' }}>
-                <span className="fw-bold text-nowrap title-text flex-shrink-0" style={{ color: titleColor }}>{title}</span>
-                
-                {/* Desktop Info (Side by Side) */}
-                <div className="desktop-stats d-flex align-items-center gap-2 ms-2">
-                    <span style={{ fontSize: '7px', color: '#B0B0B0' }}>▲ {gainer.name} <span style={{ color: NEON_GREEN }}>+{gainer.change}%</span></span>
-                    <span style={{ fontSize: '7px', color: '#B0B0B0' }}>▼ {loser.name} <span style={{ color: TICKER_RED }}>{loser.change}%</span></span>
-                </div>
+        {/* LEFT SIDE: Text Info */}
+        <div className="d-flex flex-column justify-content-center h-100" style={{ width: '60%', paddingLeft: '2px' }}>
+            
+            {/* Title Row + LIVE Badge */}
+            <div className="d-flex align-items-center gap-2 mb-1">
+                <span className="fw-bold text-nowrap title-text" style={{ color: titleColor }}>{title}</span>
+                <span className="badge pulse-neon" 
+                      style={{ 
+                          fontSize:'6px', 
+                          padding:'2px 3px', 
+                          color: NEON_GREEN, 
+                          border: 'none', 
+                          backgroundColor: 'rgba(14, 203, 129, 0.1)' 
+                      }}>LIVE</span>
+            </div>
 
-                {/* Mobile Ticker (Fade In/Out) */}
-                <div className="mobile-stats ms-1">
-                    <div className={`ticker-item ${tickerIndex === 0 ? 'active' : ''}`}>
-                        <span style={{ fontSize: '6px', color: '#B0B0B0' }}>TOP: {gainer.name} <span style={{ color: NEON_GREEN }}>+{gainer.change}%</span></span>
-                    </div>
-                    <div className={`ticker-item ${tickerIndex === 1 ? 'active' : ''}`}>
-                        <span style={{ fontSize: '6px', color: '#B0B0B0' }}>LOW: {loser.name} <span style={{ color: TICKER_RED }}>{loser.change}%</span></span>
-                    </div>
+            {/* Desktop: Stacked Stats */}
+            <div className="desktop-stats d-flex flex-column gap-1">
+                <div className="d-flex align-items-center gap-1 stat-row">
+                    <span className="stat-label">{gainer.name}</span>
+                    <span style={{ color: NEON_GREEN, fontSize: '9px', fontWeight: 'bold' }}>+{gainer.change}% ▲</span>
+                </div>
+                <div className="d-flex align-items-center gap-1 stat-row">
+                    <span className="stat-label">{loser.name}</span>
+                    <span style={{ color: TICKER_RED, fontSize: '9px', fontWeight: 'bold' }}>{loser.change}% ▼</span>
                 </div>
             </div>
 
-            {/* LIVE Badge (Desktop Only) */}
-            <span className="badge pulse-neon desktop-only-live" 
-                    style={{ 
-                        fontSize:'6px', 
-                        padding:'2px 4px', 
-                        color: NEON_GREEN, 
-                        border: 'none', 
-                        backgroundColor: 'rgba(14, 203, 129, 0.1)' 
-                    }}>LIVE</span>
+            {/* Mobile: Ticker Stats */}
+            <div className="mobile-stats">
+                <div className={`ticker-item ${tickerIndex === 0 ? 'active' : ''}`}>
+                    <span className="stat-label">{gainer.name}</span> <span style={{ color: NEON_GREEN, fontSize: '8px' }}>+{gainer.change}% ▲</span>
+                </div>
+                <div className={`ticker-item ${tickerIndex === 1 ? 'active' : ''}`}>
+                    <span className="stat-label">{loser.name}</span> <span style={{ color: TICKER_RED, fontSize: '8px' }}>{loser.change}% ▼</span>
+                </div>
+            </div>
         </div>
 
-        {/* Content: Financial Bars */}
-        <div className="content-col d-flex align-items-end justify-content-between w-100 position-relative" style={{ height: '100%', paddingBottom: '2px', paddingTop: '4px' }}>
+        {/* RIGHT SIDE: Bars */}
+        <div className="d-flex align-items-end justify-content-between h-100 position-relative" style={{ width: '35%', paddingBottom: '4px' }}>
             
-            {/* Phantom Grid Lines */}
+            {/* Phantom Grid */}
             <div className="position-absolute w-100 h-100 d-flex flex-column justify-content-between" style={{ zIndex: 0, opacity: 0.1, pointerEvents: 'none' }}>
                 <div style={{ borderBottom: `1px dashed ${isLight ? '#000' : '#fff'}`, height: '25%' }}></div>
                 <div style={{ borderBottom: `1px dashed ${isLight ? '#000' : '#fff'}`, height: '25%' }}></div>
@@ -137,32 +143,28 @@ export default function NGXAssetsWidget({
             </div>
 
             {data.sectors.map((sector, index) => (
-                <div key={index} className="d-flex flex-column align-items-center justify-content-end bar-wrapper" 
-                     style={{ width: '14%', height: '100%', zIndex: 1 }}
+                <div key={index} className="d-flex flex-column align-items-center justify-content-end" 
+                     style={{ width: '12%', height: '100%', zIndex: 1 }}
                      onMouseEnter={() => setHoveredInfo(`${sector.label}: ${sector.volume}`)} 
                      onMouseLeave={() => setHoveredInfo(null)}>
                     
                     {/* The Bar */}
-                    <div className="bar-visual" style={{ 
+                    <div style={{ 
                         width: '100%', 
                         height: `${Math.max(5, sector.value)}%`, 
-                        backgroundColor: sector.color,
+                        background: 'linear-gradient(180deg, #FCD535 0%, #0ecb81 100%)', // Yellow-Green Gradient
                         borderRadius: '1px 1px 0 0',
                         opacity: sector.label === 'IMP' ? 1 : 0.85, 
-                        boxShadow: sector.label === 'IMP' ? `0 0 6px ${sector.color}40` : 'none',
                         transition: 'height 1s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}></div>
                     
                     {/* Label */}
-                    <span className="bar-label mt-1 fw-bold text-uppercase" style={{ 
-                        fontSize: '6px', 
+                    <span className="mt-1 fw-bold text-uppercase bar-label" style={{ 
                         color: isLight ? '#0A192F' : '#8899A6',
                         opacity: 0.9,
-                        letterSpacing: '0.2px'
                     }}>{sector.label}</span>
                 </div>
             ))}
-
         </div>
 
       </div>
@@ -192,8 +194,14 @@ export default function NGXAssetsWidget({
         }
 
         .title-text {
-            font-size: 9px;
+            font-size: 11px; /* Increased 10% from 9px */
             letter-spacing: 0.5px;
+        }
+
+        .stat-label {
+            font-size: 9px; /* Increased 10% from 7px */
+            color: ${SUB_TEXT};
+            text-transform: uppercase;
         }
 
         .desktop-stats {
@@ -203,8 +211,9 @@ export default function NGXAssetsWidget({
             display: none;
         }
         
-        .desktop-only-live {
-            display: inline-block;
+        .bar-label {
+            font-size: 6px;
+            letter-spacing: 0.2px;
         }
 
         /* --- MOBILE STYLES --- */
@@ -223,7 +232,7 @@ export default function NGXAssetsWidget({
             }
 
             .title-text {
-                font-size: 8px !important;
+                font-size: 9px !important; /* Increased for mobile too */
             }
 
             .bar-label {
@@ -236,11 +245,9 @@ export default function NGXAssetsWidget({
             .mobile-stats {
                 display: block !important;
                 position: relative;
-                height: 10px;
-                width: 60px;
-            }
-            .desktop-only-live {
-                display: none !important;
+                height: 12px;
+                width: 100%;
+                margin-top: 2px;
             }
         }
 
@@ -251,7 +258,6 @@ export default function NGXAssetsWidget({
             }
         }
 
-        /* Ticker Animation */
         .ticker-item {
             position: absolute;
             top: 0;
