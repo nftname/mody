@@ -152,7 +152,8 @@ export default function NGXWidget({
                 </div>
             </div>
             
-            <span className="badge pulse-neon" 
+            {/* التعديل هنا: إضافة كلاس لإخفاء العنصر في الجوال */}
+            <span className="badge pulse-neon desktop-only-live" 
                     style={{ 
                         fontSize:'6px', 
                         padding:'2px 4px', 
@@ -234,6 +235,11 @@ export default function NGXWidget({
         .mobile-percentage {
             display: none !important;
         }
+        
+        /* كلاس جديد لإظهار LIVE في الكمبيوتر فقط */
+        .desktop-only-live {
+            display: inline-block;
+        }
 
         @media (max-width: 768px) {
             .ngx-widget-container {
@@ -273,6 +279,11 @@ export default function NGXWidget({
             }
             .mobile-percentage {
                 display: flex !important;
+            }
+            
+            /* إخفاء LIVE في الجوال */
+            .desktop-only-live {
+                display: none !important;
             }
 
             .gauge-block {
