@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import NGXWidget from '@/components/NGXWidget';
 import NGXCapWidget from '@/components/NGXCapWidget';
+import NGXAssetsWidget from '@/components/NGXAssetsWidget';
 import MarketTicker from '@/components/MarketTicker';
 import Link from 'next/link';
 
@@ -128,14 +129,9 @@ export default function NGXPage() {
       
       <MarketTicker />
 
-      {/* التعديل الجوهري هنا:
-          1. تقليل padding الجانبي لأقصى درجة (تقريباً 2px فقط) لفتح المساحة (padding: 2px 2px)
-          2. تقليل padding العمودي أيضاً
-      */}
       <div className="shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '2px 2px' }}>
-        <div className="container-fluid p-0"> {/* p-0 لإزالة أي هوامش افتراضية من البوتستراب */}
+        <div className="container-fluid p-0"> 
             
-            {/* Widgets Row */}
             <div className="d-flex flex-wrap align-items-center mb-2 widget-container-mobile">
                 
                 {/* 1. NGX Sentiment Widget */}
@@ -147,9 +143,13 @@ export default function NGXPage() {
                 <div className="widget-wrapper">
                      <NGXCapWidget theme="dark" />
                 </div>
+
+                {/* 3. NGX Assets Widget */}
+                <div className="widget-wrapper">
+                     <NGXAssetsWidget theme="dark" />
+                </div>
             </div>
 
-            {/* Title Row - نترك بعض الهوامش هنا لجمالية العنوان */}
             <div className="row align-items-center px-2">
                 <div className="col-lg-12">
                     <h1 className="fw-bold mb-2" style={{ fontSize: '1.65rem', letterSpacing: '-0.5px', color: TEXT_PRIMARY }}>
@@ -163,7 +163,6 @@ export default function NGXPage() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="container-fluid py-4 px-2">
         
         <div className="row g-4">
@@ -360,14 +359,12 @@ export default function NGXPage() {
 
                 @media (max-width: 768px) {
                    .widget-container-mobile {
-                        /* تم التعديل: إزالة المسافة البينية تماماً (gap: 0px)
-                        */
-                        gap: 0px !important; 
-                        justify-content: flex-start !important; /* تأكيد المحاذاة لليسار */
+                        gap: 0px !important; /* Zero gap for seamless look */
+                        justify-content: flex-start !important; 
                    }
                    .widget-wrapper {
                         width: auto !important; 
-                        min-width: 125px; 
+                        min-width: 112px; /* Ensure they fit side-by-side */
                    }
                 }
 
