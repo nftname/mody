@@ -144,7 +144,7 @@ export default function NGXVolumeWidget({
                         height: `${Math.max(10, sector.value)}%`, 
                         background: 'linear-gradient(180deg, #FCD535 0%, #0ecb81 100%)', 
                         borderRadius: '1px 1px 0 0',
-                        opacity: sector.label === 'IMP' ? 1 : 0.85, 
+                        opacity: sector.label === 'SOV' ? 1 : 0.85, 
                         transition: 'height 1s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}></div>
                     
