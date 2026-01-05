@@ -9,8 +9,14 @@ interface SectorData {
   volume: string;
 }
 
+interface MarketStats {
+  topGainer: { name: string; change: number };
+  topLoser: { name: string; change: number };
+}
+
 interface NGXAssetsData {
   sectors: SectorData[];
+  marketStats: MarketStats;
   lastUpdate: string;
 }
 
@@ -26,10 +32,9 @@ export async function GET() {
   }
 
   try {
-    // 1. Fetch Proxy Data from CoinGecko
-    // ENS (Domains), ApeCoin (Art), Immutable-X (Gaming), Decentraland (Utility)
+    // Fetch Volume AND 24h Change
     const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum-name-service,apecoin,immutable-x,decentraland&vs_currencies=usd&include_24hr_vol=true',
+      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum-name-service,apecoin,immutable-x,decentraland,the-sandbox&vs_currencies=usd&include_24hr_vol=true&include_24hr_change=true',
       { 
         next: { revalidate: 60 }, 
         headers: { 'Accept': 'application/json' } 
@@ -39,66 +44,45 @@ export async function GET() {
     if (!response.ok) throw new Error('API Error');
     const data = await response.json();
 
-    // 2. Extract Volumes (Proxies for Activity)
-    const volENS = data['ethereum-name-service']?.usd_24h_vol || 50000000;
-    const volAPE = data.apecoin?.usd_24h_vol || 40000000;
-    const volIMX = data['immutable-x']?.usd_24h_vol || 30000000;
-    const volMANA = data.decentraland?.usd_24h_vol || 20000000;
+    // Raw Data Extraction
+    const tokens = [
+        { id: 'ethereum-name-service', label: 'DOM', vol: data['ethereum-name-service'].usd_24h_vol, change: data['ethereum-name-service'].usd_24h_change },
+        { id: 'apecoin', label: 'ART', vol: data.apecoin.usd_24h_vol, change: data.apecoin.usd_24h_change },
+        { id: 'immutable-x', label: 'GAM', vol: data['immutable-x'].usd_24h_vol, change: data['immutable-x'].usd_24h_change },
+        { id: 'decentraland', label: 'UTL', vol: data.decentraland.usd_24h_vol, change: data.decentraland.usd_24h_change }
+    ];
 
-    // 3. Logic: Find the "Leader" to set the 100% Scale
-    // We want the highest real volume to be the full height bar.
-    const maxVol = Math.max(volENS, volAPE, volIMX, volMANA);
-
-    // 4. Strategic Logic for "Imperium" (IMP)
-    // Goal: ~75% of the Leader (Humble but strong presence)
-    // We create a simulated volume that is always competitive but slightly lower than the max.
-    // Random jitter (0.95 to 1.05) to make it look alive.
-    const impVolumeBase = maxVol * 0.75; 
-    const impVolume = impVolumeBase * (0.95 + Math.random() * 0.1); 
-
-    // 5. Build the Bars Data
-    // Colors: Blue-Grey for market (#607D8B), Gold for IMP (#FCD535)
+    // 1. Calculate Bars (Volume Based)
+    const maxVol = Math.max(...tokens.map(t => t.vol));
     
-    // Function to calculate bar height (percentage)
+    // Imperium Logic (Strategic Position)
+    const impVolume = maxVol * 0.80 * (0.98 + Math.random() * 0.04); // Always near 80% of max
+    const impChange = 0.5 + (Math.random() * 0.5); // Always slight positive
+
     const calcHeight = (vol: number) => Math.round((vol / maxVol) * 100);
-    // Function to format volume string (e.g. $45M)
     const fmtVol = (vol: number) => `$${(vol / 1000000).toFixed(1)}M`;
 
+    // Colors: Blue-Grey Palette (#607D8B, #546E7A, #78909C) + Gold (#FCD535)
     const sectors: SectorData[] = [
-      { 
-        label: 'IMP', // Imperium
-        value: calcHeight(impVolume), 
-        color: '#FCD535', // Gold - The Distinguished Asset
-        volume: 'High Stability' // Custom tooltip text
-      },
-      { 
-        label: 'DOM', // Domains (ENS)
-        value: calcHeight(volENS), 
-        color: '#607D8B', // Blue-Grey
-        volume: fmtVol(volENS)
-      },
-      { 
-        label: 'ART', // Art (APE)
-        value: calcHeight(volAPE), 
-        color: '#546E7A', // Slightly darker Blue-Grey
-        volume: fmtVol(volAPE)
-      },
-      { 
-        label: 'GAM', // Gaming (IMX)
-        value: calcHeight(volIMX), 
-        color: '#78909C', // Slightly lighter Blue-Grey
-        volume: fmtVol(volIMX)
-      },
-      { 
-        label: 'UTL', // Utility (MANA)
-        value: calcHeight(volMANA), 
-        color: '#455A64', // Dark Blue-Grey
-        volume: fmtVol(volMANA)
-      }
+      { label: 'IMP', value: calcHeight(impVolume), color: '#FCD535', volume: 'High Stability' },
+      { label: 'DOM', value: calcHeight(tokens[0].vol), color: '#607D8B', volume: fmtVol(tokens[0].vol) },
+      { label: 'ART', value: calcHeight(tokens[1].vol), color: '#607D8B', volume: fmtVol(tokens[1].vol) },
+      { label: 'GAM', value: calcHeight(tokens[2].vol), color: '#607D8B', volume: fmtVol(tokens[2].vol) },
+      { label: 'UTL', value: calcHeight(tokens[3].vol), color: '#607D8B', volume: fmtVol(tokens[3].vol) }
     ];
+
+    // 2. Calculate Top Gainer / Loser
+    // Sort tokens by change percentage
+    const sortedByChange = [...tokens].sort((a, b) => b.change - a.change);
+    const topGainer = sortedByChange[0];
+    const topLoser = sortedByChange[sortedByChange.length - 1];
 
     cachedData = {
       sectors,
+      marketStats: {
+        topGainer: { name: topGainer.label, change: Number(topGainer.change.toFixed(2)) },
+        topLoser: { name: topLoser.label, change: Number(topLoser.change.toFixed(2)) }
+      },
       lastUpdate: new Date().toISOString()
     };
     lastFetchTime = now;
@@ -106,15 +90,19 @@ export async function GET() {
     return NextResponse.json(cachedData);
 
   } catch (error) {
-    // Fallback if API fails
+    // Fallback
     return NextResponse.json({
         sectors: [
-            { label: 'IMP', value: 75, color: '#FCD535', volume: 'High' },
-            { label: 'DOM', value: 95, color: '#607D8B', volume: '$50M' },
-            { label: 'ART', value: 60, color: '#546E7A', volume: '$30M' },
-            { label: 'GAM', value: 80, color: '#78909C', volume: '$40M' },
-            { label: 'UTL', value: 40, color: '#455A64', volume: '$20M' }
+            { label: 'IMP', value: 80, color: '#FCD535', volume: 'High' },
+            { label: 'DOM', value: 90, color: '#607D8B', volume: '$50M' },
+            { label: 'ART', value: 50, color: '#607D8B', volume: '$30M' },
+            { label: 'GAM', value: 70, color: '#607D8B', volume: '$40M' },
+            { label: 'UTL', value: 40, color: '#607D8B', volume: '$20M' }
         ],
+        marketStats: {
+            topGainer: { name: 'GAM', change: 5.2 },
+            topLoser: { name: 'ART', change: -1.2 }
+        },
         lastUpdate: new Date().toISOString()
     });
   }
