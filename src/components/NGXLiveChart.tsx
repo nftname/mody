@@ -2,13 +2,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries } from 'lightweight-charts';
 
+// تم تعديل الألوان لتكون مريحة للعين (Warm Colors)
 const SECTORS = [
   { key: 'All NFTs Index', color: '#C0D860', startYear: 2017, baseValue: 40 },
-  { key: 'Imperium Name Assets', color: '#FCD535', startYear: 2025, baseValue: 100 },
+  { key: 'Imperium Name Assets', color: '#FFB300', startYear: 2025, baseValue: 100 }, // كهرماني مريح
   { key: 'Art NFTs', color: '#7B61FF', startYear: 2017, baseValue: 25 },
   { key: 'Gaming NFTs', color: '#0ECB81', startYear: 2019, baseValue: 15 },
   { key: 'Utility NFTs', color: '#00D8D6', startYear: 2020, baseValue: 10 },
-  { key: 'Standard Domains', color: '#38BDF8', startYear: 2017, baseValue: 30 }
+  { key: 'Standard Domains', color: '#38BDF8', startYear: 2017, baseValue: 30 } // أزرق سماوي
 ];
 
 const TIMEFRAMES = [
@@ -51,7 +52,6 @@ export default function NGXLiveChart() {
     if (startDate > now) startDate = new Date(now.getFullYear(), 0, 1); 
 
     let currentValue = sectorInfo.baseValue;
-    
     const diffTime = Math.abs(now.getTime() - startDate.getTime());
     
     let totalPoints = 500;
@@ -63,22 +63,16 @@ export default function NGXLiveChart() {
     
     for (let i = 0; i <= totalPoints; i++) {
         let change = (Math.random() - 0.45);
-        
-        if (isImperium) {
-            change = (Math.random() - 0.48) * 0.5; 
-        } else {
-            change = change * 2; 
-        }
+        if (isImperium) change = (Math.random() - 0.48) * 0.5; 
+        else change = change * 2; 
 
         currentValue += change;
-        
         if (isImperium && currentValue < 98) currentValue = 98; 
         if (!isImperium && currentValue < 5) currentValue = 5;
         
         data.push({ time: Math.floor(currentTime / 1000) as any, value: currentValue });
         currentTime += timeStep;
     }
-
     return data;
   };
 
@@ -90,14 +84,14 @@ export default function NGXLiveChart() {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#B0B0B0',
         fontFamily: '"Inter", sans-serif',
-        fontSize: 11, 
+        fontSize: 11,
       },
       grid: {
         vertLines: { visible: false },
         horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 400,
+      height: 400, // الارتفاع الافتراضي
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true,
@@ -105,29 +99,29 @@ export default function NGXLiveChart() {
         secondsVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
-        rightOffset: 5,
+        rightOffset: 10,
         minBarSpacing: 0.5,
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
-        scaleMargins: { top: 0.2, bottom: 0.1 },
+        scaleMargins: { top: 0.2, bottom: 0.2 }, // هوامش لضمان عدم قص الرسم
         visible: true,
       },
       crosshair: {
-        mode: CrosshairMode.Normal,
+        mode: CrosshairMode.Normal, // وضع المغناطيس لسهولة اللمس
         vertLine: {
             color: 'rgba(255, 255, 255, 0.3)',
             width: 1,
             style: 3,
             labelBackgroundColor: '#242424',
-            labelVisible: true,
+            labelVisible: true, // إجبار ظهور تاريخ المؤشر
         },
         horzLine: {
             color: 'rgba(255, 255, 255, 0.3)',
             width: 1,
             style: 3,
             labelBackgroundColor: '#242424',
-            labelVisible: true,
+            labelVisible: true, // إجبار ظهور السعر
         },
       },
       localization: { locale: 'en-US' },
@@ -149,9 +143,18 @@ export default function NGXLiveChart() {
 
     const handleResize = () => {
       if (chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+        // في الجوال نزيد الارتفاع لضمان ظهور التواريخ
+        const isMobile = window.innerWidth <= 768;
+        const newHeight = isMobile ? 350 : 400; 
+        chart.applyOptions({ 
+            width: chartContainerRef.current.clientWidth,
+            height: newHeight 
+        });
       }
     };
+    
+    // استدعاء أولي لضبط الحجم
+    handleResize();
     window.addEventListener('resize', handleResize);
 
     setChartInstance(chart);
@@ -186,7 +189,8 @@ export default function NGXLiveChart() {
       
       <div className="filters-container">
         
-        <div className="sector-filter-wrapper position-relative">
+        {/* Sector Filter */}
+        <div className="filter-wrapper position-relative">
            <select 
                 value={activeSector} 
                 onChange={(e) => setActiveSector(e.target.value)}
@@ -198,7 +202,8 @@ export default function NGXLiveChart() {
            <span className="dropdown-arrow">▼</span>
         </div>
 
-        <div className="time-filter-wrapper position-relative">
+        {/* Timeframe Filter */}
+        <div className="filter-wrapper position-relative">
             {/* Mobile Dropdown */}
             <div className="d-block d-md-none">
                 <select 
@@ -244,12 +249,15 @@ export default function NGXLiveChart() {
             padding: 15px;
             width: 100%;
             position: relative;
-            overflow: hidden;
+            overflow: hidden; /* مهم: يمنع تداخل العناصر */
         }
 
         .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
 
-        .chart-canvas-wrapper { width: 100%; height: 400px; }
+        .chart-canvas-wrapper { 
+            width: 100%; 
+            height: 400px;
+        }
 
         .filters-container {
             display: flex;
@@ -259,7 +267,7 @@ export default function NGXLiveChart() {
             padding: 0 5px;
         }
 
-        .sector-filter-wrapper, .time-filter-wrapper {
+        .filter-wrapper {
             position: relative;
             display: flex;
             align-items: center;
@@ -285,7 +293,7 @@ export default function NGXLiveChart() {
             right: 10px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 8px;
+            font-size: 10px;
             color: #aaa;
             pointer-events: none;
         }
@@ -305,7 +313,9 @@ export default function NGXLiveChart() {
         .btn-timeframe.active { color: #fff; background: rgba(255, 255, 255, 0.1); }
 
         @media (max-width: 768px) {
-            .chart-canvas-wrapper { height: 300px; }
+            /* زيادة الارتفاع في الجوال لإظهار التواريخ */
+            .chart-canvas-wrapper { height: 350px !important; }
+            
             .filters-container { 
                 flex-direction: row; 
                 justify-content: space-between;
