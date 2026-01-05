@@ -2,14 +2,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries } from 'lightweight-charts';
 
-// تم تعديل الألوان لتكون مريحة للعين (Warm Colors)
 const SECTORS = [
   { key: 'All NFTs Index', color: '#C0D860', startYear: 2017, baseValue: 40 },
-  { key: 'Imperium Name Assets', color: '#FFB300', startYear: 2025, baseValue: 100 }, // كهرماني مريح
+  { key: 'Sovereign Name Assets', color: '#FFB300', startYear: 2025, baseValue: 100 },
   { key: 'Art NFTs', color: '#7B61FF', startYear: 2017, baseValue: 25 },
   { key: 'Gaming NFTs', color: '#0ECB81', startYear: 2019, baseValue: 15 },
   { key: 'Utility NFTs', color: '#00D8D6', startYear: 2020, baseValue: 10 },
-  { key: 'Standard Domains', color: '#38BDF8', startYear: 2017, baseValue: 30 } // أزرق سماوي
+  { key: 'Standard Domains', color: '#38BDF8', startYear: 2017, baseValue: 30 }
 ];
 
 const TIMEFRAMES = [
@@ -22,6 +21,23 @@ const TIMEFRAMES = [
     { label: 'ALL', value: 'ALL' }
 ];
 
+function useClickOutside(ref: any, handler: any) {
+  useEffect(() => {
+    const listener = (event: any) => {
+      if (!ref.current || ref.current.contains(event.target)) {
+        return;
+      }
+      handler(event);
+    };
+    document.addEventListener("mousedown", listener);
+    document.addEventListener("touchstart", listener);
+    return () => {
+      document.removeEventListener("mousedown", listener);
+      document.removeEventListener("touchstart", listener);
+    };
+  }, [ref, handler]);
+}
+
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [activeTimeframe, setActiveTimeframe] = useState('ALL');
@@ -29,14 +45,23 @@ export default function NGXLiveChart() {
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<any>(null);
 
+  const [isSectorOpen, setIsSectorOpen] = useState(false);
+  const [isTimeOpen, setIsTimeOpen] = useState(false);
+  
+  const sectorRef = useRef<HTMLDivElement>(null);
+  const timeRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(sectorRef, () => setIsSectorOpen(false));
+  useClickOutside(timeRef, () => setIsTimeOpen(false));
+
   const generateData = (timeframe: string, sectorKey: string) => {
     const data = [];
     const now = new Date(); 
     let startDate = new Date();
     const sectorInfo = SECTORS.find(s => s.key === sectorKey) || SECTORS[0];
 
-    const isImperium = sectorKey === 'Imperium Name Assets';
-    const effectiveStartYear = isImperium ? 2025 : sectorInfo.startYear;
+    const isSovereign = sectorKey === 'Sovereign Name Assets';
+    const effectiveStartYear = isSovereign ? 2025 : sectorInfo.startYear;
 
     switch (timeframe) {
         case '1H': startDate.setHours(now.getHours() - 1); break;
@@ -56,19 +81,19 @@ export default function NGXLiveChart() {
     
     let totalPoints = 500;
     if (timeframe === '1H') totalPoints = 60;
-    else if (timeframe === 'ALL') totalPoints = isImperium ? 365 : 2000;
+    else if (timeframe === 'ALL') totalPoints = isSovereign ? 365 : 2000;
 
     const timeStep = diffTime / totalPoints;
     let currentTime = startDate.getTime();
     
     for (let i = 0; i <= totalPoints; i++) {
         let change = (Math.random() - 0.45);
-        if (isImperium) change = (Math.random() - 0.48) * 0.5; 
+        if (isSovereign) change = (Math.random() - 0.48) * 0.5; 
         else change = change * 2; 
 
         currentValue += change;
-        if (isImperium && currentValue < 98) currentValue = 98; 
-        if (!isImperium && currentValue < 5) currentValue = 5;
+        if (isSovereign && currentValue < 98) currentValue = 98; 
+        if (!isSovereign && currentValue < 5) currentValue = 5;
         
         data.push({ time: Math.floor(currentTime / 1000) as any, value: currentValue });
         currentTime += timeStep;
@@ -91,7 +116,7 @@ export default function NGXLiveChart() {
         horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 400, // الارتفاع الافتراضي
+      height: 400,
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true,
@@ -104,24 +129,24 @@ export default function NGXLiveChart() {
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
-        scaleMargins: { top: 0.2, bottom: 0.2 }, // هوامش لضمان عدم قص الرسم
+        scaleMargins: { top: 0.2, bottom: 0.2 },
         visible: true,
       },
       crosshair: {
-        mode: CrosshairMode.Normal, // وضع المغناطيس لسهولة اللمس
+        mode: CrosshairMode.Normal,
         vertLine: {
             color: 'rgba(255, 255, 255, 0.3)',
             width: 1,
             style: 3,
             labelBackgroundColor: '#242424',
-            labelVisible: true, // إجبار ظهور تاريخ المؤشر
+            labelVisible: true,
         },
         horzLine: {
             color: 'rgba(255, 255, 255, 0.3)',
             width: 1,
             style: 3,
             labelBackgroundColor: '#242424',
-            labelVisible: true, // إجبار ظهور السعر
+            labelVisible: true,
         },
       },
       localization: { locale: 'en-US' },
@@ -143,7 +168,6 @@ export default function NGXLiveChart() {
 
     const handleResize = () => {
       if (chartContainerRef.current) {
-        // في الجوال نزيد الارتفاع لضمان ظهور التواريخ
         const isMobile = window.innerWidth <= 768;
         const newHeight = isMobile ? 350 : 400; 
         chart.applyOptions({ 
@@ -153,7 +177,6 @@ export default function NGXLiveChart() {
       }
     };
     
-    // استدعاء أولي لضبط الحجم
     handleResize();
     window.addEventListener('resize', handleResize);
 
@@ -183,52 +206,71 @@ export default function NGXLiveChart() {
   }, [activeTimeframe, activeSector]);
 
   const currentColor = SECTORS.find(s => s.key === activeSector)?.color;
+  const currentTimeframeLabel = TIMEFRAMES.find(t => t.value === activeTimeframe)?.label;
 
   return (
     <div className="ngx-chart-glass mb-4">
       
       <div className="filters-container">
         
-        {/* Sector Filter */}
-        <div className="filter-wrapper position-relative">
-           <select 
-                value={activeSector} 
-                onChange={(e) => setActiveSector(e.target.value)}
-                className="custom-dropdown"
-                style={{ color: currentColor, borderColor: 'rgba(255,255,255,0.1)' }}
+        {/* Custom Sector Dropdown */}
+        <div className="filter-wrapper" ref={sectorRef}>
+           <div 
+             className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
+             onClick={() => setIsSectorOpen(!isSectorOpen)}
+             style={{ color: currentColor }}
            >
-                {SECTORS.map(s => <option key={s.key} value={s.key}>{s.key}</option>)}
-           </select>
-           <span className="dropdown-arrow">▼</span>
+              <span>{activeSector}</span>
+              <span className="arrow">▼</span>
+           </div>
+           
+           {isSectorOpen && (
+             <div className="custom-options">
+               {SECTORS.map((s) => (
+                 <div 
+                    key={s.key} 
+                    className={`custom-option ${activeSector === s.key ? 'selected' : ''}`}
+                    onClick={() => {
+                        setActiveSector(s.key);
+                        setIsSectorOpen(false);
+                    }}
+                    style={{ '--hover-color': s.color } as React.CSSProperties}
+                 >
+                    {s.key}
+                 </div>
+               ))}
+             </div>
+           )}
         </div>
 
-        {/* Timeframe Filter */}
-        <div className="filter-wrapper position-relative">
-            {/* Mobile Dropdown */}
-            <div className="d-block d-md-none">
-                <select 
-                    value={activeTimeframe} 
-                    onChange={(e) => setActiveTimeframe(e.target.value)}
-                    className="custom-dropdown text-end pe-4"
-                >
-                    {TIMEFRAMES.map(tf => <option key={tf.value} value={tf.value}>{tf.label}</option>)}
-                </select>
-                <span className="dropdown-arrow" style={{ right: '10px' }}>▼</span>
-            </div>
-
-            {/* Desktop Buttons */}
-            <div className="d-none d-md-flex gap-1 bg-glass-pill p-1">
-                {TIMEFRAMES.map((tf) => (
-                    <button
-                        key={tf.value}
-                        onClick={() => setActiveTimeframe(tf.value)}
-                        className={`btn-timeframe ${activeTimeframe === tf.value ? 'active' : ''}`}
-                    >
-                        {tf.label}
-                    </button>
-                ))}
-            </div>
+        {/* Custom Timeframe Dropdown (Replaces default select/buttons) */}
+        <div className="filter-wrapper" ref={timeRef}>
+            <div 
+             className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
+             onClick={() => setIsTimeOpen(!isTimeOpen)}
+            >
+              <span>{currentTimeframeLabel}</span>
+              <span className="arrow">▼</span>
+           </div>
+           
+           {isTimeOpen && (
+             <div className="custom-options time-options">
+               {TIMEFRAMES.map((tf) => (
+                 <div 
+                    key={tf.value} 
+                    className={`custom-option ${activeTimeframe === tf.value ? 'selected' : ''}`}
+                    onClick={() => {
+                        setActiveTimeframe(tf.value);
+                        setIsTimeOpen(false);
+                    }}
+                 >
+                    {tf.label}
+                 </div>
+               ))}
+             </div>
+           )}
         </div>
+
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper" />
@@ -249,7 +291,7 @@ export default function NGXLiveChart() {
             padding: 15px;
             width: 100%;
             position: relative;
-            overflow: hidden; /* مهم: يمنع تداخل العناصر */
+            min-height: 400px;
         }
 
         .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
@@ -265,55 +307,108 @@ export default function NGXLiveChart() {
             align-items: center;
             margin-bottom: 15px;
             padding: 0 5px;
+            position: relative;
+            z-index: 50;
         }
 
         .filter-wrapper {
             position: relative;
-            display: flex;
-            align-items: center;
+            min-width: 160px;
         }
 
-        .custom-dropdown {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #E0E0E0;
-            padding: 8px 24px 8px 12px;
-            border-radius: 4px;
+        /* Custom Select Styles */
+        .custom-select-trigger {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
             font-size: 14px;
             font-weight: 700;
-            outline: none;
+            color: #E0E0E0;
+            background: rgba(255, 255, 255, 0.03); /* شفاف زجاجي خفيف */
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
             cursor: pointer;
-            appearance: none;
-            min-width: 140px;
-        }
-        .custom-dropdown option { background-color: #1E1E1E; color: #fff; }
-
-        .dropdown-arrow {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 10px;
-            color: #aaa;
-            pointer-events: none;
+            transition: all 0.3s ease;
+            user-select: none;
         }
 
-        .btn-timeframe {
-            background: transparent;
-            border: none;
-            color: #6c757d;
-            font-size: 11px;
+        .custom-select-trigger:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .time-trigger {
+            min-width: 80px;
+            justify-content: space-between;
             font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
+            font-size: 13px;
         }
-        .btn-timeframe:hover { color: #fff; background: rgba(255,255,255,0.05); }
-        .btn-timeframe.active { color: #fff; background: rgba(255, 255, 255, 0.1); }
+
+        .arrow {
+            font-size: 8px;
+            margin-left: 10px;
+            opacity: 0.7;
+        }
+
+        .custom-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            margin-top: 4px;
+            overflow: hidden;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .time-options {
+            min-width: 80px;
+            right: 0;
+            left: auto;
+        }
+
+        .custom-option {
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #B0B0B0;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .custom-option:last-child {
+            border-bottom: none;
+        }
+
+        .custom-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        /* Dynamic hover color for sectors */
+        .custom-option:hover {
+            color: var(--hover-color, #fff);
+        }
+
+        .custom-option.selected {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         @media (max-width: 768px) {
-            /* زيادة الارتفاع في الجوال لإظهار التواريخ */
             .chart-canvas-wrapper { height: 350px !important; }
             
             .filters-container { 
@@ -321,10 +416,13 @@ export default function NGXLiveChart() {
                 justify-content: space-between;
                 gap: 10px; 
             }
-            .custom-dropdown { 
-                font-size: 12px; 
-                padding: 6px 20px 6px 8px; 
-                min-width: 110px; 
+            
+            .filter-wrapper {
+                min-width: 140px;
+            }
+            
+            .time-trigger {
+                min-width: 70px;
             }
         }
       `}</style>

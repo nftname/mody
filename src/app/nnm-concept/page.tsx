@@ -315,7 +315,7 @@ export default function NNMConceptPage() {
                 <div className="info-card-static">
                   <h3 className="text-white h6 mb-3 fw-bold border-bottom border-secondary pb-2" style={{ color: TEXT_OFF_WHITE }}>Asset Class Hierarchy</h3>
                   <ul className="list-unstyled mb-0">
-                    <li className="mb-2"><span style={{ color: GOLD_MEDIUM, fontWeight: 'bold' }}>- Imperium Name Assets — </span> Immutable Priority</li>
+                    <li className="mb-2"><span style={{ color: GOLD_MEDIUM, fontWeight: 'bold' }}>- Sovereign Name Assets — </span> Immutable Priority</li>
                     <li className="mb-2"><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Art NFTs — </span> Collectibles</li>
                     <li className="mb-2"><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Utility NFTs — </span> Access Mechanisms</li>
                     <li className="mb-2"><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Gaming NFTs — </span> Interactive Assets</li>
