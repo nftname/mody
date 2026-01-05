@@ -11,13 +11,11 @@ interface NGXCapData {
 interface WidgetProps {
   theme?: 'dark' | 'light';
   title?: string;
-  subtitle?: string;
 }
 
 export default function NGXCapWidget({ 
   theme = 'dark', 
-  title = 'NGX Cap NFTs', 
-  subtitle = 'Total Valuation' 
+  title = 'NGX Cap NFTs'
 }: WidgetProps) {
   const [data, setData] = useState<NGXCapData | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -50,10 +48,11 @@ export default function NGXCapWidget({
         setData(json);
       } catch (error) {
         console.error('Error fetching NGX Cap data:', error);
+        // Fallback data for preview
         setData({
-            marketCap: '$2.14T',
-            change24h: 1.25,
-            rangeProgress: 65
+            marketCap: '$2.54B',
+            change24h: 4.88,
+            rangeProgress: 75
         });
       }
     };
@@ -80,17 +79,18 @@ export default function NGXCapWidget({
     <div className="ngx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
     <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
       
-      <div className="d-flex flex-column justify-content-between px-3 py-2 rounded-3 position-relative overflow-hidden"
-           style={{
-             ...glassStyle,
-             height: '82px',
-             width: '100%'
-           }}>
+      <div className="glass-container d-flex flex-column justify-content-between rounded-3 position-relative overflow-hidden"
+           style={{ ...glassStyle }}>
         
+        {/* Header Row */}
         <div className="d-flex align-items-center justify-content-between w-100" style={{ zIndex: 2 }}>
-            <div className="d-flex align-items-center gap-2"
-                 onMouseEnter={() => setHoveredInfo('Index Name')} onMouseLeave={() => setHoveredInfo(null)}>
-                <span className="fw-bold text-nowrap" style={{ color: titleColor, fontSize: '9px', letterSpacing: '0.5px' }}>{title}</span>
+            <div className="d-flex align-items-center gap-2">
+                <span className="fw-bold text-nowrap title-text" style={{ color: titleColor }}>{title}</span>
+                
+                {/* Mobile Only: Percentage moved to header (Matching NGXWidget) */}
+                <div className="mobile-percentage fw-bold d-flex align-items-center" style={{ fontSize: '9px', color: changeColor, display: 'none' }}>
+                    {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
+                </div>
             </div>
             
             <span className="badge pulse-neon" 
@@ -103,39 +103,47 @@ export default function NGXCapWidget({
                     }}>LIVE</span>
         </div>
 
-        <div className="d-flex align-items-end gap-2 w-100" style={{ zIndex: 2, marginTop: '-2px' }}>
-            <div className="fw-bold lh-1" style={{ fontSize: '24px', color: mainTextColor, letterSpacing: '-0.5px' }}
-                 onMouseEnter={() => setHoveredInfo(`Total Market Cap: ${data.marketCap}`)} onMouseLeave={() => setHoveredInfo(null)}>
-                {data.marketCap}
+        {/* Content Row */}
+        <div className="content-col d-flex flex-column justify-content-center w-100" style={{ height: '100%' }}>
+            
+            {/* Number Row */}
+            <div className="d-flex align-items-end gap-2 mb-1 desktop-text-shift mobile-text-row">
+                <div className="fw-bold lh-1 main-score" style={{ color: mainTextColor, letterSpacing: '-0.5px' }}
+                     onMouseEnter={() => setHoveredInfo(`Total Market Cap: ${data.marketCap}`)} onMouseLeave={() => setHoveredInfo(null)}>
+                    {data.marketCap}
+                </div>
+                
+                {/* Desktop Only: Percentage stays here */}
+                <div className="desktop-percentage fw-bold d-flex align-items-center mb-1" style={{ fontSize: '9px', color: changeColor }}
+                     onMouseEnter={() => setHoveredInfo(`24h Change: ${data.change24h}%`)} onMouseLeave={() => setHoveredInfo(null)}>
+                    {data.change24h >= 0 ? '+' : ''}{data.change24h}% <span style={{ fontSize: '8px', marginLeft: '2px' }}>{data.change24h >= 0 ? '▲' : '▼'}</span>
+                </div>
             </div>
-            <div className="fw-bold d-flex align-items-center mb-1" style={{ fontSize: '9px', color: changeColor }}
-                 onMouseEnter={() => setHoveredInfo(`24h Change: ${data.change24h}%`)} onMouseLeave={() => setHoveredInfo(null)}>
-                {data.change24h >= 0 ? '+' : ''}{data.change24h}% <span style={{ fontSize: '8px', marginLeft: '2px' }}>{data.change24h >= 0 ? '▲' : '▼'}</span>
-            </div>
-        </div>
 
-        <div className="w-100 d-flex align-items-center" style={{ height: '12px', zIndex: 1 }}
-             onMouseEnter={() => setHoveredInfo('7-Day High/Low Range')} onMouseLeave={() => setHoveredInfo(null)}>
-            <div style={{ 
-                width: '100%', 
-                height: '6px', 
-                borderRadius: '10px', 
-                background: 'linear-gradient(90deg, #f6465d 0%, #fdd835 50%, #0ecb81 100%)',
-                position: 'relative'
-            }}>
-                <div style={{
-                    position: 'absolute',
-                    left: `${data.rangeProgress}%`,
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '10px',
-                    height: '10px',
-                    borderRadius: '50%',
-                    background: '#ffffff',
-                    boxShadow: '0 0 4px rgba(0,0,0,0.5)',
-                    border: '1px solid rgba(0,0,0,0.1)'
-                }} />
+            {/* Progress Bar Row */}
+            <div className="w-100 d-flex align-items-center progress-container" style={{ zIndex: 1 }}
+                 onMouseEnter={() => setHoveredInfo('7-Day High/Low Range')} onMouseLeave={() => setHoveredInfo(null)}>
+                <div className="progress-bar-bg" style={{ 
+                    width: '100%', 
+                    borderRadius: '10px', 
+                    background: 'linear-gradient(90deg, #f6465d 0%, #fdd835 50%, #0ecb81 100%)',
+                    position: 'relative'
+                }}>
+                    <div style={{
+                        position: 'absolute',
+                        left: `${data.rangeProgress}%`,
+                        top: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        background: '#ffffff',
+                        boxShadow: '0 0 4px rgba(0,0,0,0.5)',
+                        border: '1px solid rgba(0,0,0,0.1)'
+                    }} />
+                </div>
             </div>
+
         </div>
 
       </div>
@@ -148,12 +156,92 @@ export default function NGXCapWidget({
     )}
 
     <style jsx>{`
+        /* --- GENERAL & DESKTOP STYLES (Matching NGXWidget Geometry) --- */
         .ngx-widget-container {
             position: relative;
             width: 100%;
-            max-width: 300px;
+            max-width: 310px; /* Same as NGXWidget */
             margin-left: auto;
             margin-right: auto;
+        }
+
+        .glass-container {
+            height: 80px; /* Same height as NGXWidget */
+            padding-left: 20px; /* Same left padding */
+            padding-right: 15px; /* Balanced right padding */
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+
+        .title-text {
+            font-size: 9px;
+            letter-spacing: 0.5px;
+        }
+
+        .main-score {
+            font-size: 27px; /* Increased to match NGXWidget */
+        }
+
+        /* Lift number slightly on Desktop */
+        .desktop-text-shift {
+            transform: translateY(-2px); 
+        }
+
+        .progress-container {
+            height: 12px;
+            margin-top: 4px;
+        }
+        
+        .progress-bar-bg {
+            height: 6px;
+        }
+
+        .desktop-percentage {
+            display: flex;
+        }
+        .mobile-percentage {
+            display: none !important;
+        }
+
+        /* --- MOBILE STYLES (Compact Mode - Matching NGXWidget exactly) --- */
+        @media (max-width: 768px) {
+            .ngx-widget-container {
+                max-width: 125px !important; /* Forces side-by-side with neighbor */
+                margin-left: 0 !important; /* Align left to stack next to neighbor */
+                margin-right: auto !important;
+            }
+
+            .glass-container {
+                padding: 4px !important; /* Minimal padding */
+                height: 70px !important; /* Compact height */
+                padding-right: 4px !important;
+            }
+
+            .main-score {
+                font-size: 18px !important; /* Smaller font for mobile */
+            }
+
+            /* Reset transformations */
+            .desktop-text-shift {
+                transform: none !important;
+                margin-bottom: 2px !important;
+            }
+
+            .desktop-percentage {
+                display: none !important;
+            }
+            .mobile-percentage {
+                display: flex !important;
+            }
+
+            /* Thinner bar for mobile */
+            .progress-container {
+                height: 8px !important;
+                margin-top: 2px !important;
+            }
+            .progress-bar-bg {
+                height: 4px !important;
+            }
         }
 
         @media (min-width: 992px) {
