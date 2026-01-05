@@ -61,7 +61,7 @@ export async function GET() {
     const fmtVol = (vol: number) => `$${(vol / 1000000).toFixed(1)}M`;
 
     const sectors: SectorData[] = [
-      { label: 'IMP', value: calcHeight(impVolume), color: '#FCD535', volume: 'High Stability' },
+      { label: 'SOV', value: calcHeight(impVolume), color: '#FCD535', volume: 'High Stability' },
       { label: 'DOM', value: calcHeight(tokens[0].vol), color: '#607D8B', volume: fmtVol(tokens[0].vol) },
       { label: 'ART', value: calcHeight(tokens[1].vol), color: '#607D8B', volume: fmtVol(tokens[1].vol) },
       { label: 'GAM', value: calcHeight(tokens[2].vol), color: '#607D8B', volume: fmtVol(tokens[2].vol) },
@@ -88,7 +88,7 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json({
         sectors: [
-            { label: 'IMP', value: 80, color: '#FCD535', volume: 'High' },
+            { label: 'SOV', value: 80, color: '#FCD535', volume: 'High' },
             { label: 'DOM', value: 90, color: '#607D8B', volume: '$50M' },
             { label: 'ART', value: 50, color: '#607D8B', volume: '$30M' },
             { label: 'GAM', value: 70, color: '#607D8B', volume: '$40M' },

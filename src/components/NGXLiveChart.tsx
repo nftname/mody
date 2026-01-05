@@ -24,9 +24,7 @@ const TIMEFRAMES = [
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
     const listener = (event: any) => {
-      if (!ref.current || ref.current.contains(event.target)) {
-        return;
-      }
+      if (!ref.current || ref.current.contains(event.target)) return;
       handler(event);
     };
     document.addEventListener("mousedown", listener);
@@ -54,6 +52,7 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
+  // ... (generateData function remains the same) ...
   const generateData = (timeframe: string, sectorKey: string) => {
     const data = [];
     const now = new Date(); 
@@ -124,7 +123,7 @@ export default function NGXLiveChart() {
         secondsVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
-        rightOffset: 10,
+        rightOffset: 10, // هامش يمين صغير
         minBarSpacing: 0.5,
       },
       rightPriceScale: {
@@ -155,7 +154,6 @@ export default function NGXLiveChart() {
     });
 
     const currentSector = SECTORS.find(s => s.key === activeSector) || SECTORS[0];
-
     const newSeries = chart.addSeries(AreaSeries, {
       lineColor: currentSector.color,
       topColor: `${currentSector.color}66`,
@@ -193,13 +191,11 @@ export default function NGXLiveChart() {
     if (seriesInstance && chartInstance) {
         const newData = generateData(activeTimeframe, activeSector);
         const newColor = SECTORS.find(s => s.key === activeSector)?.color || '#C0D860';
-        
         seriesInstance.applyOptions({
             lineColor: newColor,
             topColor: `${newColor}66`,
             bottomColor: `${newColor}00`,
         });
-
         seriesInstance.setData(newData);
         chartInstance.timeScale().fitContent();
     }
@@ -213,14 +209,14 @@ export default function NGXLiveChart() {
       
       <div className="filters-container">
         
-        {/* Custom Sector Dropdown */}
-        <div className="filter-wrapper" ref={sectorRef}>
+        {/* Sector Filter (Expanded width) */}
+        <div className="filter-wrapper flex-grow-1" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
              onClick={() => setIsSectorOpen(!isSectorOpen)}
-             style={{ color: currentColor }}
+             style={{ color: currentColor, width: '100%' }}
            >
-              <span>{activeSector}</span>
+              <span className="text-truncate">{activeSector}</span>
               <span className="arrow">▼</span>
            </div>
            
@@ -243,14 +239,14 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* Custom Timeframe Dropdown (Replaces default select/buttons) */}
-        <div className="filter-wrapper" ref={timeRef}>
+        {/* Timeframe Filter (Compact width) */}
+        <div className="filter-wrapper ms-2" ref={timeRef} style={{ width: 'auto', minWidth: '60px' }}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
              onClick={() => setIsTimeOpen(!isTimeOpen)}
             >
               <span>{currentTimeframeLabel}</span>
-              <span className="arrow">▼</span>
+              <span className="arrow ms-1">▼</span>
            </div>
            
            {isTimeOpen && (
@@ -295,42 +291,35 @@ export default function NGXLiveChart() {
         }
 
         .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
-
-        .chart-canvas-wrapper { 
-            width: 100%; 
-            height: 400px;
-        }
+        .chart-canvas-wrapper { width: 100%; height: 400px; }
 
         .filters-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            padding: 0 5px;
+            padding: 0 2px;
             position: relative;
             z-index: 50;
         }
 
-        .filter-wrapper {
-            position: relative;
-            min-width: 160px;
-        }
+        .filter-wrapper { position: relative; }
 
-        /* Custom Select Styles */
         .custom-select-trigger {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 12px;
-            font-size: 14px;
+            padding: 6px 10px;
+            font-size: 13px;
             font-weight: 700;
             color: #E0E0E0;
-            background: rgba(255, 255, 255, 0.03); /* شفاف زجاجي خفيف */
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
             user-select: none;
+            white-space: nowrap;
         }
 
         .custom-select-trigger:hover {
@@ -339,17 +328,11 @@ export default function NGXLiveChart() {
         }
 
         .time-trigger {
-            min-width: 80px;
-            justify-content: space-between;
+            justify-content: center;
             font-weight: 600;
-            font-size: 13px;
         }
 
-        .arrow {
-            font-size: 8px;
-            margin-left: 10px;
-            opacity: 0.7;
-        }
+        .arrow { font-size: 8px; opacity: 0.7; }
 
         .custom-options {
             position: absolute;
@@ -358,72 +341,39 @@ export default function NGXLiveChart() {
             right: 0;
             background: rgba(30, 30, 30, 0.95);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 6px;
             margin-top: 4px;
             overflow: hidden;
             z-index: 100;
             box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            animation: fadeIn 0.2s ease-out;
         }
 
         .time-options {
-            min-width: 80px;
-            right: 0;
-            left: auto;
+            min-width: 100%; 
+            width: 100%;
         }
 
         .custom-option {
-            padding: 10px 12px;
-            font-size: 13px;
+            padding: 8px 10px;
+            font-size: 12px;
             color: #B0B0B0;
             cursor: pointer;
             transition: background 0.2s, color 0.2s;
             border-bottom: 1px solid rgba(255,255,255,0.02);
+            text-align: left;
         }
+        .time-options .custom-option { text-align: center; }
 
-        .custom-option:last-child {
-            border-bottom: none;
-        }
-
-        .custom-option:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-        }
-
-        /* Dynamic hover color for sectors */
-        .custom-option:hover {
-            color: var(--hover-color, #fff);
-        }
-
-        .custom-option.selected {
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
-            font-weight: 600;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .custom-option:last-child { border-bottom: none; }
+        .custom-option:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+        .custom-option:hover { color: var(--hover-color, #fff); }
+        .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
         @media (max-width: 768px) {
+            .ngx-chart-glass { padding: 10px; } /* تقليل الحواف للجوال */
             .chart-canvas-wrapper { height: 350px !important; }
-            
-            .filters-container { 
-                flex-direction: row; 
-                justify-content: space-between;
-                gap: 10px; 
-            }
-            
-            .filter-wrapper {
-                min-width: 140px;
-            }
-            
-            .time-trigger {
-                min-width: 70px;
-            }
+            .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
         }
       `}</style>
     </div>
