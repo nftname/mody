@@ -81,18 +81,15 @@ export default function NGXAssetsWidget({
     <div className="ngx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
     <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
       
-      <div className="glass-container d-flex align-items-center justify-content-between rounded-3 position-relative overflow-hidden"
+      <div className="glass-container d-flex justify-content-between rounded-3 position-relative overflow-hidden"
            style={{ ...glassStyle }}>
         
-        {/* LEFT SIDE: Text Info */}
-        <div className="text-container d-flex flex-column h-100">
+        <div className="text-container d-flex flex-column">
             
-            {/* Title Row - Lifted up */}
             <div className="title-row mb-1">
                 <span className="fw-bold text-nowrap title-text" style={{ color: titleColor }}>{title}</span>
             </div>
 
-            {/* Stats (Desktop & Mobile Stacked) - Increased spacing */}
             <div className="d-flex flex-column stats-container">
                 <div className="d-flex align-items-center gap-1 stat-row">
                     <span className="stat-label">{gainer.name}</span>
@@ -105,34 +102,23 @@ export default function NGXAssetsWidget({
             </div>
         </div>
 
-        {/* RIGHT SIDE: Bars */}
-        <div className="bars-container d-flex align-items-end justify-content-between h-100 position-relative">
+        <div className="bars-container d-flex align-items-end justify-content-between position-relative">
             
-            {/* Phantom Grid */}
-            <div className="position-absolute w-100 h-100 d-flex flex-column justify-content-between" style={{ zIndex: 0, opacity: 0.1, pointerEvents: 'none' }}>
-                <div style={{ borderBottom: `1px dashed ${isLight ? '#000' : '#fff'}`, height: '20%' }}></div>
-                <div style={{ borderBottom: `1px dashed ${isLight ? '#000' : '#fff'}`, height: '20%' }}></div>
-                <div style={{ borderBottom: `1px dashed ${isLight ? '#000' : '#fff'}`, height: '20%' }}></div>
-                <div style={{ borderBottom: `1px dashed ${isLight ? '#000' : '#fff'}`, height: '20%' }}></div>
-            </div>
-
             {data.sectors.map((sector, index) => (
                 <div key={index} className="d-flex flex-column align-items-center justify-content-end bar-wrapper" 
                      style={{ height: '100%', zIndex: 1 }}
                      onMouseEnter={() => setHoveredInfo(`${sector.label}: ${sector.volume}`)} 
                      onMouseLeave={() => setHoveredInfo(null)}>
                     
-                    {/* The Bar - Max Height capped at 80% (* 0.75 safe factor) */}
                     <div style={{ 
                         width: '100%', 
-                        height: `${Math.max(5, sector.value * 0.75)}%`, 
+                        height: `${Math.max(10, sector.value)}%`, 
                         background: 'linear-gradient(180deg, #FCD535 0%, #0ecb81 100%)', 
                         borderRadius: '1px 1px 0 0',
                         opacity: sector.label === 'IMP' ? 1 : 0.85, 
                         transition: 'height 1s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}></div>
                     
-                    {/* Label - Smaller font */}
                     <span className="mt-1 fw-bold text-uppercase bar-label" style={{ 
                         color: isLight ? '#0A192F' : '#8899A6',
                         opacity: 0.9,
@@ -159,40 +145,41 @@ export default function NGXAssetsWidget({
             margin-right: auto;
         }
 
-        /* Desktop Layout Adjustments */
         .glass-container {
             height: 80px; 
-            padding-left: 28px; 
-            padding-right: 25px; 
-            padding-top: 6px; /* Reduced top padding to lift title */
+            padding-left: 20px; 
+            padding-right: 20px; 
+            padding-top: 8px; /* Standard Desktop Padding */
             padding-bottom: 8px;
         }
         
         .text-container {
             width: 55%;
-            justify-content: flex-start !important; /* Align top */
-            padding-top: 2px;
+            justify-content: flex-start;
+            padding-top: 0;
         }
 
         .title-row {
-            margin-bottom: 6px !important; /* Increased gap under title */
+            margin-bottom: 4px;
         }
 
         .stats-container {
-            gap: 4px !important; /* Increased gap between Gainer and Loser */
+            gap: 2px;
         }
 
         .bars-container {
             width: 40%;
-            padding-bottom: 4px;
+            height: 75%; /* HARD CAP: Bars can never exceed 75% of widget height */
+            margin-top: auto; /* Push to bottom */
+            padding-bottom: 2px;
         }
 
         .bar-wrapper {
-            width: 8%; 
+            width: 12%; 
         }
 
         .title-text {
-            font-size: 10px; /* Reduced 10% from 11px */
+            font-size: 10px; 
             letter-spacing: 0.5px;
         }
 
@@ -211,7 +198,6 @@ export default function NGXAssetsWidget({
             letter-spacing: 0.2px;
         }
 
-        /* --- MOBILE STYLES --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 min-width: 112px !important; 
@@ -221,13 +207,8 @@ export default function NGXAssetsWidget({
             }
 
             .glass-container {
-                /* Even smaller top padding for mobile lift */
-                padding: 3px 4px 2px 6px !important; 
+                padding: 4px 6px !important; /* Matches neighbors */
                 height: 63px !important; 
-            }
-
-            .text-container {
-                padding-top: 0px !important;
             }
 
             .title-text {
@@ -235,11 +216,11 @@ export default function NGXAssetsWidget({
             }
             
             .title-row {
-                margin-bottom: 3px !important; /* Smaller gap on mobile */
+                margin-bottom: 2px !important;
             }
 
             .stats-container {
-                gap: 2px !important; /* Smaller gap on mobile */
+                gap: 0px !important; 
             }
 
             .stat-label {
@@ -251,16 +232,17 @@ export default function NGXAssetsWidget({
             }
             
             .bar-label {
-                font-size: 4px !important; /* Reduced 20% from 5px to prevent overlap */
+                font-size: 4px !important; 
             }
 
             .bars-container {
                 width: 45% !important; 
-                padding-right: 2px !important; 
+                height: 70% !important; /* Stricter cap on mobile */
+                padding-right: 0px !important; 
             }
             
             .bar-wrapper {
-                width: 10% !important; 
+                width: 14% !important; 
             }
         }
 
