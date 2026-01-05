@@ -26,7 +26,8 @@ export default function NGXCapWidget({
   const isLight = theme === 'light';
   
   const glassStyle = {
-    background: isLight ? 'rgba(255, 255, 255, 0.6)' : 'rgba(11, 14, 17, 0.4)',
+    // تعديل 2: زيادة الشفافية (تقليل الرقم الأخير من 0.4 إلى 0.2)
+    background: isLight ? 'rgba(255, 255, 255, 0.4)' : 'rgba(11, 14, 17, 0.2)',
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
     border: isLight ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.08)',
@@ -48,7 +49,6 @@ export default function NGXCapWidget({
         setData(json);
       } catch (error) {
         console.error('Error fetching NGX Cap data:', error);
-        // Fallback data for preview
         setData({
             marketCap: '$2.54B',
             change24h: 4.88,
@@ -82,20 +82,19 @@ export default function NGXCapWidget({
       <div className="glass-container d-flex flex-column justify-content-between rounded-3 position-relative overflow-hidden"
            style={{ ...glassStyle }}>
         
-        {/* Header Row: Cleaned up! LIVE badge removed from here to fix crowding */}
+        {/* Header Row */}
         <div className="d-flex align-items-center w-100" style={{ zIndex: 2 }}>
             <div className="d-flex align-items-center gap-2">
                 <span className="fw-bold text-nowrap title-text" style={{ color: titleColor }}>{title}</span>
                 
-                {/* Mobile Only: Percentage moved to header */}
-                <div className="mobile-percentage fw-bold d-flex align-items-center" style={{ fontSize: '9px', color: changeColor, display: 'none' }}>
+                <div className="mobile-percentage fw-bold d-flex align-items-center" style={{ fontSize: '8px', color: changeColor, display: 'none' }}>
                     {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
                 </div>
             </div>
         </div>
 
-        {/* NEW LIVE Badge Location: Positioned Absolutely Middle-Right */}
-        <div style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-20%)', zIndex: 10 }}>
+        {/* تعديل 1: توسيط شارة LIVE عمودياً بدقة */}
+        <div style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', zIndex: 10 }}>
             <span className="badge pulse-neon" 
                   style={{ 
                       fontSize:'6px', 
@@ -109,14 +108,13 @@ export default function NGXCapWidget({
         {/* Content Row */}
         <div className="content-col d-flex flex-column justify-content-center w-100" style={{ height: '100%' }}>
             
-            {/* Number Row */}
-            <div className="d-flex align-items-end gap-2 mb-1 desktop-text-shift mobile-text-row">
+            {/* Number Row - تعديل 3: رفع الرقم */}
+            <div className="d-flex align-items-end gap-2 mb-1 desktop-text-shift mobile-text-lift">
                 <div className="fw-bold lh-1 main-score" style={{ color: mainTextColor, letterSpacing: '-0.5px' }}
                      onMouseEnter={() => setHoveredInfo(`Total Market Cap: ${data.marketCap}`)} onMouseLeave={() => setHoveredInfo(null)}>
                     {data.marketCap}
                 </div>
                 
-                {/* Desktop Only: Percentage stays here */}
                 <div className="desktop-percentage fw-bold d-flex align-items-center mb-1" style={{ fontSize: '9px', color: changeColor }}
                      onMouseEnter={() => setHoveredInfo(`24h Change: ${data.change24h}%`)} onMouseLeave={() => setHoveredInfo(null)}>
                     {data.change24h >= 0 ? '+' : ''}{data.change24h}% <span style={{ fontSize: '8px', marginLeft: '2px' }}>{data.change24h >= 0 ? '▲' : '▼'}</span>
@@ -137,8 +135,8 @@ export default function NGXCapWidget({
                         left: `${data.rangeProgress}%`,
                         top: '50%',
                         transform: 'translate(-50%, -50%)',
-                        width: '10px',
-                        height: '10px',
+                        width: '8px', /* تصغير النقطة قليلاً للجوال */
+                        height: '8px',
                         borderRadius: '50%',
                         background: '#ffffff',
                         boxShadow: '0 0 4px rgba(0,0,0,0.5)',
@@ -159,7 +157,7 @@ export default function NGXCapWidget({
     )}
 
     <style jsx>{`
-        /* --- GENERAL & DESKTOP STYLES --- */
+        /* --- DESKTOP STYLES --- */
         .ngx-widget-container {
             position: relative;
             width: 100%;
@@ -185,7 +183,6 @@ export default function NGXCapWidget({
             font-size: 27px; 
         }
 
-        /* Lift number slightly on Desktop */
         .desktop-text-shift {
             transform: translateY(-2px); 
         }
@@ -206,28 +203,36 @@ export default function NGXCapWidget({
             display: none !important;
         }
 
-        /* --- MOBILE STYLES (Compact Mode) --- */
+        /* --- MOBILE STYLES (Compressed 10% more) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
-                max-width: 125px !important; 
+                /* تعديل 4: تقليل العرض بنسبة 10% تقريباً (من 125 إلى 112) */
+                min-width: 112px !important; 
+                max-width: 112px !important;
                 margin-left: 0 !important; 
                 margin-right: auto !important;
             }
 
             .glass-container {
                 padding: 4px !important; 
-                height: 70px !important; 
+                /* تعديل 4: تقليل الارتفاع 10% (من 70 إلى 63) */
+                height: 63px !important; 
                 padding-right: 4px !important;
             }
 
             .main-score {
-                font-size: 18px !important; 
+                /* تصغير الخط قليلاً ليتناسب مع الحجم الجديد */
+                font-size: 16px !important; 
             }
 
-            /* Reset transformations */
-            .desktop-text-shift {
-                transform: none !important;
-                margin-bottom: 2px !important;
+            .title-text {
+                font-size: 8px !important;
+            }
+
+            /* تعديل 3: رفع الرقم للأعلى */
+            .mobile-text-lift {
+                transform: translateY(-3px) !important;
+                margin-bottom: 3px !important;
             }
 
             .desktop-percentage {
@@ -237,13 +242,12 @@ export default function NGXCapWidget({
                 display: flex !important;
             }
 
-            /* Thinner bar for mobile */
             .progress-container {
-                height: 8px !important;
-                margin-top: 2px !important;
+                height: 6px !important;
+                margin-top: 0px !important;
             }
             .progress-bar-bg {
-                height: 4px !important;
+                height: 3px !important;
             }
         }
 
