@@ -106,7 +106,6 @@ export default function NGXWidget({
       const stroke = 16; 
       
       return (
-        // ViewBox مضبوط لعمل زوم (تكبير) للعداد داخل الحاوية
         <svg viewBox="-95 -15 190 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
             <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} />
             <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} />
@@ -170,7 +169,7 @@ export default function NGXWidget({
             
             {/* Left Side: Number & Info */}
             <div className="text-block d-flex flex-column justify-content-center" style={{ zIndex: 2 }}>
-                <div className="d-flex align-items-end gap-2 mb-1 mobile-text-row">
+                <div className="d-flex align-items-end gap-2 mb-1 desktop-text-shift mobile-text-row">
                     <div className="fw-bold lh-1 main-score" style={{ color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}>
                         {scoreInt}<span style={{ fontSize: '0.5em', opacity: 0.8 }}>.{scoreDec}</span>
                     </div>
@@ -185,7 +184,6 @@ export default function NGXWidget({
             </div>
 
             {/* Right Side: Gauge */}
-            {/* marginLeft: auto (pushes right) + marginRight (pulls back left) */}
             <div className="gauge-block d-flex align-items-center justify-content-center" style={{ zIndex: 1, marginLeft: 'auto' }}>
                 <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                     <GaugeSVG />
@@ -217,8 +215,15 @@ export default function NGXWidget({
             letter-spacing: 0.5px;
         }
         .main-score {
-            font-size: 24px;
+            /* تكبير الخط بنسبة 10% تقريباً (كان 24) */
+            font-size: 27px; 
         }
+        
+        /* رفع الرقم للأعلى في الكمبيوتر فقط */
+        .desktop-text-shift {
+            transform: translateY(-4px);
+        }
+
         .status-text {
             font-size: 8px;
             margin-top: 2px;
@@ -229,10 +234,7 @@ export default function NGXWidget({
             width: 140px; 
             height: 65px; 
             flex-shrink: 0; 
-            /* التعديل الجديد للكمبيوتر: */
-            /* 1. دفع للداخل من اليمين (إزاحة لليسار) */
             margin-right: 25px; 
-            /* 2. رفع للأعلى قليلاً عن القاعدة */
             transform: translateY(-5px);
         }
 
@@ -243,7 +245,7 @@ export default function NGXWidget({
             display: none !important;
         }
 
-        /* --- MOBILE STYLES (Compact Mode - UNTOUCHED & RESET) --- */
+        /* --- MOBILE STYLES (Compact Mode - PROTECTED) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 max-width: 125px !important; 
@@ -265,7 +267,13 @@ export default function NGXWidget({
             }
 
             .main-score {
+                /* إعادة الحجم الصغير للجوال */
                 font-size: 18px !important; 
+            }
+
+            /* إلغاء رفع الرقم في الجوال */
+            .desktop-text-shift {
+                transform: none !important;
             }
 
             .desktop-percentage {
@@ -279,7 +287,6 @@ export default function NGXWidget({
                 width: 60px !important; 
                 height: 40px !important;
                 margin-left: 0 !important; 
-                /* هام جداً: تصفير هوامش وإزاحات الكمبيوتر في الجوال */
                 margin-right: 0 !important; 
                 transform: none !important;
             }
