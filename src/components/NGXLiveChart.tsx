@@ -8,7 +8,7 @@ const SECTORS = [
   { key: 'Art NFTs', color: '#7B61FF', startYear: 2017, baseValue: 25 },
   { key: 'Gaming NFTs', color: '#0ECB81', startYear: 2019, baseValue: 15 },
   { key: 'Utility NFTs', color: '#00D8D6', startYear: 2020, baseValue: 10 },
-  { key: 'Standard Domains', color: '#F5841F', startYear: 2017, baseValue: 30 }
+  { key: 'Standard Domains', color: '#38BDF8', startYear: 2017, baseValue: 30 }
 ];
 
 const TIMEFRAMES = [
@@ -90,6 +90,7 @@ export default function NGXLiveChart() {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#B0B0B0',
         fontFamily: '"Inter", sans-serif',
+        fontSize: 11, 
       },
       grid: {
         vertLines: { visible: false },
@@ -99,7 +100,9 @@ export default function NGXLiveChart() {
       height: 400,
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
+        visible: true,
         timeVisible: true,
+        secondsVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
         rightOffset: 5,
@@ -117,12 +120,14 @@ export default function NGXLiveChart() {
             width: 1,
             style: 3,
             labelBackgroundColor: '#242424',
+            labelVisible: true,
         },
         horzLine: {
             color: 'rgba(255, 255, 255, 0.3)',
             width: 1,
             style: 3,
             labelBackgroundColor: '#242424',
+            labelVisible: true,
         },
       },
       localization: { locale: 'en-US' },
@@ -300,7 +305,7 @@ export default function NGXLiveChart() {
         .btn-timeframe.active { color: #fff; background: rgba(255, 255, 255, 0.1); }
 
         @media (max-width: 768px) {
-            .chart-canvas-wrapper { height: 280px; }
+            .chart-canvas-wrapper { height: 300px; }
             .filters-container { 
                 flex-direction: row; 
                 justify-content: space-between;
