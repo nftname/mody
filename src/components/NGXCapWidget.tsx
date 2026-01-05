@@ -82,25 +82,28 @@ export default function NGXCapWidget({
       <div className="glass-container d-flex flex-column justify-content-between rounded-3 position-relative overflow-hidden"
            style={{ ...glassStyle }}>
         
-        {/* Header Row */}
-        <div className="d-flex align-items-center justify-content-between w-100" style={{ zIndex: 2 }}>
+        {/* Header Row: Cleaned up! LIVE badge removed from here to fix crowding */}
+        <div className="d-flex align-items-center w-100" style={{ zIndex: 2 }}>
             <div className="d-flex align-items-center gap-2">
                 <span className="fw-bold text-nowrap title-text" style={{ color: titleColor }}>{title}</span>
                 
-                {/* Mobile Only: Percentage moved to header (Matching NGXWidget) */}
+                {/* Mobile Only: Percentage moved to header */}
                 <div className="mobile-percentage fw-bold d-flex align-items-center" style={{ fontSize: '9px', color: changeColor, display: 'none' }}>
                     {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
                 </div>
             </div>
-            
+        </div>
+
+        {/* NEW LIVE Badge Location: Positioned Absolutely Middle-Right */}
+        <div style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-20%)', zIndex: 10 }}>
             <span className="badge pulse-neon" 
-                    style={{ 
-                        fontSize:'6px', 
-                        padding:'2px 4px', 
-                        color: NEON_GREEN, 
-                        border: 'none', 
-                        backgroundColor: 'rgba(14, 203, 129, 0.1)' 
-                    }}>LIVE</span>
+                  style={{ 
+                      fontSize:'6px', 
+                      padding:'2px 4px', 
+                      color: NEON_GREEN, 
+                      border: 'none', 
+                      backgroundColor: 'rgba(14, 203, 129, 0.1)' 
+                  }}>LIVE</span>
         </div>
 
         {/* Content Row */}
@@ -156,19 +159,19 @@ export default function NGXCapWidget({
     )}
 
     <style jsx>{`
-        /* --- GENERAL & DESKTOP STYLES (Matching NGXWidget Geometry) --- */
+        /* --- GENERAL & DESKTOP STYLES --- */
         .ngx-widget-container {
             position: relative;
             width: 100%;
-            max-width: 310px; /* Same as NGXWidget */
+            max-width: 310px; 
             margin-left: auto;
             margin-right: auto;
         }
 
         .glass-container {
-            height: 80px; /* Same height as NGXWidget */
-            padding-left: 20px; /* Same left padding */
-            padding-right: 15px; /* Balanced right padding */
+            height: 80px; 
+            padding-left: 20px; 
+            padding-right: 15px; 
             padding-top: 8px;
             padding-bottom: 8px;
         }
@@ -179,7 +182,7 @@ export default function NGXCapWidget({
         }
 
         .main-score {
-            font-size: 27px; /* Increased to match NGXWidget */
+            font-size: 27px; 
         }
 
         /* Lift number slightly on Desktop */
@@ -203,22 +206,22 @@ export default function NGXCapWidget({
             display: none !important;
         }
 
-        /* --- MOBILE STYLES (Compact Mode - Matching NGXWidget exactly) --- */
+        /* --- MOBILE STYLES (Compact Mode) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
-                max-width: 125px !important; /* Forces side-by-side with neighbor */
-                margin-left: 0 !important; /* Align left to stack next to neighbor */
+                max-width: 125px !important; 
+                margin-left: 0 !important; 
                 margin-right: auto !important;
             }
 
             .glass-container {
-                padding: 4px !important; /* Minimal padding */
-                height: 70px !important; /* Compact height */
+                padding: 4px !important; 
+                height: 70px !important; 
                 padding-right: 4px !important;
             }
 
             .main-score {
-                font-size: 18px !important; /* Smaller font for mobile */
+                font-size: 18px !important; 
             }
 
             /* Reset transformations */
