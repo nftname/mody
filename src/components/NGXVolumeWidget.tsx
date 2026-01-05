@@ -93,7 +93,7 @@ export default function NGXVolumeWidget({
         {/* LEFT SIDE: Text Info */}
         <div className="text-container d-flex flex-column h-100">
             
-            {/* 1. Title Row */}
+            {/* Title Row */}
             <div className="title-row d-flex align-items-center">
                 <span className="fw-bold text-nowrap title-text" style={{ color: titleColor, lineHeight: 1 }}>{title}</span>
                 <span className="badge pulse-neon desktop-only ms-1" 
@@ -107,10 +107,11 @@ export default function NGXVolumeWidget({
                       }}>LIVE</span>
             </div>
 
-            {/* 2. Volume Logic: Desktop (Row) vs Mobile (Column) */}
+            {/* Volume Data Row */}
             <div className="vol-container">
-                {/* Mobile: Label on top, Value below */}
+                {/* Label (Hidden on mobile) */}
                 <div className="vol-label fw-bold" style={{ color: TEXT_WHITE }}>VOL</div>
+                {/* Value & Change */}
                 <div className="vol-data-wrapper">
                     <span className="fw-bold vol-value" style={{ color: TEXT_WHITE }}>{totalVolDisplay}</span>
                     <span className="fw-bold vol-change" style={{ color: volColor }}>
@@ -119,7 +120,7 @@ export default function NGXVolumeWidget({
                 </div>
             </div>
 
-            {/* 3. Stats Row (Gainer/Loser) */}
+            {/* Stats Row */}
             <div className="d-flex flex-column stats-container mt-auto">
                 <div className="d-flex align-items-center gap-1 stat-row">
                     <span className="stat-label">{gainer.name}</span>
@@ -178,7 +179,6 @@ export default function NGXVolumeWidget({
         /* --- DESKTOP STYLES --- */
         .glass-container {
             height: 80px; 
-            /* Push bars inward by increasing right padding to 40px */
             padding: 7px 40px 6px 20px; 
         }
         
@@ -192,7 +192,6 @@ export default function NGXVolumeWidget({
             height: 12px;
         }
 
-        /* Desktop: All in one line */
         .vol-container {
             display: flex;
             align-items: center;
@@ -248,7 +247,7 @@ export default function NGXVolumeWidget({
             display: inline-block;
         }
 
-        /* --- MOBILE STYLES (THE FIX) --- */
+        /* --- MOBILE STYLES (CRITICAL FIXES) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 min-width: 112px !important; 
@@ -258,47 +257,48 @@ export default function NGXVolumeWidget({
             }
 
             .glass-container {
-                padding: 2px 3px 2px 4px !important; 
+                /* FIX 1 & 2: Increased Top padding to 6px to push title down.
+                   Increased Right padding to 8px to push bars left. */
+                padding: 6px 8px 2px 4px !important; 
                 height: 63px !important; 
             }
 
             .text-container {
-                width: 65% !important; /* More space for text */
+                width: 65% !important; 
                 padding-top: 0px !important;
             }
 
             .title-row {
-                margin-bottom: 0px !important;
-                height: 10px !important;
+                margin-bottom: 2px !important; /* Added slight gap below title */
+                height: auto !important;
             }
 
             .title-text {
                 font-size: 7px !important; 
             }
             
-            /* --- CRITICAL MOBILE LAYOUT CHANGE --- */
             .vol-container {
                 display: flex !important;
-                flex-direction: column !important; /* Stack vertically */
+                flex-direction: column !important; 
                 align-items: flex-start !important;
                 gap: 0px !important;
-                margin-bottom: 1px !important;
-                margin-top: 1px !important; /* Push slightly down from title */
+                margin-bottom: 2px !important;
+                margin-top: 0px !important; 
             }
             
+            /* FIX 1: Remove 'VOL' label on mobile to free up space */
             .vol-label { 
-                font-size: 7px !important; 
-                line-height: 1.1 !important;
+                display: none !important;
             }
             
             .vol-data-wrapper {
                 display: flex !important;
                 align-items: center !important;
-                gap: 3px !important; /* Space between Value and % */
+                gap: 3px !important; 
             }
             
             .vol-value { 
-                font-size: 8px !important; /* Make value clearly visible */
+                font-size: 8px !important; 
             } 
             .vol-change { 
                 font-size: 7px !important; 
@@ -316,9 +316,8 @@ export default function NGXVolumeWidget({
                 font-size: 6px !important; 
             }
             
-            /* --- BARS SPACING FIX --- */
             .bars-container {
-                width: 32% !important; /* Slightly narrower container */
+                width: 32% !important; 
                 height: 65% !important; 
                 padding-right: 0px !important; 
             }
@@ -328,9 +327,9 @@ export default function NGXVolumeWidget({
                 margin-top: 1px !important;
             }
             
-            /* Narrower bars = Bigger gaps */
+            /* FIX 3: Drastically reduced bar width to 4% to force large gaps */
             .bar-wrapper {
-                width: 7% !important; /* Reduced from 10% to 7% */
+                width: 4% !important; 
             }
 
             .desktop-only {
