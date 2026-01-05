@@ -128,8 +128,8 @@ export default function NGXPage() {
       
       <MarketTicker />
 
-      {/* Header Section: Reduced vertical padding (py-2) to decrease space by 50% */}
-      <div className="py-2 px-4 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}` }}>
+      {/* Header Section: Reduced vertical padding to 'py-1' (50% less than py-2) */}
+      <div className="py-1 px-4 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}` }}>
         <div className="container-fluid">
             
             {/* Widgets Row */}
