@@ -123,7 +123,7 @@ export default function NGXPage() {
                 </p>
 
                 {/* DISCLAIMER */}
-                <div className="w-100 mt-4 pt-4 border-top border-secondary" style={{ borderColor: '#333 !important' }}>
+                <div className="w-100 pt-2 border-top border-secondary" style={{ borderColor: '#333 !important', marginTop: '1rem' }}>
                     <p className="fst-italic mb-0 text-dark-grey w-100" style={{ lineHeight: '1.4', fontSize: '10px' }}>
                         This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
                     </p>
@@ -173,6 +173,10 @@ export default function NGXPage() {
             font-weight: 700;
             font-family: "Inter", "Segoe UI", sans-serif;
             line-height: 1.3;
+        }
+
+        .article-heading.mt-5 {
+             font-size: 1.3rem;
         }
 
         .article-text {

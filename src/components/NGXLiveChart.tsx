@@ -3,12 +3,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries } from 'lightweight-charts';
 
 const SECTORS = [
-  { key: 'Imperium Name Assets', color: '#FCD535', startYear: 2025 },
-  { key: 'All Index', color: '#C0D860', startYear: 2017 },
-  { key: 'Art NFTs', color: '#7B61FF', startYear: 2017 },
-  { key: 'Gaming NFTs', color: '#0ECB81', startYear: 2019 },
-  { key: 'Utility NFTs', color: '#00D8D6', startYear: 2020 },
-  { key: 'Standard Domains', color: '#F5841F', startYear: 2017 }
+  { key: 'All NFTs Index', color: '#C0D860', startYear: 2017, baseValue: 40 },
+  { key: 'Imperium Name Assets', color: '#FCD535', startYear: 2025, baseValue: 100 },
+  { key: 'Art NFTs', color: '#7B61FF', startYear: 2017, baseValue: 25 },
+  { key: 'Gaming NFTs', color: '#0ECB81', startYear: 2019, baseValue: 15 },
+  { key: 'Utility NFTs', color: '#00D8D6', startYear: 2020, baseValue: 10 },
+  { key: 'Standard Domains', color: '#F5841F', startYear: 2017, baseValue: 30 }
 ];
 
 const TIMEFRAMES = [
@@ -34,6 +34,9 @@ export default function NGXLiveChart() {
     let startDate = new Date();
     const sectorInfo = SECTORS.find(s => s.key === sectorKey) || SECTORS[0];
 
+    const isImperium = sectorKey === 'Imperium Name Assets';
+    const effectiveStartYear = isImperium ? 2025 : sectorInfo.startYear;
+
     switch (timeframe) {
         case '1H': startDate.setHours(now.getHours() - 1); break;
         case '4H': startDate.setHours(now.getHours() - 4); break;
@@ -41,32 +44,36 @@ export default function NGXLiveChart() {
         case '1W': startDate.setDate(now.getDate() - 7); break;
         case '1M': startDate.setMonth(now.getMonth() - 1); break;
         case '1Y': startDate.setFullYear(now.getFullYear() - 1); break;
-        case 'ALL': startDate.setFullYear(sectorInfo.startYear, 0, 1); break;
-        default: startDate.setFullYear(sectorInfo.startYear, 0, 1);
+        case 'ALL': startDate.setFullYear(effectiveStartYear, 0, 1); break;
+        default: startDate.setFullYear(effectiveStartYear, 0, 1);
     }
 
-    let currentValue = sectorKey === 'Imperium Name Assets' ? 100 : 40;
-    let timeStep = 0; 
+    if (startDate > now) startDate = new Date(now.getFullYear(), 0, 1); 
+
+    let currentValue = sectorInfo.baseValue;
     
     const diffTime = Math.abs(now.getTime() - startDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
     
-    let totalPoints = 0;
-    
-    if (timeframe === '1H' || timeframe === '4H' || timeframe === '1D') {
-        totalPoints = 120; 
-        timeStep = diffTime / totalPoints;
-    } else {
-        totalPoints = diffDays < 100 ? diffDays : Math.min(diffDays, 1000); 
-        timeStep = diffTime / totalPoints;
-    }
+    let totalPoints = 500;
+    if (timeframe === '1H') totalPoints = 60;
+    else if (timeframe === 'ALL') totalPoints = isImperium ? 365 : 2000;
 
+    const timeStep = diffTime / totalPoints;
     let currentTime = startDate.getTime();
     
     for (let i = 0; i <= totalPoints; i++) {
-        const change = (Math.random() - 0.45) * 2.5;
+        let change = (Math.random() - 0.45);
+        
+        if (isImperium) {
+            change = (Math.random() - 0.48) * 0.5; 
+        } else {
+            change = change * 2; 
+        }
+
         currentValue += change;
-        if (currentValue < 10) currentValue = 10;
+        
+        if (isImperium && currentValue < 98) currentValue = 98; 
+        if (!isImperium && currentValue < 5) currentValue = 5;
         
         data.push({ time: Math.floor(currentTime / 1000) as any, value: currentValue });
         currentTime += timeStep;
@@ -95,12 +102,13 @@ export default function NGXLiveChart() {
         timeVisible: true,
         fixLeftEdge: true,
         fixRightEdge: true,
-        rightOffset: 10,
+        rightOffset: 5,
         minBarSpacing: 0.5,
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         scaleMargins: { top: 0.2, bottom: 0.1 },
+        visible: true,
       },
       crosshair: {
         mode: CrosshairMode.Normal,
@@ -131,7 +139,7 @@ export default function NGXLiveChart() {
       lineWidth: 2,
     });
 
-    newSeries.setData(generateData(activeTimeframe, activeSector));
+    newSeries.setData(generateData('ALL', activeSector));
     chart.timeScale().fitContent();
 
     const handleResize = () => {
@@ -173,7 +181,7 @@ export default function NGXLiveChart() {
       
       <div className="filters-container">
         
-        <div className="sector-filter-wrapper">
+        <div className="sector-filter-wrapper position-relative">
            <select 
                 value={activeSector} 
                 onChange={(e) => setActiveSector(e.target.value)}
@@ -182,21 +190,23 @@ export default function NGXLiveChart() {
            >
                 {SECTORS.map(s => <option key={s.key} value={s.key}>{s.key}</option>)}
            </select>
+           <span className="dropdown-arrow">▼</span>
         </div>
 
-        <div className="time-filter-wrapper">
-            {/* Mobile Dropdown for Time */}
+        <div className="time-filter-wrapper position-relative">
+            {/* Mobile Dropdown */}
             <div className="d-block d-md-none">
                 <select 
                     value={activeTimeframe} 
                     onChange={(e) => setActiveTimeframe(e.target.value)}
-                    className="custom-dropdown text-end"
+                    className="custom-dropdown text-end pe-4"
                 >
                     {TIMEFRAMES.map(tf => <option key={tf.value} value={tf.value}>{tf.label}</option>)}
                 </select>
+                <span className="dropdown-arrow" style={{ right: '10px' }}>▼</span>
             </div>
 
-            {/* Desktop Buttons for Time */}
+            {/* Desktop Buttons */}
             <div className="d-none d-md-flex gap-1 bg-glass-pill p-1">
                 {TIMEFRAMES.map((tf) => (
                     <button
@@ -244,20 +254,36 @@ export default function NGXLiveChart() {
             padding: 0 5px;
         }
 
+        .sector-filter-wrapper, .time-filter-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
         .custom-dropdown {
             background: rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.1);
             color: #E0E0E0;
-            padding: 6px 12px;
+            padding: 8px 24px 8px 12px;
             border-radius: 4px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
             outline: none;
             cursor: pointer;
             appearance: none;
-            min-width: 120px;
+            min-width: 140px;
         }
         .custom-dropdown option { background-color: #1E1E1E; color: #fff; }
+
+        .dropdown-arrow {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 8px;
+            color: #aaa;
+            pointer-events: none;
+        }
 
         .btn-timeframe {
             background: transparent;
@@ -274,9 +300,17 @@ export default function NGXLiveChart() {
         .btn-timeframe.active { color: #fff; background: rgba(255, 255, 255, 0.1); }
 
         @media (max-width: 768px) {
-            .chart-canvas-wrapper { height: 300px; }
-            .filters-container { flex-direction: row; gap: 10px; }
-            .custom-dropdown { font-size: 13px; padding: 5px 8px; min-width: 100px; }
+            .chart-canvas-wrapper { height: 280px; }
+            .filters-container { 
+                flex-direction: row; 
+                justify-content: space-between;
+                gap: 10px; 
+            }
+            .custom-dropdown { 
+                font-size: 12px; 
+                padding: 6px 20px 6px 8px; 
+                min-width: 110px; 
+            }
         }
       `}</style>
     </div>
