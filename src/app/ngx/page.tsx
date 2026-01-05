@@ -128,12 +128,15 @@ export default function NGXPage() {
       
       <MarketTicker />
 
-      {/* Header Section: Reduced horizontal padding from px-4 to px-2 (This shifts content Left by ~50%) */}
-      <div className="px-2 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}`, paddingTop: '2px', paddingBottom: '2px' }}>
-        <div className="container-fluid">
+      {/* التعديل الجوهري هنا:
+          1. تقليل padding الجانبي لأقصى درجة (تقريباً 2px فقط) لفتح المساحة (padding: 2px 2px)
+          2. تقليل padding العمودي أيضاً
+      */}
+      <div className="shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '2px 2px' }}>
+        <div className="container-fluid p-0"> {/* p-0 لإزالة أي هوامش افتراضية من البوتستراب */}
             
-            {/* Widgets Row: Reduced bottom margin from mb-4 to mb-2 (50% reduction) */}
-            <div className="d-flex flex-wrap align-items-center gap-3 mb-2 widget-container-mobile">
+            {/* Widgets Row */}
+            <div className="d-flex flex-wrap align-items-center mb-2 widget-container-mobile">
                 
                 {/* 1. NGX Sentiment Widget */}
                 <div className="widget-wrapper">
@@ -146,8 +149,8 @@ export default function NGXPage() {
                 </div>
             </div>
 
-            {/* Title Row */}
-            <div className="row align-items-center">
+            {/* Title Row - نترك بعض الهوامش هنا لجمالية العنوان */}
+            <div className="row align-items-center px-2">
                 <div className="col-lg-12">
                     <h1 className="fw-bold mb-2" style={{ fontSize: '1.65rem', letterSpacing: '-0.5px', color: TEXT_PRIMARY }}>
                             NGX NFT Index — The Global Benchmark <span className="text-gold-500"></span>
@@ -160,7 +163,7 @@ export default function NGXPage() {
         </div>
       </div>
 
-      {/* Main Content: Kept aligned px-2 */}
+      {/* Main Content */}
       <div className="container-fluid py-4 px-2">
         
         <div className="row g-4">
@@ -357,11 +360,14 @@ export default function NGXPage() {
 
                 @media (max-width: 768px) {
                    .widget-container-mobile {
-                        gap: 8px !important; /* Smaller gap on mobile */
+                        /* تم التعديل: إزالة المسافة البينية تماماً (gap: 0px)
+                        */
+                        gap: 0px !important; 
+                        justify-content: flex-start !important; /* تأكيد المحاذاة لليسار */
                    }
                    .widget-wrapper {
-                        width: auto !important; /* Let content dictate width on mobile */
-                        min-width: 125px; /* Minimum width to prevent crushing */
+                        width: auto !important; 
+                        min-width: 125px; 
                    }
                 }
 
