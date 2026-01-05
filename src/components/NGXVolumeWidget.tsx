@@ -111,7 +111,7 @@ export default function NGXVolumeWidget({
             <div className="vol-container">
                 {/* Label (Hidden on mobile) */}
                 <div className="vol-label fw-bold" style={{ color: TEXT_WHITE }}>VOL</div>
-                {/* Value & Change */}
+                {/* Value & Change - Pushed down & enlarged on mobile */}
                 <div className="vol-data-wrapper">
                     <span className="fw-bold vol-value" style={{ color: TEXT_WHITE }}>{totalVolDisplay}</span>
                     <span className="fw-bold vol-change" style={{ color: volColor }}>
@@ -247,7 +247,7 @@ export default function NGXVolumeWidget({
             display: inline-block;
         }
 
-        /* --- MOBILE STYLES (CRITICAL FIXES) --- */
+        /* --- MOBILE STYLES (MATCHING NEIGHBOR & EXPANDING BARS) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 min-width: 112px !important; 
@@ -257,24 +257,26 @@ export default function NGXVolumeWidget({
             }
 
             .glass-container {
-                /* FIX 1 & 2: Increased Top padding to 6px to push title down.
-                   Increased Right padding to 8px to push bars left. */
-                padding: 6px 8px 2px 4px !important; 
+                /* Increased Top to 5px to align baseline with neighbor */
+                /* Increased Right to 6px to push bars slightly in */
+                padding: 5px 6px 2px 4px !important; 
                 height: 63px !important; 
             }
 
             .text-container {
-                width: 65% !important; 
+                /* Reduced text width to 55% to give bars 42% */
+                width: 55% !important; 
                 padding-top: 0px !important;
             }
 
             .title-row {
-                margin-bottom: 2px !important; /* Added slight gap below title */
-                height: auto !important;
+                margin-bottom: 0px !important;
+                height: 10px !important;
             }
 
             .title-text {
-                font-size: 7px !important; 
+                /* Increased to 8.5px to match neighbor Title size exactly */
+                font-size: 8.5px !important; 
             }
             
             .vol-container {
@@ -282,11 +284,11 @@ export default function NGXVolumeWidget({
                 flex-direction: column !important; 
                 align-items: flex-start !important;
                 gap: 0px !important;
+                /* Pushed down by 4px to fill void */
+                margin-top: 4px !important; 
                 margin-bottom: 2px !important;
-                margin-top: 0px !important; 
             }
             
-            /* FIX 1: Remove 'VOL' label on mobile to free up space */
             .vol-label { 
                 display: none !important;
             }
@@ -294,14 +296,17 @@ export default function NGXVolumeWidget({
             .vol-data-wrapper {
                 display: flex !important;
                 align-items: center !important;
-                gap: 3px !important; 
+                gap: 4px !important; 
             }
             
+            /* INCREASED FONT SIZE BY 50% (approx 11px) */
             .vol-value { 
-                font-size: 8px !important; 
+                font-size: 11px !important; 
+                line-height: 1 !important;
             } 
             .vol-change { 
-                font-size: 7px !important; 
+                font-size: 10px !important; 
+                line-height: 1 !important;
             }
 
             .stats-container {
@@ -316,8 +321,10 @@ export default function NGXVolumeWidget({
                 font-size: 6px !important; 
             }
             
+            /* --- BARS EXPANSION --- */
             .bars-container {
-                width: 32% !important; 
+                /* Increased container width to 42% to create gaps */
+                width: 42% !important; 
                 height: 65% !important; 
                 padding-right: 0px !important; 
             }
@@ -327,9 +334,9 @@ export default function NGXVolumeWidget({
                 margin-top: 1px !important;
             }
             
-            /* FIX 3: Drastically reduced bar width to 4% to force large gaps */
             .bar-wrapper {
-                width: 4% !important; 
+                /* Kept at 10% but container is wider = bigger gaps */
+                width: 10% !important; 
             }
 
             .desktop-only {
