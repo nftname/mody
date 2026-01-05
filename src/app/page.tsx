@@ -6,9 +6,10 @@ import Image from 'next/image';
 import dynamicImport from 'next/dynamic';
 import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
+import NGXCapWidget from '@/components/NGXCapWidget';
+import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 import { usePublicClient } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
-// استيراد العناوين الصحيحة من ملف الكونفيج المركزي
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 
 const MARKET_ABI = parseAbi([
@@ -133,7 +134,6 @@ function Home() {
     const fetchRealData = async () => {
         if (!publicClient) return;
         try {
-            // استخدام العنوان الصحيح من ملف الكونفيج
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -229,63 +229,39 @@ function Home() {
       
       <MarketTicker />
 
-      <section className="d-none d-md-block pt-md-4 pb-2">
-          <div className="container-fluid px-0">
-              <div className="d-flex justify-content-between align-items-center" style={{ paddingLeft: '15px', paddingRight: '15px' }}>
-                  
-                  <div style={{ flex: 1, paddingBottom: '15px' }}>
-                      <h1 style={{ 
-                          fontFamily: '"Inter", "Segoe UI", sans-serif', 
-                          fontSize: '1.53rem', 
-                          fontWeight: '700',
-                          letterSpacing: '-1px', 
-                          color: '#E0E0E0', 
-                          margin: 0,
-                          lineHeight: '1.3'
-                      }}>
-                          NNM &mdash; The Global Market for <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital<br />Name NFTs</span>
-                      </h1>
-                      
-                      <p style={{ 
-                          fontFamily: '"Inter", "Segoe UI", sans-serif', 
-                          fontSize: '15px', 
-                          fontWeight: '400',
-                          color: '#B0B0B0', 
-                          marginTop: '10px', 
-                          marginBottom: 0,
-                          maxWidth: '650px' 
-                      }}>
-                          Where Nexus Digital Name NFTs gain real financial value and global liquidity.
-                      </p>
-                  </div>
+      {/* HEADER SECTION: Unified Spacing & 3 Widgets */}
+      <div className="header-wrapper shadow-sm">
+        <div className="container-fluid p-0"> 
+            
+            <div className="widgets-grid-container">
+                <div className="widget-item"> <NGXWidget theme="dark" /> </div>
+                <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
+                <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
+            </div>
 
-                  <div style={{ minWidth: '380px' }}>
-                      <NGXWidget theme="dark" />
-                  </div>
+            <div className="row align-items-center px-3 mt-3 text-section desktop-only-text">
+                <div className="col-lg-12">
+                    <h1 className="fw-bold mb-2 main-title">
+                        NNM &mdash; The Global Market for <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital Name NFTs</span>
+                    </h1>
+                    <p className="mb-0 main-desc">
+                        Where Nexus Digital Name NFTs gain real financial value and global liquidity.
+                    </p>
+                </div>
+            </div>
 
-              </div>
-          </div>
-      </section>
+            <div className="d-block d-md-none px-3 mt-3 mobile-only-text">
+                <h1 className="fw-bold text-white h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>
+                    NNM &mdash; The Global Market of <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital Name NFTs.</span>
+                </h1>
+                <p style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', fontSize: '15px', color: '#B0B0B0', marginTop: '8px', marginBottom: 0 }}>
+                    Where Nexus Digital Name NFTs gain real financial value and global liquidity.
+                </p>
+            </div>
+        </div>
+      </div>
 
-      <section className="d-block d-md-none pt-3 pb-2 px-3">
-          <h1 className="fw-bold text-white h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>
-              NNM &mdash; The Global Market of <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital Name NFTs.</span>
-          </h1>
-          <p style={{ 
-              fontFamily: '"Inter", "Segoe UI", sans-serif', 
-              fontSize: '15px', 
-              color: '#B0B0B0', 
-              marginTop: '8px',
-              marginBottom: 0
-          }}>
-              Where Nexus Digital Name NFTs gain real financial value and global liquidity.
-          </p>
-          <div className="mt-3">
-              <NGXWidget theme="dark" />
-          </div>
-      </section>
-
-      <section className="py-2 pt-md-0 pb-md-4 overflow-hidden">
+      <section className="py-2 pt-md-2 pb-md-4 overflow-hidden">
           <div className="container-fluid px-0">
               <div className="hero-grid-system" style={{ paddingLeft: '15px', paddingRight: '15px', gap: '5px' }}>
                   <div className="hero-card position-relative overflow-hidden" style={{ height: '180px', border: '1px solid #333', cursor: 'pointer', backgroundColor: '#000' }}>
@@ -312,7 +288,7 @@ function Home() {
               <div className="col-12 col-lg-6">
                   <div className="d-flex gap-3 align-items-center justify-content-start justify-content-lg-start">
                       <div className="d-none d-md-flex binance-filter-group align-items-center">{['All', 'ETH', 'POL'].map((c) => (<button key={c} onClick={() => setCurrencyFilter(c)} className={`btn btn-sm border-0 binance-filter-btn ${currencyFilter === c ? 'active-currency' : 'text-header-gray'}`} style={{ fontSize: '13px', minWidth: '50px', fontWeight: '400' }}>{c === 'ETH' && <i className="bi bi-currency-ethereum me-1"></i>}{c}</button>))}</div>
-                      <div className="d-block d-md-none position-relative" ref={dropdownRef}><button onClick={() => setIsMobileCurrencyOpen(!isMobileCurrencyOpen)} className="btn btn-sm border-0 active-currency d-flex align-items-center justify-content-center gap-1" style={{ fontSize: '13px', borderRadius: '2px', height: '32px', width: '85px', fontWeight: '400', border: '1px solid #333' }}>{currencyFilter} <span style={{ fontSize: '10px', marginLeft: 'auto' }}>â–¼</span></button>{isMobileCurrencyOpen && (<div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '2px', backgroundColor: '#1E2329', border: '1px solid #333', borderRadius: '2px', zIndex: 1000, width: '85px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}><div onClick={() => handleMobileCurrencySelect('All')} className="px-2 py-2 text-white small cursor-pointer hover-bg-gray text-center">All</div><div onClick={() => handleMobileCurrencySelect('ETH')} className="px-2 py-2 text-white small cursor-pointer hover-bg-gray text-center">ETH</div><div onClick={() => handleMobileCurrencySelect('POL')} className="px-2 py-2 text-white small cursor-pointer hover-bg-gray text-center">POL</div></div>)}</div>
+                      <div className="d-block d-md-none position-relative" ref={dropdownRef}><button onClick={() => setIsMobileCurrencyOpen(!isMobileCurrencyOpen)} className="btn btn-sm border-0 active-currency d-flex align-items-center justify-content-center gap-1" style={{ fontSize: '13px', borderRadius: '2px', height: '32px', width: '85px', fontWeight: '400', border: '1px solid #333' }}>{currencyFilter} <span style={{ fontSize: '10px', marginLeft: 'auto' }}>▼</span></button>{isMobileCurrencyOpen && (<div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '2px', backgroundColor: '#1E2329', border: '1px solid #333', borderRadius: '2px', zIndex: 1000, width: '85px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}><div onClick={() => handleMobileCurrencySelect('All')} className="px-2 py-2 text-white small cursor-pointer hover-bg-gray text-center">All</div><div onClick={() => handleMobileCurrencySelect('ETH')} className="px-2 py-2 text-white small cursor-pointer hover-bg-gray text-center">ETH</div><div onClick={() => handleMobileCurrencySelect('POL')} className="px-2 py-2 text-white small cursor-pointer hover-bg-gray text-center">POL</div></div>)}</div>
                       <div className="binance-filter-group d-flex align-items-center">{['1H', '6H', '24H', '7D'].map((t) => (<button key={t} onClick={() => setTimeFilter(t)} className={`btn btn-sm border-0 binance-filter-btn ${timeFilter === t ? 'active-time' : 'text-header-gray'}`} style={{ fontSize: '13px', minWidth: '45px', fontWeight: '400' }}>{t}</button>))}</div>
                   </div>
               </div>
@@ -371,6 +347,52 @@ function Home() {
       </div>
 
       <style jsx global>{`
+        .header-wrapper {
+            background: #242424;
+            border-bottom: 1px solid #2E2E2E;
+            padding: 4px 0;
+            margin-top: 0;
+        }
+
+        .widgets-grid-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: nowrap;
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .widget-item {
+            flex: 0 0 310px;
+        }
+
+        .main-title { font-size: 1.53rem; color: #E0E0E0; letter-spacing: -1px; }
+        .main-desc { font-size: 15px; color: #B0B0B0; max-width: 650px; }
+        .text-section { max-width: 1050px; margin: 0 auto; }
+
+        @media (max-width: 768px) {
+            .header-wrapper {
+                padding: 2px 0 !important;
+            }
+            .widgets-grid-container {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                justify-content: space-between !important;
+                gap: 2px !important;
+                padding: 0 4px !important;
+                max-width: 100% !important;
+                overflow-x: hidden;
+            }
+            .widget-item {
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+                max-width: 33% !important;
+            }
+            .desktop-only-text { display: none !important; }
+        }
+
         .fw-light { font-weight: 300 !important; } .text-header-gray { color: #848E9C !important; } .cursor-pointer { cursor: pointer; } .hover-bg-gray:hover { background-color: #2B3139; }
         .mobile-card-wrapper::-webkit-scrollbar { display: none; } .mobile-card-wrapper { -ms-overflow-style: none; scrollbar-width: none; scroll-snap-type: x mandatory; } .mobile-card-item { scroll-snap-align: start; }
         .static-asset { box-shadow: 0 15px 35px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(40, 40, 40, 0.5), inset 0 0 15px rgba(0,0,0,0.5); }
@@ -396,6 +418,8 @@ function Home() {
                 height: 180px !important; 
             } 
         }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .blink-text { animation: blink 2s infinite; }
       `}</style>
     </main>
   );
