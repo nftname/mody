@@ -106,7 +106,7 @@ export default function NGXWidget({
       const stroke = 16; 
       
       return (
-        // تعديل viewBox: تقليل الأبعاد يجعل المحتوى يظهر أكبر (زوم)
+        // ViewBox مضبوط لعمل زوم (تكبير) للعداد داخل الحاوية
         <svg viewBox="-95 -15 190 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
             <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} />
             <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} />
@@ -185,7 +185,7 @@ export default function NGXWidget({
             </div>
 
             {/* Right Side: Gauge */}
-            {/* margin-left: auto forces it to the right */}
+            {/* marginLeft: auto (pushes right) + marginRight (pulls back left) */}
             <div className="gauge-block d-flex align-items-center justify-content-center" style={{ zIndex: 1, marginLeft: 'auto' }}>
                 <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                     <GaugeSVG />
@@ -207,9 +207,7 @@ export default function NGXWidget({
         }
         .glass-container {
             height: 80px; 
-            /* هامش أيسر بسيط للنصوص */
             padding-left: 20px; 
-            /* هامش أيمن بسيط للعداد */
             padding-right: 10px; 
             padding-top: 8px;
             padding-bottom: 8px;
@@ -217,9 +215,6 @@ export default function NGXWidget({
         .title-text {
             font-size: 9px;
             letter-spacing: 0.5px;
-        }
-        .content-row {
-            /* لا نستخدم Gap هنا، نعتمد على margin-left: auto في العداد */
         }
         .main-score {
             font-size: 24px;
@@ -229,13 +224,16 @@ export default function NGXWidget({
             margin-top: 2px;
         }
         
-        /* GAUGE STYLING - FORCED SIZE */
+        /* GAUGE STYLING (DESKTOP) */
         .gauge-block {
-            /* حجم ثابت وصريح لضمان التكبير */
             width: 140px; 
             height: 65px; 
-            /* يضمن عدم تقلص العنصر */
             flex-shrink: 0; 
+            /* التعديل الجديد للكمبيوتر: */
+            /* 1. دفع للداخل من اليمين (إزاحة لليسار) */
+            margin-right: 25px; 
+            /* 2. رفع للأعلى قليلاً عن القاعدة */
+            transform: translateY(-5px);
         }
 
         .desktop-percentage {
@@ -245,7 +243,7 @@ export default function NGXWidget({
             display: none !important;
         }
 
-        /* --- MOBILE STYLES (Compact Mode - UNTOUCHED) --- */
+        /* --- MOBILE STYLES (Compact Mode - UNTOUCHED & RESET) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 max-width: 125px !important; 
@@ -278,10 +276,12 @@ export default function NGXWidget({
             }
 
             .gauge-block {
-                /* إرجاع الحجم الصغير للجوال فقط */
                 width: 60px !important; 
                 height: 40px !important;
-                margin-left: 0 !important; /* إلغاء الدفع لليمين في الجوال */
+                margin-left: 0 !important; 
+                /* هام جداً: تصفير هوامش وإزاحات الكمبيوتر في الجوال */
+                margin-right: 0 !important; 
+                transform: none !important;
             }
         }
 
