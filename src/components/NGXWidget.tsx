@@ -45,7 +45,7 @@ export default function NGXWidget({
   const isLight = theme === 'light';
   
   const glassStyle = {
-    background: isLight ? 'rgba(255, 255, 255, 0.6)' : 'rgba(11, 14, 17, 0.4)',
+    background: isLight ? 'rgba(255, 255, 255, 0.4)' : 'rgba(11, 14, 17, 0.2)',
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
     border: isLight ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.08)',
@@ -143,12 +143,10 @@ export default function NGXWidget({
       <div className="glass-container d-flex flex-column justify-content-between rounded-3 position-relative overflow-hidden"
            style={{ ...glassStyle }}>
         
-        {/* Header Row */}
         <div className="d-flex align-items-center justify-content-between w-100" style={{ zIndex: 2 }}>
             <div className="d-flex align-items-center gap-2">
                 <span className="fw-bold text-nowrap title-text" style={{ color: titleColor }}>{title}</span>
                 
-                {/* Mobile Only: Percentage moved to header */}
                 <div className="mobile-percentage fw-bold d-flex align-items-center" style={{ fontSize: '9px', color: changeColor, display: 'none' }}>
                     {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
                 </div>
@@ -164,16 +162,13 @@ export default function NGXWidget({
                     }}>LIVE</span>
         </div>
 
-        {/* Content Row */}
         <div className="content-row d-flex align-items-center w-100" style={{ height: '100%' }}>
             
-            {/* Left Side: Number & Info */}
             <div className="text-block d-flex flex-column justify-content-center" style={{ zIndex: 2 }}>
                 <div className="d-flex align-items-end gap-2 mb-1 desktop-text-shift mobile-text-row">
                     <div className="fw-bold lh-1 main-score" style={{ color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}>
                         {scoreInt}<span style={{ fontSize: '0.5em', opacity: 0.8 }}>.{scoreDec}</span>
                     </div>
-                    {/* Desktop Only: Percentage stays here */}
                     <div className="desktop-percentage fw-bold d-flex align-items-center mb-1" style={{ fontSize: '9px', color: changeColor }}>
                         {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
                     </div>
@@ -183,7 +178,6 @@ export default function NGXWidget({
                 </div>
             </div>
 
-            {/* Right Side: Gauge */}
             <div className="gauge-block d-flex align-items-center justify-content-center" style={{ zIndex: 1, marginLeft: 'auto' }}>
                 <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                     <GaugeSVG />
@@ -195,7 +189,6 @@ export default function NGXWidget({
     </Link>
 
     <style jsx>{`
-        /* --- GENERAL & DESKTOP STYLES --- */
         .ngx-widget-container {
             position: relative;
             width: 100%;
@@ -215,11 +208,9 @@ export default function NGXWidget({
             letter-spacing: 0.5px;
         }
         .main-score {
-            /* تكبير الخط بنسبة 10% تقريباً (كان 24) */
             font-size: 27px; 
         }
         
-        /* رفع الرقم للأعلى في الكمبيوتر فقط */
         .desktop-text-shift {
             transform: translateY(-4px);
         }
@@ -229,7 +220,6 @@ export default function NGXWidget({
             margin-top: 2px;
         }
         
-        /* GAUGE STYLING (DESKTOP) */
         .gauge-block {
             width: 140px; 
             height: 65px; 
@@ -245,15 +235,15 @@ export default function NGXWidget({
             display: none !important;
         }
 
-        /* --- MOBILE STYLES (Compact Mode - PROTECTED) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
-                max-width: 125px !important; 
+                min-width: 112px !important; 
+                max-width: 112px !important; 
                 margin-right: auto !important; 
             }
             .glass-container {
                 padding: 4px !important;
-                height: 70px !important; 
+                height: 63px !important; 
                 padding-right: 4px !important; 
             }
             
@@ -265,13 +255,15 @@ export default function NGXWidget({
             .text-block {
                 padding-top: 0 !important; 
             }
-
-            .main-score {
-                /* إعادة الحجم الصغير للجوال */
-                font-size: 18px !important; 
+            
+            .title-text {
+                font-size: 8px !important;
             }
 
-            /* إلغاء رفع الرقم في الجوال */
+            .main-score {
+                font-size: 16px !important; 
+            }
+
             .desktop-text-shift {
                 transform: none !important;
             }
@@ -284,8 +276,8 @@ export default function NGXWidget({
             }
 
             .gauge-block {
-                width: 60px !important; 
-                height: 40px !important;
+                width: 54px !important; 
+                height: 36px !important;
                 margin-left: 0 !important; 
                 margin-right: 0 !important; 
                 transform: none !important;
