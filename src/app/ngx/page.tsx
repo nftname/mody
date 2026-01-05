@@ -128,12 +128,12 @@ export default function NGXPage() {
       
       <MarketTicker />
 
-      {/* Header Section: Removed py-1 class and set explicit 2px padding top/bottom */}
+      {/* Header Section: Reduced horizontal padding from px-4 to px-2 (This shifts content Left by ~50%) */}
       <div className="px-2 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}`, paddingTop: '2px', paddingBottom: '2px' }}>
         <div className="container-fluid">
             
-            {/* Widgets Row */}
-            <div className="d-flex flex-wrap align-items-center gap-3 mb-4 widget-container-mobile">
+            {/* Widgets Row: Reduced bottom margin from mb-4 to mb-2 (50% reduction) */}
+            <div className="d-flex flex-wrap align-items-center gap-3 mb-2 widget-container-mobile">
                 
                 {/* 1. NGX Sentiment Widget */}
                 <div className="widget-wrapper">
