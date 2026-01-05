@@ -5,9 +5,10 @@ import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
+import NGXCapWidget from '@/components/NGXCapWidget';
+import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 import { usePublicClient } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
-// استيراد العنوان الصحيح من ملف الكونفيج
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 
 const MARKET_ABI = parseAbi([
@@ -94,7 +95,6 @@ function MarketPage() {
     const fetchMarketData = async () => {
         if (!publicClient) return;
         try {
-            // استخدام العنوان الصحيح من ملف الكونفيج
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -196,63 +196,41 @@ function MarketPage() {
   const getCurrencyLabel = () => currencyFilter === 'ETH' ? 'ETH' : 'POL';
 
   return (
-    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px' }}>
+    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', overflowX: 'hidden' }}>
       
       <MarketTicker />
 
-      <section className="container pt-3 pb-3 d-none d-md-block">
-          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-4">
-              <div className="text-center text-lg-start pt-2" style={{ flex: 1 }}>
-                  <h1 className="fw-bold text-white mb-2 text-nowrap-desktop" 
-                      style={{ 
-                          fontFamily: '"Inter", "Segoe UI", sans-serif', 
-                          fontSize: '1.53rem', 
-                          fontWeight: '700', 
-                          letterSpacing: '-1px', 
-                          lineHeight: '1.2',
-                          color: '#E0E0E0'
-                      }}>
-                      Buy & Sell <span style={{ color: '#E0E0E0' }}>Nexus Rare</span> Digital Name Assets NFTs
-                  </h1>
-                  
-                  <p style={{ 
-                      fontSize: '15px', 
-                      fontFamily: '"Inter", "Segoe UI", sans-serif', 
-                      fontWeight: '400', 
-                      lineHeight: '1.6', 
-                      maxWidth: '650px', 
-                      color: '#B0B0B0', 
-                      marginTop: '10px',
-                      marginBottom: 0,
-                  }}>
-                      Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets — turning NFTs into liquid financial power.
-                  </p>
-              </div>
-              <div style={{ width: '100%', maxWidth: '380px' }}>
-                  <NGXWidget />
-              </div>
-          </div>
-      </section>
+      {/* HEADER SECTION: Unified Spacing & 3 Widgets */}
+      <div className="header-wrapper shadow-sm">
+        <div className="container-fluid p-0"> 
+            
+            <div className="widgets-grid-container">
+                <div className="widget-item"> <NGXWidget theme="dark" /> </div>
+                <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
+                <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
+            </div>
 
-      <section className="d-block d-md-none pt-3 pb-2 px-3 text-start">
-          <h1 className="fw-bold text-white h4 text-start m-0" 
-              style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>
-              Buy & Sell <span style={{ color: '#E0E0E0' }}>Nexus Rare</span> Digital Name Assets NFTs.
-          </h1>
-          <p className="text-start" style={{ 
-              fontFamily: '"Inter", "Segoe UI", sans-serif', 
-              fontSize: '15px', 
-              color: '#B0B0B0', 
-              marginTop: '8px',
-              marginBottom: 0,
-              lineHeight: '1.5'
-          }}>
-              Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets. Turn your NFTs into liquid financial power.
-          </p>
-          <div className="mt-3">
-              <NGXWidget />
-          </div>
-      </section>
+            <div className="row align-items-center px-3 mt-3 text-section desktop-only-text">
+                <div className="col-lg-12">
+                    <h1 className="fw-bold mb-2 main-title">
+                        Buy & Sell <span style={{ color: '#E0E0E0' }}>Nexus Rare</span> Digital Name Assets NFTs
+                    </h1>
+                    <p className="mb-0 main-desc">
+                        Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets.
+                    </p>
+                </div>
+            </div>
+
+            <div className="d-block d-md-none px-3 mt-3 mobile-only-text">
+                <h1 className="fw-bold text-white h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>
+                    Buy & Sell <span style={{ color: '#E0E0E0' }}>Nexus Rare</span> Digital Name Assets NFTs.
+                </h1>
+                <p style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', fontSize: '15px', color: '#B0B0B0', marginTop: '8px', marginBottom: 0, lineHeight: '1.5' }}>
+                    Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets.
+                </p>
+            </div>
+        </div>
+      </div>
 
       <section className="container mb-0 mt-4">
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" 
@@ -419,26 +397,66 @@ function MarketPage() {
       </section>
 
       <style jsx global>{`
+        .header-wrapper {
+            background: #242424;
+            border-bottom: 1px solid #2E2E2E;
+            padding: 4px 0;
+            margin-top: 0;
+        }
+
+        .widgets-grid-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: nowrap;
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .widget-item {
+            flex: 0 0 310px;
+        }
+
+        .main-title { font-size: 1.53rem; color: #E0E0E0; letter-spacing: -1px; }
+        .main-desc { font-size: 15px; color: #B0B0B0; max-width: 650px; }
+        .text-section { max-width: 1050px; margin: 0 auto; }
+
+        @media (max-width: 768px) {
+            .header-wrapper {
+                padding: 2px 0 !important;
+            }
+            .widgets-grid-container {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                justify-content: space-between !important;
+                gap: 2px !important;
+                padding: 0 4px !important;
+                max-width: 100% !important;
+                overflow-x: hidden;
+            }
+            .widget-item {
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+                max-width: 33% !important;
+            }
+            .desktop-only-text { display: none !important; }
+        }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         .market-row:hover td { background-color: rgba(255, 255, 255, 0.03) !important; }
-        
         .name-hover:hover { color: #FCD535; text-decoration: none !important; }
-        
         @keyframes subtleShake { 0% { transform: translateX(0); } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 75% { transform: translateX(1px); } 100% { transform: translateX(0); } }
         .market-row:hover .name-shake { animation: subtleShake 0.4s ease-in-out; color: #FCD535 !important; }
-
         .filter-item { border-bottom: 2px solid transparent; transition: all 0.2s; cursor: pointer; padding-bottom: 4px; }
         .filter-item:hover, .filter-item.active { color: #fff !important; border-bottom: 2px solid #FCD535; }
-        
         .binance-filter-btn { border-radius: 2px; padding: 6px 12px; transition: all 0.2s; }
         .binance-filter-group { border: 1px solid #333; background: transparent; padding: 4px; border-radius: 2px; gap: 2px; }
         .active-time, .active-currency { background-color: #2B3139 !important; color: #FCD535 !important; }
         .text-header-gray { color: #848E9C !important; }
-
         .hover-gold-text:hover:not(.active-time):not(.active-currency) { color: #FCD535 !important; }
-        
         .hover-gold:hover { color: #FCD535 !important; }
         .hover-white:hover { color: #fff !important; border-color: #fff !important; }
         .mobile-filter-gap { margin-bottom: 1rem !important; }
