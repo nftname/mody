@@ -2,13 +2,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries } from 'lightweight-charts';
 
-const TIMEFRAMES = ['1H', '4H', '1D', '1W', '1M', '1Y', 'ALL'];
 const SECTORS = [
-  { key: 'All Index', color: '#C0D860' },     // أخضر مصفر
-  { key: 'Name Assets', color: '#FCD535' },   // ذهبي ملكي
-  { key: 'GameFi', color: '#0ECB81' },        // أخضر نيون
-  { key: 'Art', color: '#7B61FF' },           // أرجواني
-  { key: 'Land', color: '#F5841F' }           // برتقالي
+  { key: 'Imperium Name Assets', color: '#FCD535', startYear: 2025 },
+  { key: 'All Index', color: '#C0D860', startYear: 2017 },
+  { key: 'Art NFTs', color: '#7B61FF', startYear: 2017 },
+  { key: 'Gaming NFTs', color: '#0ECB81', startYear: 2019 },
+  { key: 'Utility NFTs', color: '#00D8D6', startYear: 2020 },
+  { key: 'Standard Domains', color: '#F5841F', startYear: 2017 }
+];
+
+const TIMEFRAMES = [
+    { label: '1H', value: '1H' },
+    { label: '4H', value: '4H' },
+    { label: '1D', value: '1D' },
+    { label: '1W', value: '1W' },
+    { label: '1M', value: '1M' },
+    { label: '1Y', value: '1Y' },
+    { label: 'ALL', value: 'ALL' }
 ];
 
 export default function NGXLiveChart() {
@@ -18,37 +28,50 @@ export default function NGXLiveChart() {
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<any>(null);
 
-  // دالة توليد البيانات بذكاء حسب القطاع والتاريخ
-  const generateData = (timeframe: string, sector: string) => {
-    let data = [];
-    const now = new Date();
-    let date = new Date();
-    
-    // منطق التاريخ: Name Assets يبدأ من 2025، الباقي من 2017
-    const startYear = sector === 'Name Assets' ? 2025 : 2017;
-    date.setFullYear(startYear, 0, 1);
-    
-    let value = sector === 'Name Assets' ? 100 : 20; // قيمة بداية مختلفة
-    
-    // حساب عدد النقاط التقريبي
-    let points = timeframe === '1H' ? 60 : timeframe === 'ALL' ? (sector === 'Name Assets' ? 365 : 2500) : 500;
+  const generateData = (timeframe: string, sectorKey: string) => {
+    const data = [];
+    const now = new Date(); 
+    let startDate = new Date();
+    const sectorInfo = SECTORS.find(s => s.key === sectorKey) || SECTORS[0];
 
-    for (let i = 0; i < points; i++) {
-      const change = (Math.random() - 0.45) * 2; 
-      value += change;
-      if (value < 5) value = 5;
-
-      // تقديم الوقت
-      if (timeframe === 'ALL') date.setDate(date.getDate() + 1);
-      else if (timeframe === '1M' || timeframe === '1Y') date.setDate(date.getDate() + 1);
-      else date.setMinutes(date.getMinutes() + 1);
-
-      // التوقف عند تاريخ اليوم
-      if (date > now) break;
-
-      const time = date.getTime() / 1000;
-      data.push({ time: time as any, value: value });
+    switch (timeframe) {
+        case '1H': startDate.setHours(now.getHours() - 1); break;
+        case '4H': startDate.setHours(now.getHours() - 4); break;
+        case '1D': startDate.setDate(now.getDate() - 1); break;
+        case '1W': startDate.setDate(now.getDate() - 7); break;
+        case '1M': startDate.setMonth(now.getMonth() - 1); break;
+        case '1Y': startDate.setFullYear(now.getFullYear() - 1); break;
+        case 'ALL': startDate.setFullYear(sectorInfo.startYear, 0, 1); break;
+        default: startDate.setFullYear(sectorInfo.startYear, 0, 1);
     }
+
+    let currentValue = sectorKey === 'Imperium Name Assets' ? 100 : 40;
+    let timeStep = 0; 
+    
+    const diffTime = Math.abs(now.getTime() - startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+    
+    let totalPoints = 0;
+    
+    if (timeframe === '1H' || timeframe === '4H' || timeframe === '1D') {
+        totalPoints = 120; 
+        timeStep = diffTime / totalPoints;
+    } else {
+        totalPoints = diffDays < 100 ? diffDays : Math.min(diffDays, 1000); 
+        timeStep = diffTime / totalPoints;
+    }
+
+    let currentTime = startDate.getTime();
+    
+    for (let i = 0; i <= totalPoints; i++) {
+        const change = (Math.random() - 0.45) * 2.5;
+        currentValue += change;
+        if (currentValue < 10) currentValue = 10;
+        
+        data.push({ time: Math.floor(currentTime / 1000) as any, value: currentValue });
+        currentTime += timeStep;
+    }
+
     return data;
   };
 
@@ -70,42 +93,45 @@ export default function NGXLiveChart() {
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         timeVisible: true,
+        fixLeftEdge: true,
+        fixRightEdge: true,
+        rightOffset: 10,
+        minBarSpacing: 0.5,
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
+        scaleMargins: { top: 0.2, bottom: 0.1 },
       },
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: {
-            color: 'rgba(255, 255, 255, 0.2)',
+            color: 'rgba(255, 255, 255, 0.3)',
             width: 1,
             style: 3,
             labelBackgroundColor: '#242424',
         },
         horzLine: {
-            color: 'rgba(255, 255, 255, 0.2)',
+            color: 'rgba(255, 255, 255, 0.3)',
             width: 1,
             style: 3,
             labelBackgroundColor: '#242424',
         },
       },
-      localization: {
-        locale: 'en-US', // إجبار اللغة الإنجليزية
-      },
-      handleScroll: false, // منع تداخل السكرول في الجوال
-      handleScale: false,
+      localization: { locale: 'en-US' },
+      handleScroll: { vertTouchDrag: false }, 
+      handleScale: { axisPressedMouseMove: true },
     });
 
-    const currentSectorColor = SECTORS.find(s => s.key === activeSector)?.color || '#C0D860';
+    const currentSector = SECTORS.find(s => s.key === activeSector) || SECTORS[0];
 
     const newSeries = chart.addSeries(AreaSeries, {
-      lineColor: currentSectorColor, // لون الخط ديناميكي
-      topColor: `${currentSectorColor}66`, // شفافية 40%
-      bottomColor: `${currentSectorColor}00`, // شفافية 0%
+      lineColor: currentSector.color,
+      topColor: `${currentSector.color}66`,
+      bottomColor: `${currentSector.color}00`,
       lineWidth: 2,
     });
 
-    newSeries.setData(generateData('ALL', activeSector));
+    newSeries.setData(generateData(activeTimeframe, activeSector));
     chart.timeScale().fitContent();
 
     const handleResize = () => {
@@ -124,7 +150,6 @@ export default function NGXLiveChart() {
     };
   }, []);
 
-  // تحديث البيانات والألوان عند التغيير
   useEffect(() => {
     if (seriesInstance && chartInstance) {
         const newData = generateData(activeTimeframe, activeSector);
@@ -141,36 +166,48 @@ export default function NGXLiveChart() {
     }
   }, [activeTimeframe, activeSector]);
 
+  const currentColor = SECTORS.find(s => s.key === activeSector)?.color;
+
   return (
-    <div className="ngx-chart-glass mb-5">
-      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 px-2 pt-2 gap-3">
+    <div className="ngx-chart-glass mb-4">
+      
+      <div className="filters-container">
         
-        {/* Sector Filter */}
-        <div className="d-flex gap-2 align-items-center">
-           <span className="text-muted small fw-bold">SECTOR:</span>
-           <div className="sector-selector">
-              <select 
+        <div className="sector-filter-wrapper">
+           <select 
                 value={activeSector} 
                 onChange={(e) => setActiveSector(e.target.value)}
-                className="glass-select"
-                style={{ color: SECTORS.find(s => s.key === activeSector)?.color }}
-              >
+                className="custom-dropdown"
+                style={{ color: currentColor, borderColor: 'rgba(255,255,255,0.1)' }}
+           >
                 {SECTORS.map(s => <option key={s.key} value={s.key}>{s.key}</option>)}
-              </select>
-           </div>
+           </select>
         </div>
 
-        {/* Timeframe Filter */}
-        <div className="d-flex gap-1 bg-glass-pill p-1 flex-wrap justify-content-end">
-            {TIMEFRAMES.map((tf) => (
-                <button
-                    key={tf}
-                    onClick={() => setActiveTimeframe(tf)}
-                    className={`btn-timeframe ${activeTimeframe === tf ? 'active' : ''}`}
+        <div className="time-filter-wrapper">
+            {/* Mobile Dropdown for Time */}
+            <div className="d-block d-md-none">
+                <select 
+                    value={activeTimeframe} 
+                    onChange={(e) => setActiveTimeframe(e.target.value)}
+                    className="custom-dropdown text-end"
                 >
-                    {tf}
-                </button>
-            ))}
+                    {TIMEFRAMES.map(tf => <option key={tf.value} value={tf.value}>{tf.label}</option>)}
+                </select>
+            </div>
+
+            {/* Desktop Buttons for Time */}
+            <div className="d-none d-md-flex gap-1 bg-glass-pill p-1">
+                {TIMEFRAMES.map((tf) => (
+                    <button
+                        key={tf.value}
+                        onClick={() => setActiveTimeframe(tf.value)}
+                        className={`btn-timeframe ${activeTimeframe === tf.value ? 'active' : ''}`}
+                    >
+                        {tf.label}
+                    </button>
+                ))}
+            </div>
         </div>
       </div>
 
@@ -195,15 +232,32 @@ export default function NGXLiveChart() {
             overflow: hidden;
         }
 
-        /* إخفاء شعار TradingView */
-        .chart-canvas-wrapper :global(a[href*="tradingview"]) {
-            display: none !important;
+        .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
+
+        .chart-canvas-wrapper { width: 100%; height: 400px; }
+
+        .filters-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 5px;
         }
 
-        .chart-canvas-wrapper {
-            width: 100%;
-            height: 400px;
+        .custom-dropdown {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #E0E0E0;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            min-width: 120px;
         }
+        .custom-dropdown option { background-color: #1E1E1E; color: #fff; }
 
         .btn-timeframe {
             background: transparent;
@@ -216,34 +270,13 @@ export default function NGXLiveChart() {
             cursor: pointer;
             transition: all 0.2s;
         }
-
-        .btn-timeframe:hover {
-            color: #fff;
-            background: rgba(255,255,255,0.05);
-        }
-
-        .btn-timeframe.active {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .glass-select {
-            background: transparent;
-            border: none;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            outline: none;
-        }
-        .glass-select option {
-            background-color: #1E1E1E;
-            color: #fff;
-        }
+        .btn-timeframe:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .btn-timeframe.active { color: #fff; background: rgba(255, 255, 255, 0.1); }
 
         @media (max-width: 768px) {
-            .chart-canvas-wrapper {
-                height: 280px;
-            }
+            .chart-canvas-wrapper { height: 300px; }
+            .filters-container { flex-direction: row; gap: 10px; }
+            .custom-dropdown { font-size: 13px; padding: 5px 8px; min-width: 100px; }
         }
       `}</style>
     </div>

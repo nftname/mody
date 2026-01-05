@@ -48,7 +48,7 @@ export default function NGXPage() {
       <div className="container-fluid py-4 px-2 px-md-4">
         
         {/* LIVE CHART */}
-        <div className="content-container mb-5">
+        <div className="content-container mb-4">
              <NGXLiveChart />
         </div>
 
@@ -122,9 +122,9 @@ export default function NGXPage() {
                     In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.
                 </p>
 
-                {/* DISCLAIMER (Removed Title, Smaller Text) */}
-                <div className="mt-5 pt-4 border-top border-secondary" style={{ borderColor: '#333 !important' }}>
-                    <p className="fst-italic mb-0 text-dark-grey" style={{ lineHeight: '1.6', fontSize: '10px' }}>
+                {/* DISCLAIMER */}
+                <div className="w-100 mt-4 pt-4 border-top border-secondary" style={{ borderColor: '#333 !important' }}>
+                    <p className="fst-italic mb-0 text-dark-grey w-100" style={{ lineHeight: '1.4', fontSize: '10px' }}>
                         This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
                     </p>
                 </div>
@@ -166,7 +166,6 @@ export default function NGXPage() {
         .main-desc { font-size: 15px; color: ${TEXT_MUTED}; max-width: 650px; }
         .text-section { max-width: 1050px; margin: 0 auto; }
         
-        /* UNIFIED HEADINGS STYLE */
         .article-heading {
             font-size: 1.65rem; 
             color: ${TEXT_PRIMARY}; 
@@ -186,7 +185,12 @@ export default function NGXPage() {
         }
         
         .text-dark-grey {
-            color: #555;
+            color: #444;
+        }
+        
+        .article-wrapper {
+            margin-left: 0;
+            padding-left: 0;
         }
 
         @media (max-width: 768px) {
