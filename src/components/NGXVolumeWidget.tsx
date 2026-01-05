@@ -245,7 +245,7 @@ export default function NGXVolumeWidget({
             display: inline-block;
         }
 
-        /* --- MOBILE STYLES (REFINED ADAPTATION) --- */
+        /* --- MOBILE STYLES (FINAL REFINEMENT) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 min-width: 112px !important; 
@@ -273,7 +273,6 @@ export default function NGXVolumeWidget({
                 flex-direction: column !important; 
                 align-items: flex-start !important;
                 gap: 0px !important;
-                /* PUSH DOWN to exploit empty space */
                 margin-top: 6px !important; 
                 margin-bottom: 2px !important;
             }
@@ -288,7 +287,6 @@ export default function NGXVolumeWidget({
                 gap: 3px !important; 
             }
             
-            /* REDUCED BY 20% to prevent bar overlap (Approx 9px) */
             .vol-value { 
                 font-size: 9px !important; 
                 line-height: 1 !important;
@@ -316,9 +314,11 @@ export default function NGXVolumeWidget({
                 padding-right: 0px !important; 
             }
             
+            /* --- FINAL LABEL FIX: REDUCED BY 15% --- */
             .bar-label {
-                font-size: 4px !important; 
+                font-size: 3.4px !important; /* Reduced from 4px to 3.4px */
                 margin-top: 1px !important;
+                letter-spacing: 0.1px !important;
             }
             
             .bar-wrapper {
