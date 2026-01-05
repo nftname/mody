@@ -1,11 +1,8 @@
-
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType, CrosshairMode } from 'lightweight-charts';
+import { createChart, ColorType, CrosshairMode, AreaSeries } from 'lightweight-charts';
 
-// فترات الزمن
 const TIMEFRAMES = ['1H', '4H', '1D', '1W', '1M', '1Y', 'ALL'];
-// القطاعات
 const SECTORS = ['All Index', 'Name Assets', 'GameFi', 'Art', 'Land'];
 
 export default function NGXLiveChart() {
@@ -15,30 +12,23 @@ export default function NGXLiveChart() {
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<any>(null);
 
-  // دالة توليد بيانات وهمية (مؤقتاً) لمحاكاة الشكل
-  // Generate dummy data based on timeframe logic
   const generateData = (timeframe: string) => {
     let data = [];
     let date = new Date();
-    date.setFullYear(2017, 0, 1); // Start from 2017
+    date.setFullYear(2017, 0, 1); 
     let value = 20;
     
-    // Adjust points count based on timeframe (simulation)
     let points = timeframe === '1H' ? 60 : timeframe === 'ALL' ? 2000 : 500;
     
     for (let i = 0; i < points; i++) {
-      // Random walk logic
       const change = (Math.random() - 0.48) * 2; 
       value += change;
-      if (value < 5) value = 5; // Minimum floor
+      if (value < 5) value = 5; 
 
-      // Advance time
       if (timeframe === 'ALL') date.setDate(date.getDate() + 1);
       else date.setMinutes(date.getMinutes() + 1);
 
-      // Format date string (YYYY-MM-DD for daily, timestamp for intraday)
       const time = date.getTime() / 1000; 
-      
       data.push({ time: time as any, value: value });
     }
     return data;
@@ -47,16 +37,15 @@ export default function NGXLiveChart() {
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    // 1. إعداد الرسم البياني بستايل "زجاجي ونظيف"
     const chart = createChart(chartContainerRef.current, {
       layout: {
-        background: { type: ColorType.Solid, color: 'transparent' }, // خلفية شفافة
+        background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#B0B0B0',
         fontFamily: '"Inter", sans-serif',
       },
       grid: {
-        vertLines: { visible: false }, // إخفاء الخطوط الطولية
-        horzLines: { color: 'rgba(255, 255, 255, 0.05)' }, // خطوط عرضية خفيفة جداً
+        vertLines: { visible: false },
+        horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
       },
       width: chartContainerRef.current.clientWidth,
       height: 400,
@@ -84,23 +73,20 @@ export default function NGXLiveChart() {
       },
     });
 
-    // 2. إعداد السلسلة اللونية (Area Series) - أبيض مع أخضر خفيف
-    const newSeries = chart.addAreaSeries({
-      lineColor: '#FFFFFF', // الخط العلوي أبيض
-      topColor: 'rgba(14, 203, 129, 0.4)', // أخضر خفيف جداً من الأعلى (مثل الفوليوم)
-      bottomColor: 'rgba(14, 203, 129, 0.0)', // يتلاشى للشفافية
+    const newSeries = chart.addSeries(AreaSeries, {
+      lineColor: '#FFFFFF',
+      topColor: 'rgba(14, 203, 129, 0.4)',
+      bottomColor: 'rgba(14, 203, 129, 0.0)',
       lineWidth: 2,
     });
 
-    // تحميل البيانات الأولية
     newSeries.setData(generateData('ALL'));
-
-    // ضبط التحجيم
     chart.timeScale().fitContent();
 
-    // Responsive Resize
     const handleResize = () => {
-      chart.applyOptions({ width: chartContainerRef.current?.clientWidth });
+      if (chartContainerRef.current) {
+        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+      }
     };
     window.addEventListener('resize', handleResize);
 
@@ -113,10 +99,8 @@ export default function NGXLiveChart() {
     };
   }, []);
 
-  // تحديث البيانات عند تغيير الفلاتر
   useEffect(() => {
     if (seriesInstance) {
-        // هنا مستقبلاً سنستدعي الـ API الحقيقي بناءً على الفلتر
         const newData = generateData(activeTimeframe);
         seriesInstance.setData(newData);
         if (chartInstance) chartInstance.timeScale().fitContent();
@@ -125,11 +109,7 @@ export default function NGXLiveChart() {
 
   return (
     <div className="ngx-chart-glass mb-5">
-      
-      {/* HEADER & FILTERS */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 px-2 pt-2">
-        
-        {/* Sector Filter (Dropdown Style) */}
         <div className="d-flex gap-2 align-items-center mb-2 mb-md-0">
            <span className="text-muted small fw-bold">SECTOR:</span>
            <div className="sector-selector">
@@ -143,7 +123,6 @@ export default function NGXLiveChart() {
            </div>
         </div>
 
-        {/* Timeframe Filter (Minimal Text) */}
         <div className="d-flex gap-1 bg-glass-pill p-1">
             {TIMEFRAMES.map((tf) => (
                 <button
@@ -157,10 +136,8 @@ export default function NGXLiveChart() {
         </div>
       </div>
 
-      {/* CHART CONTAINER */}
       <div ref={chartContainerRef} className="chart-canvas-wrapper" />
       
-      {/* DISCLAIMER */}
       <div className="text-end px-2 pb-2">
           <small className="text-muted fst-italic" style={{ fontSize: '10px' }}>
               * Data updated live via NGX Engine. Past performance is not indicative of future results.
@@ -169,10 +146,10 @@ export default function NGXLiveChart() {
 
       <style jsx>{`
         .ngx-chart-glass {
-            background: rgba(255, 255, 255, 0.02); /* زجاجي خفيف جداً */
+            background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05); /* إطار شبه مخفي */
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 8px;
             padding: 15px;
             width: 100%;
@@ -185,7 +162,6 @@ export default function NGXLiveChart() {
             height: 400px;
         }
 
-        /* Timeframe Buttons Style */
         .btn-timeframe {
             background: transparent;
             border: none;
@@ -204,11 +180,10 @@ export default function NGXLiveChart() {
         }
 
         .btn-timeframe.active {
-            color: #0ecb81; /* الأخضر المستخدم في الفوليوم */
+            color: #0ecb81;
             background: rgba(14, 203, 129, 0.1);
         }
 
-        /* Sector Select Style */
         .glass-select {
             background: transparent;
             color: #E0E0E0;
@@ -225,7 +200,7 @@ export default function NGXLiveChart() {
 
         @media (max-width: 768px) {
             .chart-canvas-wrapper {
-                height: 250px; /* أقصر قليلاً في الجوال */
+                height: 250px;
             }
         }
       `}</style>

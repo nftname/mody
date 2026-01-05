@@ -1,13 +1,10 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell
-} from 'recharts';
 import NGXWidget from '@/components/NGXWidget';
 import NGXCapWidget from '@/components/NGXCapWidget';
-import NGXVolumeWidget from '@/components/NGXVolumeWidget'; 
+import NGXVolumeWidget from '@/components/NGXVolumeWidget';
+import NGXLiveChart from '@/components/NGXLiveChart';
 import MarketTicker from '@/components/MarketTicker';
-import Link from 'next/link';
 
 const BACKGROUND_DARK = '#1E1E1E';
 const SURFACE_DARK = '#242424';
@@ -15,93 +12,6 @@ const BORDER_COLOR = '#2E2E2E';
 const TEXT_PRIMARY = '#E0E0E0';
 const TEXT_MUTED = '#B0B0B0';
 const GOLD_SOLID = '#F0C420';
-const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
-
-const historicalData = [
-  { date: '2017', value: 20 },
-  { date: '2018', value: 45 },
-  { date: '2019', value: 60 },
-  { date: '2020', value: 150 },
-  { date: '2021', value: 980 },
-  { date: '2022', value: 350 },
-  { date: '2023', value: 320 },
-  { date: '2024', value: 550 },
-  { date: 'May 25', value: 720 },
-  { date: 'Sep 25', value: 890 },
-  { date: 'Dec 25', value: 1100 },
-];
-
-const forecastData = [
-  { year: 'Q1 25', value: 720 }, { year: 'Q3 25', value: 890 },
-  { year: 'Q1 26', value: 1150 }, { year: 'Q3 26', value: 1400 },
-];
-
-const marketIntelligence = [
-  {
-    id: 1,
-    category: "STRATEGIC ANALYSIS",
-    date: "Dec 07, 2025",
-    title: "Digital Name Standards: Bridging Ownership & Value",
-    content: "As high-value digital assets move on-chain, clarity and transparency of ownership become essential. Randomized identifiers no longer suffice for premium assets. This drives demand for high-quality Name Assets to serve as a readable, valuable ownership layer.",
-    sources: "Sources: Industry Reports, Market Analysis",
-  },
-  {
-    id: 2,
-    category: "SECTOR OUTLOOK",
-    date: "Dec 06, 2025",
-    title: "Gaming Economies: The Rise of Tradeable Names",
-    content: "Leading game developers are embracing Web3 models. Gamer identities are shifting from rented entries to fully tradeable, liquid Name Assets. Market trends indicate significant growth in Name Asset contracts.",
-    sources: "Sources: Global Market Analysis, Sector Research",
-  },
-  {
-    id: 3,
-    category: "TECHNICAL DEEP DIVE",
-    date: "Dec 05, 2025",
-    title: "Liquidity Insights: Premium Name Assets vs Social Identities",
-    content: "The digital name market is dividing into two layers: social recognition and commercial tradeable assets. While social reputation develops gradually, premium Name Assets operate like scarce, tradable digital real estate.",
-    sources: "Sources: Market Intelligence, Global Analysis",
-  }
-];
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-            <div className="p-2 shadow-sm" style={{ fontSize: '11px', background: SURFACE_DARK, border: `1px solid ${BORDER_COLOR}`, color: TEXT_PRIMARY }}>
-                <p className="fw-bold m-0">{label}</p>
-                <p className="fw-bold m-0" style={{ color: GOLD_SOLID }}>NGX: {payload[0].value}</p>
-      </div>
-    );
-  }
-  return null;
-};
-
-const SectionHeader = ({ title }: { title: string }) => (
-    <div className="d-flex align-items-center mb-3 pb-2" style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>
-        <div style={{ width: '4px', height: '16px', background: GOLD_SOLID, marginRight: '10px' }}></div>
-        <h3 className="fw-bold m-0 text-uppercase" style={{ fontSize: '14px', letterSpacing: '1px', color: TEXT_PRIMARY }}>{title}</h3>
-    </div>
-);
-
-const LiveMomentumChart = () => {
-    const [data, setData] = useState([{ val: 40 }, { val: 60 }, { val: 45 }, { val: 80 }, { val: 70 }, { val: 90 }]);
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setData(prev => prev.map(item => ({ val: Math.max(20, Math.min(100, item.val + (Math.random() * 20 - 10))) })));
-        }, 2000);
-        return () => clearInterval(interval);
-    }, []);
-    return (
-        <div style={{ height: '80px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                    <Bar dataKey="val" radius={[2, 2, 0, 0]}>
-                        {data.map((entry, index) => <Cell key={`cell-${index}`} fill={GOLD_SOLID} fillOpacity={0.6 + (index * 0.05)} />)}
-                    </Bar>
-                </BarChart>
-            </ResponsiveContainer>
-        </div>
-    );
-};
 
 export default function NGXPage() {
   const [mounted, setMounted] = useState(false);
@@ -109,19 +19,22 @@ export default function NGXPage() {
 
   if (!mounted) return <div className="p-5 text-center">Loading Analytics...</div>;
 
-    return (
-        <main className="ngx-page" style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', color: TEXT_PRIMARY }}>
+  return (
+    <main className="ngx-page" style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', color: TEXT_PRIMARY }}>
       <MarketTicker />
 
+      {/* HEADER SECTION: Indicators & Main Title */}
       <div className="header-wrapper shadow-sm">
         <div className="container-fluid p-0"> 
             
+            {/* WIDGETS CONTAINER */}
             <div className="widgets-grid-container">
                 <div className="widget-item"> <NGXWidget theme="dark" /> </div>
                 <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
                 <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
             </div>
 
+            {/* MAIN TITLE & DESCRIPTION */}
             <div className="row align-items-center px-2 mt-3 text-section">
                 <div className="col-lg-12">
                     <h1 className="fw-bold mb-2 main-title">
@@ -135,50 +48,106 @@ export default function NGXPage() {
         </div>
       </div>
 
-      <div className="container-fluid py-4 px-2">
-        <div className="row g-4">
-            <div className="col-lg-8">
-                <div className="bg-card-white p-4 mb-4 rounded-2 border shadow-sm" style={{ borderColor: BORDER_COLOR }}>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                        <SectionHeader title="Market Performance" />
-                        <span className="badge" style={{ background: GOLD_GRADIENT, color: '#1a1200' }}>2017 - Present</span>
-                    </div>
-                    <div style={{ height: '300px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={historicalData}>
-                                <defs>
-                                    <linearGradient id="colorHist" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={GOLD_SOLID} stopOpacity={0.15}/>
-                                        <stop offset="95%" stopColor={GOLD_SOLID} stopOpacity={0}/>
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={BORDER_COLOR} />
-                                <XAxis dataKey="date" tick={{fontSize: 11, fill: TEXT_MUTED}} axisLine={false} tickLine={false} />
-                                <YAxis tick={{fontSize: 11, fill: TEXT_MUTED}} axisLine={false} tickLine={false} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Area type="monotone" dataKey="value" stroke={GOLD_SOLID} strokeWidth={2} fillOpacity={1} fill="url(#colorHist)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            </div>
-
-            <div className="col-lg-4">
-                <div className="bg-card-white p-4 mb-4 rounded-2 border shadow-sm" style={{ borderColor: BORDER_COLOR }}>
-                    <div className="d-flex justify-content-between align-items-end mb-3">
-                        <div>
-                            <SectionHeader title="Buying Pressure" />
-                            <div className="small" style={{ color: TEXT_MUTED }}>Buy/Sell Volume Ratio</div>
-                        </div>
-                        <div className="fw-bold blink-text" style={{ color: GOLD_SOLID }}>● Live</div>
-                    </div>
-                    <LiveMomentumChart />
-                </div>
+      {/* MAIN CONTENT AREA */}
+      <div className="container-fluid py-4 px-2 px-md-4">
+        
+        {/* LIVE CHART MODULE */}
+        <div className="row mb-5">
+            <div className="col-12">
+                <NGXLiveChart />
             </div>
         </div>
+
+        {/* ARTICLE SECTION */}
+        <div className="row justify-content-center">
+            <div className="col-12 col-lg-10 col-xl-9 article-container">
+                
+                <h2 className="article-title mb-4">NFTs as a Market Infrastructure: From Digital Collectibles to Asset Class Architecture</h2>
+                
+                <p className="article-text">
+                    Since their emergence in the late 2010s, Non-Fungible Tokens (NFTs) have undergone a fundamental transformation. What began as a niche experiment in digital ownership has evolved into a multi-layered market infrastructure spanning art, gaming, identity, finance, and cultural capital.
+                </p>
+                
+                <p className="article-text">
+                    In their earliest phase, NFTs were primarily perceived as speculative digital collectibles—artifacts whose value was driven by novelty, scarcity, and community-driven hype. However, as the market matured, this narrow definition proved insufficient to describe the expanding utility and structural complexity of NFT-based assets.
+                </p>
+
+                <p className="article-text">
+                    By the early 2020s, NFTs began to establish themselves not merely as digital items, but as programmable ownership primitives—capable of representing access rights, intellectual property, virtual land, in-game economies, and decentralized identities. This shift marked the beginning of NFTs as a legitimate asset class rather than a transient trend.
+                </p>
+
+                <h3 className="article-subtitle mt-5 mb-3">The Evolution of NFT Market Structure</h3>
+                
+                <p className="article-text">
+                    As NFT ecosystems expanded, a clear hierarchy of asset types began to emerge. Art NFTs continued to function as cultural and collectible instruments. Utility NFTs enabled access mechanisms across platforms and communities. Gaming NFTs introduced interactive value, while domain-based NFTs bridged identity and digital real estate.
+                </p>
+
+                <p className="article-text">
+                    This diversification created a structural challenge: traditional valuation models—largely price-driven and speculative—were no longer sufficient to capture the true composition of the NFT market. Volume alone could not explain influence. Floor price could not define importance. A more systemic lens became necessary.
+                </p>
+
+                <h3 className="article-subtitle mt-5 mb-3">Why Market Indexing Matters in NFTs</h3>
+
+                <p className="article-text">
+                    In traditional financial markets, indices serve as neutral observatories—tools that reflect market structure rather than predict outcomes. As NFTs mature, similar indexing frameworks are beginning to surface, not to forecast prices, but to contextualize market evolution.
+                </p>
+
+                <p className="article-text">
+                    Indexing in NFT markets provides a way to observe asset-class balance, category dominance, and structural shifts over time. Rather than focusing on individual projects, indices analyze the ecosystem itself.
+                </p>
+
+                <p className="article-text">
+                    Within this context, independent frameworks such as the NGX Index have emerged to monitor NFT market architecture through classification models, asset weighting, and scarcity dynamics. The NGX Index does not function as a pricing oracle or investment signal. Instead, it operates as a structural reference—tracking how different NFT asset classes evolve relative to one another as the market matures.
+                </p>
+
+                <p className="article-text">
+                    This approach reflects a broader transition in NFTs: from speculation-driven discovery toward infrastructure-level understanding.
+                </p>
+
+                <h3 className="article-subtitle mt-5 mb-3">NFTs as a Recognized Asset Class</h3>
+
+                <p className="article-text">
+                    By 2024–2025, NFTs had firmly entered institutional, corporate, and cultural conversations. Major brands, gaming studios, and digital platforms adopted NFTs not as speculative instruments, but as ownership layers embedded within larger systems.
+                </p>
+
+                <p className="article-text">
+                    At this stage, the question is no longer whether NFTs will persist, but how they will be organized, measured, and understood over the long term. Asset-class frameworks, standardized terminology, and analytical indices are becoming essential components of this next phase.
+                </p>
+
+                <h3 className="article-subtitle mt-5 mb-3">Looking Ahead: 2026 and Beyond</h3>
+
+                <p className="article-text">
+                    As regulatory clarity improves and technical standards stabilize, NFTs are expected to transition further into infrastructure assets—integrated seamlessly into digital economies rather than existing as standalone products.
+                </p>
+
+                <p className="article-text">
+                    The emergence of neutral market observatories, classification systems, and non-speculative indices will play a critical role in this evolution. They allow participants—creators, developers, institutions, and researchers—to understand the NFT ecosystem as a whole rather than through isolated data points.
+                </p>
+
+                <p className="article-text mb-5">
+                    In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.
+                </p>
+
+                {/* DISCLAIMER SECTION */}
+                <div className="mt-5 pt-4 border-top border-secondary" style={{ borderColor: '#333 !important' }}>
+                    <h5 className="fw-bold mb-2" style={{ color: '#6c757d', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>Legal & Informational Disclaimer</h5>
+                    <p className="fst-italic small mb-0" style={{ color: '#555', lineHeight: '1.6' }}>
+                        This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
       </div>
 
       <style jsx global>{`
+        /* --- GLOBAL COLORS --- */
+        .bg-card-white { background-color: ${SURFACE_DARK} !important; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .blink-text { animation: blink 2s infinite; }
+
+        /* --- HEADER STYLES --- */
         .header-wrapper {
             background: ${SURFACE_DARK};
             border-bottom: 1px solid ${BORDER_COLOR};
@@ -204,6 +173,34 @@ export default function NGXPage() {
         .main-desc { font-size: 15px; color: ${TEXT_MUTED}; max-width: 650px; }
         .text-section { max-width: 1050px; margin: 0 auto; }
 
+        /* --- ARTICLE STYLES --- */
+        .article-title {
+            color: ${TEXT_PRIMARY};
+            font-family: "Inter", "Segoe UI", sans-serif;
+            font-weight: 800;
+            font-size: 2rem;
+            line-height: 1.3;
+            letter-spacing: -0.5px;
+        }
+
+        .article-subtitle {
+            color: ${TEXT_PRIMARY};
+            font-family: "Inter", "Segoe UI", sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+            letter-spacing: -0.3px;
+        }
+
+        .article-text {
+            color: ${TEXT_MUTED};
+            font-family: "Inter", "Segoe UI", sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        /* --- MOBILE ADAPTATIONS --- */
         @media (max-width: 768px) {
             .header-wrapper {
                 padding: 2px 0 !important;
@@ -224,11 +221,11 @@ export default function NGXPage() {
             }
             .main-title { font-size: 1.25rem; text-align: center; }
             .main-desc { font-size: 13px; text-align: center; margin: 0 auto; }
+            
+            .article-title { font-size: 1.5rem; text-align: left; }
+            .article-subtitle { font-size: 1.2rem; }
+            .article-text { font-size: 14px; text-align: left; }
         }
-
-        .bg-card-white { background-color: ${SURFACE_DARK} !important; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .blink-text { animation: blink 2s infinite; }
       `}</style>
     </main>
   );
