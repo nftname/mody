@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import NGXWidget from '@/components/NGXWidget';
 import NGXCapWidget from '@/components/NGXCapWidget';
-import NGXAssetsWidget from '@/components/NGXVolumeWidget';
+import NGXVolumeWidget from '@/components/NGXVolumeWidget'; // تصحيح الاسم هنا
 import MarketTicker from '@/components/MarketTicker';
 import Link from 'next/link';
 
@@ -144,9 +144,9 @@ export default function NGXPage() {
                      <NGXCapWidget theme="dark" />
                 </div>
 
-                {/* 3. NGX Assets Widget */}
+                {/* 3. NGX Volume Widget */}
                 <div className="widget-wrapper">
-                     <NGXAssetsWidget theme="dark" />
+                     <NGXVolumeWidget theme="dark" />
                 </div>
             </div>
 
