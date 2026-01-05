@@ -165,7 +165,7 @@ export default function NGXWidget({
         </div>
 
         {/* Content Row */}
-        <div className="content-row d-flex align-items-start w-100" style={{ height: '100%' }}>
+        <div className="content-row d-flex align-items-center w-100" style={{ height: '100%' }}>
             
             {/* Left Side: Number & Info */}
             <div className="text-block d-flex flex-column justify-content-center" style={{ zIndex: 2 }}>
@@ -195,7 +195,7 @@ export default function NGXWidget({
     </Link>
 
     <style jsx>{`
-        /* --- GENERAL & DESKTOP STYLES (Default) --- */
+        /* --- GENERAL & DESKTOP STYLES (Fixed for Symmetry) --- */
         .ngx-widget-container {
             position: relative;
             width: 100%;
@@ -204,10 +204,10 @@ export default function NGXWidget({
             margin-right: auto;
         }
         .glass-container {
-            height: 82px;
-            /* Desktop Shift: 46px padding on BOTH sides for symmetry */
-            padding-left: 46px; 
-            padding-right: 46px;
+            height: 80px; /* Slightly reduced height to lift gauge */
+            /* Desktop: Reduced padding to 20px for better balance */
+            padding-left: 20px; 
+            padding-right: 15px;
             padding-top: 8px;
             padding-bottom: 8px;
         }
@@ -215,8 +215,12 @@ export default function NGXWidget({
             font-size: 9px;
             letter-spacing: 0.5px;
         }
+        .content-row {
+            /* Using gap for balanced spacing */
+            gap: 30px; 
+        }
         .text-block {
-            padding-top: 4px; /* Align text center with new gauge position */
+            /* No specific padding */
         }
         .main-score {
             font-size: 24px;
@@ -226,8 +230,9 @@ export default function NGXWidget({
             margin-top: 2px;
         }
         .gauge-block {
-            width: 45%; 
-            height: 50px; 
+            /* Reduced width to ~38% to shrink gauge by ~20% */
+            width: 38%; 
+            height: 45px; /* Reduced height to shift it up visually */
         }
         .desktop-percentage {
             display: flex;
@@ -236,7 +241,7 @@ export default function NGXWidget({
             display: none !important;
         }
 
-        /* --- MOBILE STYLES (Compact Mode - Untouched as requested) --- */
+        /* --- MOBILE STYLES (Compact Mode - UNTOUCHED as requested) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 max-width: 125px !important; 
@@ -249,7 +254,7 @@ export default function NGXWidget({
             
             .content-row {
                 gap: 1px !important; 
-                justify-content: space-between;
+                justify-content: space-between; /* Re-enable for mobile layout */
                 align-items: center !important; 
             }
             .text-block {
