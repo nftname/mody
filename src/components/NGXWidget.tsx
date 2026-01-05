@@ -195,7 +195,7 @@ export default function NGXWidget({
     </Link>
 
     <style jsx>{`
-        /* --- GENERAL & DESKTOP STYLES (Fixed for Symmetry) --- */
+        /* --- GENERAL & DESKTOP STYLES (Adjusted for balance) --- */
         .ngx-widget-container {
             position: relative;
             width: 100%;
@@ -204,10 +204,10 @@ export default function NGXWidget({
             margin-right: auto;
         }
         .glass-container {
-            height: 80px; /* Slightly reduced height to lift gauge */
-            /* Desktop: Reduced padding to 20px for better balance */
+            height: 80px; 
+            /* Desktop: Reduced right padding to move gauge closer to edge */
             padding-left: 20px; 
-            padding-right: 15px;
+            padding-right: 8px; 
             padding-top: 8px;
             padding-bottom: 8px;
         }
@@ -216,8 +216,7 @@ export default function NGXWidget({
             letter-spacing: 0.5px;
         }
         .content-row {
-            /* Using gap for balanced spacing */
-            gap: 30px; 
+            /* Removed gap to allow gauge to move right freely */
         }
         .text-block {
             /* No specific padding */
@@ -230,9 +229,9 @@ export default function NGXWidget({
             margin-top: 2px;
         }
         .gauge-block {
-            /* Reduced width to ~38% to shrink gauge by ~20% */
-            width: 38%; 
-            height: 45px; /* Reduced height to shift it up visually */
+            /* Increased width to ~45% to enlarge gauge by ~20% */
+            width: 45%; 
+            height: 50px; 
         }
         .desktop-percentage {
             display: flex;
@@ -241,7 +240,7 @@ export default function NGXWidget({
             display: none !important;
         }
 
-        /* --- MOBILE STYLES (Compact Mode - UNTOUCHED as requested) --- */
+        /* --- MOBILE STYLES (Compact Mode - UNTOUCHED) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 max-width: 125px !important; 
@@ -250,11 +249,12 @@ export default function NGXWidget({
             .glass-container {
                 padding: 4px !important;
                 height: 70px !important; 
+                padding-right: 4px !important; /* Reset padding for mobile */
             }
             
             .content-row {
                 gap: 1px !important; 
-                justify-content: space-between; /* Re-enable for mobile layout */
+                justify-content: space-between; 
                 align-items: center !important; 
             }
             .text-block {
