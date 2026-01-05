@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 
-interface AssetsData {
+interface VolumeData {
   sectors: {
     label: string;
     value: number; 
@@ -10,6 +10,7 @@ interface AssetsData {
     volume: string;
   }[];
   marketStats: {
+    totalVolChange: number;
     topGainer: { name: string; change: number };
     topLoser: { name: string; change: number };
   };
@@ -20,11 +21,11 @@ interface WidgetProps {
   title?: string;
 }
 
-export default function NGXAssetsWidget({ 
+export default function NGXVolumeWidget({ 
   theme = 'dark', 
-  title = 'NGX Assets'
+  title = 'NGX Volume'
 }: WidgetProps) {
-  const [data, setData] = useState<AssetsData | null>(null);
+  const [data, setData] = useState<VolumeData | null>(null);
   const [mounted, setMounted] = useState(false);
   const [hoveredInfo, setHoveredInfo] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -43,18 +44,20 @@ export default function NGXAssetsWidget({
   const titleColor = isLight ? '#0A192F' : '#FCD535'; 
   const NEON_GREEN = '#0ecb81';
   const TICKER_RED = '#f6465d';
+  const TEXT_WHITE = isLight ? '#000' : '#FFF';
   const SUB_TEXT = '#B0B0B0';
 
   useEffect(() => {
     setMounted(true);
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/ngx-assets');
+        // HORA: The crucial fix is here -> calling ngx-volume
+        const res = await fetch('/api/ngx-volume');
         if (!res.ok) throw new Error('Failed to fetch data');
         const json = await res.json();
         setData(json);
       } catch (error) {
-        console.error('Error fetching NGX Assets data:', error);
+        console.error('Error fetching NGX Volume data:', error);
       }
     };
     fetchData();
@@ -74,8 +77,10 @@ export default function NGXAssetsWidget({
 
   if (!mounted || !data) return null; 
 
+  const volChange = data.marketStats.totalVolChange;
   const gainer = data.marketStats.topGainer;
   const loser = data.marketStats.topLoser;
+  const volColor = volChange >= 0 ? NEON_GREEN : TICKER_RED;
 
   return (
     <div className="ngx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
@@ -84,25 +89,20 @@ export default function NGXAssetsWidget({
       <div className="glass-container d-flex justify-content-between rounded-3 position-relative overflow-hidden"
            style={{ ...glassStyle }}>
         
-        <div className="text-container d-flex flex-column">
+        <div className="text-container d-flex flex-column h-100">
             
-            {/* Title Row - Lifted Up */}
-            <div className="title-row d-flex align-items-center gap-2">
+            <div className="title-row">
                 <span className="fw-bold text-nowrap title-text" style={{ color: titleColor, lineHeight: 1 }}>{title}</span>
-                
-                {/* LIVE Badge - Desktop Only - Next to Title */}
-                <span className="badge pulse-neon desktop-only" 
-                      style={{ 
-                          fontSize:'6px', 
-                          padding:'2px 3px', 
-                          color: NEON_GREEN, 
-                          border: 'none', 
-                          backgroundColor: 'rgba(14, 203, 129, 0.1)',
-                          alignSelf: 'center'
-                      }}>LIVE</span>
             </div>
 
-            <div className="d-flex flex-column stats-container">
+            <div className="d-flex align-items-center gap-1 vol-row">
+                <span className="fw-bold" style={{ color: TEXT_WHITE, fontSize: '11px' }}>VOL</span>
+                <span className="fw-bold" style={{ color: volColor, fontSize: '11px' }}>
+                    {volChange >= 0 ? '+' : ''}{volChange}% {volChange >= 0 ? '▲' : '▼'}
+                </span>
+            </div>
+
+            <div className="d-flex flex-column stats-container mt-auto">
                 <div className="d-flex align-items-center gap-1 stat-row">
                     <span className="stat-label">{gainer.name}</span>
                     <span style={{ color: NEON_GREEN, fontWeight: 'bold' }} className="stat-val">+{gainer.change}% ▲</span>
@@ -114,7 +114,7 @@ export default function NGXAssetsWidget({
             </div>
         </div>
 
-        <div className="bars-container d-flex align-items-end justify-content-between position-relative">
+        <div className="bars-container d-flex align-items-end justify-content-between h-100 position-relative">
             
             {data.sectors.map((sector, index) => (
                 <div key={index} className="d-flex flex-column align-items-center justify-content-end bar-wrapper" 
@@ -122,10 +122,9 @@ export default function NGXAssetsWidget({
                      onMouseEnter={() => setHoveredInfo(`${sector.label}: ${sector.volume}`)} 
                      onMouseLeave={() => setHoveredInfo(null)}>
                     
-                    {/* The Bar - Max Height 75% of Container */}
                     <div style={{ 
                         width: '100%', 
-                        height: `${Math.max(5, sector.value * 0.75)}%`, 
+                        height: `${Math.max(5, sector.value * 0.8)}%`, 
                         background: 'linear-gradient(180deg, #FCD535 0%, #0ecb81 100%)', 
                         borderRadius: '1px 1px 0 0',
                         opacity: sector.label === 'IMP' ? 1 : 0.85, 
@@ -158,25 +157,26 @@ export default function NGXAssetsWidget({
             margin-right: auto;
         }
 
-        /* Desktop Styles */
         .glass-container {
             height: 80px; 
-            /* Precise padding to align title with neighbors */
-            padding: 5px 20px 8px 20px; 
+            padding: 4px 20px 6px 20px; 
         }
         
         .text-container {
             width: 55%;
             justify-content: flex-start;
-            padding-top: 2px;
         }
 
         .title-row {
-            margin-bottom: 6px;
+            margin-bottom: 2px;
+        }
+
+        .vol-row {
+            margin-bottom: 2px;
         }
 
         .stats-container {
-            gap: 3px;
+            gap: 1px;
         }
 
         .bars-container {
@@ -195,13 +195,13 @@ export default function NGXAssetsWidget({
         }
 
         .stat-label {
-            font-size: 9px;
+            font-size: 8px;
             color: ${SUB_TEXT};
             text-transform: uppercase;
         }
         
         .stat-val {
-            font-size: 9px;
+            font-size: 8px;
         }
         
         .bar-label {
@@ -209,11 +209,6 @@ export default function NGXAssetsWidget({
             letter-spacing: 0.2px;
         }
 
-        .desktop-only {
-            display: inline-block;
-        }
-
-        /* --- MOBILE STYLES --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 min-width: 112px !important; 
@@ -223,25 +218,16 @@ export default function NGXAssetsWidget({
             }
 
             .glass-container {
-                /* Reduced top padding to 2px to lift title to max height */
                 padding: 2px 4px 2px 6px !important; 
                 height: 63px !important; 
-            }
-
-            .text-container {
-                padding-top: 0px !important;
             }
 
             .title-text {
                 font-size: 8px !important; 
             }
             
-            .title-row {
-                margin-bottom: 2px !important;
-            }
-
-            .stats-container {
-                gap: 0px !important; 
+            .vol-row span {
+                font-size: 9px !important;
             }
 
             .stat-label {
@@ -261,14 +247,8 @@ export default function NGXAssetsWidget({
                 padding-right: 0px !important; 
             }
             
-            /* Reduced bar width to 10% to create gaps between bars */
             .bar-wrapper {
-                width: 10% !important; 
-            }
-
-            /* Hide LIVE badge on mobile */
-            .desktop-only {
-                display: none !important;
+                width: 8% !important; 
             }
         }
 
@@ -277,15 +257,6 @@ export default function NGXAssetsWidget({
                 margin-left: auto;
                 margin-right: 0;
             }
-        }
-
-        .pulse-neon {
-            animation: pulse-neon-green 2s infinite ease-in-out;
-        }
-        @keyframes pulse-neon-green {
-            0% { text-shadow: 0 0 2px rgba(14, 203, 129, 0.1); opacity: 1; }
-            50% { text-shadow: 0 0 8px rgba(14, 203, 129, 0.6); opacity: 0.8; }
-            100% { text-shadow: 0 0 2px rgba(14, 203, 129, 0.1); opacity: 1; }
         }
 
         .ngx-tooltip {
