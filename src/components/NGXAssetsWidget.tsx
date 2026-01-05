@@ -86,8 +86,20 @@ export default function NGXAssetsWidget({
         
         <div className="text-container d-flex flex-column">
             
-            <div className="title-row mb-1">
-                <span className="fw-bold text-nowrap title-text" style={{ color: titleColor }}>{title}</span>
+            {/* Title Row - Lifted Up */}
+            <div className="title-row d-flex align-items-center gap-2">
+                <span className="fw-bold text-nowrap title-text" style={{ color: titleColor, lineHeight: 1 }}>{title}</span>
+                
+                {/* LIVE Badge - Desktop Only - Next to Title */}
+                <span className="badge pulse-neon desktop-only" 
+                      style={{ 
+                          fontSize:'6px', 
+                          padding:'2px 3px', 
+                          color: NEON_GREEN, 
+                          border: 'none', 
+                          backgroundColor: 'rgba(14, 203, 129, 0.1)',
+                          alignSelf: 'center'
+                      }}>LIVE</span>
             </div>
 
             <div className="d-flex flex-column stats-container">
@@ -110,9 +122,10 @@ export default function NGXAssetsWidget({
                      onMouseEnter={() => setHoveredInfo(`${sector.label}: ${sector.volume}`)} 
                      onMouseLeave={() => setHoveredInfo(null)}>
                     
+                    {/* The Bar - Max Height 75% of Container */}
                     <div style={{ 
                         width: '100%', 
-                        height: `${Math.max(10, sector.value)}%`, 
+                        height: `${Math.max(5, sector.value * 0.75)}%`, 
                         background: 'linear-gradient(180deg, #FCD535 0%, #0ecb81 100%)', 
                         borderRadius: '1px 1px 0 0',
                         opacity: sector.label === 'IMP' ? 1 : 0.85, 
@@ -145,32 +158,30 @@ export default function NGXAssetsWidget({
             margin-right: auto;
         }
 
+        /* Desktop Styles */
         .glass-container {
             height: 80px; 
-            padding-left: 20px; 
-            padding-right: 20px; 
-            padding-top: 8px; /* Standard Desktop Padding */
-            padding-bottom: 8px;
+            /* Precise padding to align title with neighbors */
+            padding: 5px 20px 8px 20px; 
         }
         
         .text-container {
             width: 55%;
             justify-content: flex-start;
-            padding-top: 0;
+            padding-top: 2px;
         }
 
         .title-row {
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
 
         .stats-container {
-            gap: 2px;
+            gap: 3px;
         }
 
         .bars-container {
             width: 40%;
-            height: 75%; /* HARD CAP: Bars can never exceed 75% of widget height */
-            margin-top: auto; /* Push to bottom */
+            height: 100%; 
             padding-bottom: 2px;
         }
 
@@ -198,6 +209,11 @@ export default function NGXAssetsWidget({
             letter-spacing: 0.2px;
         }
 
+        .desktop-only {
+            display: inline-block;
+        }
+
+        /* --- MOBILE STYLES --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 min-width: 112px !important; 
@@ -207,8 +223,13 @@ export default function NGXAssetsWidget({
             }
 
             .glass-container {
-                padding: 4px 6px !important; /* Matches neighbors */
+                /* Reduced top padding to 2px to lift title to max height */
+                padding: 2px 4px 2px 6px !important; 
                 height: 63px !important; 
+            }
+
+            .text-container {
+                padding-top: 0px !important;
             }
 
             .title-text {
@@ -237,12 +258,17 @@ export default function NGXAssetsWidget({
 
             .bars-container {
                 width: 45% !important; 
-                height: 70% !important; /* Stricter cap on mobile */
                 padding-right: 0px !important; 
             }
             
+            /* Reduced bar width to 10% to create gaps between bars */
             .bar-wrapper {
-                width: 14% !important; 
+                width: 10% !important; 
+            }
+
+            /* Hide LIVE badge on mobile */
+            .desktop-only {
+                display: none !important;
             }
         }
 
