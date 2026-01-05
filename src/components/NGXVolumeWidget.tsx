@@ -109,9 +109,7 @@ export default function NGXVolumeWidget({
 
             {/* Volume Data Row */}
             <div className="vol-container">
-                {/* Label (Hidden on mobile) */}
                 <div className="vol-label fw-bold" style={{ color: TEXT_WHITE }}>VOL</div>
-                {/* Value & Change - Pushed down & enlarged on mobile */}
                 <div className="vol-data-wrapper">
                     <span className="fw-bold vol-value" style={{ color: TEXT_WHITE }}>{totalVolDisplay}</span>
                     <span className="fw-bold vol-change" style={{ color: volColor }}>
@@ -247,7 +245,7 @@ export default function NGXVolumeWidget({
             display: inline-block;
         }
 
-        /* --- MOBILE STYLES (MATCHING NEIGHBOR & EXPANDING BARS) --- */
+        /* --- MOBILE STYLES (REFINED ADAPTATION) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 min-width: 112px !important; 
@@ -257,25 +255,16 @@ export default function NGXVolumeWidget({
             }
 
             .glass-container {
-                /* Increased Top to 5px to align baseline with neighbor */
-                /* Increased Right to 6px to push bars slightly in */
                 padding: 5px 6px 2px 4px !important; 
                 height: 63px !important; 
             }
 
             .text-container {
-                /* Reduced text width to 55% to give bars 42% */
                 width: 55% !important; 
                 padding-top: 0px !important;
             }
 
-            .title-row {
-                margin-bottom: 0px !important;
-                height: 10px !important;
-            }
-
             .title-text {
-                /* Increased to 8.5px to match neighbor Title size exactly */
                 font-size: 8.5px !important; 
             }
             
@@ -284,8 +273,8 @@ export default function NGXVolumeWidget({
                 flex-direction: column !important; 
                 align-items: flex-start !important;
                 gap: 0px !important;
-                /* Pushed down by 4px to fill void */
-                margin-top: 4px !important; 
+                /* PUSH DOWN to exploit empty space */
+                margin-top: 6px !important; 
                 margin-bottom: 2px !important;
             }
             
@@ -296,16 +285,16 @@ export default function NGXVolumeWidget({
             .vol-data-wrapper {
                 display: flex !important;
                 align-items: center !important;
-                gap: 4px !important; 
+                gap: 3px !important; 
             }
             
-            /* INCREASED FONT SIZE BY 50% (approx 11px) */
+            /* REDUCED BY 20% to prevent bar overlap (Approx 9px) */
             .vol-value { 
-                font-size: 11px !important; 
+                font-size: 9px !important; 
                 line-height: 1 !important;
             } 
             .vol-change { 
-                font-size: 10px !important; 
+                font-size: 8.5px !important; 
                 line-height: 1 !important;
             }
 
@@ -321,9 +310,7 @@ export default function NGXVolumeWidget({
                 font-size: 6px !important; 
             }
             
-            /* --- BARS EXPANSION --- */
             .bars-container {
-                /* Increased container width to 42% to create gaps */
                 width: 42% !important; 
                 height: 65% !important; 
                 padding-right: 0px !important; 
@@ -335,7 +322,6 @@ export default function NGXVolumeWidget({
             }
             
             .bar-wrapper {
-                /* Kept at 10% but container is wider = bigger gaps */
                 width: 10% !important; 
             }
 
