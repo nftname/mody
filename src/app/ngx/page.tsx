@@ -128,12 +128,11 @@ export default function NGXPage() {
       
       <MarketTicker />
 
-      {/* Header Section: Reduced vertical padding to 'py-1' (50% less than py-2) */}
-      <div className="py-1 px-4 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}` }}>
+      {/* Header Section: Reduced horizontal padding from px-4 to px-2 (This shifts content Left by ~50%) */}
+      <div className="py-1 px-2 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}` }}>
         <div className="container-fluid">
             
             {/* Widgets Row */}
-            {/* Flex wrap enables side-by-side on mobile when widgets are small enough */}
             <div className="d-flex flex-wrap align-items-center gap-3 mb-4 widget-container-mobile">
                 
                 {/* 1. NGX Sentiment Widget */}
@@ -145,9 +144,6 @@ export default function NGXPage() {
                 <div className="widget-wrapper">
                      <NGXCapWidget theme="dark" />
                 </div>
-                
-                {/* 3. Placeholder for NGX Assets (Future) */}
-                {/* <div className="widget-wrapper"> <NGXAssetsWidget theme="dark" /> </div> */}
             </div>
 
             {/* Title Row */}
@@ -164,7 +160,8 @@ export default function NGXPage() {
         </div>
       </div>
 
-      <div className="container-fluid py-4 px-4">
+      {/* Main Content: Also reduced from px-4 to px-2 to align with header */}
+      <div className="container-fluid py-4 px-2">
         
         <div className="row g-4">
             
