@@ -106,7 +106,8 @@ export default function NGXWidget({
       const stroke = 16; 
       
       return (
-        <svg viewBox="-90 -20 180 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
+        // تعديل viewBox: تقليل الأبعاد يجعل المحتوى يظهر أكبر (زوم)
+        <svg viewBox="-95 -15 190 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
             <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} />
             <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} />
             <path d={describeArc(0, 80, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} />
@@ -184,7 +185,8 @@ export default function NGXWidget({
             </div>
 
             {/* Right Side: Gauge */}
-            <div className="gauge-block d-flex align-items-center justify-content-center" style={{ zIndex: 1 }}>
+            {/* margin-left: auto forces it to the right */}
+            <div className="gauge-block d-flex align-items-center justify-content-center" style={{ zIndex: 1, marginLeft: 'auto' }}>
                 <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                     <GaugeSVG />
                 </div>
@@ -195,19 +197,20 @@ export default function NGXWidget({
     </Link>
 
     <style jsx>{`
-        /* --- GENERAL & DESKTOP STYLES (Adjusted for balance) --- */
+        /* --- GENERAL & DESKTOP STYLES --- */
         .ngx-widget-container {
             position: relative;
             width: 100%;
-            max-width: 310px; /* Desktop width */
+            max-width: 310px; 
             margin-left: auto;
             margin-right: auto;
         }
         .glass-container {
             height: 80px; 
-            /* Desktop: Reduced right padding to move gauge closer to edge */
+            /* هامش أيسر بسيط للنصوص */
             padding-left: 20px; 
-            padding-right: 8px; 
+            /* هامش أيمن بسيط للعداد */
+            padding-right: 10px; 
             padding-top: 8px;
             padding-bottom: 8px;
         }
@@ -216,10 +219,7 @@ export default function NGXWidget({
             letter-spacing: 0.5px;
         }
         .content-row {
-            /* Removed gap to allow gauge to move right freely */
-        }
-        .text-block {
-            /* No specific padding */
+            /* لا نستخدم Gap هنا، نعتمد على margin-left: auto في العداد */
         }
         .main-score {
             font-size: 24px;
@@ -228,11 +228,16 @@ export default function NGXWidget({
             font-size: 8px;
             margin-top: 2px;
         }
+        
+        /* GAUGE STYLING - FORCED SIZE */
         .gauge-block {
-            /* Increased width to ~45% to enlarge gauge by ~20% */
-            width: 45%; 
-            height: 50px; 
+            /* حجم ثابت وصريح لضمان التكبير */
+            width: 140px; 
+            height: 65px; 
+            /* يضمن عدم تقلص العنصر */
+            flex-shrink: 0; 
         }
+
         .desktop-percentage {
             display: flex;
         }
@@ -249,7 +254,7 @@ export default function NGXWidget({
             .glass-container {
                 padding: 4px !important;
                 height: 70px !important; 
-                padding-right: 4px !important; /* Reset padding for mobile */
+                padding-right: 4px !important; 
             }
             
             .content-row {
@@ -273,8 +278,10 @@ export default function NGXWidget({
             }
 
             .gauge-block {
+                /* إرجاع الحجم الصغير للجوال فقط */
                 width: 60px !important; 
                 height: 40px !important;
+                margin-left: 0 !important; /* إلغاء الدفع لليمين في الجوال */
             }
         }
 
