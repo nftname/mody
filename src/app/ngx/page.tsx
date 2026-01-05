@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import NGXWidget from '@/components/NGXWidget';
 import NGXCapWidget from '@/components/NGXCapWidget';
-import NGXAssetsWidget from '@/components/NGXAssetsWidget';
+import NGXAssetsWidget from '@/components/NGXVolumeWidget';
 import MarketTicker from '@/components/MarketTicker';
 import Link from 'next/link';
 
