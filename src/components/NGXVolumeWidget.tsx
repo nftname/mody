@@ -11,7 +11,7 @@ interface VolumeData {
   }[];
   marketStats: {
     totalVolChange: number;
-    totalVolumeDisplay: string; // Added total volume string (e.g. 2.4M)
+    totalVolumeDisplay: string; 
     topGainer: { name: string; change: number };
     topLoser: { name: string; change: number };
   };
@@ -34,7 +34,6 @@ export default function NGXVolumeWidget({
 
   const isLight = theme === 'light';
   
-  // Adjusted padding for tighter fit
   const glassStyle = {
     background: isLight ? 'rgba(255, 255, 255, 0.4)' : 'rgba(11, 14, 17, 0.2)',
     backdropFilter: 'blur(8px)',
@@ -79,7 +78,6 @@ export default function NGXVolumeWidget({
   if (!mounted || !data) return null; 
 
   const volChange = data.marketStats.totalVolChange;
-  // Fallback for volume display if API doesn't send it yet
   const totalVolDisplay = data.marketStats.totalVolumeDisplay || "2.4M"; 
   const gainer = data.marketStats.topGainer;
   const loser = data.marketStats.topLoser;
@@ -95,10 +93,9 @@ export default function NGXVolumeWidget({
         {/* LEFT SIDE: Text Info */}
         <div className="text-container d-flex flex-column h-100">
             
-            {/* Title Row - Lifted to Absolute Top */}
+            {/* Title Row */}
             <div className="title-row d-flex align-items-center">
                 <span className="fw-bold text-nowrap title-text" style={{ color: titleColor, lineHeight: 1 }}>{title}</span>
-                {/* LIVE Badge - Desktop Only - Centered next to title */}
                 <span className="badge pulse-neon desktop-only ms-1" 
                       style={{ 
                           fontSize:'6px', 
@@ -110,7 +107,7 @@ export default function NGXVolumeWidget({
                       }}>LIVE</span>
             </div>
 
-            {/* Volume Row: Value + Percentage */}
+            {/* Volume Row */}
             <div className="d-flex align-items-center gap-1 vol-row">
                 <span className="fw-bold vol-label" style={{ color: TEXT_WHITE }}>VOL</span>
                 <span className="fw-bold vol-value" style={{ color: TEXT_WHITE }}>{totalVolDisplay}</span>
@@ -119,7 +116,7 @@ export default function NGXVolumeWidget({
                 </span>
             </div>
 
-            {/* Stats Row (Gainer / Loser) */}
+            {/* Stats Row */}
             <div className="d-flex flex-column stats-container mt-auto">
                 <div className="d-flex align-items-center gap-1 stat-row">
                     <span className="stat-label">{gainer.name}</span>
@@ -134,14 +131,12 @@ export default function NGXVolumeWidget({
 
         {/* RIGHT SIDE: Bars */}
         <div className="bars-container d-flex align-items-end justify-content-between position-relative">
-            
             {data.sectors.map((sector, index) => (
                 <div key={index} className="d-flex flex-column align-items-center justify-content-end bar-wrapper" 
                      style={{ height: '100%', zIndex: 1 }}
                      onMouseEnter={() => setHoveredInfo(`${sector.label}: ${sector.volume}`)} 
                      onMouseLeave={() => setHoveredInfo(null)}>
                     
-                    {/* The Bar - Max Height hard capped via container, this is relative */}
                     <div style={{ 
                         width: '100%', 
                         height: `${Math.max(10, sector.value)}%`, 
@@ -180,18 +175,21 @@ export default function NGXVolumeWidget({
         /* --- DESKTOP STYLES --- */
         .glass-container {
             height: 80px; 
-            padding: 4px 20px 6px 20px; 
+            /* Padding Top: Increased to 7px to push Title DOWN slightly.
+               Padding Right: Increased to 35px to push Bars INWARD.
+            */
+            padding: 7px 35px 6px 20px; 
         }
         
         .text-container {
-            width: 58%; /* Text takes more space */
+            width: 58%;
             justify-content: flex-start;
-            padding-top: 2px;
+            padding-top: 0;
         }
 
         .title-row {
-            margin-bottom: 2px;
-            height: 12px; /* Fixed height for title area */
+            margin-bottom: 3px;
+            height: 12px;
         }
 
         .vol-row {
@@ -208,8 +206,8 @@ export default function NGXVolumeWidget({
 
         .bars-container {
             width: 38%;
-            height: 70%; /* HARD CAP: Bars never exceed 70% of widget height */
-            margin-top: auto; /* Push to bottom */
+            height: 70%; 
+            margin-top: auto; 
             padding-bottom: 2px;
         }
 
@@ -218,7 +216,7 @@ export default function NGXVolumeWidget({
         }
 
         .title-text {
-            font-size: 9px; /* Reduced Desktop Title */
+            font-size: 9px;
             letter-spacing: 0.5px;
         }
 
@@ -241,7 +239,7 @@ export default function NGXVolumeWidget({
             display: inline-block;
         }
 
-        /* --- MOBILE STYLES (CRITICAL FIXES) --- */
+        /* --- MOBILE STYLES --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 min-width: 112px !important; 
@@ -251,32 +249,36 @@ export default function NGXVolumeWidget({
             }
 
             .glass-container {
-                /* Extremely tight padding to fit everything */
+                /* Reduced Top padding to 2px for Mobile specifically */
                 padding: 2px 3px 2px 4px !important; 
                 height: 63px !important; 
             }
 
-            /* 1. Lift Title Up */
             .text-container {
-                width: 62% !important; /* Give text even more room on mobile */
+                width: 62% !important; 
                 padding-top: 0px !important;
             }
 
             .title-row {
-                margin-bottom: 1px !important;
+                margin-bottom: 0px !important;
                 height: 10px !important;
             }
 
             .title-text {
-                font-size: 7px !important; /* Tiny title */
+                font-size: 7px !important; 
             }
             
-            /* 2. Volume Row Sizing */
-            .vol-label { font-size: 8px !important; }
-            .vol-value { font-size: 8px !important; display: none !important; } /* Hide Absolute Value on Mobile if needed, or keep tiny: display: inline !important */
-            .vol-change { font-size: 8px !important; }
+            /* Filling the Gap on Mobile */
+            .vol-row {
+                margin-bottom: 1px !important;
+            }
+            .vol-label { font-size: 7px !important; margin-right: 2px !important; }
+            .vol-value { 
+                font-size: 7px !important; 
+                display: inline-block !important; /* Force show value on mobile */
+            } 
+            .vol-change { font-size: 7px !important; margin-left: 2px !important; }
 
-            /* 3. Stats Sizing */
             .stats-container {
                 gap: 0px !important; 
             }
@@ -289,10 +291,9 @@ export default function NGXVolumeWidget({
                 font-size: 6px !important; 
             }
             
-            /* 4. Bars Constraints */
             .bars-container {
                 width: 35% !important; 
-                height: 65% !important; /* Strict 65% height cap on mobile */
+                height: 65% !important; 
                 padding-right: 0px !important; 
             }
             
@@ -302,7 +303,7 @@ export default function NGXVolumeWidget({
             }
             
             .bar-wrapper {
-                width: 10% !important; /* Thin bars */
+                width: 10% !important; 
             }
 
             .desktop-only {
