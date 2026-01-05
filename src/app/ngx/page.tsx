@@ -128,8 +128,8 @@ export default function NGXPage() {
       
       <MarketTicker />
 
-      {/* Header Section: Reduced horizontal padding from px-4 to px-2 (This shifts content Left by ~50%) */}
-      <div className="py-1 px-2 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}` }}>
+      {/* Header Section: Removed py-1 class and set explicit 2px padding top/bottom */}
+      <div className="px-2 shadow-sm" style={{ background: SURFACE_DARK, borderBottom: `1px solid ${BORDER_COLOR}`, paddingTop: '2px', paddingBottom: '2px' }}>
         <div className="container-fluid">
             
             {/* Widgets Row */}
@@ -160,7 +160,7 @@ export default function NGXPage() {
         </div>
       </div>
 
-      {/* Main Content: Also reduced from px-4 to px-2 to align with header */}
+      {/* Main Content: Kept aligned px-2 */}
       <div className="container-fluid py-4 px-2">
         
         <div className="row g-4">
