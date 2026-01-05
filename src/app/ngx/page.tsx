@@ -11,7 +11,6 @@ const SURFACE_DARK = '#242424';
 const BORDER_COLOR = '#2E2E2E';
 const TEXT_PRIMARY = '#E0E0E0';
 const TEXT_MUTED = '#B0B0B0';
-const GOLD_SOLID = '#F0C420';
 
 export default function NGXPage() {
   const [mounted, setMounted] = useState(false);
@@ -23,19 +22,17 @@ export default function NGXPage() {
     <main className="ngx-page" style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', color: TEXT_PRIMARY }}>
       <MarketTicker />
 
-      {/* HEADER SECTION: Indicators & Main Title */}
+      {/* HEADER SECTION */}
       <div className="header-wrapper shadow-sm">
         <div className="container-fluid p-0"> 
             
-            {/* WIDGETS CONTAINER */}
             <div className="widgets-grid-container">
                 <div className="widget-item"> <NGXWidget theme="dark" /> </div>
                 <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
                 <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
             </div>
 
-            {/* MAIN TITLE & DESCRIPTION */}
-            <div className="row align-items-center px-2 mt-3 text-section">
+            <div className="row px-2 mt-3 text-section align-items-center">
                 <div className="col-lg-12">
                     <h1 className="fw-bold mb-2 main-title">
                             NGX NFT Index — The Global Benchmark
@@ -48,21 +45,18 @@ export default function NGXPage() {
         </div>
       </div>
 
-      {/* MAIN CONTENT AREA */}
       <div className="container-fluid py-4 px-2 px-md-4">
         
-        {/* LIVE CHART MODULE */}
-        <div className="row mb-5">
-            <div className="col-12">
-                <NGXLiveChart />
-            </div>
+        {/* LIVE CHART */}
+        <div className="content-container mb-5">
+             <NGXLiveChart />
         </div>
 
-        {/* ARTICLE SECTION */}
-        <div className="row justify-content-center">
-            <div className="col-12 col-lg-10 col-xl-9 article-container">
+        {/* ARTICLE */}
+        <div className="content-container">
+            <div className="article-wrapper">
                 
-                <h2 className="article-title mb-4">NFTs as a Market Infrastructure: From Digital Collectibles to Asset Class Architecture</h2>
+                <h2 className="article-heading mb-4">NFTs as a Market Infrastructure: From Digital Collectibles to Asset Class Architecture</h2>
                 
                 <p className="article-text">
                     Since their emergence in the late 2010s, Non-Fungible Tokens (NFTs) have undergone a fundamental transformation. What began as a niche experiment in digital ownership has evolved into a multi-layered market infrastructure spanning art, gaming, identity, finance, and cultural capital.
@@ -76,7 +70,7 @@ export default function NGXPage() {
                     By the early 2020s, NFTs began to establish themselves not merely as digital items, but as programmable ownership primitives—capable of representing access rights, intellectual property, virtual land, in-game economies, and decentralized identities. This shift marked the beginning of NFTs as a legitimate asset class rather than a transient trend.
                 </p>
 
-                <h3 className="article-subtitle mt-5 mb-3">The Evolution of NFT Market Structure</h3>
+                <h3 className="article-heading mt-5 mb-3">The Evolution of NFT Market Structure</h3>
                 
                 <p className="article-text">
                     As NFT ecosystems expanded, a clear hierarchy of asset types began to emerge. Art NFTs continued to function as cultural and collectible instruments. Utility NFTs enabled access mechanisms across platforms and communities. Gaming NFTs introduced interactive value, while domain-based NFTs bridged identity and digital real estate.
@@ -86,7 +80,7 @@ export default function NGXPage() {
                     This diversification created a structural challenge: traditional valuation models—largely price-driven and speculative—were no longer sufficient to capture the true composition of the NFT market. Volume alone could not explain influence. Floor price could not define importance. A more systemic lens became necessary.
                 </p>
 
-                <h3 className="article-subtitle mt-5 mb-3">Why Market Indexing Matters in NFTs</h3>
+                <h3 className="article-heading mt-5 mb-3">Why Market Indexing Matters in NFTs</h3>
 
                 <p className="article-text">
                     In traditional financial markets, indices serve as neutral observatories—tools that reflect market structure rather than predict outcomes. As NFTs mature, similar indexing frameworks are beginning to surface, not to forecast prices, but to contextualize market evolution.
@@ -104,7 +98,7 @@ export default function NGXPage() {
                     This approach reflects a broader transition in NFTs: from speculation-driven discovery toward infrastructure-level understanding.
                 </p>
 
-                <h3 className="article-subtitle mt-5 mb-3">NFTs as a Recognized Asset Class</h3>
+                <h3 className="article-heading mt-5 mb-3">NFTs as a Recognized Asset Class</h3>
 
                 <p className="article-text">
                     By 2024–2025, NFTs had firmly entered institutional, corporate, and cultural conversations. Major brands, gaming studios, and digital platforms adopted NFTs not as speculative instruments, but as ownership layers embedded within larger systems.
@@ -114,7 +108,7 @@ export default function NGXPage() {
                     At this stage, the question is no longer whether NFTs will persist, but how they will be organized, measured, and understood over the long term. Asset-class frameworks, standardized terminology, and analytical indices are becoming essential components of this next phase.
                 </p>
 
-                <h3 className="article-subtitle mt-5 mb-3">Looking Ahead: 2026 and Beyond</h3>
+                <h3 className="article-heading mt-5 mb-3">Looking Ahead: 2026 and Beyond</h3>
 
                 <p className="article-text">
                     As regulatory clarity improves and technical standards stabilize, NFTs are expected to transition further into infrastructure assets—integrated seamlessly into digital economies rather than existing as standalone products.
@@ -128,10 +122,9 @@ export default function NGXPage() {
                     In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.
                 </p>
 
-                {/* DISCLAIMER SECTION */}
+                {/* DISCLAIMER (Removed Title, Smaller Text) */}
                 <div className="mt-5 pt-4 border-top border-secondary" style={{ borderColor: '#333 !important' }}>
-                    <h5 className="fw-bold mb-2" style={{ color: '#6c757d', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>Legal & Informational Disclaimer</h5>
-                    <p className="fst-italic small mb-0" style={{ color: '#555', lineHeight: '1.6' }}>
+                    <p className="fst-italic mb-0 text-dark-grey" style={{ lineHeight: '1.6', fontSize: '10px' }}>
                         This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
                     </p>
                 </div>
@@ -142,12 +135,6 @@ export default function NGXPage() {
       </div>
 
       <style jsx global>{`
-        /* --- GLOBAL COLORS --- */
-        .bg-card-white { background-color: ${SURFACE_DARK} !important; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .blink-text { animation: blink 2s infinite; }
-
-        /* --- HEADER STYLES --- */
         .header-wrapper {
             background: ${SURFACE_DARK};
             border-bottom: 1px solid ${BORDER_COLOR};
@@ -165,6 +152,12 @@ export default function NGXPage() {
             padding: 0 15px;
         }
 
+        .content-container {
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
         .widget-item {
             flex: 0 0 310px;
         }
@@ -172,23 +165,15 @@ export default function NGXPage() {
         .main-title { font-size: 1.65rem; color: ${TEXT_PRIMARY}; letter-spacing: -0.5px; }
         .main-desc { font-size: 15px; color: ${TEXT_MUTED}; max-width: 650px; }
         .text-section { max-width: 1050px; margin: 0 auto; }
-
-        /* --- ARTICLE STYLES --- */
-        .article-title {
-            color: ${TEXT_PRIMARY};
-            font-family: "Inter", "Segoe UI", sans-serif;
-            font-weight: 800;
-            font-size: 2rem;
-            line-height: 1.3;
+        
+        /* UNIFIED HEADINGS STYLE */
+        .article-heading {
+            font-size: 1.65rem; 
+            color: ${TEXT_PRIMARY}; 
             letter-spacing: -0.5px;
-        }
-
-        .article-subtitle {
-            color: ${TEXT_PRIMARY};
-            font-family: "Inter", "Segoe UI", sans-serif;
             font-weight: 700;
-            font-size: 1.4rem;
-            letter-spacing: -0.3px;
+            font-family: "Inter", "Segoe UI", sans-serif;
+            line-height: 1.3;
         }
 
         .article-text {
@@ -199,8 +184,11 @@ export default function NGXPage() {
             margin-bottom: 1.2rem;
             text-align: justify;
         }
+        
+        .text-dark-grey {
+            color: #555;
+        }
 
-        /* --- MOBILE ADAPTATIONS --- */
         @media (max-width: 768px) {
             .header-wrapper {
                 padding: 2px 0 !important;
@@ -222,8 +210,7 @@ export default function NGXPage() {
             .main-title { font-size: 1.25rem; text-align: center; }
             .main-desc { font-size: 13px; text-align: center; margin: 0 auto; }
             
-            .article-title { font-size: 1.5rem; text-align: left; }
-            .article-subtitle { font-size: 1.2rem; }
+            .article-heading { font-size: 1.25rem; text-align: left; }
             .article-text { font-size: 14px; text-align: left; }
         }
       `}</style>
