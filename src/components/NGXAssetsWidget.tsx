@@ -27,7 +27,6 @@ export default function NGXAssetsWidget({
   const [data, setData] = useState<AssetsData | null>(null);
   const [mounted, setMounted] = useState(false);
   const [hoveredInfo, setHoveredInfo] = useState<string | null>(null);
-  const [tickerIndex, setTickerIndex] = useState(0);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -60,15 +59,7 @@ export default function NGXAssetsWidget({
     };
     fetchData();
     const interval = setInterval(fetchData, 60000); 
-    
-    const tickerInterval = setInterval(() => {
-        setTickerIndex((prev) => (prev === 0 ? 1 : 0));
-    }, 4000);
-
-    return () => {
-        clearInterval(interval);
-        clearInterval(tickerInterval);
-    };
+    return () => clearInterval(interval);
   }, []);
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -94,10 +85,10 @@ export default function NGXAssetsWidget({
            style={{ ...glassStyle }}>
         
         {/* LEFT SIDE: Text Info */}
-        <div className="d-flex flex-column justify-content-center h-100" style={{ width: '60%', paddingLeft: '2px' }}>
+        <div className="text-container d-flex flex-column justify-content-center h-100">
             
             {/* Title Row + LIVE Badge */}
-            <div className="d-flex align-items-center gap-2 mb-1">
+            <div className="d-flex align-items-center gap-2 mb-1 title-row">
                 <span className="fw-bold text-nowrap title-text" style={{ color: titleColor }}>{title}</span>
                 <span className="badge pulse-neon" 
                       style={{ 
@@ -109,31 +100,21 @@ export default function NGXAssetsWidget({
                       }}>LIVE</span>
             </div>
 
-            {/* Desktop: Stacked Stats */}
-            <div className="desktop-stats d-flex flex-column gap-1">
+            {/* Stats (Desktop & Mobile Stacked) */}
+            <div className="d-flex flex-column gap-0 stats-container">
                 <div className="d-flex align-items-center gap-1 stat-row">
                     <span className="stat-label">{gainer.name}</span>
-                    <span style={{ color: NEON_GREEN, fontSize: '9px', fontWeight: 'bold' }}>+{gainer.change}% ▲</span>
+                    <span style={{ color: NEON_GREEN, fontWeight: 'bold' }} className="stat-val">+{gainer.change}% ▲</span>
                 </div>
                 <div className="d-flex align-items-center gap-1 stat-row">
                     <span className="stat-label">{loser.name}</span>
-                    <span style={{ color: TICKER_RED, fontSize: '9px', fontWeight: 'bold' }}>{loser.change}% ▼</span>
-                </div>
-            </div>
-
-            {/* Mobile: Ticker Stats */}
-            <div className="mobile-stats">
-                <div className={`ticker-item ${tickerIndex === 0 ? 'active' : ''}`}>
-                    <span className="stat-label">{gainer.name}</span> <span style={{ color: NEON_GREEN, fontSize: '8px' }}>+{gainer.change}% ▲</span>
-                </div>
-                <div className={`ticker-item ${tickerIndex === 1 ? 'active' : ''}`}>
-                    <span className="stat-label">{loser.name}</span> <span style={{ color: TICKER_RED, fontSize: '8px' }}>{loser.change}% ▼</span>
+                    <span style={{ color: TICKER_RED, fontWeight: 'bold' }} className="stat-val">{loser.change}% ▼</span>
                 </div>
             </div>
         </div>
 
         {/* RIGHT SIDE: Bars */}
-        <div className="d-flex align-items-end justify-content-between h-100 position-relative" style={{ width: '35%', paddingBottom: '4px' }}>
+        <div className="bars-container d-flex align-items-end justify-content-between h-100 position-relative">
             
             {/* Phantom Grid */}
             <div className="position-absolute w-100 h-100 d-flex flex-column justify-content-between" style={{ zIndex: 0, opacity: 0.1, pointerEvents: 'none' }}>
@@ -143,16 +124,16 @@ export default function NGXAssetsWidget({
             </div>
 
             {data.sectors.map((sector, index) => (
-                <div key={index} className="d-flex flex-column align-items-center justify-content-end" 
-                     style={{ width: '12%', height: '100%', zIndex: 1 }}
+                <div key={index} className="d-flex flex-column align-items-center justify-content-end bar-wrapper" 
+                     style={{ height: '100%', zIndex: 1 }}
                      onMouseEnter={() => setHoveredInfo(`${sector.label}: ${sector.volume}`)} 
                      onMouseLeave={() => setHoveredInfo(null)}>
                     
-                    {/* The Bar */}
+                    {/* The Bar - Reduced Height by 20% (* 0.8) */}
                     <div style={{ 
                         width: '100%', 
-                        height: `${Math.max(5, sector.value)}%`, 
-                        background: 'linear-gradient(180deg, #FCD535 0%, #0ecb81 100%)', // Yellow-Green Gradient
+                        height: `${Math.max(5, sector.value * 0.8)}%`, 
+                        background: 'linear-gradient(180deg, #FCD535 0%, #0ecb81 100%)', 
                         borderRadius: '1px 1px 0 0',
                         opacity: sector.label === 'IMP' ? 1 : 0.85, 
                         transition: 'height 1s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -185,30 +166,41 @@ export default function NGXAssetsWidget({
             margin-right: auto;
         }
 
+        /* Desktop Layout Adjustments */
         .glass-container {
             height: 80px; 
-            padding-left: 20px; 
-            padding-right: 15px; 
+            padding-left: 28px; /* Increased Left Padding to push Text Right */
+            padding-right: 25px; /* Increased Right Padding to push Bars Left */
             padding-top: 8px;
             padding-bottom: 8px;
         }
+        
+        .text-container {
+            width: 55%;
+        }
+
+        .bars-container {
+            width: 40%;
+            padding-bottom: 4px;
+        }
+
+        .bar-wrapper {
+            width: 8%; /* Reduced bar width for more spacing (was 12%) */
+        }
 
         .title-text {
-            font-size: 11px; /* Increased 10% from 9px */
+            font-size: 11px; 
             letter-spacing: 0.5px;
         }
 
         .stat-label {
-            font-size: 9px; /* Increased 10% from 7px */
+            font-size: 9px;
             color: ${SUB_TEXT};
             text-transform: uppercase;
         }
-
-        .desktop-stats {
-            display: flex;
-        }
-        .mobile-stats {
-            display: none;
+        
+        .stat-val {
+            font-size: 9px;
         }
         
         .bar-label {
@@ -226,28 +218,43 @@ export default function NGXAssetsWidget({
             }
 
             .glass-container {
-                padding: 4px !important; 
+                /* Reduced Top Padding to 2px to lift title */
+                padding: 2px 4px 2px 6px !important; 
                 height: 63px !important; 
-                padding-right: 4px !important;
             }
 
             .title-text {
-                font-size: 9px !important; /* Increased for mobile too */
+                font-size: 8px !important; /* Reduced by 10% */
+            }
+            
+            .title-row {
+                margin-bottom: 2px !important;
             }
 
+            .stat-label {
+                font-size: 6px !important; /* Reduced size */
+            }
+            
+            .stat-val {
+                font-size: 6px !important; /* Reduced size */
+            }
+            
+            /* Tighten gap for stacked names in mobile */
+            .stats-container {
+                gap: 0px !important; 
+            }
+            
             .bar-label {
                 font-size: 5px !important;
             }
 
-            .desktop-stats {
-                display: none !important;
+            .bars-container {
+                width: 45% !important; /* Give bars a bit more room in compact view */
+                padding-right: 2px !important; /* Slight padding from edge */
             }
-            .mobile-stats {
-                display: block !important;
-                position: relative;
-                height: 12px;
-                width: 100%;
-                margin-top: 2px;
+            
+            .bar-wrapper {
+                width: 10% !important; /* Slightly wider on mobile than desktop relative to container */
             }
         }
 
@@ -256,19 +263,6 @@ export default function NGXAssetsWidget({
                 margin-left: auto;
                 margin-right: 0;
             }
-        }
-
-        .ticker-item {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-            white-space: nowrap;
-        }
-        .ticker-item.active {
-            opacity: 1;
         }
 
         .pulse-neon {
