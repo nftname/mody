@@ -45,7 +45,8 @@ export default function NGXPage() {
         </div>
       </div>
 
-      <div className="container-fluid py-4 px-0 px-md-4">
+      {/* Restored Padding for Mobile Container to prevent spill */}
+      <div className="container-fluid py-4 px-3 px-md-4">
         
         {/* LIVE CHART */}
         <div className="content-container mb-4">
@@ -53,7 +54,7 @@ export default function NGXPage() {
         </div>
 
         {/* ARTICLE */}
-        <div className="content-container px-3">
+        <div className="content-container">
             <div className="article-wrapper">
                 
                 <h2 className="article-heading mb-3">NFTs as a Market Infrastructure: From Digital Collectibles to Asset Class Architecture</h2>
@@ -118,13 +119,13 @@ export default function NGXPage() {
                     The emergence of neutral market observatories, classification systems, and non-speculative indices will play a critical role in this evolution. They allow participants—creators, developers, institutions, and researchers—to understand the NFT ecosystem as a whole rather than through isolated data points.
                 </p>
 
-                <p className="article-text mb-2">
+                <p className="article-text mb-3">
                     In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.
                 </p>
 
-                {/* DISCLAIMER */}
+                {/* DISCLAIMER - Darker Text Color (#999) */}
                 <div className="w-100 mt-2 border-top border-secondary" style={{ borderColor: '#333 !important', paddingTop: '10px' }}>
-                    <p className="fst-italic mb-0 w-100" style={{ lineHeight: '1.4', fontSize: '11px', color: '#CCCCCC' }}>
+                    <p className="fst-italic mb-0 w-100" style={{ lineHeight: '1.4', fontSize: '11px', color: '#999999' }}>
                         This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
                     </p>
                 </div>
@@ -155,7 +156,6 @@ export default function NGXPage() {
         .content-container {
             max-width: 1050px;
             margin: 0 auto;
-            /* padding left on parent handles desktop padding */
         }
 
         .widget-item { flex: 0 0 310px; }

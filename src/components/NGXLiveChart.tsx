@@ -122,7 +122,7 @@ export default function NGXLiveChart() {
         secondsVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
-        rightOffset: 2,
+        rightOffset: 10,
         minBarSpacing: 0.5,
       },
       rightPriceScale: {
@@ -238,7 +238,7 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* Timeframe Filter */}
+        {/* Timeframe Filter (Compact) */}
         <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
@@ -287,6 +287,7 @@ export default function NGXLiveChart() {
             width: 100%;
             position: relative;
             min-height: 400px;
+            overflow: hidden;
         }
 
         .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
@@ -297,21 +298,22 @@ export default function NGXLiveChart() {
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            padding: 0 2px;
+            padding: 0 10px; /* Indent inward for Desktop */
             position: relative;
             z-index: 50;
         }
 
         .filter-wrapper { position: relative; }
         
-        .sector-wrapper { width: auto; max-width: 240px; }
-        .time-wrapper { width: auto; min-width: 60px; }
+        /* Desktop widths */
+        .sector-wrapper { width: auto; min-width: 200px; max-width: 280px; }
+        .time-wrapper { width: auto; min-width: 70px; }
 
         .custom-select-trigger {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 10px;
+            padding: 6px 12px;
             font-size: 13px;
             font-weight: 700;
             color: #E0E0E0;
@@ -382,10 +384,22 @@ export default function NGXLiveChart() {
                 backdrop-filter: none;
             }
             .chart-canvas-wrapper { height: 350px !important; }
-            .filters-container { padding: 5px 10px; margin-bottom: 5px; }
+            
+            /* Mobile Filters Logic: Compact Time, Expanded Sector */
+            .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
-            .sector-wrapper { width: 70%; max-width: none; }
-            .time-wrapper { width: 28%; min-width: 0; }
+            
+            .sector-wrapper { 
+                flex-grow: 1; /* Take remaining space */
+                width: auto;
+                max-width: none;
+                margin-right: 5px;
+            }
+            .time-wrapper { 
+                width: auto; /* Just fit content */
+                min-width: 60px;
+                flex-shrink: 0;
+            }
         }
       `}</style>
     </div>
