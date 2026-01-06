@@ -23,33 +23,37 @@ const EmbedCard = ({ title, component, width, height, embedId }: any) => {
   };
 
   return (
-    <div className="embed-card">
+    <div className="embed-card h-100 d-flex flex-column justify-content-between">
       <div className="preview-area">
         <div className="widget-scale-wrapper">
           {component}
         </div>
       </div>
-      <div className="info-area d-flex justify-content-between align-items-center mt-3">
-        <div>
-            <h6 className="mb-0 fw-bold text-white" style={{ fontSize: '11px' }}>{title}</h6>
-            <div className="watermark">Powered by NNM Sovereign Name Assets</div>
-        </div>
+      <div className="info-area mt-2 text-center text-md-start">
+        <h6 className="d-none d-md-block mb-1 fw-bold text-white" style={{ fontSize: '11px' }}>{title}</h6>
+        
+        {/* زر النسخ */}
         <button 
             onClick={handleCopy} 
-            className={`btn btn-sm ${copied ? 'btn-success' : 'btn-outline-secondary'}`}
-            style={{ fontSize: '10px', padding: '4px 10px', borderRadius: '4px' }}
+            className={`btn btn-sm w-100 mb-1 copy-btn ${copied ? 'btn-success' : 'btn-outline-secondary'}`}
         >
-            {copied ? 'COPIED' : 'COPY CODE'}
+            {copied ? 'COPIED' : 'COPY'}
         </button>
+        
+        {/* العلامة المائية */}
+        <div className="watermark">
+            Powered by NNM Sovereign Name Assets
+        </div>
       </div>
+
       <style jsx>{`
         .embed-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid ${BORDER_COLOR};
             border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
+            padding: 12px;
             transition: all 0.3s;
+            overflow: hidden;
         }
         .embed-card:hover {
             border-color: rgba(255, 255, 255, 0.1);
@@ -64,18 +68,53 @@ const EmbedCard = ({ title, component, width, height, embedId }: any) => {
             position: relative;
         }
         .widget-scale-wrapper {
-            transform: scale(0.65); /* تصغير بنسبة مئوية */
+            transform: scale(0.65); /* مقاس الكمبيوتر الافتراضي */
             transform-origin: center;
             width: 100%;
             display: flex;
             justify-content: center;
         }
+        .copy-btn {
+            font-size: 10px;
+            padding: 4px 0;
+            border-radius: 4px;
+        }
         .watermark {
-            font-size: 8px;
-            color: #FCD535;
+            font-size: 9px;
+            color: #FCD535; /* Gold */
             font-style: italic;
-            opacity: 0.8;
-            margin-top: 2px;
+            opacity: 0.9;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* --- MOBILE ADJUSTMENTS (3 IN A ROW) --- */
+        @media (max-width: 768px) {
+            .embed-card {
+                padding: 5px;
+                border: 1px solid rgba(255,255,255,0.05);
+            }
+            .preview-area {
+                height: 40px; /* ارتفاع أقل في الجوال */
+            }
+            /* تصغير شديد للويدجت ليناسب عرض 33% */
+            .widget-scale-wrapper {
+                transform: scale(0.30); 
+                width: 300px; /* نعطيها عرض وهمي لكي لا تنضغط العناصر */
+            }
+            .copy-btn {
+                font-size: 8px;
+                padding: 2px 0;
+                margin-top: 5px;
+            }
+            .watermark {
+                font-size: 5px; /* خط صغير جداً */
+                white-space: normal; /* السماح بالنزول لسطرين */
+                text-align: center;
+                margin-top: 2px;
+            }
         }
       `}</style>
     </div>
@@ -206,8 +245,9 @@ export default function NGXPage() {
                          <h4 className="fw-bold mb-0 text-white" style={{ fontSize: '14px', letterSpacing: '1px' }}>DEVELOPERS & MARKET DATA</h4>
                     </div>
                     
-                    <div className="row g-3">
-                        {/* 1. Full Bar */}
+                    <div className="row g-2"> {/* Reduced gutter for tighter layout */}
+                        
+                        {/* 1. Full Bar (Always Full Width) */}
                         <div className="col-12">
                              <div className="embed-card">
                                 <div className="preview-area" style={{ height: '80px' }}>
@@ -219,46 +259,38 @@ export default function NGXPage() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="info-area d-flex justify-content-between align-items-center mt-2">
+                                <div className="info-area d-flex justify-content-between align-items-center mt-2 px-2">
                                     <div>
                                         <h6 className="mb-0 fw-bold text-white" style={{ fontSize: '11px' }}>NGX Full Market Bar</h6>
-                                        <div className="watermark">Powered by NNM Sovereign Name Assets</div>
+                                        <div className="watermark" style={{ fontSize: '9px' }}>Powered by NNM Sovereign Name Assets</div>
                                     </div>
-                                    <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '10px' }}>COPY CODE (100% Width)</button>
+                                    <button className="btn btn-sm btn-outline-secondary copy-btn px-3">COPY CODE</button>
                                 </div>
                              </div>
                         </div>
 
-                        {/* 2. Sentiment */}
-                        <div className="col-md-4">
+                        {/* 2. Individual Widgets (3 in a row on Mobile via col-4) */}
+                        <div className="col-4 col-md-4">
                             <EmbedCard 
-                                title="Sentiment Gauge" 
+                                title="Sentiment" 
                                 component={<NGXWidget theme="dark" />} 
-                                width="320" 
-                                height="100" 
-                                embedId="ngx-sentiment"
+                                width="320" height="100" embedId="ngx-sentiment"
                             />
                         </div>
 
-                        {/* 3. Market Cap */}
-                        <div className="col-md-4">
+                        <div className="col-4 col-md-4">
                             <EmbedCard 
                                 title="Market Cap" 
                                 component={<NGXCapWidget theme="dark" />} 
-                                width="320" 
-                                height="100" 
-                                embedId="ngx-cap"
+                                width="320" height="100" embedId="ngx-cap"
                             />
                         </div>
 
-                        {/* 4. Volume */}
-                        <div className="col-md-4">
+                        <div className="col-4 col-md-4">
                             <EmbedCard 
-                                title="Volume & Sectors" 
+                                title="Volume" 
                                 component={<NGXVolumeWidget theme="dark" />} 
-                                width="320" 
-                                height="100" 
-                                embedId="ngx-volume"
+                                width="320" height="100" embedId="ngx-volume"
                             />
                         </div>
                     </div>
@@ -319,15 +351,6 @@ export default function NGXPage() {
         }
         
         .article-wrapper { margin-left: 0; padding-left: 0; }
-        
-        /* Embed Section Styles */
-        .embed-card .watermark {
-            font-size: 8px;
-            color: #FCD535;
-            font-style: italic;
-            opacity: 0.8;
-            margin-top: 2px;
-        }
 
         @media (max-width: 768px) {
             .header-wrapper { padding: 2px 0 !important; }
