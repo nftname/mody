@@ -247,14 +247,19 @@ export default function DashboardPage() {
                     {address ? address.slice(2,4).toUpperCase() : ''}
                 </div>
             </div>
+            
+            {/* Address with Link */}
             <div className="d-flex align-items-center gap-2">
-                <span className="fw-normal" style={{ fontSize: '18px', fontFamily: 'monospace', color: GOLD_COLOR }}>
-                    {address ? `${address.slice(0,6)}...${address.slice(-4)}` : ''}
-                </span>
+                <Link href={`/profile/${address}`} className="text-decoration-none">
+                    <span className="fw-normal" style={{ fontSize: '18px', fontFamily: 'monospace', color: GOLD_COLOR, cursor: 'pointer' }}>
+                        {address ? `${address.slice(0,6)}...${address.slice(-4)}` : ''}
+                    </span>
+                </Link>
                 <button onClick={copyToClipboard} className="btn p-0 border-0" style={{ color: '#8a939b' }}>
                     {isCopied ? <i className="bi bi-check-lg text-success"></i> : <i className="bi bi-copy"></i>}
                 </button>
             </div>
+
             <div className="d-flex gap-5 mt-2 px-2">
                 <div className="d-flex flex-column align-items-start">
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Balance</div>
@@ -361,7 +366,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Offers Table - With Forced Transparent Backgrounds */}
+                {/* Offers Table */}
                 <div className="table-responsive">
                     <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
                         <thead>
@@ -396,7 +401,15 @@ export default function DashboardPage() {
                                             {parseFloat(offer.formattedPrice).toFixed(2)}
                                         </td>
                                         <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>
-                                            {offerType === 'Made' ? 'Owner' : (offer.bidder_address ? `${offer.bidder_address.slice(0,4)}...${offer.bidder_address.slice(-4)}` : '-')}
+                                            {offerType === 'Made' ? 'Owner' : (
+                                                offer.bidder_address ? (
+                                                    <Link href={`/profile/${offer.bidder_address}`} className="text-decoration-none">
+                                                        <span style={{ color: GOLD_COLOR, cursor: 'pointer' }}>
+                                                            {`${offer.bidder_address.slice(0,4)}...${offer.bidder_address.slice(-4)}`}
+                                                        </span>
+                                                    </Link>
+                                                ) : '-'
+                                            )}
                                         </td>
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>
                                             {offer.timeLeft}
