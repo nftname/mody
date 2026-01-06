@@ -258,26 +258,27 @@ export default function NGXPage() {
 
       </div>
 
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" 
-           style={{ 
-               borderColor: '#333 !important', 
-               marginTop: '5rem', 
-               marginBottom: '80px', 
-               backgroundColor: '#0b0e11', 
-               maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', 
-               WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' 
-           }}>
-          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
-          <div className="marquee-container overflow-hidden position-relative w-100">
-              <div className="marquee-track d-flex align-items-center">
-                  {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (
-                      <div key={index} className="brand-item d-flex align-items-center justify-content-center mx-5" style={{ minWidth: '120px', transition: '0.4s' }}>
-                          <div className="brand-logo d-flex align-items-center gap-2" style={{ fontSize: '18px', fontWeight: '800', fontFamily: 'Montserrat, sans-serif', letterSpacing: '1px' }}>
-                              <GoldIcon icon={brand.icon} isCustomSVG={brand.isCustom} />
-                              <span className="brand-text-gold">{brand.name}</span>
+      {/* التعديل الجراحي: غلفنا الشريط بحاوية شفافة للتحكم في المسافات */}
+      <div className="w-100" style={{ marginTop: '5rem', marginBottom: '80px' }}>
+          <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" 
+               style={{ 
+                   borderColor: '#333 !important', 
+                   backgroundColor: '#0b0e11', // اللون الأسود للشريط كما طلبت
+                   maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', 
+                   WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' 
+               }}>
+              <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
+              <div className="marquee-container overflow-hidden position-relative w-100">
+                  <div className="marquee-track d-flex align-items-center">
+                      {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (
+                          <div key={index} className="brand-item d-flex align-items-center justify-content-center mx-5" style={{ minWidth: '120px', transition: '0.4s' }}>
+                              <div className="brand-logo d-flex align-items-center gap-2" style={{ fontSize: '18px', fontWeight: '800', fontFamily: 'Montserrat, sans-serif', letterSpacing: '1px' }}>
+                                  <GoldIcon icon={brand.icon} isCustomSVG={brand.isCustom} />
+                                  <span className="brand-text-gold">{brand.name}</span>
+                              </div>
                           </div>
-                      </div>
-                  ))}
+                      ))}
+                  </div>
               </div>
           </div>
       </div>
