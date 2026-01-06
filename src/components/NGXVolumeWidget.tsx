@@ -112,8 +112,11 @@ export default function NGXVolumeWidget({
                 <div className="vol-label fw-bold" style={{ color: TEXT_WHITE }}>VOL</div>
                 <div className="vol-data-wrapper">
                     <span className="fw-bold vol-value" style={{ color: TEXT_WHITE }}>{totalVolDisplay}</span>
-                    <span className="fw-bold vol-change" style={{ color: volColor }}>
-                        {volChange >= 0 ? '+' : ''}{volChange}%
+                    
+                    {/* التعديل الجراحي: إضافة السهم وضبط المحاذاة */}
+                    <span className="fw-bold vol-change d-flex align-items-center" style={{ color: volColor }}>
+                        <span className="vol-arrow" style={{ marginRight: '1px' }}>{volChange >= 0 ? '▲' : '▼'}</span>
+                        {Math.abs(volChange)}%
                     </span>
                 </div>
             </div>
@@ -134,7 +137,7 @@ export default function NGXVolumeWidget({
         {/* RIGHT SIDE: Bars */}
         <div className="bars-container d-flex align-items-end justify-content-between position-relative">
             {data.sectors
-                .filter(sector => sector.label !== 'SOV') // حذفنا بار SOV فقط
+                .filter(sector => sector.label !== 'SOV')
                 .map((sector, index) => (
                 <div key={index} className="d-flex flex-column align-items-center justify-content-end bar-wrapper" 
                      style={{ height: '100%', zIndex: 1 }}
@@ -146,7 +149,7 @@ export default function NGXVolumeWidget({
                         height: `${Math.max(10, sector.value)}%`, 
                         background: 'linear-gradient(180deg, #FCD535 0%, #0ecb81 100%)', 
                         borderRadius: '1px 1px 0 0',
-                        opacity: 0.85, // جعلنا الشفافية موحدة بعد حذف SOV
+                        opacity: 0.85, 
                         transition: 'height 1s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}></div>
                     
@@ -206,7 +209,9 @@ export default function NGXVolumeWidget({
 
         .vol-label { font-size: 10px; }
         .vol-value { font-size: 10px; }
+        /* حجم الخط المكتبي */
         .vol-change { font-size: 10px; }
+        .vol-arrow { font-size: 8px; }
 
         .stats-container {
             gap: 2px;
@@ -247,7 +252,7 @@ export default function NGXVolumeWidget({
             display: inline-block;
         }
 
-        /* --- MOBILE STYLES (FINAL REFINEMENT) --- */
+        /* --- MOBILE STYLES (MATCHING CAP WIDGET) --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
                 min-width: 112px !important; 
@@ -293,9 +298,14 @@ export default function NGXVolumeWidget({
                 font-size: 9px !important; 
                 line-height: 1 !important;
             } 
+            
+            /* التعديل الجراحي: نفس مقاسات Cap Widget للجوال */
             .vol-change { 
-                font-size: 8.5px !important; 
+                font-size: 7px !important; 
                 line-height: 1 !important;
+            }
+            .vol-arrow {
+                font-size: 6px !important;
             }
 
             .stats-container {
@@ -316,9 +326,8 @@ export default function NGXVolumeWidget({
                 padding-right: 0px !important; 
             }
             
-            /* --- FINAL LABEL FIX: REDUCED BY 15% --- */
             .bar-label {
-                font-size: 3.4px !important; /* Reduced from 4px to 3.4px */
+                font-size: 3.4px !important;
                 margin-top: 1px !important;
                 letter-spacing: 0.1px !important;
             }
