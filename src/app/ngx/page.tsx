@@ -180,7 +180,7 @@ export default function NGXPage() {
         </div>
       </div>
 
-      <div className="container-fluid py-4 px-3 px-md-4">
+      <div className="container-fluid py-4 px-3 px-md-4" style={{ paddingBottom: '5rem' }}>
         {/* LIVE CHART */}
         <div className="content-container mb-4">
              <NGXLiveChart />
