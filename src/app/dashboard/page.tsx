@@ -146,7 +146,7 @@ export default function DashboardPage() {
 
   if (!isConnected) {
     return (
-        <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '80px', width: '100%' }}>
+        <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
             <div className="text-center">
                 <h2 className="text-white mb-3">Connect Wallet to View Profile</h2>
                 <p className="text-secondary mb-4">Please connect your wallet to see your NNM assets.</p>
@@ -158,14 +158,11 @@ export default function DashboardPage() {
   return (
     <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', width: '100%', overflowX: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
       
-      <div style={{ paddingTop: '80px' }}>
-          <div style={{ width: '100%', height: '160px', background: 'linear-gradient(180deg, #2b2b2b 0%, #1E1E1E 100%)', position: 'relative', borderBottom: '1px solid #2d2d2d' }}>
-          </div>
+      <div style={{ width: '100%', height: '180px', background: 'linear-gradient(180deg, #2b2b2b 0%, #1E1E1E 100%)', position: 'relative', borderBottom: '1px solid #2d2d2d' }}>
       </div>
 
-      <div className="container mx-auto px-3" style={{ marginTop: '-80px', position: 'relative', zIndex: 10 }}>
+      <div className="container mx-auto px-3" style={{ marginTop: '-90px', position: 'relative', zIndex: 10 }}>
         
-        {/* Header Info */}
         <div className="d-flex flex-column gap-3 mb-4">
             <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #1E1E1E', background: '#161b22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
                 <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: '#1E1E1E' }}>
@@ -182,7 +179,6 @@ export default function DashboardPage() {
                 </button>
             </div>
 
-            {/* Stats Bar: Adjusted Alignment & Color */}
             <div className="d-flex gap-5 mt-2 px-2">
                 <div className="d-flex flex-column align-items-start">
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Balance</div>
@@ -205,7 +201,6 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        {/* Tabs: No Border Bottom, Reduced Margin */}
         <div className="d-flex gap-4 mb-2 overflow-auto" style={{ borderBottom: 'none' }}>
             {['Items', 'Listings', 'Offers', 'Created', 'Activity'].map((tab) => (
                 <button 
@@ -219,6 +214,7 @@ export default function DashboardPage() {
                         fontSize: '15px', 
                         fontWeight: activeSection === tab ? '600' : '500',
                         whiteSpace: 'nowrap',
+                        borderRadius: 0
                     }}
                 >
                     {tab}
@@ -229,28 +225,23 @@ export default function DashboardPage() {
             ))}
         </div>
 
-        {/* Content Area */}
         {activeSection === 'Items' && (
             <>
-                {/* Toolbar */}
                 <div className="d-flex align-items-center gap-2 mb-4 position-relative">
                     
-                     {/* Filter Button: Professional SVG Icon */}
                     <div className="position-relative">
                         <button 
                             onClick={() => setShowFilterMenu(!showFilterMenu)} 
                             className="btn border border-secondary d-flex align-items-center justify-content-center" 
-                            style={{ borderRadius: '8px', borderColor: '#333', width: '42px', height: '42px', padding: '0', backgroundColor: 'transparent' }}
+                            style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}
                         >
-                            {/* SVG mimicking OpenSea Filter Icon */}
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M4 6H20" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/>
                                 <path d="M7 12H17" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/>
                                 <path d="M10 18H14" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/>
                             </svg>
                         </button>
                         
-                        {/* Filter Dropdown */}
                         {showFilterMenu && (
                             <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
                                 <div style={{ fontSize: '10px', color: '#8a939b', padding: '4px 8px', textTransform: 'uppercase' }}>Filter by Tier</div>
@@ -268,28 +259,25 @@ export default function DashboardPage() {
                         )}
                     </div>
 
-                     {/* Search Input */}
                     <div className="position-relative flex-grow-1">
-                        <i className="bi bi-search position-absolute" style={{ top: '12px', left: '12px', fontSize: '16px', color: '#b0b0b0' }}></i>
+                        <i className="bi bi-search position-absolute" style={{ top: '8px', left: '10px', fontSize: '14px', color: '#b0b0b0' }}></i>
                         <input 
                             type="search" 
                             placeholder="Search by name" 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="form-control bg-transparent text-white border-secondary ps-5" 
-                            style={{ borderRadius: '8px', borderColor: '#333', fontSize: '15px', height: '42px' }}
+                            style={{ borderRadius: '8px', borderColor: '#333', fontSize: '14px', height: '32px' }}
                         />
                     </div>
 
-                    {/* View Toggle: Bright White Icon */}
-                    <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '42px', height: '42px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
-                        {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '20px' }}></i>}
-                        {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '20px' }}></i>}
-                        {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '24px' }}></i>}
+                    <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
+                        {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '16px' }}></i>}
+                        {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '16px' }}></i>}
+                        {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '20px' }}></i>}
                     </button>
                 </div>
 
-                {/* Assets Renderer */}
                 <div className="pb-5">
                     {loading && myAssets.length === 0 ? (
                         <div className="text-center py-5">
