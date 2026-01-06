@@ -100,12 +100,12 @@ const Navbar = () => {
   };
 
   const exactDarkColor = '#0b0e11'; 
-  const drawerBgColor = '#1E1E1E'; // اللون الفحمي للقائمة الجانبية
+  const drawerBgColor = '#1E1E1E'; 
   
   const dropdownColor = '#0a0c10'; 
   const metallicGoldHex = '#F0C420'; 
   const paleGoldHex = '#D4C49D'; 
-  const matteGoldIcon = '#CBA135'; // لون ذهبي مطفأ للأيقونات السفلية
+  const matteGoldIcon = '#CBA135'; 
   const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
   const offWhiteText = '#E0E0E0';
 
@@ -418,22 +418,22 @@ const Navbar = () => {
           <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
 
           <div className="drawer-content px-4 pt-4 pb-3 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
-              <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-3 mt-2">
-                  <div className="d-flex flex-column gap-3">
+              <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-2 mt-2">
+                  <div className="d-flex flex-column gap-1">
                     {menuItems.map((item) => (
                         <Link key={item} 
                                 href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                                 onClick={closeDrawer}
-                                className="text-decoration-none fw-bold py-2"
+                                className="text-decoration-none fw-bold py-1"
                                 style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
                             {item}
                         </Link>
                     ))}
-                    <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-bold py-2" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>How it Works</Link>
-                    <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-bold py-2" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>Contact</Link>
+                    <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-bold py-1" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>How it Works</Link>
+                    <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-bold py-1" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>Contact</Link>
                   </div>
 
-                  <hr className="m-0 my-3" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.03)', opacity: 1 }} />
+                  <hr className="m-0 my-2" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.03)', opacity: 1 }} />
 
                   <div className="d-flex flex-column gap-2">
                     {secondaryLinks.map((link) => (
