@@ -35,7 +35,6 @@ const EmbedCard = ({ title, component, width, height, embedId, label, isFullBar 
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    // استخدام الدومين الحقيقي
     const code = `<iframe src="https://nftnnm.com/embed/${embedId}?theme=auto" width="${width}" height="${height}" frameborder="0" style="border-radius:12px; overflow:hidden;"></iframe>`;
     navigator.clipboard.writeText(code);
     setCopied(true);
@@ -259,7 +258,15 @@ export default function NGXPage() {
 
       </div>
 
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: '5rem', marginBottom: '80px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" 
+           style={{ 
+               borderColor: '#333 !important', 
+               marginTop: '5rem', 
+               marginBottom: '80px', 
+               backgroundColor: '#0b0e11', 
+               maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', 
+               WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' 
+           }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
