@@ -179,7 +179,7 @@ export default function NGXPage() {
         </div>
       </div>
 
-      <div className="container-fluid py-4 px-3 px-md-4" style={{ paddingBottom: '5rem' }}>
+      <div className="container-fluid py-4 px-3 px-md-4" style={{ paddingBottom: '0' }}> {/* تعديل: إزالة الـ padding السفلي الكبير من هنا */}
         {/* LIVE CHART */}
         <div className="content-container mb-4">
              <NGXLiveChart />
@@ -258,30 +258,36 @@ export default function NGXPage() {
 
       </div>
 
-      {/* التعديل الجراحي: غلفنا الشريط بحاوية شفافة للتحكم في المسافات */}
-      <div className="w-100" style={{ marginTop: '5rem', marginBottom: '80px' }}>
-          <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" 
-               style={{ 
-                   borderColor: '#333 !important', 
-                   backgroundColor: '#0b0e11', // اللون الأسود للشريط كما طلبت
-                   maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', 
-                   WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' 
-               }}>
-              <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
-              <div className="marquee-container overflow-hidden position-relative w-100">
-                  <div className="marquee-track d-flex align-items-center">
-                      {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (
-                          <div key={index} className="brand-item d-flex align-items-center justify-content-center mx-5" style={{ minWidth: '120px', transition: '0.4s' }}>
-                              <div className="brand-logo d-flex align-items-center gap-2" style={{ fontSize: '18px', fontWeight: '800', fontFamily: 'Montserrat, sans-serif', letterSpacing: '1px' }}>
-                                  <GoldIcon icon={brand.icon} isCustomSVG={brand.isCustom} />
-                                  <span className="brand-text-gold">{brand.name}</span>
-                              </div>
+      {/* حل جراحي: فصل المسافات عن الشريط الملون باستخدام Spacer Divs شفافة */}
+      
+      {/* 1. مسافة علوية شفافة (بدلاً من margin-top) */}
+      <div style={{ width: '100%', height: '5rem', background: 'transparent' }}></div>
+
+      {/* 2. الشريط الأسود (بدون أي مارجن خارجي قد يسبب التداخل) */}
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" 
+           style={{ 
+               borderColor: '#333 !important', 
+               backgroundColor: '#0b0e11', // اللون الأسود الصريح
+               maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', 
+               WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' 
+           }}>
+          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
+          <div className="marquee-container overflow-hidden position-relative w-100">
+              <div className="marquee-track d-flex align-items-center">
+                  {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (
+                      <div key={index} className="brand-item d-flex align-items-center justify-content-center mx-5" style={{ minWidth: '120px', transition: '0.4s' }}>
+                          <div className="brand-logo d-flex align-items-center gap-2" style={{ fontSize: '18px', fontWeight: '800', fontFamily: 'Montserrat, sans-serif', letterSpacing: '1px' }}>
+                              <GoldIcon icon={brand.icon} isCustomSVG={brand.isCustom} />
+                              <span className="brand-text-gold">{brand.name}</span>
                           </div>
-                      ))}
-                  </div>
+                      </div>
+                  ))}
               </div>
           </div>
       </div>
+
+      {/* 3. مسافة سفلية شفافة (بدلاً من margin-bottom) تفصل الشريط عن الفوتر وتكشف الخلفية الفحمية */}
+      <div style={{ width: '100%', height: '80px', background: 'transparent' }}></div>
 
       <style jsx global>{`
         .header-wrapper { background: ${SURFACE_DARK}; border-bottom: 1px solid ${BORDER_COLOR}; padding: 4px 0; margin-top: 0; }
