@@ -6,7 +6,6 @@ import {
   getDefaultConfig,
   RainbowKitProvider,
   darkTheme,
-  Theme,
 } from '@rainbow-me/rainbowkit';
 import { WagmiProvider } from 'wagmi';
 import { polygon } from 'viem/chains';
@@ -15,7 +14,7 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 const origin = typeof window !== 'undefined' ? window.location.origin : 'https://Nftnnm.com';
 
 const config = getDefaultConfig({
-  appName: 'NNM Sovereign Name Assets',
+  appName: 'NNM Market',
   appDescription: 'Nexus Digital Name NFTs Market',
   appUrl: origin,
   appIcon: `${origin}/icons/icon.svg`,
@@ -26,32 +25,18 @@ const config = getDefaultConfig({
 
 const queryClient = new QueryClient();
 
-const baseTheme = darkTheme({
-  accentColor: '#F0C420',
-  accentColorForeground: 'black',
-  borderRadius: 'small',
-  fontStack: 'system',
-  overlayBlur: 'small',
-});
-
-const nnmCustomTheme: Theme = {
-  ...baseTheme,
-  colors: {
-    ...baseTheme.colors,
-    modalBackground: '#0b0e11',
-    modalBorder: 'rgba(255, 255, 255, 0.08)',
-    menuItemBackground: '#141414',
-    modalText: '#E0E0E0',
-    modalTextSecondary: '#D4C49D',
-  },
-};
-
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
-            theme={nnmCustomTheme}
+            theme={darkTheme({
+                accentColor: '#FCD535',
+                accentColorForeground: 'black',
+                borderRadius: 'small',
+                fontStack: 'system',
+                overlayBlur: 'small',
+            })}
             modalSize="compact"
         >
           {children}
