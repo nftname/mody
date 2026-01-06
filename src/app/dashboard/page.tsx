@@ -101,7 +101,7 @@ export default function DashboardPage() {
               return {
                 id: tokenId.toString(),
                 name: meta.name || `NNM #${tokenId.toString()}`,
-                image: resolveIPFS(meta.image) || '', // Real image from IPFS
+                image: resolveIPFS(meta.image) || '',
                 tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
                 price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'
               };
@@ -159,13 +159,11 @@ export default function DashboardPage() {
   return (
     <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', width: '100%', overflowX: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
       
-      {/* Banner Section */}
       <div style={{ width: '100%', height: '180px', background: 'linear-gradient(180deg, #2b2b2b 0%, #1E1E1E 100%)', position: 'relative', borderBottom: '1px solid #2d2d2d' }}>
       </div>
 
       <div className="container mx-auto px-3" style={{ marginTop: '-90px', position: 'relative', zIndex: 10 }}>
         
-        {/* Profile Header */}
         <div className="d-flex flex-column gap-3 mb-4">
             <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #1E1E1E', background: '#161b22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
                 <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: '#1E1E1E' }}>
@@ -204,7 +202,6 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        {/* Tabs - No gray border bottom */}
         <div className="d-flex gap-4 mb-2 overflow-auto" style={{ borderBottom: 'none' }}>
             {['Items', 'Listings', 'Offers', 'Created', 'Activity'].map((tab) => (
                 <button 
@@ -233,7 +230,6 @@ export default function DashboardPage() {
             <>
                 <div className="d-flex align-items-center gap-2 mb-4 position-relative">
                     
-                    {/* Filter Icon */}
                     <div className="position-relative">
                         <button 
                             onClick={() => setShowFilterMenu(!showFilterMenu)} 
@@ -264,7 +260,6 @@ export default function DashboardPage() {
                         )}
                     </div>
 
-                    {/* Search Bar */}
                     <div className="position-relative flex-grow-1">
                         <i className="bi bi-search position-absolute" style={{ top: '8px', left: '10px', fontSize: '14px', color: '#b0b0b0' }}></i>
                         <input 
@@ -277,7 +272,6 @@ export default function DashboardPage() {
                         />
                     </div>
 
-                    {/* View Toggle */}
                     <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
                         {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '16px' }}></i>}
                         {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '16px' }}></i>}
@@ -313,12 +307,11 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     const isListed = item.price && parseFloat(item.price) > 0;
     
-    // Polygon Badge SVG
+    // Correct Polygon Badge with Halo
     const PolygonBadge = () => (
-        <div className="position-absolute top-0 start-0 m-2" style={{ zIndex: 5 }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                 <circle cx="12" cy="12" r="12" fill="white"/>
-                 <path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="#8247E5"/>
+        <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px', backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '50%' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="#8247E5"/>
             </svg>
         </div>
     );
@@ -337,7 +330,8 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                         </div>
                         <div className="flex-grow-1">
                             <div className="text-white" style={{ fontSize: '14px', fontWeight: '600' }}>{item.name}</div>
-                            <div className="text-secondary" style={{ fontSize: '11px' }}>NNM Registry</div>
+                            {/* Using hardcoded name temporarily for visual match, will be dynamic later */}
+                            <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
                         </div>
                         <div className="text-end pe-2">
                             <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{isListed ? `${item.price} POL` : 'Not listed'}</div>
@@ -352,7 +346,6 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
       <div className={colClass}>
           <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
               <Link href={`/asset/${item.id}`} className="text-decoration-none h-100 d-flex flex-column">
-                  {/* Image Container */}
                   <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
                        <PolygonBadge />
                        {item.image ? (
@@ -364,23 +357,20 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                        )}
                   </div>
                   
-                  {/* Info Area */}
                   <div className="p-3 d-flex flex-column flex-grow-1">
-                      {/* Name & ID Row */}
-                      <div className="d-flex justify-content-between align-items-start">
-                          <div className="text-white fw-bold text-truncate" style={{ fontSize: '13px', maxWidth: '80%' }}>{item.name}</div>
-                          <div className="text-secondary" style={{ fontSize: '11px' }}>#{item.id}</div>
+                      <div className="d-flex justify-content-between align-items-start mb-1">
+                          <div className="text-white fw-bold text-truncate" style={{ fontSize: '14px', maxWidth: '80%' }}>{item.name}</div>
+                          <div className="text-secondary" style={{ fontSize: '12px' }}>#{item.id}</div>
                       </div>
                       
-                      {/* Collection Name */}
-                      <div className="text-secondary mb-3" style={{ fontSize: '11px', marginTop: '2px' }}>NNM Registry</div>
+                      {/* Collection Name: White, No Separator Line */}
+                      <div className="text-white mb-3" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
                       
-                      {/* Footer: Price or Status */}
-                      <div className="mt-auto pt-2 border-top border-secondary" style={{ borderColor: '#2d2d2d !important' }}>
-                           <div className="text-white fw-bold" style={{ fontSize: '13px' }}>
-                               {isListed ? `${item.price} POL` : <span className="text-secondary fw-normal">Not listed</span>}
+                      <div className="mt-auto">
+                           <div className="text-white fw-bold" style={{ fontSize: '14px' }}>
+                               {isListed ? `${item.price} POL` : <span className="text-secondary fw-normal" style={{ fontSize: '12px' }}>Last Sale</span>}
                            </div>
-                           {isListed && <div className="text-secondary" style={{ fontSize: '10px' }}>Price</div>}
+                           {isListed && <div className="text-secondary" style={{ fontSize: '11px' }}>Price</div>}
                       </div>
                   </div>
               </Link>
