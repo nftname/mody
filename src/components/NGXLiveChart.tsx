@@ -52,7 +52,6 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // ... (generateData function remains the same) ...
   const generateData = (timeframe: string, sectorKey: string) => {
     const data = [];
     const now = new Date(); 
@@ -123,7 +122,7 @@ export default function NGXLiveChart() {
         secondsVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
-        rightOffset: 10, // هامش يمين صغير
+        rightOffset: 2,
         minBarSpacing: 0.5,
       },
       rightPriceScale: {
@@ -209,12 +208,12 @@ export default function NGXLiveChart() {
       
       <div className="filters-container">
         
-        {/* Sector Filter (Expanded width) */}
-        <div className="filter-wrapper flex-grow-1" ref={sectorRef}>
+        {/* Sector Filter */}
+        <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
              onClick={() => setIsSectorOpen(!isSectorOpen)}
-             style={{ color: currentColor, width: '100%' }}
+             style={{ color: currentColor }}
            >
               <span className="text-truncate">{activeSector}</span>
               <span className="arrow">▼</span>
@@ -239,8 +238,8 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* Timeframe Filter (Compact width) */}
-        <div className="filter-wrapper ms-2" ref={timeRef} style={{ width: 'auto', minWidth: '60px' }}>
+        {/* Timeframe Filter */}
+        <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
              onClick={() => setIsTimeOpen(!isTimeOpen)}
@@ -304,6 +303,9 @@ export default function NGXLiveChart() {
         }
 
         .filter-wrapper { position: relative; }
+        
+        .sector-wrapper { width: auto; max-width: 240px; }
+        .time-wrapper { width: auto; min-width: 60px; }
 
         .custom-select-trigger {
             display: flex;
@@ -338,7 +340,7 @@ export default function NGXLiveChart() {
             position: absolute;
             top: 100%;
             left: 0;
-            right: 0;
+            min-width: 100%;
             background: rgba(30, 30, 30, 0.95);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -350,7 +352,8 @@ export default function NGXLiveChart() {
         }
 
         .time-options {
-            min-width: 100%; 
+            right: 0;
+            left: auto;
             width: 100%;
         }
 
@@ -362,6 +365,7 @@ export default function NGXLiveChart() {
             transition: background 0.2s, color 0.2s;
             border-bottom: 1px solid rgba(255,255,255,0.02);
             text-align: left;
+            white-space: nowrap;
         }
         .time-options .custom-option { text-align: center; }
 
@@ -371,9 +375,17 @@ export default function NGXLiveChart() {
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
         @media (max-width: 768px) {
-            .ngx-chart-glass { padding: 10px; } /* تقليل الحواف للجوال */
+            .ngx-chart-glass { 
+                padding: 0; 
+                border: none; 
+                background: transparent;
+                backdrop-filter: none;
+            }
             .chart-canvas-wrapper { height: 350px !important; }
+            .filters-container { padding: 5px 10px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
+            .sector-wrapper { width: 70%; max-width: none; }
+            .time-wrapper { width: 28%; min-width: 0; }
         }
       `}</style>
     </div>
