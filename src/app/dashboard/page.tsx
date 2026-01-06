@@ -25,7 +25,6 @@ export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
   
-  // Fix: Added <any[]> type definition to prevent 'never' type errors
   const [myAssets, setMyAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
@@ -41,13 +40,11 @@ export default function DashboardPage() {
   
   const [isCopied, setIsCopied] = useState(false);
 
-  // Fix: Added (uri: string) type
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
   };
 
-  // Fix: Added Generic types <T> and (arr: T[], size: number)
   const chunk = <T,>(arr: T[], size: number) => {
     const result: T[][] = [];
     for (let i = 0; i < arr.length; i += size) result.push(arr.slice(i, i + size));
@@ -89,7 +86,6 @@ export default function DashboardPage() {
 
       for (const batch of batches) {
         const batchResults = await Promise.all(
-          // Fix: Added (tokenId: any) type
           batch.map(async (tokenId: any) => {
             try {
               const tokenURI = await publicClient.readContract({
@@ -105,7 +101,6 @@ export default function DashboardPage() {
               return {
                 id: tokenId.toString(),
                 name: meta.name || `NNM #${tokenId.toString()}`,
-                // Fix: Added (a: any) type
                 tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
                 price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'
               };
@@ -141,7 +136,6 @@ export default function DashboardPage() {
     setViewModeState((prev) => (prev + 1) % viewModes.length);
   };
 
-  // Fixed by explicitly typing myAssets state above
   const totalAssetValue = myAssets.reduce((acc, curr) => acc + parseFloat(curr.price || 0), 0);
 
   const filteredAssets = myAssets.filter(asset => {
@@ -188,31 +182,31 @@ export default function DashboardPage() {
                 </button>
             </div>
 
-            {/* Stats Bar */}
-            <div className="d-flex gap-4 mt-2">
-                <div>
+            {/* Stats Bar: Adjusted Alignment & Color */}
+            <div className="d-flex gap-5 mt-2 px-2">
+                <div className="d-flex flex-column align-items-start">
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Balance</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>
-                         <span style={{ fontSize: '12px', color: '#8a939b', marginRight: '4px' }}>POL</span>
+                         <span style={{ fontSize: '13px', color: '#FFFFFF', marginRight: '4px' }}>POL</span>
                          {balanceData ? parseFloat(balanceData.formatted).toFixed(2) : '0.00'}
                     </div>
                 </div>
-                <div>
+                <div className="d-flex flex-column align-items-start">
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Assets</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>{myAssets.length}</div>
                 </div>
-                <div>
+                <div className="d-flex flex-column align-items-start">
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Total value</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>
-                        <span style={{ fontSize: '12px', color: '#8a939b', marginRight: '4px' }}>POL</span>
+                        <span style={{ fontSize: '13px', color: '#FFFFFF', marginRight: '4px' }}>POL</span>
                         {totalAssetValue.toFixed(0)}
                     </div>
                 </div>
             </div>
         </div>
 
-        {/* Tabs */}
-        <div className="d-flex gap-4 mb-4 overflow-auto" style={{ borderBottom: 'none' }}>
+        {/* Tabs: No Border Bottom, Reduced Margin */}
+        <div className="d-flex gap-4 mb-2 overflow-auto" style={{ borderBottom: 'none' }}>
             {['Items', 'Listings', 'Offers', 'Created', 'Activity'].map((tab) => (
                 <button 
                     key={tab} 
@@ -229,7 +223,7 @@ export default function DashboardPage() {
                 >
                     {tab}
                     {activeSection === tab && (
-                        <div style={{ position: 'absolute', bottom: '0', left: '0', right: '0', height: '2px', backgroundColor: GOLD_COLOR, borderRadius: '2px' }}></div>
+                        <div style={{ position: 'absolute', bottom: '0', left: '0', right: '0', height: '3px', backgroundColor: GOLD_COLOR, borderRadius: '2px' }}></div>
                     )}
                 </button>
             ))}
@@ -241,16 +235,19 @@ export default function DashboardPage() {
                 {/* Toolbar */}
                 <div className="d-flex align-items-center gap-2 mb-4 position-relative">
                     
-                     {/* Filter Button */}
+                     {/* Filter Button: Professional SVG Icon */}
                     <div className="position-relative">
                         <button 
                             onClick={() => setShowFilterMenu(!showFilterMenu)} 
-                            className="btn border border-secondary d-flex flex-column align-items-center justify-content-center gap-1" 
-                            style={{ borderRadius: '8px', borderColor: '#333', width: '36px', height: '36px', padding: '0' }}
+                            className="btn border border-secondary d-flex align-items-center justify-content-center" 
+                            style={{ borderRadius: '8px', borderColor: '#333', width: '42px', height: '42px', padding: '0', backgroundColor: 'transparent' }}
                         >
-                            <div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div>
-                            <div style={{ width: '12px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div>
-                            <div style={{ width: '8px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div>
+                            {/* SVG mimicking OpenSea Filter Icon */}
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 6H20" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/>
+                                <path d="M7 12H17" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/>
+                                <path d="M10 18H14" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
                         </button>
                         
                         {/* Filter Dropdown */}
@@ -273,22 +270,22 @@ export default function DashboardPage() {
 
                      {/* Search Input */}
                     <div className="position-relative flex-grow-1">
-                        <i className="bi bi-search position-absolute" style={{ top: '10px', left: '12px', fontSize: '14px', color: '#b0b0b0' }}></i>
+                        <i className="bi bi-search position-absolute" style={{ top: '12px', left: '12px', fontSize: '16px', color: '#b0b0b0' }}></i>
                         <input 
                             type="search" 
                             placeholder="Search by name" 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="form-control bg-transparent text-white border-secondary ps-5" 
-                            style={{ borderRadius: '8px', borderColor: '#333', fontSize: '14px', height: '36px' }}
+                            style={{ borderRadius: '8px', borderColor: '#333', fontSize: '15px', height: '42px' }}
                         />
                     </div>
 
-                    {/* View Toggle */}
-                    <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '36px', height: '36px', color: '#8a939b', padding: 0 }}>
-                        {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '14px' }}></i>}
-                        {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '14px' }}></i>}
-                        {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '16px' }}></i>}
+                    {/* View Toggle: Bright White Icon */}
+                    <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '42px', height: '42px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
+                        {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '20px' }}></i>}
+                        {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '20px' }}></i>}
+                        {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '24px' }}></i>}
                     </button>
                 </div>
 
@@ -317,7 +314,6 @@ export default function DashboardPage() {
   );
 }
 
-// Fix: Added types for component props ({ item: any, mode: string })
 const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
     const style = getCardStyles(item.tier);
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
@@ -384,7 +380,6 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
     );
 };
 
-// Fix: Added (tier: string) type
 const getCardStyles = (tier: string) => {
     if (tier?.toLowerCase() === 'immortal') return { bg: 'linear-gradient(135deg, #0a0a0a 0%, #2a2a2a 100%)' };
     if (tier?.toLowerCase() === 'elite') return { bg: 'linear-gradient(135deg, #2b0505 0%, #5a1a1a 100%)' };
