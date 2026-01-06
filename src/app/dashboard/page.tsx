@@ -7,9 +7,9 @@ import { createPublicClient, http, parseAbi } from 'viem';
 import { polygon } from 'viem/chains';
 import { NFT_COLLECTION_ADDRESS } from '@/data/config';
 
+const GOLD_COLOR = '#FCD535';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
-// ABI متوافق مع Registry 10 (ERC721Enumerable)
 const CONTRACT_ABI = parseAbi([
   "function balanceOf(address) view returns (uint256)",
   "function tokenOfOwnerByIndex(address, uint256) view returns (uint256)",
@@ -28,9 +28,14 @@ export default function DashboardPage() {
   const [myAssets, setMyAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('Items');
-  const [viewMode, setViewMode] = useState('grid');
+  // Single state for view mode toggle cycle
+  const [viewModeState, setViewModeState] = useState(0); 
+  const viewModes = ['grid', 'large', 'list'];
+  const currentViewMode = viewModes[viewModeState];
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+  const [showFilters, setShowFilters] = useState(false); // State for filter toggle
 
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
@@ -116,13 +121,16 @@ export default function DashboardPage() {
 
   useEffect(() => { if (isConnected) fetchAssets(); }, [address, isConnected]);
 
-  // Logic for UI interactions
   const copyToClipboard = () => {
     if (address) {
       navigator.clipboard.writeText(address);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     }
+  };
+
+  const toggleViewMode = () => {
+    setViewModeState((prev) => (prev + 1) % viewModes.length);
   };
 
   const totalAssetValue = myAssets.reduce((acc, curr) => acc + parseFloat(curr.price || 0), 0);
@@ -143,28 +151,28 @@ export default function DashboardPage() {
   }
 
   return (
-    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', width: '100%', overflowX: 'hidden', fontFamily: 'sans-serif' }}>
+    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', width: '100%', overflowX: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
       
       {/* Spacer for Fixed Navbar */}
       <div style={{ height: '80px', width: '100%' }}></div>
 
-      {/* Banner Section */}
-      <div style={{ width: '100%', height: '25vh', minHeight: '180px', background: 'linear-gradient(180deg, #2b2b2b 0%, #1E1E1E 100%)', position: 'relative', borderBottom: '1px solid #2d2d2d' }}>
+      {/* Banner Section - Reduced height, starts right after navbar */}
+      <div style={{ width: '100%', height: '160px', background: 'linear-gradient(180deg, #2b2b2b 0%, #1E1E1E 100%)', position: 'relative', borderBottom: '1px solid #2d2d2d' }}>
       </div>
 
-      {/* Profile & Content Container */}
-      <div className="container mx-auto px-3" style={{ marginTop: '-70px', position: 'relative', zIndex: 10 }}>
+      {/* Profile & Content Container - Overlaps banner */}
+      <div className="container mx-auto px-3" style={{ marginTop: '-80px', position: 'relative', zIndex: 10 }}>
         
-        {/* Header: Avatar & Wallet Address */}
-        <div className="d-flex flex-column gap-3 mb-5">
-            <div style={{ width: '140px', height: '140px', borderRadius: '50%', border: '5px solid #1E1E1E', background: '#161b22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.6)' }}>
-                <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '46px', fontWeight: 'bold', color: '#1E1E1E' }}>
+        {/* Header: Avatar & Wallet Address - Precise OpenSea sizing */}
+        <div className="d-flex flex-column gap-3 mb-4">
+            <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #1E1E1E', background: '#161b22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
+                <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: '#1E1E1E' }}>
                     {address ? address.slice(2,4).toUpperCase() : ''}
                 </div>
             </div>
 
-            <div className="d-flex align-items-center gap-3">
-                <span className="text-white fw-bold" style={{ fontSize: '24px' }}>
+            <div className="d-flex align-items-center gap-2">
+                <span className="fw-normal" style={{ fontSize: '18px', fontFamily: 'monospace', color: GOLD_COLOR }}>
                     {address ? `${address.slice(0,6)}...${address.slice(-4)}` : ''}
                 </span>
                 <button onClick={copyToClipboard} className="btn p-0 border-0" style={{ color: '#8a939b' }}>
@@ -172,44 +180,44 @@ export default function DashboardPage() {
                 </button>
             </div>
 
-            {/* Stats Bar: Balance | Items | Portfolio Value */}
+            {/* Stats Bar: Label ABOVE Value - Precise OpenSea layout & font size */}
             <div className="d-flex flex-wrap gap-4 mt-2">
                 <div>
-                    <div className="fw-bold text-white fs-5">
+                    <div style={{ color: '#8a939b', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Currency Balance</div>
+                    <div className="text-white" style={{ fontSize: '16px', fontWeight: '500' }}>
                         {balanceData ? parseFloat(balanceData.formatted).toFixed(2) : '0.00'} <span style={{ fontSize: '12px', color: '#8a939b' }}>POL</span>
                     </div>
-                    <div style={{ color: '#8a939b', fontSize: '12px' }}>Currency Balance</div>
                 </div>
                 <div>
-                    <div className="fw-bold text-white fs-5">{myAssets.length}</div>
-                    <div style={{ color: '#8a939b', fontSize: '12px' }}>Total Items</div>
+                    <div style={{ color: '#8a939b', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Items</div>
+                    <div className="text-white" style={{ fontSize: '16px', fontWeight: '500' }}>{myAssets.length}</div>
                 </div>
                 <div>
-                    <div className="fw-bold text-white fs-5">{totalAssetValue.toFixed(0)} <span style={{ fontSize: '12px', color: '#8a939b' }}>POL</span></div>
-                    <div style={{ color: '#8a939b', fontSize: '12px' }}>Portfolio Value</div>
+                    <div style={{ color: '#8a939b', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Portfolio Value</div>
+                    <div className="text-white" style={{ fontSize: '16px', fontWeight: '500' }}>{totalAssetValue.toFixed(0)} <span style={{ fontSize: '12px', color: '#8a939b' }}>POL</span></div>
                 </div>
             </div>
         </div>
 
-        {/* Tabs Navigation */}
-        <div className="d-flex gap-4 border-bottom border-secondary mb-4 overflow-auto" style={{ borderColor: '#2d2d2d !important' }}>
+        {/* Tabs Navigation - Smaller font, tighter spacing, white text, golden underline */}
+        <div className="d-flex gap-3 border-bottom border-secondary mb-4 overflow-auto" style={{ borderColor: '#2d2d2d !important' }}>
             {['Items', 'Listings', 'Offers', 'Created', 'Activity'].map((tab) => (
                 <button 
                     key={tab} 
                     onClick={() => setActiveTab(tab)} 
-                    className="btn px-0 fw-bold position-relative pb-3"
+                    className="btn px-0 position-relative pb-3"
                     style={{ 
                         color: activeTab === tab ? '#FFFFFF' : '#8a939b', 
                         background: 'transparent', 
                         border: 'none', 
-                        fontSize: '16px',
+                        fontSize: '14px', 
+                        fontWeight: '500',
                         whiteSpace: 'nowrap',
-                        marginRight: '10px'
                     }}
                 >
                     {tab}
                     {activeTab === tab && (
-                        <div style={{ position: 'absolute', bottom: '-1px', left: 0, width: '100%', height: '2px', backgroundColor: '#FCD535' }}></div>
+                        <div style={{ position: 'absolute', bottom: '-1px', left: 0, width: '100%', height: '2px', backgroundColor: GOLD_COLOR }}></div>
                     )}
                 </button>
             ))}
@@ -218,34 +226,45 @@ export default function DashboardPage() {
         {/* Content Area (Items Tab) */}
         {activeTab === 'Items' && (
             <>
-                {/* Toolbar: Search, Filters, View Modes */}
-                <div className="d-flex flex-column flex-md-row gap-3 mb-4 justify-content-between align-items-center">
-                    <div className="d-flex gap-2 w-100 flex-wrap">
-                         {/* Search */}
-                        <div className="position-relative flex-grow-1" style={{ maxWidth: '400px', minWidth: '200px' }}>
-                            <i className="bi bi-search position-absolute text-secondary" style={{ top: '12px', left: '12px' }}></i>
-                            <input 
-                                type="text" 
-                                placeholder="Search by name" 
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="form-control bg-transparent text-white border-secondary ps-5 py-2" 
-                                style={{ borderRadius: '12px', borderColor: '#333' }} 
-                            />
-                        </div>
-                        {/* Visual Filters (Placeholder for now) */}
-                        <button className="btn border-secondary text-white d-flex align-items-center gap-2" style={{ borderRadius: '12px', borderColor: '#333', fontSize: '14px' }}>
-                            Price: Low to High <i className="bi bi-chevron-down" style={{ fontSize: '10px' }}></i>
-                        </button>
+                {/* Toolbar: Filter Icon | Search | Settings | View Toggle - Precise layout */}
+                <div className="d-flex align-items-center gap-2 mb-4">
+                     {/* Filter Toggle Icon */}
+                    <button onClick={() => setShowFilters(!showFilters)} className="btn p-2 border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '40px', height: '40px', color: '#8a939b' }}>
+                        <i className="bi bi-funnel-fill"></i>
+                    </button>
+
+                     {/* Search Input - Squarer borders, smaller size */}
+                    <div className="position-relative flex-grow-1">
+                        <i className="bi bi-search position-absolute text-secondary" style={{ top: '10px', left: '12px', fontSize: '14px' }}></i>
+                        <input 
+                            type="text" 
+                            placeholder="Search by name" 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="form-control bg-transparent text-white border-secondary ps-5 py-2" 
+                            style={{ borderRadius: '8px', borderColor: '#333', fontSize: '14px', height: '40px' }}
+                        />
                     </div>
 
-                    {/* View Toggles */}
-                    <div className="d-flex gap-2 bg-dark rounded-3 p-1" style={{ border: '1px solid #333' }}>
-                        <button onClick={() => setViewMode('grid')} className={`btn btn-sm ${viewMode === 'grid' ? 'bg-secondary text-white' : 'text-secondary'}`} style={{ borderRadius: '8px' }}><i className="bi bi-grid-fill"></i></button>
-                        <button onClick={() => setViewMode('large')} className={`btn btn-sm ${viewMode === 'large' ? 'bg-secondary text-white' : 'text-secondary'}`} style={{ borderRadius: '8px' }}><i className="bi bi-square-fill"></i></button>
-                        <button onClick={() => setViewMode('list')} className={`btn btn-sm ${viewMode === 'list' ? 'bg-secondary text-white' : 'text-secondary'}`} style={{ borderRadius: '8px' }}><i className="bi bi-list-ul"></i></button>
-                    </div>
+                    {/* Settings Icon */}
+                    <button className="btn p-2 border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '40px', height: '40px', color: '#8a939b' }}>
+                        <i className="bi bi-gear-fill"></i>
+                    </button>
+
+                    {/* Single View Toggle Button - Cycles through modes */}
+                    <button onClick={toggleViewMode} className="btn p-2 border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '40px', height: '40px', color: '#8a939b' }}>
+                        {currentViewMode === 'grid' && <i className="bi bi-grid-fill"></i>}
+                        {currentViewMode === 'large' && <i className="bi bi-square-fill"></i>}
+                        {currentViewMode === 'list' && <i className="bi bi-list-ul"></i>}
+                    </button>
                 </div>
+                
+                {/* Placeholder for Filters Sidebar (hidden by default) */}
+                {showFilters && (
+                    <div className="mb-3 p-3 rounded-3 border border-secondary" style={{ backgroundColor: '#161b22', borderColor: '#333' }}>
+                        <span className="text-secondary" style={{ fontSize: '12px' }}>Filters will appear here...</span>
+                    </div>
+                )}
 
                 {/* Assets Renderer */}
                 <div className="pb-5">
@@ -256,7 +275,7 @@ export default function DashboardPage() {
                     ) : (
                         <div className="row g-3">
                             {filteredAssets.map((asset) => (
-                                <AssetRenderer key={asset.id} item={asset} mode={viewMode} />
+                                <AssetRenderer key={asset.id} item={asset} mode={currentViewMode} />
                             ))}
                             {filteredAssets.length === 0 && !loading && (
                                 <div className="col-12 text-center py-5 text-secondary">No items found</div>
@@ -283,19 +302,18 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
         return (
             <div className={colClass}>
                 <Link href={`/asset/${item.id}`} className="text-decoration-none">
-                    <div className="d-flex align-items-center gap-3 p-3 rounded-3" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d', transition: '0.2s' }}>
-                        <div style={{ width: '56px', height: '56px', background: style.bg, borderRadius: '8px', flexShrink: 0 }}></div>
+                    <div className="d-flex align-items-center gap-3 p-2 rounded-3" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d', transition: '0.2s' }}>
+                        <div style={{ width: '48px', height: '48px', background: style.bg, borderRadius: '6px', flexShrink: 0 }}></div>
                         <div className="flex-grow-1">
-                            <div className="text-white fw-bold" style={{ fontSize: '15px', fontFamily: 'serif', fontStyle: 'italic' }}>{item.name}</div>
-                            <div className="text-secondary" style={{ fontSize: '12px' }}>NNM Registry</div>
+                            <div className="text-white" style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'serif', fontStyle: 'italic' }}>{item.name}</div>
+                            <div className="text-secondary" style={{ fontSize: '11px' }}>NNM Registry</div>
                         </div>
-                        <div className="text-end pe-3 d-none d-md-block">
-                             <div className="text-secondary" style={{ fontSize: '11px' }}>Top Offer</div>
-                             <div className="text-white" style={{ fontSize: '13px' }}>-</div>
+                        <div className="text-end pe-2 d-none d-md-block">
+                             <div className="text-secondary" style={{ fontSize: '10px' }}>Top Offer</div>
+                             <div style={{ fontSize: '12px', color: '#8a939b' }}>-</div>
                         </div>
-                        <div className="text-end pe-3">
-                            <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.price} POL</div>
-                            <div className="text-secondary" style={{ fontSize: '11px' }}>Price</div>
+                        <div className="text-end pe-2">
+                            <div className="text-white" style={{ fontSize: '13px', fontWeight: '500' }}>{item.price} POL</div>
                         </div>
                     </div>
                 </Link>
@@ -306,12 +324,12 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
     // 2. Grid & Large View
     return (
       <div className={colClass}>
-          <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#161b22', borderRadius: '12px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
+          <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
               <Link href={`/asset/${item.id}`} className="text-decoration-none h-100 d-flex flex-column">
                   {/* Image Area */}
                   <div style={{ width: '100%', aspectRatio: '1/1', background: style.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                        <div style={{ textAlign: 'center', zIndex: 2 }}>
-                           <h3 className="asset-name" style={{ fontFamily: 'serif', fontWeight: '900', fontSize: mode === 'large' ? '32px' : '22px', color: '#e5e8eb', fontStyle: 'italic', textTransform: 'uppercase', margin: 0 }}>{item.name}</h3>
+                           <h3 className="asset-name" style={{ fontFamily: 'serif', fontWeight: '900', fontSize: mode === 'large' ? '32px' : '20px', color: '#e5e8eb', fontStyle: 'italic', textTransform: 'uppercase', margin: 0 }}>{item.name}</h3>
                        </div>
                        {/* Overlay gradient */}
                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, #161b22 0%, transparent 30%)' }}></div>
@@ -321,12 +339,12 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                   <div className="p-3 d-flex flex-column flex-grow-1">
                       <div className="d-flex justify-content-between align-items-start">
                           <div style={{ maxWidth: '70%' }}>
-                              <div className="text-white fw-bold asset-name" style={{ fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'serif', fontStyle: 'italic' }}>{item.name}</div>
+                              <div className="text-white asset-name" style={{ fontSize: '13px', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'serif', fontStyle: 'italic' }}>{item.name}</div>
                               <div className="text-secondary" style={{ fontSize: '11px' }}>NNM Registry</div>
                           </div>
                           <div className="text-end">
                               <div className="text-secondary" style={{ fontSize: '10px' }}>Price</div>
-                              <div className="text-white fw-bold" style={{ fontSize: '13px' }}>{item.price} POL</div>
+                              <div className="text-white" style={{ fontSize: '13px', fontWeight: '500' }}>{item.price} POL</div>
                           </div>
                       </div>
                       
@@ -340,7 +358,7 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
           </div>
           <style jsx>{`
             .asset-name { transition: color 0.3s; }
-            .h-100:hover .asset-name { color: #FCD535 !important; }
+            .h-100:hover .asset-name { color: ${GOLD_COLOR} !important; }
             .h-100:hover { border-color: #444 !important; }
           `}</style>
       </div>
