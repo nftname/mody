@@ -271,7 +271,8 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
     const publicClient = usePublicClient();
     const [isMinting, setIsMinting] = useState(false);
     
-    const btnOpacity = isAvailable ? 1 : 0.5;
+    // التعديل الجراحي 1: جعل الشفافية دائماً 1 ليكون الزر ظاهراً ولامعاً دائماً
+    const btnOpacity = 1; 
 
     const handleMintClick = async () => {
         if (!nameToMint || !publicClient) return;
@@ -372,7 +373,8 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                 ) : (
                     <button
                         onClick={handleMintClick}
-                        disabled={!isAvailable || isMinting}
+                        // التعديل الجراحي 2: إزالة !isAvailable من خاصية disabled للسماح بالضغط
+                        disabled={isMinting}
                         style={{
                             width: '100%',
                             height: '50px',
@@ -385,7 +387,8 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                             fontWeight: '800',
                             letterSpacing: '2px',
                             opacity: isMinting ? 0.7 : btnOpacity,
-                            cursor: isAvailable ? 'pointer' : 'not-allowed',
+                            // التعديل الجراحي 3: جعل المؤشر دائماً pointer
+                            cursor: 'pointer',
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}
                     >
