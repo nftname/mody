@@ -48,7 +48,6 @@ export default function NGXCapWidget({
         setData(json);
       } catch (error) {
         console.error('Error fetching NGX Cap data:', error);
-        // بيانات احتياطية
         setData({
             marketCap: '$2.54B',
             change24h: 4.88,
@@ -84,11 +83,15 @@ export default function NGXCapWidget({
         
         {/* Header Row */}
         <div className="d-flex align-items-center w-100" style={{ zIndex: 2 }}>
-            <div className="d-flex align-items-center gap-2">
+            {/* تعديل 1: تقليل الفجوة من gap-2 إلى gap-1 لتوفير المساحة */}
+            <div className="d-flex align-items-center gap-1">
                 <span className="fw-bold text-nowrap title-text" style={{ color: titleColor }}>{title}</span>
                 
-                <div className="mobile-percentage fw-bold d-flex align-items-center" style={{ fontSize: '8px', color: changeColor, display: 'none' }}>
-                    {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
+                {/* تعديل 2 و 3: تصغير الخط والتحكم بحجم السهم بدقة */}
+                <div className="mobile-percentage fw-bold d-flex align-items-center" 
+                     style={{ fontSize: '7px', color: changeColor, display: 'none', lineHeight: '1' }}>
+                    <span style={{ fontSize: '6px', marginRight: '1px' }}>{data.change24h >= 0 ? '▲' : '▼'}</span>
+                    {Math.abs(data.change24h)}%
                 </div>
             </div>
         </div>
@@ -122,7 +125,6 @@ export default function NGXCapWidget({
 
             {/* Progress Bar Row */}
             <div className="w-100 d-flex align-items-center progress-container" style={{ zIndex: 1 }}
-                 // هنا التعديل المهم: تغيير النص ليصبح 24 ساعة بدلاً من 7 أيام
                  onMouseEnter={() => setHoveredInfo('24H High/Low Range')} onMouseLeave={() => setHoveredInfo(null)}>
                 <div className="progress-bar-bg" style={{ 
                     width: '100%', 
