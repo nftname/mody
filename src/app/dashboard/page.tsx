@@ -6,7 +6,7 @@ import { useAccount, useBalance } from "wagmi";
 import { createPublicClient, http, parseAbi, formatEther } from 'viem';
 import { polygon } from 'viem/chains';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
-import { supabase } from '@/lib/supabase'; // التأكد من وجود هذا الملف كما في AssetPage
+import { supabase } from '@/lib/supabase';
 
 const GOLD_COLOR = '#FCD535';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
@@ -43,11 +43,11 @@ export default function DashboardPage() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState('ALL'); 
-  const [showFilterMenu, setShowFilterMenu] = useState(false); // For Items Tab
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
   
   // Offers Filters
-  const [offerType, setOfferType] = useState('Received'); // Received, Made, Expired
-  const [offerSort, setOfferSort] = useState('Newest');   // Newest, Ending Soon, High Price, Low Price
+  const [offerType, setOfferType] = useState('Received'); 
+  const [offerSort, setOfferSort] = useState('Newest');   
   const [showOfferTypeMenu, setShowOfferTypeMenu] = useState(false);
   const [showOfferSortMenu, setShowOfferSortMenu] = useState(false);
 
@@ -56,7 +56,6 @@ export default function DashboardPage() {
   
   const [isCopied, setIsCopied] = useState(false);
 
-  // --- Utilities ---
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -167,8 +166,6 @@ export default function DashboardPage() {
           const now = Math.floor(Date.now() / 1000);
 
           if (offerType === 'Received') {
-              // Simulating "Received": Offers on tokens I own
-              // Note: Ideally Supabase should allow filtering by token owner, but here we filter by myAssets IDs
               const myTokenIds = myAssets.map(a => a.id);
               if (myTokenIds.length > 0) {
                   query = query.in('token_id', myTokenIds).gt('expiration', now).neq('status', 'cancelled');
@@ -186,8 +183,6 @@ export default function DashboardPage() {
           const { data, error } = await query;
           if (error) throw error;
 
-          // Enrich offer data with Asset Name (from myAssets or fetch if needed)
-          // For simplicity in this dashboard, we map to known assets or generic name
           const enrichedOffers = data?.map(offer => {
               const knownAsset = myAssets.find(a => a.id === offer.token_id.toString());
               return {
@@ -198,8 +193,7 @@ export default function DashboardPage() {
               };
           }) || [];
 
-          // Client-side Sorting
-          if (offerSort === 'Newest') enrichedOffers.sort((a, b) => b.created_at?.localeCompare(a.created_at)); // Assuming created_at exists
+          if (offerSort === 'Newest') enrichedOffers.sort((a, b) => b.created_at?.localeCompare(a.created_at));
           if (offerSort === 'High Price') enrichedOffers.sort((a, b) => b.price - a.price);
           if (offerSort === 'Low Price') enrichedOffers.sort((a, b) => a.price - b.price);
           if (offerSort === 'Ending Soon') enrichedOffers.sort((a, b) => a.expiration - b.expiration);
@@ -314,7 +308,7 @@ export default function DashboardPage() {
                 {/* Offers Filters Toolbar */}
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     
-                    {/* Left: Sort Filter (Hamburger) */}
+                    {/* Left: Sort Filter */}
                     <div className="position-relative">
                         <button 
                             onClick={() => setShowOfferSortMenu(!showOfferSortMenu)}
@@ -341,7 +335,7 @@ export default function DashboardPage() {
                         )}
                     </div>
 
-                    {/* Right: Type Filter (Offers Received/Made) */}
+                    {/* Right: Type Filter */}
                     <div className="position-relative">
                         <button 
                             onClick={() => setShowOfferTypeMenu(!showOfferTypeMenu)}
@@ -367,7 +361,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Offers Table */}
+                {/* Offers Table - With Forced Transparent Backgrounds */}
                 <div className="table-responsive">
                     <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
                         <thead>
@@ -380,8 +374,18 @@ export default function DashboardPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {offersData.length === 0 ? (
-                                <tr><td colSpan={5} className="text-center py-5 text-secondary">No offers found</td></tr>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d' }}>
+                                        <div className="spinner-border text-secondary" role="status"></div>
+                                    </td>
+                                </tr>
+                            ) : offersData.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>
+                                        No offers found
+                                    </td>
+                                </tr>
                             ) : (
                                 offersData.map((offer) => (
                                     <tr key={offer.id} className="align-middle listing-row">
@@ -419,7 +423,25 @@ export default function DashboardPage() {
                         <div className="spinner-border text-secondary" role="status"></div>
                     </div>
                 ) : listedAssets.length === 0 ? (
-                    <div className="text-center py-5 text-secondary">No active listings found</div>
+                    <div className="table-responsive">
+                        <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
+                            <thead>
+                                <tr>
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%' }}>ASSET</th>
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>POL</th>
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Exp</th>
+                                    <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th> 
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colSpan={4} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>
+                                        No active listings found
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 ) : (
                     <div className="table-responsive">
                         <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
@@ -524,8 +546,9 @@ export default function DashboardPage() {
         )}
 
       </div>
-      <style jsx>{`
+      <style jsx global>{`
         .listing-row:hover td { background-color: rgba(255, 255, 255, 0.03) !important; }
+        table, th, td, tr, .table { background-color: transparent !important; }
       `}</style>
     </main>
   );
