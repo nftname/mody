@@ -110,17 +110,6 @@ const MintContent = () => {
   return (
     <main dir="ltr" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
       
-      {isAdmin && (
-        <div 
-            title="Admin Mode: ReserveName Active (Free Mint)"
-            style={{
-                position: 'fixed', top: '20px', right: '20px', width: '10px', height: '10px',
-                backgroundColor: '#00ff00', borderRadius: '50%', boxShadow: '0 0 10px #00ff00',
-                zIndex: 9999, cursor: 'help'
-            }}
-        ></div>
-      )}
-
       <div className="container hero-container text-center">
         <h1
           className="text-white fw-bold mb-2"
@@ -271,8 +260,7 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
     const publicClient = usePublicClient();
     const [isMinting, setIsMinting] = useState(false);
     
-    // التعديل الجراحي 1: جعل الشفافية دائماً 1 ليكون الزر ظاهراً ولامعاً دائماً
-    const btnOpacity = 1; 
+    const btnOpacity = 1;
 
     const handleMintClick = async () => {
         if (!nameToMint || !publicClient) return;
@@ -373,7 +361,6 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                 ) : (
                     <button
                         onClick={handleMintClick}
-                        // التعديل الجراحي 2: إزالة !isAvailable من خاصية disabled للسماح بالضغط
                         disabled={isMinting}
                         style={{
                             width: '100%',
@@ -387,7 +374,6 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                             fontWeight: '800',
                             letterSpacing: '2px',
                             opacity: isMinting ? 0.7 : btnOpacity,
-                            // التعديل الجراحي 3: جعل المؤشر دائماً pointer
                             cursor: 'pointer',
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}
