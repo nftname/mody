@@ -208,7 +208,6 @@ export default function NGXLiveChart() {
       
       <div className="filters-container">
         
-        {/* Sector Filter */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
@@ -238,7 +237,6 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* Timeframe Filter (Compact) */}
         <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
@@ -298,14 +296,13 @@ export default function NGXLiveChart() {
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            padding: 0 10px; /* Indent inward for Desktop */
+            padding: 0 10px;
             position: relative;
             z-index: 50;
         }
 
         .filter-wrapper { position: relative; }
         
-        /* Desktop widths */
         .sector-wrapper { width: auto; min-width: 200px; max-width: 280px; }
         .time-wrapper { width: auto; min-width: 70px; }
 
@@ -385,18 +382,17 @@ export default function NGXLiveChart() {
             }
             .chart-canvas-wrapper { height: 350px !important; }
             
-            /* Mobile Filters Logic: Compact Time, Expanded Sector */
             .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
             
             .sector-wrapper { 
-                flex-grow: 1; /* Take remaining space */
-                width: auto;
-                max-width: none;
-                margin-right: 5px;
+                flex-grow: 0;
+                width: 55%;
+                max-width: 190px;
+                margin-right: auto;
             }
             .time-wrapper { 
-                width: auto; /* Just fit content */
+                width: auto;
                 min-width: 60px;
                 flex-shrink: 0;
             }
