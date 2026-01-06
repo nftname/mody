@@ -284,7 +284,7 @@ export default function DashboardPage() {
                                         style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}
                                     >
                                         ASSET 
-                                        <i className={`bi ${sortOrder === 'newest' ? 'bi-arrow-up' : 'bi-arrow-down'} ms-2`} style={{ fontSize: '11px' }}></i>
+                                        <i className={`bi ${sortOrder === 'newest' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'} ms-2`} style={{ fontSize: '11px' }}></i>
                                     </th>
                                     
                                     {/* POL Header - Moved closer to Asset */}
