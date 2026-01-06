@@ -263,22 +263,29 @@ export default function DashboardPage() {
                     <div className="text-center py-5 text-secondary">No active listings found</div>
                 ) : (
                     <div className="table-responsive">
-                        <table className="table" style={{ color: '#fff', verticalAlign: 'middle' }}>
+                        {/* Custom Table Styles to Override Bootstrap Whiteness */}
+                        <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
                             <thead>
-                                <tr style={{ borderBottom: '1px solid #2d2d2d' }}>
-                                    <th style={{ fontWeight: 'normal', color: '#8a939b', paddingBottom: '15px', fontSize: '13px', border: 'none' }}>ASSET</th>
-                                    <th style={{ fontWeight: 'normal', color: '#8a939b', paddingBottom: '15px', fontSize: '13px', border: 'none' }}>POL</th>
-                                    <th style={{ fontWeight: 'normal', color: '#8a939b', paddingBottom: '15px', fontSize: '13px', border: 'none' }}>XP</th>
-                                    <th style={{ width: '50px', border: 'none' }}></th> 
+                                <tr>
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0' }}>ASSET</th>
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0' }}>POL</th>
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0' }}>XP</th>
+                                    <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '40px', padding: '0 0 10px 0' }}></th> 
                                 </tr>
                             </thead>
                             <tbody>
                                 {listedAssets.map((asset) => (
-                                    <tr key={asset.id} style={{ borderBottom: '1px solid #2d2d2d' }}>
-                                        <td style={{ padding: '20px 0', fontStyle: 'italic', fontWeight: 'normal', fontSize: '15px', border: 'none' }}>{asset.name}</td>
-                                        <td style={{ padding: '20px 0', fontWeight: 'bold', fontSize: '15px', border: 'none' }}>{asset.price}</td>
-                                        <td style={{ padding: '20px 0', fontSize: '14px', border: 'none' }}>Active</td>
-                                        <td style={{ padding: '20px 0', textAlign: 'right', border: 'none' }}>
+                                    <tr key={asset.id} className="align-middle">
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>
+                                            {asset.name}
+                                        </td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>
+                                            {asset.price}
+                                        </td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>
+                                            Active
+                                        </td>
+                                        <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
                                             <Link href={`/asset/${asset.id}`}>
                                                 <i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i>
                                             </Link>
@@ -372,7 +379,6 @@ export default function DashboardPage() {
 const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
-    // Correct Polygon Badge: 5% opacity black BG, White Logo fill
     const PolygonBadge = () => (
         <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px', backgroundColor: 'rgba(0, 0, 0, 0.05)', borderRadius: '50%' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
