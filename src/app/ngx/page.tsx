@@ -11,8 +11,9 @@ const SURFACE_DARK = '#242424';
 const BORDER_COLOR = '#2E2E2E';
 const TEXT_PRIMARY = '#E0E0E0';
 const TEXT_MUTED = '#B0B0B0';
+const GOLD_COLOR = '#FFB300'; // Comfortable Gold
 
-const EmbedCard = ({ title, component, width, height, embedId }: any) => {
+const EmbedCard = ({ title, component, width, height, embedId, label, isFullBar }: any) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -25,14 +26,21 @@ const EmbedCard = ({ title, component, width, height, embedId }: any) => {
   return (
     <div className="embed-card h-100 d-flex flex-column justify-content-between">
       <div className="preview-area">
-        <div className="widget-scale-wrapper">
+        <div className={`widget-scale-wrapper ${isFullBar ? 'full-bar-scale' : 'individual-scale'}`}>
           {component}
         </div>
       </div>
-      <div className="info-area mt-2 text-center text-md-start">
+      
+      <div className="info-area mt-1 text-center">
+        {/* Desktop Title */}
         <h6 className="d-none d-md-block mb-1 fw-bold text-white" style={{ fontSize: '11px' }}>{title}</h6>
         
-        {/* زر النسخ */}
+        {/* Mobile Label (Gold) */}
+        {label && (
+            <div className="mobile-label fw-bold mb-1">{label}</div>
+        )}
+        
+        {/* Copy Button */}
         <button 
             onClick={handleCopy} 
             className={`btn btn-sm w-100 mb-1 copy-btn ${copied ? 'btn-success' : 'btn-outline-secondary'}`}
@@ -40,7 +48,7 @@ const EmbedCard = ({ title, component, width, height, embedId }: any) => {
             {copied ? 'COPIED' : 'COPY'}
         </button>
         
-        {/* العلامة المائية */}
+        {/* Watermark */}
         <div className="watermark">
             Powered by NNM Sovereign Name Assets
         </div>
@@ -51,69 +59,105 @@ const EmbedCard = ({ title, component, width, height, embedId }: any) => {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid ${BORDER_COLOR};
             border-radius: 8px;
-            padding: 12px;
+            padding: 10px;
             transition: all 0.3s;
             overflow: hidden;
+            position: relative;
         }
         .embed-card:hover {
             border-color: rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.04);
         }
         .preview-area {
-            height: 60px;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
             position: relative;
         }
+        
+        /* Scaling Logic */
         .widget-scale-wrapper {
-            transform: scale(0.65); /* مقاس الكمبيوتر الافتراضي */
             transform-origin: center;
             width: 100%;
             display: flex;
             justify-content: center;
         }
+        
+        /* Desktop Scales */
+        .full-bar-scale { transform: scale(0.85); }
+        .individual-scale { transform: scale(0.75); }
+
         .copy-btn {
             font-size: 10px;
             padding: 4px 0;
             border-radius: 4px;
+            color: #ddd;
+            border-color: #444;
         }
+        
+        .mobile-label {
+            display: none; /* Hidden on desktop by default in this layout context */
+            color: ${GOLD_COLOR};
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
         .watermark {
             font-size: 9px;
-            color: #FCD535; /* Gold */
+            color: #777;
             font-style: italic;
-            opacity: 0.9;
+            opacity: 0.8;
             line-height: 1.1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* --- MOBILE ADJUSTMENTS (3 IN A ROW) --- */
+        /* --- MOBILE ADJUSTMENTS --- */
         @media (max-width: 768px) {
             .embed-card {
-                padding: 5px;
+                padding: 4px;
                 border: 1px solid rgba(255,255,255,0.05);
             }
+            
             .preview-area {
-                height: 40px; /* ارتفاع أقل في الجوال */
+                height: 45px; /* مساحة العرض */
             }
-            /* تصغير شديد للويدجت ليناسب عرض 33% */
-            .widget-scale-wrapper {
-                transform: scale(0.30); 
-                width: 300px; /* نعطيها عرض وهمي لكي لا تنضغط العناصر */
+
+            /* 1. Full Bar Scaling (Bigger ~80% visual width) */
+            .full-bar-scale {
+                transform: scale(0.55); /* Increased from small size */
+                width: 180%; /* Width trick to allow scaling without clipping */
+                margin-left: -40%; /* Center centering */
             }
+
+            /* 2. Individual Widget Scaling (50% bigger than before) */
+            .individual-scale {
+                transform: scale(0.48); /* Increased significantly from 0.30 */
+                width: 280px; /* Virtual width to prevent clipping */
+            }
+
             .copy-btn {
                 font-size: 8px;
                 padding: 2px 0;
-                margin-top: 5px;
-            }
-            .watermark {
-                font-size: 5px; /* خط صغير جداً */
-                white-space: normal; /* السماح بالنزول لسطرين */
-                text-align: center;
                 margin-top: 2px;
+                background: rgba(0,0,0,0.3);
+            }
+
+            .mobile-label {
+                display: block; /* Show Labels on Mobile */
+                font-size: 8px;
+                margin-bottom: 2px !important;
+            }
+
+            .watermark {
+                font-size: 5px;
+                white-space: normal;
+                line-height: 1;
+                margin-top: 2px;
+                display: none; /* Hide watermark on tiny mobile cards to save space if needed, or keep it */
             }
         }
       `}</style>
@@ -241,54 +285,55 @@ export default function NGXPage() {
                 {/* DEVELOPERS EMBED SECTION */}
                 <div className="mt-5 pt-4">
                     <div className="d-flex align-items-center mb-3">
-                         <div style={{ width: '30px', height: '2px', background: '#FCD535', marginRight: '10px' }}></div>
+                         <div style={{ width: '30px', height: '2px', background: GOLD_COLOR, marginRight: '10px' }}></div>
                          <h4 className="fw-bold mb-0 text-white" style={{ fontSize: '14px', letterSpacing: '1px' }}>DEVELOPERS & MARKET DATA</h4>
                     </div>
                     
-                    <div className="row g-2"> {/* Reduced gutter for tighter layout */}
+                    <div className="row g-1"> {/* Reduced gutter (g-1) for tighter mobile layout */}
                         
                         {/* 1. Full Bar (Always Full Width) */}
-                        <div className="col-12">
-                             <div className="embed-card">
-                                <div className="preview-area" style={{ height: '80px' }}>
-                                    <div className="widget-scale-wrapper" style={{ transform: 'scale(0.6)' }}>
-                                        <div className="d-flex gap-2">
-                                            <NGXWidget theme="dark" />
-                                            <NGXCapWidget theme="dark" />
-                                            <NGXVolumeWidget theme="dark" />
-                                        </div>
+                        <div className="col-12 mb-2">
+                             <EmbedCard 
+                                title="NGX Full Market Bar"
+                                isFullBar={true}
+                                component={
+                                    <div className="d-flex gap-2">
+                                        <NGXWidget theme="dark" />
+                                        <NGXCapWidget theme="dark" />
+                                        <NGXVolumeWidget theme="dark" />
                                     </div>
-                                </div>
-                                <div className="info-area d-flex justify-content-between align-items-center mt-2 px-2">
-                                    <div>
-                                        <h6 className="mb-0 fw-bold text-white" style={{ fontSize: '11px' }}>NGX Full Market Bar</h6>
-                                        <div className="watermark" style={{ fontSize: '9px' }}>Powered by NNM Sovereign Name Assets</div>
-                                    </div>
-                                    <button className="btn btn-sm btn-outline-secondary copy-btn px-3">COPY CODE</button>
-                                </div>
-                             </div>
+                                }
+                                width="100%" height="90" embedId="ngx-full-bar"
+                             />
                         </div>
 
-                        {/* 2. Individual Widgets (3 in a row on Mobile via col-4) */}
-                        <div className="col-4 col-md-4">
+                        {/* 2. Individual Widgets (3 Cols) */}
+                        
+                        {/* Sentiment */}
+                        <div className="col-4">
                             <EmbedCard 
                                 title="Sentiment" 
+                                label="Sentiment"
                                 component={<NGXWidget theme="dark" />} 
                                 width="320" height="100" embedId="ngx-sentiment"
                             />
                         </div>
 
-                        <div className="col-4 col-md-4">
+                        {/* Market Cap */}
+                        <div className="col-4">
                             <EmbedCard 
                                 title="Market Cap" 
+                                label="Market Cap"
                                 component={<NGXCapWidget theme="dark" />} 
                                 width="320" height="100" embedId="ngx-cap"
                             />
                         </div>
 
-                        <div className="col-4 col-md-4">
+                        {/* Volume */}
+                        <div className="col-4">
                             <EmbedCard 
                                 title="Volume" 
+                                label="Volume"
                                 component={<NGXVolumeWidget theme="dark" />} 
                                 width="320" height="100" embedId="ngx-volume"
                             />
