@@ -307,11 +307,11 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     const isListed = item.price && parseFloat(item.price) > 0;
     
-    // Correct Polygon Badge with Halo
+    // Correct Polygon Badge: 5% opacity black BG, White Logo fill
     const PolygonBadge = () => (
-        <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px', backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '50%' }}>
+        <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px', backgroundColor: 'rgba(0, 0, 0, 0.05)', borderRadius: '50%' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="#8247E5"/>
+                <path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="#FFFFFF"/>
             </svg>
         </div>
     );
@@ -330,11 +330,10 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                         </div>
                         <div className="flex-grow-1">
                             <div className="text-white" style={{ fontSize: '14px', fontWeight: '600' }}>{item.name}</div>
-                            {/* Using hardcoded name temporarily for visual match, will be dynamic later */}
                             <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
                         </div>
                         <div className="text-end pe-2">
-                            <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{isListed ? `${item.price} POL` : 'Not listed'}</div>
+                            <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
                         </div>
                     </div>
                 </Link>
@@ -360,17 +359,17 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                   <div className="p-3 d-flex flex-column flex-grow-1">
                       <div className="d-flex justify-content-between align-items-start mb-1">
                           <div className="text-white fw-bold text-truncate" style={{ fontSize: '14px', maxWidth: '80%' }}>{item.name}</div>
-                          <div className="text-secondary" style={{ fontSize: '12px' }}>#{item.id}</div>
+                          <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
                       </div>
                       
-                      {/* Collection Name: White, No Separator Line */}
-                      <div className="text-white mb-3" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
+                      {/* Collection Name with reduced bottom margin (mb-2 instead of mb-3) */}
+                      <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
                       
                       <div className="mt-auto">
                            <div className="text-white fw-bold" style={{ fontSize: '14px' }}>
-                               {isListed ? `${item.price} POL` : <span className="text-secondary fw-normal" style={{ fontSize: '12px' }}>Last Sale</span>}
+                               {isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Last Sale</span>}
                            </div>
-                           {isListed && <div className="text-secondary" style={{ fontSize: '11px' }}>Price</div>}
+                           {isListed && <div style={{ fontSize: '11px', color: '#cccccc' }}>Price</div>}
                       </div>
                   </div>
               </Link>
