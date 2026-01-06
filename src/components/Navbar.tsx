@@ -419,7 +419,8 @@ const Navbar = () => {
 
           <div className="drawer-content px-4 pt-4 pb-3 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
               <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-2 mt-2">
-                  <div className="d-flex flex-column gap-1">
+                  {/* تم تعديل التباعد هنا إلى gap-2 بدلاً من gap-1 لتكون الزيادة 10% تقريباً */}
+                  <div className="d-flex flex-column gap-2">
                     {menuItems.map((item) => (
                         <Link key={item} 
                                 href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
