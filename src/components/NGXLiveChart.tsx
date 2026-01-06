@@ -2,13 +2,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries } from 'lightweight-charts';
 
-// تم تحديث القطاعات: حذف SOV وتغيير Domains إلى Digital Name Assets
+// تم تعديل الترتيب بدقة: ALL هو الافتراضي، يليه Digital Names، ثم البقية
 const SECTORS = [
-  { key: 'All NFTs Index', color: '#C0D860', startYear: 2017, baseValue: 40 },
-  { key: 'Art NFTs', color: '#7B61FF', startYear: 2017, baseValue: 25 },
-  { key: 'Gaming NFTs', color: '#0ECB81', startYear: 2019, baseValue: 15 },
-  { key: 'Utility NFTs', color: '#00D8D6', startYear: 2020, baseValue: 10 },
-  { key: 'Digital Name Assets', color: '#38BDF8', startYear: 2017, baseValue: 30 }
+  { key: 'All NFTs Index', color: '#C0D860', startYear: 2017, baseValue: 40 },      // 1. الافتراضي
+  { key: 'Digital Name Assets', color: '#38BDF8', startYear: 2017, baseValue: 30 }, // 2. ديجيتال نيم
+  { key: 'Art NFTs', color: '#7B61FF', startYear: 2017, baseValue: 25 },            // 3. آرت
+  { key: 'Gaming NFTs', color: '#0ECB81', startYear: 2019, baseValue: 15 },         // 4. جيم
+  { key: 'Utility NFTs', color: '#00D8D6', startYear: 2020, baseValue: 10 }         // 5. الأخير
 ];
 
 const TIMEFRAMES = [
@@ -39,6 +39,7 @@ function useClickOutside(ref: any, handler: any) {
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [activeTimeframe, setActiveTimeframe] = useState('ALL');
+  // سيبدأ تلقائياً بأول عنصر في المصفوفة وهو All NFTs Index
   const [activeSector, setActiveSector] = useState(SECTORS[0].key);
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<any>(null);

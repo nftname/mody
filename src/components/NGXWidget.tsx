@@ -101,17 +101,33 @@ export default function NGXWidget({
   const scoreStr = data.score.toFixed(1);
   const [scoreInt, scoreDec] = scoreStr.split('.');
 
+  // دالة لتحديد نص التلميح بناءً على مكان الماوس (أو الحالة الحالية)
+  // هنا سأعتمد على الحالة الحالية للمؤشر لعرض التلميح المناسب
+  const getTooltipText = () => {
+      if (data.score < 20) return "Strong Sell Signal (0-20)";
+      if (data.score < 40) return "Sell Signal (20-40)";
+      if (data.score < 60) return "Neutral Zone (40-60)";
+      if (data.score < 80) return "Buy Signal (60-80)";
+      return "Strong Buy Signal (80-100)";
+  };
+
   const GaugeSVG = () => {
       const radius = 80;
       const stroke = 16; 
       
       return (
         <svg viewBox="-95 -15 190 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
-            <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} />
-            <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} />
+            {/* المناطق مع التلميحات */}
+            <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} 
+                  onMouseEnter={() => setHoveredInfo("Strong Sell (0-20)")} onMouseLeave={() => setHoveredInfo(null)} style={{cursor:'help'}}/>
+            <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} 
+                  onMouseEnter={() => setHoveredInfo("Sell (20-40)")} onMouseLeave={() => setHoveredInfo(null)} style={{cursor:'help'}}/>
+            <path d={describeArc(0, 80, radius, 72, 108)} fill="none" stroke="#fdd835" strokeWidth={stroke} 
+                  onMouseEnter={() => setHoveredInfo("Neutral (40-60)")} onMouseLeave={() => setHoveredInfo(null)} style={{cursor:'help'}}/>
+            <path d={describeArc(0, 80, radius, 108, 144)} fill="none" stroke="#7cb342" strokeWidth={stroke} 
+                  onMouseEnter={() => setHoveredInfo("Buy (60-80)")} onMouseLeave={() => setHoveredInfo(null)} style={{cursor:'help'}}/>
+            <path d={describeArc(0, 80, radius, 144, 180)} fill="none" stroke={TICKER_GREEN} strokeWidth={stroke} 
+                  onMouseEnter={() => setHoveredInfo("Strong Buy (80-100)")} onMouseLeave={() => setHoveredInfo(null)} style={{cursor:'help'}}/>
 
             <g fill={isLight ? "#0A192F" : "rgba(255,255,255,0.8)"} fontSize="10" fontFamily="sans-serif" fontWeight="700">
                 <text x="-95" y="85" textAnchor="middle">0</text>
@@ -152,7 +168,6 @@ export default function NGXWidget({
                 </div>
             </div>
             
-            {/* التعديل هنا: إضافة كلاس لإخفاء العنصر في الجوال */}
             <span className="badge pulse-neon desktop-only-live" 
                     style={{ 
                         fontSize:'6px', 
@@ -167,14 +182,17 @@ export default function NGXWidget({
             
             <div className="text-block d-flex flex-column justify-content-center" style={{ zIndex: 2 }}>
                 <div className="d-flex align-items-end gap-2 mb-1 desktop-text-shift mobile-text-row">
-                    <div className="fw-bold lh-1 main-score" style={{ color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}>
+                    <div className="fw-bold lh-1 main-score" style={{ color: mainTextColor, textShadow: isLight ? 'none' : `0 0 20px ${currentStatus.color}30` }}
+                         onMouseEnter={() => setHoveredInfo(`Current Score: ${data.score}`)} onMouseLeave={() => setHoveredInfo(null)}>
                         {scoreInt}<span style={{ fontSize: '0.5em', opacity: 0.8 }}>.{scoreDec}</span>
                     </div>
-                    <div className="desktop-percentage fw-bold d-flex align-items-center mb-1" style={{ fontSize: '9px', color: changeColor }}>
+                    <div className="desktop-percentage fw-bold d-flex align-items-center mb-1" style={{ fontSize: '9px', color: changeColor }}
+                         onMouseEnter={() => setHoveredInfo(`24h Change: ${data.change24h}%`)} onMouseLeave={() => setHoveredInfo(null)}>
                         {data.change24h >= 0 ? '▲' : '▼'} {Math.abs(data.change24h)}%
                     </div>
                 </div>
-                <div className="status-text fw-bold text-uppercase" style={{ color: currentStatus.color, letterSpacing: '0.5px' }}>
+                <div className="status-text fw-bold text-uppercase" style={{ color: currentStatus.color, letterSpacing: '0.5px' }}
+                     onMouseEnter={() => setHoveredInfo(getTooltipText())} onMouseLeave={() => setHoveredInfo(null)}>
                     {currentStatus.text}
                 </div>
             </div>
@@ -188,6 +206,13 @@ export default function NGXWidget({
         </div>
       </div>
     </Link>
+
+    {/* TOOLTIP COMPONENT ADDED HERE */}
+    {hoveredInfo && (
+        <div className="ngx-tooltip" style={{ top: mousePos.y + 15, left: mousePos.x + 15 }}>
+            {hoveredInfo}
+        </div>
+    )}
 
     <style jsx>{`
         .ngx-widget-container {
@@ -236,9 +261,24 @@ export default function NGXWidget({
             display: none !important;
         }
         
-        /* كلاس جديد لإظهار LIVE في الكمبيوتر فقط */
         .desktop-only-live {
             display: inline-block;
+        }
+
+        /* Tooltip Style */
+        .ngx-tooltip {
+            position: absolute;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            pointer-events: none;
+            z-index: 100;
+            white-space: nowrap;
+            background: ${isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(11, 14, 17, 0.95)'};
+            color: ${isLight ? '#000' : '#fff'};
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid ${isLight ? '#eee' : 'rgba(255,255,255,0.1)'};
         }
 
         @media (max-width: 768px) {
@@ -281,7 +321,6 @@ export default function NGXWidget({
                 display: flex !important;
             }
             
-            /* إخفاء LIVE في الجوال */
             .desktop-only-live {
                 display: none !important;
             }
