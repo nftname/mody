@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount, useBalance } from "wagmi";
-import { createPublicClient, http, parseAbi } from 'viem';
+import { createPublicClient, http, parseAbi, formatEther } from 'viem';
 import { polygon } from 'viem/chains';
-import { NFT_COLLECTION_ADDRESS } from '@/data/config';
+import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 
 const GOLD_COLOR = '#FCD535';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
@@ -14,6 +14,10 @@ const CONTRACT_ABI = parseAbi([
   "function balanceOf(address) view returns (uint256)",
   "function tokenOfOwnerByIndex(address, uint256) view returns (uint256)",
   "function tokenURI(uint256) view returns (string)"
+]);
+
+const MARKETPLACE_ABI = parseAbi([
+  "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
 const publicClient = createPublicClient({
@@ -88,6 +92,7 @@ export default function DashboardPage() {
         const batchResults = await Promise.all(
           batch.map(async (tokenId: any) => {
             try {
+              // 1. Fetch Metadata
               const tokenURI = await publicClient.readContract({
                   address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                   abi: CONTRACT_ABI,
@@ -97,13 +102,32 @@ export default function DashboardPage() {
 
               const metaRes = await fetch(resolveIPFS(tokenURI));
               const meta = metaRes.ok ? await metaRes.json() : {};
+
+              // 2. Fetch Listing Status
+              let isListed = false;
+              let listingPrice = '0';
+              try {
+                  const listingData = await publicClient.readContract({
+                      address: MARKETPLACE_ADDRESS as `0x${string}`,
+                      abi: MARKETPLACE_ABI,
+                      functionName: 'listings',
+                      args: [tokenId]
+                  });
+                  if (listingData[2] === true) {
+                      isListed = true;
+                      listingPrice = formatEther(listingData[1]);
+                  }
+              } catch (e) {
+                  console.warn(`Failed to check listing for ${tokenId}`, e);
+              }
               
               return {
                 id: tokenId.toString(),
                 name: meta.name || `NNM #${tokenId.toString()}`,
                 image: resolveIPFS(meta.image) || '',
                 tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
-                price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'
+                price: isListed ? listingPrice : (meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'),
+                isListed: isListed
               };
             } catch (error) {
               console.error('Failed to load token metadata', error);
@@ -144,6 +168,8 @@ export default function DashboardPage() {
     const matchesTier = selectedTier === 'ALL' ? true : asset.tier.toUpperCase() === selectedTier;
     return matchesSearch && matchesTier;
   });
+
+  const listedAssets = myAssets.filter(asset => asset.isListed);
 
   if (!isConnected) {
     return (
@@ -226,10 +252,50 @@ export default function DashboardPage() {
             ))}
         </div>
 
+        {/* LISTINGS SECTION */}
+        {activeSection === 'Listings' && (
+            <div className="pb-5 mt-4">
+                {loading ? (
+                    <div className="text-center py-5">
+                        <div className="spinner-border text-secondary" role="status"></div>
+                    </div>
+                ) : listedAssets.length === 0 ? (
+                    <div className="text-center py-5 text-secondary">No active listings found</div>
+                ) : (
+                    <div className="table-responsive">
+                        <table className="table" style={{ color: '#fff', verticalAlign: 'middle' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid #2d2d2d' }}>
+                                    <th style={{ fontWeight: 'normal', color: '#8a939b', paddingBottom: '15px', fontSize: '13px', border: 'none' }}>ASSET</th>
+                                    <th style={{ fontWeight: 'normal', color: '#8a939b', paddingBottom: '15px', fontSize: '13px', border: 'none' }}>POL</th>
+                                    <th style={{ fontWeight: 'normal', color: '#8a939b', paddingBottom: '15px', fontSize: '13px', border: 'none' }}>XP</th>
+                                    <th style={{ width: '50px', border: 'none' }}></th> 
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {listedAssets.map((asset) => (
+                                    <tr key={asset.id} style={{ borderBottom: '1px solid #2d2d2d' }}>
+                                        <td style={{ padding: '20px 0', fontStyle: 'italic', fontWeight: 'normal', fontSize: '15px', border: 'none' }}>{asset.name}</td>
+                                        <td style={{ padding: '20px 0', fontWeight: 'bold', fontSize: '15px', border: 'none' }}>{asset.price}</td>
+                                        <td style={{ padding: '20px 0', fontSize: '14px', border: 'none' }}>Active</td>
+                                        <td style={{ padding: '20px 0', textAlign: 'right', border: 'none' }}>
+                                            <Link href={`/asset/${asset.id}`}>
+                                                <i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i>
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+        )}
+
+        {/* ITEMS SECTION */}
         {activeSection === 'Items' && (
             <>
                 <div className="d-flex align-items-center gap-2 mb-4 position-relative">
-                    
                     <div className="position-relative">
                         <button 
                             onClick={() => setShowFilterMenu(!showFilterMenu)} 
@@ -305,7 +371,6 @@ export default function DashboardPage() {
 
 const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
-    const isListed = item.price && parseFloat(item.price) > 0;
     
     // Correct Polygon Badge: 5% opacity black BG, White Logo fill
     const PolygonBadge = () => (
@@ -333,7 +398,7 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                             <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
                         </div>
                         <div className="text-end pe-2">
-                            <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
+                            <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
                         </div>
                     </div>
                 </Link>
@@ -362,14 +427,13 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                           <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
                       </div>
                       
-                      {/* Collection Name with reduced bottom margin (mb-2 instead of mb-3) */}
                       <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
                       
                       <div className="mt-auto">
                            <div className="text-white fw-bold" style={{ fontSize: '14px' }}>
-                               {isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Last Sale</span>}
+                               {item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Last Sale</span>}
                            </div>
-                           {isListed && <div style={{ fontSize: '11px', color: '#cccccc' }}>Price</div>}
+                           {item.isListed && <div style={{ fontSize: '11px', color: '#cccccc' }}>Price</div>}
                       </div>
                   </div>
               </Link>
