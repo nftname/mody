@@ -12,6 +12,76 @@ const BORDER_COLOR = '#2E2E2E';
 const TEXT_PRIMARY = '#E0E0E0';
 const TEXT_MUTED = '#B0B0B0';
 
+const EmbedCard = ({ title, component, width, height, embedId }: any) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    const code = `<iframe src="https://nnm.market/embed/${embedId}?theme=auto" width="${width}" height="${height}" frameborder="0" style="border-radius:12px; overflow:hidden;"></iframe>`;
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="embed-card">
+      <div className="preview-area">
+        <div className="widget-scale-wrapper">
+          {component}
+        </div>
+      </div>
+      <div className="info-area d-flex justify-content-between align-items-center mt-3">
+        <div>
+            <h6 className="mb-0 fw-bold text-white" style={{ fontSize: '11px' }}>{title}</h6>
+            <div className="watermark">Powered by NNM Sovereign Name Assets</div>
+        </div>
+        <button 
+            onClick={handleCopy} 
+            className={`btn btn-sm ${copied ? 'btn-success' : 'btn-outline-secondary'}`}
+            style={{ fontSize: '10px', padding: '4px 10px', borderRadius: '4px' }}
+        >
+            {copied ? 'COPIED' : 'COPY CODE'}
+        </button>
+      </div>
+      <style jsx>{`
+        .embed-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid ${BORDER_COLOR};
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        .embed-card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .preview-area {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .widget-scale-wrapper {
+            transform: scale(0.65); /* تصغير بنسبة مئوية */
+            transform-origin: center;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .watermark {
+            font-size: 8px;
+            color: #FCD535;
+            font-style: italic;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+      `}</style>
+    </div>
+  );
+};
+
 export default function NGXPage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -45,7 +115,6 @@ export default function NGXPage() {
         </div>
       </div>
 
-      {/* Restored Padding for Mobile Container to prevent spill */}
       <div className="container-fluid py-4 px-3 px-md-4">
         
         {/* LIVE CHART */}
@@ -123,11 +192,76 @@ export default function NGXPage() {
                     In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.
                 </p>
 
-                {/* DISCLAIMER - Darker Text Color (#999) */}
+                {/* DISCLAIMER */}
                 <div className="w-100 mt-2 border-top border-secondary" style={{ borderColor: '#333 !important', paddingTop: '10px' }}>
                     <p className="fst-italic mb-0 w-100" style={{ lineHeight: '1.4', fontSize: '11px', color: '#999999' }}>
                         This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
                     </p>
+                </div>
+                
+                {/* DEVELOPERS EMBED SECTION */}
+                <div className="mt-5 pt-4">
+                    <div className="d-flex align-items-center mb-3">
+                         <div style={{ width: '30px', height: '2px', background: '#FCD535', marginRight: '10px' }}></div>
+                         <h4 className="fw-bold mb-0 text-white" style={{ fontSize: '14px', letterSpacing: '1px' }}>DEVELOPERS & MARKET DATA</h4>
+                    </div>
+                    
+                    <div className="row g-3">
+                        {/* 1. Full Bar */}
+                        <div className="col-12">
+                             <div className="embed-card">
+                                <div className="preview-area" style={{ height: '80px' }}>
+                                    <div className="widget-scale-wrapper" style={{ transform: 'scale(0.6)' }}>
+                                        <div className="d-flex gap-2">
+                                            <NGXWidget theme="dark" />
+                                            <NGXCapWidget theme="dark" />
+                                            <NGXVolumeWidget theme="dark" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="info-area d-flex justify-content-between align-items-center mt-2">
+                                    <div>
+                                        <h6 className="mb-0 fw-bold text-white" style={{ fontSize: '11px' }}>NGX Full Market Bar</h6>
+                                        <div className="watermark">Powered by NNM Sovereign Name Assets</div>
+                                    </div>
+                                    <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '10px' }}>COPY CODE (100% Width)</button>
+                                </div>
+                             </div>
+                        </div>
+
+                        {/* 2. Sentiment */}
+                        <div className="col-md-4">
+                            <EmbedCard 
+                                title="Sentiment Gauge" 
+                                component={<NGXWidget theme="dark" />} 
+                                width="320" 
+                                height="100" 
+                                embedId="ngx-sentiment"
+                            />
+                        </div>
+
+                        {/* 3. Market Cap */}
+                        <div className="col-md-4">
+                            <EmbedCard 
+                                title="Market Cap" 
+                                component={<NGXCapWidget theme="dark" />} 
+                                width="320" 
+                                height="100" 
+                                embedId="ngx-cap"
+                            />
+                        </div>
+
+                        {/* 4. Volume */}
+                        <div className="col-md-4">
+                            <EmbedCard 
+                                title="Volume & Sectors" 
+                                component={<NGXVolumeWidget theme="dark" />} 
+                                width="320" 
+                                height="100" 
+                                embedId="ngx-volume"
+                            />
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -184,9 +318,15 @@ export default function NGXPage() {
             text-align: justify;
         }
         
-        .article-wrapper {
-            margin-left: 0;
-            padding-left: 0;
+        .article-wrapper { margin-left: 0; padding-left: 0; }
+        
+        /* Embed Section Styles */
+        .embed-card .watermark {
+            font-size: 8px;
+            color: #FCD535;
+            font-style: italic;
+            opacity: 0.8;
+            margin-top: 2px;
         }
 
         @media (max-width: 768px) {
