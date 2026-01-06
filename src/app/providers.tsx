@@ -15,7 +15,7 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 const origin = typeof window !== 'undefined' ? window.location.origin : 'https://Nftnnm.com';
 
 const config = getDefaultConfig({
-  appName: 'NNM Market',
+  appName: 'NNM Sovereign Name Assets',
   appDescription: 'Nexus Digital Name NFTs Market',
   appUrl: origin,
   appIcon: `${origin}/icons/icon.svg`,
