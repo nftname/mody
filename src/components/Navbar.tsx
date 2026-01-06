@@ -161,6 +161,24 @@ const Navbar = () => {
     height: '23px', 
   };
 
+  // Icon Mapping for Main Menu
+  const menuIcons: { [key: string]: string } = {
+    'Home': 'bi-house-door',
+    'Market': 'bi-shop',
+    'NGX': 'bi-activity',
+    'Mint': 'bi-diamond',
+    'NNM Concept': 'bi-layers'
+  };
+
+  // Icon Mapping for Secondary Menu
+  const secondaryIcons: { [key: string]: string } = {
+    'Analytics': 'bi-graph-up',
+    'Newsletter': 'bi-newspaper',
+    'Blog': 'bi-pencil-square',
+    'Careers': 'bi-briefcase',
+    'Partners': 'bi-people'
+  };
+
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
   const secondaryLinks = ['Analytics', 'Newsletter', 'Blog', 'Careers', 'Partners'];
 
@@ -206,8 +224,8 @@ const Navbar = () => {
     </svg>
   );
 
-  const LogoSVG = ({ mobile = false }: { mobile?: boolean }) => (
-    <svg width={mobile ? "31" : "30"} height={mobile ? "31" : "30"} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
+  const LogoSVG = ({ mobile = false, size = 30 }: { mobile?: boolean, size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
         <defs>
             <linearGradient id={mobile ? "goldGradMob" : "goldGradDesk"} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FFD700" />
@@ -258,7 +276,7 @@ const Navbar = () => {
             </button>
 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
-              <LogoSVG mobile={true} />
+              <LogoSVG mobile={true} size={31} />
               <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '22px', letterSpacing: '0.5px', marginTop: '1px' }}>NNM</span>
             </Link>
         </div>
@@ -399,8 +417,8 @@ const Navbar = () => {
                style={{ backgroundColor: 'transparent', borderTop: 'none', borderBottom: 'none' }}>
               
               <div className="d-flex align-items-center gap-3">
-                 <LogoSVG mobile={true} />
-                 <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '24px', letterSpacing: '0.5px' }}>NNM</span>
+                 <LogoSVG mobile={true} size={40} />
+                 <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '28px', letterSpacing: '0.5px' }}>NNM</span>
               </div>
 
               <button onClick={closeDrawer} className="btn p-0 d-flex align-items-center justify-content-center" 
@@ -419,19 +437,25 @@ const Navbar = () => {
 
           <div className="drawer-content px-4 pt-4 pb-3 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
               <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-2 mt-2">
-                  {/* تم تعديل التباعد هنا إلى gap-2 بدلاً من gap-1 لتكون الزيادة 10% تقريباً */}
                   <div className="d-flex flex-column gap-2">
                     {menuItems.map((item) => (
                         <Link key={item} 
                                 href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                                 onClick={closeDrawer}
-                                className="text-decoration-none fw-bold py-1"
+                                className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3"
                                 style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                            <i className={`bi ${menuIcons[item]} opacity-75`} style={{ fontSize: '18px' }}></i>
                             {item}
                         </Link>
                     ))}
-                    <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-bold py-1" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>How it Works</Link>
-                    <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-bold py-1" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>Contact</Link>
+                    <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                        <i className="bi bi-info-circle opacity-75" style={{ fontSize: '18px' }}></i>
+                        How it Works
+                    </Link>
+                    <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                        <i className="bi bi-chat-left-text opacity-75" style={{ fontSize: '18px' }}></i>
+                        Contact
+                    </Link>
                   </div>
 
                   <hr className="m-0 my-2" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.03)', opacity: 1 }} />
@@ -441,8 +465,9 @@ const Navbar = () => {
                         <Link key={link} 
                                 href={`/${link.toLowerCase()}`}
                                 onClick={closeDrawer}
-                                className="text-decoration-none fw-normal py-1"
+                                className="text-decoration-none fw-normal py-1 d-flex align-items-center gap-3"
                                 style={{ fontSize: '13px', color: '#888' }}>
+                            <i className={`bi ${secondaryIcons[link]}`} style={{ fontSize: '14px', opacity: 0.8 }}></i>
                             {link}
                         </Link>
                     ))}
