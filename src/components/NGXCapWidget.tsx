@@ -26,7 +26,6 @@ export default function NGXCapWidget({
   const isLight = theme === 'light';
   
   const glassStyle = {
-    // تعديل 2: زيادة الشفافية (تقليل الرقم الأخير من 0.4 إلى 0.2)
     background: isLight ? 'rgba(255, 255, 255, 0.4)' : 'rgba(11, 14, 17, 0.2)',
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
@@ -49,6 +48,7 @@ export default function NGXCapWidget({
         setData(json);
       } catch (error) {
         console.error('Error fetching NGX Cap data:', error);
+        // بيانات احتياطية
         setData({
             marketCap: '$2.54B',
             change24h: 4.88,
@@ -93,7 +93,6 @@ export default function NGXCapWidget({
             </div>
         </div>
 
-        {/* تعديل 1: توسيط شارة LIVE عمودياً بدقة */}
         <div style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', zIndex: 10 }}>
             <span className="badge pulse-neon" 
                   style={{ 
@@ -108,7 +107,7 @@ export default function NGXCapWidget({
         {/* Content Row */}
         <div className="content-col d-flex flex-column justify-content-center w-100" style={{ height: '100%' }}>
             
-            {/* Number Row - تعديل 3: رفع الرقم */}
+            {/* Number Row */}
             <div className="d-flex align-items-end gap-2 mb-1 desktop-text-shift mobile-text-lift">
                 <div className="fw-bold lh-1 main-score" style={{ color: mainTextColor, letterSpacing: '-0.5px' }}
                      onMouseEnter={() => setHoveredInfo(`Total Market Cap: ${data.marketCap}`)} onMouseLeave={() => setHoveredInfo(null)}>
@@ -123,7 +122,8 @@ export default function NGXCapWidget({
 
             {/* Progress Bar Row */}
             <div className="w-100 d-flex align-items-center progress-container" style={{ zIndex: 1 }}
-                 onMouseEnter={() => setHoveredInfo('7-Day High/Low Range')} onMouseLeave={() => setHoveredInfo(null)}>
+                 // هنا التعديل المهم: تغيير النص ليصبح 24 ساعة بدلاً من 7 أيام
+                 onMouseEnter={() => setHoveredInfo('24H High/Low Range')} onMouseLeave={() => setHoveredInfo(null)}>
                 <div className="progress-bar-bg" style={{ 
                     width: '100%', 
                     borderRadius: '10px', 
@@ -135,7 +135,7 @@ export default function NGXCapWidget({
                         left: `${data.rangeProgress}%`,
                         top: '50%',
                         transform: 'translate(-50%, -50%)',
-                        width: '8px', /* تصغير النقطة قليلاً للجوال */
+                        width: '8px',
                         height: '8px',
                         borderRadius: '50%',
                         background: '#ffffff',
@@ -203,10 +203,9 @@ export default function NGXCapWidget({
             display: none !important;
         }
 
-        /* --- MOBILE STYLES (Compressed 10% more) --- */
+        /* --- MOBILE STYLES --- */
         @media (max-width: 768px) {
             .ngx-widget-container {
-                /* تعديل 4: تقليل العرض بنسبة 10% تقريباً (من 125 إلى 112) */
                 min-width: 112px !important; 
                 max-width: 112px !important;
                 margin-left: 0 !important; 
@@ -215,13 +214,11 @@ export default function NGXCapWidget({
 
             .glass-container {
                 padding: 4px !important; 
-                /* تعديل 4: تقليل الارتفاع 10% (من 70 إلى 63) */
                 height: 63px !important; 
                 padding-right: 4px !important;
             }
 
             .main-score {
-                /* تصغير الخط قليلاً ليتناسب مع الحجم الجديد */
                 font-size: 16px !important; 
             }
 
@@ -229,7 +226,6 @@ export default function NGXCapWidget({
                 font-size: 8px !important;
             }
 
-            /* تعديل 3: رفع الرقم للأعلى */
             .mobile-text-lift {
                 transform: translateY(-3px) !important;
                 margin-bottom: 3px !important;
