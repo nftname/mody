@@ -121,7 +121,7 @@ export default function DashboardPage() {
 
   if (!isConnected) {
     return (
-        <main style={{ backgroundColor: '#0d1117', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '80px' }}>
             <div className="text-center">
                 <h2 className="text-white mb-3">Connect Wallet to View Dashboard</h2>
                 <p className="text-secondary mb-4">Please connect your wallet to see your NNM assets.</p>
@@ -131,9 +131,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <main style={{ backgroundColor: '#0d1117', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '80px' }}>
+    // التعديل الجوهري 1: تغيير اللون إلى الفحمي الموحد وتعديل الـ Padding العلوي ليتناسب مع النافبار الثابت
+    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '80px', paddingTop: '100px', width: '100%' }}>
       
-      <div className="container pt-5 pb-4">
+      {/* التعديل الجوهري 2: التأكد من أن الكونتينر يتوسط الشاشة */}
+      <div className="container pb-4 mx-auto">
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-end gap-4">
             <div>
                 <h5 className="text-secondary text-uppercase mb-2" style={{ letterSpacing: '2px', fontSize: '12px' }}>Welcome Back</h5>
@@ -158,7 +160,7 @@ export default function DashboardPage() {
         <div className="w-100 my-4" style={{ height: '1px', background: 'linear-gradient(90deg, transparent 0%, rgba(252, 213, 53, 0.3) 50%, transparent 100%)' }}></div>
       </div>
 
-      <div className="container mb-5">
+      <div className="container mb-5 mx-auto">
         <div className="d-flex gap-3">
             {['ALL', 'IMMORTAL', 'ELITE', 'FOUNDERS'].map((tab) => (
                 <button key={tab} onClick={() => setActiveTab(tab)} className="btn fw-bold rounded-pill px-4"
@@ -169,7 +171,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="container">
+      <div className="container mx-auto">
         {loading && myAssets.length === 0 ? (
             <div className="text-center py-5">
                 <div className="spinner-border text-warning" role="status">
