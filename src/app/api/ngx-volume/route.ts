@@ -34,7 +34,7 @@ export async function GET() {
 
   try {
     const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum-name-service,apecoin,immutable-x,decentraland,the-sandbox&vs_currencies=usd&include_24hr_vol=true&include_24hr_change=true',
+      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum-name-service,apecoin,immutable-x,decentraland&vs_currencies=usd&include_24hr_vol=true&include_24hr_change=true',
       { 
         next: { revalidate: 60 }, 
         headers: { 'Accept': 'application/json' } 
@@ -45,7 +45,8 @@ export async function GET() {
     const data = await response.json();
 
     const tokens = [
-        { id: 'ethereum-name-service', label: 'DOM', vol: data['ethereum-name-service'].usd_24h_vol, change: data['ethereum-name-service'].usd_24h_change },
+        // تم تغيير التسمية من DOM إلى NAM لتعكس Digital Name Assets
+        { id: 'ethereum-name-service', label: 'NAM', vol: data['ethereum-name-service'].usd_24h_vol, change: data['ethereum-name-service'].usd_24h_change },
         { id: 'apecoin', label: 'ART', vol: data.apecoin.usd_24h_vol, change: data.apecoin.usd_24h_change },
         { id: 'immutable-x', label: 'GAM', vol: data['immutable-x'].usd_24h_vol, change: data['immutable-x'].usd_24h_change },
         { id: 'decentraland', label: 'UTL', vol: data.decentraland.usd_24h_vol, change: data.decentraland.usd_24h_change }
@@ -54,18 +55,17 @@ export async function GET() {
     const maxVol = Math.max(...tokens.map(t => t.vol));
     const totalVolChange = tokens.reduce((acc, curr) => acc + curr.change, 0) / tokens.length;
     
-    // Imperium Logic: 80% of Market Leader + Small Random Variance for Realism
-    const impVolume = maxVol * 0.80 * (0.98 + Math.random() * 0.04); 
+    // تم حذف منطق Imperium Logic (impVolume) نهائياً
 
     const calcHeight = (vol: number) => Math.round((vol / maxVol) * 100);
     const fmtVol = (vol: number) => `$${(vol / 1000000).toFixed(1)}M`;
 
+    // تم حذف SOV من هنا، وتعيين ألوان مميزة لكل قطاع
     const sectors: SectorData[] = [
-      { label: 'SOV', value: calcHeight(impVolume), color: '#FCD535', volume: 'High Stability' },
-      { label: 'DOM', value: calcHeight(tokens[0].vol), color: '#607D8B', volume: fmtVol(tokens[0].vol) },
-      { label: 'ART', value: calcHeight(tokens[1].vol), color: '#607D8B', volume: fmtVol(tokens[1].vol) },
-      { label: 'GAM', value: calcHeight(tokens[2].vol), color: '#607D8B', volume: fmtVol(tokens[2].vol) },
-      { label: 'UTL', value: calcHeight(tokens[3].vol), color: '#607D8B', volume: fmtVol(tokens[3].vol) }
+      { label: 'NAM', value: calcHeight(tokens[0].vol), color: '#38BDF8', volume: fmtVol(tokens[0].vol) }, // Blue for Names
+      { label: 'ART', value: calcHeight(tokens[1].vol), color: '#7B61FF', volume: fmtVol(tokens[1].vol) }, // Purple for Art
+      { label: 'GAM', value: calcHeight(tokens[2].vol), color: '#0ECB81', volume: fmtVol(tokens[2].vol) }, // Green for Gaming
+      { label: 'UTL', value: calcHeight(tokens[3].vol), color: '#00D8D6', volume: fmtVol(tokens[3].vol) }  // Teal for Utility
     ];
 
     const sortedByChange = [...tokens].sort((a, b) => b.change - a.change);
@@ -86,13 +86,13 @@ export async function GET() {
     return NextResponse.json(cachedData);
 
   } catch (error) {
+    // بيانات احتياطية نظيفة بدون SOV
     return NextResponse.json({
         sectors: [
-            { label: 'SOV', value: 80, color: '#FCD535', volume: 'High' },
-            { label: 'DOM', value: 90, color: '#607D8B', volume: '$50M' },
-            { label: 'ART', value: 50, color: '#607D8B', volume: '$30M' },
-            { label: 'GAM', value: 70, color: '#607D8B', volume: '$40M' },
-            { label: 'UTL', value: 40, color: '#607D8B', volume: '$20M' }
+            { label: 'NAM', value: 90, color: '#38BDF8', volume: '$50M' },
+            { label: 'ART', value: 50, color: '#7B61FF', volume: '$30M' },
+            { label: 'GAM', value: 70, color: '#0ECB81', volume: '$40M' },
+            { label: 'UTL', value: 40, color: '#00D8D6', volume: '$20M' }
         ],
         marketStats: {
             totalVolChange: 12.5,

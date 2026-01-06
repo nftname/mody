@@ -2,13 +2,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries } from 'lightweight-charts';
 
+// تم تحديث القطاعات: حذف SOV وتغيير Domains إلى Digital Name Assets
 const SECTORS = [
   { key: 'All NFTs Index', color: '#C0D860', startYear: 2017, baseValue: 40 },
-  { key: 'Sovereign Name Assets', color: '#FFB300', startYear: 2025, baseValue: 100 },
   { key: 'Art NFTs', color: '#7B61FF', startYear: 2017, baseValue: 25 },
   { key: 'Gaming NFTs', color: '#0ECB81', startYear: 2019, baseValue: 15 },
   { key: 'Utility NFTs', color: '#00D8D6', startYear: 2020, baseValue: 10 },
-  { key: 'Standard Domains', color: '#38BDF8', startYear: 2017, baseValue: 30 }
+  { key: 'Digital Name Assets', color: '#38BDF8', startYear: 2017, baseValue: 30 }
 ];
 
 const TIMEFRAMES = [
@@ -58,8 +58,7 @@ export default function NGXLiveChart() {
     let startDate = new Date();
     const sectorInfo = SECTORS.find(s => s.key === sectorKey) || SECTORS[0];
 
-    const isSovereign = sectorKey === 'Sovereign Name Assets';
-    const effectiveStartYear = isSovereign ? 2025 : sectorInfo.startYear;
+    const effectiveStartYear = sectorInfo.startYear;
 
     switch (timeframe) {
         case '1H': startDate.setHours(now.getHours() - 1); break;
@@ -79,19 +78,16 @@ export default function NGXLiveChart() {
     
     let totalPoints = 500;
     if (timeframe === '1H') totalPoints = 60;
-    else if (timeframe === 'ALL') totalPoints = isSovereign ? 365 : 2000;
+    else if (timeframe === 'ALL') totalPoints = 2000;
 
     const timeStep = diffTime / totalPoints;
     let currentTime = startDate.getTime();
     
     for (let i = 0; i <= totalPoints; i++) {
-        let change = (Math.random() - 0.45);
-        if (isSovereign) change = (Math.random() - 0.48) * 0.5; 
-        else change = change * 2; 
+        let change = (Math.random() - 0.45) * 2; 
 
         currentValue += change;
-        if (isSovereign && currentValue < 98) currentValue = 98; 
-        if (!isSovereign && currentValue < 5) currentValue = 5;
+        if (currentValue < 5) currentValue = 5;
         
         data.push({ time: Math.floor(currentTime / 1000) as any, value: currentValue });
         currentTime += timeStep;
@@ -302,7 +298,6 @@ export default function NGXLiveChart() {
         }
 
         .filter-wrapper { position: relative; }
-        
         .sector-wrapper { width: auto; min-width: 200px; max-width: 280px; }
         .time-wrapper { width: auto; min-width: 70px; }
 
@@ -374,28 +369,12 @@ export default function NGXLiveChart() {
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
         @media (max-width: 768px) {
-            .ngx-chart-glass { 
-                padding: 0; 
-                border: none; 
-                background: transparent;
-                backdrop-filter: none;
-            }
+            .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
             .chart-canvas-wrapper { height: 350px !important; }
-            
             .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
-            
-            .sector-wrapper { 
-                flex-grow: 0;
-                width: 55%;
-                max-width: 190px;
-                margin-right: auto;
-            }
-            .time-wrapper { 
-                width: auto;
-                min-width: 60px;
-                flex-shrink: 0;
-            }
+            .sector-wrapper { flex-grow: 0; width: 55%; max-width: 190px; margin-right: auto; }
+            .time-wrapper { width: auto; min-width: 60px; flex-shrink: 0; }
         }
       `}</style>
     </div>

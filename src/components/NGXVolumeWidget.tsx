@@ -133,7 +133,9 @@ export default function NGXVolumeWidget({
 
         {/* RIGHT SIDE: Bars */}
         <div className="bars-container d-flex align-items-end justify-content-between position-relative">
-            {data.sectors.map((sector, index) => (
+            {data.sectors
+                .filter(sector => sector.label !== 'SOV') // حذفنا بار SOV فقط
+                .map((sector, index) => (
                 <div key={index} className="d-flex flex-column align-items-center justify-content-end bar-wrapper" 
                      style={{ height: '100%', zIndex: 1 }}
                      onMouseEnter={() => setHoveredInfo(`${sector.label}: ${sector.volume}`)} 
@@ -144,7 +146,7 @@ export default function NGXVolumeWidget({
                         height: `${Math.max(10, sector.value)}%`, 
                         background: 'linear-gradient(180deg, #FCD535 0%, #0ecb81 100%)', 
                         borderRadius: '1px 1px 0 0',
-                        opacity: sector.label === 'SOV' ? 1 : 0.85, 
+                        opacity: 0.85, // جعلنا الشفافية موحدة بعد حذف SOV
                         transition: 'height 1s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}></div>
                     
