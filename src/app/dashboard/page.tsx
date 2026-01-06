@@ -42,6 +42,9 @@ export default function DashboardPage() {
   const [selectedTier, setSelectedTier] = useState('ALL'); 
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   
+  // Sorting State for Listings
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  
   const [isCopied, setIsCopied] = useState(false);
 
   const resolveIPFS = (uri: string) => {
@@ -161,6 +164,10 @@ export default function DashboardPage() {
     setViewModeState((prev) => (prev + 1) % viewModes.length);
   };
 
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest');
+  };
+
   const totalAssetValue = myAssets.reduce((acc, curr) => acc + parseFloat(curr.price || 0), 0);
 
   const filteredAssets = myAssets.filter(asset => {
@@ -170,6 +177,11 @@ export default function DashboardPage() {
   });
 
   const listedAssets = myAssets.filter(asset => asset.isListed);
+
+  // Sorting Logic: Reversing array to simulate LIFO (Last In First Out) for "Newest"
+  const sortedListedAssets = sortOrder === 'newest' 
+    ? [...listedAssets].reverse() 
+    : listedAssets;
 
   if (!isConnected) {
     return (
@@ -263,19 +275,35 @@ export default function DashboardPage() {
                     <div className="text-center py-5 text-secondary">No active listings found</div>
                 ) : (
                     <div className="table-responsive">
-                        {/* Custom Table Styles to Override Bootstrap Whiteness */}
                         <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
                             <thead>
                                 <tr>
-                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0' }}>ASSET</th>
-                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0' }}>POL</th>
-                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0' }}>XP</th>
-                                    <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '40px', padding: '0 0 10px 0' }}></th> 
+                                    {/* ASSET Header with Sorting */}
+                                    <th 
+                                        onClick={toggleSortOrder} 
+                                        style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}
+                                    >
+                                        ASSET 
+                                        <i className={`bi ${sortOrder === 'newest' ? 'bi-arrow-up' : 'bi-arrow-down'} ms-2`} style={{ fontSize: '11px' }}></i>
+                                    </th>
+                                    
+                                    {/* POL Header - Moved closer to Asset */}
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>
+                                        POL
+                                    </th>
+                                    
+                                    {/* Exp Header */}
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>
+                                        Exp
+                                    </th>
+                                    
+                                    {/* Settings Header - Shifted Inward */}
+                                    <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%', padding: '0 20px 10px 0' }}></th> 
                                 </tr>
                             </thead>
                             <tbody>
-                                {listedAssets.map((asset) => (
-                                    <tr key={asset.id} className="align-middle">
+                                {sortedListedAssets.map((asset) => (
+                                    <tr key={asset.id} className="align-middle listing-row">
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>
                                             {asset.name}
                                         </td>
@@ -285,7 +313,8 @@ export default function DashboardPage() {
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>
                                             Active
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
+                                        {/* Settings Icon - Shifted Inward via Padding */}
+                                        <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
                                             <Link href={`/asset/${asset.id}`}>
                                                 <i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i>
                                             </Link>
@@ -294,6 +323,11 @@ export default function DashboardPage() {
                                 ))}
                             </tbody>
                         </table>
+                        <style jsx>{`
+                            .listing-row:hover td {
+                                background-color: rgba(255, 255, 255, 0.03) !important;
+                            }
+                        `}</style>
                     </div>
                 )}
             </div>
@@ -379,6 +413,7 @@ export default function DashboardPage() {
 const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
+    // Correct Polygon Badge: 5% opacity black BG, White Logo fill
     const PolygonBadge = () => (
         <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px', backgroundColor: 'rgba(0, 0, 0, 0.05)', borderRadius: '50%' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
