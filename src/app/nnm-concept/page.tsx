@@ -199,13 +199,13 @@ export default function NNMConceptPage() {
             }
         }
 
-        /* Ticker Animations (left unchanged intentionally) */
+        /* Ticker Animations */
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
         .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
 
-        /* Page Typography (content only) */
+        /* Page Typography */
         .concept-shell p,
         .concept-shell li,
         .concept-shell small,
@@ -267,7 +267,6 @@ export default function NNMConceptPage() {
                       lineHeight: '1.6',
                       marginLeft: 'auto', // Centering on Desktop
                       marginRight: 'auto', // Centering on Desktop
-                      // Mobile reset for alignment happens via parent class 'text-start'
                     }}>
                       The <span className="text-gold fw-bold">Imperium Asset</span> represents the ultimate tier of digital name ownership, far beyond standard tokens. Each <span className="text-gold fw-bold">Imperium Name</span> establishes immutable priority within the Web3 ecosystem, securing a permanent place in digital history. As we approach 2026, these assets are poised to become the cornerstone of digital identity and value.
                   </p>
@@ -311,15 +310,21 @@ export default function NNMConceptPage() {
                    </div>
                 </div>
 
-                {/* Hierarchy Box */}
+                {/* Hierarchy Box (UPDATED to Match NGX Chart Categories) */}
                 <div className="info-card-static">
                   <h3 className="text-white h6 mb-3 fw-bold border-bottom border-secondary pb-2" style={{ color: TEXT_OFF_WHITE }}>Asset Class Hierarchy</h3>
                   <ul className="list-unstyled mb-0">
-                    <li className="mb-2"><span style={{ color: GOLD_MEDIUM, fontWeight: 'bold' }}>- Sovereign Name Assets — </span> Immutable Priority</li>
-                    <li className="mb-2"><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Art NFTs — </span> Collectibles</li>
-                    <li className="mb-2"><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Utility NFTs — </span> Access Mechanisms</li>
+                    {/* 1. Digital Name Assets (Gold) */}
+                    <li className="mb-2"><span style={{ color: GOLD_MEDIUM, fontWeight: 'bold' }}>- Digital Name Assets — </span> Immutable Priority</li>
+                    
+                    {/* 2. Art NFTs */}
+                    <li className="mb-2"><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Art NFTs — </span> Digital Collectibles</li>
+                    
+                    {/* 3. Gaming NFTs */}
                     <li className="mb-2"><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Gaming NFTs — </span> Interactive Assets</li>
-                    <li><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Standard Domains —</span> Leased Identifiers</li>
+                    
+                    {/* 4. Utility NFTs */}
+                    <li><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Utility NFTs — </span> Access Mechanisms</li>
                   </ul>
                 </div>
               </div>
@@ -350,7 +355,7 @@ export default function NNMConceptPage() {
                 
                 </div>
 
-                {/* Legal Note Box (Gold Border Added) */}
+                {/* Legal Note Box */}
                 <div className="note-box">
                   <span className="text-white fw-bold" style={{ color: TEXT_OFF_WHITE }}>Note:</span> This presentation provides general information. It is not financial advice. Ownership does not guarantee financial returns.
                 </div>
@@ -358,7 +363,7 @@ export default function NNMConceptPage() {
               </div>
             </div>
 
-            {/* CTA BUTTON (Mobile 70% Width) - LINKED TO /mint */}
+            {/* CTA BUTTON */}
             <div className="text-center mt-5 mb-5 btn-ingot-wrapper">
                  <Link href="/mint" className="btn btn-ingot rounded-1 text-decoration-none d-inline-block">
                      CLAIM YOUR NEXUS NAME
@@ -368,8 +373,8 @@ export default function NNMConceptPage() {
       </section>
       </div>
 
-      {/* --- BRAND TICKER --- */}
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '20px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+      {/* --- BRAND TICKER (Spacing Increased) --- */}
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '80px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
