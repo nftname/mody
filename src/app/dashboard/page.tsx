@@ -6,6 +6,7 @@ import { useAccount, useBalance } from "wagmi";
 import { createPublicClient, http, parseAbi, formatEther } from 'viem';
 import { polygon } from 'viem/chains';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
+import { supabase } from '@/lib/supabase'; // التأكد من وجود هذا الملف كما في AssetPage
 
 const GOLD_COLOR = '#FCD535';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
@@ -30,23 +31,32 @@ export default function DashboardPage() {
   const { data: balanceData } = useBalance({ address });
   
   const [myAssets, setMyAssets] = useState<any[]>([]);
+  const [offersData, setOffersData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
   const [activeSection, setActiveSection] = useState('Items');
   
+  // View Modes
   const [viewModeState, setViewModeState] = useState(0); 
   const viewModes = ['grid', 'large', 'list'];
   const currentViewMode = viewModes[viewModeState];
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState('ALL'); 
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [showFilterMenu, setShowFilterMenu] = useState(false); // For Items Tab
   
-  // Sorting State for Listings
+  // Offers Filters
+  const [offerType, setOfferType] = useState('Received'); // Received, Made, Expired
+  const [offerSort, setOfferSort] = useState('Newest');   // Newest, Ending Soon, High Price, Low Price
+  const [showOfferTypeMenu, setShowOfferTypeMenu] = useState(false);
+  const [showOfferSortMenu, setShowOfferSortMenu] = useState(false);
+
+  // Listings Sort
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   
   const [isCopied, setIsCopied] = useState(false);
 
+  // --- Utilities ---
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -57,6 +67,18 @@ export default function DashboardPage() {
     for (let i = 0; i < arr.length; i += size) result.push(arr.slice(i, i + size));
     return result;
   };
+
+  const formatExpiration = (timestamp: number) => {
+      const now = Math.floor(Date.now() / 1000);
+      const diff = timestamp - now;
+      if (diff <= 0) return "Expired";
+      const days = Math.floor(diff / (3600 * 24));
+      if (days > 0) return `${days}d`;
+      const hours = Math.floor(diff / 3600);
+      return `${hours}h`;
+  };
+
+  // --- Fetching Logic ---
 
   const fetchAssets = async () => {
     if (!address) return;
@@ -95,7 +117,6 @@ export default function DashboardPage() {
         const batchResults = await Promise.all(
           batch.map(async (tokenId: any) => {
             try {
-              // 1. Fetch Metadata
               const tokenURI = await publicClient.readContract({
                   address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                   abi: CONTRACT_ABI,
@@ -106,7 +127,6 @@ export default function DashboardPage() {
               const metaRes = await fetch(resolveIPFS(tokenURI));
               const meta = metaRes.ok ? await metaRes.json() : {};
 
-              // 2. Fetch Listing Status
               let isListed = false;
               let listingPrice = '0';
               try {
@@ -120,9 +140,7 @@ export default function DashboardPage() {
                       isListed = true;
                       listingPrice = formatEther(listingData[1]);
                   }
-              } catch (e) {
-                  console.warn(`Failed to check listing for ${tokenId}`, e);
-              }
+              } catch (e) { console.warn(e); }
               
               return {
                 id: tokenId.toString(),
@@ -132,25 +150,67 @@ export default function DashboardPage() {
                 price: isListed ? listingPrice : (meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'),
                 isListed: isListed
               };
-            } catch (error) {
-              console.error('Failed to load token metadata', error);
-              return null;
-            }
+            } catch (error) { return null; }
           })
         );
-
-        const valid = batchResults.filter(Boolean) as any[];
-        loaded.push(...valid);
+        loaded.push(...(batchResults.filter(Boolean) as any[]));
         setMyAssets([...loaded]); 
       }
-    } catch (error) {
-      console.error("Dashboard Engine Error:", error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { console.error(error); } finally { setLoading(false); }
+  };
+
+  const fetchOffers = async () => {
+      if (!address) return;
+      setLoading(true);
+      try {
+          let query = supabase.from('offers').select('*');
+          const now = Math.floor(Date.now() / 1000);
+
+          if (offerType === 'Received') {
+              // Simulating "Received": Offers on tokens I own
+              // Note: Ideally Supabase should allow filtering by token owner, but here we filter by myAssets IDs
+              const myTokenIds = myAssets.map(a => a.id);
+              if (myTokenIds.length > 0) {
+                  query = query.in('token_id', myTokenIds).gt('expiration', now).neq('status', 'cancelled');
+              } else {
+                  setOffersData([]);
+                  setLoading(false);
+                  return;
+              }
+          } else if (offerType === 'Made') {
+              query = query.eq('bidder_address', address).gt('expiration', now).neq('status', 'cancelled');
+          } else if (offerType === 'Expired') {
+              query = query.or(`bidder_address.eq.${address},token_id.in.(${myAssets.map(a => a.id).join(',')})`).lte('expiration', now);
+          }
+
+          const { data, error } = await query;
+          if (error) throw error;
+
+          // Enrich offer data with Asset Name (from myAssets or fetch if needed)
+          // For simplicity in this dashboard, we map to known assets or generic name
+          const enrichedOffers = data?.map(offer => {
+              const knownAsset = myAssets.find(a => a.id === offer.token_id.toString());
+              return {
+                  ...offer,
+                  assetName: knownAsset ? knownAsset.name : `NNM #${offer.token_id}`,
+                  formattedPrice: offer.price.toString(),
+                  timeLeft: formatExpiration(offer.expiration)
+              };
+          }) || [];
+
+          // Client-side Sorting
+          if (offerSort === 'Newest') enrichedOffers.sort((a, b) => b.created_at?.localeCompare(a.created_at)); // Assuming created_at exists
+          if (offerSort === 'High Price') enrichedOffers.sort((a, b) => b.price - a.price);
+          if (offerSort === 'Low Price') enrichedOffers.sort((a, b) => a.price - b.price);
+          if (offerSort === 'Ending Soon') enrichedOffers.sort((a, b) => a.expiration - b.expiration);
+
+          setOffersData(enrichedOffers);
+
+      } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
   useEffect(() => { if (isConnected) fetchAssets(); }, [address, isConnected]);
+  useEffect(() => { if (activeSection === 'Offers') fetchOffers(); }, [activeSection, offerType, offerSort, myAssets]);
 
   const copyToClipboard = () => {
     if (address) {
@@ -160,28 +220,13 @@ export default function DashboardPage() {
     }
   };
 
-  const toggleViewMode = () => {
-    setViewModeState((prev) => (prev + 1) % viewModes.length);
-  };
-
-  const toggleSortOrder = () => {
-    setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest');
-  };
+  const toggleViewMode = () => { setViewModeState((prev) => (prev + 1) % viewModes.length); };
+  const toggleSortOrder = () => { setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest'); };
 
   const totalAssetValue = myAssets.reduce((acc, curr) => acc + parseFloat(curr.price || 0), 0);
-
-  const filteredAssets = myAssets.filter(asset => {
-    const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTier = selectedTier === 'ALL' ? true : asset.tier.toUpperCase() === selectedTier;
-    return matchesSearch && matchesTier;
-  });
-
+  const filteredAssets = myAssets.filter(asset => asset.name.toLowerCase().includes(searchQuery.toLowerCase()) && (selectedTier === 'ALL' || asset.tier.toUpperCase() === selectedTier));
   const listedAssets = myAssets.filter(asset => asset.isListed);
-
-  // Sorting Logic: Reversing array to simulate LIFO (Last In First Out) for "Newest"
-  const sortedListedAssets = sortOrder === 'newest' 
-    ? [...listedAssets].reverse() 
-    : listedAssets;
+  const sortedListedAssets = sortOrder === 'newest' ? [...listedAssets].reverse() : listedAssets;
 
   if (!isConnected) {
     return (
@@ -197,18 +242,17 @@ export default function DashboardPage() {
   return (
     <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', width: '100%', overflowX: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
       
-      <div style={{ width: '100%', height: '180px', background: 'linear-gradient(180deg, #2b2b2b 0%, #1E1E1E 100%)', position: 'relative', borderBottom: '1px solid #2d2d2d' }}>
-      </div>
+      <div style={{ width: '100%', height: '180px', background: 'linear-gradient(180deg, #2b2b2b 0%, #1E1E1E 100%)', position: 'relative', borderBottom: '1px solid #2d2d2d' }}></div>
 
       <div className="container mx-auto px-3" style={{ marginTop: '-90px', position: 'relative', zIndex: 10 }}>
         
+        {/* Profile Header */}
         <div className="d-flex flex-column gap-3 mb-4">
             <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #1E1E1E', background: '#161b22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
                 <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: '#1E1E1E' }}>
                     {address ? address.slice(2,4).toUpperCase() : ''}
                 </div>
             </div>
-
             <div className="d-flex align-items-center gap-2">
                 <span className="fw-normal" style={{ fontSize: '18px', fontFamily: 'monospace', color: GOLD_COLOR }}>
                     {address ? `${address.slice(0,6)}...${address.slice(-4)}` : ''}
@@ -217,7 +261,6 @@ export default function DashboardPage() {
                     {isCopied ? <i className="bi bi-check-lg text-success"></i> : <i className="bi bi-copy"></i>}
                 </button>
             </div>
-
             <div className="d-flex gap-5 mt-2 px-2">
                 <div className="d-flex flex-column align-items-start">
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Balance</div>
@@ -240,6 +283,7 @@ export default function DashboardPage() {
             </div>
         </div>
 
+        {/* Tabs */}
         <div className="d-flex gap-4 mb-2 overflow-auto" style={{ borderBottom: 'none' }}>
             {['Items', 'Listings', 'Offers', 'Created', 'Activity'].map((tab) => (
                 <button 
@@ -264,6 +308,109 @@ export default function DashboardPage() {
             ))}
         </div>
 
+        {/* --- OFFERS SECTION --- */}
+        {activeSection === 'Offers' && (
+            <div className="mt-4">
+                {/* Offers Filters Toolbar */}
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    
+                    {/* Left: Sort Filter (Hamburger) */}
+                    <div className="position-relative">
+                        <button 
+                            onClick={() => setShowOfferSortMenu(!showOfferSortMenu)}
+                            className="btn border border-secondary d-flex flex-column align-items-center justify-content-center gap-1" 
+                            style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}
+                        >
+                            <div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div>
+                            <div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div>
+                            <div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div>
+                        </button>
+                        {showOfferSortMenu && (
+                            <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
+                                {['Newest', 'Ending Soon', 'High Price', 'Low Price'].map(sort => (
+                                    <button 
+                                        key={sort}
+                                        onClick={() => { setOfferSort(sort); setShowOfferSortMenu(false); }}
+                                        className="btn w-100 text-start btn-sm text-white"
+                                        style={{ backgroundColor: offerSort === sort ? '#2d2d2d' : 'transparent', fontSize: '13px' }}
+                                    >
+                                        {sort}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right: Type Filter (Offers Received/Made) */}
+                    <div className="position-relative">
+                        <button 
+                            onClick={() => setShowOfferTypeMenu(!showOfferTypeMenu)}
+                            className="btn d-flex align-items-center gap-2 px-3"
+                            style={{ border: '1px solid #333', borderRadius: '8px', color: '#fff', fontSize: '13px', height: '32px', backgroundColor: 'transparent' }}
+                        >
+                            Offers {offerType} <i className="bi bi-chevron-down" style={{ fontSize: '10px' }}></i>
+                        </button>
+                        {showOfferTypeMenu && (
+                            <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', right: 0, width: '160px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
+                                {['Received', 'Made', 'Expired'].map(type => (
+                                    <button 
+                                        key={type}
+                                        onClick={() => { setOfferType(type); setShowOfferTypeMenu(false); }}
+                                        className="btn w-100 text-start btn-sm text-white"
+                                        style={{ backgroundColor: offerType === type ? '#2d2d2d' : 'transparent', fontSize: '13px' }}
+                                    >
+                                        Offers {type}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Offers Table */}
+                <div className="table-responsive">
+                    <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
+                        <thead>
+                            <tr>
+                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '35%' }}>ASSET</th>
+                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>PRICE</th>
+                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>{offerType === 'Made' ? 'TO' : 'FROM'}</th>
+                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>EXP</th>
+                                <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '5%', padding: '0 20px 10px 0' }}></th> 
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {offersData.length === 0 ? (
+                                <tr><td colSpan={5} className="text-center py-5 text-secondary">No offers found</td></tr>
+                            ) : (
+                                offersData.map((offer) => (
+                                    <tr key={offer.id} className="align-middle listing-row">
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>
+                                            {offer.assetName}
+                                        </td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>
+                                            {parseFloat(offer.formattedPrice).toFixed(2)}
+                                        </td>
+                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>
+                                            {offerType === 'Made' ? 'Owner' : (offer.bidder_address ? `${offer.bidder_address.slice(0,4)}...${offer.bidder_address.slice(-4)}` : '-')}
+                                        </td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>
+                                            {offer.timeLeft}
+                                        </td>
+                                        <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
+                                            <Link href={`/asset/${offer.token_id}`}>
+                                                <i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i>
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )}
+
         {/* LISTINGS SECTION */}
         {activeSection === 'Listings' && (
             <div className="pb-5 mt-4">
@@ -278,56 +425,27 @@ export default function DashboardPage() {
                         <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
                             <thead>
                                 <tr>
-                                    {/* ASSET Header with Sorting */}
-                                    <th 
-                                        onClick={toggleSortOrder} 
-                                        style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}
-                                    >
-                                        ASSET 
-                                        <i className={`bi ${sortOrder === 'newest' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'} ms-2`} style={{ fontSize: '11px' }}></i>
+                                    <th onClick={toggleSortOrder} style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}>
+                                        ASSET <i className={`bi ${sortOrder === 'newest' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'} ms-2`} style={{ fontSize: '11px' }}></i>
                                     </th>
-                                    
-                                    {/* POL Header - Moved closer to Asset */}
-                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>
-                                        POL
-                                    </th>
-                                    
-                                    {/* Exp Header */}
-                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>
-                                        Exp
-                                    </th>
-                                    
-                                    {/* Settings Header - Shifted Inward */}
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>POL</th>
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Exp</th>
                                     <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%', padding: '0 20px 10px 0' }}></th> 
                                 </tr>
                             </thead>
                             <tbody>
                                 {sortedListedAssets.map((asset) => (
                                     <tr key={asset.id} className="align-middle listing-row">
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>
-                                            {asset.name}
-                                        </td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>
-                                            {asset.price}
-                                        </td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>
-                                            Active
-                                        </td>
-                                        {/* Settings Icon - Shifted Inward via Padding */}
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>{asset.name}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{asset.price}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>Active</td>
                                         <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
-                                            <Link href={`/asset/${asset.id}`}>
-                                                <i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i>
-                                            </Link>
+                                            <Link href={`/asset/${asset.id}`}><i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i></Link>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-                        <style jsx>{`
-                            .listing-row:hover td {
-                                background-color: rgba(255, 255, 255, 0.03) !important;
-                            }
-                        `}</style>
                     </div>
                 )}
             </div>
@@ -406,6 +524,9 @@ export default function DashboardPage() {
         )}
 
       </div>
+      <style jsx>{`
+        .listing-row:hover td { background-color: rgba(255, 255, 255, 0.03) !important; }
+      `}</style>
     </main>
   );
 }
@@ -413,7 +534,6 @@ export default function DashboardPage() {
 const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
-    // Correct Polygon Badge: 5% opacity black BG, White Logo fill
     const PolygonBadge = () => (
         <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px', backgroundColor: 'rgba(0, 0, 0, 0.05)', borderRadius: '50%' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
