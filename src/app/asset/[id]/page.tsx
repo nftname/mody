@@ -13,12 +13,16 @@ import { supabase } from '@/lib/supabase';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
-// تعديل الخلفية لتطابق الداشبورد
+
+// --- THEME COLORS & STYLES ---
 const BACKGROUND_DARK = '#1E1E1E'; 
-const SURFACE_DARK = '#242424'; // تعديل طفيف ليتماشى مع الخلفية الجديدة
-const BORDER_COLOR = '#2E2E2E'; // تعديل حدود العناصر لتكون متناسقة
-const TEXT_PRIMARY = '#E0E0E0';
+const SURFACE_DARK = '#262626'; 
+// تعديل: جعل الحدود خفيفة جداً وهادئة (رمادي شفاف) بدلاً من الأبيض الصريح
+const BORDER_COLOR = 'rgba(255, 255, 255, 0.08)'; 
+const TEXT_PRIMARY = '#FFFFFF';
 const TEXT_MUTED = '#B0B0B0';
+// لون مخصص لوصف OpenSea
+const OPENSEA_DESC_COLOR = '#E5E8EB'; 
 const GOLD_SOLID = '#F0C420';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
 const GOLD_TEXT_CLASS = 'gold-text-effect'; 
@@ -26,7 +30,7 @@ const GOLD_BTN_STYLE = { background: GOLD_GRADIENT, color: '#1a1200', border: 'n
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: GOLD_SOLID, border: `1px solid ${GOLD_SOLID}`, fontWeight: 'bold' as const };
 
 const OFFER_DURATION = 30 * 24 * 60 * 60; 
-const POL_TO_USD_RATE = 0.54; // Mock rate for display
+const POL_TO_USD_RATE = 0.54; 
 
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
@@ -88,23 +92,24 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => 
     );
 };
 
+// تعديل الأكورديون: استخدام لون الحدود الجديد الهادئ
 const Accordion = ({ title, defaultOpen = false, icon, children }: any) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
-        <div style={{ border: `1px solid ${BORDER_COLOR}`, borderRadius: '10px', overflow: 'hidden', marginBottom: '12px', backgroundColor: SURFACE_DARK }}>
-            <button onClick={() => setIsOpen(!isOpen)} className="d-flex align-items-center justify-content-between w-100 px-3 py-3" style={{ background: 'transparent', border: 'none', color: TEXT_PRIMARY, fontWeight: '700', fontSize: '15px' }}>
-                <div className="d-flex align-items-center gap-2"><i className={`bi ${icon}`} style={{ color: TEXT_MUTED }}></i> {title}</div>
-                <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'}`} style={{ color: TEXT_MUTED }}></i>
+        <div style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>
+            <button onClick={() => setIsOpen(!isOpen)} className="d-flex align-items-center justify-content-between w-100 py-3" style={{ background: 'transparent', border: 'none', color: TEXT_PRIMARY, fontWeight: '600', fontSize: '15px', paddingLeft: 0, paddingRight: 0 }}>
+                <div className="d-flex align-items-center gap-3"><i className={`bi ${icon}`} style={{ color: TEXT_MUTED, fontSize: '16px' }}></i> {title}</div>
+                <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'}`} style={{ color: TEXT_MUTED, fontSize: '12px' }}></i>
             </button>
-            {isOpen && <div className="p-3 border-top" style={{ borderColor: BORDER_COLOR, backgroundColor: BACKGROUND_DARK }}>{children}</div>}
+            {isOpen && <div className="pb-4 pt-1">{children}</div>}
         </div>
     );
 };
 
 const TraitBox = ({ type, value, percent }: any) => (
-    <div className="d-flex flex-column align-items-center justify-content-center p-2 h-100" style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)', border: `1px solid ${BORDER_COLOR}`, borderRadius: '8px', textAlign: 'center' }}>
-        <div style={{ color: TEXT_MUTED, fontSize: '10px', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>{type}</div>
-        <div style={{ color: '#fff', fontWeight: '600', fontSize: '13px', marginBottom: '2px', lineHeight: '1.2' }}>{value}</div>
+    <div className="d-flex flex-column align-items-center justify-content-center p-3 h-100" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: `1px solid ${BORDER_COLOR}`, borderRadius: '8px', textAlign: 'center' }}>
+        <div style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '10px', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>{type}</div>
+        <div style={{ color: '#fff', fontWeight: '600', fontSize: '13px', marginBottom: '2px', lineHeight: '1.4' }}>{value}</div>
         <div style={{ color: TEXT_MUTED, fontSize: '10px' }}>{percent} floor</div>
     </div>
 );
@@ -260,10 +265,9 @@ function AssetPage() {
                     <div className="col-lg-5">
                         <div className="rounded-4 overflow-hidden position-relative mb-4" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1' }}>
                             <div className="d-flex align-items-center justify-content-between p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
-                                <div className="d-flex gap-2">
-                                    {/* ERC721 Badge (Top Left - Replaces Polygon Icon if not needed or keep both) */}
-                                    <span style={{ fontSize: '14px', color: '#FFF', fontWeight: 'bold' }}>ERC721</span> 
-                                </div>
+                                {/* تعديل: إزالة شارة ERC721 من هنا */}
+                                <div className="d-flex gap-2"></div>
+                                {/* تعديل: أيقونة القلب تصبح بيضاء بالكامل عند الضغط */}
                                 <div className="d-flex gap-2">
                                     <button onClick={() => setIsFav(!isFav)} className="btn p-0 border-0">
                                         <i className={`bi ${isFav ? 'bi-heart-fill text-white' : 'bi-heart text-white'}`} style={{ fontSize: '20px' }}></i>
@@ -276,15 +280,20 @@ function AssetPage() {
 
                     {/* RIGHT COLUMN: TABS & DETAILS */}
                     <div className="col-lg-7">
-                        {/* Header Info */}
+                        {/* Header Info - تعديل ترتيب العناصر */}
                         <div className="mb-4">
-                            <div className="d-flex align-items-center justify-content-between mb-1">
-                                <Link href="#" className="text-decoration-none" style={{ color: '#FCD535', fontSize: '15px', fontWeight: '500' }}>NNM Sovereign Asset</Link>
-                                <div className="d-flex gap-2">
-                                    <span style={{ color: TEXT_MUTED, fontSize: '13px' }}>Owned by <a href="#" className="text-decoration-none" style={{ color: '#FFF' }}>{asset.owner.slice(0,6)}...</a></span>
-                                </div>
+                            {/* تعديل: الاسم أولاً تحته مباشرة */}
+                            <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-2`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
+                            
+                            {/* تعديل: السطر الثاني يحتوي على اسم المنصة (أبيض) ورابط المالك (ذهبي) على اليمين */}
+                            <div className="d-flex align-items-center justify-content-between mb-4">
+                                {/* تعديل: لون أبيض عادي وإزالة العلامة الزرقاء */}
+                                <span style={{ color: TEXT_PRIMARY, fontSize: '15px', fontWeight: '500' }}>NNM Sovereign Asset</span>
+                                {/* تعديل: رابط المالك باللون الذهبي على أقصى اليمين */}
+                                <span style={{ color: TEXT_MUTED, fontSize: '13px' }}>Owned by <a href="#" className="text-decoration-none" style={{ color: GOLD_SOLID }}>{asset.owner.slice(0,6)}...</a></span>
                             </div>
-                            <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-3`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
+                            
+                            {/* سطر التصنيفات */}
                             <div className="d-flex align-items-center gap-4 mb-4" style={{ color: TEXT_MUTED, fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>
                                 <span>ERC721</span>
                                 <span>POLYGON</span>
@@ -294,11 +303,13 @@ function AssetPage() {
 
                         {/* TABS (Top Level Navigation) */}
                         <div className="mb-4">
+                            {/* تعديل: خط الحدود السفلي هادئ جداً */}
                             <div className="d-flex border-bottom" style={{ borderColor: BORDER_COLOR }}>
                                 {['Details', 'Orders', 'Activity'].map(tab => (
-                                    <button key={tab} onClick={() => setActiveTab(tab)} className="btn px-4 py-3 fw-bold position-relative" style={{ color: activeTab === tab ? '#fff' : TEXT_MUTED, background: 'transparent', border: 'none', fontSize: '15px' }}>
+                                    /* تعديل: الخط الأبيض العريض بحجم الكلمة وقريب منها */
+                                    <button key={tab} onClick={() => setActiveTab(tab)} className="btn mx-3 py-3 fw-bold position-relative p-0" style={{ color: activeTab === tab ? '#fff' : TEXT_MUTED, background: 'transparent', border: 'none', fontSize: '15px' }}>
                                         {tab}
-                                        {activeTab === tab && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', backgroundColor: '#fff' }}></div>}
+                                        {activeTab === tab && <div style={{ position: 'absolute', bottom: '-1px', left: 0, width: '100%', height: '3px', backgroundColor: '#fff', borderRadius: '2px 2px 0 0' }}></div>}
                                     </button>
                                 ))}
                             </div>
@@ -308,6 +319,7 @@ function AssetPage() {
                         <div>
                             {activeTab === 'Details' && (
                                 <div className="fade-in">
+                                    {/* Traits (Open by default) */}
                                     <Accordion title="Traits" icon="bi-tag" defaultOpen={true}>
                                         <div className="row g-2">
                                             <div className="col-6 col-md-4"><TraitBox type="ASSET TYPE" value="Digital Name" percent="100%" /></div>
@@ -332,10 +344,12 @@ function AssetPage() {
                                         </div>
                                     </Accordion>
 
+                                    {/* تعديل: محتوى وتنسيق قسم About مطابق لـ OpenSea */}
                                     <Accordion title="About" icon="bi-text-left">
-                                        <div style={{ color: TEXT_MUTED, fontSize: '14px', lineHeight: '1.6' }}>
-                                            <p className="mb-2 fw-bold text-white">About Value</p>
-                                            <p>GEN-0 Genesis — NNM Protocol Record. A singular, unreplicable digital artifact recorded on-chain.</p>
+                                        <div style={{ color: OPENSEA_DESC_COLOR, fontSize: '16px', lineHeight: '1.6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
+                                            <p className="mb-4 fw-bold text-white" style={{ fontSize: '18px' }}>GEN-0 Genesis NNM Protocol Record</p>
+                                            <p className="mb-4">A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.</p>
+                                            <p className="mb-0">It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol permanent, time-anchored digital inscription preserved on the blockchain.</p>
                                         </div>
                                     </Accordion>
 
@@ -427,15 +441,14 @@ function AssetPage() {
                 </div>
             </div>
 
-            {/* STICKY FOOTER ACTION */}
-            <div className="fixed-bottom p-3" style={{ backgroundColor: SURFACE_DARK, borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100 }}>
+            {/* STICKY FOOTER (Mobile) */}
+            <div className="fixed-bottom p-3" style={{ backgroundColor: '#1E1E1E', borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100 }}>
                 <div className="container" style={{ maxWidth: '1200px' }}>
                     <div className="d-flex align-items-center justify-content-between">
-                       {/* Price Left */}
                        <div className="d-flex flex-column">
                            {listing ? (
                                <>
-                                <span style={{ color: TEXT_MUTED, fontSize: '11px' }}>Buy now price</span>
+                                <span style={{ color: TEXT_MUTED, fontSize: '11px' }}>Buy price</span>
                                 <div className="d-flex align-items-baseline gap-2">
                                     <span className="text-white fw-bold" style={{ fontSize: '18px' }}>{formatCompactNumber(parseFloat(listing.price))} POL</span>
                                     <span style={{ color: TEXT_MUTED, fontSize: '12px' }}>{formatUSD(listing.price)}</span>
@@ -451,8 +464,6 @@ function AssetPage() {
                                </>
                            )}
                        </div>
-
-                       {/* Buttons Right */}
                        <div className="d-flex gap-2 w-50 justify-content-end">
                            {!isConnected ? (
                                <div style={{ width: '100%' }}><ConnectButton.Custom>{({ openConnectModal }) => (<button onClick={openConnectModal} className="btn w-100 fw-bold py-3" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>Connect Wallet</button>)}</ConnectButton.Custom></div>
