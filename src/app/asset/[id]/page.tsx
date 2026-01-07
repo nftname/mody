@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useAccount, useWriteContract, usePublicClient, useBalance, useSignTypedData } from "wagmi";
 import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -13,20 +13,21 @@ import { supabase } from '@/lib/supabase';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
-// تعديل الخلفية لتطابق الداشبورد
-const BACKGROUND_DARK = '#1E1E1E'; 
-const SURFACE_DARK = '#242424'; // تعديل طفيف ليتماشى مع الخلفية الجديدة
-const BORDER_COLOR = '#2E2E2E'; // تعديل حدود العناصر لتكون متناسقة
-const TEXT_PRIMARY = '#E0E0E0';
-const TEXT_MUTED = '#B0B0B0';
+
+// --- THEME & STYLES ---
+const BACKGROUND_DARK = '#1E1E1E'; // Charcoal Gray
+const SURFACE_DARK = '#262626';    
+const BORDER_COLOR = 'rgba(255, 255, 255, 0.08)'; // Very subtle border
+const TEXT_PRIMARY = '#FFFFFF';
+const TEXT_MUTED = '#8a939b'; 
 const GOLD_SOLID = '#F0C420';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
 const GOLD_TEXT_CLASS = 'gold-text-effect'; 
 const GOLD_BTN_STYLE = { background: GOLD_GRADIENT, color: '#1a1200', border: 'none', fontWeight: 'bold' as const };
-const OUTLINE_BTN_STYLE = { background: 'transparent', color: GOLD_SOLID, border: `1px solid ${GOLD_SOLID}`, fontWeight: 'bold' as const };
+const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FFF', border: `1px solid ${BORDER_COLOR}`, fontWeight: 'bold' as const };
 
 const OFFER_DURATION = 30 * 24 * 60 * 60; 
-const POL_TO_USD_RATE = 0.54; // Mock rate for display
+const POL_TO_USD_RATE = 0.54; 
 
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
@@ -36,35 +37,19 @@ const MARKETPLACE_ABI = parseAbi([
     "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
-const domain = {
-    name: 'NNMMarketplace',
-    version: '11',
-    chainId: 137, 
-    verifyingContract: MARKETPLACE_ADDRESS as `0x${string}`,
-} as const;
+const domain = { name: 'NNMMarketplace', version: '11', chainId: 137, verifyingContract: MARKETPLACE_ADDRESS as `0x${string}` } as const;
+const types = { Offer: [{ name: 'bidder', type: 'address' }, { name: 'tokenId', type: 'uint256' }, { name: 'price', type: 'uint256' }, { name: 'expiration', type: 'uint256' }] } as const;
 
-const types = {
-    Offer: [
-        { name: 'bidder', type: 'address' },
-        { name: 'tokenId', type: 'uint256' },
-        { name: 'price', type: 'uint256' },
-        { name: 'expiration', type: 'uint256' },
-    ],
-} as const;
-
-// --- Formatters ---
+// --- Helpers ---
 const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 2 }).format(num);
 const formatUSD = (pol: any) => { const val = parseFloat(pol); if(isNaN(val)) return '$0.00'; return `$${(val * POL_TO_USD_RATE).toFixed(2)}`; };
 const resolveIPFS = (uri: string) => uri?.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri || '';
 const formatShortTime = (date: string) => {
     const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-    if (diff < 60) return `${diff}s`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-    return `${Math.floor(diff / 86400)}d`;
+    if (diff < 60) return `${diff}s`; if (diff < 3600) return `${Math.floor(diff / 60)}m`; if (diff < 86400) return `${Math.floor(diff / 3600)}h`; return `${Math.floor(diff / 86400)}d`;
 };
 
-// --- UI Components ---
+// --- Components ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => {
     if (!isOpen) return null;
     let icon = <div className="spinner-border" style={{ color: GOLD_SOLID }} role="status"></div>;
@@ -72,7 +57,6 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => 
     if (type === 'success') { icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '40px', color: '#28a745' }}></i>; iconColor = '#28a745'; }
     else if (type === 'error') { icon = <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '40px', color: '#dc3545' }}></i>; iconColor = '#dc3545'; }
     else if (type === 'swap') { icon = <i className="bi bi-wallet2" style={{ fontSize: '40px', color: GOLD_SOLID }}></i>; }
-
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${iconColor}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', textAlign: 'center', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
@@ -91,20 +75,20 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => 
 const Accordion = ({ title, defaultOpen = false, icon, children }: any) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
-        <div style={{ border: `1px solid ${BORDER_COLOR}`, borderRadius: '10px', overflow: 'hidden', marginBottom: '12px', backgroundColor: SURFACE_DARK }}>
-            <button onClick={() => setIsOpen(!isOpen)} className="d-flex align-items-center justify-content-between w-100 px-3 py-3" style={{ background: 'transparent', border: 'none', color: TEXT_PRIMARY, fontWeight: '700', fontSize: '15px' }}>
-                <div className="d-flex align-items-center gap-2"><i className={`bi ${icon}`} style={{ color: TEXT_MUTED }}></i> {title}</div>
-                <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'}`} style={{ color: TEXT_MUTED }}></i>
+        <div style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>
+            <button onClick={() => setIsOpen(!isOpen)} className="d-flex align-items-center justify-content-between w-100 py-3" style={{ background: 'transparent', border: 'none', color: TEXT_PRIMARY, fontWeight: '600', fontSize: '15px', paddingLeft: 0, paddingRight: 0 }}>
+                <div className="d-flex align-items-center gap-3"><i className={`bi ${icon}`} style={{ color: TEXT_MUTED, fontSize: '16px' }}></i> {title}</div>
+                <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'}`} style={{ color: TEXT_MUTED, fontSize: '12px' }}></i>
             </button>
-            {isOpen && <div className="p-3 border-top" style={{ borderColor: BORDER_COLOR, backgroundColor: BACKGROUND_DARK }}>{children}</div>}
+            {isOpen && <div className="pb-4 pt-1">{children}</div>}
         </div>
     );
 };
 
 const TraitBox = ({ type, value, percent }: any) => (
-    <div className="d-flex flex-column align-items-center justify-content-center p-2 h-100" style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)', border: `1px solid ${BORDER_COLOR}`, borderRadius: '8px', textAlign: 'center' }}>
-        <div style={{ color: TEXT_MUTED, fontSize: '10px', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>{type}</div>
-        <div style={{ color: '#fff', fontWeight: '600', fontSize: '13px', marginBottom: '2px', lineHeight: '1.2' }}>{value}</div>
+    <div className="d-flex flex-column align-items-center justify-content-center p-3 h-100" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: `1px solid ${BORDER_COLOR}`, borderRadius: '8px', textAlign: 'center' }}>
+        <div style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '10px', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>{type}</div>
+        <div style={{ color: '#fff', fontWeight: '600', fontSize: '13px', marginBottom: '2px', lineHeight: '1.4' }}>{value}</div>
         <div style={{ color: TEXT_MUTED, fontSize: '10px' }}>{percent} floor</div>
     </div>
 );
@@ -113,7 +97,6 @@ const mockChartData = [ { name: 'Nov', price: 8 }, { name: 'Dec', price: 10 }, {
 
 function AssetPage() {
     const params = useParams();
-    const router = useRouter();
     const { address, isConnected } = useAccount();
     const { writeContractAsync } = useWriteContract();
     const { signTypedDataAsync } = useSignTypedData(); 
@@ -139,6 +122,7 @@ function AssetPage() {
     const [offerPrice, setOfferPrice] = useState('');
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
+    const [isFav, setIsFav] = useState(false);
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
     
     const rawId = params?.id;
@@ -148,7 +132,6 @@ function AssetPage() {
     const fetchAllData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            // 1. Asset & Listing
             const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [BigInt(tokenId)] });
             const metaRes = await fetch(resolveIPFS(tokenURI));
             const meta = metaRes.ok ? await metaRes.json() : {};
@@ -170,15 +153,12 @@ function AssetPage() {
 
             setIsOwner(address?.toLowerCase() === owner.toLowerCase());
             
-            // 2. Offers (Supabase)
             const { data: offers } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled').order('price', { ascending: false });
             setOffersList(offers || []);
 
-            // 3. Activity (Supabase)
             const { data: acts } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
             setActivityList(acts || []);
 
-            // 4. More Collection (Mock)
             setMoreAssets([
                 {id:96, image: 'https://gateway.pinata.cloud/ipfs/bafkreiazhoyzkbenhbvjlltd6izwonwz3xikljtrrksual5ttzs4nyzbuu'},
                 {id:97, image: 'https://gateway.pinata.cloud/ipfs/bafkreiagc35ykldllvd2knqcnei2ctmkps66byvjinlr7hmkgkdx5mhxqi'},
@@ -205,45 +185,12 @@ function AssetPage() {
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
     const closeModal = () => { setIsPending(false); setModal({ ...modal, isOpen: false }); if (modal.type === 'success') { fetchAllData(); setIsOfferMode(false); } };
 
-    // --- On-Chain Logic (Preserved) ---
-    const handleApprove = async () => {
-        setIsPending(true);
-        try { const hash = await writeContractAsync({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'approve', args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)] }); await publicClient!.waitForTransactionReceipt({ hash }); await refreshWpolData(); } catch(e) { console.error(e); setIsPending(false); }
-    };
-    const handleSubmitOffer = async () => {
-        if (!address) return;
-        setIsPending(true);
-        try {
-            const priceInWei = parseEther(offerPrice);
-            const expiration = BigInt(Math.floor(Date.now() / 1000) + OFFER_DURATION);
-            const signature = await signTypedDataAsync({ domain, types, primaryType: 'Offer', message: { bidder: address, tokenId: BigInt(tokenId), price: priceInWei, expiration } });
-            await supabase.from('offers').insert([{ token_id: tokenId, bidder_address: address, price: parseFloat(offerPrice), expiration: Number(expiration), status: 'active', signature }]);
-            showModal('success', 'Offer Submitted', 'Signed successfully.');
-        } catch(e) { setIsPending(false); }
-    };
-    const handleBuy = async () => {
-        if (!listing) return;
-        setIsPending(true);
-        try {
-            const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'buyItem', args: [BigInt(tokenId)], value: parseEther(listing.price) });
-            await publicClient!.waitForTransactionReceipt({ hash });
-            await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: listing.seller, to_address: address, price: listing.price }]);
-            showModal('success', 'Bought!', 'Asset purchased.');
-        } catch(e) { setIsPending(false); }
-    };
-    const handleAccept = async (offer: any) => {
-        setIsPending(true);
-        try {
-            const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'acceptOffChainOffer', args: [BigInt(tokenId), offer.bidder_address, parseEther(offer.price), BigInt(offer.expiration), offer.signature] });
-            await publicClient!.waitForTransactionReceipt({ hash });
-            await supabase.from('offers').update({ status: 'accepted' }).eq('id', offer.id);
-            await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: address, to_address: offer.bidder_address, price: offer.price }]);
-            showModal('success', 'Sold!', 'Offer accepted.');
-        } catch(e) { setIsPending(false); }
-    };
-    const handleCancelOffer = async (id: any) => {
-        try { await supabase.from('offers').update({ status: 'cancelled' }).eq('id', id); fetchAllData(); } catch(e){}
-    };
+    // --- Actions ---
+    const handleApprove = async () => { /* ... Logic Preserved ... */ setIsPending(true); try { const hash = await writeContractAsync({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'approve', args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)] }); await publicClient!.waitForTransactionReceipt({ hash }); await refreshWpolData(); } catch(e) { console.error(e); setIsPending(false); } };
+    const handleSubmitOffer = async () => { /* ... Logic Preserved ... */ if (!address) return; setIsPending(true); try { const priceInWei = parseEther(offerPrice); const expiration = BigInt(Math.floor(Date.now() / 1000) + OFFER_DURATION); const signature = await signTypedDataAsync({ domain, types, primaryType: 'Offer', message: { bidder: address, tokenId: BigInt(tokenId), price: priceInWei, expiration } }); await supabase.from('offers').insert([{ token_id: tokenId, bidder_address: address, price: parseFloat(offerPrice), expiration: Number(expiration), status: 'active', signature }]); showModal('success', 'Offer Submitted', 'Signed successfully.'); } catch(e) { setIsPending(false); } };
+    const handleBuy = async () => { /* ... Logic Preserved ... */ if (!listing) return; setIsPending(true); try { const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'buyItem', args: [BigInt(tokenId)], value: parseEther(listing.price) }); await publicClient!.waitForTransactionReceipt({ hash }); await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: listing.seller, to_address: address, price: listing.price }]); showModal('success', 'Bought!', 'Asset purchased.'); } catch(e) { setIsPending(false); } };
+    const handleAccept = async (offer: any) => { /* ... Logic Preserved ... */ setIsPending(true); try { const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'acceptOffChainOffer', args: [BigInt(tokenId), offer.bidder_address, parseEther(offer.price), BigInt(offer.expiration), offer.signature] }); await publicClient!.waitForTransactionReceipt({ hash }); await supabase.from('offers').update({ status: 'accepted' }).eq('id', offer.id); await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: address, to_address: offer.bidder_address, price: offer.price }]); showModal('success', 'Sold!', 'Offer accepted.'); } catch(e) { setIsPending(false); } };
+    const handleCancelOffer = async (id: any) => { try { await supabase.from('offers').update({ status: 'cancelled' }).eq('id', id); fetchAllData(); } catch(e){} };
 
     if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center" style={{ background: BACKGROUND_DARK, color: TEXT_MUTED }}>Loading...</div>;
     if (!asset) return null;
@@ -252,208 +199,172 @@ function AssetPage() {
         <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
             <CustomModal isOpen={modal.isOpen} type={modal.type} title={modal.title} message={modal.message} onClose={closeModal} />
             
-            <div className="container-fluid" style={{ maxWidth: '1200px', paddingTop: '20px' }}>
-                <div className="row g-4">
+            <div className="container-fluid" style={{ maxWidth: '1280px', paddingTop: '20px' }}>
+                <div className="row g-5">
                     
-                    {/* LEFT COLUMN: Image & Description (OpenSea Layout) */}
+                    {/* LEFT COLUMN: Image & Header (Mobile First Style) */}
                     <div className="col-lg-5">
-                        <div className="rounded-3 overflow-hidden position-relative mb-4" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1' }}>
+                        <div className="rounded-4 overflow-hidden position-relative mb-4" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1' }}>
                             <div className="d-flex align-items-center justify-content-between p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
                                 <div className="d-flex gap-2">
-                                    <span style={{ fontSize: '18px', color: '#FFF' }}><i className="bi bi-polygon"></i></span>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="white" fillOpacity="0.1"/><path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="white"/></svg>
                                 </div>
                                 <div className="d-flex gap-2">
-                                    <button className="btn p-0" style={{ color: TEXT_MUTED }}><i className="bi bi-heart"></i></button>
+                                    <button onClick={() => setIsFav(!isFav)} className="btn p-0 border-0">
+                                        <i className={`bi ${isFav ? 'bi-heart-fill text-white' : 'bi-heart text-white'}`} style={{ fontSize: '20px' }}></i>
+                                    </button>
                                 </div>
                             </div>
                             <img src={asset.image} alt={asset.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
+                    </div>
 
-                        {/* NAME & HEADER INFO (Under Image on Mobile/Left on Desktop) */}
-                        <div className="mb-4 px-1">
-                            <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-1`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
-                            <div className="d-flex align-items-center gap-2 mb-3">
-                                <span style={{ fontSize: '16px', fontWeight: '500', color: '#FFF' }}>NNM Sovereign Asset</span>
-                                <i className="bi bi-patch-check-fill text-primary" style={{ fontSize: '14px' }}></i>
-                                <span style={{ color: TEXT_MUTED, fontSize: '14px' }}>Minted by <span style={{ color: '#FCD535' }}>{asset.owner.slice(0,4)}</span></span>
+                    {/* RIGHT COLUMN: TABS & DETAILS */}
+                    <div className="col-lg-7">
+                        {/* Header Info */}
+                        <div className="mb-4">
+                            <div className="d-flex align-items-center justify-content-between mb-1">
+                                <Link href="#" className="text-decoration-none" style={{ color: '#FCD535', fontSize: '15px', fontWeight: '500' }}>NNM Sovereign Asset</Link>
+                                <div className="d-flex gap-2">
+                                    <button className="btn btn-dark btn-sm rounded-circle d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', background: 'transparent', border: `1px solid ${BORDER_COLOR}` }}><i className="bi bi-share text-white"></i></button>
+                                    <button className="btn btn-dark btn-sm rounded-circle d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', background: 'transparent', border: `1px solid ${BORDER_COLOR}` }}><i className="bi bi-three-dots text-white"></i></button>
+                                </div>
                             </div>
-                            <div className="d-flex gap-4" style={{ color: TEXT_MUTED, fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>
-                                <span>ERC721</span>
-                                <span>POLYGON</span>
-                                <span>TOKEN #{asset.id}</span>
+                            <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-3`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
+                            <div className="d-flex align-items-center justify-content-between mb-4">
+                                <div className="d-flex align-items-center gap-2">
+                                    <span style={{ color: TEXT_MUTED, fontSize: '13px' }}>Minted by <a href="#" className="text-decoration-none" style={{ color: '#FFF' }}>{asset.owner.slice(0,6)}</a></span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* ACCORDIONS */}
-                        <Accordion title="Traits" icon="bi-tag" defaultOpen={true}>
-                            <div className="row g-2">
-                                <div className="col-6 col-md-4"><TraitBox type="ASSET TYPE" value="Digital Name" percent="100%" /></div>
-                                <div className="col-6 col-md-4"><TraitBox type="COLLECTION" value="Genesis - 001" percent="100%" /></div>
-                                <div className="col-6 col-md-4"><TraitBox type="GENERATION" value="Gen-0" percent="100%" /></div>
-                                <div className="col-6 col-md-4"><TraitBox type="MINT DATE" value="Dec 2025" percent="100%" /></div>
-                                <div className="col-6 col-md-4"><TraitBox type="PLATFORM" value="NNM Registry" percent="100%" /></div>
-                                <div className="col-6 col-md-4"><TraitBox type="TIER" value={asset.tier} percent="21%" /></div>
-                            </div>
-                        </Accordion>
-
-                        <Accordion title="Price history" icon="bi-graph-up">
-                            <div style={{ height: '200px', width: '100%' }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={mockChartData}>
-                                        <defs>
-                                            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#d4f936" stopOpacity={0.2}/><stop offset="95%" stopColor="#d4f936" stopOpacity={0}/>
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                                        <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '8px', color: '#fff' }} />
-                                        <Area type="monotone" dataKey="price" stroke="#d4f936" strokeWidth={2} fill="url(#colorPrice)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </Accordion>
-
-                        <Accordion title="About" icon="bi-text-left">
-                            <div style={{ color: TEXT_MUTED, fontSize: '15px', lineHeight: '1.6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-                                <p className="mb-2 fw-bold text-white">About Value</p>
-                                <p className="mb-3">GEN-0 Genesis — NNM Protocol Record</p>
-                                <p>A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol.</p>
-                            </div>
-                        </Accordion>
-
-                        <Accordion title="Blockchain details" icon="bi-grid">
-                            <div className="d-flex justify-content-between py-2 border-bottom" style={{ borderColor: '#333' }}>
-                                <span style={{ color: TEXT_MUTED, fontSize: '14px' }}>Contract Address</span>
-                                <a href={`https://polygonscan.com/address/${NFT_COLLECTION_ADDRESS}`} target="_blank" className="text-decoration-none" style={{ color: '#2081e2' }}>{NFT_COLLECTION_ADDRESS.slice(0,6)}...{NFT_COLLECTION_ADDRESS.slice(-4)}</a>
-                            </div>
-                            <div className="d-flex justify-content-between py-2 border-bottom" style={{ borderColor: '#333' }}>
-                                <span style={{ color: TEXT_MUTED, fontSize: '14px' }}>Token ID</span>
-                                <a href={`https://polygonscan.com/token/${NFT_COLLECTION_ADDRESS}?a=${tokenId}`} target="_blank" className="text-decoration-none" style={{ color: '#2081e2' }}>{tokenId}</a>
-                            </div>
-                            <div className="d-flex justify-content-between py-2 border-bottom" style={{ borderColor: '#333' }}>
-                                <span style={{ color: TEXT_MUTED, fontSize: '14px' }}>Token Standard</span>
-                                <span style={{ color: TEXT_PRIMARY, fontSize: '14px' }}>ERC-721</span>
-                            </div>
-                            <div className="d-flex justify-content-between py-2">
-                                <span style={{ color: TEXT_MUTED, fontSize: '14px' }}>Chain</span>
-                                <span style={{ color: TEXT_PRIMARY, fontSize: '14px' }}>Polygon</span>
-                            </div>
-                        </Accordion>
-
-                        <Accordion title="More from this collection" icon="bi-collection">
-                            <div className="d-flex gap-3 overflow-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-                                {moreAssets.map(item => (
-                                    <Link key={item.id} href={`/asset/${item.id}`} className="text-decoration-none" style={{ minWidth: '140px' }}>
-                                        <div className="rounded-3 overflow-hidden" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK }}>
-                                            <div style={{ aspectRatio: '1/1' }}><img src={item.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
-                                            <div className="p-2 text-center">
-                                                <div className="text-white fw-bold small">NNM #{item.id}</div>
-                                                <div style={{ fontSize: '10px', color: TEXT_MUTED }}>Not listed</div>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </Accordion>
-                    </div>
-
-                    {/* RIGHT COLUMN: Info Tabs & Actions (Desktop) / Sticky Footer (Mobile) */}
-                    <div className="col-lg-7">
-                        {/* TABS SYSTEM */}
-                        <div className="rounded-3 overflow-hidden mb-5" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK }}>
+                        {/* TABS (Top Level Navigation) */}
+                        <div className="mb-4">
                             <div className="d-flex border-bottom" style={{ borderColor: BORDER_COLOR }}>
                                 {['Details', 'Orders', 'Activity'].map(tab => (
-                                    <button key={tab} onClick={() => setActiveTab(tab)} className="btn px-4 py-3 fw-bold" style={{ color: activeTab === tab ? '#fff' : TEXT_MUTED, borderBottom: activeTab === tab ? '2px solid #fff' : 'none', borderRadius: 0, fontSize: '15px' }}>
+                                    <button key={tab} onClick={() => setActiveTab(tab)} className="btn px-4 py-3 fw-bold position-relative" style={{ color: activeTab === tab ? '#fff' : TEXT_MUTED, background: 'transparent', border: 'none', fontSize: '15px' }}>
                                         {tab}
+                                        {activeTab === tab && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', backgroundColor: '#fff' }}></div>}
                                     </button>
                                 ))}
                             </div>
-                            
-                            <div className="p-0">
-                                {activeTab === 'Details' && (
-                                    <div className="p-4 text-center text-muted">
-                                        <i className="bi bi-info-circle mb-2" style={{ fontSize: '24px' }}></i>
-                                        <p>Select Orders or Activity to see market data.</p>
-                                    </div>
-                                )}
+                        </div>
 
-                                {activeTab === 'Orders' && (
-                                    <div className="table-responsive">
-                                        <table className="table mb-0" style={{ color: '#fff', fontSize: '13px' }}>
-                                            <thead>
-                                                <tr>
-                                                    <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px' }}>W/POL</th>
-                                                    <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px' }}>USD</th>
-                                                    <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px' }}>Expiration</th>
-                                                    <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px' }}>From</th>
-                                                    <th style={{ background: 'transparent', borderBottom: `1px solid ${BORDER_COLOR}` }}></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {offersList.map((offer) => (
-                                                    <tr key={offer.id}>
-                                                        <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, fontWeight: '700' }}>{formatCompactNumber(offer.price)}</td>
-                                                        <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, color: TEXT_MUTED }}>{formatUSD(offer.price)}</td>
-                                                        <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}` }}>{formatShortTime(new Date(offer.created_at + offer.expiration * 1000).toISOString())}</td>
-                                                        <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}` }}>
-                                                            <a href={`https://polygonscan.com/address/${offer.bidder_address}`} target="_blank" style={{ color: GOLD_SOLID, textDecoration: 'none' }}>
-                                                                {offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}
-                                                            </a>
-                                                        </td>
-                                                        <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, textAlign: 'right' }}>
-                                                            {isOwner && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px' }}>Accept</button>}
-                                                            {offer.bidder_address === address && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm btn-outline-danger" style={{ fontSize: '11px' }}>Cancel</button>}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                                {offersList.length === 0 && <tr><td colSpan={5} className="text-center py-4 text-muted">No offers yet</td></tr>}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
+                        {/* TAB CONTENT */}
+                        <div>
+                            {activeTab === 'Details' && (
+                                <div className="fade-in">
+                                    <Accordion title="Traits" icon="bi-tag" defaultOpen={true}>
+                                        <div className="row g-2">
+                                            <div className="col-6 col-md-4"><TraitBox type="ASSET TYPE" value="Digital Name" percent="100%" /></div>
+                                            <div className="col-6 col-md-4"><TraitBox type="COLLECTION" value="Genesis - 001" percent="100%" /></div>
+                                            <div className="col-6 col-md-4"><TraitBox type="GENERATION" value="Gen-0" percent="100%" /></div>
+                                            <div className="col-6 col-md-4"><TraitBox type="MINT DATE" value="Dec 2025" percent="100%" /></div>
+                                            <div className="col-6 col-md-4"><TraitBox type="PLATFORM" value="NNM Registry" percent="100%" /></div>
+                                            <div className="col-6 col-md-4"><TraitBox type="TIER" value={asset.tier} percent="21%" /></div>
+                                        </div>
+                                    </Accordion>
 
-                                {activeTab === 'Activity' && (
-                                    <div className="table-responsive">
-                                        <table className="table mb-0" style={{ color: '#fff', fontSize: '13px' }}>
-                                            <thead>
-                                                <tr>
-                                                    <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px' }}>Event</th>
-                                                    <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px' }}>Price</th>
-                                                    <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px' }}>From</th>
-                                                    <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px' }}>To</th>
-                                                    <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px', textAlign: 'right' }}>Date</th>
+                                    <Accordion title="Price history" icon="bi-graph-up">
+                                        <div style={{ height: '200px', width: '100%' }}>
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <AreaChart data={mockChartData}>
+                                                    <defs><linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#d4f936" stopOpacity={0.2}/><stop offset="95%" stopColor="#d4f936" stopOpacity={0}/></linearGradient></defs>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke={BORDER_COLOR} vertical={false} />
+                                                    <Tooltip contentStyle={{ backgroundColor: 'rgba(30,30,30,0.8)', backdropFilter: 'blur(5px)', border: 'none', borderRadius: '8px', color: '#fff' }} />
+                                                    <Area type="monotone" dataKey="price" stroke="#d4f936" strokeWidth={2} fill="url(#colorPrice)" />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </Accordion>
+
+                                    <Accordion title="About" icon="bi-text-left">
+                                        <div style={{ color: TEXT_MUTED, fontSize: '14px', lineHeight: '1.6' }}>
+                                            <p className="mb-2 fw-bold text-white">About Value</p>
+                                            <p>GEN-0 Genesis — NNM Protocol Record. A singular, unreplicable digital artifact recorded on-chain.</p>
+                                        </div>
+                                    </Accordion>
+
+                                    <Accordion title="Blockchain details" icon="bi-grid">
+                                        <div className="d-flex justify-content-between py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}><span>Contract Address</span><a href={`https://polygonscan.com/address/${NFT_COLLECTION_ADDRESS}`} target="_blank" className="text-decoration-none" style={{ color: '#2081e2' }}>{NFT_COLLECTION_ADDRESS.slice(0,6)}...{NFT_COLLECTION_ADDRESS.slice(-4)}</a></div>
+                                        <div className="d-flex justify-content-between py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}><span>Token ID</span><span style={{ color: TEXT_PRIMARY }}>{tokenId}</span></div>
+                                        <div className="d-flex justify-content-between py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}><span>Token Standard</span><span style={{ color: TEXT_PRIMARY }}>ERC-721</span></div>
+                                        <div className="d-flex justify-content-between py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}><span>Chain</span><span style={{ color: TEXT_PRIMARY }}>Polygon</span></div>
+                                    </Accordion>
+                                </div>
+                            )}
+
+                            {activeTab === 'Orders' && (
+                                <div className="table-responsive fade-in">
+                                    <table className="table mb-0" style={{ color: '#fff', fontSize: '13px' }}>
+                                        <thead>
+                                            <tr>
+                                                <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px', fontWeight: 'normal' }}>Price (W/POL)</th>
+                                                <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px', fontWeight: 'normal' }}>USD</th>
+                                                <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px', fontWeight: 'normal' }}>Expiration</th>
+                                                <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px', fontWeight: 'normal' }}>From</th>
+                                                <th style={{ background: 'transparent', borderBottom: `1px solid ${BORDER_COLOR}` }}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {offersList.map((offer) => (
+                                                <tr key={offer.id}>
+                                                    <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, fontWeight: '600' }}>{formatCompactNumber(offer.price)}</td>
+                                                    <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, color: TEXT_MUTED }}>{formatUSD(offer.price)}</td>
+                                                    <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, color: TEXT_MUTED }}>{formatShortTime(new Date(offer.created_at + offer.expiration * 1000).toISOString())}</td>
+                                                    <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}` }}><a href="#" style={{ color: GOLD_SOLID, textDecoration: 'none' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</a></td>
+                                                    <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, textAlign: 'right' }}>
+                                                        {isOwner && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
+                                                        {offer.bidder_address === address && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm btn-outline-danger" style={{ fontSize: '11px', padding: '4px 12px' }}>Cancel</button>}
+                                                    </td>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                {activityList.map((act) => (
-                                                    <tr key={act.id}>
-                                                        <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}` }}>{act.activity_type}</td>
-                                                        <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, fontWeight: '600' }}>{act.price > 0 ? formatCompactNumber(act.price) : '-'}</td>
-                                                        <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}` }}><a href={`https://polygonscan.com/address/${act.from_address}`} style={{color: GOLD_SOLID, textDecoration: 'none'}}>{act.from_address.slice(0,6)}</a></td>
-                                                        <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}` }}><a href={`https://polygonscan.com/address/${act.to_address}`} style={{color: GOLD_SOLID, textDecoration: 'none'}}>{act.to_address.slice(0,6)}</a></td>
-                                                        <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, textAlign: 'right', color: TEXT_MUTED }}>{formatShortTime(act.created_at)}</td>
-                                                    </tr>
-                                                ))}
-                                                {activityList.length === 0 && <tr><td colSpan={5} className="text-center py-4 text-muted">No activity yet</td></tr>}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
+                                            ))}
+                                            {offersList.length === 0 && <tr><td colSpan={5} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>No active offers</td></tr>}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                            {activeTab === 'Activity' && (
+                                <div className="table-responsive fade-in">
+                                    <table className="table mb-0" style={{ color: '#fff', fontSize: '13px' }}>
+                                        <thead>
+                                            <tr>
+                                                <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px', fontWeight: 'normal' }}>Event</th>
+                                                <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px', fontWeight: 'normal' }}>Price</th>
+                                                <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px', fontWeight: 'normal' }}>From</th>
+                                                <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px', fontWeight: 'normal' }}>To</th>
+                                                <th style={{ background: 'transparent', color: TEXT_MUTED, borderBottom: `1px solid ${BORDER_COLOR}`, padding: '12px', fontWeight: 'normal', textAlign: 'right' }}>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {activityList.map((act) => (
+                                                <tr key={act.id}>
+                                                    <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}` }}><i className="bi bi-cart-fill me-2 text-muted"></i> {act.activity_type}</td>
+                                                    <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, fontWeight: '600' }}>{act.price > 0 ? formatCompactNumber(act.price) : '-'}</td>
+                                                    <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, color: GOLD_SOLID }}>{act.from_address.slice(0,6)}</td>
+                                                    <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, color: GOLD_SOLID }}>{act.to_address.slice(0,6)}</td>
+                                                    <td style={{ background: 'transparent', padding: '12px', borderBottom: `1px solid ${BORDER_COLOR}`, textAlign: 'right', color: TEXT_MUTED }}>{formatShortTime(act.created_at)}</td>
+                                                </tr>
+                                            ))}
+                                            {activityList.length === 0 && <tr><td colSpan={5} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>No recent activity</td></tr>}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* STICKY FOOTER ACTION */}
-            <div className="fixed-bottom p-3" style={{ backgroundColor: SURFACE_DARK, borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100 }}>
+            {/* STICKY FOOTER (Mobile) */}
+            <div className="fixed-bottom p-3" style={{ backgroundColor: '#1E1E1E', borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100 }}>
                 <div className="container" style={{ maxWidth: '1200px' }}>
                     <div className="d-flex align-items-center justify-content-between">
-                       {/* Price Left */}
                        <div className="d-flex flex-column">
                            {listing ? (
                                <>
-                                <span style={{ color: TEXT_MUTED, fontSize: '11px' }}>Buy now price</span>
+                                <span style={{ color: TEXT_MUTED, fontSize: '11px' }}>Buy price</span>
                                 <div className="d-flex align-items-baseline gap-2">
                                     <span className="text-white fw-bold" style={{ fontSize: '18px' }}>{formatCompactNumber(parseFloat(listing.price))} POL</span>
                                     <span style={{ color: TEXT_MUTED, fontSize: '12px' }}>{formatUSD(listing.price)}</span>
@@ -469,8 +380,6 @@ function AssetPage() {
                                </>
                            )}
                        </div>
-
-                       {/* Buttons Right */}
                        <div className="d-flex gap-2 w-50 justify-content-end">
                            {!isConnected ? (
                                <div style={{ width: '100%' }}><ConnectButton.Custom>{({ openConnectModal }) => (<button onClick={openConnectModal} className="btn w-100 fw-bold py-3" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>Connect Wallet</button>)}</ConnectButton.Custom></div>
