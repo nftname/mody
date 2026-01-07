@@ -91,8 +91,7 @@ export default function DashboardPage() {
       return `${Math.floor(diff / 86400)}d ago`;
   };
 
-  // --- Fetching Logic ---
-
+  // --- 1. Fetch My Assets (On-Chain) ---
   const fetchAssets = async () => {
     if (!address) return;
     setLoading(true);
@@ -172,6 +171,7 @@ export default function DashboardPage() {
     } catch (error) { console.error(error); } finally { setLoading(false); }
   };
 
+  // --- 2. Fetch Offers (Supabase) ---
   const fetchOffers = async () => {
       if (!address) return;
       setLoading(true);
@@ -180,6 +180,7 @@ export default function DashboardPage() {
           const now = Math.floor(Date.now() / 1000);
 
           if (offerType === 'Received') {
+              // Logic: Offers on tokens I currently own
               const myTokenIds = myAssets.map(a => a.id);
               if (myTokenIds.length > 0) {
                   query = query.in('token_id', myTokenIds).gt('expiration', now).neq('status', 'cancelled');
@@ -189,6 +190,7 @@ export default function DashboardPage() {
                   return;
               }
           } else if (offerType === 'Made') {
+              // Logic: Offers where I am the bidder
               query = query.eq('bidder_address', address).gt('expiration', now).neq('status', 'cancelled');
           } else if (offerType === 'Expired') {
               query = query.or(`bidder_address.eq.${address},token_id.in.(${myAssets.map(a => a.id).join(',')})`).lte('expiration', now);
@@ -207,6 +209,7 @@ export default function DashboardPage() {
               };
           }) || [];
 
+          // Client-side Sort
           if (offerSort === 'Newest') enrichedOffers.sort((a, b) => b.created_at?.localeCompare(a.created_at));
           if (offerSort === 'High Price') enrichedOffers.sort((a, b) => b.price - a.price);
           if (offerSort === 'Low Price') enrichedOffers.sort((a, b) => a.price - b.price);
@@ -217,7 +220,7 @@ export default function DashboardPage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
-  // REAL ON-CHAIN DATA: Created Assets (Mints)
+  // --- 3. Fetch Created (Real On-Chain Mints) ---
   const fetchCreated = async () => {
       if (!address) return;
       setLoading(true);
@@ -231,6 +234,13 @@ export default function DashboardPage() {
           });
 
           const tokenIds = logs.map(log => log.args.tokenId);
+          
+          if (tokenIds.length === 0) {
+              setCreatedAssets([]);
+              setLoading(false);
+              return;
+          }
+
           const batches = chunk(tokenIds, 5);
           const loadedCreated: any[] = [];
 
@@ -252,18 +262,20 @@ export default function DashboardPage() {
               loadedCreated.push(...(batchResults.filter(Boolean) as any[]));
           }
           setCreatedAssets(loadedCreated);
-      } catch (e) { console.error("Created Fetch Error", e); } finally { setLoading(false); }
+      } catch (e) { 
+          console.error("Created Fetch Error:", e); 
+          setLoading(false);
+      } 
   };
 
-  // REAL ON-CHAIN DATA: Activity (Transfers)
+  // --- 4. Fetch Activity (Hybrid: Chain + Supabase) ---
   const fetchActivity = async () => {
       if (!address) return;
       setLoading(true);
       try {
           const events: any[] = [];
           
-          // Fetch Transfers IN (Receive/Mint) and OUT (Send/Sell)
-          // Note: Splitting into two calls is safer for some RPCs
+          // A. Fetch NFT Transfers from Blockchain (Mint, Send, Receive)
           const logsIn = await publicClient.getLogs({
               address: NFT_COLLECTION_ADDRESS as `0x${string}`,
               event: parseAbi(["event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"])[0],
@@ -286,17 +298,40 @@ export default function DashboardPage() {
               events.push({
                   type: isMint ? 'Mint' : 'Transfer',
                   tokenId: log.args.tokenId?.toString(),
-                  price: '-', // Price is inside Marketplace events, keeping it simple for Transfer logs
+                  price: '-', 
                   from: log.args.from,
                   to: log.args.to,
                   date: Number(block.timestamp)
               });
           }
 
+          // B. Fetch Offers from Supabase (Off-Chain Activity)
+          // We fetch offers made by this user to show "Offer Made" activity
+          const { data: offersMade } = await supabase
+            .from('offers')
+            .select('*')
+            .eq('bidder_address', address);
+
+          if (offersMade) {
+              offersMade.forEach(offer => {
+                  events.push({
+                      type: 'Offer',
+                      tokenId: offer.token_id.toString(),
+                      price: `${offer.price} WPOL`,
+                      from: offer.bidder_address,
+                      to: 'Owner', // Generic destination for an offer
+                      date: Math.floor(new Date(offer.created_at).getTime() / 1000)
+                  });
+              });
+          }
+
+          // Sort combined events by date descending (Newest first)
           events.sort((a, b) => b.date - a.date);
           setActivityData(events);
 
-      } catch (e) { console.error("Activity Error", e); } finally { setLoading(false); }
+      } catch (e) { 
+          console.error("Activity Error", e); 
+      } finally { setLoading(false); }
   };
 
   useEffect(() => { if (isConnected) fetchAssets(); }, [address, isConnected]);
@@ -341,7 +376,7 @@ export default function DashboardPage() {
 
       <div className="container mx-auto px-3" style={{ marginTop: '-90px', position: 'relative', zIndex: 10 }}>
         
-        {/* Profile Header - Spacing Reduced */}
+        {/* Profile Header - Reduced Spacing */}
         <div className="d-flex flex-column gap-1 mb-2">
             <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #1E1E1E', background: '#161b22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
                 <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: '#1E1E1E' }}>
@@ -485,7 +520,7 @@ export default function DashboardPage() {
             </div>
         )}
 
-        {/* --- 3. OFFERS SECTION --- */}
+        {/* --- 3. OFFERS SECTION (SUPABASE) --- */}
         {activeSection === 'Offers' && (
             <div className="mt-4">
                 <div className="d-flex justify-content-between align-items-center mb-4">
@@ -573,7 +608,7 @@ export default function DashboardPage() {
             </>
         )}
 
-        {/* --- 5. ACTIVITY SECTION (REAL ON-CHAIN) --- */}
+        {/* --- 5. ACTIVITY SECTION (HYBRID) --- */}
         {activeSection === 'Activity' && (
             <div className="mt-4 pb-5">
                 <div className="table-responsive">
@@ -595,6 +630,7 @@ export default function DashboardPage() {
                                             <div className="d-flex align-items-center gap-2">
                                                 {activity.type === 'Mint' && <i className="bi bi-stars text-success"></i>}
                                                 {activity.type === 'Transfer' && <i className="bi bi-arrow-right-circle text-secondary"></i>}
+                                                {activity.type === 'Offer' && <i className="bi bi-hand-index-thumb text-warning"></i>}
                                                 <span>{activity.type}</span>
                                             </div>
                                         </td>
@@ -603,7 +639,7 @@ export default function DashboardPage() {
                                             {activity.from === '0x0000000000000000000000000000000000000000' ? 'NullAddress' : <Link href={`/profile/${activity.from}`} className="text-decoration-none"><span style={{ color: GOLD_COLOR, cursor: 'pointer' }}>{`${activity.from.slice(0,4)}...${activity.from.slice(-4)}`}</span></Link>}
                                         </td>
                                         <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>
-                                            {activity.to === address ? 'You' : <Link href={`/profile/${activity.to}`} className="text-decoration-none"><span style={{ color: GOLD_COLOR, cursor: 'pointer' }}>{`${activity.to.slice(0,4)}...${activity.to.slice(-4)}`}</span></Link>}
+                                            {activity.to === 'Owner' ? 'Owner' : (activity.to === address ? 'You' : <Link href={`/profile/${activity.to}`} className="text-decoration-none"><span style={{ color: GOLD_COLOR, cursor: 'pointer' }}>{`${activity.to.slice(0,4)}...${activity.to.slice(-4)}`}</span></Link>)}
                                         </td>
                                         <td style={{ backgroundColor: 'transparent', color: '#8a939b', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>{formatTimeAgo(activity.date)}</td>
                                     </tr>
