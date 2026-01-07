@@ -30,7 +30,6 @@ export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
   
-  // --- States ---
   const [myAssets, setMyAssets] = useState<any[]>([]);
   const [createdAssets, setCreatedAssets] = useState<any[]>([]);
   const [offersData, setOffersData] = useState<any[]>([]);
@@ -44,18 +43,15 @@ export default function DashboardPage() {
   const currentViewMode = viewModes[viewModeState];
   const [isCopied, setIsCopied] = useState(false);
 
-  // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState('ALL'); 
   
-  // Dropdown States
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const [offerType, setOfferType] = useState('All'); 
   const [offerSort, setOfferSort] = useState('Newest');   
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
-  // --- Click Outside Handler ---
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as HTMLElement;
@@ -72,7 +68,6 @@ export default function DashboardPage() {
       else setOpenDropdown(name);
   };
 
-  // --- Helpers ---
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -112,7 +107,6 @@ export default function DashboardPage() {
       }).format(num);
   };
 
-  // --- 1. ITEMS ---
   const fetchAssets = async () => {
     if (!address) return;
     setLoading(true);
@@ -187,7 +181,6 @@ export default function DashboardPage() {
     } catch (error) { console.error("Fetch Assets Error:", error); } finally { setLoading(false); }
   };
 
-  // --- 2. OFFERS ---
   const fetchOffers = async () => {
       if (!address) return;
       setLoading(true);
@@ -257,7 +250,6 @@ export default function DashboardPage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
-  // --- 3. CREATED ---
   const fetchCreated = async () => {
       if (!address) return;
       setLoading(true);
@@ -276,7 +268,6 @@ export default function DashboardPage() {
               return;
           }
 
-          // Map dates
           const dateMap: Record<string, string> = {};
           data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
 
@@ -308,12 +299,10 @@ export default function DashboardPage() {
       } finally { setLoading(false); }
   };
 
-  // --- 4. ACTIVITY ---
   const fetchActivity = async () => {
       if (!address) return;
       setLoading(true);
       try {
-          // History
           const { data: activityData, error: actError } = await supabase
             .from('activities')
             .select('*')
@@ -322,7 +311,6 @@ export default function DashboardPage() {
 
           if (actError) throw actError;
 
-          // Offers
           const { data: offersData, error: offError } = await supabase
              .from('offers')
              .select('*')
@@ -342,7 +330,7 @@ export default function DashboardPage() {
           }));
 
           const formattedOffers = (offersData || []).map((item: any) => ({
-              type: 'Offer Made',
+              type: 'Offer',
               tokenId: item.token_id.toString(),
               price: item.price,
               from: item.bidder_address,
@@ -473,7 +461,6 @@ export default function DashboardPage() {
                 <div className="row mb-4">
                     <div className="col-12 col-lg-6">
                         <div className="d-flex align-items-center gap-2 position-relative">
-                            
                             <div className="position-relative dropdown-container">
                                 <button onClick={() => toggleDropdown('filter')} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6H20" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/><path d="M7 12H17" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/><path d="M10 18H14" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -487,12 +474,10 @@ export default function DashboardPage() {
                                     </div>
                                 )}
                             </div>
-
                             <div className="position-relative flex-grow-1">
                                 <i className="bi bi-search position-absolute" style={{ top: '8px', left: '10px', fontSize: '14px', color: '#b0b0b0' }}></i>
                                 <input type="search" placeholder="Search by name" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="form-control bg-transparent text-white border-secondary ps-5" style={{ borderRadius: '8px', borderColor: '#333', fontSize: '14px', height: '32px' }} />
                             </div>
-
                             <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
                                 {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '16px' }}></i>}
                                 {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '16px' }}></i>}
@@ -501,7 +486,6 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
-
                 <div className="pb-5">
                     {loading && myAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : (
                         <div className="row g-3">
@@ -599,7 +583,6 @@ export default function DashboardPage() {
                 <div className="row mb-4">
                     <div className="col-12 col-lg-6">
                         <div className="d-flex align-items-center gap-2 position-relative">
-                            
                             <div className="d-flex align-items-center gap-3">
                                 <span className="text-white fw-bold" style={{ fontSize: '15px' }}>{createdAssets.length} Assets</span>
                                 <div className="position-relative dropdown-container">
@@ -613,7 +596,6 @@ export default function DashboardPage() {
                                     )}
                                 </div>
                             </div>
-                            
                             <div className="ms-auto">
                                 <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
                                     {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '16px' }}></i>}
@@ -621,11 +603,9 @@ export default function DashboardPage() {
                                     {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '20px' }}></i>}
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 </div>
-
                 <div className="pb-5">
                     {loading && createdAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : createdAssets.length === 0 ? (
                         <div className="text-center py-5 text-secondary">No created assets found</div>
@@ -642,13 +622,13 @@ export default function DashboardPage() {
         {activeSection === 'Activity' && (
             <div className="mt-4 pb-5">
                 <div className="table-responsive">
-                    <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0', fontSize: '0.9em' }}>
+                    <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0', fontSize: '11px' }}>
                         <thead><tr>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Event</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>W/POL</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '30%' }}>From</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '30%' }}>To</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '10%' }}>Date</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '12%' }}>Event</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '18%' }}>W/POL</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>From</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>To</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '10%', textAlign: 'right' }}>Date</th>
                         </tr></thead>
                         <tbody>
                             {loading ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d' }}><div className="spinner-border text-secondary" role="status"></div></td></tr> : activityData.length === 0 ? (
@@ -656,20 +636,20 @@ export default function DashboardPage() {
                             ) : (
                                 activityData.map((activity, index) => (
                                     <tr key={index} className="align-middle listing-row" style={{ cursor: 'pointer' }} onClick={() => window.location.href = `/asset/${activity.tokenId}`}>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '11px' }}>
                                             <span>{activity.type}</span>
                                         </td>
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>
                                             {activity.price && !isNaN(parseFloat(activity.price)) ? formatCompactNumber(parseFloat(activity.price)) : '-'}
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>
+                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '11px' }}>
                                             {activity.from === '0x0000000000000000000000000000000000000000' ? 'NullAddress' : (
                                                 <a href={`https://polygonscan.com/address/${activity.from}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>
                                                     {activity.from.toLowerCase() === address?.toLowerCase() ? 'You' : `${activity.from.slice(0,4)}...${activity.from.slice(-4)}`}
                                                 </a>
                                             )}
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>
+                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '11px' }}>
                                             {activity.to === 'Market' ? (
                                                 <a href={`https://polygonscan.com/address/${MARKETPLACE_ADDRESS}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>Market</a>
                                             ) : (
@@ -678,7 +658,7 @@ export default function DashboardPage() {
                                                 </a>
                                             )}
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#8a939b', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>{formatShortTime(activity.date)}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#8a939b', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '11px', textAlign: 'right' }}>{formatShortTime(activity.date)}</td>
                                     </tr>
                                 ))
                             )}
@@ -700,7 +680,6 @@ export default function DashboardPage() {
 const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
-    // Helper to format Date for Mint
     const formatDate = (dateStr: string) => {
         if (!dateStr) return '';
         const d = new Date(dateStr);
