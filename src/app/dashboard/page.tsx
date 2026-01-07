@@ -8,11 +8,9 @@ import { polygon } from 'viem/chains';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
-// --- Constants & Styles ---
 const GOLD_COLOR = '#FCD535';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
-// --- ABIs ---
 const CONTRACT_ABI = parseAbi([
   "function balanceOf(address) view returns (uint256)",
   "function tokenOfOwnerByIndex(address, uint256) view returns (uint256)",
@@ -23,7 +21,6 @@ const MARKETPLACE_ABI = parseAbi([
   "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
-// --- Blockchain Client ---
 const publicClient = createPublicClient({
   chain: polygon,
   transport: http() 
@@ -33,7 +30,6 @@ export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
   
-  // --- States ---
   const [myAssets, setMyAssets] = useState<any[]>([]);
   const [createdAssets, setCreatedAssets] = useState<any[]>([]);
   const [offersData, setOffersData] = useState<any[]>([]);
@@ -42,13 +38,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('Items');
   
-  // View & UI States
   const [viewModeState, setViewModeState] = useState(0); 
   const viewModes = ['grid', 'large', 'list'];
   const currentViewMode = viewModes[viewModeState];
   const [isCopied, setIsCopied] = useState(false);
 
-  // Filter & Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState('ALL'); 
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -60,7 +54,6 @@ export default function DashboardPage() {
 
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
-  // --- Helpers ---
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -93,9 +86,6 @@ export default function DashboardPage() {
       return `${Math.floor(diff / 86400)}d ago`;
   };
 
-  // ================= DATA FETCHING LOGIC =================
-
-  // 1. ITEMS & LISTINGS (Source: Blockchain State - Live Truth)
   const fetchAssets = async () => {
     if (!address) return;
     setLoading(true);
@@ -170,7 +160,6 @@ export default function DashboardPage() {
     } catch (error) { console.error("Fetch Assets Error:", error); } finally { setLoading(false); }
   };
 
-  // 2. OFFERS (Source: Supabase Table 'offers')
   const fetchOffers = async () => {
       if (!address) return;
       setLoading(true);
@@ -188,23 +177,39 @@ export default function DashboardPage() {
                   return;
               }
           } else if (offerType === 'Made') {
-              query = query.eq('bidder_address', address).gt('expiration', now).neq('status', 'cancelled');
+              query = query.ilike('bidder_address', address).gt('expiration', now).neq('status', 'cancelled');
           } else if (offerType === 'Expired') {
-              query = query.or(`bidder_address.eq.${address},token_id.in.(${myAssets.map(a => a.id).join(',')})`).lte('expiration', now);
+              query = query.or(`bidder_address.ilike.${address},token_id.in.(${myAssets.map(a => a.id).join(',')})`).lte('expiration', now);
           }
 
           const { data, error } = await query;
           if (error) throw error;
 
-          const enrichedOffers = data?.map(offer => {
+          const enrichedOffers = await Promise.all((data || []).map(async (offer) => {
               const knownAsset = myAssets.find(a => a.id === offer.token_id.toString());
+              let assetName = knownAsset ? knownAsset.name : `NNM #${offer.token_id}`;
+
+              if (!knownAsset) {
+                  try {
+                      const tokenURI = await publicClient.readContract({
+                          address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                          abi: CONTRACT_ABI,
+                          functionName: 'tokenURI',
+                          args: [BigInt(offer.token_id)]
+                      });
+                      const metaRes = await fetch(resolveIPFS(tokenURI));
+                      const meta = metaRes.ok ? await metaRes.json() : {};
+                      if (meta.name) assetName = meta.name;
+                  } catch (e) { }
+              }
+
               return {
                   ...offer,
-                  assetName: knownAsset ? knownAsset.name : `NNM #${offer.token_id}`,
+                  assetName: assetName,
                   formattedPrice: offer.price.toString(),
                   timeLeft: formatExpiration(offer.expiration)
               };
-          }) || [];
+          }));
 
           if (offerSort === 'Newest') enrichedOffers.sort((a, b) => b.created_at?.localeCompare(a.created_at));
           if (offerSort === 'High Price') enrichedOffers.sort((a, b) => b.price - a.price);
@@ -215,16 +220,14 @@ export default function DashboardPage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
-  // 3. CREATED (Source: Supabase 'activities' table)
   const fetchCreated = async () => {
       if (!address) return;
       setLoading(true);
       try {
-          // Query Supabase for 'Mint' activities where user is the receiver
           const { data, error } = await supabase
             .from('activities')
             .select('token_id')
-            .eq('to_address', address)
+            .ilike('to_address', address)
             .eq('activity_type', 'Mint');
 
           if (error) throw error;
@@ -235,10 +238,8 @@ export default function DashboardPage() {
               return;
           }
 
-          // Extract Unique IDs
           const tokenIds = [...new Set(data.map(item => item.token_id))];
 
-          // Fetch Metadata for these IDs from Blockchain/IPFS
           const batches = chunk(tokenIds, 5);
           const loadedCreated: any[] = [];
 
@@ -266,16 +267,14 @@ export default function DashboardPage() {
       } 
   };
 
-  // 4. ACTIVITY (Source: Supabase 'activities' table - Unified History)
   const fetchActivity = async () => {
       if (!address) return;
       setLoading(true);
       try {
-          // Fetch all activities where user is involved (Sender OR Receiver)
           const { data, error } = await supabase
             .from('activities')
             .select('*')
-            .or(`from_address.eq.${address},to_address.eq.${address}`)
+            .or(`from_address.ilike.${address},to_address.ilike.${address}`)
             .order('created_at', { ascending: false });
 
           if (error) throw error;
@@ -296,7 +295,6 @@ export default function DashboardPage() {
       } finally { setLoading(false); }
   };
 
-  // --- Effects ---
   useEffect(() => { if (isConnected) fetchAssets(); }, [address, isConnected]);
   
   useEffect(() => { 
@@ -305,7 +303,6 @@ export default function DashboardPage() {
       if (activeSection === 'Activity') fetchActivity();
   }, [activeSection, offerType, offerSort, myAssets]);
 
-  // --- UI Handlers ---
   const copyToClipboard = () => {
     if (address) {
       navigator.clipboard.writeText(address);
@@ -341,7 +338,6 @@ export default function DashboardPage() {
 
       <div className="container mx-auto px-3" style={{ marginTop: '-90px', position: 'relative', zIndex: 10 }}>
         
-        {/* Header */}
         <div className="d-flex flex-column gap-1 mb-2">
             <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #1E1E1E', background: '#161b22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
                 <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: '#1E1E1E' }}>
@@ -382,7 +378,6 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        {/* Tabs */}
         <div className="d-flex gap-4 mb-3 overflow-auto" style={{ borderBottom: 'none' }}>
             {['Items', 'Listings', 'Offers', 'Created', 'Activity'].map((tab) => (
                 <button 
@@ -407,7 +402,6 @@ export default function DashboardPage() {
             ))}
         </div>
 
-        {/* --- 1. ITEMS --- */}
         {activeSection === 'Items' && (
             <>
                 <div className="row mb-4">
@@ -453,7 +447,6 @@ export default function DashboardPage() {
             </>
         )}
 
-        {/* --- 2. LISTINGS --- */}
         {activeSection === 'Listings' && (
             <div className="pb-5 mt-4">
                 {loading ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : listedAssets.length === 0 ? (
@@ -483,7 +476,6 @@ export default function DashboardPage() {
             </div>
         )}
 
-        {/* --- 3. OFFERS --- */}
         {activeSection === 'Offers' && (
             <div className="mt-4">
                 <div className="d-flex justify-content-between align-items-center mb-4">
@@ -533,7 +525,6 @@ export default function DashboardPage() {
             </div>
         )}
 
-        {/* --- 4. CREATED (From Database) --- */}
         {activeSection === 'Created' && (
             <>
                 <div className="row mb-4">
@@ -571,7 +562,6 @@ export default function DashboardPage() {
             </>
         )}
 
-        {/* --- 5. ACTIVITY (From Database) --- */}
         {activeSection === 'Activity' && (
             <div className="mt-4 pb-5">
                 <div className="table-responsive">
