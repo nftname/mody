@@ -13,16 +13,17 @@ import { supabase } from '@/lib/supabase';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
-const BACKGROUND_DARK = '#121212'; // OpenSea Darker Tone
-const SURFACE_DARK = '#1b1b1b'; 
-const BORDER_COLOR = '#353840'; 
-const TEXT_PRIMARY = '#FFFFFF';
-const TEXT_MUTED = '#8a939b'; 
+// تعديل الخلفية لتطابق الداشبورد
+const BACKGROUND_DARK = '#1E1E1E'; 
+const SURFACE_DARK = '#242424'; // تعديل طفيف ليتماشى مع الخلفية الجديدة
+const BORDER_COLOR = '#2E2E2E'; // تعديل حدود العناصر لتكون متناسقة
+const TEXT_PRIMARY = '#E0E0E0';
+const TEXT_MUTED = '#B0B0B0';
 const GOLD_SOLID = '#F0C420';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
-const GOLD_TEXT_CLASS = 'gold-text-effect'; // CSS class defined below
+const GOLD_TEXT_CLASS = 'gold-text-effect'; 
 const GOLD_BTN_STYLE = { background: GOLD_GRADIENT, color: '#1a1200', border: 'none', fontWeight: 'bold' as const };
-const OUTLINE_BTN_STYLE = { background: 'transparent', color: '#FFF', border: `1px solid ${BORDER_COLOR}`, fontWeight: 'bold' as const };
+const OUTLINE_BTN_STYLE = { background: 'transparent', color: GOLD_SOLID, border: `1px solid ${GOLD_SOLID}`, fontWeight: 'bold' as const };
 
 const OFFER_DURATION = 30 * 24 * 60 * 60; 
 const POL_TO_USD_RATE = 0.54; // Mock rate for display
@@ -258,8 +259,12 @@ function AssetPage() {
                     <div className="col-lg-5">
                         <div className="rounded-3 overflow-hidden position-relative mb-4" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1' }}>
                             <div className="d-flex align-items-center justify-content-between p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
-                                <span style={{ fontSize: '20px', color: '#FFF' }}><i className="bi bi-polygon"></i></span>
-                                <i className="bi bi-heart text-white" style={{ fontSize: '20px' }}></i>
+                                <div className="d-flex gap-2">
+                                    <span style={{ fontSize: '18px', color: '#FFF' }}><i className="bi bi-polygon"></i></span>
+                                </div>
+                                <div className="d-flex gap-2">
+                                    <button className="btn p-0" style={{ color: TEXT_MUTED }}><i className="bi bi-heart"></i></button>
+                                </div>
                             </div>
                             <img src={asset.image} alt={asset.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
