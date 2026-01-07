@@ -14,14 +14,12 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 
-// --- THEME COLORS & STYLES ---
+// --- THEME & STYLES ---
 const BACKGROUND_DARK = '#1E1E1E'; 
-const SURFACE_DARK = '#262626'; 
-// تعديل: جعل الحدود خفيفة جداً وهادئة (رمادي شفاف) بدلاً من الأبيض الصريح
+const SURFACE_DARK = '#262626';    
 const BORDER_COLOR = 'rgba(255, 255, 255, 0.08)'; 
 const TEXT_PRIMARY = '#FFFFFF';
 const TEXT_MUTED = '#B0B0B0';
-// لون مخصص لوصف OpenSea
 const OPENSEA_DESC_COLOR = '#E5E8EB'; 
 const GOLD_SOLID = '#F0C420';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
@@ -40,35 +38,30 @@ const MARKETPLACE_ABI = parseAbi([
     "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
-const domain = {
-    name: 'NNMMarketplace',
-    version: '11',
-    chainId: 137, 
-    verifyingContract: MARKETPLACE_ADDRESS as `0x${string}`,
-} as const;
+const domain = { name: 'NNMMarketplace', version: '11', chainId: 137, verifyingContract: MARKETPLACE_ADDRESS as `0x${string}` } as const;
+const types = { Offer: [{ name: 'bidder', type: 'address' }, { name: 'tokenId', type: 'uint256' }, { name: 'price', type: 'uint256' }, { name: 'expiration', type: 'uint256' }] } as const;
 
-const types = {
-    Offer: [
-        { name: 'bidder', type: 'address' },
-        { name: 'tokenId', type: 'uint256' },
-        { name: 'price', type: 'uint256' },
-        { name: 'expiration', type: 'uint256' },
-    ],
-} as const;
-
-// --- Formatters ---
+// --- Helpers ---
 const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 2 }).format(num);
 const formatUSD = (pol: any) => { const val = parseFloat(pol); if(isNaN(val)) return '$0.00'; return `$${(val * POL_TO_USD_RATE).toFixed(2)}`; };
 const resolveIPFS = (uri: string) => uri?.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri || '';
 const formatShortTime = (date: string) => {
     const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-    if (diff < 60) return `${diff}s`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-    return `${Math.floor(diff / 86400)}d`;
+    if (diff < 60) return `${diff}s`; if (diff < 3600) return `${Math.floor(diff / 60)}m`; if (diff < 86400) return `${Math.floor(diff / 3600)}h`; return `${Math.floor(diff / 86400)}d`;
+};
+const formatDuration = (expirationTimestamp: number) => {
+    const now = Math.floor(Date.now() / 1000);
+    const seconds = expirationTimestamp - now;
+    if (seconds <= 0) return "Expired";
+    const days = Math.floor(seconds / (3600 * 24));
+    if (days > 0) return `${days}d`; 
+    const hours = Math.floor(seconds / 3600);
+    if (hours > 0) return `${hours}h`; 
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}m`;
 };
 
-// --- UI Components ---
+// --- Components ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => {
     if (!isOpen) return null;
     let icon = <div className="spinner-border" style={{ color: GOLD_SOLID }} role="status"></div>;
@@ -76,7 +69,6 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => 
     if (type === 'success') { icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '40px', color: '#28a745' }}></i>; iconColor = '#28a745'; }
     else if (type === 'error') { icon = <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '40px', color: '#dc3545' }}></i>; iconColor = '#dc3545'; }
     else if (type === 'swap') { icon = <i className="bi bi-wallet2" style={{ fontSize: '40px', color: GOLD_SOLID }}></i>; }
-
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${iconColor}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', textAlign: 'center', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
@@ -92,7 +84,6 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => 
     );
 };
 
-// تعديل الأكورديون: استخدام لون الحدود الجديد الهادئ
 const Accordion = ({ title, defaultOpen = false, icon, children }: any) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
@@ -132,6 +123,10 @@ function AssetPage() {
     const [activityList, setActivityList] = useState<any[]>([]);
     const [moreAssets, setMoreAssets] = useState<any[]>([]);
     
+    // Real Stats from DB
+    const [totalVolume, setTotalVolume] = useState('0');
+    const [lastSalePrice, setLastSalePrice] = useState('---');
+
     // UI States
     const [activeTab, setActiveTab] = useState('Details');
     const [loading, setLoading] = useState(true);
@@ -144,9 +139,14 @@ function AssetPage() {
     const [offerPrice, setOfferPrice] = useState('');
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
-    const [isFav, setIsFav] = useState(false); // For Heart Icon
+    const [isFav, setIsFav] = useState(false);
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
     
+    // Pagination & Sort
+    const [currentPage, setCurrentPage] = useState(1);
+    const offersPerPage = 5;
+    const [sortDesc, setSortDesc] = useState(true);
+
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
@@ -175,10 +175,26 @@ function AssetPage() {
             else setListing(null);
 
             setIsOwner(address?.toLowerCase() === owner.toLowerCase());
+            if (address && owner.toLowerCase() === address.toLowerCase()) {
+                const approvedStatus = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'isApprovedForAll', args: [address, MARKETPLACE_ADDRESS as `0x${string}`] });
+                setIsApproved(approvedStatus);
+            }
             
             // 2. Offers (Supabase)
             const { data: offers } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled').order('price', { ascending: false });
-            setOffersList(offers || []);
+            if (offers) {
+                const formattedOffers = offers.map((offer: any) => ({
+                    id: offer.id,
+                    bidder_address: offer.bidder_address,
+                    price: offer.price.toString(),
+                    expiration: offer.expiration,
+                    status: offer.status,
+                    signature: offer.signature, 
+                    isMyOffer: address && offer.bidder_address.toLowerCase() === address.toLowerCase(),
+                    created_at: offer.created_at
+                }));
+                setOffersList(formattedOffers);
+            }
 
             // 3. Activity (Supabase)
             const { data: acts } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
@@ -211,44 +227,30 @@ function AssetPage() {
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
     const closeModal = () => { setIsPending(false); setModal({ ...modal, isOpen: false }); if (modal.type === 'success') { fetchAllData(); setIsOfferMode(false); } };
 
-    // --- On-Chain Logic (Preserved) ---
-    const handleApprove = async () => {
-        setIsPending(true);
-        try { const hash = await writeContractAsync({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'approve', args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)] }); await publicClient!.waitForTransactionReceipt({ hash }); await refreshWpolData(); } catch(e) { console.error(e); setIsPending(false); }
-    };
-    const handleSubmitOffer = async () => {
-        if (!address) return;
-        setIsPending(true);
-        try {
-            const priceInWei = parseEther(offerPrice);
-            const expiration = BigInt(Math.floor(Date.now() / 1000) + OFFER_DURATION);
-            const signature = await signTypedDataAsync({ domain, types, primaryType: 'Offer', message: { bidder: address, tokenId: BigInt(tokenId), price: priceInWei, expiration } });
-            await supabase.from('offers').insert([{ token_id: tokenId, bidder_address: address, price: parseFloat(offerPrice), expiration: Number(expiration), status: 'active', signature }]);
-            showModal('success', 'Offer Submitted', 'Signed successfully.');
-        } catch(e) { setIsPending(false); }
-    };
-    const handleBuy = async () => {
-        if (!listing) return;
+    // --- Actions ---
+    const handleApprove = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'approve', args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)] }); await publicClient!.waitForTransactionReceipt({ hash }); await refreshWpolData(); } catch(e) { console.error(e); setIsPending(false); } };
+    const handleSubmitOffer = async () => { if (!address) return; setIsPending(true); try { const priceInWei = parseEther(offerPrice); const expiration = BigInt(Math.floor(Date.now() / 1000) + OFFER_DURATION); const signature = await signTypedDataAsync({ domain, types, primaryType: 'Offer', message: { bidder: address, tokenId: BigInt(tokenId), price: priceInWei, expiration } }); await supabase.from('offers').insert([{ token_id: tokenId, bidder_address: address, price: parseFloat(offerPrice), expiration: Number(expiration), status: 'active', signature }]); showModal('success', 'Offer Submitted', 'Signed successfully.'); } catch(e) { setIsPending(false); } };
+    const handleBuy = async () => { if (!listing) return; setIsPending(true); try { const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'buyItem', args: [BigInt(tokenId)], value: parseEther(listing.price) }); await publicClient!.waitForTransactionReceipt({ hash }); await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: listing.seller, to_address: address, price: listing.price }]); showModal('success', 'Bought!', 'Asset purchased.'); } catch(e) { setIsPending(false); } };
+    const handleAccept = async (offer: any) => { setIsPending(true); try { const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'acceptOffChainOffer', args: [BigInt(tokenId), offer.bidder_address, parseEther(offer.price), BigInt(offer.expiration), offer.signature] }); await publicClient!.waitForTransactionReceipt({ hash }); await supabase.from('offers').update({ status: 'accepted' }).eq('id', offer.id); await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: address, to_address: offer.bidder_address, price: offer.price }]); showModal('success', 'Sold!', 'Offer accepted.'); } catch(e) { setIsPending(false); } };
+    const handleCancelOffer = async (id: any) => { try { await supabase.from('offers').update({ status: 'cancelled' }).eq('id', id); fetchAllData(); } catch(e){} };
+
+    const handleApproveNft = async () => {
         setIsPending(true);
         try {
-            const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'buyItem', args: [BigInt(tokenId)], value: parseEther(listing.price) });
+            const hash = await writeContractAsync({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'setApprovalForAll', args: [MARKETPLACE_ADDRESS as `0x${string}`, true] });
             await publicClient!.waitForTransactionReceipt({ hash });
-            await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: listing.seller, to_address: address, price: listing.price }]);
-            showModal('success', 'Bought!', 'Asset purchased.');
-        } catch(e) { setIsPending(false); }
+            setIsApproved(true);
+        } catch (err) { console.error(err); } finally { setIsPending(false); }
     };
-    const handleAccept = async (offer: any) => {
+
+    const handleList = async () => {
         setIsPending(true);
         try {
-            const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'acceptOffChainOffer', args: [BigInt(tokenId), offer.bidder_address, parseEther(offer.price), BigInt(offer.expiration), offer.signature] });
+            const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listItem', args: [BigInt(tokenId), parseEther(sellPrice)] });
             await publicClient!.waitForTransactionReceipt({ hash });
-            await supabase.from('offers').update({ status: 'accepted' }).eq('id', offer.id);
-            await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: address, to_address: offer.bidder_address, price: offer.price }]);
-            showModal('success', 'Sold!', 'Offer accepted.');
-        } catch(e) { setIsPending(false); }
-    };
-    const handleCancelOffer = async (id: any) => {
-        try { await supabase.from('offers').update({ status: 'cancelled' }).eq('id', id); fetchAllData(); } catch(e){}
+            fetchAllData();
+            setIsListingMode(false);
+        } catch (err) { console.error(err); } finally { setIsPending(false); }
     };
 
     if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center" style={{ background: BACKGROUND_DARK, color: TEXT_MUTED }}>Loading...</div>;
@@ -259,15 +261,15 @@ function AssetPage() {
             <CustomModal isOpen={modal.isOpen} type={modal.type} title={modal.title} message={modal.message} onClose={closeModal} />
             
             <div className="container-fluid" style={{ maxWidth: '1280px', paddingTop: '20px' }}>
-                <div className="row g-5">
+                <div className="row g-3 g-lg-5">
                     
                     {/* LEFT COLUMN: Image & Header (Mobile First Style) */}
                     <div className="col-lg-5">
                         <div className="rounded-4 overflow-hidden position-relative mb-4" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1' }}>
                             <div className="d-flex align-items-center justify-content-between p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
-                                {/* تعديل: إزالة شارة ERC721 من هنا */}
-                                <div className="d-flex gap-2"></div>
-                                {/* تعديل: أيقونة القلب تصبح بيضاء بالكامل عند الضغط */}
+                                <div className="d-flex gap-2">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="white" fillOpacity="0.1"/><path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="white"/></svg>
+                                </div>
                                 <div className="d-flex gap-2">
                                     <button onClick={() => setIsFav(!isFav)} className="btn p-0 border-0">
                                         <i className={`bi ${isFav ? 'bi-heart-fill text-white' : 'bi-heart text-white'}`} style={{ fontSize: '20px' }}></i>
@@ -279,35 +281,31 @@ function AssetPage() {
                     </div>
 
                     {/* RIGHT COLUMN: TABS & DETAILS */}
-                    <div className="col-lg-7">
-                        {/* Header Info - تعديل ترتيب العناصر */}
-                        <div className="mb-4">
-                            {/* تعديل: الاسم أولاً تحته مباشرة */}
-                            <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-2`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
+                    <div className="col-lg-7 pt-0">
+                        {/* Header Info - Reduced vertical spacing */}
+                        <div className="mb-2">
+                            {/* 1. Name is first */}
+                            <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-1`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
                             
-                            {/* تعديل: السطر الثاني يحتوي على اسم المنصة (أبيض) ورابط المالك (ذهبي) على اليمين */}
-                            <div className="d-flex align-items-center justify-content-between mb-4">
-                                {/* تعديل: لون أبيض عادي وإزالة العلامة الزرقاء */}
+                            {/* 2. Collection Name & Owner */}
+                            <div className="d-flex align-items-center justify-content-between mb-2">
                                 <span style={{ color: TEXT_PRIMARY, fontSize: '15px', fontWeight: '500' }}>NNM Sovereign Asset</span>
-                                {/* تعديل: رابط المالك باللون الذهبي على أقصى اليمين */}
                                 <span style={{ color: TEXT_MUTED, fontSize: '13px' }}>Owned by <a href="#" className="text-decoration-none" style={{ color: GOLD_SOLID }}>{asset.owner.slice(0,6)}...</a></span>
                             </div>
                             
-                            {/* سطر التصنيفات */}
-                            <div className="d-flex align-items-center gap-4 mb-4" style={{ color: TEXT_MUTED, fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>
+                            {/* 3. Badges - Reduced margin bottom to pull Tabs closer */}
+                            <div className="d-flex align-items-center gap-4 mb-2" style={{ color: TEXT_MUTED, fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>
                                 <span>ERC721</span>
                                 <span>POLYGON</span>
                                 <span>TOKEN #{asset.id}</span>
                             </div>
                         </div>
 
-                        {/* TABS (Top Level Navigation) */}
-                        <div className="mb-4">
-                            {/* تعديل: خط الحدود السفلي هادئ جداً */}
-                            <div className="d-flex border-bottom" style={{ borderColor: BORDER_COLOR }}>
+                        {/* TABS (Top Level Navigation) - Light Gray Line */}
+                        <div className="mb-3">
+                            <div className="d-flex border-bottom" style={{ borderColor: '#333' }}>
                                 {['Details', 'Orders', 'Activity'].map(tab => (
-                                    /* تعديل: الخط الأبيض العريض بحجم الكلمة وقريب منها */
-                                    <button key={tab} onClick={() => setActiveTab(tab)} className="btn mx-3 py-3 fw-bold position-relative p-0" style={{ color: activeTab === tab ? '#fff' : TEXT_MUTED, background: 'transparent', border: 'none', fontSize: '15px' }}>
+                                    <button key={tab} onClick={() => setActiveTab(tab)} className="btn mx-3 py-2 fw-bold position-relative p-0" style={{ color: activeTab === tab ? '#fff' : TEXT_MUTED, background: 'transparent', border: 'none', fontSize: '15px' }}>
                                         {tab}
                                         {activeTab === tab && <div style={{ position: 'absolute', bottom: '-1px', left: 0, width: '100%', height: '3px', backgroundColor: '#fff', borderRadius: '2px 2px 0 0' }}></div>}
                                     </button>
@@ -315,11 +313,10 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* TAB CONTENT */}
-                        <div>
+                        {/* TAB CONTENT - Reduced top padding */}
+                        <div className="pt-0 mt-0">
                             {activeTab === 'Details' && (
                                 <div className="fade-in">
-                                    {/* Traits (Open by default) */}
                                     <Accordion title="Traits" icon="bi-tag" defaultOpen={true}>
                                         <div className="row g-2">
                                             <div className="col-6 col-md-4"><TraitBox type="ASSET TYPE" value="Digital Name" percent="100%" /></div>
@@ -344,7 +341,6 @@ function AssetPage() {
                                         </div>
                                     </Accordion>
 
-                                    {/* تعديل: محتوى وتنسيق قسم About مطابق لـ OpenSea */}
                                     <Accordion title="About" icon="bi-text-left">
                                         <div style={{ color: OPENSEA_DESC_COLOR, fontSize: '16px', lineHeight: '1.6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
                                             <p className="mb-4 fw-bold text-white" style={{ fontSize: '18px' }}>GEN-0 Genesis NNM Protocol Record</p>
@@ -476,7 +472,17 @@ function AssetPage() {
                                ) : !isOwner ? (
                                    <button onClick={() => setIsOfferMode(true)} className="btn fw-bold w-100 py-3" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>Make Offer</button>
                                ) : (
-                                   <button className="btn fw-bold w-100 py-3" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>List for Sale</button>
+                                   isListingMode ? (
+                                     <div className="d-flex gap-2 w-100">
+                                        {!isApproved ? 
+                                            <button onClick={handleApproveNft} disabled={isPending} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>Approve NFT</button>
+                                            : <button onClick={handleList} disabled={isPending} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>Confirm List</button>
+                                        }
+                                        <button onClick={() => setIsListingMode(false)} className="btn btn-secondary py-3 fw-bold" style={{ borderRadius: '12px' }}>Cancel</button>
+                                     </div>
+                                   ) : (
+                                       <button onClick={() => setIsListingMode(true)} className="btn fw-bold w-100 py-3" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>List for Sale</button>
+                                   )
                                )
                            )}
                        </div>
