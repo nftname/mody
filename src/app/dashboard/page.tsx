@@ -8,29 +8,39 @@ import { polygon } from 'viem/chains';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
+// --- Constants & Styles ---
 const GOLD_COLOR = '#FCD535';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
+// --- ABIs ---
+// 1. ERC721 ABI (Standard)
 const CONTRACT_ABI = parseAbi([
   "function balanceOf(address) view returns (uint256)",
   "function tokenOfOwnerByIndex(address, uint256) view returns (uint256)",
   "function tokenURI(uint256) view returns (string)"
 ]);
 
+// 2. Marketplace ABI (Listings View)
 const MARKETPLACE_ABI = parseAbi([
   "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
+// 3. Events ABI (For fetching History & Created)
+const EVENTS_ABI = parseAbi([
+  "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"
+]);
+
+// --- Blockchain Client ---
 const publicClient = createPublicClient({
   chain: polygon,
-  transport: http()
+  transport: http() // Uses public RPC
 });
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
   
-  // Data States
+  // --- States ---
   const [myAssets, setMyAssets] = useState<any[]>([]);
   const [createdAssets, setCreatedAssets] = useState<any[]>([]);
   const [offersData, setOffersData] = useState<any[]>([]);
@@ -39,28 +49,25 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('Items');
   
-  // View Modes
+  // View & UI States
   const [viewModeState, setViewModeState] = useState(0); 
   const viewModes = ['grid', 'large', 'list'];
   const currentViewMode = viewModes[viewModeState];
+  const [isCopied, setIsCopied] = useState(false);
 
-  // Filters
+  // Filter & Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState('ALL'); 
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   
-  // Offers Filters
   const [offerType, setOfferType] = useState('Received'); 
   const [offerSort, setOfferSort] = useState('Newest');   
   const [showOfferTypeMenu, setShowOfferTypeMenu] = useState(false);
   const [showOfferSortMenu, setShowOfferSortMenu] = useState(false);
 
-  // Sorting
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
-  
-  const [isCopied, setIsCopied] = useState(false);
 
-  // --- Utilities ---
+  // --- Helpers ---
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -91,7 +98,9 @@ export default function DashboardPage() {
       return `${Math.floor(diff / 86400)}d ago`;
   };
 
-  // --- 1. Fetch My Assets (On-Chain) ---
+  // ================= DATA FETCHING LOGIC =================
+
+  // 1. ITEMS & LISTINGS (Source: Blockchain State)
   const fetchAssets = async () => {
     if (!address) return;
     setLoading(true);
@@ -104,12 +113,7 @@ export default function DashboardPage() {
       });
       
       const count = Number(balanceBigInt);
-
-      if (!count) {
-        setMyAssets([]);
-        setLoading(false);
-        return;
-      }
+      if (!count) { setMyAssets([]); setLoading(false); return; }
 
       const tokenIds = await Promise.all(
         Array.from({ length: count }, (_, i) => 
@@ -168,10 +172,10 @@ export default function DashboardPage() {
         loaded.push(...(batchResults.filter(Boolean) as any[]));
         setMyAssets([...loaded]); 
       }
-    } catch (error) { console.error(error); } finally { setLoading(false); }
+    } catch (error) { console.error("Fetch Assets Error:", error); } finally { setLoading(false); }
   };
 
-  // --- 2. Fetch Offers (Supabase) ---
+  // 2. OFFERS (Source: Supabase Table 'offers')
   const fetchOffers = async () => {
       if (!address) return;
       setLoading(true);
@@ -180,7 +184,6 @@ export default function DashboardPage() {
           const now = Math.floor(Date.now() / 1000);
 
           if (offerType === 'Received') {
-              // Logic: Offers on tokens I currently own
               const myTokenIds = myAssets.map(a => a.id);
               if (myTokenIds.length > 0) {
                   query = query.in('token_id', myTokenIds).gt('expiration', now).neq('status', 'cancelled');
@@ -190,7 +193,6 @@ export default function DashboardPage() {
                   return;
               }
           } else if (offerType === 'Made') {
-              // Logic: Offers where I am the bidder
               query = query.eq('bidder_address', address).gt('expiration', now).neq('status', 'cancelled');
           } else if (offerType === 'Expired') {
               query = query.or(`bidder_address.eq.${address},token_id.in.(${myAssets.map(a => a.id).join(',')})`).lte('expiration', now);
@@ -209,27 +211,28 @@ export default function DashboardPage() {
               };
           }) || [];
 
-          // Client-side Sort
           if (offerSort === 'Newest') enrichedOffers.sort((a, b) => b.created_at?.localeCompare(a.created_at));
           if (offerSort === 'High Price') enrichedOffers.sort((a, b) => b.price - a.price);
           if (offerSort === 'Low Price') enrichedOffers.sort((a, b) => a.price - b.price);
           if (offerSort === 'Ending Soon') enrichedOffers.sort((a, b) => a.expiration - b.expiration);
 
           setOffersData(enrichedOffers);
-
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
-  // --- 3. Fetch Created (Real On-Chain Mints) ---
+  // 3. CREATED (Source: Blockchain Events - Transfer from Null Address)
   const fetchCreated = async () => {
       if (!address) return;
       setLoading(true);
       try {
-          // Transfer from Null Address (0x0...0) means Mint
+          // Ask Blockchain: "Give me Transfer receipts where FROM is 0x0...0 and TO is ME"
           const logs = await publicClient.getLogs({
               address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-              event: parseAbi(["event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"])[0],
-              args: { from: '0x0000000000000000000000000000000000000000', to: address },
+              event: EVENTS_ABI[0], // Transfer Event
+              args: { 
+                  from: '0x0000000000000000000000000000000000000000', 
+                  to: address 
+              },
               fromBlock: 'earliest'
           });
 
@@ -241,6 +244,7 @@ export default function DashboardPage() {
               return;
           }
 
+          // Fetch details for found tokens
           const batches = chunk(tokenIds, 5);
           const loadedCreated: any[] = [];
 
@@ -263,29 +267,31 @@ export default function DashboardPage() {
           }
           setCreatedAssets(loadedCreated);
       } catch (e) { 
-          console.error("Created Fetch Error:", e); 
+          console.error("Created Fetch Error (RPC limit may apply):", e); 
           setLoading(false);
       } 
   };
 
-  // --- 4. Fetch Activity (Hybrid: Chain + Supabase) ---
+  // 4. ACTIVITY (Source: Hybrid -> Chain Events + Supabase Offers)
   const fetchActivity = async () => {
       if (!address) return;
       setLoading(true);
       try {
           const events: any[] = [];
           
-          // A. Fetch NFT Transfers from Blockchain (Mint, Send, Receive)
+          // A. Chain Events (Transfers: Buy/Sell/Mint)
+          // Fetch "Incoming" Transfers (Mint or Buy)
           const logsIn = await publicClient.getLogs({
               address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-              event: parseAbi(["event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"])[0],
+              event: EVENTS_ABI[0],
               args: { to: address },
               fromBlock: 'earliest'
           });
           
+          // Fetch "Outgoing" Transfers (Sell or Send)
           const logsOut = await publicClient.getLogs({
               address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-              event: parseAbi(["event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"])[0],
+              event: EVENTS_ABI[0],
               args: { from: address },
               fromBlock: 'earliest'
           });
@@ -298,15 +304,14 @@ export default function DashboardPage() {
               events.push({
                   type: isMint ? 'Mint' : 'Transfer',
                   tokenId: log.args.tokenId?.toString(),
-                  price: '-', 
+                  price: '-', // Basic transfer doesn't show price unless we parse Market logs (complex), keeping simple
                   from: log.args.from,
                   to: log.args.to,
                   date: Number(block.timestamp)
               });
           }
 
-          // B. Fetch Offers from Supabase (Off-Chain Activity)
-          // We fetch offers made by this user to show "Offer Made" activity
+          // B. Supabase Offers (Offers Made by me)
           const { data: offersMade } = await supabase
             .from('offers')
             .select('*')
@@ -319,13 +324,13 @@ export default function DashboardPage() {
                       tokenId: offer.token_id.toString(),
                       price: `${offer.price} WPOL`,
                       from: offer.bidder_address,
-                      to: 'Owner', // Generic destination for an offer
+                      to: 'Owner',
                       date: Math.floor(new Date(offer.created_at).getTime() / 1000)
                   });
               });
           }
 
-          // Sort combined events by date descending (Newest first)
+          // Sort by date (Newest first)
           events.sort((a, b) => b.date - a.date);
           setActivityData(events);
 
@@ -334,13 +339,16 @@ export default function DashboardPage() {
       } finally { setLoading(false); }
   };
 
+  // --- Effects ---
   useEffect(() => { if (isConnected) fetchAssets(); }, [address, isConnected]);
+  
   useEffect(() => { 
       if (activeSection === 'Offers') fetchOffers();
       if (activeSection === 'Created') fetchCreated();
       if (activeSection === 'Activity') fetchActivity();
   }, [activeSection, offerType, offerSort, myAssets]);
 
+  // --- UI Handlers ---
   const copyToClipboard = () => {
     if (address) {
       navigator.clipboard.writeText(address);
@@ -376,7 +384,7 @@ export default function DashboardPage() {
 
       <div className="container mx-auto px-3" style={{ marginTop: '-90px', position: 'relative', zIndex: 10 }}>
         
-        {/* Profile Header - Reduced Spacing */}
+        {/* Header */}
         <div className="d-flex flex-column gap-1 mb-2">
             <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #1E1E1E', background: '#161b22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
                 <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: '#1E1E1E' }}>
@@ -384,7 +392,6 @@ export default function DashboardPage() {
                 </div>
             </div>
             
-            {/* Address Link */}
             <div className="d-flex align-items-center gap-2">
                 <Link href={`/profile/${address}`} className="text-decoration-none">
                     <span className="fw-normal" style={{ fontSize: '18px', fontFamily: 'monospace', color: GOLD_COLOR, cursor: 'pointer' }}>
@@ -443,11 +450,10 @@ export default function DashboardPage() {
             ))}
         </div>
 
-        {/* --- 1. ITEMS SECTION --- */}
+        {/* --- 1. ITEMS --- */}
         {activeSection === 'Items' && (
             <>
                 <div className="row mb-4">
-                    {/* Controls Container: 50% on Desktop (col-lg-6), 100% on Mobile (col-12) */}
                     <div className="col-12 col-lg-6">
                         <div className="d-flex align-items-center gap-2 position-relative">
                             
@@ -490,7 +496,7 @@ export default function DashboardPage() {
             </>
         )}
 
-        {/* --- 2. LISTINGS SECTION --- */}
+        {/* --- 2. LISTINGS --- */}
         {activeSection === 'Listings' && (
             <div className="pb-5 mt-4">
                 {loading ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : listedAssets.length === 0 ? (
@@ -520,7 +526,7 @@ export default function DashboardPage() {
             </div>
         )}
 
-        {/* --- 3. OFFERS SECTION (SUPABASE) --- */}
+        {/* --- 3. OFFERS --- */}
         {activeSection === 'Offers' && (
             <div className="mt-4">
                 <div className="d-flex justify-content-between align-items-center mb-4">
@@ -570,7 +576,7 @@ export default function DashboardPage() {
             </div>
         )}
 
-        {/* --- 4. CREATED SECTION (REAL ON-CHAIN) --- */}
+        {/* --- 4. CREATED (From Blockchain Events) --- */}
         {activeSection === 'Created' && (
             <>
                 <div className="row mb-4">
@@ -608,7 +614,7 @@ export default function DashboardPage() {
             </>
         )}
 
-        {/* --- 5. ACTIVITY SECTION (HYBRID) --- */}
+        {/* --- 5. ACTIVITY (Chain + Supabase) --- */}
         {activeSection === 'Activity' && (
             <div className="mt-4 pb-5">
                 <div className="table-responsive">
