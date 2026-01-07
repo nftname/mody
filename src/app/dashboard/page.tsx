@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAccount, useBalance } from "wagmi";
 import { createPublicClient, http, parseAbi, formatEther } from 'viem';
@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
   
+  // --- States ---
   const [myAssets, setMyAssets] = useState<any[]>([]);
   const [createdAssets, setCreatedAssets] = useState<any[]>([]);
   const [offersData, setOffersData] = useState<any[]>([]);
@@ -43,17 +44,35 @@ export default function DashboardPage() {
   const currentViewMode = viewModes[viewModeState];
   const [isCopied, setIsCopied] = useState(false);
 
+  // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState('ALL'); 
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
   
-  const [offerType, setOfferType] = useState('Received'); 
-  const [offerSort, setOfferSort] = useState('Newest');   
-  const [showOfferTypeMenu, setShowOfferTypeMenu] = useState(false);
-  const [showOfferSortMenu, setShowOfferSortMenu] = useState(false);
+  // Dropdown States
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
+  const [offerType, setOfferType] = useState('All'); 
+  const [offerSort, setOfferSort] = useState('Newest');   
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
+  // --- Click Outside Handler ---
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.dropdown-container')) {
+            setOpenDropdown(null);
+        }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const toggleDropdown = (name: string) => {
+      if (openDropdown === name) setOpenDropdown(null);
+      else setOpenDropdown(name);
+  };
+
+  // --- Helpers ---
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -75,18 +94,25 @@ export default function DashboardPage() {
       return `${hours}h`;
   };
 
-  const formatTimeAgo = (dateString: string | number) => {
+  const formatShortTime = (dateString: string | number) => {
       const date = new Date(dateString);
       const now = new Date();
       const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
-      
-      if (diff < 60) return 'Just now';
-      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-      return `${Math.floor(diff / 86400)}d ago`;
+      if (diff < 60) return `${diff}s`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+      if (diff < 31536000) return `${Math.floor(diff / 86400)}d`;
+      return `${Math.floor(diff / 31536000)}y`;
   };
 
-  // --- 1. ITEMS (My Wallet) ---
+  const formatCompactNumber = (num: number) => {
+      return Intl.NumberFormat('en-US', {
+          notation: "compact",
+          maximumFractionDigits: 1
+      }).format(num);
+  };
+
+  // --- 1. ITEMS ---
   const fetchAssets = async () => {
     if (!address) return;
     setLoading(true);
@@ -112,7 +138,6 @@ export default function DashboardPage() {
         )
       );
 
-      // Fetch metadata in small batches to avoid RPC overload
       const batches = chunk(tokenIds, 5);
       const loaded: any[] = [];
 
@@ -157,7 +182,7 @@ export default function DashboardPage() {
           })
         );
         loaded.push(...(batchResults.filter(Boolean) as any[]));
-        setMyAssets([...loaded]); // Update UI progressively
+        setMyAssets([...loaded]); 
       }
     } catch (error) { console.error("Fetch Assets Error:", error); } finally { setLoading(false); }
   };
@@ -169,20 +194,29 @@ export default function DashboardPage() {
       try {
           let query = supabase.from('offers').select('*');
           const now = Math.floor(Date.now() / 1000);
+          const myTokenIds = myAssets.map(a => a.id);
+          const idsString = myTokenIds.length > 0 ? myTokenIds.join(',') : '';
 
-          if (offerType === 'Received') {
-              const myTokenIds = myAssets.map(a => a.id);
+          if (offerType === 'All') {
+              if (idsString) {
+                query = query.or(`bidder_address.ilike.${address},token_id.in.(${idsString})`).gt('expiration', now).neq('status', 'cancelled');
+              } else {
+                query = query.ilike('bidder_address', address).gt('expiration', now).neq('status', 'cancelled');
+              }
+          } else if (offerType === 'Received') {
               if (myTokenIds.length > 0) {
                   query = query.in('token_id', myTokenIds).gt('expiration', now).neq('status', 'cancelled');
               } else {
-                  setOffersData([]);
-                  setLoading(false);
-                  return;
+                  setOffersData([]); setLoading(false); return;
               }
           } else if (offerType === 'Made') {
               query = query.ilike('bidder_address', address).gt('expiration', now).neq('status', 'cancelled');
           } else if (offerType === 'Expired') {
-              query = query.or(`bidder_address.ilike.${address},token_id.in.(${myAssets.map(a => a.id).join(',')})`).lte('expiration', now);
+              if (idsString) {
+                query = query.or(`bidder_address.ilike.${address},token_id.in.(${idsString})`).lte('expiration', now);
+              } else {
+                query = query.ilike('bidder_address', address).lte('expiration', now);
+              }
           }
 
           const { data, error } = await query;
@@ -192,7 +226,6 @@ export default function DashboardPage() {
               const knownAsset = myAssets.find(a => a.id === offer.token_id.toString());
               let assetName = knownAsset ? knownAsset.name : `NNM #${offer.token_id}`;
 
-              // If name not found in myAssets, fetch from chain
               if (!knownAsset) {
                   try {
                       const tokenURI = await publicClient.readContract({
@@ -224,15 +257,15 @@ export default function DashboardPage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
-  // --- 3. CREATED (Fix Infinite Loading) ---
+  // --- 3. CREATED ---
   const fetchCreated = async () => {
       if (!address) return;
       setLoading(true);
       try {
           const { data, error } = await supabase
             .from('activities')
-            .select('token_id')
-            .ilike('to_address', address) // Case insensitive
+            .select('token_id, created_at')
+            .ilike('to_address', address) 
             .eq('activity_type', 'Mint');
 
           if (error) throw error;
@@ -243,9 +276,11 @@ export default function DashboardPage() {
               return;
           }
 
-          const tokenIds = [...new Set(data.map(item => item.token_id))];
+          // Map dates
+          const dateMap: Record<string, string> = {};
+          data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
 
-          // Use smaller batches and timeout protection
+          const tokenIds = [...new Set(data.map(item => item.token_id))];
           const batches = chunk(tokenIds, 4); 
           const loadedCreated: any[] = [];
 
@@ -260,26 +295,25 @@ export default function DashboardPage() {
                           name: meta.name || `NNM #${tokenId.toString()}`,
                           image: resolveIPFS(meta.image) || '',
                           tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
-                          price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'
+                          price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0',
+                          mintDate: dateMap[tokenId]
                       };
                   } catch { return null; }
               }));
               loadedCreated.push(...(batchResults.filter(Boolean) as any[]));
-              setCreatedAssets([...loadedCreated]); // Render partial results
+              setCreatedAssets([...loadedCreated]); 
           }
       } catch (e) { 
           console.error("Created Fetch Error:", e); 
-      } finally {
-          setLoading(false); // Force stop loading
-      }
+      } finally { setLoading(false); }
   };
 
-  // --- 4. ACTIVITY (Merge Offers + Fix Links) ---
+  // --- 4. ACTIVITY ---
   const fetchActivity = async () => {
       if (!address) return;
       setLoading(true);
       try {
-          // 1. Fetch History (Mint/Sales)
+          // History
           const { data: activityData, error: actError } = await supabase
             .from('activities')
             .select('*')
@@ -288,7 +322,7 @@ export default function DashboardPage() {
 
           if (actError) throw actError;
 
-          // 2. Fetch Offers (My Offers)
+          // Offers
           const { data: offersData, error: offError } = await supabase
              .from('offers')
              .select('*')
@@ -297,31 +331,27 @@ export default function DashboardPage() {
 
           if (offError) throw offError;
 
-          // 3. Format Activities
           const formattedActivities = (activityData || []).map((item: any) => ({
               type: item.activity_type,
               tokenId: item.token_id.toString(),
-              price: item.price ? `${item.price} POL` : '-',
+              price: item.price,
               from: item.from_address,
               to: item.to_address,
               date: item.created_at,
               rawDate: new Date(item.created_at).getTime()
           }));
 
-          // 4. Format Offers as Activities
           const formattedOffers = (offersData || []).map((item: any) => ({
               type: 'Offer Made',
               tokenId: item.token_id.toString(),
-              price: item.price ? `${item.price} WPOL` : '-',
+              price: item.price,
               from: item.bidder_address,
               to: 'Market',
               date: item.created_at,
               rawDate: new Date(item.created_at).getTime()
           }));
 
-          // 5. Merge and Sort
           const merged = [...formattedActivities, ...formattedOffers].sort((a, b) => b.rawDate - a.rawDate);
-
           setActivityData(merged);
 
       } catch (e) { 
@@ -346,7 +376,6 @@ export default function DashboardPage() {
   };
 
   const toggleViewMode = () => { setViewModeState((prev) => (prev + 1) % viewModes.length); };
-  const toggleSortOrder = () => { setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest'); };
 
   const totalAssetValue = myAssets.reduce((acc, curr) => acc + parseFloat(curr.price || 0), 0);
   const filteredAssets = myAssets.filter(asset => asset.name.toLowerCase().includes(searchQuery.toLowerCase()) && (selectedTier === 'ALL' || asset.tier.toUpperCase() === selectedTier));
@@ -372,6 +401,7 @@ export default function DashboardPage() {
 
       <div className="container mx-auto px-3" style={{ marginTop: '-90px', position: 'relative', zIndex: 10 }}>
         
+        {/* Profile Header */}
         <div className="d-flex flex-column gap-1 mb-2">
             <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #1E1E1E', background: '#161b22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
                 <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: '#1E1E1E' }}>
@@ -412,6 +442,7 @@ export default function DashboardPage() {
             </div>
         </div>
 
+        {/* Tabs */}
         <div className="d-flex gap-4 mb-3 overflow-auto" style={{ borderBottom: 'none' }}>
             {['Items', 'Listings', 'Offers', 'Created', 'Activity'].map((tab) => (
                 <button 
@@ -436,21 +467,22 @@ export default function DashboardPage() {
             ))}
         </div>
 
+        {/* --- 1. ITEMS --- */}
         {activeSection === 'Items' && (
             <>
                 <div className="row mb-4">
                     <div className="col-12 col-lg-6">
                         <div className="d-flex align-items-center gap-2 position-relative">
                             
-                            <div className="position-relative">
-                                <button onClick={() => setShowFilterMenu(!showFilterMenu)} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
+                            <div className="position-relative dropdown-container">
+                                <button onClick={() => toggleDropdown('filter')} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6H20" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/><path d="M7 12H17" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/><path d="M10 18H14" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/></svg>
                                 </button>
-                                {showFilterMenu && (
+                                {openDropdown === 'filter' && (
                                     <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
                                         <div style={{ fontSize: '10px', color: '#8a939b', padding: '4px 8px', textTransform: 'uppercase' }}>Filter by Tier</div>
                                         {['ALL', 'IMMORTAL', 'ELITE', 'FOUNDERS'].map(tier => (
-                                            <button key={tier} onClick={() => { setSelectedTier(tier); setShowFilterMenu(false); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: selectedTier === tier ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{tier}</button>
+                                            <button key={tier} onClick={() => { setSelectedTier(tier); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: selectedTier === tier ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{tier}</button>
                                         ))}
                                     </div>
                                 )}
@@ -481,6 +513,7 @@ export default function DashboardPage() {
             </>
         )}
 
+        {/* --- 2. LISTINGS --- */}
         {activeSection === 'Listings' && (
             <div className="pb-5 mt-4">
                 {loading ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : listedAssets.length === 0 ? (
@@ -491,7 +524,7 @@ export default function DashboardPage() {
                     <div className="table-responsive">
                         <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
                             <thead><tr>
-                                <th onClick={toggleSortOrder} style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}>ASSET <i className={`bi ${sortOrder === 'newest' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'} ms-2`} style={{ fontSize: '11px' }}></i></th>
+                                <th onClick={() => setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest')} style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}>ASSET <i className={`bi ${sortOrder === 'newest' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'} ms-2`} style={{ fontSize: '11px' }}></i></th>
                                 <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>POL</th>
                                 <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Exp</th>
                                 <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th> 
@@ -510,24 +543,25 @@ export default function DashboardPage() {
             </div>
         )}
 
+        {/* --- 3. OFFERS --- */}
         {activeSection === 'Offers' && (
             <div className="mt-4">
                 <div className="d-flex justify-content-between align-items-center mb-4">
-                    <div className="position-relative">
-                        <button onClick={() => setShowOfferSortMenu(!showOfferSortMenu)} className="btn border border-secondary d-flex flex-column align-items-center justify-content-center gap-1" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
+                    <div className="position-relative dropdown-container">
+                        <button onClick={() => toggleDropdown('offerSort')} className="btn border border-secondary d-flex flex-column align-items-center justify-content-center gap-1" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
                             <div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div><div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div><div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div>
                         </button>
-                        {showOfferSortMenu && (
+                        {openDropdown === 'offerSort' && (
                             <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
-                                {['Newest', 'Ending Soon', 'High Price', 'Low Price'].map(sort => (<button key={sort} onClick={() => { setOfferSort(sort); setShowOfferSortMenu(false); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: offerSort === sort ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{sort}</button>))}
+                                {['Newest', 'Ending Soon', 'High Price', 'Low Price'].map(sort => (<button key={sort} onClick={() => { setOfferSort(sort); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: offerSort === sort ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{sort}</button>))}
                             </div>
                         )}
                     </div>
-                    <div className="position-relative">
-                        <button onClick={() => setShowOfferTypeMenu(!showOfferTypeMenu)} className="btn d-flex align-items-center gap-2 px-3" style={{ border: '1px solid #333', borderRadius: '8px', color: '#fff', fontSize: '13px', height: '32px', backgroundColor: 'transparent' }}>Offers {offerType} <i className="bi bi-chevron-down" style={{ fontSize: '10px' }}></i></button>
-                        {showOfferTypeMenu && (
+                    <div className="position-relative dropdown-container">
+                        <button onClick={() => toggleDropdown('offerType')} className="btn d-flex align-items-center gap-2 px-3" style={{ border: '1px solid #333', borderRadius: '8px', color: '#fff', fontSize: '13px', height: '32px', backgroundColor: 'transparent' }}>{offerType} Offers <i className="bi bi-chevron-down" style={{ fontSize: '10px' }}></i></button>
+                        {openDropdown === 'offerType' && (
                             <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', right: 0, width: '160px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
-                                {['Received', 'Made', 'Expired'].map(type => (<button key={type} onClick={() => { setOfferType(type); setShowOfferTypeMenu(false); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: offerType === type ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>Offers {type}</button>))}
+                                {['All', 'Received', 'Made', 'Expired'].map(type => (<button key={type} onClick={() => { setOfferType(type); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: offerType === type ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{type} Offers</button>))}
                             </div>
                         )}
                     </div>
@@ -559,27 +593,35 @@ export default function DashboardPage() {
             </div>
         )}
 
+        {/* --- 4. CREATED (Updated UI) --- */}
         {activeSection === 'Created' && (
             <>
                 <div className="row mb-4">
                     <div className="col-12 col-lg-6">
                         <div className="d-flex align-items-center gap-2 position-relative">
-                            <div className="position-relative">
-                                <button onClick={() => setShowOfferSortMenu(!showOfferSortMenu)} className="btn border border-secondary d-flex flex-column align-items-center justify-content-center gap-1" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
-                                    <div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div><div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div><div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div>
-                                </button>
-                                {showOfferSortMenu && (
-                                    <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
-                                        {['Newest', 'Oldest'].map(sort => (<button key={sort} onClick={() => { setSortOrder(sort === 'Newest' ? 'newest' : 'oldest'); setShowOfferSortMenu(false); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: 'transparent', fontSize: '13px' }}>Minted {sort}</button>))}
-                                    </div>
-                                )}
+                            
+                            <div className="d-flex align-items-center gap-3">
+                                <span className="text-white fw-bold" style={{ fontSize: '15px' }}>{createdAssets.length} Assets</span>
+                                <div className="position-relative dropdown-container">
+                                    <button onClick={() => toggleDropdown('createdSort')} className="btn d-flex align-items-center gap-2" style={{ border: 'none', background: 'transparent', color: '#fff', fontSize: '14px' }}>
+                                        Sort by <i className="bi bi-chevron-down" style={{ fontSize: '11px' }}></i>
+                                    </button>
+                                    {openDropdown === 'createdSort' && (
+                                        <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
+                                            {['Newest', 'Oldest'].map(sort => (<button key={sort} onClick={() => { setSortOrder(sort === 'Newest' ? 'newest' : 'oldest'); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: 'transparent', fontSize: '13px' }}>Minted {sort}</button>))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             
-                            <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
-                                {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '16px' }}></i>}
-                                {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '16px' }}></i>}
-                                {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '20px' }}></i>}
-                            </button>
+                            <div className="ms-auto">
+                                <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
+                                    {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '16px' }}></i>}
+                                    {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '16px' }}></i>}
+                                    {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '20px' }}></i>}
+                                </button>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -596,16 +638,17 @@ export default function DashboardPage() {
             </>
         )}
 
+        {/* --- 5. ACTIVITY (Updated UI) --- */}
         {activeSection === 'Activity' && (
             <div className="mt-4 pb-5">
                 <div className="table-responsive">
-                    <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
+                    <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0', fontSize: '0.9em' }}>
                         <thead><tr>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Event</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Price</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>From</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>To</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Date</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Event</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>W/POL</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '30%' }}>From</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '30%' }}>To</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '10%' }}>Date</th>
                         </tr></thead>
                         <tbody>
                             {loading ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d' }}><div className="spinner-border text-secondary" role="status"></div></td></tr> : activityData.length === 0 ? (
@@ -613,23 +656,29 @@ export default function DashboardPage() {
                             ) : (
                                 activityData.map((activity, index) => (
                                     <tr key={index} className="align-middle listing-row" style={{ cursor: 'pointer' }} onClick={() => window.location.href = `/asset/${activity.tokenId}`}>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>
-                                            <div className="d-flex align-items-center gap-2">
-                                                {activity.type === 'Mint' && <i className="bi bi-stars text-success"></i>}
-                                                {activity.type === 'Sale' && <i className="bi bi-cart-check-fill text-success"></i>}
-                                                {activity.type === 'Transfer' && <i className="bi bi-arrow-right-circle text-secondary"></i>}
-                                                {(activity.type === 'Offer' || activity.type === 'Offer Made') && <i className="bi bi-hand-index-thumb text-warning"></i>}
-                                                <span>{activity.type}</span>
-                                            </div>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>
+                                            <span>{activity.type}</span>
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{activity.price}</td>
-                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>
-                                            {activity.from === '0x0000000000000000000000000000000000000000' ? 'NullAddress' : (activity.from.toLowerCase() === address?.toLowerCase() ? 'You' : `${activity.from.slice(0,4)}...${activity.from.slice(-4)}`)}
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>
+                                            {activity.price && !isNaN(parseFloat(activity.price)) ? formatCompactNumber(parseFloat(activity.price)) : '-'}
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>
-                                            {activity.to === 'Owner' ? 'Owner' : (activity.to === 'Market' ? 'Market' : (activity.to.toLowerCase() === address?.toLowerCase() ? 'You' : `${activity.to.slice(0,4)}...${activity.to.slice(-4)}`))}
+                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>
+                                            {activity.from === '0x0000000000000000000000000000000000000000' ? 'NullAddress' : (
+                                                <a href={`https://polygonscan.com/address/${activity.from}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>
+                                                    {activity.from.toLowerCase() === address?.toLowerCase() ? 'You' : `${activity.from.slice(0,4)}...${activity.from.slice(-4)}`}
+                                                </a>
+                                            )}
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#8a939b', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>{formatTimeAgo(activity.date)}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>
+                                            {activity.to === 'Market' ? (
+                                                <a href={`https://polygonscan.com/address/${MARKETPLACE_ADDRESS}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>Market</a>
+                                            ) : (
+                                                <a href={`https://polygonscan.com/address/${activity.to}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>
+                                                    {activity.to === 'Owner' ? 'Owner' : (activity.to.toLowerCase() === address?.toLowerCase() ? 'You' : `${activity.to.slice(0,4)}...${activity.to.slice(-4)}`)}
+                                                </a>
+                                            )}
+                                        </td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#8a939b', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>{formatShortTime(activity.date)}</td>
                                     </tr>
                                 ))
                             )}
@@ -650,6 +699,14 @@ export default function DashboardPage() {
 
 const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
+    
+    // Helper to format Date for Mint
+    const formatDate = (dateStr: string) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    };
+
     const PolygonBadge = () => (
         <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px', backgroundColor: 'rgba(0, 0, 0, 0.05)', borderRadius: '50%' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="#FFFFFF"/></svg>
@@ -668,7 +725,7 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                             <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
                         </div>
                         <div className="text-end pe-2">
-                            <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
+                             <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
                         </div>
                     </div>
                 </Link>
@@ -689,6 +746,7 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                           <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
                       </div>
                       <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
+                      {item.mintDate && <div className="text-white mb-2" style={{ fontSize: '11px', color: '#888' }}>Minted: {formatDate(item.mintDate)}</div>}
                       <div className="mt-auto">
                            <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Last Sale</span>}</div>
                            {item.isListed && <div style={{ fontSize: '11px', color: '#cccccc' }}>Price</div>}
