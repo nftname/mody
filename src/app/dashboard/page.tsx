@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
   
+  // --- States ---
   const [myAssets, setMyAssets] = useState<any[]>([]);
   const [createdAssets, setCreatedAssets] = useState<any[]>([]);
   const [offersData, setOffersData] = useState<any[]>([]);
@@ -43,15 +44,18 @@ export default function DashboardPage() {
   const currentViewMode = viewModes[viewModeState];
   const [isCopied, setIsCopied] = useState(false);
 
+  // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState('ALL'); 
   
+  // Dropdown States
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const [offerType, setOfferType] = useState('All'); 
   const [offerSort, setOfferSort] = useState('Newest');   
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
+  // --- Click Outside Handler ---
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as HTMLElement;
@@ -68,6 +72,7 @@ export default function DashboardPage() {
       else setOpenDropdown(name);
   };
 
+  // --- Helpers ---
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -107,6 +112,7 @@ export default function DashboardPage() {
       }).format(num);
   };
 
+  // --- 1. ITEMS ---
   const fetchAssets = async () => {
     if (!address) return;
     setLoading(true);
@@ -181,6 +187,7 @@ export default function DashboardPage() {
     } catch (error) { console.error("Fetch Assets Error:", error); } finally { setLoading(false); }
   };
 
+  // --- 2. OFFERS ---
   const fetchOffers = async () => {
       if (!address) return;
       setLoading(true);
@@ -250,6 +257,7 @@ export default function DashboardPage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
+  // --- 3. CREATED ---
   const fetchCreated = async () => {
       if (!address) return;
       setLoading(true);
@@ -268,6 +276,7 @@ export default function DashboardPage() {
               return;
           }
 
+          // Map dates
           const dateMap: Record<string, string> = {};
           data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
 
@@ -299,10 +308,12 @@ export default function DashboardPage() {
       } finally { setLoading(false); }
   };
 
+  // --- 4. ACTIVITY ---
   const fetchActivity = async () => {
       if (!address) return;
       setLoading(true);
       try {
+          // History
           const { data: activityData, error: actError } = await supabase
             .from('activities')
             .select('*')
@@ -311,6 +322,7 @@ export default function DashboardPage() {
 
           if (actError) throw actError;
 
+          // Offers
           const { data: offersData, error: offError } = await supabase
              .from('offers')
              .select('*')
@@ -413,7 +425,7 @@ export default function DashboardPage() {
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Balance</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>
                          <span style={{ fontSize: '13px', color: '#FFFFFF', marginRight: '4px' }}>POL</span>
-                         {balanceData ? parseFloat(balanceData.formatted).toFixed(2) : '0.00'}
+                         {balanceData ? formatCompactNumber(parseFloat(balanceData.formatted)) : '0.00'}
                     </div>
                 </div>
                 <div className="d-flex flex-column align-items-start">
@@ -424,7 +436,7 @@ export default function DashboardPage() {
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Total value</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>
                         <span style={{ fontSize: '13px', color: '#FFFFFF', marginRight: '4px' }}>POL</span>
-                        {totalAssetValue.toFixed(0)}
+                        {formatCompactNumber(totalAssetValue)}
                     </div>
                 </div>
             </div>
@@ -642,14 +654,14 @@ export default function DashboardPage() {
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>
                                             {activity.price && !isNaN(parseFloat(activity.price)) ? formatCompactNumber(parseFloat(activity.price)) : '-'}
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '11px' }}>
+                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>
                                             {activity.from === '0x0000000000000000000000000000000000000000' ? 'NullAddress' : (
                                                 <a href={`https://polygonscan.com/address/${activity.from}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>
                                                     {activity.from.toLowerCase() === address?.toLowerCase() ? 'You' : `${activity.from.slice(0,4)}...${activity.from.slice(-4)}`}
                                                 </a>
                                             )}
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '11px' }}>
+                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>
                                             {activity.to === 'Market' ? (
                                                 <a href={`https://polygonscan.com/address/${MARKETPLACE_ADDRESS}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>Market</a>
                                             ) : (
