@@ -20,7 +20,8 @@ const SURFACE_DARK = '#262626';
 const BORDER_COLOR = 'rgba(255, 255, 255, 0.08)'; 
 const TEXT_PRIMARY = '#FFFFFF';
 const TEXT_MUTED = '#B0B0B0';
-const OPENSEA_DESC_COLOR = '#E5E8EB'; 
+// تم تعديل لون النص ليكون رمادي هادئ
+const OPENSEA_DESC_COLOR = '#8a939b'; 
 const GOLD_SOLID = '#F0C420';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
 const GOLD_TEXT_CLASS = 'gold-text-effect'; 
@@ -265,7 +266,8 @@ function AssetPage() {
                     
                     {/* LEFT COLUMN: Image & Header (Mobile First Style) */}
                     <div className="col-lg-5">
-                        <div className="rounded-4 overflow-hidden position-relative mb-4" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1' }}>
+                        {/* تعديل 1: تقليل المسافة أسفل الصورة */}
+                        <div className="rounded-4 overflow-hidden position-relative mb-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1' }}>
                             <div className="d-flex align-items-center justify-content-between p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
                                 <div className="d-flex gap-2">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="white" fillOpacity="0.1"/><path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="white"/></svg>
@@ -303,7 +305,8 @@ function AssetPage() {
 
                         {/* TABS (Top Level Navigation) - Light Gray Line */}
                         <div className="mb-3">
-                            <div className="d-flex border-bottom" style={{ borderColor: '#333' }}>
+                            {/* تعديل 2: خط رمادي خافت */}
+                            <div className="d-flex border-bottom" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
                                 {['Details', 'Orders', 'Activity'].map(tab => (
                                     <button key={tab} onClick={() => setActiveTab(tab)} className="btn mx-3 py-2 fw-bold position-relative p-0" style={{ color: activeTab === tab ? '#fff' : TEXT_MUTED, background: 'transparent', border: 'none', fontSize: '15px' }}>
                                         {tab}
@@ -342,6 +345,7 @@ function AssetPage() {
                                     </Accordion>
 
                                     <Accordion title="About" icon="bi-text-left">
+                                        {/* تعديل 3: نص الوصف بلون رمادي هادئ */}
                                         <div style={{ color: OPENSEA_DESC_COLOR, fontSize: '16px', lineHeight: '1.6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
                                             <p className="mb-4 fw-bold text-white" style={{ fontSize: '18px' }}>GEN-0 Genesis NNM Protocol Record</p>
                                             <p className="mb-4">A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.</p>
