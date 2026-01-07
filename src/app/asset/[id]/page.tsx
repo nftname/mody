@@ -20,8 +20,7 @@ const SURFACE_DARK = '#262626';
 const BORDER_COLOR = 'rgba(255, 255, 255, 0.08)'; 
 const TEXT_PRIMARY = '#FFFFFF';
 const TEXT_MUTED = '#B0B0B0';
-// تم تعديل لون النص ليكون رمادي هادئ
-const OPENSEA_DESC_COLOR = '#8a939b'; 
+const OPENSEA_DESC_COLOR = '#E5E8EB'; 
 const GOLD_SOLID = '#F0C420';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
 const GOLD_TEXT_CLASS = 'gold-text-effect'; 
@@ -201,11 +200,11 @@ function AssetPage() {
             const { data: acts } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
             setActivityList(acts || []);
 
-            // 4. More Collection (Mock)
+            // 4. More Collection (Mock) - ADDED NAMES HERE
             setMoreAssets([
-                {id:96, image: 'https://gateway.pinata.cloud/ipfs/bafkreiazhoyzkbenhbvjlltd6izwonwz3xikljtrrksual5ttzs4nyzbuu'},
-                {id:97, image: 'https://gateway.pinata.cloud/ipfs/bafkreiagc35ykldllvd2knqcnei2ctmkps66byvjinlr7hmkgkdx5mhxqi'},
-                {id:98, image: 'https://gateway.pinata.cloud/ipfs/bafkreib7mz6rnwk3ig7ft6ne5iuajlywkttv4zvjp5bbk7ssd5kaykjbsm'}
+                {id:96, name: 'Royal', image: 'https://gateway.pinata.cloud/ipfs/bafkreiazhoyzkbenhbvjlltd6izwonwz3xikljtrrksual5ttzs4nyzbuu'},
+                {id:97, name: 'Majestic', image: 'https://gateway.pinata.cloud/ipfs/bafkreiagc35ykldllvd2knqcnei2ctmkps66byvjinlr7hmkgkdx5mhxqi'},
+                {id:98, name: 'Imperial', image: 'https://gateway.pinata.cloud/ipfs/bafkreib7mz6rnwk3ig7ft6ne5iuajlywkttv4zvjp5bbk7ssd5kaykjbsm'}
             ]);
 
         } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -305,8 +304,8 @@ function AssetPage() {
 
                         {/* TABS (Top Level Navigation) - Light Gray Line */}
                         <div className="mb-3">
-                            {/* تعديل 2: خط رمادي خافت */}
-                            <div className="d-flex border-bottom" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                            {/* تعديل 2: خط رمادي خافت جداً */}
+                            <div className="d-flex border-bottom" style={{ borderColor: 'rgba(255, 255, 255, 0.05)' }}>
                                 {['Details', 'Orders', 'Activity'].map(tab => (
                                     <button key={tab} onClick={() => setActiveTab(tab)} className="btn mx-3 py-2 fw-bold position-relative p-0" style={{ color: activeTab === tab ? '#fff' : TEXT_MUTED, background: 'transparent', border: 'none', fontSize: '15px' }}>
                                         {tab}
@@ -344,9 +343,9 @@ function AssetPage() {
                                         </div>
                                     </Accordion>
 
-                                    <Accordion title="About" icon="bi-text-left">
-                                        {/* تعديل 3: نص الوصف بلون رمادي هادئ */}
-                                        <div style={{ color: OPENSEA_DESC_COLOR, fontSize: '16px', lineHeight: '1.6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
+                                    {/* تعديل 3: عنوان About ديناميكي + لون النص رمادي هادئ */}
+                                    <Accordion title={`About ${asset.name}`} icon="bi-text-left">
+                                        <div style={{ color: '#8a939b', fontSize: '16px', lineHeight: '1.6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
                                             <p className="mb-4 fw-bold text-white" style={{ fontSize: '18px' }}>GEN-0 Genesis NNM Protocol Record</p>
                                             <p className="mb-4">A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.</p>
                                             <p className="mb-0">It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol permanent, time-anchored digital inscription preserved on the blockchain.</p>
@@ -367,7 +366,8 @@ function AssetPage() {
                                                     <div className="rounded-3 overflow-hidden" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK }}>
                                                         <div style={{ aspectRatio: '1/1' }}><img src={item.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
                                                         <div className="p-2 text-center">
-                                                            <div className="text-white fw-bold small">NNM #{item.id}</div>
+                                                            {/* تعديل 4: عرض اسم الأصل بدلاً من المعرف */}
+                                                            <div className="text-white fw-bold small">{item.name}</div>
                                                             <div style={{ fontSize: '10px', color: TEXT_MUTED }}>Not listed</div>
                                                         </div>
                                                     </div>
