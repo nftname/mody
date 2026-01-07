@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamicImport from 'next/dynamic';
@@ -11,6 +11,7 @@ import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 import { usePublicClient } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
+import { supabase } from '@/lib/supabase';
 
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
@@ -109,7 +110,7 @@ const AssetCard = ({ item }: { item: any }) => {
               <div className="w-100 d-flex justify-content-between align-items-end px-2" style={{ marginTop: 'auto' }}>
                   <div className="text-start"><div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px', marginBottom: '4px' }}>Name</div><h5 className="fw-bold m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.name}</h5></div>
                   <div className="text-center"><div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px', marginBottom: '4px' }}>Price</div><div className="fw-bold" style={{ fontSize: '14px', color: '#0ecb81' }}>{Number(item.floor).toFixed(2)} <span style={{ fontSize: '9px', color: '#888' }}>POL</span></div></div>
-                  <div className="text-end"><div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px', marginBottom: '4px' }}>Vol</div><div className="fw-bold" style={{ fontSize: '14px', color: '#ffffff' }}>--- <span style={{ fontSize: '9px', color: '#888' }}>POL</span></div></div>
+                  <div className="text-end"><div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px', marginBottom: '4px' }}>Vol</div><div className="fw-bold" style={{ fontSize: '14px', color: '#ffffff' }}>{item.volumeDisplay}</div></div>
               </div>
           </Link>
       </div>
@@ -134,6 +135,7 @@ function Home() {
     const fetchRealData = async () => {
         if (!publicClient) return;
         try {
+            // 1. Fetch Listings from Blockchain
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -148,8 +150,43 @@ function Home() {
                 return;
             }
 
+            // 2. Fetch DATA from Supabase
+            // Get Sales
+            const { data: salesData } = await supabase
+                .from('activities')
+                .select('token_id, price')
+                .eq('activity_type', 'Sale');
+
+            // Get Offers
+            const { data: offersData } = await supabase
+                .from('offers')
+                .select('token_id')
+                .eq('status', 'active');
+
+            // 3. Process Maps
+            const volumeMap: any = {};
+            const salesCountMap: any = {};
+            const offersCountMap: any = {};
+
+            if (salesData) {
+                salesData.forEach((sale: any) => {
+                    const tid = sale.token_id;
+                    const price = Number(sale.price) || 0;
+                    volumeMap[tid] = (volumeMap[tid] || 0) + price;
+                    salesCountMap[tid] = (salesCountMap[tid] || 0) + 1;
+                });
+            }
+
+            if (offersData) {
+                offersData.forEach((offer: any) => {
+                    offersCountMap[offer.token_id] = (offersCountMap[offer.token_id] || 0) + 1;
+                });
+            }
+
+            // 4. Merge Data
             const items = await Promise.all(tokenIds.map(async (id, index) => {
                 try {
+                    const tid = Number(id);
                     const uri = await publicClient.readContract({
                         address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                         abi: erc721Abi,
@@ -160,14 +197,22 @@ function Home() {
                     const metaRes = await fetch(resolveIPFS(uri));
                     const meta = metaRes.ok ? await metaRes.json() : {};
                     const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
+                    
+                    const volumeVal = volumeMap[tid] || 0;
+                    const salesCount = salesCountMap[tid] || 0;
+                    const offersCount = offersCountMap[tid] || 0;
+                    
+                    const trendingScore = salesCount + offersCount;
 
                     return {
-                        id: Number(id),
-                        rank: index + 1,
+                        id: tid,
+                        rank: index + 1, // Will be re-ranked by sorting
                         name: meta.name || `Asset #${id}`,
                         tier: tierAttr,
                         floor: formatEther(prices[index]),
-                        volume: '0', 
+                        volume: volumeVal,
+                        volumeDisplay: volumeVal > 0 ? `${volumeVal.toFixed(2)}` : '0',
+                        trendingScore: trendingScore,
                         change: 0 
                     };
                 } catch (e) {
@@ -186,13 +231,38 @@ function Home() {
     fetchRealData();
   }, [publicClient]);
 
-  const featuredItems = realListings.slice(0, 3);
-  const newListingsItems = realListings.slice(3, 6);
+  // --- Sorting & Filtering Logic ---
+  const sortedData = useMemo(() => {
+      let data = [...realListings];
+      
+      // Filter logic (Top vs Trending)
+      if (activeTab === 'top') {
+          // Top = Highest Volume
+          data.sort((a, b) => b.volume - a.volume);
+      } else {
+          // Trending = Highest Score (Sales + Offers)
+          data.sort((a, b) => b.trendingScore - a.trendingScore);
+      }
+      
+      // Update ranks after sort
+      return data.map((item, index) => ({ ...item, rank: index + 1 }));
+  }, [realListings, activeTab]);
+
+  // Featured: Top 3 by Volume (Top Performer)
+  const featuredItems = useMemo(() => {
+      return [...realListings].sort((a, b) => b.volume - a.volume).slice(0, 3);
+  }, [realListings]);
+
+  // New Listings: Top 3 by ID (Last Minted)
+  const newListingsItems = useMemo(() => {
+      return [...realListings].sort((a, b) => b.id - a.id).slice(0, 3);
+  }, [realListings]);
   
-  const desktopLeftData = realListings.slice(0, 5);
-  const desktopRightData = realListings.slice(5, 10);
-  const mobileSlideOne = realListings.slice(0, 5);
-  const mobileSlideTwo = realListings.slice(5, 10);
+  // Table Pagination
+  const desktopLeftData = sortedData.slice(0, 5);
+  const desktopRightData = sortedData.slice(5, 10);
+  const mobileSlideOne = sortedData.slice(0, 5);
+  const mobileSlideTwo = sortedData.slice(5, 10);
   
   const trustedBrands = [ 
     { name: "POLYGON", icon: "bi-link-45deg", isCustom: false },
@@ -426,7 +496,7 @@ function Home() {
 }
 
 function MobileTableHeader() { return ( <div className="d-flex justify-content-between mb-3 border-bottom border-secondary pb-2" style={{ borderColor: '#333 !important', height: '40px', alignItems: 'flex-end' }}> <div style={{ flex: 2 }}> <span style={{ fontSize: '13px', color: '#848E9C' }}>Name Asset</span> </div> <div style={{ flex: 2, display: 'flex', justifyContent: 'flex-end', gap: '10px' }}> <span style={{ fontSize: '13px', color: '#848E9C', width: '80px', textAlign: 'right' }}>Floor Price</span> <span style={{ fontSize: '13px', color: '#848E9C', width: '80px', textAlign: 'right' }}>Volume</span> </div> </div> ); }
-function MobileRow({ item, getColorClass, getRankStyle }: any) { return ( <Link href={`/asset/${item.id}`} className="text-decoration-none"> <div className="d-flex align-items-center justify-content-between py-3 binance-row" style={{ borderBottom: '1px solid #222' }}> <div className="d-flex align-items-center gap-3" style={{ flex: 2 }}> <div style={{ width: '20px', textAlign: 'center' }}> {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '18px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light">{item.rank}</span> )} </div> <CoinIcon name={item.name} tier={item.tier} /> <span className="text-white fw-light name-shake" style={{ fontSize: '14px' }}>{item.name}</span> </div> <div className="d-flex justify-content-end align-items-center" style={{ flex: 2, gap: '10px' }}> <div className="d-flex flex-column align-items-end" style={{ width: '80px' }}> <span className="fw-bold text-white" style={{ fontSize: '14px' }}>{Number(item.floor).toFixed(2)}</span> <span className={`small ${getColorClass(item.change)}`} style={{ fontSize: '10px' }}>{Number(item.change).toFixed(2)}%</span> </div> <div className="d-flex flex-column align-items-end" style={{ width: '80px' }}> <span className="small text-white" style={{ fontSize: '13px' }}>---</span> <span className={`small ${getColorClass(item.change)}`} style={{ fontSize: '10px' }}>{Number(item.change).toFixed(2)}%</span> </div> </div> </div> </Link> ); }
+function MobileRow({ item, getColorClass, getRankStyle }: any) { return ( <Link href={`/asset/${item.id}`} className="text-decoration-none"> <div className="d-flex align-items-center justify-content-between py-3 binance-row" style={{ borderBottom: '1px solid #222' }}> <div className="d-flex align-items-center gap-3" style={{ flex: 2 }}> <div style={{ width: '20px', textAlign: 'center' }}> {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '18px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light">{item.rank}</span> )} </div> <CoinIcon name={item.name} tier={item.tier} /> <span className="text-white fw-light name-shake" style={{ fontSize: '14px' }}>{item.name}</span> </div> <div className="d-flex justify-content-end align-items-center" style={{ flex: 2, gap: '10px' }}> <div className="d-flex flex-column align-items-end" style={{ width: '80px' }}> <span className="fw-bold text-white" style={{ fontSize: '14px' }}>{Number(item.floor).toFixed(2)}</span> <span className={`small ${getColorClass(item.change)}`} style={{ fontSize: '10px' }}>{Number(item.change).toFixed(2)}%</span> </div> <div className="d-flex flex-column align-items-end" style={{ width: '80px' }}> <span className="small text-white" style={{ fontSize: '13px' }}>{item.volumeDisplay}</span> <span className={`small ${getColorClass(item.change)}`} style={{ fontSize: '10px' }}>{Number(item.change).toFixed(2)}%</span> </div> </div> </div> </Link> ); }
 function DesktopTable({ data, getColorClass, getRankStyle }: any) {
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => { setIsMounted(true); }, []);
@@ -474,7 +544,7 @@ function DesktopTable({ data, getColorClass, getRankStyle }: any) {
                             <td className="text-end" style={{ verticalAlign: 'middle' }}>
                                 {isMounted ? (
                                     <>
-                                        <span className="text-white fw-bold me-2">---</span>
+                                        <span className="text-white fw-bold me-2">{item.volumeDisplay}</span>
                                         <span className={`small ${getColorClass(item.change)}`}>{item.change > 0 ? '+' : ''}{Number(item.change).toFixed(2)}%</span>
                                     </>
                                 ) : (

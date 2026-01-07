@@ -13,27 +13,20 @@ const GOLD_COLOR = '#FCD535';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
 // --- ABIs ---
-// 1. ERC721 ABI (Standard)
 const CONTRACT_ABI = parseAbi([
   "function balanceOf(address) view returns (uint256)",
   "function tokenOfOwnerByIndex(address, uint256) view returns (uint256)",
   "function tokenURI(uint256) view returns (string)"
 ]);
 
-// 2. Marketplace ABI (Listings View)
 const MARKETPLACE_ABI = parseAbi([
   "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
-]);
-
-// 3. Events ABI (For fetching History & Created)
-const EVENTS_ABI = parseAbi([
-  "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"
 ]);
 
 // --- Blockchain Client ---
 const publicClient = createPublicClient({
   chain: polygon,
-  transport: http() // Uses public RPC
+  transport: http() 
 });
 
 export default function DashboardPage() {
@@ -89,9 +82,11 @@ export default function DashboardPage() {
       return `${hours}h`;
   };
 
-  const formatTimeAgo = (timestamp: number) => {
-      const now = Math.floor(Date.now() / 1000);
-      const diff = now - timestamp;
+  const formatTimeAgo = (dateString: string | number) => {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+      
       if (diff < 60) return 'Just now';
       if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
       if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -100,7 +95,7 @@ export default function DashboardPage() {
 
   // ================= DATA FETCHING LOGIC =================
 
-  // 1. ITEMS & LISTINGS (Source: Blockchain State)
+  // 1. ITEMS & LISTINGS (Source: Blockchain State - Live Truth)
   const fetchAssets = async () => {
     if (!address) return;
     setLoading(true);
@@ -220,38 +215,37 @@ export default function DashboardPage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
-  // 3. CREATED (Source: Blockchain Events - Transfer from Null Address)
+  // 3. CREATED (Source: Supabase 'activities' table)
   const fetchCreated = async () => {
       if (!address) return;
       setLoading(true);
       try {
-          // Ask Blockchain: "Give me Transfer receipts where FROM is 0x0...0 and TO is ME"
-          const logs = await publicClient.getLogs({
-              address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-              event: EVENTS_ABI[0], // Transfer Event
-              args: { 
-                  from: '0x0000000000000000000000000000000000000000', 
-                  to: address 
-              },
-              fromBlock: 'earliest'
-          });
+          // Query Supabase for 'Mint' activities where user is the receiver
+          const { data, error } = await supabase
+            .from('activities')
+            .select('token_id')
+            .eq('to_address', address)
+            .eq('activity_type', 'Mint');
 
-          const tokenIds = logs.map(log => log.args.tokenId);
+          if (error) throw error;
           
-          if (tokenIds.length === 0) {
+          if (!data || data.length === 0) {
               setCreatedAssets([]);
               setLoading(false);
               return;
           }
 
-          // Fetch details for found tokens
+          // Extract Unique IDs
+          const tokenIds = [...new Set(data.map(item => item.token_id))];
+
+          // Fetch Metadata for these IDs from Blockchain/IPFS
           const batches = chunk(tokenIds, 5);
           const loadedCreated: any[] = [];
 
           for (const batch of batches) {
               const batchResults = await Promise.all(batch.map(async (tokenId: any) => {
                   try {
-                      const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'tokenURI', args: [tokenId] });
+                      const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'tokenURI', args: [BigInt(tokenId)] });
                       const metaRes = await fetch(resolveIPFS(tokenURI));
                       const meta = metaRes.ok ? await metaRes.json() : {};
                       return {
@@ -267,71 +261,34 @@ export default function DashboardPage() {
           }
           setCreatedAssets(loadedCreated);
       } catch (e) { 
-          console.error("Created Fetch Error (RPC limit may apply):", e); 
+          console.error("Created Fetch Error:", e); 
           setLoading(false);
       } 
   };
 
-  // 4. ACTIVITY (Source: Hybrid -> Chain Events + Supabase Offers)
+  // 4. ACTIVITY (Source: Supabase 'activities' table - Unified History)
   const fetchActivity = async () => {
       if (!address) return;
       setLoading(true);
       try {
-          const events: any[] = [];
-          
-          // A. Chain Events (Transfers: Buy/Sell/Mint)
-          // Fetch "Incoming" Transfers (Mint or Buy)
-          const logsIn = await publicClient.getLogs({
-              address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-              event: EVENTS_ABI[0],
-              args: { to: address },
-              fromBlock: 'earliest'
-          });
-          
-          // Fetch "Outgoing" Transfers (Sell or Send)
-          const logsOut = await publicClient.getLogs({
-              address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-              event: EVENTS_ABI[0],
-              args: { from: address },
-              fromBlock: 'earliest'
-          });
-
-          const allLogs = [...logsIn, ...logsOut];
-
-          for (const log of allLogs) {
-              const block = await publicClient.getBlock({ blockHash: log.blockHash });
-              const isMint = log.args.from === '0x0000000000000000000000000000000000000000';
-              events.push({
-                  type: isMint ? 'Mint' : 'Transfer',
-                  tokenId: log.args.tokenId?.toString(),
-                  price: '-', // Basic transfer doesn't show price unless we parse Market logs (complex), keeping simple
-                  from: log.args.from,
-                  to: log.args.to,
-                  date: Number(block.timestamp)
-              });
-          }
-
-          // B. Supabase Offers (Offers Made by me)
-          const { data: offersMade } = await supabase
-            .from('offers')
+          // Fetch all activities where user is involved (Sender OR Receiver)
+          const { data, error } = await supabase
+            .from('activities')
             .select('*')
-            .eq('bidder_address', address);
+            .or(`from_address.eq.${address},to_address.eq.${address}`)
+            .order('created_at', { ascending: false });
 
-          if (offersMade) {
-              offersMade.forEach(offer => {
-                  events.push({
-                      type: 'Offer',
-                      tokenId: offer.token_id.toString(),
-                      price: `${offer.price} WPOL`,
-                      from: offer.bidder_address,
-                      to: 'Owner',
-                      date: Math.floor(new Date(offer.created_at).getTime() / 1000)
-                  });
-              });
-          }
+          if (error) throw error;
 
-          // Sort by date (Newest first)
-          events.sort((a, b) => b.date - a.date);
+          const events = data.map((activity: any) => ({
+              type: activity.activity_type,
+              tokenId: activity.token_id.toString(),
+              price: activity.price ? `${activity.price} POL` : '-',
+              from: activity.from_address,
+              to: activity.to_address,
+              date: activity.created_at
+          }));
+
           setActivityData(events);
 
       } catch (e) { 
@@ -576,7 +533,7 @@ export default function DashboardPage() {
             </div>
         )}
 
-        {/* --- 4. CREATED (From Blockchain Events) --- */}
+        {/* --- 4. CREATED (From Database) --- */}
         {activeSection === 'Created' && (
             <>
                 <div className="row mb-4">
@@ -604,7 +561,7 @@ export default function DashboardPage() {
 
                 <div className="pb-5">
                     {loading ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : createdAssets.length === 0 ? (
-                        <div className="text-center py-5 text-secondary">No created assets found on chain</div>
+                        <div className="text-center py-5 text-secondary">No created assets found</div>
                     ) : (
                         <div className="row g-3">
                             {sortedCreatedAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} />))}
@@ -614,7 +571,7 @@ export default function DashboardPage() {
             </>
         )}
 
-        {/* --- 5. ACTIVITY (Chain + Supabase) --- */}
+        {/* --- 5. ACTIVITY (From Database) --- */}
         {activeSection === 'Activity' && (
             <div className="mt-4 pb-5">
                 <div className="table-responsive">
@@ -635,6 +592,7 @@ export default function DashboardPage() {
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>
                                             <div className="d-flex align-items-center gap-2">
                                                 {activity.type === 'Mint' && <i className="bi bi-stars text-success"></i>}
+                                                {activity.type === 'Sale' && <i className="bi bi-cart-check-fill text-success"></i>}
                                                 {activity.type === 'Transfer' && <i className="bi bi-arrow-right-circle text-secondary"></i>}
                                                 {activity.type === 'Offer' && <i className="bi bi-hand-index-thumb text-warning"></i>}
                                                 <span>{activity.type}</span>

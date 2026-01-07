@@ -7,6 +7,7 @@ import { useAccount, useWriteContract, useReadContract, usePublicClient } from "
 import { parseAbi, keccak256, stringToBytes } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { CONTRACT_ADDRESS } from '@/data/config';
+import { supabase } from '@/lib/supabase';
 
 // ABI for the NFT Registry Contract (Minting Logic - Updated for Registry 10)
 const CONTRACT_ABI = parseAbi([
@@ -255,7 +256,7 @@ const MintContent = () => {
 
 const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex, nameToMint, isAdmin, onSuccess, onError }: any) => {
     
-    const { isConnected } = useAccount(); 
+    const { address, isConnected } = useAccount(); 
     const { writeContractAsync } = useWriteContract();
     const publicClient = usePublicClient();
     const [isMinting, setIsMinting] = useState(false);
@@ -293,8 +294,10 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
             // Use browser-safe base64 encoding
             const tokenURI = `data:application/json;base64,${btoa(unescape(encodeURIComponent(jsonString)))}`;
 
+            let hash;
+
             if (isAdmin) {
-              await writeContractAsync({
+              hash = await writeContractAsync({
                 address: CONTRACT_ADDRESS as `0x${string}`,
                 abi: CONTRACT_ABI,
                 functionName: 'reserveName',
@@ -311,13 +314,35 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
               
               const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
               
-              await writeContractAsync({
+              hash = await writeContractAsync({
                 address: CONTRACT_ADDRESS as `0x${string}`,
                 abi: CONTRACT_ABI,
                 functionName: 'mintPublic',
                 args: [nameToMint, tierIndex, tokenURI],
                 value: valueToSend, 
               });
+            }
+
+            // Wait for transaction confirmation
+            const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+            // Record to Supabase Activity after success
+            // Find Token ID from Transfer event (Topic 0: Transfer signature, Topic 3: TokenId)
+            const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
+            
+            if (transferLog && transferLog.topics[3]) {
+                const mintedId = parseInt(transferLog.topics[3], 16);
+                
+                await supabase.from('activities').insert([
+                    {
+                        token_id: mintedId,
+                        activity_type: 'Mint',
+                        from_address: '0x0000000000000000000000000000000000000000',
+                        to_address: address, 
+                        price: price.replace('$',''),
+                        created_at: new Date().toISOString()
+                    }
+                ]);
             }
             
             onSuccess();

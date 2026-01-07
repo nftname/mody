@@ -10,6 +10,7 @@ import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 import { usePublicClient } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
+import { supabase } from '@/lib/supabase';
 
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
@@ -129,6 +130,7 @@ function MarketPage() {
     const fetchMarketData = async () => {
         if (!publicClient) return;
         try {
+            // 1. Fetch Listings from Blockchain (The Truth)
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -143,8 +145,55 @@ function MarketPage() {
                 return;
             }
 
+            // 2. Fetch DATA from Supabase (History & Logic)
+            
+            // A. Get Sales (For Volume & Trending)
+            const { data: salesData } = await supabase
+                .from('activities')
+                .select('token_id, price')
+                .eq('activity_type', 'Sale');
+
+            // B. Get Offers (For Trending Score)
+            const { data: offersData } = await supabase
+                .from('offers')
+                .select('token_id')
+                .eq('status', 'active'); // Only active offers count for trends
+
+            // 3. Process Logic Maps
+            const volumeMap: any = {};
+            const salesCountMap: any = {};
+            const lastSaleMap: any = {};
+            const offersCountMap: any = {};
+
+            // Process Sales
+            if (salesData) {
+                salesData.forEach((sale: any) => {
+                    const tid = sale.token_id;
+                    const price = Number(sale.price) || 0;
+                    
+                    // Volume Accumulation
+                    volumeMap[tid] = (volumeMap[tid] || 0) + price;
+                    
+                    // Sales Count
+                    salesCountMap[tid] = (salesCountMap[tid] || 0) + 1;
+
+                    // Last Sale (Approx via overwriting since DB order might vary, usually sorted by query)
+                    // Better to sort query by date desc, but for map logic:
+                    lastSaleMap[tid] = price; 
+                });
+            }
+
+            // Process Offers
+            if (offersData) {
+                offersData.forEach((offer: any) => {
+                    offersCountMap[offer.token_id] = (offersCountMap[offer.token_id] || 0) + 1;
+                });
+            }
+
+            // 4. Merge Everything
             const items = await Promise.all(tokenIds.map(async (id, index) => {
                 try {
+                    const tid = Number(id);
                     const uri = await publicClient.readContract({
                         address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                         abi: erc721Abi,
@@ -155,15 +204,26 @@ function MarketPage() {
                     const metaRes = await fetch(resolveIPFS(uri));
                     const meta = metaRes.ok ? await metaRes.json() : {};
                     const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
+                    
+                    // -- REAL DATA VALUES --
+                    const volumeVal = volumeMap[tid] || 0;
+                    const salesCount = salesCountMap[tid] || 0;
+                    const offersCount = offersCountMap[tid] || 0;
+                    const lastSaleVal = lastSaleMap[tid] ? `${lastSaleMap[tid]} POL` : '---';
+
+                    // -- TRENDING FORMULA: Sales Count + Offers Count --
+                    const trendingScore = salesCount + offersCount;
 
                     return {
-                        id: Number(id),
+                        id: tid,
                         rank: index + 1, 
                         name: meta.name || `Asset #${id}`,
                         tier: tierAttr,
                         floor: formatEther(prices[index]),
-                        lastSale: '---',
-                        volume: '---',
+                        lastSale: lastSaleVal, 
+                        volume: volumeVal, // Raw number for sorting
+                        volumeDisplay: volumeVal > 0 ? `${volumeVal.toFixed(2)} POL` : '0 POL',
+                        trendingScore: trendingScore, // Logic for Trending Filter
                         listed: 'Now',
                         change: 0,
                         currencySymbol: 'POL'
@@ -187,10 +247,21 @@ function MarketPage() {
   const finalData = useMemo(() => {
       let processedData = [...realListings];
       
-      if (activeFilter === 'Watchlist') {
+      // --- LOGIC FILTERS (Top vs Trending) ---
+      if (activeFilter === 'Top') {
+          // Top = Highest Volume (Money Flow)
+          processedData.sort((a, b) => b.volume - a.volume);
+      } else if (activeFilter === 'Trending') {
+          // Trending = Highest Activity (Sales + Offers)
+          processedData.sort((a, b) => b.trendingScore - a.trendingScore);
+      } else if (activeFilter === 'Watchlist') {
           processedData = processedData.filter(item => watchlist.includes(item.id));
+      } else {
+          // All Assets: Default ID/Rank sort (or Listing date if we had it)
+          processedData.sort((a, b) => a.rank - b.rank); 
       }
       
+      // --- COLUMN SORTING OVERRIDE ---
       if (sortConfig) {
           processedData.sort((a: any, b: any) => {
               const valA = isNaN(parseFloat(a[sortConfig.key])) ? a[sortConfig.key] : parseFloat(a[sortConfig.key]);
@@ -278,6 +349,7 @@ function MarketPage() {
                   >
                       <i className={`bi ${activeFilter === 'Watchlist' ? 'bi-star-fill text-warning' : 'bi-star-fill'}`}></i> Watchlist
                   </div>
+                  {/* LOGIC FILTERS */}
                   {['Trending', 'Top', 'All Assets'].map(f => (
                       <div key={f} onClick={() => setActiveFilter(f)} 
                            className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`}
@@ -339,8 +411,8 @@ function MarketPage() {
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                   Last Sale
                               </th>
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                                  Volume
+                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                                  <div className="d-flex align-items-center justify-content-end">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                   Listed
@@ -381,7 +453,7 @@ function MarketPage() {
                                       <span className="text-white" style={{ fontSize: '13px', color: '#E0E0E0' }}>{item.lastSale}</span>
                                   </td>
                                   <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '13px', color: '#E0E0E0' }}>{item.volume}</span>
+                                      <span className="text-white" style={{ fontSize: '13px', color: '#E0E0E0' }}>{item.volumeDisplay}</span>
                                   </td>
                                   <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{item.listed}</span>

@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
-// أضفنا useSignTypedData للتوقيع المجاني
 import { useAccount, useWriteContract, usePublicClient, useBalance, useSignTypedData } from "wagmi";
 import { parseAbi, formatEther, parseEther, erc721Abi, erc20Abi } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -24,10 +23,8 @@ const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 
 const GOLD_BTN_STYLE = { background: GOLD_GRADIENT, color: '#1a1200', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: GOLD_SOLID, border: `1px solid ${GOLD_SOLID}`, fontWeight: 'bold' as const };
 
-// مدة العرض (30 يوم)
 const OFFER_DURATION = 30 * 24 * 60 * 60; 
 
-// تحديث ABI ليشمل دالة قبول العروض بالتوقيع (acceptOffChainOffer)
 const MARKETPLACE_ABI = parseAbi([
     "function listItem(uint256 tokenId, uint256 price) external",
     "function buyItem(uint256 tokenId) external payable",
@@ -36,11 +33,10 @@ const MARKETPLACE_ABI = parseAbi([
     "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
-// إعدادات التوقيع (EIP-712) - يجب أن تطابق العقد تماماً
 const domain = {
     name: 'NNMMarketplace',
     version: '11',
-    chainId: 137, // Polygon Mainnet ID
+    chainId: 137, 
     verifyingContract: MARKETPLACE_ADDRESS as `0x${string}`,
 } as const;
 
@@ -114,7 +110,7 @@ function AssetPage() {
     const router = useRouter();
     const { address, isConnected } = useAccount();
     const { writeContractAsync } = useWriteContract();
-    const { signTypedDataAsync } = useSignTypedData(); // هوك التوقيع الجديد
+    const { signTypedDataAsync } = useSignTypedData(); 
     const publicClient = usePublicClient();
     const { data: polBalanceData } = useBalance({ address });
     
@@ -122,6 +118,10 @@ function AssetPage() {
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
     const [offersList, setOffersList] = useState<any[]>([]);
+    
+    // Real Stats from DB
+    const [totalVolume, setTotalVolume] = useState('0');
+    const [lastSalePrice, setLastSalePrice] = useState('---');
     
     const [loading, setLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
@@ -190,31 +190,50 @@ function AssetPage() {
         } catch (e) { console.error("Listing Error", e); }
     }, [tokenId, publicClient]);
 
-    // 3. Fetch Offers (Supabase) + Include Signature
-    const fetchOffers = useCallback(async () => {
+    // 3. Fetch Data from Supabase (Offers + Activity Stats)
+    const fetchSupabaseData = useCallback(async () => {
         if (!tokenId) return;
         try {
-            const { data, error } = await supabase
+            // A. Fetch Offers
+            const { data: offers, error: offersError } = await supabase
                 .from('offers')
                 .select('*')
                 .eq('token_id', tokenId)
                 .neq('status', 'cancelled') 
                 .order('price', { ascending: false });
 
-            if (error) throw error;
-
-            if (data) {
-                const formattedOffers = data.map((offer: any) => ({
+            if (offers) {
+                const formattedOffers = offers.map((offer: any) => ({
                     id: offer.id,
                     bidder: offer.bidder_address,
                     price: offer.price.toString(),
                     expiration: offer.expiration,
                     status: offer.status,
-                    signature: offer.signature, // جلب التوقيع لتنفيذ البيع لاحقاً
+                    signature: offer.signature, 
                     isMyOffer: address && offer.bidder_address.toLowerCase() === address.toLowerCase()
                 }));
                 setOffersList(formattedOffers);
             }
+
+            // B. Fetch Activity for Stats (Volume & Last Sale)
+            const { data: activities } = await supabase
+                .from('activities')
+                .select('price, created_at')
+                .eq('token_id', tokenId)
+                .eq('activity_type', 'Sale')
+                .order('created_at', { ascending: false });
+
+            if (activities && activities.length > 0) {
+                // Calculate Volume
+                const volume = activities.reduce((acc, curr) => acc + Number(curr.price), 0);
+                setTotalVolume(volume.toFixed(2));
+                // Set Last Sale
+                setLastSalePrice(`${activities[0].price} POL`);
+            } else {
+                setTotalVolume('0');
+                setLastSalePrice('---');
+            }
+
         } catch (e) { console.error("Supabase Error:", e); }
     }, [tokenId, address]);
 
@@ -233,16 +252,16 @@ function AssetPage() {
 
     useEffect(() => {
         if (tokenId && publicClient) {
-            Promise.all([fetchAssetData(), checkListing(), fetchOffers()]).then(() => setLoading(false));
+            Promise.all([fetchAssetData(), checkListing(), fetchSupabaseData()]).then(() => setLoading(false));
         }
-    }, [tokenId, address, fetchAssetData, checkListing, fetchOffers, publicClient]);
+    }, [tokenId, address, fetchAssetData, checkListing, fetchSupabaseData, publicClient]);
 
     useEffect(() => {
         if (isOfferMode && address) refreshWpolData();
     }, [isOfferMode, address, refreshWpolData]);
 
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
-    const closeModal = () => { setIsPending(false); setModal({ ...modal, isOpen: false }); if (modal.type === 'success') { fetchOffers(); checkListing(); setIsListingMode(false); setIsOfferMode(false); setOfferPrice(''); } };
+    const closeModal = () => { setIsPending(false); setModal({ ...modal, isOpen: false }); if (modal.type === 'success') { fetchSupabaseData(); checkListing(); setIsListingMode(false); setIsOfferMode(false); setOfferPrice(''); } };
 
     // --- ACTIONS ---
 
@@ -256,7 +275,7 @@ function AssetPage() {
                 address: WPOL_ADDRESS as `0x${string}`,
                 abi: erc20Abi,
                 functionName: 'approve',
-                args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)] // الموافقة على المبلغ المحدد فقط
+                args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)] 
             });
             await publicClient!.waitForTransactionReceipt({ hash });
             await refreshWpolData();
@@ -285,7 +304,6 @@ function AssetPage() {
             const priceInWei = parseEther(offerPrice);
             const expiration = BigInt(Math.floor(Date.now() / 1000) + OFFER_DURATION);
             
-            // طلب التوقيع من المحفظة (EIP-712)
             const signature = await signTypedDataAsync({
                 domain,
                 types,
@@ -298,7 +316,6 @@ function AssetPage() {
                 },
             });
 
-            // حفظ العرض والتوقيع في Supabase
             const { error } = await supabase
                 .from('offers')
                 .insert([
@@ -308,7 +325,7 @@ function AssetPage() {
                         price: parseFloat(offerPrice),
                         expiration: Number(expiration),
                         status: 'active',
-                        signature: signature // الحقل الجديد
+                        signature: signature 
                     }
                 ]);
 
@@ -346,9 +363,19 @@ function AssetPage() {
 
             await publicClient!.waitForTransactionReceipt({ hash });
 
-            // تحديث الحالة في Supabase
             await supabase.from('offers').update({ status: 'accepted' }).eq('id', offer.id);
             
+            await supabase.from('activities').insert([
+                {
+                    token_id: tokenId,
+                    activity_type: 'Sale',
+                    from_address: address,
+                    to_address: offer.bidder, 
+                    price: offer.price,
+                    created_at: new Date().toISOString()
+                }
+            ]);
+
             showModal('success', 'Sold!', 'Offer accepted and asset transferred.');
         } catch (err: any) {
             console.error(err);
@@ -366,7 +393,7 @@ function AssetPage() {
                 .update({ status: 'cancelled' })
                 .eq('id', offerId);
             if(error) throw error;
-            await fetchOffers();
+            await fetchSupabaseData();
             setIsPending(false);
         } catch(e) { console.error(e); setIsPending(false); }
     };
@@ -388,6 +415,18 @@ function AssetPage() {
                 value: parseEther(listing.pricePerToken)
             });
             await publicClient!.waitForTransactionReceipt({ hash });
+
+            await supabase.from('activities').insert([
+                {
+                    token_id: tokenId,
+                    activity_type: 'Sale',
+                    from_address: listing.seller,
+                    to_address: address, 
+                    price: listing.pricePerToken,
+                    created_at: new Date().toISOString()
+                }
+            ]);
+
             showModal('success', 'Success!', 'Asset purchased.');
         } catch (err: any) {
             showModal('error', 'Failed', err.message?.slice(0, 100));
@@ -406,6 +445,7 @@ function AssetPage() {
                 args: [BigInt(tokenId), parseEther(sellPrice)]
             });
             await publicClient!.waitForTransactionReceipt({ hash });
+            
             showModal('success', 'Success!', 'Listed successfully.');
         } catch (err: any) {
             showModal('error', 'Failed', err.message?.slice(0, 100));
@@ -585,6 +625,19 @@ function AssetPage() {
                             )}
                         </div>
 
+                        {/* Stats Row (Volume & Last Sale) - UPDATED TO SHOW DB DATA */}
+                        <div className="d-flex gap-4 mb-4 p-3 rounded-3" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${BORDER_COLOR}` }}>
+                            <div>
+                                <div className="small text-muted mb-1">Total Volume</div>
+                                <div className="fw-bold text-white fs-5">{totalVolume} POL</div>
+                            </div>
+                            <div className="vr bg-secondary opacity-25"></div>
+                            <div>
+                                <div className="small text-muted mb-1">Last Sale</div>
+                                <div className="fw-bold text-white fs-5">{lastSalePrice}</div>
+                            </div>
+                        </div>
+
                         {/* Chart (نفسه) */}
                         <div className="mb-4">
                             <h5 className="fw-bold mb-3" style={{ color: TEXT_PRIMARY }}>Price History</h5>
@@ -607,7 +660,7 @@ function AssetPage() {
                             <div className="d-flex align-items-center gap-2 mb-3 pb-2" style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>
                                 <i className="bi bi-list-ul text-gold"></i>
                                 <h5 className="fw-bold mb-0" style={{ color: TEXT_PRIMARY }}>Offers</h5>
-                                <button onClick={fetchOffers} className="btn btn-sm border-0 ms-auto" style={{ color: TEXT_MUTED }}><i className="bi bi-arrow-clockwise"></i></button>
+                                <button onClick={fetchSupabaseData} className="btn btn-sm border-0 ms-auto" style={{ color: TEXT_MUTED }}><i className="bi bi-arrow-clockwise"></i></button>
                             </div>
                             <div className="rounded-3 overflow-hidden" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK }}>
                                 <div className="table-responsive">
