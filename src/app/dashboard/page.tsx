@@ -86,6 +86,7 @@ export default function DashboardPage() {
       return `${Math.floor(diff / 86400)}d ago`;
   };
 
+  // --- 1. ITEMS (My Wallet) ---
   const fetchAssets = async () => {
     if (!address) return;
     setLoading(true);
@@ -111,6 +112,7 @@ export default function DashboardPage() {
         )
       );
 
+      // Fetch metadata in small batches to avoid RPC overload
       const batches = chunk(tokenIds, 5);
       const loaded: any[] = [];
 
@@ -155,11 +157,12 @@ export default function DashboardPage() {
           })
         );
         loaded.push(...(batchResults.filter(Boolean) as any[]));
-        setMyAssets([...loaded]); 
+        setMyAssets([...loaded]); // Update UI progressively
       }
     } catch (error) { console.error("Fetch Assets Error:", error); } finally { setLoading(false); }
   };
 
+  // --- 2. OFFERS ---
   const fetchOffers = async () => {
       if (!address) return;
       setLoading(true);
@@ -189,6 +192,7 @@ export default function DashboardPage() {
               const knownAsset = myAssets.find(a => a.id === offer.token_id.toString());
               let assetName = knownAsset ? knownAsset.name : `NNM #${offer.token_id}`;
 
+              // If name not found in myAssets, fetch from chain
               if (!knownAsset) {
                   try {
                       const tokenURI = await publicClient.readContract({
@@ -220,6 +224,7 @@ export default function DashboardPage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
+  // --- 3. CREATED (Fix Infinite Loading) ---
   const fetchCreated = async () => {
       if (!address) return;
       setLoading(true);
@@ -227,7 +232,7 @@ export default function DashboardPage() {
           const { data, error } = await supabase
             .from('activities')
             .select('token_id')
-            .ilike('to_address', address)
+            .ilike('to_address', address) // Case insensitive
             .eq('activity_type', 'Mint');
 
           if (error) throw error;
@@ -240,7 +245,8 @@ export default function DashboardPage() {
 
           const tokenIds = [...new Set(data.map(item => item.token_id))];
 
-          const batches = chunk(tokenIds, 5);
+          // Use smaller batches and timeout protection
+          const batches = chunk(tokenIds, 4); 
           const loadedCreated: any[] = [];
 
           for (const batch of batches) {
@@ -259,36 +265,64 @@ export default function DashboardPage() {
                   } catch { return null; }
               }));
               loadedCreated.push(...(batchResults.filter(Boolean) as any[]));
+              setCreatedAssets([...loadedCreated]); // Render partial results
           }
-          setCreatedAssets(loadedCreated);
       } catch (e) { 
           console.error("Created Fetch Error:", e); 
-          setLoading(false);
-      } 
+      } finally {
+          setLoading(false); // Force stop loading
+      }
   };
 
+  // --- 4. ACTIVITY (Merge Offers + Fix Links) ---
   const fetchActivity = async () => {
       if (!address) return;
       setLoading(true);
       try {
-          const { data, error } = await supabase
+          // 1. Fetch History (Mint/Sales)
+          const { data: activityData, error: actError } = await supabase
             .from('activities')
             .select('*')
             .or(`from_address.ilike.${address},to_address.ilike.${address}`)
             .order('created_at', { ascending: false });
 
-          if (error) throw error;
+          if (actError) throw actError;
 
-          const events = data.map((activity: any) => ({
-              type: activity.activity_type,
-              tokenId: activity.token_id.toString(),
-              price: activity.price ? `${activity.price} POL` : '-',
-              from: activity.from_address,
-              to: activity.to_address,
-              date: activity.created_at
+          // 2. Fetch Offers (My Offers)
+          const { data: offersData, error: offError } = await supabase
+             .from('offers')
+             .select('*')
+             .ilike('bidder_address', address)
+             .order('created_at', { ascending: false });
+
+          if (offError) throw offError;
+
+          // 3. Format Activities
+          const formattedActivities = (activityData || []).map((item: any) => ({
+              type: item.activity_type,
+              tokenId: item.token_id.toString(),
+              price: item.price ? `${item.price} POL` : '-',
+              from: item.from_address,
+              to: item.to_address,
+              date: item.created_at,
+              rawDate: new Date(item.created_at).getTime()
           }));
 
-          setActivityData(events);
+          // 4. Format Offers as Activities
+          const formattedOffers = (offersData || []).map((item: any) => ({
+              type: 'Offer Made',
+              tokenId: item.token_id.toString(),
+              price: item.price ? `${item.price} WPOL` : '-',
+              from: item.bidder_address,
+              to: 'Market',
+              date: item.created_at,
+              rawDate: new Date(item.created_at).getTime()
+          }));
+
+          // 5. Merge and Sort
+          const merged = [...formattedActivities, ...formattedOffers].sort((a, b) => b.rawDate - a.rawDate);
+
+          setActivityData(merged);
 
       } catch (e) { 
           console.error("Activity Error", e); 
@@ -551,7 +585,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="pb-5">
-                    {loading ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : createdAssets.length === 0 ? (
+                    {loading && createdAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : createdAssets.length === 0 ? (
                         <div className="text-center py-5 text-secondary">No created assets found</div>
                     ) : (
                         <div className="row g-3">
@@ -578,22 +612,22 @@ export default function DashboardPage() {
                                 <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>No recent activity found</td></tr>
                             ) : (
                                 activityData.map((activity, index) => (
-                                    <tr key={index} className="align-middle listing-row">
+                                    <tr key={index} className="align-middle listing-row" style={{ cursor: 'pointer' }} onClick={() => window.location.href = `/asset/${activity.tokenId}`}>
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>
                                             <div className="d-flex align-items-center gap-2">
                                                 {activity.type === 'Mint' && <i className="bi bi-stars text-success"></i>}
                                                 {activity.type === 'Sale' && <i className="bi bi-cart-check-fill text-success"></i>}
                                                 {activity.type === 'Transfer' && <i className="bi bi-arrow-right-circle text-secondary"></i>}
-                                                {activity.type === 'Offer' && <i className="bi bi-hand-index-thumb text-warning"></i>}
+                                                {(activity.type === 'Offer' || activity.type === 'Offer Made') && <i className="bi bi-hand-index-thumb text-warning"></i>}
                                                 <span>{activity.type}</span>
                                             </div>
                                         </td>
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{activity.price}</td>
                                         <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>
-                                            {activity.from === '0x0000000000000000000000000000000000000000' ? 'NullAddress' : <Link href={`/profile/${activity.from}`} className="text-decoration-none"><span style={{ color: GOLD_COLOR, cursor: 'pointer' }}>{`${activity.from.slice(0,4)}...${activity.from.slice(-4)}`}</span></Link>}
+                                            {activity.from === '0x0000000000000000000000000000000000000000' ? 'NullAddress' : (activity.from.toLowerCase() === address?.toLowerCase() ? 'You' : `${activity.from.slice(0,4)}...${activity.from.slice(-4)}`)}
                                         </td>
                                         <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>
-                                            {activity.to === 'Owner' ? 'Owner' : (activity.to === address ? 'You' : <Link href={`/profile/${activity.to}`} className="text-decoration-none"><span style={{ color: GOLD_COLOR, cursor: 'pointer' }}>{`${activity.to.slice(0,4)}...${activity.to.slice(-4)}`}</span></Link>)}
+                                            {activity.to === 'Owner' ? 'Owner' : (activity.to === 'Market' ? 'Market' : (activity.to.toLowerCase() === address?.toLowerCase() ? 'You' : `${activity.to.slice(0,4)}...${activity.to.slice(-4)}`))}
                                         </td>
                                         <td style={{ backgroundColor: 'transparent', color: '#8a939b', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>{formatTimeAgo(activity.date)}</td>
                                     </tr>
