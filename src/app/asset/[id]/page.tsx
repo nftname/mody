@@ -27,17 +27,16 @@ const GOLD_TEXT_CLASS = 'gold-text-effect';
 const GOLD_BTN_STYLE = { background: GOLD_GRADIENT, color: '#1a1200', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: GOLD_SOLID, border: `1px solid ${GOLD_SOLID}`, fontWeight: 'bold' as const };
 
-// Updated Glass Button Style (50% Width, 5% Opacity, Thinner Border)
 const GLASS_BTN_STYLE = {
-    background: 'rgba(255, 255, 255, 0.05)', // 5% transparency
-    border: `1px solid ${GOLD_SOLID}`, // Thin border
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: `1px solid ${GOLD_SOLID}`,
     color: GOLD_SOLID,
     backdropFilter: 'blur(5px)',
     borderRadius: '12px',
     fontWeight: 'bold' as const,
-    fontSize: '15px', // Slightly smaller font
-    padding: '10px',  // Reduced height padding
-    width: '50%',     // 50% Width
+    fontSize: '15px',
+    padding: '10px',
+    width: '50%',
     maxWidth: '300px',
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
 };
@@ -56,7 +55,6 @@ const MARKETPLACE_ABI = parseAbi([
 const domain = { name: 'NNMMarketplace', version: '11', chainId: 137, verifyingContract: MARKETPLACE_ADDRESS as `0x${string}` } as const;
 const types = { Offer: [{ name: 'bidder', type: 'address' }, { name: 'tokenId', type: 'uint256' }, { name: 'price', type: 'uint256' }, { name: 'expiration', type: 'uint256' }] } as const;
 
-// --- Helpers ---
 const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
 const formatUSD = (pol: any) => { const val = parseFloat(pol); if(isNaN(val)) return '$0.00'; return `$${(val * POL_TO_USD_RATE).toFixed(2)}`; };
 const resolveIPFS = (uri: string) => uri?.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri || '';
@@ -76,7 +74,6 @@ const formatDuration = (expirationTimestamp: number) => {
     return `${minutes}m`;
 };
 
-// --- Components ---
 const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => {
     if (!isOpen) return null;
     let icon = <div className="spinner-border" style={{ color: GOLD_SOLID }} role="status"></div>;
@@ -105,11 +102,9 @@ const Accordion = ({ title, defaultOpen = false, icon, children }: any) => {
         <div style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>
             <button onClick={() => setIsOpen(!isOpen)} className="d-flex align-items-center justify-content-between w-100 py-3 px-3" style={{ background: 'transparent', border: 'none', color: TEXT_PRIMARY, fontWeight: '600', fontSize: '15px' }}>
                 <div className="d-flex align-items-center gap-3">
-                    {/* Shifted icon slightly right via padding */}
                     <i className={`bi ${icon}`} style={{ color: TEXT_MUTED, fontSize: '16px', paddingLeft: '4px' }}></i> 
                     {title}
                 </div>
-                {/* Shifted arrow slightly left via padding */}
                 <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'}`} style={{ color: TEXT_MUTED, fontSize: '12px', paddingRight: '4px' }}></i>
             </button>
             {isOpen && <div className="pb-4 pt-1">{children}</div>}
@@ -135,18 +130,13 @@ function AssetPage() {
     const publicClient = usePublicClient();
     const { data: polBalanceData } = useBalance({ address });
     
-    // States
     const [asset, setAsset] = useState<any | null>(null);
     const [listing, setListing] = useState<any | null>(null);
     const [offersList, setOffersList] = useState<any[]>([]);
     const [activityList, setActivityList] = useState<any[]>([]);
     const [moreAssets, setMoreAssets] = useState<any[]>([]);
-    
-    // Filter & Sort
     const [offerSort, setOfferSort] = useState('Newest');
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-
-    // UI States
     const [activeTab, setActiveTab] = useState('Details');
     const [loading, setLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
@@ -154,12 +144,9 @@ function AssetPage() {
     const [isPending, setIsPending] = useState(false);
     const [isListingMode, setIsListingMode] = useState(false);
     const [sellPrice, setSellPrice] = useState('10');
-    
-    // Modal States
     const [isOfferMode, setIsOfferMode] = useState(false);
     const [offerStep, setOfferStep] = useState<'select' | 'input'>('select');
     const [offerPrice, setOfferPrice] = useState('');
-    
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
     const [isFav, setIsFav] = useState(false);
@@ -167,8 +154,6 @@ function AssetPage() {
 
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
-
-    // Auto Focus Ref
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -177,7 +162,6 @@ function AssetPage() {
         }
     }, [isOfferMode, offerStep]);
 
-    // Click Outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -194,7 +178,6 @@ function AssetPage() {
         else setOpenDropdown(name);
     };
 
-    // --- Data Fetching ---
     const fetchAllData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
@@ -314,7 +297,6 @@ function AssetPage() {
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
     const closeModal = () => { setIsPending(false); setModal({ ...modal, isOpen: false }); if (modal.type === 'success') { fetchAllData(); setIsOfferMode(false); } };
 
-    // --- ACTIONS ---
     const handleApprove = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'approve', args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)] }); await publicClient!.waitForTransactionReceipt({ hash }); await refreshWpolData(); } catch(e) { console.error(e); setIsPending(false); } };
     
     const handleSubmitOffer = async () => {
@@ -326,8 +308,6 @@ function AssetPage() {
             const expiration = BigInt(Math.floor(Date.now() / 1000) + OFFER_DURATION);
             const signature = await signTypedDataAsync({ domain, types, primaryType: 'Offer', message: { bidder: address, tokenId: BigInt(tokenId), price: priceInWei, expiration } });
             await supabase.from('offers').insert([{ token_id: tokenId, bidder_address: address, price: parseFloat(offerPrice), expiration: Number(expiration), status: 'active', signature }]);
-            
-            // KEY LOGIC: Close Offer Modal FIRST, then Show Success
             setIsOfferMode(false); 
             showModal('success', 'Offer Submitted', 'Signed successfully.');
         } catch(e) { setIsPending(false); }
@@ -383,7 +363,6 @@ function AssetPage() {
             <div className="container-fluid" style={{ maxWidth: '1280px', paddingTop: '20px' }}>
                 <div className="row g-3 g-lg-5">
                     
-                    {/* LEFT COLUMN */}
                     <div className="col-lg-5">
                         <div className="rounded-4 overflow-hidden position-relative mb-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1' }}>
                             <div className="d-flex align-items-center justify-content-end p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
@@ -395,16 +374,17 @@ function AssetPage() {
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN */}
                     <div className="col-lg-7 pt-0">
                         <div className="mb-2">
-                            {/* Increased margin-bottom for title (50%) */}
                             <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-3`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
                             
-                            {/* Increased margin-bottom for owner line (50%) */}
                             <div className="d-flex align-items-center justify-content-between mb-3">
                                 <span style={{ color: TEXT_PRIMARY, fontSize: '15px', fontWeight: '500' }}>NNM Sovereign Asset</span>
-                                <span style={{ color: TEXT_MUTED, fontSize: '13px' }}>Owned by <a href="#" className="text-decoration-none" style={{ color: GOLD_SOLID }}>{asset.owner.slice(0,6)}...</a></span>
+                                <span style={{ color: TEXT_MUTED, fontSize: '13px' }}>
+                                    Owned by <Link href={`/profile/${asset.owner}`} className="text-decoration-none" style={{ color: GOLD_SOLID }}>
+                                        {asset.owner.slice(0,6)}...{asset.owner.slice(-4)}
+                                    </Link>
+                                </span>
                             </div>
                             
                             <div className="d-flex align-items-center gap-4 mb-2" style={{ color: TEXT_MUTED, fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>
@@ -414,7 +394,6 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* TABS */}
                         <div className="mb-3">
                             <div className="d-flex" style={{ borderBottom: 'none' }}>
                                 {['Details', 'Orders', 'Activity'].map(tab => (
@@ -426,7 +405,6 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* TAB CONTENT */}
                         <div className="pt-0 mt-0">
                             <div style={{ border: `1px solid ${BORDER_COLOR}`, borderRadius: '12px', overflow: 'hidden', backgroundColor: SURFACE_DARK }}>
                                 {activeTab === 'Details' && (
@@ -535,10 +513,9 @@ function AssetPage() {
                                                     ) : (
                                                         offersList.map((offer) => (
                                                             <tr key={offer.id}>
-                                                                {/* Added align-middle to keep numbers aligned with text */}
                                                                 <td className="align-middle" style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600', fontSize: '13px' }}>{formatCompactNumber(offer.price)}</td>
-                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><a href="#" style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</a></td>
-                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><a href="#" style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{asset?.owner === address ? 'You' : (asset?.owner ? asset.owner.slice(0,6) : '-')}</a></td>
+                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><Link href={`/profile/${offer.bidder_address}`} style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</Link></td>
+                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><Link href={`/profile/${asset.owner}`} style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{asset?.owner === address ? 'You' : (asset?.owner ? asset.owner.slice(0,6) : '-')}</Link></td>
                                                                 <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>{offer.timeLeft}</td>
                                                                 <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
                                                                     {isOwner && !offer.isMyOffer && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
@@ -569,8 +546,12 @@ function AssetPage() {
                                                         <tr key={index}>
                                                             <td className="align-middle" style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>{act.type}</td>
                                                             <td className="align-middle" style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>{act.price ? formatCompactNumber(act.price) : '-'}</td>
-                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>{act.from ? act.from.slice(0,6) : '-'}</td>
-                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>{act.to ? (act.to === 'Market' ? 'Market' : act.to.slice(0,6)) : '-'}</td>
+                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>
+                                                                {act.from ? <Link href={`/profile/${act.from}`} style={{color: GOLD_SOLID, textDecoration: 'none'}}>{act.from.slice(0,6)}</Link> : '-'}
+                                                            </td>
+                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>
+                                                                {act.to ? (act.to === 'Market' ? 'Market' : <Link href={`/profile/${act.to}`} style={{color: GOLD_SOLID, textDecoration: 'none'}}>{act.to.slice(0,6)}</Link>) : '-'}
+                                                            </td>
                                                             <td className="align-middle" style={{ backgroundColor: 'transparent', color: TEXT_MUTED, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>{formatShortTime(act.date)}</td>
                                                         </tr>
                                                     ))}
@@ -586,7 +567,6 @@ function AssetPage() {
                 </div>
             </div>
 
-            {/* STICKY FOOTER */}
             <div className="fixed-bottom p-2" style={{ backgroundColor: '#1E1E1E', borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100 }}>
                 <div className="container d-flex justify-content-center" style={{ maxWidth: '1200px' }}>
                     {!isConnected ? (
@@ -604,7 +584,6 @@ function AssetPage() {
                             <button onClick={() => setIsListingMode(true)} className="btn fw-bold py-2" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', width: '65%', maxWidth: '500px', fontSize: '16px' }}>List for Sale</button>
                         )
                     ) : (
-                        // Updated Glass Button
                         <button onClick={openOfferModal} style={GLASS_BTN_STYLE}>
                             Make Offer
                         </button>
@@ -612,7 +591,6 @@ function AssetPage() {
                 </div>
             </div>
 
-            {/* MAKE OFFER MODAL - CENTERED & AUTO-FOCUS */}
             {isOfferMode && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${GOLD_SOLID}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
@@ -636,7 +614,6 @@ function AssetPage() {
                                 <div className="mb-4 text-center">
                                     <div style={{ color: TEXT_MUTED, fontSize: '13px', marginBottom: '8px' }}>Balance: {wpolBalance.toFixed(1)} WPOL</div>
                                     <div className="d-flex align-items-center justify-content-center border rounded-3 overflow-hidden p-2" style={{ borderColor: BORDER_COLOR, backgroundColor: BACKGROUND_DARK }}>
-                                        {/* Input Auto Focus & Center Align */}
                                         <input 
                                             ref={inputRef}
                                             autoFocus
