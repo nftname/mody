@@ -414,22 +414,8 @@ export default function ProfilePage() {
 
             <div className="d-flex gap-5 mt-2 px-2">
                 <div className="d-flex flex-column align-items-start">
-                    <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Balance</div>
-                    <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>
-                         <span style={{ fontSize: '13px', color: '#FFFFFF', marginRight: '4px' }}>POL</span>
-                         {balanceData ? formatCompactNumber(parseFloat(balanceData.formatted)) : '0.00'}
-                    </div>
-                </div>
-                <div className="d-flex flex-column align-items-start">
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Assets</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>{myAssets.length}</div>
-                </div>
-                <div className="d-flex flex-column align-items-start">
-                    <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Total value</div>
-                    <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>
-                        <span style={{ fontSize: '13px', color: '#FFFFFF', marginRight: '4px' }}>POL</span>
-                        {formatCompactNumber(totalAssetValue)}
-                    </div>
                 </div>
             </div>
         </div>
