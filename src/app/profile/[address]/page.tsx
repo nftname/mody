@@ -572,66 +572,41 @@ export default function ProfilePage() {
         )}
 
         {activeSection === 'Offers' && (
-            <div className="mt-4">
-                {isOwner ? (
-                <>
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                    <div className="position-relative dropdown-container">
-                        <button onClick={() => toggleDropdown('offerSort')} className="btn border border-secondary d-flex flex-column align-items-center justify-content-center gap-1" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
-                            <div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div><div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div><div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div>
-                        </button>
-                        {openDropdown === 'offerSort' && (
-                            <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
-                                {['Newest', 'Ending Soon', 'High Price', 'Low Price'].map(sort => (<button key={sort} onClick={() => { setOfferSort(sort); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: offerSort === sort ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{sort}</button>))}
-                            </div>
-                        )}
-                    </div>
-                    <div className="position-relative dropdown-container">
-                        <button onClick={() => toggleDropdown('offerType')} className="btn d-flex align-items-center gap-2 px-3" style={{ border: '1px solid #333', borderRadius: '8px', color: '#fff', fontSize: '13px', height: '32px', backgroundColor: 'transparent' }}>{offerType} Offers <i className="bi bi-chevron-down" style={{ fontSize: '10px' }}></i></button>
-                        {openDropdown === 'offerType' && (
-                            <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', right: 0, width: '160px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
-                                {['All', 'Received', 'Made', 'Expired'].map(type => (<button key={type} onClick={() => { setOfferType(type); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: offerType === type ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{type} Offers</button>))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-                <div className="table-responsive">
-                    <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
-                        <thead><tr>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '35%' }}>ASSET</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>WPOL</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>{offerType === 'Made' ? 'TO' : 'FROM'}</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>EXP</th>
-                            <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '5%', padding: '0 20px 10px 0' }}></th> 
-                        </tr></thead>
-                        <tbody>
-                            {loading ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d' }}><div className="spinner-border text-secondary" role="status"></div></td></tr> : offersData.length === 0 ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>No offers found</td></tr> : (
-                                offersData.map((offer) => (
-                                    <tr key={offer.id} className="align-middle listing-row">
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>{offer.assetName}</td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{parseFloat(offer.formattedPrice).toFixed(2)}</td>
-                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>{offerType === 'Made' ? 'Owner' : (offer.bidder_address ? <Link href={`/profile/${offer.bidder_address}`} className="text-decoration-none"><span style={{ color: GOLD_COLOR, cursor: 'pointer' }}>{`${offer.bidder_address.slice(0,4)}...${offer.bidder_address.slice(-4)}`}</span></Link> : '-')}</td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>{offer.timeLeft}</td>
-                                        <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}><Link href={`/asset/${offer.token_id}`}><i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i></Link></td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-                </>
-                ) : (
-                    <div className="text-center py-5 text-secondary">
-                        
-                    </div>
-                )}
+            <div className="mt-4 pb-5 d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
+                <span style={{ color: '#8a939b', fontSize: '16px' }}>لا يوجد بيان هنا</span>
             </div>
         )}
 
         {activeSection === 'Created' && (
             <>
-                <div className="row mb-4">
-                    <div className="col-12 col-lg-6">
+                <div className="row g-3 mb-4 d-none d-lg-flex align-items-center">
+                    <div className="col-lg-3">
+                        <span className="text-white fw-bold" style={{ fontSize: '15px' }}>{createdAssets.length} Assets</span>
+                    </div>
+                    <div className="col-lg-3">
+                        <div className="position-relative dropdown-container">
+                            <button onClick={() => toggleDropdown('createdSort')} className="btn d-flex align-items-center gap-2 ps-0" style={{ border: 'none', background: 'transparent', color: '#fff', fontSize: '14px' }}>
+                                Sort by <i className="bi bi-chevron-down" style={{ fontSize: '11px' }}></i>
+                            </button>
+                            {openDropdown === 'createdSort' && (
+                                <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
+                                    {['Newest', 'Oldest'].map(sort => (<button key={sort} onClick={() => { setSortOrder(sort === 'Newest' ? 'newest' : 'oldest'); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: 'transparent', fontSize: '13px' }}>Minted {sort}</button>))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div className="col-lg-3"></div>
+                    <div className="col-lg-3 text-end">
+                        <button onClick={toggleViewMode} className="btn border border-secondary d-inline-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
+                            {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '16px' }}></i>}
+                            {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '16px' }}></i>}
+                            {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '20px' }}></i>}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="row mb-4 d-lg-none">
+                    <div className="col-12">
                         <div className="d-flex align-items-center gap-2 position-relative">
                             <div className="d-flex align-items-center gap-3">
                                 <span className="text-white fw-bold" style={{ fontSize: '15px' }}>{createdAssets.length} Assets</span>
@@ -656,6 +631,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 </div>
+
                 <div className="pb-5">
                     {loading && createdAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : createdAssets.length === 0 ? (
                         <div className="text-center py-5 text-secondary">No created assets found</div>
@@ -726,7 +702,6 @@ export default function ProfilePage() {
   );
 }
 
-// مكون البطاقة الذي يحتوي على منطق العرض وزر القلب
 const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any, mode: string, isFavorite: boolean, onToggleFavorite: (e: React.MouseEvent, id: string) => void }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
@@ -751,7 +726,6 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                         <div className="text-end pe-4">
                              <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
                         </div>
-                        {/* زر القلب للقائمة */}
                         <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute end-0 me-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
                              <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : '#8a939b', fontSize: '16px' }}></i>
                         </button>
@@ -760,15 +734,12 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
             </div>
         );
     }
-    // الوضع Grid أو Large (نفس الهيكلية)
     return (
       <div className={colClass}>
           <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
               <Link href={`/asset/${item.id}`} className="text-decoration-none h-100 d-flex flex-column">
                   <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
                        {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="asset-img" />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
-                       
-                       {/* زر القلب للشبكة والصور الكبيرة - في الزاوية العلوية اليمنى */}
                        <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
                             <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : 'white', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
                        </button>
