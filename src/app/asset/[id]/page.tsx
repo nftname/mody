@@ -55,7 +55,6 @@ const domain = { name: 'NNMMarketplace', version: '11', chainId: 137, verifyingC
 const types = { Offer: [{ name: 'bidder', type: 'address' }, { name: 'tokenId', type: 'uint256' }, { name: 'price', type: 'uint256' }, { name: 'expiration', type: 'uint256' }] } as const;
 
 const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
-const formatUSD = (pol: any) => { const val = parseFloat(pol); if(isNaN(val)) return '$0.00'; return `$${(val * POL_TO_USD_RATE).toFixed(2)}`; };
 const resolveIPFS = (uri: string) => uri?.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri || '';
 const formatShortTime = (date: string) => {
     const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -134,6 +133,8 @@ function AssetPage() {
     const [offersList, setOffersList] = useState<any[]>([]);
     const [activityList, setActivityList] = useState<any[]>([]);
     const [moreAssets, setMoreAssets] = useState<any[]>([]);
+    const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set()); // FAVORITES STATE
+
     const [offerSort, setOfferSort] = useState('Newest');
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('Details');
@@ -148,7 +149,7 @@ function AssetPage() {
     const [offerPrice, setOfferPrice] = useState('');
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
-    const [isFav, setIsFav] = useState(false);
+    
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
     const rawId = params?.id;
@@ -175,6 +176,41 @@ function AssetPage() {
     const toggleDropdown = (name: string) => {
         if (openDropdown === name) setOpenDropdown(null);
         else setOpenDropdown(name);
+    };
+
+    // --- FAVORITES LOGIC ---
+    const fetchFavorites = async () => {
+        if (!address) return;
+        try {
+            const { data, error } = await supabase.from('favorites').select('token_id').eq('wallet_address', address);
+            if (error) throw error;
+            if (data) setFavoriteIds(new Set(data.map(item => item.token_id)));
+        } catch (e) { console.error("Error fetching favorites", e); }
+    };
+
+    const handleToggleFavorite = async (e: React.MouseEvent, targetTokenId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!address) return; 
+
+        const newFavs = new Set(favoriteIds);
+        const isFav = newFavs.has(targetTokenId);
+
+        if (isFav) newFavs.delete(targetTokenId);
+        else newFavs.add(targetTokenId);
+
+        setFavoriteIds(newFavs);
+
+        try {
+            if (isFav) {
+                await supabase.from('favorites').delete().match({ wallet_address: address, token_id: targetTokenId });
+            } else {
+                await supabase.from('favorites').insert({ wallet_address: address, token_id: targetTokenId });
+            }
+        } catch (error) {
+            console.error("Error toggling favorite", error);
+            fetchFavorites(); 
+        }
     };
 
     const fetchAllData = useCallback(async () => {
@@ -290,7 +326,12 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
-    useEffect(() => { fetchAllData(); fetchMoreAssets(); }, [fetchAllData, fetchMoreAssets]);
+    useEffect(() => { 
+        fetchAllData(); 
+        fetchMoreAssets();
+        if (isConnected && address) fetchFavorites();
+    }, [fetchAllData, fetchMoreAssets, address, isConnected]);
+    
     useEffect(() => { if (isOfferMode) refreshWpolData(); }, [isOfferMode, refreshWpolData]);
 
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
@@ -344,7 +385,7 @@ function AssetPage() {
     const handleApproveNft = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'setApprovalForAll', args: [MARKETPLACE_ADDRESS as `0x${string}`, true] }); await publicClient!.waitForTransactionReceipt({ hash }); setIsApproved(true); } catch (err) { console.error(err); } finally { setIsPending(false); } };
     const handleList = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listItem', args: [BigInt(tokenId), parseEther(sellPrice)] }); await publicClient!.waitForTransactionReceipt({ hash }); fetchAllData(); setIsListingMode(false); } catch (err) { console.error(err); } finally { setIsPending(false); } };
     
-    // New Function to Cancel Listing (Added for Owner Logic)
+    // Cancel Listing Function
     const handleCancelListing = async () => {
         setIsPending(true);
         try {
@@ -365,7 +406,7 @@ function AssetPage() {
         setOfferPrice('');
     };
 
-    // Shared Button Logic Component (Surgical Addition)
+    // Shared Button Component
     const RenderActionButtons = ({ mobile = false }) => {
         const btnClass = mobile ? "btn w-100 fw-bold py-2" : "btn w-100 fw-bold py-3";
         const containerStyle = mobile ? { width: '65%', maxWidth: '500px' } : { width: '100%' };
@@ -414,6 +455,7 @@ function AssetPage() {
     if (!asset) return null;
 
     const hasEnoughBalance = wpolBalance >= parseFloat(offerPrice || '0');
+    const isMainFav = favoriteIds.has(asset.id);
 
     return (
         <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
@@ -424,9 +466,10 @@ function AssetPage() {
                     
                     <div className="col-lg-5">
                         <div className="rounded-4 overflow-hidden position-relative mb-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1' }}>
+                            {/* FAVORITE BUTTON (MAIN IMAGE) */}
                             <div className="d-flex align-items-center justify-content-end p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
-                                <button onClick={() => setIsFav(!isFav)} className="btn p-0 border-0">
-                                    <i className={`bi ${isFav ? 'bi-heart-fill text-white' : 'bi-heart text-white'}`} style={{ fontSize: '20px' }}></i>
+                                <button onClick={(e) => handleToggleFavorite(e, asset.id)} className="btn p-0 border-0">
+                                    <i className={`bi ${isMainFav ? 'bi-heart-fill' : 'bi-heart'}`} style={{ fontSize: '24px', color: isMainFav ? '#FFFFFF' : '#FFFFFF', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}></i>
                                 </button>
                             </div>
                             <img src={asset.image} alt={asset.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -521,25 +564,36 @@ function AssetPage() {
 
                                         <Accordion title="More from this collection" icon="bi-collection">
                                             <div className="d-flex gap-3 overflow-auto pb-3 px-3" style={{ scrollbarWidth: 'none' }}>
-                                                {moreAssets.length > 0 ? moreAssets.map(item => (
-                                                    <Link key={item.id} href={`/asset/${item.id}`} className="text-decoration-none">
-                                                        <div className="h-100 d-flex flex-column" style={{ width: '220px', backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
-                                                            <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
-                                                                {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
-                                                            </div>
-                                                            <div className="p-3 d-flex flex-column flex-grow-1">
-                                                                <div className="d-flex justify-content-between align-items-start mb-1">
-                                                                    <div className="text-white fw-bold text-truncate" style={{ fontSize: '14px', maxWidth: '80%' }}>{item.name}</div>
-                                                                    <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
+                                                {moreAssets.length > 0 ? moreAssets.map(item => {
+                                                    const isItemFav = favoriteIds.has(item.id);
+                                                    return (
+                                                        <Link key={item.id} href={`/asset/${item.id}`} className="text-decoration-none">
+                                                            <div className="h-100 d-flex flex-column" style={{ width: '220px', backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
+                                                                <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
+                                                                    {/* FAVORITE BUTTON (MORE ASSETS) */}
+                                                                    <button 
+                                                                        onClick={(e) => handleToggleFavorite(e, item.id)} 
+                                                                        className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" 
+                                                                        style={{ zIndex: 10 }}
+                                                                    >
+                                                                        <i className={`bi ${isItemFav ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isItemFav ? '#FFFFFF' : 'white', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
+                                                                    </button>
+                                                                    {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
                                                                 </div>
-                                                                <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
-                                                                <div className="mt-auto">
-                                                                    <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Not Listed</span>}</div>
+                                                                <div className="p-3 d-flex flex-column flex-grow-1">
+                                                                    <div className="d-flex justify-content-between align-items-start mb-1">
+                                                                        <div className="text-white fw-bold text-truncate" style={{ fontSize: '14px', maxWidth: '80%' }}>{item.name}</div>
+                                                                        <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
+                                                                    </div>
+                                                                    <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
+                                                                    <div className="mt-auto">
+                                                                        <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Not Listed</span>}</div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    </Link>
-                                                )) : (
+                                                        </Link>
+                                                    );
+                                                }) : (
                                                     <div className="text-muted text-center w-100 py-3">Loading more assets...</div>
                                                 )}
                                             </div>
