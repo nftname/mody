@@ -42,7 +42,7 @@ const domain = { name: 'NNMMarketplace', version: '11', chainId: 137, verifyingC
 const types = { Offer: [{ name: 'bidder', type: 'address' }, { name: 'tokenId', type: 'uint256' }, { name: 'price', type: 'uint256' }, { name: 'expiration', type: 'uint256' }] } as const;
 
 // --- Helpers ---
-const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 2 }).format(num);
+const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
 const formatUSD = (pol: any) => { const val = parseFloat(pol); if(isNaN(val)) return '$0.00'; return `$${(val * POL_TO_USD_RATE).toFixed(2)}`; };
 const resolveIPFS = (uri: string) => uri?.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri || '';
 const formatShortTime = (date: string) => {
@@ -206,7 +206,7 @@ function AssetPage() {
                     timeLeft: formatDuration(offer.expiration)
                 }));
 
-                // Apply Sorting based on State
+                // Apply Sorting
                 if (offerSort === 'Newest') enrichedOffers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 if (offerSort === 'High Price') enrichedOffers.sort((a, b) => b.price - a.price);
                 if (offerSort === 'Low Price') enrichedOffers.sort((a, b) => a.price - b.price);
@@ -214,7 +214,7 @@ function AssetPage() {
                 setOffersList(enrichedOffers);
             }
 
-            // 3. Activity (Merged Logic like Dashboard)
+            // 3. Activity
             const { data: actData } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
             const { data: offerActData } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled').order('created_at', { ascending: false });
 
@@ -242,7 +242,7 @@ function AssetPage() {
         } catch (e) { console.error(e); } finally { setLoading(false); }
     }, [tokenId, address, publicClient, offerSort]);
 
-    // --- Sequential Fetching Logic for "More from this collection" ---
+    // --- Sequential Fetching Logic ---
     const fetchMoreAssets = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         const startId = BigInt(tokenId) + BigInt(1);
@@ -254,7 +254,6 @@ function AssetPage() {
                 const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [nextId] });
                 const metaRes = await fetch(resolveIPFS(tokenURI));
                 const meta = metaRes.ok ? await metaRes.json() : {};
-                
                 let isListed = false;
                 let price = meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0';
                 try {
@@ -291,7 +290,7 @@ function AssetPage() {
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
     const closeModal = () => { setIsPending(false); setModal({ ...modal, isOpen: false }); if (modal.type === 'success') { fetchAllData(); setIsOfferMode(false); } };
 
-    // --- HYBRID ACTIONS (On-Chain + DB Sync) ---
+    // --- ACTIONS ---
     const handleApprove = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: WPOL_ADDRESS as `0x${string}`, abi: erc20Abi, functionName: 'approve', args: [MARKETPLACE_ADDRESS as `0x${string}`, parseEther(offerPrice)] }); await publicClient!.waitForTransactionReceipt({ hash }); await refreshWpolData(); } catch(e) { console.error(e); setIsPending(false); } };
     
     const handleSubmitOffer = async () => {
@@ -301,7 +300,6 @@ function AssetPage() {
             const priceInWei = parseEther(offerPrice);
             const expiration = BigInt(Math.floor(Date.now() / 1000) + OFFER_DURATION);
             const signature = await signTypedDataAsync({ domain, types, primaryType: 'Offer', message: { bidder: address, tokenId: BigInt(tokenId), price: priceInWei, expiration } });
-            // DB Sync
             await supabase.from('offers').insert([{ token_id: tokenId, bidder_address: address, price: parseFloat(offerPrice), expiration: Number(expiration), status: 'active', signature }]);
             showModal('success', 'Offer Submitted', 'Signed successfully.');
         } catch(e) { setIsPending(false); }
@@ -313,7 +311,6 @@ function AssetPage() {
         try {
             const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'buyItem', args: [BigInt(tokenId)], value: parseEther(listing.price) });
             await publicClient!.waitForTransactionReceipt({ hash });
-            // DB Sync: Record Sale Activity
             await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: listing.seller, to_address: address, price: listing.price }]);
             showModal('success', 'Bought!', 'Asset purchased.');
         } catch(e) { setIsPending(false); }
@@ -324,7 +321,6 @@ function AssetPage() {
         try {
             const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'acceptOffChainOffer', args: [BigInt(tokenId), offer.bidder_address, parseEther(offer.price.toString()), BigInt(offer.expiration), offer.signature] });
             await publicClient!.waitForTransactionReceipt({ hash });
-            // DB Sync: Update Offer & Record Activity
             await supabase.from('offers').update({ status: 'accepted' }).eq('id', offer.id);
             await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: address, to_address: offer.bidder_address, price: offer.price }]);
             showModal('success', 'Sold!', 'Offer accepted.');
@@ -333,7 +329,6 @@ function AssetPage() {
 
     const handleCancelOffer = async (id: any) => {
         try {
-            // DB Sync: Cancel Offer
             await supabase.from('offers').update({ status: 'cancelled' }).eq('id', id);
             fetchAllData();
         } catch(e){}
@@ -352,9 +347,8 @@ function AssetPage() {
             <div className="container-fluid" style={{ maxWidth: '1280px', paddingTop: '20px' }}>
                 <div className="row g-3 g-lg-5">
                     
-                    {/* LEFT COLUMN: Image & Header (Mobile First Style) */}
+                    {/* LEFT COLUMN */}
                     <div className="col-lg-5">
-                        {/* No Polygon Badge */}
                         <div className="rounded-4 overflow-hidden position-relative mb-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1' }}>
                             <div className="d-flex align-items-center justify-content-end p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
                                 <button onClick={() => setIsFav(!isFav)} className="btn p-0 border-0">
@@ -365,7 +359,7 @@ function AssetPage() {
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: TABS & DETAILS */}
+                    {/* RIGHT COLUMN */}
                     <div className="col-lg-7 pt-0">
                         <div className="mb-2">
                             <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-1`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
@@ -380,9 +374,9 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* TABS (Faint Line) */}
+                        {/* TABS (No Line) */}
                         <div className="mb-3">
-                            <div className="d-flex border-bottom" style={{ borderColor: 'rgba(255, 255, 255, 0.05)' }}>
+                            <div className="d-flex" style={{ borderBottom: 'none' }}>
                                 {['Details', 'Orders', 'Activity'].map(tab => (
                                     <button key={tab} onClick={() => setActiveTab(tab)} className="btn mx-3 py-2 fw-bold position-relative p-0" style={{ color: activeTab === tab ? '#fff' : TEXT_MUTED, background: 'transparent', border: 'none', fontSize: '15px' }}>
                                         {tab}
@@ -480,21 +474,21 @@ function AssetPage() {
                                     <div className="table-responsive">
                                         <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
                                             <thead><tr>
-                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '30%' }}>Price (WPOL)</th>
-                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>USD</th>
-                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Expiration</th>
-                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>From</th>
-                                                <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th>
+                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Price</th>
+                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Unit</th>
+                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>From</th>
+                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Expiration</th>
+                                                <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '20%' }}></th>
                                             </tr></thead>
                                             <tbody>
                                                 {offersList.map((offer) => (
                                                     <tr key={offer.id}>
-                                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>{formatCompactNumber(offer.price)}</td>
-                                                        <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED }}>{formatUSD(offer.price)}</td>
-                                                        <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED }}>{offer.timeLeft}</td>
-                                                        <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><a href="#" style={{ color: GOLD_SOLID, textDecoration: 'none' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</a></td>
+                                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600', fontSize: '13px' }}>{formatCompactNumber(offer.price)}</td>
+                                                        <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>WPOL</td>
+                                                        <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><a href="#" style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</a></td>
+                                                        <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>{offer.timeLeft}</td>
                                                         <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
-                                                            {isOwner && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
+                                                            {isOwner && !offer.isMyOffer && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
                                                             {offer.isMyOffer && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm btn-outline-danger" style={{ fontSize: '11px', padding: '4px 12px' }}>Cancel</button>}
                                                         </td>
                                                     </tr>
