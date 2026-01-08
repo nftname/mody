@@ -461,8 +461,8 @@ function AssetPage() {
                                 <div className="mt-4">
                                     <div className="d-flex justify-content-between align-items-center mb-4">
                                         <div className="position-relative dropdown-container">
-                                            <button onClick={() => toggleDropdown('offerSort')} className="btn border border-secondary d-flex flex-column align-items-center justify-content-center gap-1" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
-                                                <div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div><div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div><div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div>
+                                            <button onClick={() => toggleDropdown('offerSort')} className="btn d-flex align-items-center gap-2" style={{ border: 'none', background: 'transparent', color: '#fff', fontSize: '14px' }}>
+                                                Sort by <i className="bi bi-chevron-down" style={{ fontSize: '11px' }}></i>
                                             </button>
                                             {openDropdown === 'offerSort' && (
                                                 <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
@@ -474,22 +474,22 @@ function AssetPage() {
                                     <div className="table-responsive">
                                         <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
                                             <thead><tr>
-                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Price</th>
-                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Unit</th>
+                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>WPOL</th>
                                                 <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>From</th>
-                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Expiration</th>
-                                                <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '20%' }}></th>
+                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>To</th>
+                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Exp</th>
+                                                <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th>
                                             </tr></thead>
                                             <tbody>
                                                 {offersList.map((offer) => (
                                                     <tr key={offer.id}>
                                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600', fontSize: '13px' }}>{formatCompactNumber(offer.price)}</td>
-                                                        <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>WPOL</td>
                                                         <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><a href="#" style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</a></td>
+                                                        <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><a href="#" style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{asset?.owner === address ? 'You' : (asset?.owner ? asset.owner.slice(0,6) : '-')}</a></td>
                                                         <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>{offer.timeLeft}</td>
                                                         <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
                                                             {isOwner && !offer.isMyOffer && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
-                                                            {offer.isMyOffer && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm btn-outline-danger" style={{ fontSize: '11px', padding: '4px 12px' }}>Cancel</button>}
+                                                            {offer.isMyOffer && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm fw-bold" style={{ fontSize: '11px', padding: '4px 12px', background: 'rgba(240, 196, 32, 0.1)', border: `1px solid ${GOLD_SOLID}`, color: GOLD_SOLID, backdropFilter: 'blur(4px)', borderRadius: '8px' }}>Cancel</button>}
                                                         </td>
                                                     </tr>
                                                 ))}
