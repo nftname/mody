@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount, useBalance } from "wagmi";
 import { createPublicClient, http, parseAbi, formatEther } from 'viem';
@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const [createdAssets, setCreatedAssets] = useState<any[]>([]);
   const [offersData, setOffersData] = useState<any[]>([]);
   const [activityData, setActivityData] = useState<any[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set()); // New State for Favorites
   
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('Items');
@@ -47,6 +48,7 @@ export default function DashboardPage() {
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState('ALL'); 
+  const [filterFavorites, setFilterFavorites] = useState(false); // Filter by Favorites State
   
   // Dropdown States
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -110,6 +112,47 @@ export default function DashboardPage() {
           notation: "compact",
           maximumFractionDigits: 1
       }).format(num);
+  };
+
+  // --- Favorites Logic (Side-Data Layer) ---
+  const fetchFavorites = async () => {
+    if (!address) return;
+    try {
+        const { data, error } = await supabase
+            .from('favorites')
+            .select('token_id')
+            .eq('wallet_address', address);
+        
+        if (error) throw error;
+        if (data) {
+            setFavoriteIds(new Set(data.map(item => item.token_id)));
+        }
+    } catch (e) { console.error("Error fetching favorites", e); }
+  };
+
+  const handleToggleFavorite = async (e: React.MouseEvent, tokenId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!address) return;
+
+    const newFavs = new Set(favoriteIds);
+    const isFav = newFavs.has(tokenId);
+
+    if (isFav) newFavs.delete(tokenId);
+    else newFavs.add(tokenId);
+
+    setFavoriteIds(newFavs);
+
+    try {
+        if (isFav) {
+            await supabase.from('favorites').delete().match({ wallet_address: address, token_id: tokenId });
+        } else {
+            await supabase.from('favorites').insert({ wallet_address: address, token_id: tokenId });
+        }
+    } catch (error) {
+        console.error("Error toggling favorite", error);
+        fetchFavorites(); // Revert on error
+    }
   };
 
   // --- 1. ITEMS ---
@@ -359,7 +402,12 @@ export default function DashboardPage() {
       } finally { setLoading(false); }
   };
 
-  useEffect(() => { if (isConnected) fetchAssets(); }, [address, isConnected]);
+  useEffect(() => { 
+      if (isConnected) {
+          fetchAssets();
+          fetchFavorites(); // Fetch favorites when connected
+      } 
+  }, [address, isConnected]);
   
   useEffect(() => { 
       if (activeSection === 'Offers') fetchOffers();
@@ -378,7 +426,15 @@ export default function DashboardPage() {
   const toggleViewMode = () => { setViewModeState((prev) => (prev + 1) % viewModes.length); };
 
   const totalAssetValue = myAssets.reduce((acc, curr) => acc + parseFloat(curr.price || 0), 0);
-  const filteredAssets = myAssets.filter(asset => asset.name.toLowerCase().includes(searchQuery.toLowerCase()) && (selectedTier === 'ALL' || asset.tier.toUpperCase() === selectedTier));
+  
+  // Updated Filter Logic to include Favorites
+  const filteredAssets = myAssets.filter(asset => {
+      const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesTier = selectedTier === 'ALL' || asset.tier.toUpperCase() === selectedTier;
+      const matchesFavorite = filterFavorites ? favoriteIds.has(asset.id) : true;
+      return matchesSearch && matchesTier && matchesFavorite;
+  });
+
   const listedAssets = myAssets.filter(asset => asset.isListed);
   const sortedListedAssets = sortOrder === 'newest' ? [...listedAssets].reverse() : listedAssets;
   const sortedCreatedAssets = sortOrder === 'newest' ? [...createdAssets].reverse() : createdAssets;
@@ -479,6 +535,18 @@ export default function DashboardPage() {
                                 </button>
                                 {openDropdown === 'filter' && (
                                     <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
+                                        {/* Added Favorites Filter Option */}
+                                        <div style={{ borderBottom: '1px solid #333', marginBottom: '8px', paddingBottom: '8px' }}>
+                                            <button 
+                                                onClick={() => { setFilterFavorites(!filterFavorites); setOpenDropdown(null); }} 
+                                                className="btn w-100 text-start btn-sm text-white" 
+                                                style={{ backgroundColor: filterFavorites ? '#2d2d2d' : 'transparent', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                            >
+                                                <i className={`bi ${filterFavorites ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: filterFavorites ? '#FFFFFF' : 'white', fontSize: '14px' }}></i>
+                                                Favorites Only
+                                            </button>
+                                        </div>
+
                                         <div style={{ fontSize: '10px', color: '#8a939b', padding: '4px 8px', textTransform: 'uppercase' }}>Filter by Tier</div>
                                         {['ALL', 'IMMORTAL', 'ELITE', 'FOUNDERS'].map(tier => (
                                             <button key={tier} onClick={() => { setSelectedTier(tier); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: selectedTier === tier ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{tier}</button>
@@ -501,7 +569,8 @@ export default function DashboardPage() {
                 <div className="pb-5">
                     {loading && myAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : (
                         <div className="row g-3">
-                            {filteredAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} />))}
+                            {/* Passed favorite props to AssetRenderer */}
+                            {filteredAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
                             {filteredAssets.length === 0 && !loading && <div className="col-12 text-center py-5 text-secondary">No items found</div>}
                         </div>
                     )}
@@ -623,7 +692,7 @@ export default function DashboardPage() {
                         <div className="text-center py-5 text-secondary">No created assets found</div>
                     ) : (
                         <div className="row g-3">
-                            {sortedCreatedAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} />))}
+                            {sortedCreatedAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
                         </div>
                     )}
                 </div>
@@ -689,7 +758,8 @@ export default function DashboardPage() {
   );
 }
 
-const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
+// Updated AssetRenderer with Heart Button & NO Polygon Badge
+const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any, mode: string, isFavorite: boolean, onToggleFavorite: (e: React.MouseEvent, id: string) => void }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
     const formatDate = (dateStr: string) => {
@@ -698,16 +768,11 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
         return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     };
 
-    const PolygonBadge = () => (
-        <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px', backgroundColor: 'rgba(0, 0, 0, 0.05)', borderRadius: '50%' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="#FFFFFF"/></svg>
-        </div>
-    );
     if (mode === 'list') {
         return (
             <div className={colClass}>
                 <Link href={`/asset/${item.id}`} className="text-decoration-none">
-                    <div className="d-flex align-items-center gap-3 p-2 rounded-3" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d', transition: '0.2s' }}>
+                    <div className="d-flex align-items-center gap-3 p-2 rounded-3 position-relative" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d', transition: '0.2s' }}>
                         <div style={{ width: '48px', height: '48px', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
                              {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#333' }}></div>)}
                         </div>
@@ -715,21 +780,31 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                             <div className="text-white" style={{ fontSize: '14px', fontWeight: '600' }}>{item.name}</div>
                             <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
                         </div>
-                        <div className="text-end pe-2">
+                        <div className="text-end pe-4">
                              <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
                         </div>
+                        {/* Heart Button for List View */}
+                        <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute end-0 me-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
+                             <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : '#8a939b', fontSize: '16px' }}></i>
+                        </button>
                     </div>
                 </Link>
             </div>
         );
     }
+    // Grid or Large Mode
     return (
       <div className={colClass}>
           <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
               <Link href={`/asset/${item.id}`} className="text-decoration-none h-100 d-flex flex-column">
                   <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
-                       <PolygonBadge />
+                       {/* Polygon Badge REMOVED completely */}
                        {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="asset-img" />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
+                       
+                       {/* Heart Button for Grid View (Top Right) */}
+                       <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
+                            <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : 'white', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
+                       </button>
                   </div>
                   <div className="p-3 d-flex flex-column flex-grow-1">
                       <div className="d-flex justify-content-between align-items-start mb-1">
