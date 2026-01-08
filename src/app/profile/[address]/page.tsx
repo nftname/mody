@@ -685,11 +685,16 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
         return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     };
 
+    // تم تعديل هذا المكون ليعرض شعار البوليجون الصحيح والأبيض
     const PolygonBadge = () => (
-        <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px', backgroundColor: 'rgba(0, 0, 0, 0.05)', borderRadius: '50%' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="#FFFFFF"/></svg>
+        <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="#FFFFFF"/>
+                <path d="M12 0L2.59808 5.4282V16.2859L12 21.7141L21.4019 16.2859V5.4282L12 0ZM19.4019 15.1304L12 19.4019L4.59808 15.1304V6.58372L12 2.31218L19.4019 6.58372V15.1304Z" fill="#FFFFFF"/>
+            </svg>
         </div>
     );
+
     if (mode === 'list') {
         return (
             <div className={colClass}>
