@@ -34,10 +34,9 @@ const GLASS_BTN_STYLE = {
     backdropFilter: 'blur(5px)',
     borderRadius: '12px',
     fontWeight: 'bold' as const,
-    fontSize: '15px',
-    padding: '10px',
-    width: '50%',
-    maxWidth: '300px',
+    fontSize: '16px',
+    padding: '12px',
+    width: '100%',
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
 };
 
@@ -344,11 +343,71 @@ function AssetPage() {
 
     const handleApproveNft = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'setApprovalForAll', args: [MARKETPLACE_ADDRESS as `0x${string}`, true] }); await publicClient!.waitForTransactionReceipt({ hash }); setIsApproved(true); } catch (err) { console.error(err); } finally { setIsPending(false); } };
     const handleList = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listItem', args: [BigInt(tokenId), parseEther(sellPrice)] }); await publicClient!.waitForTransactionReceipt({ hash }); fetchAllData(); setIsListingMode(false); } catch (err) { console.error(err); } finally { setIsPending(false); } };
+    
+    // New Function to Cancel Listing (Added for Owner Logic)
+    const handleCancelListing = async () => {
+        setIsPending(true);
+        try {
+            const hash = await writeContractAsync({ 
+                address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                abi: MARKETPLACE_ABI, 
+                functionName: 'cancelListing', 
+                args: [BigInt(tokenId)] 
+            });
+            await publicClient!.waitForTransactionReceipt({ hash });
+            fetchAllData();
+        } catch (e) { console.error(e); } finally { setIsPending(false); }
+    };
 
     const openOfferModal = () => {
         setOfferStep(listing ? 'select' : 'input');
         setIsOfferMode(true);
         setOfferPrice('');
+    };
+
+    // Shared Button Logic Component (Surgical Addition)
+    const RenderActionButtons = ({ mobile = false }) => {
+        const btnClass = mobile ? "btn w-100 fw-bold py-2" : "btn w-100 fw-bold py-3";
+        const containerStyle = mobile ? { width: '65%', maxWidth: '500px' } : { width: '100%' };
+
+        if (!isConnected) {
+            return (
+                <div style={containerStyle}>
+                    <ConnectButton.Custom>
+                        {({ openConnectModal }) => (
+                            <button onClick={openConnectModal} className={btnClass} style={{ ...GLASS_BTN_STYLE, width: '100%', maxWidth: 'none', fontSize: '16px' }}>
+                                Make Offer
+                            </button>
+                        )}
+                    </ConnectButton.Custom>
+                </div>
+            );
+        }
+
+        if (isOwner) {
+            if (isListingMode) {
+                return (
+                    <div className="d-flex gap-2 w-100 justify-content-center" style={{maxWidth: mobile ? '600px' : '100%'}}>
+                        {!isApproved ? 
+                            <button onClick={handleApproveNft} disabled={isPending} className="btn py-2 fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>Approve NFT</button>
+                            : <button onClick={handleList} disabled={isPending} className="btn py-2 fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>Confirm List</button>
+                        }
+                        <button onClick={() => setIsListingMode(false)} className="btn btn-secondary py-2 fw-bold flex-grow-1" style={{ borderRadius: '12px', fontSize: '16px' }}>Cancel</button>
+                    </div>
+                );
+            }
+            // Logic Fix: Show Cancel Listing if already listed
+            if (listing) {
+                return <button onClick={handleCancelListing} disabled={isPending} className={btnClass} style={{ ...OUTLINE_BTN_STYLE, borderRadius: '12px', width: mobile ? '65%' : '100%', maxWidth: mobile ? '500px' : 'none', fontSize: '16px' }}>Cancel Listing</button>;
+            }
+            return <button onClick={() => setIsListingMode(true)} className={btnClass} style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', width: mobile ? '65%' : '100%', maxWidth: mobile ? '500px' : 'none', fontSize: '16px' }}>List for Sale</button>;
+        }
+
+        return (
+            <button onClick={openOfferModal} style={mobile ? GLASS_BTN_STYLE : { ...GLASS_BTN_STYLE, width: '100%', maxWidth: 'none' }}>
+                Make Offer
+            </button>
+        );
     };
 
     if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center" style={{ background: BACKGROUND_DARK, color: TEXT_MUTED }}>Loading...</div>;
@@ -371,6 +430,10 @@ function AssetPage() {
                                 </button>
                             </div>
                             <img src={asset.image} alt={asset.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                        {/* DESKTOP BUTTON LOCATION (Left Column, Under Image) */}
+                        <div className="d-none d-lg-block mt-4">
+                            <RenderActionButtons mobile={false} />
                         </div>
                     </div>
 
@@ -567,27 +630,10 @@ function AssetPage() {
                 </div>
             </div>
 
-            <div className="fixed-bottom p-2" style={{ backgroundColor: '#1E1E1E', borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100 }}>
+            {/* MOBILE FIXED BOTTOM BAR (Hidden on Desktop) */}
+            <div className="fixed-bottom p-2 d-lg-none" style={{ backgroundColor: '#1E1E1E', borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100 }}>
                 <div className="container d-flex justify-content-center" style={{ maxWidth: '1200px' }}>
-                    {!isConnected ? (
-                        <div style={{ width: '65%', maxWidth: '500px' }}><ConnectButton.Custom>{({ openConnectModal }) => (<button onClick={openConnectModal} className="btn w-100 fw-bold py-2" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>Connect Wallet</button>)}</ConnectButton.Custom></div>
-                    ) : isOwner ? (
-                        isListingMode ? (
-                            <div className="d-flex gap-2 w-100 justify-content-center" style={{maxWidth: '600px'}}>
-                                {!isApproved ? 
-                                    <button onClick={handleApproveNft} disabled={isPending} className="btn py-2 fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>Approve NFT</button>
-                                    : <button onClick={handleList} disabled={isPending} className="btn py-2 fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>Confirm List</button>
-                                }
-                                <button onClick={() => setIsListingMode(false)} className="btn btn-secondary py-2 fw-bold flex-grow-1" style={{ borderRadius: '12px', fontSize: '16px' }}>Cancel</button>
-                            </div>
-                        ) : (
-                            <button onClick={() => setIsListingMode(true)} className="btn fw-bold py-2" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', width: '65%', maxWidth: '500px', fontSize: '16px' }}>List for Sale</button>
-                        )
-                    ) : (
-                        <button onClick={openOfferModal} style={GLASS_BTN_STYLE}>
-                            Make Offer
-                        </button>
-                    )}
+                    <RenderActionButtons mobile={true} />
                 </div>
             </div>
 
