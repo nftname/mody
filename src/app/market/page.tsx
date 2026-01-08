@@ -42,6 +42,7 @@ const resolveIPFS = (uri: string) => {
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
 };
 
+// Reduced size by 10% as requested
 const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     let bg = '#222';
     if (tier?.toLowerCase() === 'immortal') bg = 'linear-gradient(135deg, #333 0%, #111 100%)';
@@ -50,13 +51,13 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
 
     return (
         <div style={{
-            width: '45px', height: '45px', 
+            width: '40px', height: '40px', // Reduced from 45px
             borderRadius: '50%',
             background: bg,
             border: '1px solid rgba(255,255,255,0.15)',
             boxShadow: 'inset 0 0 5px rgba(255,255,255,0.05), 0 2px 4px rgba(0,0,0,0.5)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '16px', 
+            fontSize: '14px', // Reduced font
             fontWeight: 'bold', fontFamily: 'serif',
             color: '#FCD535', textShadow: '0 1px 2px rgba(0,0,0,0.8)',
             flexShrink: 0
@@ -96,26 +97,40 @@ const SortArrows = ({ active, direction, onClick }: any) => (
     </div>
 );
 
-// Helper function for dynamic pagination
+// Advanced Pagination Logic (1 2 3 ... Last-1 Last)
 const getPaginationRange = (current: number, total: number) => {
-    const delta = 2; // Number of pages to show around current
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
+
     const range = [];
-    for (let i = 1; i <= total; i++) {
-        if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
-            range.push(i);
-        }
+    const showStart = 3; // Always show 1, 2, 3
+    const showEnd = 2;   // Always show Last-1, Last
+
+    // Add first 3 pages
+    for (let i = 1; i <= showStart; i++) {
+        range.push(i);
     }
-    const rangeWithDots = [];
-    let l;
-    for (let i of range) {
-        if (l) {
-            if (i - l === 2) rangeWithDots.push(l + 1);
-            else if (i - l !== 1) rangeWithDots.push('...');
-        }
-        rangeWithDots.push(i);
-        l = i;
+
+    // Determine if we are far from start
+    if (current > showStart + 1) {
+        range.push('...');
     }
-    return rangeWithDots;
+
+    // Add current page if it's not in start/end zones
+    if (current > showStart && current <= total - showEnd) {
+        range.push(current);
+    }
+
+    // Determine if we are far from end
+    if (current < total - showEnd) {
+        if (range[range.length - 1] !== '...') range.push('...');
+    }
+
+    // Add last 2 pages
+    for (let i = total - showEnd + 1; i <= total; i++) {
+        if (i > showStart) range.push(i); // Avoid duplicates
+    }
+
+    return range;
 };
 
 function MarketPage() {
@@ -243,7 +258,6 @@ function MarketPage() {
 
                     return {
                         id: tid,
-                        rank: index + 1, 
                         name: meta.name || `Asset #${id}`,
                         tier: tierAttr,
                         floor: formatEther(prices[index]),
@@ -251,7 +265,7 @@ function MarketPage() {
                         volume: volumeVal,
                         volumeDisplay: volumeVal > 0 ? `${volumeVal.toFixed(2)} POL` : '0 POL',
                         trendingScore: trendingScore,
-                        offersCount: offersCount, // For Most Offers sort
+                        offersCount: offersCount, 
                         listed: 'Now',
                         change: 0,
                         currencySymbol: 'POL'
@@ -269,16 +283,21 @@ function MarketPage() {
   const finalData = useMemo(() => {
       let processedData = [...realListings];
       
+      // LOGIC: Comparison to Binance/OpenSea
       if (activeFilter === 'Top') {
+          // Top = High Volume (Standard)
           processedData.sort((a, b) => b.volume - a.volume);
       } else if (activeFilter === 'Trending') {
+          // Trending = High Activity (Sales + Active Offers) (Standard)
           processedData.sort((a, b) => b.trendingScore - a.trendingScore);
-      } else if (activeFilter === 'Most Offers') { // New Filter Logic
+      } else if (activeFilter === 'Most Offers') { 
+          // Specific Metric
           processedData.sort((a, b) => b.offersCount - a.offersCount);
       } else if (activeFilter === 'Watchlist') {
           processedData = processedData.filter(item => favoriteIds.has(item.id));
       } else {
-          processedData.sort((a, b) => a.rank - b.rank); 
+          // All Assets = Default Sort (Usually ID/Recent)
+          processedData.sort((a, b) => a.id - b.id); 
       }
       
       if (sortConfig) {
@@ -299,7 +318,7 @@ function MarketPage() {
       currentPage * ITEMS_PER_PAGE
   );
 
-  const paginationRange = getPaginationRange(currentPage, totalPages); // Get dynamic range
+  const paginationRange = getPaginationRange(currentPage, totalPages);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'desc';
@@ -314,7 +333,8 @@ function MarketPage() {
   const getCurrencyLabel = () => currencyFilter === 'ETH' ? 'ETH' : 'POL';
 
   return (
-    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', overflowX: 'hidden' }}>
+    // Added user-select-none to prevent highlighting
+    <main className="no-select" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', overflowX: 'hidden' }}>
       
       <MarketTicker />
 
@@ -355,18 +375,19 @@ function MarketPage() {
                style={{ borderColor: '#222 !important', padding: '2px 0' }}>
               
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
+                  {/* Watchlist - Text Only */}
                   <div 
                     onClick={() => setActiveFilter('Watchlist')}
-                    className={`d-flex align-items-center gap-1 cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : ''}`}
-                    style={{ fontSize: '16px', fontWeight: 'bold', color: activeFilter === 'Watchlist' ? '#fff' : '#FCD535', paddingBottom: '4px' }}
+                    className={`cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : 'text-header-gray'}`}
+                    style={{ fontSize: '14.5px', fontWeight: 'bold', paddingBottom: '4px' }}
                   >
                       Watchlist
                   </div>
-                  {/* LOGIC FILTERS - Added 'Most Offers' */}
+                  {/* Logic Filters - Reduced Font to 14.5px */}
                   {['Trending', 'Top', 'Most Offers', 'All Assets'].map(f => (
                       <div key={f} onClick={() => setActiveFilter(f)} 
                            className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`}
-                           style={{ fontSize: '16px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
+                           style={{ fontSize: '14.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
                           {f}
                       </div>
                   ))}
@@ -402,7 +423,6 @@ function MarketPage() {
                  <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
               ) : activeFilter === 'Watchlist' && finalData.length === 0 ? (
                   <div className="text-center py-5 text-secondary">
-                      <i className="bi bi-star" style={{ fontSize: '40px', marginBottom: '10px', display: 'block' }}></i>
                       Your watchlist is empty.
                   </div>
               ) : finalData.length === 0 ? (
@@ -412,114 +432,122 @@ function MarketPage() {
                       
                       <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#1E1E1E' }}>
                           <tr style={{ borderBottom: '1px solid #333' }}>
-                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '80px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              {/* Headers Font reduced 10% (13.5px) */}
+                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '80px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', minWidth: '220px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', minWidth: '180px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* REDUCED PADDING & ALIGNMENT FOR PRICE */}
-                              <th onClick={() => handleSort('floor')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '120px' }}>
+                              {/* Price moved closer (50% less padding) */}
+                              <th onClick={() => handleSort('floor')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '120px' }}>
                                   <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'floor'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                   Last Sale
                               </th>
-                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-end">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                   Listed
                               </th>
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'center', width: '140px', whiteSpace: 'nowrap' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'center', width: '140px', whiteSpace: 'nowrap' }}>
                                   Action
                               </th>
                           </tr>
                       </thead>
 
                       <tbody>
-                          {currentTableData.map((item: any) => (
-                              <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
-                                  <td style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <div className="d-flex align-items-center gap-3">
-                                          <i 
-                                            className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} 
-                                            style={{ fontSize: '14px' }}
-                                            onClick={(e) => handleToggleFavorite(e, item.id)}
-                                          ></i>
-                                          <span style={getRankStyle(item.rank) as any}>{item.rank}</span>
-                                      </div>
-                                  </td>
-                                  <td style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <Link href={`/asset/${item.id}`} className="d-flex align-items-center gap-3 text-decoration-none group">
-                                          <CoinIcon name={item.name} tier={item.tier} />
-                                          <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
-                                      </Link>
-                                  </td>
-                                  {/* REDUCED PADDING PRICE CELL */}
-                                  <td className="text-start" style={{ padding: '16px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <div className="d-flex align-items-center justify-content-start gap-2">
-                                          <span className="fw-bold text-white" style={{ fontSize: '14px', color: '#E0E0E0' }}>{item.floor}</span>
-                                          <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{item.currencySymbol || getCurrencyLabel()}</span>
-                                          <span style={{ fontSize: '12px', color: '#0ecb81' }}>+0.00%</span>
-                                      </div>
-                                  </td>
-                                  <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '13px', color: '#E0E0E0' }}>{item.lastSale}</span>
-                                  </td>
-                                  <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '13px', color: '#E0E0E0' }}>{item.volumeDisplay}</span>
-                                  </td>
-                                  <td className="text-end" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{item.listed}</span>
-                                  </td>
-                                  <td className="text-center" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                      <div className="d-flex justify-content-center gap-2">
-                                          <Link href={`/asset/${item.id}`} className="text-decoration-none">
-                                              <ActionButton text="Buy" />
-                                          </Link>
-                                          <Link href={`/asset/${item.id}`} className="text-decoration-none">
-                                              <button className="btn btn-sm text-white-50 border-secondary hover-white" style={{ fontSize: '10px', padding: '4px 10px', borderRadius: '2px', background: 'transparent' }}>Bid</button>
-                                          </Link>
-                                      </div>
-                                  </td>
-                              </tr>
-                          ))}
+                          {currentTableData.map((item: any, index: number) => {
+                              // Dynamic Rank Calculation based on current sorted view
+                              const dynamicRank = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
+                              
+                              return (
+                                <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
+                                    <td style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <div className="d-flex align-items-center gap-3">
+                                            {/* Heart Icon restored */}
+                                            <i 
+                                                className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} 
+                                                style={{ fontSize: '14px' }}
+                                                onClick={(e) => handleToggleFavorite(e, item.id)}
+                                            ></i>
+                                            {/* Dynamic Rank 1, 2, 3 Color Logic */}
+                                            <span style={getRankStyle(dynamicRank) as any}>{dynamicRank}</span>
+                                        </div>
+                                    </td>
+                                    {/* Name Container Reduced Padding (12px -> 8px) */}
+                                    <td style={{ padding: '12px 8px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <Link href={`/asset/${item.id}`} className="d-flex align-items-center gap-2 text-decoration-none group">
+                                            <CoinIcon name={item.name} tier={item.tier} />
+                                            {/* Font size reduced slightly in container */}
+                                            <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '13.5px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
+                                        </Link>
+                                    </td>
+                                    {/* Reduced Padding Left for Price (50% gap reduction) */}
+                                    <td className="text-start" style={{ padding: '12px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <div className="d-flex align-items-center justify-content-start gap-2">
+                                            <span className="fw-bold text-white" style={{ fontSize: '14px', color: '#E0E0E0' }}>{item.floor}</span>
+                                            <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{item.currencySymbol || getCurrencyLabel()}</span>
+                                            <span style={{ fontSize: '12px', color: '#0ecb81' }}>+0.00%</span>
+                                        </div>
+                                    </td>
+                                    <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <span className="text-white" style={{ fontSize: '13px', color: '#E0E0E0' }}>{item.lastSale}</span>
+                                    </td>
+                                    <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <span className="text-white" style={{ fontSize: '13px', color: '#E0E0E0' }}>{item.volumeDisplay}</span>
+                                    </td>
+                                    <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{item.listed}</span>
+                                    </td>
+                                    <td className="text-center" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <div className="d-flex justify-content-center gap-2">
+                                            <Link href={`/asset/${item.id}`} className="text-decoration-none">
+                                                <ActionButton text="Buy" />
+                                            </Link>
+                                            <Link href={`/asset/${item.id}`} className="text-decoration-none">
+                                                <button className="btn btn-sm text-white-50 border-secondary hover-white" style={{ fontSize: '10px', padding: '4px 10px', borderRadius: '2px', background: 'transparent' }}>Bid</button>
+                                            </Link>
+                                        </div>
+                                    </td>
+                                </tr>
+                              );
+                          })}
                       </tbody>
                   </table>
               )}
           </div>
 
-          {/* DYNAMIC PAGINATION (1 2 3 ... LastPage) */}
-          {finalData.length > 0 && (
-              <div className="d-flex justify-content-center align-items-center gap-3 mt-5 text-secondary" style={{ fontSize: '14px' }}>
-                  <i 
-                      className={`bi bi-chevron-left ${currentPage === 1 ? 'text-muted' : 'cursor-pointer hover-white'}`}
-                      onClick={() => goToPage(currentPage - 1)}
-                  ></i>
-                  
-                  {paginationRange.map((pageNumber, index) => {
-                      if (pageNumber === '...') {
-                          return <span key={index} className="text-muted">...</span>;
-                      }
-                      return (
-                          <span 
-                              key={index}
-                              onClick={() => goToPage(pageNumber as number)} 
-                              className={`cursor-pointer ${currentPage === pageNumber ? 'text-white fw-bold' : 'hover-white'}`}
-                              style={{ padding: '0 5px', minWidth: '24px', textAlign: 'center' }}
-                          >
-                              {pageNumber}
-                          </span>
-                      );
-                  })}
+          {/* ALWAYS VISIBLE DYNAMIC PAGINATION */}
+          <div className="d-flex justify-content-center align-items-center gap-3 mt-5 text-secondary" style={{ fontSize: '14px' }}>
+              <i 
+                  className={`bi bi-chevron-left ${currentPage === 1 ? 'text-muted' : 'cursor-pointer hover-white'}`}
+                  onClick={() => goToPage(currentPage - 1)}
+              ></i>
+              
+              {paginationRange.map((pageNumber, index) => {
+                  if (pageNumber === '...') {
+                      return <span key={index} className="text-muted">...</span>;
+                  }
+                  return (
+                      <span 
+                          key={index}
+                          onClick={() => goToPage(pageNumber as number)} 
+                          className={`cursor-pointer ${currentPage === pageNumber ? 'text-white fw-bold' : 'hover-white'}`}
+                          style={{ padding: '0 5px', minWidth: '24px', textAlign: 'center', color: currentPage === pageNumber ? '#fff' : '#6c757d' }}
+                      >
+                          {pageNumber}
+                      </span>
+                  );
+              })}
 
-                  <i 
-                      className={`bi bi-chevron-right ${currentPage === totalPages ? 'text-muted' : 'cursor-pointer hover-white'}`}
-                      onClick={() => goToPage(currentPage + 1)}
-                  ></i>
-              </div>
-          )}
+              <i 
+                  className={`bi bi-chevron-right ${currentPage === totalPages ? 'text-muted' : 'cursor-pointer hover-white'}`}
+                  onClick={() => goToPage(currentPage + 1)}
+              ></i>
+          </div>
 
       </section>
 
@@ -540,6 +568,14 @@ function MarketPage() {
       </div>
 
       <style jsx global>{`
+        /* DISABLE SELECT */
+        .no-select {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
         .header-wrapper {
             background: #242424;
             border-bottom: 1px solid #2E2E2E;
