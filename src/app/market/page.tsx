@@ -96,6 +96,28 @@ const SortArrows = ({ active, direction, onClick }: any) => (
     </div>
 );
 
+// Helper function for dynamic pagination
+const getPaginationRange = (current: number, total: number) => {
+    const delta = 2; // Number of pages to show around current
+    const range = [];
+    for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+            range.push(i);
+        }
+    }
+    const rangeWithDots = [];
+    let l;
+    for (let i of range) {
+        if (l) {
+            if (i - l === 2) rangeWithDots.push(l + 1);
+            else if (i - l !== 1) rangeWithDots.push('...');
+        }
+        rangeWithDots.push(i);
+        l = i;
+    }
+    return rangeWithDots;
+};
+
 function MarketPage() {
   const { address, isConnected } = useAccount(); 
   const trustedBrands = [ 
@@ -127,7 +149,6 @@ function MarketPage() {
 
   const publicClient = usePublicClient();
 
-  // --- FETCH FAVORITES (Still uses 'favorites' table from DB) ---
   useEffect(() => {
     if (isConnected && address) {
         const fetchFavorites = async () => {
@@ -142,7 +163,6 @@ function MarketPage() {
     }
   }, [address, isConnected]);
 
-  // --- TOGGLE FAVORITE LOGIC ---
   const handleToggleFavorite = async (e: React.MouseEvent, id: number) => {
       e.preventDefault();
       e.stopPropagation();
@@ -231,6 +251,7 @@ function MarketPage() {
                         volume: volumeVal,
                         volumeDisplay: volumeVal > 0 ? `${volumeVal.toFixed(2)} POL` : '0 POL',
                         trendingScore: trendingScore,
+                        offersCount: offersCount, // For Most Offers sort
                         listed: 'Now',
                         change: 0,
                         currencySymbol: 'POL'
@@ -252,7 +273,9 @@ function MarketPage() {
           processedData.sort((a, b) => b.volume - a.volume);
       } else if (activeFilter === 'Trending') {
           processedData.sort((a, b) => b.trendingScore - a.trendingScore);
-      } else if (activeFilter === 'Watchlist') { // Filter by Favorites set
+      } else if (activeFilter === 'Most Offers') { // New Filter Logic
+          processedData.sort((a, b) => b.offersCount - a.offersCount);
+      } else if (activeFilter === 'Watchlist') {
           processedData = processedData.filter(item => favoriteIds.has(item.id));
       } else {
           processedData.sort((a, b) => a.rank - b.rank); 
@@ -275,6 +298,8 @@ function MarketPage() {
       (currentPage - 1) * ITEMS_PER_PAGE,
       currentPage * ITEMS_PER_PAGE
   );
+
+  const paginationRange = getPaginationRange(currentPage, totalPages); // Get dynamic range
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'desc';
@@ -330,7 +355,6 @@ function MarketPage() {
                style={{ borderColor: '#222 !important', padding: '2px 0' }}>
               
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
-                  {/* Updated Filter Item: Watchlist (Renamed & Star Icon removed as requested, just text, or keep star if preferred. Keeping Star for UX consistency with row icon) */}
                   <div 
                     onClick={() => setActiveFilter('Watchlist')}
                     className={`d-flex align-items-center gap-1 cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : ''}`}
@@ -338,8 +362,8 @@ function MarketPage() {
                   >
                       Watchlist
                   </div>
-                  {/* LOGIC FILTERS */}
-                  {['Trending', 'Top', 'All Assets'].map(f => (
+                  {/* LOGIC FILTERS - Added 'Most Offers' */}
+                  {['Trending', 'Top', 'Most Offers', 'All Assets'].map(f => (
                       <div key={f} onClick={() => setActiveFilter(f)} 
                            className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`}
                            style={{ fontSize: '16px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
@@ -391,10 +415,11 @@ function MarketPage() {
                               <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '80px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', minWidth: '150px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', minWidth: '220px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('floor')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 5px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              {/* REDUCED PADDING & ALIGNMENT FOR PRICE */}
+                              <th onClick={() => handleSort('floor')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '120px' }}>
                                   <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'floor'} direction={sortConfig?.direction} /></div>
                               </th>
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -417,9 +442,8 @@ function MarketPage() {
                               <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
                                   <td style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <div className="d-flex align-items-center gap-3">
-                                          {/* STAR ICON FOR WATCHLIST */}
                                           <i 
-                                            className={`bi ${favoriteIds.has(item.id) ? 'bi-star-fill text-warning' : 'bi-star text-secondary'} hover-gold cursor-pointer`} 
+                                            className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} 
                                             style={{ fontSize: '14px' }}
                                             onClick={(e) => handleToggleFavorite(e, item.id)}
                                           ></i>
@@ -432,7 +456,8 @@ function MarketPage() {
                                           <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
                                       </Link>
                                   </td>
-                                  <td className="text-start" style={{ padding: '16px 5px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                  {/* REDUCED PADDING PRICE CELL */}
+                                  <td className="text-start" style={{ padding: '16px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <div className="d-flex align-items-center justify-content-start gap-2">
                                           <span className="fw-bold text-white" style={{ fontSize: '14px', color: '#E0E0E0' }}>{item.floor}</span>
                                           <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{item.currencySymbol || getCurrencyLabel()}</span>
@@ -465,7 +490,7 @@ function MarketPage() {
               )}
           </div>
 
-          {/* ALWAYS VISIBLE PAGINATION */}
+          {/* DYNAMIC PAGINATION (1 2 3 ... LastPage) */}
           {finalData.length > 0 && (
               <div className="d-flex justify-content-center align-items-center gap-3 mt-5 text-secondary" style={{ fontSize: '14px' }}>
                   <i 
@@ -473,39 +498,21 @@ function MarketPage() {
                       onClick={() => goToPage(currentPage - 1)}
                   ></i>
                   
-                  {/* Always show Page 1 */}
-                  <span 
-                      onClick={() => goToPage(1)} 
-                      className={`cursor-pointer ${currentPage === 1 ? 'text-white fw-bold' : 'hover-white'}`}
-                      style={{ padding: '0 5px' }}
-                  >
-                      1
-                  </span>
-
-                  {/* Always show Page 2 if available */}
-                  {totalPages >= 2 && (
-                      <span 
-                          onClick={() => goToPage(2)} 
-                          className={`cursor-pointer ${currentPage === 2 ? 'text-white fw-bold' : 'hover-white'}`}
-                          style={{ padding: '0 5px' }}
-                      >
-                          2
-                      </span>
-                  )}
-
-                  {/* Show dots if more than 3 pages */}
-                  {totalPages > 3 && <span className="text-muted">...</span>}
-
-                  {/* Always show Last Page if more than 2 pages */}
-                  {totalPages > 2 && (
-                      <span 
-                          onClick={() => goToPage(totalPages)} 
-                          className={`cursor-pointer ${currentPage === totalPages ? 'text-white fw-bold' : 'hover-white'}`}
-                          style={{ padding: '0 5px' }}
-                      >
-                          {totalPages}
-                      </span>
-                  )}
+                  {paginationRange.map((pageNumber, index) => {
+                      if (pageNumber === '...') {
+                          return <span key={index} className="text-muted">...</span>;
+                      }
+                      return (
+                          <span 
+                              key={index}
+                              onClick={() => goToPage(pageNumber as number)} 
+                              className={`cursor-pointer ${currentPage === pageNumber ? 'text-white fw-bold' : 'hover-white'}`}
+                              style={{ padding: '0 5px', minWidth: '24px', textAlign: 'center' }}
+                          >
+                              {pageNumber}
+                          </span>
+                      );
+                  })}
 
                   <i 
                       className={`bi bi-chevron-right ${currentPage === totalPages ? 'text-muted' : 'cursor-pointer hover-white'}`}
