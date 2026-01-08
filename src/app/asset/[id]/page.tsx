@@ -20,25 +20,25 @@ const SURFACE_DARK = '#262626';
 const BORDER_COLOR = 'rgba(255, 255, 255, 0.08)'; 
 const TEXT_PRIMARY = '#FFFFFF';
 const TEXT_MUTED = '#B0B0B0';
-const OPENSEA_DESC_COLOR = '#8a939b'; 
+const OPENSEA_DESC_COLOR = '#E5E8EB'; // Updated to match OpenSea's lighter text color
 const GOLD_SOLID = '#F0C420';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
 const GOLD_TEXT_CLASS = 'gold-text-effect'; 
 const GOLD_BTN_STYLE = { background: GOLD_GRADIENT, color: '#1a1200', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: GOLD_SOLID, border: `1px solid ${GOLD_SOLID}`, fontWeight: 'bold' as const };
-// New Glass Button Style for Footer
+
+// Updated Glass Button Style for Footer - Transparent with Gold Border/Text
 const GLASS_BTN_STYLE = {
-    background: 'rgba(240, 196, 32, 0.15)',
+    background: 'rgba(30, 30, 30, 0.2)', // Transparent dark background
     border: `1px solid ${GOLD_SOLID}`,
     color: GOLD_SOLID,
     backdropFilter: 'blur(10px)',
-    borderRadius: '16px',
+    borderRadius: '12px',
     fontWeight: 'bold' as const,
-    fontSize: '18px',
-    padding: '16px',
-    width: '65%',
+    fontSize: '16px',
+    padding: '14px',
+    width: '100%',
     maxWidth: '500px',
-    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)'
 };
 
 const OFFER_DURATION = 30 * 24 * 60 * 60; 
@@ -102,7 +102,8 @@ const Accordion = ({ title, defaultOpen = false, icon, children }: any) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
         <div style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>
-            <button onClick={() => setIsOpen(!isOpen)} className="d-flex align-items-center justify-content-between w-100 py-3" style={{ background: 'transparent', border: 'none', color: TEXT_PRIMARY, fontWeight: '600', fontSize: '15px', paddingLeft: 0, paddingRight: 0 }}>
+            {/* Adjusted padding for icon and chevron */}
+            <button onClick={() => setIsOpen(!isOpen)} className="d-flex align-items-center justify-content-between w-100 py-3 px-3" style={{ background: 'transparent', border: 'none', color: TEXT_PRIMARY, fontWeight: '600', fontSize: '15px' }}>
                 <div className="d-flex align-items-center gap-3"><i className={`bi ${icon}`} style={{ color: TEXT_MUTED, fontSize: '16px' }}></i> {title}</div>
                 <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'}`} style={{ color: TEXT_MUTED, fontSize: '12px' }}></i>
             </button>
@@ -151,7 +152,7 @@ function AssetPage() {
     
     // Modal States
     const [isOfferMode, setIsOfferMode] = useState(false);
-    const [offerStep, setOfferStep] = useState<'select' | 'input'>('select'); // New state for modal steps
+    const [offerStep, setOfferStep] = useState<'select' | 'input'>('select');
     const [offerPrice, setOfferPrice] = useState('');
     
     const [wpolBalance, setWpolBalance] = useState<number>(0);
@@ -313,7 +314,7 @@ function AssetPage() {
     
     const handleSubmitOffer = async () => {
         if (!address) return;
-        if (wpolBalance < parseFloat(offerPrice || '0')) return; // Extra safety check
+        if (wpolBalance < parseFloat(offerPrice || '0')) return;
         setIsPending(true);
         try {
             const priceInWei = parseEther(offerPrice);
@@ -443,11 +444,18 @@ function AssetPage() {
                                             </div>
                                         </Accordion>
 
+                                        {/* Updated About Section to match OpenSea exact text and style */}
                                         <Accordion title={`About ${asset.name}`} icon="bi-text-left">
                                             <div className="px-3" style={{ color: OPENSEA_DESC_COLOR, fontSize: '16px', lineHeight: '1.6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
-                                                <p className="mb-4 fw-bold text-white" style={{ fontSize: '18px' }}>GEN-0 Genesis NNM Protocol Record</p>
-                                                <p className="mb-4">A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.</p>
-                                                <p className="mb-0">It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol permanent, time-anchored digital inscription preserved on the blockchain.</p>
+                                                <div className="mb-4" style={{ fontSize: '16px', fontWeight: '600', color: OPENSEA_DESC_COLOR }}>
+                                                    GEN-0 Genesis — NNM Protocol Record
+                                                </div>
+                                                <p className="mb-4">
+                                                    A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.
+                                                </p>
+                                                <p className="mb-0">
+                                                    It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol — a permanent, time-anchored digital inscription preserved on the blockchain.
+                                                </p>
                                             </div>
                                         </Accordion>
 
@@ -564,25 +572,25 @@ function AssetPage() {
                 </div>
             </div>
 
-            {/* STICKY FOOTER - REDESIGNED */}
-            <div className="fixed-bottom p-3" style={{ backgroundColor: '#1E1E1E', borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100 }}>
+            {/* STICKY FOOTER - REDESIGNED WITH REDUCED HEIGHT AND GLASS BUTTON */}
+            <div className="fixed-bottom p-3" style={{ backgroundColor: '#1E1E1E', borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100, height: 'auto' }}>
                 <div className="container d-flex justify-content-center" style={{ maxWidth: '1200px' }}>
                     {!isConnected ? (
-                        <div style={{ width: '65%', maxWidth: '500px' }}><ConnectButton.Custom>{({ openConnectModal }) => (<button onClick={openConnectModal} className="btn w-100 fw-bold py-3" style={{ ...GOLD_BTN_STYLE, borderRadius: '16px', fontSize: '18px' }}>Connect Wallet</button>)}</ConnectButton.Custom></div>
+                        <div style={{ width: '65%', maxWidth: '500px' }}><ConnectButton.Custom>{({ openConnectModal }) => (<button onClick={openConnectModal} className="btn w-100 fw-bold py-2" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>Connect Wallet</button>)}</ConnectButton.Custom></div>
                     ) : isOwner ? (
                         isListingMode ? (
                             <div className="d-flex gap-2 w-100 justify-content-center" style={{maxWidth: '600px'}}>
                                 {!isApproved ? 
-                                    <button onClick={handleApproveNft} disabled={isPending} className="btn py-3 fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, borderRadius: '16px' }}>Approve NFT</button>
-                                    : <button onClick={handleList} disabled={isPending} className="btn py-3 fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, borderRadius: '16px' }}>Confirm List</button>
+                                    <button onClick={handleApproveNft} disabled={isPending} className="btn py-2 fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>Approve NFT</button>
+                                    : <button onClick={handleList} disabled={isPending} className="btn py-2 fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>Confirm List</button>
                                 }
-                                <button onClick={() => setIsListingMode(false)} className="btn btn-secondary py-3 fw-bold flex-grow-1" style={{ borderRadius: '16px' }}>Cancel</button>
+                                <button onClick={() => setIsListingMode(false)} className="btn btn-secondary py-2 fw-bold flex-grow-1" style={{ borderRadius: '12px', fontSize: '16px' }}>Cancel</button>
                             </div>
                         ) : (
-                            <button onClick={() => setIsListingMode(true)} className="btn fw-bold py-3" style={{ ...GOLD_BTN_STYLE, borderRadius: '16px', width: '65%', maxWidth: '500px', fontSize: '18px' }}>List for Sale</button>
+                            <button onClick={() => setIsListingMode(true)} className="btn fw-bold py-2" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', width: '65%', maxWidth: '500px', fontSize: '16px' }}>List for Sale</button>
                         )
                     ) : (
-                        // The big glass button for visitors
+                        // The glass button for visitors
                         <button onClick={openOfferModal} style={GLASS_BTN_STYLE}>
                             Make Offer
                         </button>
