@@ -200,15 +200,61 @@ function AssetPage() {
             const { data: acts } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
             setActivityList(acts || []);
 
-            // 4. More Collection (Mock) - ADDED NAMES HERE
-            setMoreAssets([
-                {id:96, name: 'Royal', image: 'https://gateway.pinata.cloud/ipfs/bafkreiazhoyzkbenhbvjlltd6izwonwz3xikljtrrksual5ttzs4nyzbuu'},
-                {id:97, name: 'Majestic', image: 'https://gateway.pinata.cloud/ipfs/bafkreiagc35ykldllvd2knqcnei2ctmkps66byvjinlr7hmkgkdx5mhxqi'},
-                {id:98, name: 'Imperial', image: 'https://gateway.pinata.cloud/ipfs/bafkreib7mz6rnwk3ig7ft6ne5iuajlywkttv4zvjp5bbk7ssd5kaykjbsm'}
-            ]);
-
         } catch (e) { console.error(e); } finally { setLoading(false); }
     }, [tokenId, address, publicClient]);
+
+    // --- Sequential Fetching Logic for "More from this collection" ---
+    const fetchMoreAssets = useCallback(async () => {
+        if (!tokenId || !publicClient) return;
+        
+        // Fetch next 3 IDs sequentially (FIXED BigInt literal error)
+        const startId = BigInt(tokenId) + BigInt(1);
+        const batchIds = [startId, startId + BigInt(1), startId + BigInt(2)];
+        const loadedAssets: any[] = [];
+
+        for (const nextId of batchIds) {
+            try {
+                // Fetch URI & Metadata
+                const tokenURI = await publicClient.readContract({ 
+                    address: NFT_COLLECTION_ADDRESS as `0x${string}`, 
+                    abi: erc721Abi, 
+                    functionName: 'tokenURI', 
+                    args: [nextId] 
+                });
+                
+                const metaRes = await fetch(resolveIPFS(tokenURI));
+                const meta = metaRes.ok ? await metaRes.json() : {};
+                
+                // Fetch Listing Status
+                let isListed = false;
+                let price = meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0';
+                
+                try {
+                    const listingData = await publicClient.readContract({ 
+                        address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                        abi: MARKETPLACE_ABI, 
+                        functionName: 'listings', 
+                        args: [nextId] 
+                    });
+                    if (listingData[2]) {
+                        isListed = true;
+                        price = formatEther(listingData[1]);
+                    }
+                } catch (e) {}
+
+                loadedAssets.push({
+                    id: nextId.toString(),
+                    name: meta.name || `NNM #${nextId}`,
+                    image: resolveIPFS(meta.image) || '',
+                    price: price,
+                    isListed: isListed
+                });
+            } catch (e) {
+                // If token doesn't exist or error, skip
+            }
+        }
+        setMoreAssets(loadedAssets);
+    }, [tokenId, publicClient]);
 
     const refreshWpolData = useCallback(async () => {
         if (address && publicClient) {
@@ -221,7 +267,7 @@ function AssetPage() {
         }
     }, [address, publicClient]);
 
-    useEffect(() => { fetchAllData(); }, [fetchAllData]);
+    useEffect(() => { fetchAllData(); fetchMoreAssets(); }, [fetchAllData, fetchMoreAssets]);
     useEffect(() => { if (isOfferMode) refreshWpolData(); }, [isOfferMode, refreshWpolData]);
 
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
@@ -361,18 +407,27 @@ function AssetPage() {
 
                                     <Accordion title="More from this collection" icon="bi-collection">
                                         <div className="d-flex gap-3 overflow-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-                                            {moreAssets.map(item => (
-                                                <Link key={item.id} href={`/asset/${item.id}`} className="text-decoration-none" style={{ minWidth: '140px' }}>
-                                                    <div className="rounded-3 overflow-hidden" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK }}>
-                                                        <div style={{ aspectRatio: '1/1' }}><img src={item.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
-                                                        <div className="p-2 text-center">
-                                                            {/* تعديل 4: عرض اسم الأصل بدلاً من المعرف */}
-                                                            <div className="text-white fw-bold small">{item.name}</div>
-                                                            <div style={{ fontSize: '10px', color: TEXT_MUTED }}>Not listed</div>
+                                            {moreAssets.length > 0 ? moreAssets.map(item => (
+                                                <Link key={item.id} href={`/asset/${item.id}`} className="text-decoration-none">
+                                                    <div className="h-100 d-flex flex-column" style={{ width: '220px', backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
+                                                        <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
+                                                            {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
+                                                        </div>
+                                                        <div className="p-3 d-flex flex-column flex-grow-1">
+                                                            <div className="d-flex justify-content-between align-items-start mb-1">
+                                                                <div className="text-white fw-bold text-truncate" style={{ fontSize: '14px', maxWidth: '80%' }}>{item.name}</div>
+                                                                <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
+                                                            </div>
+                                                            <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
+                                                            <div className="mt-auto">
+                                                                <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Not Listed</span>}</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </Link>
-                                            ))}
+                                            )) : (
+                                                <div className="text-muted text-center w-100 py-3">Loading more assets...</div>
+                                            )}
                                         </div>
                                     </Accordion>
                                 </div>
