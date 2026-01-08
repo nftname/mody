@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useAccount, useBalance } from "wagmi";
@@ -29,11 +29,12 @@ const publicClient = createPublicClient({
 
 export default function ProfilePage() {
   const params = useParams();
-  const targetAddress = params?.address as `0x${string}`; // The address being viewed
-  const { address: connectedAddress } = useAccount(); // The viewer's address
+  const targetAddress = params?.address as `0x${string}`; 
+  const { address: connectedAddress } = useAccount(); 
   const { data: balanceData } = useBalance({ address: targetAddress });
   
-  // --- States ---
+  const isOwner = connectedAddress && targetAddress ? connectedAddress.toLowerCase() === targetAddress.toLowerCase() : false;
+
   const [myAssets, setMyAssets] = useState<any[]>([]);
   const [createdAssets, setCreatedAssets] = useState<any[]>([]);
   const [offersData, setOffersData] = useState<any[]>([]);
@@ -47,18 +48,15 @@ export default function ProfilePage() {
   const currentViewMode = viewModes[viewModeState];
   const [isCopied, setIsCopied] = useState(false);
 
-  // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState('ALL'); 
   
-  // Dropdown States
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const [offerType, setOfferType] = useState('All'); 
   const [offerSort, setOfferSort] = useState('Newest');   
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
-  // --- Click Outside Handler ---
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as HTMLElement;
@@ -75,7 +73,6 @@ export default function ProfilePage() {
       else setOpenDropdown(name);
   };
 
-  // --- Helpers ---
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -115,7 +112,6 @@ export default function ProfilePage() {
       }).format(num);
   };
 
-  // --- 1. ITEMS ---
   const fetchAssets = async () => {
     if (!targetAddress) return;
     setLoading(true);
@@ -190,9 +186,8 @@ export default function ProfilePage() {
     } catch (error) { console.error("Fetch Assets Error:", error); } finally { setLoading(false); }
   };
 
-  // --- 2. OFFERS ---
   const fetchOffers = async () => {
-      if (!targetAddress) return;
+      if (!targetAddress || !isOwner) return; 
       setLoading(true);
       try {
           let query = supabase.from('offers').select('*');
@@ -260,7 +255,6 @@ export default function ProfilePage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
-  // --- 3. CREATED ---
   const fetchCreated = async () => {
       if (!targetAddress) return;
       setLoading(true);
@@ -279,7 +273,6 @@ export default function ProfilePage() {
               return;
           }
 
-          // Map dates
           const dateMap: Record<string, string> = {};
           data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
 
@@ -311,12 +304,10 @@ export default function ProfilePage() {
       } finally { setLoading(false); }
   };
 
-  // --- 4. ACTIVITY ---
   const fetchActivity = async () => {
       if (!targetAddress) return;
       setLoading(true);
       try {
-          // History
           const { data: activityData, error: actError } = await supabase
             .from('activities')
             .select('*')
@@ -325,7 +316,6 @@ export default function ProfilePage() {
 
           if (actError) throw actError;
 
-          // Offers
           const { data: offersData, error: offError } = await supabase
              .from('offers')
              .select('*')
@@ -365,10 +355,10 @@ export default function ProfilePage() {
   useEffect(() => { fetchAssets(); }, [targetAddress]);
   
   useEffect(() => { 
-      if (activeSection === 'Offers') fetchOffers();
+      if (activeSection === 'Offers' && isOwner) fetchOffers();
       if (activeSection === 'Created') fetchCreated();
       if (activeSection === 'Activity') fetchActivity();
-  }, [activeSection, offerType, offerSort, myAssets]);
+  }, [activeSection, offerType, offerSort, myAssets, isOwner]);
 
   const copyToClipboard = () => {
     if (targetAddress) {
@@ -395,7 +385,6 @@ export default function ProfilePage() {
 
       <div className="container mx-auto px-3" style={{ marginTop: '-90px', position: 'relative', zIndex: 10 }}>
         
-        {/* Profile Header */}
         <div className="d-flex flex-column gap-1 mb-2">
             <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #1E1E1E', background: '#161b22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
                 <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: '#1E1E1E' }}>
@@ -413,6 +402,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="d-flex gap-5 mt-2 px-2">
+                {isOwner && (
                 <div className="d-flex flex-column align-items-start">
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Balance</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>
@@ -420,10 +410,12 @@ export default function ProfilePage() {
                          {balanceData ? formatCompactNumber(parseFloat(balanceData.formatted)) : '0.00'}
                     </div>
                 </div>
+                )}
                 <div className="d-flex flex-column align-items-start">
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Assets</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>{myAssets.length}</div>
                 </div>
+                {isOwner && (
                 <div className="d-flex flex-column align-items-start">
                     <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Total value</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>
@@ -431,10 +423,10 @@ export default function ProfilePage() {
                         {formatCompactNumber(totalAssetValue)}
                     </div>
                 </div>
+                )}
             </div>
         </div>
 
-        {/* Tabs */}
         <div className="d-flex gap-4 mb-3 overflow-auto" style={{ borderBottom: 'none' }}>
             {['Items', 'Listings', 'Offers', 'Created', 'Activity'].map((tab) => (
                 <button 
@@ -459,7 +451,6 @@ export default function ProfilePage() {
             ))}
         </div>
 
-        {/* --- 1. ITEMS --- */}
         {activeSection === 'Items' && (
             <>
                 <div className="row mb-4">
@@ -501,7 +492,6 @@ export default function ProfilePage() {
             </>
         )}
 
-        {/* --- 2. LISTINGS --- */}
         {activeSection === 'Listings' && (
             <div className="pb-5 mt-4">
                 {loading ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : listedAssets.length === 0 ? (
@@ -531,9 +521,10 @@ export default function ProfilePage() {
             </div>
         )}
 
-        {/* --- 3. OFFERS --- */}
         {activeSection === 'Offers' && (
             <div className="mt-4">
+                {isOwner ? (
+                <>
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <div className="position-relative dropdown-container">
                         <button onClick={() => toggleDropdown('offerSort')} className="btn border border-secondary d-flex flex-column align-items-center justify-content-center gap-1" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
@@ -578,10 +569,15 @@ export default function ProfilePage() {
                         </tbody>
                     </table>
                 </div>
+                </>
+                ) : (
+                    <div className="text-center py-5 text-secondary">
+                        
+                    </div>
+                )}
             </div>
         )}
 
-        {/* --- 4. CREATED (Updated UI) --- */}
         {activeSection === 'Created' && (
             <>
                 <div className="row mb-4">
@@ -622,7 +618,6 @@ export default function ProfilePage() {
             </>
         )}
 
-        {/* --- 5. ACTIVITY (Updated UI) --- */}
         {activeSection === 'Activity' && (
             <div className="mt-4 pb-5">
                 <div className="table-responsive">
