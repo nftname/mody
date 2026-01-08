@@ -35,7 +35,7 @@ export default function DashboardPage() {
   const [createdAssets, setCreatedAssets] = useState<any[]>([]);
   const [offersData, setOffersData] = useState<any[]>([]);
   const [activityData, setActivityData] = useState<any[]>([]);
-  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set()); // New State for Favorites
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set()); 
   
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('Items');
@@ -48,7 +48,7 @@ export default function DashboardPage() {
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState('ALL'); 
-  const [filterFavorites, setFilterFavorites] = useState(false); // Filter by Favorites State
+  const [filterFavorites, setFilterFavorites] = useState(false);
   
   // Dropdown States
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -114,7 +114,7 @@ export default function DashboardPage() {
       }).format(num);
   };
 
-  // --- Favorites Logic (Side-Data Layer) ---
+  // --- Favorites Logic ---
   const fetchFavorites = async () => {
     if (!address) return;
     try {
@@ -125,7 +125,7 @@ export default function DashboardPage() {
         
         if (error) throw error;
         if (data) {
-            setFavoriteIds(new Set(data.map(item => item.token_id)));
+            setFavoriteIds(new Set(data.map((item: any) => item.token_id)));
         }
     } catch (e) { console.error("Error fetching favorites", e); }
   };
@@ -151,7 +151,7 @@ export default function DashboardPage() {
         }
     } catch (error) {
         console.error("Error toggling favorite", error);
-        fetchFavorites(); // Revert on error
+        fetchFavorites(); // Revert
     }
   };
 
@@ -265,7 +265,7 @@ export default function DashboardPage() {
           const { data, error } = await query;
           if (error) throw error;
 
-          const enrichedOffers = await Promise.all((data || []).map(async (offer) => {
+          const enrichedOffers = await Promise.all((data || []).map(async (offer: any) => {
               const knownAsset = myAssets.find(a => a.id === offer.token_id.toString());
               let assetName = knownAsset ? knownAsset.name : `NNM #${offer.token_id}`;
 
@@ -319,11 +319,10 @@ export default function DashboardPage() {
               return;
           }
 
-          // Map dates
           const dateMap: Record<string, string> = {};
           data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
 
-          const tokenIds = [...new Set(data.map(item => item.token_id))];
+          const tokenIds = [...new Set(data.map((item: any) => item.token_id))];
           const batches = chunk(tokenIds, 4); 
           const loadedCreated: any[] = [];
 
@@ -405,7 +404,7 @@ export default function DashboardPage() {
   useEffect(() => { 
       if (isConnected) {
           fetchAssets();
-          fetchFavorites(); // Fetch favorites when connected
+          fetchFavorites();
       } 
   }, [address, isConnected]);
   
@@ -427,12 +426,14 @@ export default function DashboardPage() {
 
   const totalAssetValue = myAssets.reduce((acc, curr) => acc + parseFloat(curr.price || 0), 0);
   
-  // Updated Filter Logic to include Favorites
+  // Updated Filter Logic
   const filteredAssets = myAssets.filter(asset => {
       const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase());
+      if (selectedTier === 'FAVORITES') {
+          return matchesSearch && favoriteIds.has(asset.id);
+      }
       const matchesTier = selectedTier === 'ALL' || asset.tier.toUpperCase() === selectedTier;
-      const matchesFavorite = filterFavorites ? favoriteIds.has(asset.id) : true;
-      return matchesSearch && matchesTier && matchesFavorite;
+      return matchesSearch && matchesTier;
   });
 
   const listedAssets = myAssets.filter(asset => asset.isListed);
@@ -535,20 +536,9 @@ export default function DashboardPage() {
                                 </button>
                                 {openDropdown === 'filter' && (
                                     <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
-                                        {/* Added Favorites Filter Option */}
-                                        <div style={{ borderBottom: '1px solid #333', marginBottom: '8px', paddingBottom: '8px' }}>
-                                            <button 
-                                                onClick={() => { setFilterFavorites(!filterFavorites); setOpenDropdown(null); }} 
-                                                className="btn w-100 text-start btn-sm text-white" 
-                                                style={{ backgroundColor: filterFavorites ? '#2d2d2d' : 'transparent', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                                            >
-                                                <i className={`bi ${filterFavorites ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: filterFavorites ? '#FFFFFF' : 'white', fontSize: '14px' }}></i>
-                                                Favorites Only
-                                            </button>
-                                        </div>
-
-                                        <div style={{ fontSize: '10px', color: '#8a939b', padding: '4px 8px', textTransform: 'uppercase' }}>Filter by Tier</div>
-                                        {['ALL', 'IMMORTAL', 'ELITE', 'FOUNDERS'].map(tier => (
+                                        <div style={{ fontSize: '10px', color: '#8a939b', padding: '4px 8px', textTransform: 'uppercase' }}>Filter by Category</div>
+                                        {/* Updated Filter Options with Favorites at the end */}
+                                        {['ALL', 'IMMORTAL', 'ELITE', 'FOUNDERS', 'FAVORITES'].map(tier => (
                                             <button key={tier} onClick={() => { setSelectedTier(tier); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: selectedTier === tier ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{tier}</button>
                                         ))}
                                     </div>
@@ -569,7 +559,6 @@ export default function DashboardPage() {
                 <div className="pb-5">
                     {loading && myAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : (
                         <div className="row g-3">
-                            {/* Passed favorite props to AssetRenderer */}
                             {filteredAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
                             {filteredAssets.length === 0 && !loading && <div className="col-12 text-center py-5 text-secondary">No items found</div>}
                         </div>
@@ -661,8 +650,34 @@ export default function DashboardPage() {
         {/* --- 4. CREATED (Updated UI) --- */}
         {activeSection === 'Created' && (
             <>
-                <div className="row mb-4">
-                    <div className="col-12 col-lg-6">
+                <div className="row g-3 mb-4 d-none d-lg-flex align-items-center">
+                    <div className="col-lg-3">
+                        <span className="text-white fw-bold" style={{ fontSize: '15px' }}>{createdAssets.length} Assets</span>
+                    </div>
+                    <div className="col-lg-3">
+                        <div className="position-relative dropdown-container">
+                            <button onClick={() => toggleDropdown('createdSort')} className="btn d-flex align-items-center gap-2 ps-0" style={{ border: 'none', background: 'transparent', color: '#fff', fontSize: '14px' }}>
+                                Sort by <i className="bi bi-chevron-down" style={{ fontSize: '11px' }}></i>
+                            </button>
+                            {openDropdown === 'createdSort' && (
+                                <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
+                                    {['Newest', 'Oldest'].map(sort => (<button key={sort} onClick={() => { setSortOrder(sort === 'Newest' ? 'newest' : 'oldest'); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: 'transparent', fontSize: '13px' }}>Minted {sort}</button>))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div className="col-lg-3"></div>
+                    <div className="col-lg-3 text-end">
+                        <button onClick={toggleViewMode} className="btn border border-secondary d-inline-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
+                            {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '16px' }}></i>}
+                            {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '16px' }}></i>}
+                            {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '20px' }}></i>}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="row mb-4 d-lg-none">
+                    <div className="col-12">
                         <div className="d-flex align-items-center gap-2 position-relative">
                             <div className="d-flex align-items-center gap-3">
                                 <span className="text-white fw-bold" style={{ fontSize: '15px' }}>{createdAssets.length} Assets</span>
@@ -687,10 +702,9 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
+
                 <div className="pb-5">
-                    {loading && createdAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : createdAssets.length === 0 ? (
-                        <div className="text-center py-5 text-secondary">No created assets found</div>
-                    ) : (
+                    {loading && createdAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : (
                         <div className="row g-3">
                             {sortedCreatedAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
                         </div>
@@ -758,7 +772,6 @@ export default function DashboardPage() {
   );
 }
 
-// Updated AssetRenderer with Heart Button & NO Polygon Badge
 const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any, mode: string, isFavorite: boolean, onToggleFavorite: (e: React.MouseEvent, id: string) => void }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
@@ -783,7 +796,6 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                         <div className="text-end pe-4">
                              <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
                         </div>
-                        {/* Heart Button for List View */}
                         <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute end-0 me-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
                              <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : '#8a939b', fontSize: '16px' }}></i>
                         </button>
@@ -792,16 +804,12 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
             </div>
         );
     }
-    // Grid or Large Mode
     return (
       <div className={colClass}>
           <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
               <Link href={`/asset/${item.id}`} className="text-decoration-none h-100 d-flex flex-column">
                   <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
-                       {/* Polygon Badge REMOVED completely */}
                        {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="asset-img" />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
-                       
-                       {/* Heart Button for Grid View (Top Right) */}
                        <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
                             <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : 'white', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
                        </button>
