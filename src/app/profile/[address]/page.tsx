@@ -58,6 +58,7 @@ export default function ProfilePage() {
   const [offerSort, setOfferSort] = useState('Newest');   
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
+  // إغلاق القوائم المنسدلة عند الضغط خارجها
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as HTMLElement;
@@ -113,6 +114,7 @@ export default function ProfilePage() {
       }).format(num);
   };
 
+  // جلب المفضلات
   const fetchFavorites = async () => {
     if (!connectedAddress) return;
     try {
@@ -128,15 +130,16 @@ export default function ProfilePage() {
     } catch (e) { console.error("Error fetching favorites", e); }
   };
 
+  // التعامل مع ضغط زر المفضلة
   const handleToggleFavorite = async (e: React.MouseEvent, tokenId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!connectedAddress) return; // Must be connected
+    if (!connectedAddress) return; 
 
     const newFavs = new Set(favoriteIds);
     const isFav = newFavs.has(tokenId);
 
-    // Optimistic UI update (Instant feedback)
+    // تحديث فوري للواجهة
     if (isFav) newFavs.delete(tokenId);
     else newFavs.add(tokenId);
 
@@ -144,19 +147,17 @@ export default function ProfilePage() {
 
     try {
         if (isFav) {
-            // Remove from DB
             await supabase.from('favorites').delete().match({ wallet_address: connectedAddress, token_id: tokenId });
         } else {
-            // Add to DB
             await supabase.from('favorites').insert({ wallet_address: connectedAddress, token_id: tokenId });
         }
     } catch (error) {
         console.error("Error toggling favorite", error);
-        // Revert on error
-        fetchFavorites();
+        fetchFavorites(); // تراجع في حال الخطأ
     }
   };
 
+  // جلب الأصول (Items)
   const fetchAssets = async () => {
     if (!targetAddress) return;
     setLoading(true);
@@ -231,6 +232,7 @@ export default function ProfilePage() {
     } catch (error) { console.error("Fetch Assets Error:", error); } finally { setLoading(false); }
   };
 
+  // جلب العروض (Offers)
   const fetchOffers = async () => {
       if (!targetAddress || !isOwner) return; 
       setLoading(true);
@@ -300,6 +302,7 @@ export default function ProfilePage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
+  // جلب العناصر المنشأة (Created)
   const fetchCreated = async () => {
       if (!targetAddress) return;
       setLoading(true);
@@ -349,6 +352,7 @@ export default function ProfilePage() {
       } finally { setLoading(false); }
   };
 
+  // جلب النشاط (Activity)
   const fetchActivity = async () => {
       if (!targetAddress) return;
       setLoading(true);
@@ -722,6 +726,7 @@ export default function ProfilePage() {
   );
 }
 
+// مكون البطاقة الذي يحتوي على منطق العرض وزر القلب
 const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any, mode: string, isFavorite: boolean, onToggleFavorite: (e: React.MouseEvent, id: string) => void }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
@@ -730,15 +735,6 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
         const d = new Date(dateStr);
         return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     };
-
-    const PolygonBadge = () => (
-        <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16.5 12C16.5 12.8 16.2 13.5 15.6 14.1L12.9 16.8C12.4 17.3 11.6 17.3 11.1 16.8L8.4 14.1C7.8 13.5 7.5 12.8 7.5 12C7.5 11.2 7.8 10.5 8.4 9.9L11.1 7.2C11.6 6.7 12.4 6.7 12.9 7.2L15.6 9.9C16.2 10.5 16.5 11.2 16.5 12Z" fill="#FFFFFF"/>
-                <path d="M12 0L2.59808 5.4282V16.2859L12 21.7141L21.4019 16.2859V5.4282L12 0ZM19.4019 15.1304L12 19.4019L4.59808 15.1304V6.58372L12 2.31218L19.4019 6.58372V15.1304Z" fill="#FFFFFF"/>
-            </svg>
-        </div>
-    );
 
     if (mode === 'list') {
         return (
@@ -755,6 +751,7 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                         <div className="text-end pe-4">
                              <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
                         </div>
+                        {/* زر القلب للقائمة */}
                         <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute end-0 me-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
                              <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : '#8a939b', fontSize: '16px' }}></i>
                         </button>
@@ -763,13 +760,15 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
             </div>
         );
     }
+    // الوضع Grid أو Large (نفس الهيكلية)
     return (
       <div className={colClass}>
           <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
               <Link href={`/asset/${item.id}`} className="text-decoration-none h-100 d-flex flex-column">
                   <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
-                       <PolygonBadge />
                        {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="asset-img" />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
+                       
+                       {/* زر القلب للشبكة والصور الكبيرة - في الزاوية العلوية اليمنى */}
                        <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
                             <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : 'white', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
                        </button>
