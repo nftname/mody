@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import { useParams } from 'next/navigation';
@@ -20,25 +20,26 @@ const SURFACE_DARK = '#262626';
 const BORDER_COLOR = 'rgba(255, 255, 255, 0.08)'; 
 const TEXT_PRIMARY = '#FFFFFF';
 const TEXT_MUTED = '#B0B0B0';
-const OPENSEA_DESC_COLOR = '#E5E8EB'; // Updated to match OpenSea's lighter text color
+const OPENSEA_DESC_COLOR = '#E5E8EB'; 
 const GOLD_SOLID = '#F0C420';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
 const GOLD_TEXT_CLASS = 'gold-text-effect'; 
 const GOLD_BTN_STYLE = { background: GOLD_GRADIENT, color: '#1a1200', border: 'none', fontWeight: 'bold' as const };
 const OUTLINE_BTN_STYLE = { background: 'transparent', color: GOLD_SOLID, border: `1px solid ${GOLD_SOLID}`, fontWeight: 'bold' as const };
 
-// Updated Glass Button Style for Footer - Transparent with Gold Border/Text
+// Updated Glass Button Style (50% Width, 5% Opacity, Thinner Border)
 const GLASS_BTN_STYLE = {
-    background: 'rgba(30, 30, 30, 0.2)', // Transparent dark background
-    border: `1px solid ${GOLD_SOLID}`,
+    background: 'rgba(255, 255, 255, 0.05)', // 5% transparency
+    border: `1px solid ${GOLD_SOLID}`, // Thin border
     color: GOLD_SOLID,
-    backdropFilter: 'blur(10px)',
+    backdropFilter: 'blur(5px)',
     borderRadius: '12px',
     fontWeight: 'bold' as const,
-    fontSize: '16px',
-    padding: '14px',
-    width: '100%',
-    maxWidth: '500px',
+    fontSize: '15px', // Slightly smaller font
+    padding: '10px',  // Reduced height padding
+    width: '50%',     // 50% Width
+    maxWidth: '300px',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
 };
 
 const OFFER_DURATION = 30 * 24 * 60 * 60; 
@@ -102,10 +103,14 @@ const Accordion = ({ title, defaultOpen = false, icon, children }: any) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
         <div style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>
-            {/* Adjusted padding for icon and chevron */}
             <button onClick={() => setIsOpen(!isOpen)} className="d-flex align-items-center justify-content-between w-100 py-3 px-3" style={{ background: 'transparent', border: 'none', color: TEXT_PRIMARY, fontWeight: '600', fontSize: '15px' }}>
-                <div className="d-flex align-items-center gap-3"><i className={`bi ${icon}`} style={{ color: TEXT_MUTED, fontSize: '16px' }}></i> {title}</div>
-                <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'}`} style={{ color: TEXT_MUTED, fontSize: '12px' }}></i>
+                <div className="d-flex align-items-center gap-3">
+                    {/* Shifted icon slightly right via padding */}
+                    <i className={`bi ${icon}`} style={{ color: TEXT_MUTED, fontSize: '16px', paddingLeft: '4px' }}></i> 
+                    {title}
+                </div>
+                {/* Shifted arrow slightly left via padding */}
+                <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'}`} style={{ color: TEXT_MUTED, fontSize: '12px', paddingRight: '4px' }}></i>
             </button>
             {isOpen && <div className="pb-4 pt-1">{children}</div>}
         </div>
@@ -137,7 +142,7 @@ function AssetPage() {
     const [activityList, setActivityList] = useState<any[]>([]);
     const [moreAssets, setMoreAssets] = useState<any[]>([]);
     
-    // Filter & Sort States for Orders
+    // Filter & Sort
     const [offerSort, setOfferSort] = useState('Newest');
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
@@ -163,7 +168,16 @@ function AssetPage() {
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
 
-    // --- Click Outside Handler for Dropdowns ---
+    // Auto Focus Ref
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isOfferMode && offerStep === 'input' && inputRef.current) {
+            setTimeout(() => inputRef.current?.focus(), 100);
+        }
+    }, [isOfferMode, offerStep]);
+
+    // Click Outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -184,7 +198,6 @@ function AssetPage() {
     const fetchAllData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            // 1. Asset & Listing
             const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [BigInt(tokenId)] });
             const metaRes = await fetch(resolveIPFS(tokenURI));
             const meta = metaRes.ok ? await metaRes.json() : {};
@@ -210,7 +223,6 @@ function AssetPage() {
                 setIsApproved(approvedStatus);
             }
             
-            // 2. Offers (Synced with Dashboard Logic)
             const { data: offers } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled');
             if (offers) {
                 let enrichedOffers = offers.map((offer: any) => ({
@@ -224,16 +236,12 @@ function AssetPage() {
                     created_at: offer.created_at,
                     timeLeft: formatDuration(offer.expiration)
                 }));
-
-                // Apply Sorting
                 if (offerSort === 'Newest') enrichedOffers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 if (offerSort === 'High Price') enrichedOffers.sort((a, b) => b.price - a.price);
                 if (offerSort === 'Low Price') enrichedOffers.sort((a, b) => a.price - b.price);
-                
                 setOffersList(enrichedOffers);
             }
 
-            // 3. Activity
             const { data: actData } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
             const { data: offerActData } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled').order('created_at', { ascending: false });
 
@@ -261,13 +269,11 @@ function AssetPage() {
         } catch (e) { console.error(e); } finally { setLoading(false); }
     }, [tokenId, address, publicClient, offerSort]);
 
-    // --- Sequential Fetching Logic ---
     const fetchMoreAssets = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         const startId = BigInt(tokenId) + BigInt(1);
         const batchIds = [startId, startId + BigInt(1), startId + BigInt(2)];
         const loadedAssets: any[] = [];
-
         for (const nextId of batchIds) {
             try {
                 const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [nextId] });
@@ -279,7 +285,6 @@ function AssetPage() {
                     const listingData = await publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [nextId] });
                     if (listingData[2]) { isListed = true; price = formatEther(listingData[1]); }
                 } catch (e) {}
-
                 loadedAssets.push({
                     id: nextId.toString(),
                     name: meta.name || `NNM #${nextId}`,
@@ -321,6 +326,9 @@ function AssetPage() {
             const expiration = BigInt(Math.floor(Date.now() / 1000) + OFFER_DURATION);
             const signature = await signTypedDataAsync({ domain, types, primaryType: 'Offer', message: { bidder: address, tokenId: BigInt(tokenId), price: priceInWei, expiration } });
             await supabase.from('offers').insert([{ token_id: tokenId, bidder_address: address, price: parseFloat(offerPrice), expiration: Number(expiration), status: 'active', signature }]);
+            
+            // KEY LOGIC: Close Offer Modal FIRST, then Show Success
+            setIsOfferMode(false); 
             showModal('success', 'Offer Submitted', 'Signed successfully.');
         } catch(e) { setIsPending(false); }
     };
@@ -357,7 +365,6 @@ function AssetPage() {
     const handleApproveNft = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'setApprovalForAll', args: [MARKETPLACE_ADDRESS as `0x${string}`, true] }); await publicClient!.waitForTransactionReceipt({ hash }); setIsApproved(true); } catch (err) { console.error(err); } finally { setIsPending(false); } };
     const handleList = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listItem', args: [BigInt(tokenId), parseEther(sellPrice)] }); await publicClient!.waitForTransactionReceipt({ hash }); fetchAllData(); setIsListingMode(false); } catch (err) { console.error(err); } finally { setIsPending(false); } };
 
-    // --- Open Modal Logic ---
     const openOfferModal = () => {
         setOfferStep(listing ? 'select' : 'input');
         setIsOfferMode(true);
@@ -391,11 +398,15 @@ function AssetPage() {
                     {/* RIGHT COLUMN */}
                     <div className="col-lg-7 pt-0">
                         <div className="mb-2">
-                            <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-1`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
-                            <div className="d-flex align-items-center justify-content-between mb-2">
+                            {/* Increased margin-bottom for title (50%) */}
+                            <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-3`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
+                            
+                            {/* Increased margin-bottom for owner line (50%) */}
+                            <div className="d-flex align-items-center justify-content-between mb-3">
                                 <span style={{ color: TEXT_PRIMARY, fontSize: '15px', fontWeight: '500' }}>NNM Sovereign Asset</span>
                                 <span style={{ color: TEXT_MUTED, fontSize: '13px' }}>Owned by <a href="#" className="text-decoration-none" style={{ color: GOLD_SOLID }}>{asset.owner.slice(0,6)}...</a></span>
                             </div>
+                            
                             <div className="d-flex align-items-center gap-4 mb-2" style={{ color: TEXT_MUTED, fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>
                                 <span>ERC721</span>
                                 <span>POLYGON</span>
@@ -403,7 +414,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* TABS (No Line) */}
+                        {/* TABS */}
                         <div className="mb-3">
                             <div className="d-flex" style={{ borderBottom: 'none' }}>
                                 {['Details', 'Orders', 'Activity'].map(tab => (
@@ -415,7 +426,7 @@ function AssetPage() {
                             </div>
                         </div>
 
-                        {/* TAB CONTENT WITH BORDER CONTAINER */}
+                        {/* TAB CONTENT */}
                         <div className="pt-0 mt-0">
                             <div style={{ border: `1px solid ${BORDER_COLOR}`, borderRadius: '12px', overflow: 'hidden', backgroundColor: SURFACE_DARK }}>
                                 {activeTab === 'Details' && (
@@ -444,7 +455,6 @@ function AssetPage() {
                                             </div>
                                         </Accordion>
 
-                                        {/* Updated About Section to match OpenSea exact text and style */}
                                         <Accordion title={`About ${asset.name}`} icon="bi-text-left">
                                             <div className="px-3" style={{ color: OPENSEA_DESC_COLOR, fontSize: '16px', lineHeight: '1.6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
                                                 <div className="mb-4" style={{ fontSize: '16px', fontWeight: '600', color: OPENSEA_DESC_COLOR }}>
@@ -520,19 +530,23 @@ function AssetPage() {
                                                     <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th>
                                                 </tr></thead>
                                                 <tbody>
-                                                    {offersList.map((offer) => (
-                                                        <tr key={offer.id}>
-                                                            <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600', fontSize: '13px' }}>{formatCompactNumber(offer.price)}</td>
-                                                            <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><a href="#" style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</a></td>
-                                                            <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><a href="#" style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{asset?.owner === address ? 'You' : (asset?.owner ? asset.owner.slice(0,6) : '-')}</a></td>
-                                                            <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>{offer.timeLeft}</td>
-                                                            <td style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
-                                                                {isOwner && !offer.isMyOffer && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
-                                                                {offer.isMyOffer && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm fw-bold" style={{ fontSize: '11px', padding: '4px 12px', background: 'rgba(240, 196, 32, 0.1)', border: `1px solid ${GOLD_SOLID}`, color: GOLD_SOLID, backdropFilter: 'blur(4px)', borderRadius: '8px' }}>Cancel</button>}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                    {offersList.length === 0 && <tr><td colSpan={5} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>No active offers</td></tr>}
+                                                    {offersList.length === 0 ? (
+                                                        <tr><td colSpan={5} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>No active offers</td></tr>
+                                                    ) : (
+                                                        offersList.map((offer) => (
+                                                            <tr key={offer.id}>
+                                                                {/* Added align-middle to keep numbers aligned with text */}
+                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600', fontSize: '13px' }}>{formatCompactNumber(offer.price)}</td>
+                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><a href="#" style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</a></td>
+                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><a href="#" style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{asset?.owner === address ? 'You' : (asset?.owner ? asset.owner.slice(0,6) : '-')}</a></td>
+                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>{offer.timeLeft}</td>
+                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
+                                                                    {isOwner && !offer.isMyOffer && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
+                                                                    {offer.isMyOffer && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm fw-bold" style={{ fontSize: '11px', padding: '4px 12px', background: 'rgba(240, 196, 32, 0.1)', border: `1px solid ${GOLD_SOLID}`, color: GOLD_SOLID, backdropFilter: 'blur(4px)', borderRadius: '8px' }}>Cancel</button>}
+                                                                </td>
+                                                            </tr>
+                                                        ))
+                                                    )}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -553,14 +567,14 @@ function AssetPage() {
                                                 <tbody>
                                                     {activityList.map((act, index) => (
                                                         <tr key={index}>
-                                                            <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>{act.type}</td>
-                                                            <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>{act.price ? formatCompactNumber(act.price) : '-'}</td>
-                                                            <td style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>{act.from ? act.from.slice(0,6) : '-'}</td>
-                                                            <td style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>{act.to ? (act.to === 'Market' ? 'Market' : act.to.slice(0,6)) : '-'}</td>
-                                                            <td style={{ backgroundColor: 'transparent', color: TEXT_MUTED, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>{formatShortTime(act.date)}</td>
+                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>{act.type}</td>
+                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>{act.price ? formatCompactNumber(act.price) : '-'}</td>
+                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>{act.from ? act.from.slice(0,6) : '-'}</td>
+                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>{act.to ? (act.to === 'Market' ? 'Market' : act.to.slice(0,6)) : '-'}</td>
+                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: TEXT_MUTED, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>{formatShortTime(act.date)}</td>
                                                         </tr>
                                                     ))}
-                                                    {activityList.length === 0 && <tr><td colSpan={5} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>No recent activity</td></tr>}
+                                                    {activityList.length === 0 && <tr><td colSpan={5} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>No recent activity</td></tr>}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -572,8 +586,8 @@ function AssetPage() {
                 </div>
             </div>
 
-            {/* STICKY FOOTER - REDESIGNED WITH REDUCED HEIGHT AND GLASS BUTTON */}
-            <div className="fixed-bottom p-3" style={{ backgroundColor: '#1E1E1E', borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100, height: 'auto' }}>
+            {/* STICKY FOOTER */}
+            <div className="fixed-bottom p-2" style={{ backgroundColor: '#1E1E1E', borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100 }}>
                 <div className="container d-flex justify-content-center" style={{ maxWidth: '1200px' }}>
                     {!isConnected ? (
                         <div style={{ width: '65%', maxWidth: '500px' }}><ConnectButton.Custom>{({ openConnectModal }) => (<button onClick={openConnectModal} className="btn w-100 fw-bold py-2" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>Connect Wallet</button>)}</ConnectButton.Custom></div>
@@ -590,7 +604,7 @@ function AssetPage() {
                             <button onClick={() => setIsListingMode(true)} className="btn fw-bold py-2" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', width: '65%', maxWidth: '500px', fontSize: '16px' }}>List for Sale</button>
                         )
                     ) : (
-                        // The glass button for visitors
+                        // Updated Glass Button
                         <button onClick={openOfferModal} style={GLASS_BTN_STYLE}>
                             Make Offer
                         </button>
@@ -598,14 +612,12 @@ function AssetPage() {
                 </div>
             </div>
 
-            {/* MAKE OFFER MODAL - REDESIGNED */}
+            {/* MAKE OFFER MODAL - CENTERED & AUTO-FOCUS */}
             {isOfferMode && (
-                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                    <div className="w-100 p-4 rounded-top-4 fade-in" style={{ backgroundColor: SURFACE_DARK, borderTop: `1px solid ${BORDER_COLOR}`, maxWidth: '600px', animation: 'slideUp 0.3s' }}>
-                        <div className="d-flex justify-content-between align-items-center mb-4">
-                            <h5 className="text-white m-0 fw-bold">{offerStep === 'select' ? 'Select an option' : 'Make an offer'}</h5>
-                            <button onClick={() => setIsOfferMode(false)} className="btn btn-close btn-close-white"></button>
-                        </div>
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${GOLD_SOLID}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
+                        <button onClick={() => setIsOfferMode(false)} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
+                        <h4 className="fw-bold mb-4 text-center" style={{ color: TEXT_PRIMARY }}>{offerStep === 'select' ? 'Select Option' : 'Make an offer'}</h4>
 
                         {offerStep === 'select' && (
                             <div className="d-flex flex-column gap-3">
@@ -620,12 +632,22 @@ function AssetPage() {
 
                         {offerStep === 'input' && (
                             <>
-                                {listing && <button onClick={() => setOfferStep('select')} className="btn btn-link text-white text-decoration-none mb-3 p-0"><i className="bi bi-arrow-left me-2"></i>Back</button>}
+                                {listing && <button onClick={() => setOfferStep('select')} className="btn btn-link text-white text-decoration-none mb-2 p-0"><i className="bi bi-arrow-left me-2"></i>Back</button>}
                                 <div className="mb-4 text-center">
-                                    <div style={{ color: TEXT_MUTED, fontSize: '13px', marginBottom: '5px' }}>Balance: {wpolBalance.toFixed(1)} WPOL</div>
-                                    <div className="d-flex align-items-center border rounded-3 overflow-hidden p-2" style={{ borderColor: BORDER_COLOR, backgroundColor: BACKGROUND_DARK }}>
-                                        <input type="number" className="form-control border-0 bg-transparent text-white p-2" style={{ fontSize: '24px', fontWeight: 'bold' }} placeholder="0.00" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
-                                        <span className="text-white fw-bold px-3">WPOL</span>
+                                    <div style={{ color: TEXT_MUTED, fontSize: '13px', marginBottom: '8px' }}>Balance: {wpolBalance.toFixed(1)} WPOL</div>
+                                    <div className="d-flex align-items-center justify-content-center border rounded-3 overflow-hidden p-2" style={{ borderColor: BORDER_COLOR, backgroundColor: BACKGROUND_DARK }}>
+                                        {/* Input Auto Focus & Center Align */}
+                                        <input 
+                                            ref={inputRef}
+                                            autoFocus
+                                            type="number" 
+                                            className="form-control border-0 bg-transparent text-white p-0 text-end" 
+                                            style={{ fontSize: '24px', fontWeight: 'bold', width: '100px', boxShadow: 'none' }} 
+                                            placeholder="0" 
+                                            value={offerPrice} 
+                                            onChange={(e) => setOfferPrice(e.target.value)} 
+                                        />
+                                        <span className="text-white fw-bold ps-2" style={{ fontSize: '20px' }}>WPOL</span>
                                     </div>
                                     {!hasEnoughBalance && offerPrice && <div className="text-danger mt-2" style={{fontSize: '12px'}}>Insufficient WPOL balance</div>}
                                 </div>
