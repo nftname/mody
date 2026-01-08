@@ -7,7 +7,7 @@ import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
 import NGXCapWidget from '@/components/NGXCapWidget';
 import NGXVolumeWidget from '@/components/NGXVolumeWidget';
-import { usePublicClient } from "wagmi";
+import { usePublicClient, useAccount } from "wagmi"; // Added useAccount
 import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
@@ -97,6 +97,7 @@ const SortArrows = ({ active, direction, onClick }: any) => (
 );
 
 function MarketPage() {
+  const { address, isConnected } = useAccount(); // Connection Hook
   const trustedBrands = [ 
     { name: "POLYGON", icon: "bi-link-45deg", isCustom: false },
     { name: "BNB CHAIN", icon: "bi-diamond-fill", isCustom: false },
@@ -116,7 +117,7 @@ function MarketPage() {
   const [activeFilter, setActiveFilter] = useState('All Assets');
   const [timeFilter, setTimeFilter] = useState('24H');
   const [currencyFilter, setCurrencyFilter] = useState('POL'); 
-  const [watchlist, setWatchlist] = useState<number[]>([]); 
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); // FAVORITES STATE
   
   const [realListings, setRealListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,11 +127,49 @@ function MarketPage() {
 
   const publicClient = usePublicClient();
 
+  // --- FETCH FAVORITES FROM SUPABASE ---
+  useEffect(() => {
+    if (isConnected && address) {
+        const fetchFavorites = async () => {
+            try {
+                const { data } = await supabase.from('favorites').select('token_id').eq('wallet_address', address);
+                if (data) {
+                    setFavoriteIds(new Set(data.map((i: any) => Number(i.token_id))));
+                }
+            } catch (e) { console.error("Fav fetch error", e); }
+        };
+        fetchFavorites();
+    }
+  }, [address, isConnected]);
+
+  // --- TOGGLE FAVORITE LOGIC ---
+  const handleToggleFavorite = async (e: React.MouseEvent, id: number) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!isConnected || !address) return; // Optional: Show connect modal here
+
+      const nextFavs = new Set(favoriteIds);
+      const isFav = nextFavs.has(id);
+
+      if (isFav) nextFavs.delete(id);
+      else nextFavs.add(id);
+
+      setFavoriteIds(nextFavs); // Optimistic Update
+
+      try {
+          if (isFav) {
+              await supabase.from('favorites').delete().match({ wallet_address: address, token_id: id.toString() });
+          } else {
+              await supabase.from('favorites').insert({ wallet_address: address, token_id: id.toString() });
+          }
+      } catch (err) { console.error(err); }
+  };
+
   useEffect(() => {
     const fetchMarketData = async () => {
         if (!publicClient) return;
         try {
-            // 1. Fetch Listings from Blockchain (The Truth)
+            // 1. Fetch Listings from Blockchain
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -145,19 +184,9 @@ function MarketPage() {
                 return;
             }
 
-            // 2. Fetch DATA from Supabase (History & Logic)
-            
-            // A. Get Sales (For Volume & Trending)
-            const { data: salesData } = await supabase
-                .from('activities')
-                .select('token_id, price')
-                .eq('activity_type', 'Sale');
-
-            // B. Get Offers (For Trending Score)
-            const { data: offersData } = await supabase
-                .from('offers')
-                .select('token_id')
-                .eq('status', 'active'); // Only active offers count for trends
+            // 2. Fetch DATA from Supabase
+            const { data: salesData } = await supabase.from('activities').select('token_id, price').eq('activity_type', 'Sale');
+            const { data: offersData } = await supabase.from('offers').select('token_id').eq('status', 'active');
 
             // 3. Process Logic Maps
             const volumeMap: any = {};
@@ -165,25 +194,16 @@ function MarketPage() {
             const lastSaleMap: any = {};
             const offersCountMap: any = {};
 
-            // Process Sales
             if (salesData) {
                 salesData.forEach((sale: any) => {
                     const tid = sale.token_id;
                     const price = Number(sale.price) || 0;
-                    
-                    // Volume Accumulation
                     volumeMap[tid] = (volumeMap[tid] || 0) + price;
-                    
-                    // Sales Count
                     salesCountMap[tid] = (salesCountMap[tid] || 0) + 1;
-
-                    // Last Sale (Approx via overwriting since DB order might vary, usually sorted by query)
-                    // Better to sort query by date desc, but for map logic:
                     lastSaleMap[tid] = price; 
                 });
             }
 
-            // Process Offers
             if (offersData) {
                 offersData.forEach((offer: any) => {
                     offersCountMap[offer.token_id] = (offersCountMap[offer.token_id] || 0) + 1;
@@ -194,24 +214,15 @@ function MarketPage() {
             const items = await Promise.all(tokenIds.map(async (id, index) => {
                 try {
                     const tid = Number(id);
-                    const uri = await publicClient.readContract({
-                        address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-                        abi: erc721Abi,
-                        functionName: 'tokenURI',
-                        args: [id]
-                    });
-                    
+                    const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
                     const metaRes = await fetch(resolveIPFS(uri));
                     const meta = metaRes.ok ? await metaRes.json() : {};
                     const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
                     
-                    // -- REAL DATA VALUES --
                     const volumeVal = volumeMap[tid] || 0;
                     const salesCount = salesCountMap[tid] || 0;
                     const offersCount = offersCountMap[tid] || 0;
                     const lastSaleVal = lastSaleMap[tid] ? `${lastSaleMap[tid]} POL` : '---';
-
-                    // -- TRENDING FORMULA: Sales Count + Offers Count --
                     const trendingScore = salesCount + offersCount;
 
                     return {
@@ -221,24 +232,18 @@ function MarketPage() {
                         tier: tierAttr,
                         floor: formatEther(prices[index]),
                         lastSale: lastSaleVal, 
-                        volume: volumeVal, // Raw number for sorting
+                        volume: volumeVal,
                         volumeDisplay: volumeVal > 0 ? `${volumeVal.toFixed(2)} POL` : '0 POL',
-                        trendingScore: trendingScore, // Logic for Trending Filter
+                        trendingScore: trendingScore,
                         listed: 'Now',
                         change: 0,
                         currencySymbol: 'POL'
                     };
-                } catch (e) {
-                    return null;
-                }
+                } catch (e) { return null; }
             }));
 
             setRealListings(items.filter(i => i !== null));
-        } catch (error) {
-            console.error("Failed to fetch listings", error);
-        } finally {
-            setLoading(false);
-        }
+        } catch (error) { console.error("Failed to fetch listings", error); } finally { setLoading(false); }
     };
 
     fetchMarketData();
@@ -247,21 +252,16 @@ function MarketPage() {
   const finalData = useMemo(() => {
       let processedData = [...realListings];
       
-      // --- LOGIC FILTERS (Top vs Trending) ---
       if (activeFilter === 'Top') {
-          // Top = Highest Volume (Money Flow)
           processedData.sort((a, b) => b.volume - a.volume);
       } else if (activeFilter === 'Trending') {
-          // Trending = Highest Activity (Sales + Offers)
           processedData.sort((a, b) => b.trendingScore - a.trendingScore);
-      } else if (activeFilter === 'Watchlist') {
-          processedData = processedData.filter(item => watchlist.includes(item.id));
+      } else if (activeFilter === 'Favorites') { // Updated Logic
+          processedData = processedData.filter(item => favoriteIds.has(item.id));
       } else {
-          // All Assets: Default ID/Rank sort (or Listing date if we had it)
           processedData.sort((a, b) => a.rank - b.rank); 
       }
       
-      // --- COLUMN SORTING OVERRIDE ---
       if (sortConfig) {
           processedData.sort((a: any, b: any) => {
               const valA = isNaN(parseFloat(a[sortConfig.key])) ? a[sortConfig.key] : parseFloat(a[sortConfig.key]);
@@ -272,7 +272,7 @@ function MarketPage() {
           });
       }
       return processedData;
-  }, [activeFilter, watchlist, sortConfig, realListings]);
+  }, [activeFilter, favoriteIds, sortConfig, realListings]);
 
   const totalPages = Math.ceil(finalData.length / ITEMS_PER_PAGE);
   const currentTableData = finalData.slice(
@@ -282,20 +282,12 @@ function MarketPage() {
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'desc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
-      direction = 'asc';
-    }
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') direction = 'asc';
     setSortConfig({ key, direction });
   };
 
-  const toggleWatchlist = (id: number) => {
-    setWatchlist(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
-  };
-
   const goToPage = (page: number) => {
-      if (page >= 1 && page <= totalPages) {
-          setCurrentPage(page);
-      }
+      if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
   const getCurrencyLabel = () => currencyFilter === 'ETH' ? 'ETH' : 'POL';
@@ -305,7 +297,7 @@ function MarketPage() {
       
       <MarketTicker />
 
-      {/* HEADER SECTION: Unified Spacing & 3 Widgets */}
+      {/* HEADER SECTION */}
       <div className="header-wrapper shadow-sm">
         <div className="container-fluid p-0"> 
             
@@ -342,12 +334,13 @@ function MarketPage() {
                style={{ borderColor: '#222 !important', padding: '2px 0' }}>
               
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
+                  {/* Updated Filter Item: Favorites */}
                   <div 
-                    onClick={() => setActiveFilter('Watchlist')}
-                    className={`d-flex align-items-center gap-1 cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : ''}`}
-                    style={{ fontSize: '16px', fontWeight: 'bold', color: activeFilter === 'Watchlist' ? '#fff' : '#FCD535', paddingBottom: '4px' }}
+                    onClick={() => setActiveFilter('Favorites')}
+                    className={`d-flex align-items-center gap-1 cursor-pointer filter-item ${activeFilter === 'Favorites' ? 'active' : ''}`}
+                    style={{ fontSize: '16px', fontWeight: 'bold', color: activeFilter === 'Favorites' ? '#fff' : '#FCD535', paddingBottom: '4px' }}
                   >
-                      <i className={`bi ${activeFilter === 'Watchlist' ? 'bi-star-fill text-warning' : 'bi-star-fill'}`}></i> Watchlist
+                      <i className={`bi ${activeFilter === 'Favorites' ? 'bi-heart-fill text-white' : 'bi-heart'}`}></i> Favorites
                   </div>
                   {/* LOGIC FILTERS */}
                   {['Trending', 'Top', 'All Assets'].map(f => (
@@ -387,10 +380,10 @@ function MarketPage() {
               
               {loading ? (
                  <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
-              ) : activeFilter === 'Watchlist' && finalData.length === 0 ? (
+              ) : activeFilter === 'Favorites' && finalData.length === 0 ? (
                   <div className="text-center py-5 text-secondary">
-                      <i className="bi bi-star" style={{ fontSize: '40px', marginBottom: '10px', display: 'block' }}></i>
-                      Your watchlist is empty.
+                      <i className="bi bi-heart" style={{ fontSize: '40px', marginBottom: '10px', display: 'block' }}></i>
+                      Your favorites list is empty.
                   </div>
               ) : finalData.length === 0 ? (
                   <div className="text-center py-5 text-secondary">No items listed for sale yet.</div>
@@ -428,10 +421,11 @@ function MarketPage() {
                               <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
                                   <td style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <div className="d-flex align-items-center gap-3">
+                                          {/* HEART ICON IN TABLE */}
                                           <i 
-                                            className={`bi ${watchlist.includes(item.id) ? 'bi-star-fill text-warning' : 'bi-star text-secondary'} hover-gold cursor-pointer`} 
+                                            className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} 
                                             style={{ fontSize: '14px' }}
-                                            onClick={() => toggleWatchlist(item.id)}
+                                            onClick={(e) => handleToggleFavorite(e, item.id)}
                                           ></i>
                                           <span style={getRankStyle(item.rank) as any}>{item.rank}</span>
                                       </div>
@@ -475,23 +469,47 @@ function MarketPage() {
               )}
           </div>
 
-          {totalPages > 1 && activeFilter !== 'Watchlist' && (
+          {/* UPDATED PAGINATION LOGIC */}
+          {totalPages > 1 && activeFilter !== 'Favorites' && (
               <div className="d-flex justify-content-center align-items-center gap-3 mt-5 text-secondary" style={{ fontSize: '14px' }}>
                   <i 
                       className={`bi bi-chevron-left ${currentPage === 1 ? 'text-muted' : 'cursor-pointer hover-white'}`}
                       onClick={() => goToPage(currentPage - 1)}
                   ></i>
                   
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  {/* Always show Page 1 */}
+                  <span 
+                      onClick={() => goToPage(1)} 
+                      className={`cursor-pointer ${currentPage === 1 ? 'text-white fw-bold' : 'hover-white'}`}
+                      style={{ padding: '0 5px' }}
+                  >
+                      1
+                  </span>
+
+                  {/* Always show Page 2 if available */}
+                  {totalPages >= 2 && (
                       <span 
-                          key={page}
-                          onClick={() => goToPage(page)}
-                          className={`cursor-pointer ${currentPage === page ? 'text-white fw-bold' : 'hover-white'}`}
+                          onClick={() => goToPage(2)} 
+                          className={`cursor-pointer ${currentPage === 2 ? 'text-white fw-bold' : 'hover-white'}`}
                           style={{ padding: '0 5px' }}
                       >
-                          {page}
+                          2
                       </span>
-                  ))}
+                  )}
+
+                  {/* Show dots if more than 4 pages (to bridge gap to last page) */}
+                  {totalPages > 3 && <span className="text-muted">...</span>}
+
+                  {/* Always show Last Page if more than 2 pages */}
+                  {totalPages > 2 && (
+                      <span 
+                          onClick={() => goToPage(totalPages)} 
+                          className={`cursor-pointer ${currentPage === totalPages ? 'text-white fw-bold' : 'hover-white'}`}
+                          style={{ padding: '0 5px' }}
+                      >
+                          {totalPages}
+                      </span>
+                  )}
 
                   <i 
                       className={`bi bi-chevron-right ${currentPage === totalPages ? 'text-muted' : 'cursor-pointer hover-white'}`}
@@ -502,7 +520,6 @@ function MarketPage() {
 
       </section>
 
-      {/* التعديل هنا: تقليل marginBottom إلى 40px بدلاً من 80px */}
       <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: '5rem', marginBottom: '40px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
