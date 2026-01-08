@@ -7,7 +7,7 @@ import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
 import NGXCapWidget from '@/components/NGXCapWidget';
 import NGXVolumeWidget from '@/components/NGXVolumeWidget';
-import { usePublicClient, useAccount } from "wagmi"; // Added useAccount
+import { usePublicClient, useAccount } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
@@ -97,7 +97,7 @@ const SortArrows = ({ active, direction, onClick }: any) => (
 );
 
 function MarketPage() {
-  const { address, isConnected } = useAccount(); // Connection Hook
+  const { address, isConnected } = useAccount(); 
   const trustedBrands = [ 
     { name: "POLYGON", icon: "bi-link-45deg", isCustom: false },
     { name: "BNB CHAIN", icon: "bi-diamond-fill", isCustom: false },
@@ -117,7 +117,7 @@ function MarketPage() {
   const [activeFilter, setActiveFilter] = useState('All Assets');
   const [timeFilter, setTimeFilter] = useState('24H');
   const [currencyFilter, setCurrencyFilter] = useState('POL'); 
-  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); // FAVORITES STATE
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); 
   
   const [realListings, setRealListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,7 +127,7 @@ function MarketPage() {
 
   const publicClient = usePublicClient();
 
-  // --- FETCH FAVORITES FROM SUPABASE ---
+  // --- FETCH FAVORITES (Still uses 'favorites' table from DB) ---
   useEffect(() => {
     if (isConnected && address) {
         const fetchFavorites = async () => {
@@ -146,7 +146,7 @@ function MarketPage() {
   const handleToggleFavorite = async (e: React.MouseEvent, id: number) => {
       e.preventDefault();
       e.stopPropagation();
-      if (!isConnected || !address) return; // Optional: Show connect modal here
+      if (!isConnected || !address) return; 
 
       const nextFavs = new Set(favoriteIds);
       const isFav = nextFavs.has(id);
@@ -154,7 +154,7 @@ function MarketPage() {
       if (isFav) nextFavs.delete(id);
       else nextFavs.add(id);
 
-      setFavoriteIds(nextFavs); // Optimistic Update
+      setFavoriteIds(nextFavs); 
 
       try {
           if (isFav) {
@@ -169,7 +169,6 @@ function MarketPage() {
     const fetchMarketData = async () => {
         if (!publicClient) return;
         try {
-            // 1. Fetch Listings from Blockchain
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -184,11 +183,9 @@ function MarketPage() {
                 return;
             }
 
-            // 2. Fetch DATA from Supabase
             const { data: salesData } = await supabase.from('activities').select('token_id, price').eq('activity_type', 'Sale');
             const { data: offersData } = await supabase.from('offers').select('token_id').eq('status', 'active');
 
-            // 3. Process Logic Maps
             const volumeMap: any = {};
             const salesCountMap: any = {};
             const lastSaleMap: any = {};
@@ -210,7 +207,6 @@ function MarketPage() {
                 });
             }
 
-            // 4. Merge Everything
             const items = await Promise.all(tokenIds.map(async (id, index) => {
                 try {
                     const tid = Number(id);
@@ -256,7 +252,7 @@ function MarketPage() {
           processedData.sort((a, b) => b.volume - a.volume);
       } else if (activeFilter === 'Trending') {
           processedData.sort((a, b) => b.trendingScore - a.trendingScore);
-      } else if (activeFilter === 'Favorites') { // Updated Logic
+      } else if (activeFilter === 'Watchlist') { // Filter by Favorites set
           processedData = processedData.filter(item => favoriteIds.has(item.id));
       } else {
           processedData.sort((a, b) => a.rank - b.rank); 
@@ -334,13 +330,13 @@ function MarketPage() {
                style={{ borderColor: '#222 !important', padding: '2px 0' }}>
               
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
-                  {/* Updated Filter Item: Favorites */}
+                  {/* Updated Filter Item: Watchlist (Renamed & Star Icon removed as requested, just text, or keep star if preferred. Keeping Star for UX consistency with row icon) */}
                   <div 
-                    onClick={() => setActiveFilter('Favorites')}
-                    className={`d-flex align-items-center gap-1 cursor-pointer filter-item ${activeFilter === 'Favorites' ? 'active' : ''}`}
-                    style={{ fontSize: '16px', fontWeight: 'bold', color: activeFilter === 'Favorites' ? '#fff' : '#FCD535', paddingBottom: '4px' }}
+                    onClick={() => setActiveFilter('Watchlist')}
+                    className={`d-flex align-items-center gap-1 cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : ''}`}
+                    style={{ fontSize: '16px', fontWeight: 'bold', color: activeFilter === 'Watchlist' ? '#fff' : '#FCD535', paddingBottom: '4px' }}
                   >
-                      <i className={`bi ${activeFilter === 'Favorites' ? 'bi-heart-fill text-white' : 'bi-heart'}`}></i> Favorites
+                      Watchlist
                   </div>
                   {/* LOGIC FILTERS */}
                   {['Trending', 'Top', 'All Assets'].map(f => (
@@ -380,10 +376,10 @@ function MarketPage() {
               
               {loading ? (
                  <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
-              ) : activeFilter === 'Favorites' && finalData.length === 0 ? (
+              ) : activeFilter === 'Watchlist' && finalData.length === 0 ? (
                   <div className="text-center py-5 text-secondary">
-                      <i className="bi bi-heart" style={{ fontSize: '40px', marginBottom: '10px', display: 'block' }}></i>
-                      Your favorites list is empty.
+                      <i className="bi bi-star" style={{ fontSize: '40px', marginBottom: '10px', display: 'block' }}></i>
+                      Your watchlist is empty.
                   </div>
               ) : finalData.length === 0 ? (
                   <div className="text-center py-5 text-secondary">No items listed for sale yet.</div>
@@ -395,10 +391,10 @@ function MarketPage() {
                               <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '80px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', minWidth: '220px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', minWidth: '150px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('floor')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('floor')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 5px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'floor'} direction={sortConfig?.direction} /></div>
                               </th>
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '15px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -421,9 +417,9 @@ function MarketPage() {
                               <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
                                   <td style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <div className="d-flex align-items-center gap-3">
-                                          {/* HEART ICON IN TABLE */}
+                                          {/* STAR ICON FOR WATCHLIST */}
                                           <i 
-                                            className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} 
+                                            className={`bi ${favoriteIds.has(item.id) ? 'bi-star-fill text-warning' : 'bi-star text-secondary'} hover-gold cursor-pointer`} 
                                             style={{ fontSize: '14px' }}
                                             onClick={(e) => handleToggleFavorite(e, item.id)}
                                           ></i>
@@ -436,7 +432,7 @@ function MarketPage() {
                                           <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
                                       </Link>
                                   </td>
-                                  <td className="text-start" style={{ padding: '16px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                  <td className="text-start" style={{ padding: '16px 5px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                       <div className="d-flex align-items-center justify-content-start gap-2">
                                           <span className="fw-bold text-white" style={{ fontSize: '14px', color: '#E0E0E0' }}>{item.floor}</span>
                                           <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{item.currencySymbol || getCurrencyLabel()}</span>
@@ -469,8 +465,8 @@ function MarketPage() {
               )}
           </div>
 
-          {/* UPDATED PAGINATION LOGIC */}
-          {totalPages > 1 && activeFilter !== 'Favorites' && (
+          {/* ALWAYS VISIBLE PAGINATION */}
+          {finalData.length > 0 && (
               <div className="d-flex justify-content-center align-items-center gap-3 mt-5 text-secondary" style={{ fontSize: '14px' }}>
                   <i 
                       className={`bi bi-chevron-left ${currentPage === 1 ? 'text-muted' : 'cursor-pointer hover-white'}`}
@@ -497,7 +493,7 @@ function MarketPage() {
                       </span>
                   )}
 
-                  {/* Show dots if more than 4 pages (to bridge gap to last page) */}
+                  {/* Show dots if more than 3 pages */}
                   {totalPages > 3 && <span className="text-muted">...</span>}
 
                   {/* Always show Last Page if more than 2 pages */}
