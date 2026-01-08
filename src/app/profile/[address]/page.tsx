@@ -58,7 +58,6 @@ export default function ProfilePage() {
   const [offerSort, setOfferSort] = useState('Newest');   
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
-  // إغلاق القوائم المنسدلة عند الضغط خارجها
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as HTMLElement;
@@ -114,7 +113,6 @@ export default function ProfilePage() {
       }).format(num);
   };
 
-  // جلب المفضلات
   const fetchFavorites = async () => {
     if (!connectedAddress) return;
     try {
@@ -130,7 +128,6 @@ export default function ProfilePage() {
     } catch (e) { console.error("Error fetching favorites", e); }
   };
 
-  // التعامل مع ضغط زر المفضلة
   const handleToggleFavorite = async (e: React.MouseEvent, tokenId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -139,7 +136,6 @@ export default function ProfilePage() {
     const newFavs = new Set(favoriteIds);
     const isFav = newFavs.has(tokenId);
 
-    // تحديث فوري للواجهة
     if (isFav) newFavs.delete(tokenId);
     else newFavs.add(tokenId);
 
@@ -153,11 +149,10 @@ export default function ProfilePage() {
         }
     } catch (error) {
         console.error("Error toggling favorite", error);
-        fetchFavorites(); // تراجع في حال الخطأ
+        fetchFavorites();
     }
   };
 
-  // جلب الأصول (Items)
   const fetchAssets = async () => {
     if (!targetAddress) return;
     setLoading(true);
@@ -232,7 +227,6 @@ export default function ProfilePage() {
     } catch (error) { console.error("Fetch Assets Error:", error); } finally { setLoading(false); }
   };
 
-  // جلب العروض (Offers)
   const fetchOffers = async () => {
       if (!targetAddress || !isOwner) return; 
       setLoading(true);
@@ -302,7 +296,6 @@ export default function ProfilePage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
-  // جلب العناصر المنشأة (Created)
   const fetchCreated = async () => {
       if (!targetAddress) return;
       setLoading(true);
@@ -352,7 +345,6 @@ export default function ProfilePage() {
       } finally { setLoading(false); }
   };
 
-  // جلب النشاط (Activity)
   const fetchActivity = async () => {
       if (!targetAddress) return;
       setLoading(true);
@@ -572,8 +564,10 @@ export default function ProfilePage() {
         )}
 
         {activeSection === 'Offers' && (
-            <div className="mt-4 pb-5 d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-                <span style={{ color: '#8a939b', fontSize: '16px' }}>لا يوجد بيان هنا</span>
+            <div className="mt-4 pb-5">
+                <div className="text-center py-5 text-secondary" style={{ fontSize: '16px' }}>
+                    لا يوجد بيان هنا
+                </div>
             </div>
         )}
 
@@ -631,7 +625,6 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 </div>
-
                 <div className="pb-5">
                     {loading && createdAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : createdAssets.length === 0 ? (
                         <div className="text-center py-5 text-secondary">No created assets found</div>
@@ -734,6 +727,7 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
             </div>
         );
     }
+    // الوضع Grid أو Large (نفس الهيكلية)
     return (
       <div className={colClass}>
           <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
