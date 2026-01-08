@@ -39,6 +39,7 @@ export default function ProfilePage() {
   const [createdAssets, setCreatedAssets] = useState<any[]>([]);
   const [offersData, setOffersData] = useState<any[]>([]);
   const [activityData, setActivityData] = useState<any[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('Items');
@@ -110,6 +111,50 @@ export default function ProfilePage() {
           notation: "compact",
           maximumFractionDigits: 1
       }).format(num);
+  };
+
+  const fetchFavorites = async () => {
+    if (!connectedAddress) return;
+    try {
+        const { data, error } = await supabase
+            .from('favorites')
+            .select('token_id')
+            .eq('wallet_address', connectedAddress);
+        
+        if (error) throw error;
+        if (data) {
+            setFavoriteIds(new Set(data.map(item => item.token_id)));
+        }
+    } catch (e) { console.error("Error fetching favorites", e); }
+  };
+
+  const handleToggleFavorite = async (e: React.MouseEvent, tokenId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!connectedAddress) return; // Must be connected
+
+    const newFavs = new Set(favoriteIds);
+    const isFav = newFavs.has(tokenId);
+
+    // Optimistic UI update (Instant feedback)
+    if (isFav) newFavs.delete(tokenId);
+    else newFavs.add(tokenId);
+
+    setFavoriteIds(newFavs);
+
+    try {
+        if (isFav) {
+            // Remove from DB
+            await supabase.from('favorites').delete().match({ wallet_address: connectedAddress, token_id: tokenId });
+        } else {
+            // Add to DB
+            await supabase.from('favorites').insert({ wallet_address: connectedAddress, token_id: tokenId });
+        }
+    } catch (error) {
+        console.error("Error toggling favorite", error);
+        // Revert on error
+        fetchFavorites();
+    }
   };
 
   const fetchAssets = async () => {
@@ -353,6 +398,7 @@ export default function ProfilePage() {
   };
 
   useEffect(() => { fetchAssets(); }, [targetAddress]);
+  useEffect(() => { fetchFavorites(); }, [connectedAddress]);
   
   useEffect(() => { 
       if (activeSection === 'Offers' && isOwner) fetchOffers();
@@ -484,7 +530,7 @@ export default function ProfilePage() {
                 <div className="pb-5">
                     {loading && myAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : (
                         <div className="row g-3">
-                            {filteredAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} />))}
+                            {filteredAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
                             {filteredAssets.length === 0 && !loading && <div className="col-12 text-center py-5 text-secondary">No items found</div>}
                         </div>
                     )}
@@ -611,7 +657,7 @@ export default function ProfilePage() {
                         <div className="text-center py-5 text-secondary">No created assets found</div>
                     ) : (
                         <div className="row g-3">
-                            {sortedCreatedAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} />))}
+                            {sortedCreatedAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
                         </div>
                     )}
                 </div>
@@ -676,7 +722,7 @@ export default function ProfilePage() {
   );
 }
 
-const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
+const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any, mode: string, isFavorite: boolean, onToggleFavorite: (e: React.MouseEvent, id: string) => void }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
     const formatDate = (dateStr: string) => {
@@ -685,7 +731,6 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
         return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     };
 
-    // تم تعديل هذا المكون ليعرض شعار البوليجون الصحيح والأبيض
     const PolygonBadge = () => (
         <div className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center" style={{ zIndex: 5, width: '28px', height: '28px' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -699,7 +744,7 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
         return (
             <div className={colClass}>
                 <Link href={`/asset/${item.id}`} className="text-decoration-none">
-                    <div className="d-flex align-items-center gap-3 p-2 rounded-3" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d', transition: '0.2s' }}>
+                    <div className="d-flex align-items-center gap-3 p-2 rounded-3 position-relative" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d', transition: '0.2s' }}>
                         <div style={{ width: '48px', height: '48px', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
                              {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#333' }}></div>)}
                         </div>
@@ -707,9 +752,12 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                             <div className="text-white" style={{ fontSize: '14px', fontWeight: '600' }}>{item.name}</div>
                             <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
                         </div>
-                        <div className="text-end pe-2">
+                        <div className="text-end pe-4">
                              <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
                         </div>
+                        <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute end-0 me-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
+                             <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : '#8a939b', fontSize: '16px' }}></i>
+                        </button>
                     </div>
                 </Link>
             </div>
@@ -722,6 +770,9 @@ const AssetRenderer = ({ item, mode }: { item: any, mode: string }) => {
                   <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
                        <PolygonBadge />
                        {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="asset-img" />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
+                       <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
+                            <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : 'white', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
+                       </button>
                   </div>
                   <div className="p-3 d-flex flex-column flex-grow-1">
                       <div className="d-flex justify-content-between align-items-start mb-1">
