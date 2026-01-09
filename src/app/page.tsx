@@ -520,7 +520,8 @@ function MobileTableHeader() {
             <div style={{ flex: '0 0 auto', width: '25%', textAlign: 'left', paddingLeft: '5px' }}> 
                 <span style={{ fontSize: '13px', color: '#848E9C' }}>Price</span> 
             </div>
-            <div style={{ flex: '0 0 auto', width: '30%', textAlign: 'left' }}> 
+            {/* MODIFIED: Added paddingLeft 20px to shift Volume title away */}
+            <div style={{ flex: '0 0 auto', width: '30%', textAlign: 'left', paddingLeft: '20px' }}> 
                 <span style={{ fontSize: '13px', color: '#848E9C' }}>Volume</span> 
             </div> 
         </div> 
@@ -536,17 +537,15 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
                         {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '16px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light" style={{ fontSize: '12px' }}>{item.rank}</span> )} 
                     </div> 
                     <CoinIcon name={item.name} tier={item.tier} /> 
-                    {/* MODIFIED: Increased font size 10% (13px -> 14.5px) & Bold weight */}
                     <span className="text-white fw-bold name-shake text-truncate" style={{ fontSize: '14.5px' }}>{item.name}</span> 
                 </div> 
                 
                 <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 auto', width: '25%', paddingLeft: '15px' }}> 
-                    {/* MODIFIED: Increased font size 10% (11px -> 12.5px) */}
                     <span className="fw-normal text-white" style={{ fontSize: '12.5px' }}>{formatTablePrice(item.pricePol)}</span> 
                 </div> 
 
-                <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 auto', width: '30%' }}> 
-                    {/* MODIFIED: Increased font size 10% (10px -> 11.5px) */}
+                {/* MODIFIED: Added paddingLeft 20px to shift Volume data away from Price */}
+                <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 auto', width: '30%', paddingLeft: '20px' }}> 
                     <span className="small text-white" style={{ fontSize: '11.5px', fontWeight: '400' }}>{formatTableVolume(item.volume)}</span> 
                 </div> 
             </div> 
@@ -564,7 +563,6 @@ function DesktopTable({ data, formatTablePrice, formatTableVolume, getRankStyle 
                 <thead><tr style={{ fontSize: '15px', borderBottom: '1px solid #333', height: '50px' }}>
                         <th colSpan={2} style={{ paddingBottom: '15px', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', width: '45%' }}>Name Asset</th>
                         <th style={{ paddingBottom: '15px', textAlign: 'left', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap', width: '25%', paddingLeft: '15px' }}>Price</th>
-                        {/* SURGICAL MOD: Added paddingLeft: '40px' to create a GAP between Price and Volume */}
                         <th style={{ paddingBottom: '15px', textAlign: 'left', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap', width: '30%', paddingLeft: '40px' }}>Volume</th>
                 </tr></thead>
 
@@ -582,23 +580,19 @@ function DesktopTable({ data, formatTablePrice, formatTableVolume, getRankStyle 
                                 <Link href={`/asset/${item.id}`} className="text-decoration-none text-white">
                                     <div className="d-flex align-items-center gap-3">
                                         <CoinIcon name={item.name} tier={item.tier} />
-                                        {/* MODIFIED: Changed fw-light to fw-bold, Added fontSize 15px (approx 10% increase) */}
                                         <span className="fw-bold name-shake" style={{ fontSize: '15px' }}>{item.name}</span>
                                     </div>
                                 </Link>
                             </td>
                             <td className="text-start" style={{ verticalAlign: 'middle', paddingLeft: '15px' }}>
                                 {isMounted ? (
-                                    /* MODIFIED: Increased font size 10% (11px -> 12.5px) */
                                     <span className="text-white fw-normal me-2" style={{ fontSize: '12.5px' }}>{formatTablePrice(item.pricePol)}</span>
                                 ) : (
                                     <span className="text-secondary fw-normal me-2" style={{ fontSize: '12.5px' }}>--</span>
                                 )}
                             </td>
-                            {/* SURGICAL MOD: Added paddingLeft: '40px' to create a GAP between Price and Volume */}
                             <td className="text-start" style={{ verticalAlign: 'middle', paddingLeft: '40px' }}>
                                 {isMounted ? (
-                                    /* MODIFIED: Increased font size 10% (10px -> 11.5px) */
                                     <span className="text-white fw-normal me-2" style={{ fontSize: '11.5px' }}>{formatTableVolume(item.volume)}</span>
                                 ) : (
                                     <span className="text-secondary fw-normal me-2" style={{ fontSize: '11.5px' }}>--</span>
