@@ -65,7 +65,7 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
-// Card with USD Values as requested
+// Card logic and styling is defined HERE in Home page
 const AssetCard = ({ item }: { item: any }) => {
     let bg = 'linear-gradient(135deg, #002b36 0%, #004d40 100%)';
     let border = '1px solid rgba(0, 255, 200, 0.2)';
@@ -82,25 +82,26 @@ const AssetCard = ({ item }: { item: any }) => {
            style={{ width: '100%', height: '220px', backgroundColor: 'transparent', borderRadius: '8px', cursor: 'pointer' }}>
           <Link href={`/asset/${item.id}`} className="text-decoration-none w-100 h-100 d-flex flex-column align-items-center justify-content-center">
               <div className="static-asset position-relative"
-                   style={{ width: '90%', height: '60%', background: bg, border: border, borderRadius: '8px', overflow: 'hidden', marginTop: '10px', marginBottom: '10px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                   style={{ width: '90%', height: '65%', background: bg, border: border, borderRadius: '8px', overflow: 'hidden', marginTop: '10px', marginBottom: '8px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                    <div style={{ zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                        <p style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: '10px', color: '#FCD535', letterSpacing: '1px', margin: 0 }}>GEN-0 #00{item.id}</p>
                        <h3 style={{ fontFamily: 'serif', fontWeight: '900', fontSize: '22px', color: '#FCD535', letterSpacing: '1.5px', margin: 0, textTransform: 'uppercase' }}>{item.name}</h3>
                    </div>
               </div>
-              {/* Card Footer: Name White, Price $ White, Vol $ White */}
-              <div className="w-100 d-flex justify-content-between align-items-end px-2 pb-2" style={{ marginTop: 'auto' }}>
-                  <div className="text-start">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px' }}>Name</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.name}</h5>
+              
+              {/* COMPACT FOOTER: Spacing reduced by 20% between elements */}
+              <div className="w-100 d-flex justify-content-center align-items-end" style={{ marginTop: 'auto', gap: '20px', paddingBottom: '4px' }}>
+                  <div className="text-center">
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px' }}>Name</div>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '12px', color: '#ffffff' }}>{item.name}</h5>
                   </div>
                   <div className="text-center">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px' }}>Price</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.priceUsdDisplay}</h5>
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px' }}>Price</div>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '12px', color: '#ffffff' }}>{item.priceUsdDisplay}</h5>
                   </div>
-                  <div className="text-end">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px' }}>Vol</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.volumeUsdDisplay}</h5>
+                  <div className="text-center">
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px' }}>Vol</div>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '12px', color: '#ffffff' }}>{item.volumeUsdDisplay}</h5>
                   </div>
               </div>
           </Link>
@@ -123,7 +124,6 @@ function Home() {
   
   const publicClient = usePublicClient();
 
-  // 1. Fetch Rates (Source of Truth)
   useEffect(() => {
       const fetchPrices = async () => {
           try {
@@ -139,12 +139,10 @@ function Home() {
       return () => clearInterval(interval);
   }, []);
 
-  // 2. Fetch Data (Hybrid Logic)
   useEffect(() => {
     const fetchRealData = async () => {
         if (!publicClient) return;
         try {
-            // Blockchain: Active Listings
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -158,7 +156,6 @@ function Home() {
                 return;
             }
 
-            // Database: Filtered History
             const { data: allActivities } = await supabase.from('activities').select('*');
             const { data: offersData } = await supabase.from('offers').select('token_id').eq('status', 'active');
 
@@ -168,7 +165,7 @@ function Home() {
             
             const now = Date.now();
             let timeLimit = 0;
-            // Time Filters: 1H, 6H, 24H, 7D
+            // Time filter logic for Volume/Trending Stats
             if (timeFilter === '1H') timeLimit = 3600 * 1000;
             else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
             else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
@@ -182,7 +179,7 @@ function Home() {
                     const price = Number(act.price) || 0;
 
                     if (act.activity_type === 'Sale') {
-                        // Apply Time Filter
+                        // Apply Time Filter ONLY to Volume/Sales count
                         if (now - actTime <= timeLimit) {
                             volumeMap[tid] = (volumeMap[tid] || 0) + price;
                             salesCountMap[tid] = (salesCountMap[tid] || 0) + 1;
@@ -217,8 +214,8 @@ function Home() {
                         rank: index + 1, 
                         name: meta.name || `Asset #${id}`,
                         tier: tierAttr,
-                        pricePol: pricePol, // Raw POL
-                        volume: volumeVal,  // Raw POL
+                        pricePol: pricePol, 
+                        volume: volumeVal, 
                         trendingScore: trendingScore,
                         change: 0 
                     };
@@ -230,13 +227,11 @@ function Home() {
     };
 
     fetchRealData();
-  }, [publicClient, timeFilter]); // Re-run when Time Filter changes
+  }, [publicClient, timeFilter]); 
 
-  // --- Processing Data for View ---
   const processedData = useMemo(() => {
       let data = [...realListings];
       
-      // Calculate USD values for Cards (regardless of table filter)
       data = data.map(item => {
           const usdPrice = item.pricePol * (exchangeRates.pol || 0);
           const usdVol = item.volume * (exchangeRates.pol || 0);
@@ -247,7 +242,6 @@ function Home() {
           };
       });
 
-      // Sort
       if (activeTab === 'top') {
           data.sort((a, b) => b.volume - a.volume);
       } else {
@@ -256,12 +250,10 @@ function Home() {
       return data.map((item, index) => ({ ...item, rank: index + 1 }));
   }, [realListings, activeTab, exchangeRates]);
 
-  // Featured: Top 3 by Volume (High Performance)
   const featuredItems = useMemo(() => {
       return [...processedData].sort((a, b) => b.volume - a.volume).slice(0, 3);
   }, [processedData]);
 
-  // New Listings: Top 3 by ID (Simplified for "Just Listed")
   const newListingsItems = useMemo(() => {
       return [...processedData].sort((a, b) => b.id - a.id).slice(0, 3);
   }, [processedData]);
@@ -298,11 +290,11 @@ function Home() {
   const getRankStyle = (rank: number) => { const baseStyle = { fontStyle: 'italic', fontWeight: '700', fontSize: '20px', paddingBottom: '2px' }; if (rank === 1) return { ...baseStyle, color: '#FF9900', textShadow: '0 0 10px rgba(255, 153, 0, 0.4)' }; if (rank === 2) return { ...baseStyle, color: '#FFC233', textShadow: '0 0 10px rgba(255, 194, 51, 0.3)' }; if (rank === 3) return { ...baseStyle, color: '#FCD535', textShadow: '0 0 10px rgba(252, 213, 53, 0.2)' }; return { color: '#fff', fontWeight: '300', fontSize: '20px' }; };
   const handleMobileCurrencySelect = (c: string) => { setCurrencyFilter(c); setIsMobileCurrencyOpen(false); };
 
-  // Strict Currency Formatter for Table
+  // STRICT TABLE FORMATTER (Font reduced 20%, ETH max 4 decimals)
   const formatTablePrice = (valPol: number) => {
       if (!exchangeRates.pol || exchangeRates.pol === 0) return `${valPol.toFixed(2)} POL`;
       if (currencyFilter === 'All') return `${(valPol * exchangeRates.pol).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} $`;
-      if (currencyFilter === 'ETH') return `${(valPol * exchangeRates.pol / (exchangeRates.eth || 3000)).toFixed(6)} ETH`;
+      if (currencyFilter === 'ETH') return `${(valPol * exchangeRates.pol / (exchangeRates.eth || 3000)).toFixed(4)} ETH`; // 4 Decimals Specific for Home
       return `${valPol.toFixed(2)} POL`;
   };
 
@@ -389,7 +381,7 @@ function Home() {
           </div>
 
           <div style={{ marginTop: '5.25rem', marginBottom: '3rem' }}>
-              <h3 className="text-white fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px' }}>New Listings</h3>
+              <h3 className="text-white fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px' }}>Just Listed</h3>
               {loading ? <div className="text-secondary text-center">Loading Listings...</div> :
               <div className="row g-4 d-none d-lg-flex">
                   {newListingsItems.map((item) => (<div key={item.id} className="col-lg-4 col-xl-4"><AssetCard item={item} /></div>))}
@@ -455,12 +447,17 @@ function Home() {
 function MobileTableHeader() { 
     return ( 
         <div className="d-flex justify-content-between mb-3 border-bottom border-secondary pb-2" style={{ borderColor: '#333 !important', height: '40px', alignItems: 'flex-end' }}> 
-            <div style={{ flex: '1 1 auto', overflow: 'hidden' }}> 
+            {/* Reduced width for Name header */}
+            <div style={{ flex: '0 0 auto', width: '35%' }}> 
                 <span style={{ fontSize: '13px', color: '#848E9C' }}>Name Asset</span> 
             </div> 
-            <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'flex-end', gap: '5px' }}> 
-                <span style={{ fontSize: '13px', color: '#848E9C', width: '70px', textAlign: 'left' }}>Price</span> 
-                <span style={{ fontSize: '13px', color: '#848E9C', width: '70px', textAlign: 'left' }}>Volume</span> 
+            {/* Price closer to center */}
+            <div style={{ flex: '0 0 auto', width: '25%', textAlign: 'left', paddingLeft: '5px' }}> 
+                <span style={{ fontSize: '13px', color: '#848E9C' }}>Price</span> 
+            </div>
+            {/* Volume aligned right */}
+            <div style={{ flex: '0 0 auto', width: '35%', textAlign: 'left' }}> 
+                <span style={{ fontSize: '13px', color: '#848E9C' }}>Volume</span> 
             </div> 
         </div> 
     ); 
@@ -470,22 +467,23 @@ function MobileRow({ item, formatTablePrice, getRankStyle }: any) {
     return ( 
         <Link href={`/asset/${item.id}`} className="text-decoration-none"> 
             <div className="d-flex align-items-center justify-content-between py-3 binance-row" style={{ borderBottom: '1px solid #222' }}> 
-                {/* Left Side: Name (Tight Width) */}
-                <div className="d-flex align-items-center gap-2" style={{ flex: '1 1 auto', overflow: 'hidden', paddingRight: '2px' }}> 
-                    <div style={{ width: '20px', textAlign: 'center', flexShrink: 0 }}> 
-                        {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '18px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light">{item.rank}</span> )} 
+                {/* 1. Name Column (35%) */}
+                <div className="d-flex align-items-center gap-2" style={{ flex: '0 0 auto', width: '35%', overflow: 'hidden' }}> 
+                    <div style={{ width: '15px', textAlign: 'center', flexShrink: 0 }}> 
+                        {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '16px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light" style={{ fontSize: '12px' }}>{item.rank}</span> )} 
                     </div> 
                     <CoinIcon name={item.name} tier={item.tier} /> 
-                    <span className="text-white fw-light name-shake text-truncate" style={{ fontSize: '14px' }}>{item.name}</span> 
+                    <span className="text-white fw-light name-shake text-truncate" style={{ fontSize: '13px' }}>{item.name}</span> 
                 </div> 
-                {/* Right Side: Price & Volume (Text Left Aligned) */}
-                <div className="d-flex justify-content-end align-items-center" style={{ flex: '0 0 auto', gap: '5px' }}> 
-                    <div className="d-flex flex-column align-items-start" style={{ width: '70px' }}> 
-                        <span className="fw-normal text-white" style={{ fontSize: '14px' }}>{formatTablePrice(item.pricePol)}</span> 
-                    </div> 
-                    <div className="d-flex flex-column align-items-start" style={{ width: '70px' }}> 
-                        <span className="small text-white" style={{ fontSize: '13px', fontWeight: '400' }}>{formatTablePrice(item.volume)}</span> 
-                    </div> 
+                
+                {/* 2. Price Column (25%) - TIGHTLY Next to Name */}
+                <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 auto', width: '25%', paddingLeft: '5px' }}> 
+                    <span className="fw-normal text-white" style={{ fontSize: '11.5px' }}>{formatTablePrice(item.pricePol)}</span> 
+                </div> 
+
+                {/* 3. Volume Column (35%) - Right side but text-left aligned */}
+                <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 auto', width: '35%' }}> 
+                    <span className="small text-white" style={{ fontSize: '10.5px', fontWeight: '400' }}>{formatTablePrice(item.volume)}</span> 
                 </div> 
             </div> 
         </Link> 
@@ -500,9 +498,11 @@ function DesktopTable({ data, formatTablePrice, getRankStyle }: any) {
         <div className="table-responsive">
             <table className="table table-dark align-middle mb-0" style={{ backgroundColor: 'transparent' }}>
                 <thead><tr style={{ fontSize: '15px', borderBottom: '1px solid #333', height: '50px' }}>
-                        <th colSpan={2} style={{ paddingBottom: '15px', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', width: 'auto' }}>Name Asset</th>
-                        <th style={{ paddingBottom: '15px', textAlign: 'left', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap', width: '100px' }}>Price</th>
-                        <th style={{ paddingBottom: '15px', textAlign: 'left', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap', width: '100px' }}>Volume</th>
+                        {/* Name Width minimized */}
+                        <th colSpan={2} style={{ paddingBottom: '15px', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', width: '30%' }}>Name Asset</th>
+                        {/* Price pushed left to touch Name */}
+                        <th style={{ paddingBottom: '15px', textAlign: 'left', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap', width: '30%', paddingLeft: '0' }}>Price</th>
+                        <th style={{ paddingBottom: '15px', textAlign: 'left', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap', width: '40%' }}>Volume</th>
                 </tr></thead>
 
                 <tbody style={{ fontSize: '14px', borderTop: 'none' }}>
@@ -515,7 +515,7 @@ function DesktopTable({ data, formatTablePrice, getRankStyle }: any) {
                                     <span className="text-white fw-light">{item.rank}</span>
                                 )}
                             </td>
-                            <td style={{ verticalAlign: 'middle' }}>
+                            <td style={{ verticalAlign: 'middle', paddingRight: '0' }}>
                                 <Link href={`/asset/${item.id}`} className="text-decoration-none text-white">
                                     <div className="d-flex align-items-center gap-3">
                                         <CoinIcon name={item.name} tier={item.tier} />
@@ -523,20 +523,20 @@ function DesktopTable({ data, formatTablePrice, getRankStyle }: any) {
                                     </div>
                                 </Link>
                             </td>
-                            {/* Price: Aligned Left, Normal Weight */}
-                            <td className="text-start" style={{ verticalAlign: 'middle' }}>
+                            {/* Price: Aligned Left, 0 Padding Left to minimize gap */}
+                            <td className="text-start" style={{ verticalAlign: 'middle', paddingLeft: '0' }}>
                                 {isMounted ? (
-                                    <span className="text-white fw-normal me-2">{formatTablePrice(item.pricePol)}</span>
+                                    <span className="text-white fw-normal me-2" style={{ fontSize: '11.5px' }}>{formatTablePrice(item.pricePol)}</span>
                                 ) : (
-                                    <span className="text-secondary fw-normal me-2">--</span>
+                                    <span className="text-secondary fw-normal me-2" style={{ fontSize: '11.5px' }}>--</span>
                                 )}
                             </td>
-                            {/* Volume: Aligned Left, Normal Weight */}
+                            {/* Volume: Aligned Left */}
                             <td className="text-start" style={{ verticalAlign: 'middle' }}>
                                 {isMounted ? (
-                                    <span className="text-white fw-normal me-2">{formatTablePrice(item.volume)}</span>
+                                    <span className="text-white fw-normal me-2" style={{ fontSize: '10.5px' }}>{formatTablePrice(item.volume)}</span>
                                 ) : (
-                                    <span className="text-secondary fw-normal me-2">--</span>
+                                    <span className="text-secondary fw-normal me-2" style={{ fontSize: '10.5px' }}>--</span>
                                 )}
                             </td>
                         </tr>
