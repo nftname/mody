@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next"; // ط£ط¶ظپظ†ط§ Viewport
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LegalModal from "@/components/LegalModal";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import SiteController from "@/components/SiteController"; // ✅ تمت إضافة المستورد الجديد
 import { Providers } from "@/app/providers";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -52,6 +53,9 @@ export default function RootLayout({
 
         <Providers>
             <div className="d-flex flex-column min-vh-100">
+              {/* ✅ هنا تم وضع وحدة التحكم: تتحقق من الإغلاق أو تظهر الرسائل قبل أي شيء آخر */}
+              <SiteController />
+              
               <Navbar />
               <PWAInstallPrompt />
               <LegalModal />
