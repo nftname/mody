@@ -13,7 +13,7 @@ import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
-// --- CONSTANTS ---
+// --- CONSTANTS (MOVED TO TOP TO FIX ERROR) ---
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
@@ -66,12 +66,13 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
-// --- ASSET CARD ---
+// --- ASSET CARD (Corrected Design & Height) ---
 const AssetCard = ({ item }: { item: any }) => {
     return (
       <div className="asset-card-container hover-lift" style={{ cursor: 'pointer' }}>
           <Link href={`/asset/${item.id}`} className="text-decoration-none w-100">
               
+              {/* 1. Image Container (Height Reduced to 160px) */}
               <div className="position-relative w-100" style={{ 
                   height: '160px', 
                   borderRadius: '12px', 
@@ -80,6 +81,7 @@ const AssetCard = ({ item }: { item: any }) => {
                   marginBottom: '10px', 
                   border: '1px solid rgba(255,255,255,0.1)'
               }}>
+                   {/* Background Image: Force Fill */}
                    <Image 
                         src="/cart.jpg" 
                         alt={item.name} 
@@ -87,8 +89,10 @@ const AssetCard = ({ item }: { item: any }) => {
                         style={{ objectFit: 'fill', objectPosition: 'center' }} 
                    />
 
+                   {/* Dark Overlay */}
                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.15)' }}></div>
 
+                   {/* A. NAME (Center) */}
                    <div style={{
                        position: 'absolute',
                        top: '50%',
@@ -103,6 +107,7 @@ const AssetCard = ({ item }: { item: any }) => {
                            fontStyle: 'italic',
                            fontWeight: '700',
                            fontSize: '28px',
+                           // Matte Antique Gold Gradient
                            background: 'linear-gradient(180deg, #e6cf8b 0%, #c49938 50%, #9e7b2a 100%)',
                            WebkitBackgroundClip: 'text',
                            WebkitTextFillColor: 'transparent',
@@ -114,6 +119,7 @@ const AssetCard = ({ item }: { item: any }) => {
                        </h3>
                    </div>
 
+                   {/* B. FOOTER INFO (Bottom Center) */}
                    <div style={{
                        position: 'absolute',
                        bottom: '10px',
@@ -137,6 +143,7 @@ const AssetCard = ({ item }: { item: any }) => {
                    </div>
               </div>
               
+              {/* 2. Data Footer (Reduced Height/Spacing) */}
               <div className="w-100 d-flex justify-content-between align-items-end px-2">
                   <div className="text-start">
                       <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Name</div>
@@ -171,6 +178,7 @@ function Home() {
   
   const publicClient = usePublicClient();
 
+  // Fetch Prices
   useEffect(() => {
       const fetchPrices = async () => {
           try {
@@ -186,6 +194,7 @@ function Home() {
       return () => clearInterval(interval);
   }, []);
 
+  // Fetch Data Logic
   useEffect(() => {
     const fetchRealData = async () => {
         if (!publicClient) return;
@@ -274,6 +283,7 @@ function Home() {
     fetchRealData();
   }, [publicClient, timeFilter]); 
 
+  // Process Data for View
   const processedData = useMemo(() => {
       let data = [...realListings];
       
@@ -536,18 +546,15 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
                         {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '16px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light" style={{ fontSize: '12px' }}>{item.rank}</span> )} 
                     </div> 
                     <CoinIcon name={item.name} tier={item.tier} /> 
-                    {/* MODIFIED: Increased font size 10% (13px -> 14.5px) & Bold weight */}
-                    <span className="text-white fw-bold name-shake text-truncate" style={{ fontSize: '14.5px' }}>{item.name}</span> 
+                    <span className="text-white fw-light name-shake text-truncate" style={{ fontSize: '13px' }}>{item.name}</span> 
                 </div> 
                 
                 <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 auto', width: '25%', paddingLeft: '15px' }}> 
-                    {/* MODIFIED: Increased font size 10% (11px -> 12.5px) */}
-                    <span className="fw-normal text-white" style={{ fontSize: '12.5px' }}>{formatTablePrice(item.pricePol)}</span> 
+                    <span className="fw-normal text-white" style={{ fontSize: '11px' }}>{formatTablePrice(item.pricePol)}</span> 
                 </div> 
 
                 <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 auto', width: '30%' }}> 
-                    {/* MODIFIED: Increased font size 10% (10px -> 11.5px) */}
-                    <span className="small text-white" style={{ fontSize: '11.5px', fontWeight: '400' }}>{formatTableVolume(item.volume)}</span> 
+                    <span className="small text-white" style={{ fontSize: '10px', fontWeight: '400' }}>{formatTableVolume(item.volume)}</span> 
                 </div> 
             </div> 
         </Link> 
@@ -581,25 +588,22 @@ function DesktopTable({ data, formatTablePrice, formatTableVolume, getRankStyle 
                                 <Link href={`/asset/${item.id}`} className="text-decoration-none text-white">
                                     <div className="d-flex align-items-center gap-3">
                                         <CoinIcon name={item.name} tier={item.tier} />
-                                        {/* MODIFIED: Changed fw-light to fw-bold, Added fontSize 15px (approx 10% increase) */}
-                                        <span className="fw-bold name-shake" style={{ fontSize: '15px' }}>{item.name}</span>
+                                        <span className="fw-light name-shake">{item.name}</span>
                                     </div>
                                 </Link>
                             </td>
                             <td className="text-start" style={{ verticalAlign: 'middle', paddingLeft: '15px' }}>
                                 {isMounted ? (
-                                    /* MODIFIED: Increased font size 10% (11px -> 12.5px) */
-                                    <span className="text-white fw-normal me-2" style={{ fontSize: '12.5px' }}>{formatTablePrice(item.pricePol)}</span>
+                                    <span className="text-white fw-normal me-2" style={{ fontSize: '11px' }}>{formatTablePrice(item.pricePol)}</span>
                                 ) : (
-                                    <span className="text-secondary fw-normal me-2" style={{ fontSize: '12.5px' }}>--</span>
+                                    <span className="text-secondary fw-normal me-2" style={{ fontSize: '11px' }}>--</span>
                                 )}
                             </td>
                             <td className="text-start" style={{ verticalAlign: 'middle' }}>
                                 {isMounted ? (
-                                    /* MODIFIED: Increased font size 10% (10px -> 11.5px) */
-                                    <span className="text-white fw-normal me-2" style={{ fontSize: '11.5px' }}>{formatTableVolume(item.volume)}</span>
+                                    <span className="text-white fw-normal me-2" style={{ fontSize: '10px' }}>{formatTableVolume(item.volume)}</span>
                                 ) : (
-                                    <span className="text-secondary fw-normal me-2" style={{ fontSize: '11.5px' }}>--</span>
+                                    <span className="text-secondary fw-normal me-2" style={{ fontSize: '10px' }}>--</span>
                                 )}
                             </td>
                         </tr>
