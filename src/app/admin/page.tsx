@@ -4,18 +4,24 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { supabase } from '@/lib/supabase';
 
+// ✅ تم وضع محفظتك هنا لتكون أنت المدير الوحيد
 const OWNER_WALLET = "0x5f2f670df4Db14ddB4Bc1E3eCe86CA645fb01BE6".toLowerCase();
 
 export default function AdminPage() {
   const { address, isConnected } = useAccount();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // Settings State
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [announcement, setAnnouncement] = useState('');
+  
+  // Analytics State
   const [offersStats, setOffersStats] = useState<any[]>([]);
   const [totalVolume, setTotalVolume] = useState(0);
 
   useEffect(() => {
+    // التأكد من أن المتصل هو صاحب المحفظة المحددة
     if (isConnected && address && address.toLowerCase() === OWNER_WALLET) {
         setIsAdmin(true);
         fetchSettings();
@@ -27,6 +33,7 @@ export default function AdminPage() {
   }, [address, isConnected]);
 
   const fetchSettings = async () => {
+      // قراءة الإعدادات من الصف رقم 1
       const { data } = await supabase.from('app_settings').select('*').eq('id', 1).single();
       if (data) {
           setMaintenanceMode(data.is_maintenance_mode);
@@ -48,105 +55,117 @@ export default function AdminPage() {
       const { error } = await supabase.from('app_settings').update({ is_maintenance_mode: newVal }).eq('id', 1);
       if (!error) {
           setMaintenanceMode(newVal);
-          alert(newVal ? "🚨 SITE IS NOW CLOSED" : "✅ SITE IS NOW LIVE");
+          alert(newVal ? "🚨 SITE IS NOW CLOSED (MAINTENANCE MODE)" : "✅ SITE IS NOW LIVE");
       }
   };
 
   const saveAnnouncement = async () => {
       await supabase.from('app_settings').update({ announcement_text: announcement }).eq('id', 1);
-      alert('Announcement Updated!');
+      alert('Announcement Banner Updated!');
   };
 
-  if (loading) return <div style={{padding: '40px', background: '#000', color: '#fff', height: '100vh'}}>Verifying...</div>;
+  if (loading) return <div className="p-10 text-white bg-black h-screen">Verifying Identity...</div>;
 
   if (!isAdmin) {
       return (
-          <div style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: '#ff0000', fontWeight: 'bold'}}>
-              ACCESS DENIED
+          <div className="flex h-screen items-center justify-center bg-black text-red-600 font-bold text-3xl flex-col gap-4">
+              <i className="bi bi-shield-lock-fill text-6xl"></i>
+              <span>ACCESS DENIED</span>
+              <span className="text-sm text-gray-500">Only the owner wallet can view this page.</span>
           </div>
       );
   }
 
   return (
-    <div style={{minHeight: '100vh', backgroundColor: '#050505', color: '#fff', padding: '40px', fontFamily: 'sans-serif'}}>
-      <div style={{maxWidth: '1100px', margin: '0 auto'}}>
-        <h1 style={{fontSize: '24px', fontWeight: 'bold', color: '#FCD535', marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px'}}>
-            🛡️ NNM Command Center
+    <div className="min-h-screen bg-[#050505] text-white p-8 font-sans">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold text-[#FCD535] mb-8 border-b border-gray-800 pb-4 flex items-center gap-3">
+            <i className="bi bi-cpu-fill"></i> NNM Command Center
         </h1>
 
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px'}}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
-            {/* 1. EMERGENCY CONTROLS */}
-            <div style={{background: '#1a1a1a', padding: '25px', borderRadius: '15px', border: '1px solid #333'}}>
-                <h2 style={{fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#ff4444'}}>🚨 Emergency Controls</h2>
+            {/* 1. EMERGENCY CONTROLS (التحكم بالطوارئ) */}
+            <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800 shadow-2xl">
+                <h2 className="text-xl font-bold mb-6 text-red-500 flex items-center gap-2">
+                    <i className="bi bi-exclamation-triangle-fill"></i> Emergency Controls
+                </h2>
                 
-                <div style={{background: '#000', padding: '20px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px'}}>
+                {/* Kill Switch */}
+                <div className="flex items-center justify-between mb-8 p-5 bg-black rounded-lg border border-gray-800">
                     <div>
-                        <h3 style={{margin: 0, fontSize: '14px'}}>Kill Switch</h3>
-                        <p style={{margin: '5px 0 0', fontSize: '11px', color: '#888'}}>Stop all visitors access.</p>
+                        <h3 className="font-bold text-white text-lg">Site Status (Kill Switch)</h3>
+                        <p className="text-sm text-gray-400 mt-1">If OFF, visitors will see a "Maintenance" screen.</p>
                     </div>
                     <button 
                         onClick={toggleMaintenance}
-                        style={{
-                            padding: '10px 20px', 
-                            borderRadius: '8px', 
-                            border: 'none', 
-                            fontWeight: 'bold', 
-                            cursor: 'pointer',
-                            backgroundColor: maintenanceMode ? '#ff4444' : '#00c853',
-                            color: '#fff'
-                        }}
+                        className={`px-6 py-3 rounded-lg font-bold text-sm tracking-wider transition-all shadow-lg ${maintenanceMode ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse' : 'bg-green-600 hover:bg-green-700 text-white'}`}
                     >
-                        {maintenanceMode ? '⛔ CLOSED' : '✅ LIVE'}
+                        {maintenanceMode ? '⛔ SITE IS CLOSED' : '✅ SITE IS LIVE'}
                     </button>
                 </div>
 
-                <div>
-                    <h3 style={{fontSize: '14px', marginBottom: '10px'}}>Announcement Bar</h3>
+                {/* Announcement Banner */}
+                <div className="mb-2">
+                    <h3 className="font-bold mb-3 text-white flex items-center gap-2">
+                        <i className="bi bi-megaphone-fill text-[#FCD535]"></i> Global Announcement Bar
+                    </h3>
                     <textarea 
-                        style={{width: '100%', background: '#000', border: '1px solid #333', borderRadius: '8px', padding: '10px', color: '#fff', outline: 'none'}}
+                        className="w-full bg-black border border-gray-700 p-3 rounded-lg text-sm text-gray-300 focus:border-[#FCD535] outline-none transition-colors"
                         rows={3}
                         value={announcement}
                         onChange={(e) => setAnnouncement(e.target.value)}
+                        placeholder="Type a message here to show it at the top of the website immediately..."
                     />
-                    <button onClick={saveAnnouncement} style={{marginTop: '15px', width: '100%', padding: '10px', borderRadius: '8px', border: 'none', background: '#FCD535', fontWeight: 'bold', cursor: 'pointer'}}>
-                        Save Changes
-                    </button>
+                    <div className="flex justify-end mt-3">
+                        <button onClick={saveAnnouncement} className="bg-[#FCD535] hover:bg-[#e0bc2e] text-black px-6 py-2 rounded font-bold text-sm transition-all">
+                            Save & Publish Banner
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* 2. ANALYTICS */}
-            <div style={{background: '#1a1a1a', padding: '25px', borderRadius: '15px', border: '1px solid #333'}}>
-                <h2 style={{fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#448aff'}}>📊 Market Pulse</h2>
+            {/* 2. ANALYTICS (التحليل) */}
+            <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800 shadow-2xl">
+                <h2 className="text-xl font-bold mb-6 text-blue-400 flex items-center gap-2">
+                    <i className="bi bi-graph-up-arrow"></i> Market Pulse
+                </h2>
                 
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px'}}>
-                    <div style={{background: '#000', padding: '15px', borderRadius: '10px', textAlign: 'center'}}>
-                        <div style={{fontSize: '11px', color: '#888'}}>Offers</div>
-                        <div style={{fontSize: '24px', fontWeight: 'bold'}}>{offersStats.length}</div>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-black p-5 rounded-lg border border-gray-800 text-center">
+                        <div className="text-gray-500 text-xs uppercase font-bold tracking-widest mb-2">Active Offers</div>
+                        <div className="text-3xl font-black text-white">{offersStats.length}</div>
                     </div>
-                    <div style={{background: '#000', padding: '15px', borderRadius: '10px', textAlign: 'center'}}>
-                        <div style={{fontSize: '11px', color: '#888'}}>Total Value</div>
-                        <div style={{fontSize: '24px', fontWeight: 'bold', color: '#FCD535'}}>${totalVolume}</div>
+                    <div className="bg-black p-5 rounded-lg border border-gray-800 text-center">
+                        <div className="text-gray-500 text-xs uppercase font-bold tracking-widest mb-2">Total Bid Value</div>
+                        <div className="text-3xl font-black text-[#FCD535]">${totalVolume.toLocaleString()}</div>
                     </div>
                 </div>
 
-                <div style={{background: '#000', borderRadius: '10px', overflow: 'hidden'}}>
-                    <table style={{width: '100%', fontSize: '12px', borderCollapse: 'collapse'}}>
-                        <thead style={{background: '#222'}}>
-                            <tr>
-                                <th style={{padding: '10px'}}>ID</th>
-                                <th style={{padding: '10px'}}>Price</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {offersStats.map((offer, i) => (
-                                <tr key={i} style={{borderBottom: '1px solid #111'}}>
-                                    <td style={{padding: '10px', color: '#FCD535'}}>#{offer.token_id}</td>
-                                    <td style={{padding: '10px'}}>${offer.offer_price}</td>
+                <div className="overflow-hidden border border-gray-800 rounded-lg bg-black">
+                    <div className="p-3 bg-gray-900 border-b border-gray-800 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                        Latest Active Offers
+                    </div>
+                    <div className="overflow-auto max-h-[300px]">
+                        <table className="w-full text-xs text-left">
+                            <thead className="bg-gray-800 text-gray-300 sticky top-0">
+                                <tr>
+                                    <th className="p-3">Token ID</th>
+                                    <th className="p-3">Price ($)</th>
+                                    <th className="p-3">From</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {offersStats.map((offer, i) => (
+                                    <tr key={i} className="border-b border-gray-800 hover:bg-gray-900 transition-colors">
+                                        <td className="p-3 text-[#FCD535] font-mono">#{offer.token_id}</td>
+                                        <td className="p-3 text-white font-bold">${Number(offer.offer_price).toLocaleString()}</td>
+                                        <td className="p-3 text-gray-500 font-mono truncate max-w-[100px]">{offer.bidder}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
