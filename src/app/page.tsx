@@ -17,7 +17,6 @@ const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
-const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #B3882A 100%)';
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
 const resolveIPFS = (uri: string) => {
@@ -40,32 +39,6 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
         );
     }
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
-};
-
-const getCardStyles = (tier: string) => {
-    switch(tier?.toLowerCase()) {
-        case 'immortal': 
-            return {
-                bg: 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)',
-                border: '1px solid rgba(252, 213, 53, 0.3)',
-                shadow: '0 10px 40px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.9)',
-                textColor: GOLD_GRADIENT
-            };
-        case 'elite': 
-            return {
-                bg: 'linear-gradient(135deg, #2b0505 0%, #4a0a0a 100%)',
-                border: '1px solid rgba(255, 50, 50, 0.3)',
-                shadow: '0 10px 40px rgba(40,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.9)',
-                textColor: GOLD_GRADIENT
-            };
-        default:
-            return {
-                bg: 'linear-gradient(135deg, #002b36 0%, #004d40 100%)',
-                border: '1px solid rgba(0, 255, 200, 0.2)',
-                shadow: '0 10px 40px rgba(0,30,30,0.8), inset 0 0 20px rgba(0,0,0,0.9)',
-                textColor: GOLD_GRADIENT
-            };
-    }
 };
 
 const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
@@ -92,25 +65,43 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
+// Card with USD Values as requested
 const AssetCard = ({ item }: { item: any }) => {
-    const style = getCardStyles(item.tier);
+    let bg = 'linear-gradient(135deg, #002b36 0%, #004d40 100%)';
+    let border = '1px solid rgba(0, 255, 200, 0.2)';
+    if(item.tier === 'immortal') {
+        bg = 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)';
+        border = '1px solid rgba(252, 213, 53, 0.3)';
+    } else if(item.tier === 'elite') {
+        bg = 'linear-gradient(135deg, #2b0505 0%, #4a0a0a 100%)';
+        border = '1px solid rgba(255, 50, 50, 0.3)';
+    }
+
     return (
       <div className="museum-case position-relative p-2 d-flex flex-column align-items-center justify-content-center"
-           style={{ width: '100%', height: '180px', backgroundColor: 'transparent', borderRadius: '8px', cursor: 'pointer' }}>
+           style={{ width: '100%', height: '220px', backgroundColor: 'transparent', borderRadius: '8px', cursor: 'pointer' }}>
           <Link href={`/asset/${item.id}`} className="text-decoration-none w-100 h-100 d-flex flex-column align-items-center justify-content-center">
               <div className="static-asset position-relative"
-                   style={{ width: '90%', height: '65%', background: style.bg, border: style.border, borderRadius: '8px', overflow: 'hidden', marginTop: '10px', marginBottom: '10px', boxShadow: style.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                   style={{ width: '90%', height: '60%', background: bg, border: border, borderRadius: '8px', overflow: 'hidden', marginTop: '10px', marginBottom: '10px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                    <div style={{ zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                       <p style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: '10px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '1px', margin: 0, paddingBottom: '4px', textTransform: 'uppercase' }}>GEN-0 #00{item.id}</p>
-                       <h3 style={{ fontFamily: 'serif', fontWeight: '900', fontSize: '25px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0px 3px 3px rgba(0,0,0,0.9))', letterSpacing: '1.5px', margin: 0, textTransform: 'uppercase', lineHeight: '1.1' }}>{item.name}</h3>
-                       <p style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: '10px', background: style.textColor, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '1px', margin: 0, paddingTop: '4px', textTransform: 'uppercase' }}>2025 EDITION</p>
+                       <p style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: '10px', color: '#FCD535', letterSpacing: '1px', margin: 0 }}>GEN-0 #00{item.id}</p>
+                       <h3 style={{ fontFamily: 'serif', fontWeight: '900', fontSize: '22px', color: '#FCD535', letterSpacing: '1.5px', margin: 0, textTransform: 'uppercase' }}>{item.name}</h3>
                    </div>
-                   <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 70%)', zIndex: 1 }}></div>
               </div>
-              <div className="w-100 d-flex justify-content-between align-items-end px-2" style={{ marginTop: 'auto' }}>
-                  <div className="text-start"><div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px', marginBottom: '4px' }}>Name</div><h5 className="fw-bold m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.name}</h5></div>
-                  <div className="text-center"><div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px', marginBottom: '4px' }}>Price</div><div className="fw-bold" style={{ fontSize: '14px', color: '#0ecb81' }}>{Number(item.floor).toFixed(2)} <span style={{ fontSize: '9px', color: '#888' }}>POL</span></div></div>
-                  <div className="text-end"><div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px', marginBottom: '4px' }}>Vol</div><div className="fw-bold" style={{ fontSize: '14px', color: '#ffffff' }}>{item.volumeDisplay}</div></div>
+              {/* Card Footer: Name White, Price $ White, Vol $ White */}
+              <div className="w-100 d-flex justify-content-between align-items-end px-2 pb-2" style={{ marginTop: 'auto' }}>
+                  <div className="text-start">
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px' }}>Name</div>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.name}</h5>
+                  </div>
+                  <div className="text-center">
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px' }}>Price</div>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.priceUsdDisplay}</h5>
+                  </div>
+                  <div className="text-end">
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '1px' }}>Vol</div>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.volumeUsdDisplay}</h5>
+                  </div>
               </div>
           </Link>
       </div>
@@ -120,7 +111,7 @@ const AssetCard = ({ item }: { item: any }) => {
 function Home() {
   
   const [activeTab, setActiveTab] = useState<'trending' | 'top'>('trending');
-  const [timeFilter, setTimeFilter] = useState('1H');
+  const [timeFilter, setTimeFilter] = useState('24H');
   const [currencyFilter, setCurrencyFilter] = useState('All');
   
   const [isMobileCurrencyOpen, setIsMobileCurrencyOpen] = useState(false);
@@ -128,21 +119,38 @@ function Home() {
   
   const [realListings, setRealListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
   
   const publicClient = usePublicClient();
 
+  // 1. Fetch Rates (Source of Truth)
+  useEffect(() => {
+      const fetchPrices = async () => {
+          try {
+              const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
+              const data = await res.json();
+              const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
+              const ethPrice = data['ethereum']?.usd || 0;
+              setExchangeRates({ pol: polPrice, eth: ethPrice });
+          } catch (e) { console.error(e); }
+      };
+      fetchPrices();
+      const interval = setInterval(fetchPrices, 30000);
+      return () => clearInterval(interval);
+  }, []);
+
+  // 2. Fetch Data (Hybrid Logic)
   useEffect(() => {
     const fetchRealData = async () => {
         if (!publicClient) return;
         try {
-            // 1. Fetch Listings from Blockchain
+            // Blockchain: Active Listings
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
                 functionName: 'getAllListings'
             });
-
-            const [tokenIds, prices, sellers] = data;
+            const [tokenIds, prices] = data;
 
             if (tokenIds.length === 0) {
                 setRealListings([]);
@@ -150,30 +158,36 @@ function Home() {
                 return;
             }
 
-            // 2. Fetch DATA from Supabase
-            // Get Sales
-            const { data: salesData } = await supabase
-                .from('activities')
-                .select('token_id, price')
-                .eq('activity_type', 'Sale');
+            // Database: Filtered History
+            const { data: allActivities } = await supabase.from('activities').select('*');
+            const { data: offersData } = await supabase.from('offers').select('token_id').eq('status', 'active');
 
-            // Get Offers
-            const { data: offersData } = await supabase
-                .from('offers')
-                .select('token_id')
-                .eq('status', 'active');
-
-            // 3. Process Maps
             const volumeMap: any = {};
             const salesCountMap: any = {};
             const offersCountMap: any = {};
+            
+            const now = Date.now();
+            let timeLimit = 0;
+            // Time Filters: 1H, 6H, 24H, 7D
+            if (timeFilter === '1H') timeLimit = 3600 * 1000;
+            else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
+            else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
+            else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
+            else timeLimit = 315360000000;
 
-            if (salesData) {
-                salesData.forEach((sale: any) => {
-                    const tid = sale.token_id;
-                    const price = Number(sale.price) || 0;
-                    volumeMap[tid] = (volumeMap[tid] || 0) + price;
-                    salesCountMap[tid] = (salesCountMap[tid] || 0) + 1;
+            if (allActivities) {
+                allActivities.forEach((act: any) => {
+                    const tid = Number(act.token_id);
+                    const actTime = new Date(act.created_at).getTime();
+                    const price = Number(act.price) || 0;
+
+                    if (act.activity_type === 'Sale') {
+                        // Apply Time Filter
+                        if (now - actTime <= timeLimit) {
+                            volumeMap[tid] = (volumeMap[tid] || 0) + price;
+                            salesCountMap[tid] = (salesCountMap[tid] || 0) + 1;
+                        }
+                    }
                 });
             }
 
@@ -183,21 +197,15 @@ function Home() {
                 });
             }
 
-            // 4. Merge Data
             const items = await Promise.all(tokenIds.map(async (id, index) => {
                 try {
                     const tid = Number(id);
-                    const uri = await publicClient.readContract({
-                        address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-                        abi: erc721Abi,
-                        functionName: 'tokenURI',
-                        args: [id]
-                    });
-                    
+                    const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
                     const metaRes = await fetch(resolveIPFS(uri));
                     const meta = metaRes.ok ? await metaRes.json() : {};
                     const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
                     
+                    const pricePol = parseFloat(formatEther(prices[index]));
                     const volumeVal = volumeMap[tid] || 0;
                     const salesCount = salesCountMap[tid] || 0;
                     const offersCount = offersCountMap[tid] || 0;
@@ -206,63 +214,62 @@ function Home() {
 
                     return {
                         id: tid,
-                        rank: index + 1, // Will be re-ranked by sorting
+                        rank: index + 1, 
                         name: meta.name || `Asset #${id}`,
                         tier: tierAttr,
-                        floor: formatEther(prices[index]),
-                        volume: volumeVal,
-                        volumeDisplay: volumeVal > 0 ? `${volumeVal.toFixed(2)}` : '0',
+                        pricePol: pricePol, // Raw POL
+                        volume: volumeVal,  // Raw POL
                         trendingScore: trendingScore,
                         change: 0 
                     };
-                } catch (e) {
-                    return null;
-                }
+                } catch (e) { return null; }
             }));
 
             setRealListings(items.filter(i => i !== null));
-        } catch (error) {
-            console.error("Home Data Fetch Error", error);
-        } finally {
-            setLoading(false);
-        }
+        } catch (error) { console.error("Home Fetch Error", error); } finally { setLoading(false); }
     };
 
     fetchRealData();
-  }, [publicClient]);
+  }, [publicClient, timeFilter]); // Re-run when Time Filter changes
 
-  // --- Sorting & Filtering Logic ---
-  const sortedData = useMemo(() => {
+  // --- Processing Data for View ---
+  const processedData = useMemo(() => {
       let data = [...realListings];
       
-      // Filter logic (Top vs Trending)
+      // Calculate USD values for Cards (regardless of table filter)
+      data = data.map(item => {
+          const usdPrice = item.pricePol * (exchangeRates.pol || 0);
+          const usdVol = item.volume * (exchangeRates.pol || 0);
+          return {
+              ...item,
+              priceUsdDisplay: `$${usdPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
+              volumeUsdDisplay: `$${usdVol.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+          };
+      });
+
+      // Sort
       if (activeTab === 'top') {
-          // Top = Highest Volume
           data.sort((a, b) => b.volume - a.volume);
       } else {
-          // Trending = Highest Score (Sales + Offers)
           data.sort((a, b) => b.trendingScore - a.trendingScore);
       }
-      
-      // Update ranks after sort
       return data.map((item, index) => ({ ...item, rank: index + 1 }));
-  }, [realListings, activeTab]);
+  }, [realListings, activeTab, exchangeRates]);
 
-  // Featured: Top 3 by Volume (Top Performer)
+  // Featured: Top 3 by Volume (High Performance)
   const featuredItems = useMemo(() => {
-      return [...realListings].sort((a, b) => b.volume - a.volume).slice(0, 3);
-  }, [realListings]);
+      return [...processedData].sort((a, b) => b.volume - a.volume).slice(0, 3);
+  }, [processedData]);
 
-  // New Listings: Top 3 by ID (Last Minted)
+  // New Listings: Top 3 by ID (Simplified for "Just Listed")
   const newListingsItems = useMemo(() => {
-      return [...realListings].sort((a, b) => b.id - a.id).slice(0, 3);
-  }, [realListings]);
+      return [...processedData].sort((a, b) => b.id - a.id).slice(0, 3);
+  }, [processedData]);
   
-  // Table Pagination
-  const desktopLeftData = sortedData.slice(0, 5);
-  const desktopRightData = sortedData.slice(5, 10);
-  const mobileSlideOne = sortedData.slice(0, 5);
-  const mobileSlideTwo = sortedData.slice(5, 10);
+  const desktopLeftData = processedData.slice(0, 5);
+  const desktopRightData = processedData.slice(5, 10);
+  const mobileSlideOne = processedData.slice(0, 5);
+  const mobileSlideTwo = processedData.slice(5, 10);
   
   const trustedBrands = [ 
     { name: "POLYGON", icon: "bi-link-45deg", isCustom: false },
@@ -282,51 +289,44 @@ function Home() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsMobileCurrencyOpen(false);
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) { setIsMobileCurrencyOpen(false); }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const getColorClass = (change: number) => { return change >= 0 ? 'text-success' : 'text-danger'; };
   const getRankStyle = (rank: number) => { const baseStyle = { fontStyle: 'italic', fontWeight: '700', fontSize: '20px', paddingBottom: '2px' }; if (rank === 1) return { ...baseStyle, color: '#FF9900', textShadow: '0 0 10px rgba(255, 153, 0, 0.4)' }; if (rank === 2) return { ...baseStyle, color: '#FFC233', textShadow: '0 0 10px rgba(255, 194, 51, 0.3)' }; if (rank === 3) return { ...baseStyle, color: '#FCD535', textShadow: '0 0 10px rgba(252, 213, 53, 0.2)' }; return { color: '#fff', fontWeight: '300', fontSize: '20px' }; };
   const handleMobileCurrencySelect = (c: string) => { setCurrencyFilter(c); setIsMobileCurrencyOpen(false); };
 
+  // Strict Currency Formatter for Table
+  const formatTablePrice = (valPol: number) => {
+      if (!exchangeRates.pol || exchangeRates.pol === 0) return `${valPol.toFixed(2)} POL`;
+      if (currencyFilter === 'All') return `${(valPol * exchangeRates.pol).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} $`;
+      if (currencyFilter === 'ETH') return `${(valPol * exchangeRates.pol / (exchangeRates.eth || 3000)).toFixed(6)} ETH`;
+      return `${valPol.toFixed(2)} POL`;
+  };
+
   return (
-    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', paddingBottom: '0px', fontFamily: '"Inter", "Segoe UI", sans-serif', overflowX: 'hidden' }}>
+    <main className="no-select" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', paddingBottom: '0px', fontFamily: '"Inter", "Segoe UI", sans-serif', overflowX: 'hidden' }}>
       
       <MarketTicker />
 
-      {/* HEADER SECTION: Unified Spacing & 3 Widgets */}
       <div className="header-wrapper shadow-sm">
         <div className="container-fluid p-0"> 
-            
             <div className="widgets-grid-container">
                 <div className="widget-item"> <NGXWidget theme="dark" /> </div>
                 <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
                 <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
             </div>
-
             <div className="row align-items-center px-3 mt-3 text-section desktop-only-text">
                 <div className="col-lg-12">
-                    <h1 className="fw-bold mb-2 main-title">
-                        NNM &mdash; The Global Market for <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital Name NFTs</span>
-                    </h1>
-                    <p className="mb-0 main-desc">
-                        Where Nexus Digital Name NFTs gain real financial value and global liquidity.
-                    </p>
+                    <h1 className="fw-bold mb-2 main-title">NNM &mdash; The Global Market for <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital Name NFTs</span></h1>
+                    <p className="mb-0 main-desc">Where Nexus Digital Name NFTs gain real financial value and global liquidity.</p>
                 </div>
             </div>
-
             <div className="d-block d-md-none px-3 mt-3 mobile-only-text">
-                <h1 className="fw-bold text-white h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>
-                    NNM &mdash; The Global Market of <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital Name NFTs.</span>
-                </h1>
-                <p style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', fontSize: '15px', color: '#B0B0B0', marginTop: '8px', marginBottom: 0 }}>
-                    Where Nexus Digital Name NFTs gain real financial value and global liquidity.
-                </p>
+                <h1 className="fw-bold text-white h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>NNM &mdash; The Global Market of <span style={{ color: '#E0E0E0' }}>Nexus Rare Digital Name NFTs.</span></h1>
+                <p style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', fontSize: '15px', color: '#B0B0B0', marginTop: '8px', marginBottom: 0 }}>Where Nexus Digital Name NFTs gain real financial value and global liquidity.</p>
             </div>
         </div>
       </div>
@@ -365,20 +365,20 @@ function Home() {
           </div>
 
           <div className="row g-4 d-none d-lg-flex">
-              <div className="col-lg-6"><DesktopTable data={desktopLeftData} getColorClass={getColorClass} getRankStyle={getRankStyle} /></div>
-              <div className="col-lg-6"><DesktopTable data={desktopRightData} getColorClass={getColorClass} getRankStyle={getRankStyle} /></div>
+              <div className="col-lg-6"><DesktopTable data={desktopLeftData} formatTablePrice={formatTablePrice} getRankStyle={getRankStyle} /></div>
+              <div className="col-lg-6"><DesktopTable data={desktopRightData} formatTablePrice={formatTablePrice} getRankStyle={getRankStyle} /></div>
           </div>
           <div className="d-block d-lg-none">
               <div className="mobile-swipe-wrapper">
-                  <div className="mobile-slide"><MobileTableHeader />{mobileSlideOne.map((item) => (<MobileRow key={item.id} item={item} getColorClass={getColorClass} getRankStyle={getRankStyle} />))}</div>
-                  <div className="mobile-slide"><MobileTableHeader />{mobileSlideTwo.map((item) => (<MobileRow key={item.id} item={item} getColorClass={getColorClass} getRankStyle={getRankStyle} />))}</div>
+                  <div className="mobile-slide"><MobileTableHeader />{mobileSlideOne.map((item) => (<MobileRow key={item.id} item={item} formatTablePrice={formatTablePrice} getRankStyle={getRankStyle} />))}</div>
+                  <div className="mobile-slide"><MobileTableHeader />{mobileSlideTwo.map((item) => (<MobileRow key={item.id} item={item} formatTablePrice={formatTablePrice} getRankStyle={getRankStyle} />))}</div>
               </div>
           </div>
           
           <div className="text-center mt-4 mb-5"><Link href="/market" className="btn view-all-btn px-4 py-2" style={{ borderRadius: '6px', fontSize: '18px', minWidth: '160px', color: '#fff', transition: 'all 0.3s' }}>View All</Link></div>
 
           <div className="mt-5 mb-5">
-              <h3 className="text-white fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px' }}>Featured Assets</h3>
+              <h3 className="text-white fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px' }}>Top Performers</h3>
               {loading ? <div className="text-secondary text-center">Loading Assets...</div> :
               <div className="row g-4 d-none d-lg-flex">
                   {featuredItems.map((item) => (<div key={item.id} className="col-lg-4 col-xl-4"><AssetCard item={item} /></div>))}
@@ -417,52 +417,19 @@ function Home() {
       </div>
 
       <style jsx global>{`
-        .header-wrapper {
-            background: #242424;
-            border-bottom: 1px solid #2E2E2E;
-            padding: 4px 0;
-            margin-top: 0;
-        }
-
-        .widgets-grid-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: nowrap;
-            max-width: 1050px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
-
-        .widget-item {
-            flex: 0 0 310px;
-        }
-
+        .no-select { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        .header-wrapper { background: #242424; border-bottom: 1px solid #2E2E2E; padding: 4px 0; margin-top: 0; }
+        .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
+        .widget-item { flex: 0 0 310px; }
         .main-title { font-size: 1.53rem; color: #E0E0E0; letter-spacing: -1px; }
         .main-desc { font-size: 15px; color: #B0B0B0; max-width: 650px; }
         .text-section { max-width: 1050px; margin: 0 auto; }
-
         @media (max-width: 768px) {
-            .header-wrapper {
-                padding: 2px 0 !important;
-            }
-            .widgets-grid-container {
-                display: flex !important;
-                flex-wrap: nowrap !important;
-                justify-content: space-between !important;
-                gap: 2px !important;
-                padding: 0 4px !important;
-                max-width: 100% !important;
-                overflow-x: hidden;
-            }
-            .widget-item {
-                flex: 1 1 auto !important;
-                min-width: 0 !important;
-                max-width: 33% !important;
-            }
+            .header-wrapper { padding: 2px 0 !important; }
+            .widgets-grid-container { display: flex !important; flex-wrap: nowrap !important; justify-content: space-between !important; gap: 2px !important; padding: 0 4px !important; max-width: 100% !important; overflow-x: hidden; }
+            .widget-item { flex: 1 1 auto !important; min-width: 0 !important; max-width: 33% !important; }
             .desktop-only-text { display: none !important; }
         }
-
         .fw-light { font-weight: 300 !important; } .text-header-gray { color: #848E9C !important; } .cursor-pointer { cursor: pointer; } .hover-bg-gray:hover { background-color: #2B3139; }
         .mobile-card-wrapper::-webkit-scrollbar { display: none; } .mobile-card-wrapper { -ms-overflow-style: none; scrollbar-width: none; scroll-snap-type: x mandatory; } .mobile-card-item { scroll-snap-align: start; }
         .static-asset { box-shadow: 0 15px 35px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(40, 40, 40, 0.5), inset 0 0 15px rgba(0,0,0,0.5); }
@@ -477,27 +444,55 @@ function Home() {
         .view-all-btn { background-color: #1E2329; border: none; } .view-all-btn:hover, .view-all-btn:active { background-color: #474D57 !important; color: #fff !important; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
         .hero-grid-system { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; } 
         @media (max-width: 991px) { 
-            .hero-grid-system { 
-                display: flex !important; 
-                overflow-x: auto; 
-                scroll-snap-type: x mandatory; 
-            } 
-            .hero-card { 
-                flex: 0 0 85%; 
-                scroll-snap-align: start; 
-                height: 180px !important; 
-            } 
+            .hero-grid-system { display: flex !important; overflow-x: auto; scroll-snap-type: x mandatory; } 
+            .hero-card { flex: 0 0 85%; scroll-snap-align: start; height: 180px !important; } 
         }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .blink-text { animation: blink 2s infinite; }
       `}</style>
     </main>
   );
 }
 
-function MobileTableHeader() { return ( <div className="d-flex justify-content-between mb-3 border-bottom border-secondary pb-2" style={{ borderColor: '#333 !important', height: '40px', alignItems: 'flex-end' }}> <div style={{ flex: 2 }}> <span style={{ fontSize: '13px', color: '#848E9C' }}>Name Asset</span> </div> <div style={{ flex: 2, display: 'flex', justifyContent: 'flex-end', gap: '10px' }}> <span style={{ fontSize: '13px', color: '#848E9C', width: '80px', textAlign: 'right' }}>Floor Price</span> <span style={{ fontSize: '13px', color: '#848E9C', width: '80px', textAlign: 'right' }}>Volume</span> </div> </div> ); }
-function MobileRow({ item, getColorClass, getRankStyle }: any) { return ( <Link href={`/asset/${item.id}`} className="text-decoration-none"> <div className="d-flex align-items-center justify-content-between py-3 binance-row" style={{ borderBottom: '1px solid #222' }}> <div className="d-flex align-items-center gap-3" style={{ flex: 2 }}> <div style={{ width: '20px', textAlign: 'center' }}> {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '18px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light">{item.rank}</span> )} </div> <CoinIcon name={item.name} tier={item.tier} /> <span className="text-white fw-light name-shake" style={{ fontSize: '14px' }}>{item.name}</span> </div> <div className="d-flex justify-content-end align-items-center" style={{ flex: 2, gap: '10px' }}> <div className="d-flex flex-column align-items-end" style={{ width: '80px' }}> <span className="fw-bold text-white" style={{ fontSize: '14px' }}>{Number(item.floor).toFixed(2)}</span> <span className={`small ${getColorClass(item.change)}`} style={{ fontSize: '10px' }}>{Number(item.change).toFixed(2)}%</span> </div> <div className="d-flex flex-column align-items-end" style={{ width: '80px' }}> <span className="small text-white" style={{ fontSize: '13px' }}>{item.volumeDisplay}</span> <span className={`small ${getColorClass(item.change)}`} style={{ fontSize: '10px' }}>{Number(item.change).toFixed(2)}%</span> </div> </div> </div> </Link> ); }
-function DesktopTable({ data, getColorClass, getRankStyle }: any) {
+function MobileTableHeader() { 
+    return ( 
+        <div className="d-flex justify-content-between mb-3 border-bottom border-secondary pb-2" style={{ borderColor: '#333 !important', height: '40px', alignItems: 'flex-end' }}> 
+            <div style={{ flex: '1 1 auto', overflow: 'hidden' }}> 
+                <span style={{ fontSize: '13px', color: '#848E9C' }}>Name Asset</span> 
+            </div> 
+            <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'flex-end', gap: '5px' }}> 
+                <span style={{ fontSize: '13px', color: '#848E9C', width: '70px', textAlign: 'left' }}>Price</span> 
+                <span style={{ fontSize: '13px', color: '#848E9C', width: '70px', textAlign: 'left' }}>Volume</span> 
+            </div> 
+        </div> 
+    ); 
+}
+
+function MobileRow({ item, formatTablePrice, getRankStyle }: any) { 
+    return ( 
+        <Link href={`/asset/${item.id}`} className="text-decoration-none"> 
+            <div className="d-flex align-items-center justify-content-between py-3 binance-row" style={{ borderBottom: '1px solid #222' }}> 
+                {/* Left Side: Name (Tight Width) */}
+                <div className="d-flex align-items-center gap-2" style={{ flex: '1 1 auto', overflow: 'hidden', paddingRight: '2px' }}> 
+                    <div style={{ width: '20px', textAlign: 'center', flexShrink: 0 }}> 
+                        {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '18px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light">{item.rank}</span> )} 
+                    </div> 
+                    <CoinIcon name={item.name} tier={item.tier} /> 
+                    <span className="text-white fw-light name-shake text-truncate" style={{ fontSize: '14px' }}>{item.name}</span> 
+                </div> 
+                {/* Right Side: Price & Volume (Text Left Aligned) */}
+                <div className="d-flex justify-content-end align-items-center" style={{ flex: '0 0 auto', gap: '5px' }}> 
+                    <div className="d-flex flex-column align-items-start" style={{ width: '70px' }}> 
+                        <span className="fw-normal text-white" style={{ fontSize: '14px' }}>{formatTablePrice(item.pricePol)}</span> 
+                    </div> 
+                    <div className="d-flex flex-column align-items-start" style={{ width: '70px' }}> 
+                        <span className="small text-white" style={{ fontSize: '13px', fontWeight: '400' }}>{formatTablePrice(item.volume)}</span> 
+                    </div> 
+                </div> 
+            </div> 
+        </Link> 
+    ); 
+}
+
+function DesktopTable({ data, formatTablePrice, getRankStyle }: any) {
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => { setIsMounted(true); }, []);
 
@@ -505,9 +500,9 @@ function DesktopTable({ data, getColorClass, getRankStyle }: any) {
         <div className="table-responsive">
             <table className="table table-dark align-middle mb-0" style={{ backgroundColor: 'transparent' }}>
                 <thead><tr style={{ fontSize: '15px', borderBottom: '1px solid #333', height: '50px' }}>
-                        <th colSpan={2} style={{ paddingBottom: '15px', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle' }}>Name Asset</th>
-                        <th style={{ paddingBottom: '15px', textAlign: 'right', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>Floor Price</th>
-                        <th style={{ paddingBottom: '15px', textAlign: 'right', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>Volume</th>
+                        <th colSpan={2} style={{ paddingBottom: '15px', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', width: 'auto' }}>Name Asset</th>
+                        <th style={{ paddingBottom: '15px', textAlign: 'left', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap', width: '100px' }}>Price</th>
+                        <th style={{ paddingBottom: '15px', textAlign: 'left', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap', width: '100px' }}>Volume</th>
                 </tr></thead>
 
                 <tbody style={{ fontSize: '14px', borderTop: 'none' }}>
@@ -528,30 +523,20 @@ function DesktopTable({ data, getColorClass, getRankStyle }: any) {
                                     </div>
                                 </Link>
                             </td>
-                                                    <td className="text-end" style={{ verticalAlign: 'middle' }}>
+                            {/* Price: Aligned Left, Normal Weight */}
+                            <td className="text-start" style={{ verticalAlign: 'middle' }}>
                                 {isMounted ? (
-                                    <>
-                                        <span className="text-white fw-bold me-2">{Number(item.floor).toFixed(2)}</span>
-                                        <span className={`small ${getColorClass(item.change)}`}>{item.change > 0 ? '+' : ''}{Number(item.change).toFixed(2)}%</span>
-                                    </>
+                                    <span className="text-white fw-normal me-2">{formatTablePrice(item.pricePol)}</span>
                                 ) : (
-                                    <>
-                                        <span className="text-secondary fw-bold me-2">--</span>
-                                        <span className={`small text-secondary`}>--%</span>
-                                    </>
+                                    <span className="text-secondary fw-normal me-2">--</span>
                                 )}
                             </td>
-                            <td className="text-end" style={{ verticalAlign: 'middle' }}>
+                            {/* Volume: Aligned Left, Normal Weight */}
+                            <td className="text-start" style={{ verticalAlign: 'middle' }}>
                                 {isMounted ? (
-                                    <>
-                                        <span className="text-white fw-bold me-2">{item.volumeDisplay}</span>
-                                        <span className={`small ${getColorClass(item.change)}`}>{item.change > 0 ? '+' : ''}{Number(item.change).toFixed(2)}%</span>
-                                    </>
+                                    <span className="text-white fw-normal me-2">{formatTablePrice(item.volume)}</span>
                                 ) : (
-                                    <>
-                                        <span className="text-secondary fw-bold me-2">--</span>
-                                        <span className="small text-secondary">--%</span>
-                                    </>
+                                    <span className="text-secondary fw-normal me-2">--</span>
                                 )}
                             </td>
                         </tr>
