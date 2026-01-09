@@ -384,6 +384,13 @@ function MarketPage() {
       return `${priceInPol.toFixed(2)} POL`;
   };
 
+  // --- NEW: SPECIAL VOLUME FORMATTER (ALWAYS USD) ---
+  const formatVolumeUSD = (valPol: number) => {
+      if (!exchangeRates.pol || exchangeRates.pol === 0) return '$0.00';
+      const valUsd = valPol * exchangeRates.pol;
+      return `${valUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
+  };
+
   return (
     <main className="no-select" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', overflowX: 'hidden' }}>
       
@@ -495,7 +502,7 @@ function MarketPage() {
                                     {/* Volume: Shifted Right 50px */}
                                     <td className="text-start" style={{ padding: '12px 10px 12px 50px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex flex-column align-items-start">
-                                            <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{formatPrice(item.volume)}</span>
+                                            <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{formatVolumeUSD(item.volume)}</span>
                                             {item.volume > 0 && <span style={{ fontSize: '10px', color: '#0ecb81' }}>+<i className="bi bi-caret-up-fill"></i></span>}
                                         </div>
                                     </td>
