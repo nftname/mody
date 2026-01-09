@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LegalModal from "@/components/LegalModal";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
-import SiteController from "@/components/SiteController"; // ✅ تمت إضافة المستورد الجديد
+import SiteController from "@/components/SiteController"; 
 import { Providers } from "@/app/providers";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -20,8 +20,38 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  // هام جداً: ضع رابط موقعك الأصلي هنا بدلاً من الرابط الافتراضي
+  metadataBase: new URL('https://www.YOUR-REAL-DOMAIN.com'), 
+
   title: "NNM Market",
-  description: "Next-Gen NFT Marketplace",
+  description: "Next-Gen NFT Marketplace & Global Index",
+  
+  // إعدادات النشر على فيسبوك (Open Graph)
+  openGraph: {
+    title: "NNM Market",
+    description: "The Global Benchmark for NFT Market Assets",
+    url: '/',
+    siteName: 'NNM Market',
+    images: [
+      {
+        url: '/icons/icon.svg', // سيأخذ أيقونة الموقع كصورة مؤقتة للمشاركة
+        width: 1200,
+        height: 630,
+        alt: 'NNM Market Preview',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+
+  // إعدادات النشر على تويتر
+  twitter: {
+    card: 'summary_large_image',
+    title: "NNM Market",
+    description: "Next-Gen NFT Marketplace & Global Index",
+    images: ['/icons/icon.svg'],
+  },
+
   manifest: '/manifest.json',
   icons: {
     icon: [
@@ -53,7 +83,6 @@ export default function RootLayout({
 
         <Providers>
             <div className="d-flex flex-column min-vh-100">
-              {/* ✅ هنا تم وضع وحدة التحكم: تتحقق من الإغلاق أو تظهر الرسائل قبل أي شيء آخر */}
               <SiteController />
               
               <Navbar />
