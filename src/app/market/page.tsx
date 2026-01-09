@@ -69,19 +69,18 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
-// Action Button: Ultra Thin Border, "Buy - Bid", Right Aligned in Table
+// Updated Action Button: Darker Gold, No Glass, Smaller Padding/Width
 const ActionButton = () => (
     <button className="btn btn-sm d-flex align-items-center justify-content-center hover-glass" style={{
-        background: 'rgba(252, 213, 53, 0.05)', 
-        border: '0.5px solid #FCD535', // Ultra thin
+        background: 'transparent', // Removed glass opacity
+        border: '1px solid #8a6d1c', // Darker Gold Color
         color: '#FCD535',
-        fontSize: '11px', 
-        fontWeight: '300',
-        padding: '0 5px',
+        fontSize: '10px', // Smaller font
+        fontWeight: '300', // Thin font
+        padding: '0 2px', // Minimal padding (reduced 20% width)
         borderRadius: '4px', 
-        height: '28px',
-        width: '85px', 
-        backdropFilter: 'blur(4px)',
+        height: '26px',
+        width: '75px', // Reduced width
         cursor: 'pointer',
         letterSpacing: '0.5px',
         transition: 'all 0.3s ease'
@@ -106,15 +105,18 @@ const SortArrows = ({ active, direction, onClick }: any) => (
     </div>
 );
 
-// Updated Time Logic: Returns dots only if calc fails entirely
+// Updated Time Logic
 const formatTimeAgo = (timestamp: number) => {
-    if (!timestamp || timestamp === 0) return '...'; // Not recently, just dots if data missing
+    if (!timestamp || timestamp === 0) return '...'; 
     const now = Date.now();
     const diff = now - timestamp;
     
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
+
+    if (diff < 0) return 'Just now'; 
+    if (days > 365) return 'Recently'; 
 
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m`;
@@ -170,13 +172,13 @@ function MarketPage() {
   useEffect(() => {
       const fetchPrices = async () => {
           try {
-              // Using updated Coingecko IDs
               const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
               const data = await res.json();
               
-              // Try polygon-ecosystem-token first (POL), then matic-network fallback
               const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
               const ethPrice = data['ethereum']?.usd || 0;
+
+              console.log(`[Market] Live Prices - POL: $${polPrice}, ETH: $${ethPrice}`);
 
               setExchangeRates({
                   pol: polPrice, 
@@ -184,11 +186,10 @@ function MarketPage() {
               });
           } catch (e) { 
               console.error("Price API Error", e); 
-              // If API fails, rates stay at 0, triggering fallback logic in formatPrice
           }
       };
       fetchPrices();
-      const interval = setInterval(fetchPrices, 60000); 
+      const interval = setInterval(fetchPrices, 30000); 
       return () => clearInterval(interval);
   }, []);
 
@@ -209,18 +210,17 @@ function MarketPage() {
 
   const handleToggleFavorite = async (e: React.MouseEvent, id: number) => {
       e.preventDefault(); e.stopPropagation();
-      // Optimistic Update: Update UI regardless of connection speed
+      
       const nextFavs = new Set(favoriteIds);
       if (nextFavs.has(id)) nextFavs.delete(id); else nextFavs.add(id);
       setFavoriteIds(nextFavs); 
 
-      if (!isConnected || !address) return; // DB sync needs connection
+      if (!isConnected || !address) return; 
       try {
           if (favoriteIds.has(id)) await supabase.from('favorites').delete().match({ wallet_address: address, token_id: id.toString() });
           else await supabase.from('favorites').insert({ wallet_address: address, token_id: id.toString() });
       } catch (err) { }
   };
-  // ------------------------------------------
 
   useEffect(() => {
     const fetchMarketData = async () => {
@@ -273,7 +273,6 @@ function MarketPage() {
                     }
 
                     if ((act.activity_type === 'List' || act.activity_type === 'Mint')) {
-                        // Keep the MAX (latest) time found for listing
                         if (actTime > statsMap[tid].listedTime) {
                             statsMap[tid].listedTime = actTime;
                         }
@@ -364,25 +363,24 @@ function MarketPage() {
 
   const goToPage = (page: number) => { if (page >= 1 && page <= totalPages) setCurrentPage(page); };
 
-  // --- Strict Currency Logic ---
+  // --- STRICT CURRENCY LOGIC ---
   const formatPrice = (priceInPol: number) => {
-      // Safety Check: If API failed (rate is 0), Fallback to POL immediately
       if (!exchangeRates.pol || exchangeRates.pol === 0 || !exchangeRates.eth || exchangeRates.eth === 0) {
           return `${priceInPol.toFixed(2)} POL`;
       }
 
-      // 1. All = USD
       if (currencyFilter === 'All') {
           const priceInUsd = priceInPol * exchangeRates.pol;
           return `${priceInUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
       }
-      // 2. ETH
       else if (currencyFilter === 'ETH') {
           const priceInUsd = priceInPol * exchangeRates.pol;
           const valInEth = priceInUsd / exchangeRates.eth;
-          return `${valInEth.toFixed(4)} ETH`;
+          
+          if (valInEth === 0) return '0 ETH';
+          if (valInEth < 0.000001) return '< 0.000001 ETH';
+          return `${valInEth.toFixed(6)} ETH`; 
       }
-      // 3. POL (Default)
       return `${priceInPol.toFixed(2)} POL`;
   };
 
@@ -444,23 +442,24 @@ function MarketPage() {
                   <table className="table align-middle mb-0" style={{ minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0' }}>
                       <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#1E1E1E' }}>
                           <tr style={{ borderBottom: '1px solid #333' }}>
-                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '80px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              {/* Rank: Reduced Width for Mobile */}
+                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '50px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Width auto + padding-right 0 to pull Price closer */}
-                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0 4px 10px', borderBottom: '1px solid #333', minWidth: '150px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              {/* Name: Minimal Width to pull price left */}
+                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0 4px 10px', borderBottom: '1px solid #333', width: 'auto', maxWidth: '100px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Price Align Left, No padding-left */}
-                              <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '120px' }}>
+                              {/* Price: Forced Left, No Padding Left */}
+                              <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '90px' }}>
                                   <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'pricePol'} direction={sortConfig?.direction} /></div>
                               </th>
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap' }}>Last Sale</th>
                               <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-start">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>Listed</th>
-                              {/* Action Align Right */}
+                              {/* Listed: Added Padding Right for Gap */}
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 40px 4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>Listed</th>
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', width: '120px', whiteSpace: 'nowrap' }}>Action</th>
                           </tr>
                       </thead>
@@ -471,19 +470,18 @@ function MarketPage() {
                                 <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
                                     <td style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center gap-3">
-                                            {/* Heart Reduced 10% */}
                                             <i className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} style={{ fontSize: '12.5px', transform: 'scale(0.9)' }} onClick={(e) => handleToggleFavorite(e, item.id)}></i>
                                             <span style={getRankStyle(dynamicRank) as any}>{dynamicRank}</span>
                                         </div>
                                     </td>
-                                    {/* Name: Minimal padding right to merge visually with price */}
+                                    {/* Name: Minimal width logic */}
                                     <td style={{ padding: '12px 0 12px 5px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <Link href={`/asset/${item.id}`} className="d-flex align-items-center gap-2 text-decoration-none group">
                                             <CoinIcon name={item.name} tier={item.tier} />
                                             <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '13.5px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
                                         </Link>
                                     </td>
-                                    {/* Price: Left Align, Text Left, Symbol Last */}
+                                    {/* Price: Zero padding left to touch name */}
                                     <td className="text-start" style={{ padding: '12px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center justify-content-start gap-2">
                                             <span className="text-white" style={{ fontSize: '14px', fontWeight: '400', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
@@ -498,10 +496,10 @@ function MarketPage() {
                                             {item.volume > 0 && <span style={{ fontSize: '10px', color: '#0ecb81' }}>+<i className="bi bi-caret-up-fill"></i></span>}
                                         </div>
                                     </td>
-                                    <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    {/* Listed: Padding Right 40px for Gap */}
+                                    <td className="text-end" style={{ padding: '12px 40px 12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{formatTimeAgo(item.listedTime)}</span>
                                     </td>
-                                    {/* Action Right Align */}
                                     <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex justify-content-end">
                                             <Link href={`/asset/${item.id}`} className="text-decoration-none">
