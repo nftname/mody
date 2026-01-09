@@ -65,44 +65,46 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
-// --- ASSET CARD ---
+// --- NEW ASSET CARD DESIGN ---
 const AssetCard = ({ item }: { item: any }) => {
-    let bg = 'linear-gradient(135deg, #002b36 0%, #004d40 100%)';
-    let border = '1px solid rgba(0, 255, 200, 0.2)';
-    if(item.tier === 'immortal') {
-        bg = 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%)';
-        border = '1px solid rgba(252, 213, 53, 0.3)';
-    } else if(item.tier === 'elite') {
-        bg = 'linear-gradient(135deg, #2b0505 0%, #4a0a0a 100%)';
-        border = '1px solid rgba(255, 50, 50, 0.3)';
-    }
-
     return (
-      <div className="museum-case position-relative p-2 d-flex flex-column align-items-center justify-content-center"
-           style={{ width: '100%', height: '220px', backgroundColor: 'transparent', borderRadius: '8px', cursor: 'pointer' }}>
-          <Link href={`/asset/${item.id}`} className="text-decoration-none w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+      <div className="asset-card-container hover-lift" style={{ cursor: 'pointer' }}>
+          <Link href={`/asset/${item.id}`} className="text-decoration-none w-100">
               
-              <div className="static-asset position-relative"
-                   style={{ width: '90%', height: '65%', background: bg, border: border, borderRadius: '8px', overflow: 'hidden', marginTop: '10px', marginBottom: '5px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                   <div style={{ zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                       <p style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: '10px', color: '#FCD535', letterSpacing: '1px', margin: 0 }}>GEN-0 #00{item.id}</p>
-                       <h3 style={{ fontFamily: 'serif', fontWeight: '900', fontSize: '22px', color: '#FCD535', letterSpacing: '1.5px', margin: 0, textTransform: 'uppercase' }}>{item.name}</h3>
-                   </div>
+              {/* 1. Image Container with Shadow */}
+              <div className="position-relative w-100" style={{ 
+                  height: '180px', 
+                  borderRadius: '8px', 
+                  overflow: 'hidden', 
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.4)', // Light Shadow
+                  marginBottom: '12px'
+              }}>
+                   <Image 
+                        src="/cart.jpg" 
+                        alt={item.name} 
+                        fill 
+                        style={{ objectFit: 'cover' }} 
+                   />
               </div>
               
-              {/* FOOTER GRID */}
-              <div className="w-100 px-2 pb-2" style={{ marginTop: '0', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', alignItems: 'end' }}>
-                  <div style={{ textAlign: 'left' }}>
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px' }}>Name</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '12px', color: '#ffffff' }}>{item.name}</h5>
+              {/* 2. Data Footer (Inside the invisible frame) */}
+              <div className="w-100 d-flex justify-content-between align-items-end px-1">
+                  {/* Name */}
+                  <div className="text-start">
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Name</div>
+                      <h5 className="fw-bold m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.name}</h5>
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px' }}>Price</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '12px', color: '#ffffff' }}>{item.priceUsdDisplay}</h5>
+                  
+                  {/* Price */}
+                  <div className="text-center">
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Price</div>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.priceUsdDisplay}</h5>
                   </div>
-                  <div style={{ textAlign: 'right', paddingRight: '15px' }}>
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px' }}>Vol</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '12px', color: '#ffffff' }}>{item.volumeUsdDisplay}</h5>
+                  
+                  {/* Volume */}
+                  <div className="text-end">
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Vol</div>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.volumeUsdDisplay}</h5>
                   </div>
               </div>
           </Link>
@@ -289,7 +291,6 @@ function Home() {
   const getRankStyle = (rank: number) => { const baseStyle = { fontStyle: 'italic', fontWeight: '700', fontSize: '20px', paddingBottom: '2px' }; if (rank === 1) return { ...baseStyle, color: '#FF9900', textShadow: '0 0 10px rgba(255, 153, 0, 0.4)' }; if (rank === 2) return { ...baseStyle, color: '#FFC233', textShadow: '0 0 10px rgba(255, 194, 51, 0.3)' }; if (rank === 3) return { ...baseStyle, color: '#FCD535', textShadow: '0 0 10px rgba(252, 213, 53, 0.2)' }; return { color: '#fff', fontWeight: '300', fontSize: '20px' }; };
   const handleMobileCurrencySelect = (c: string) => { setCurrencyFilter(c); setIsMobileCurrencyOpen(false); };
 
-  // PRICE Formatter (Respects Filter)
   const formatTablePrice = (valPol: number) => {
       if (!exchangeRates.pol || exchangeRates.pol === 0) return `${valPol.toFixed(2)} POL`;
       if (currencyFilter === 'All') return `${(valPol * exchangeRates.pol).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} $`;
@@ -297,10 +298,8 @@ function Home() {
       return `${valPol.toFixed(2)} POL`;
   };
 
-  // VOLUME Formatter (ALWAYS USD)
   const formatTableVolume = (valPol: number) => {
-      if (!exchangeRates.pol || exchangeRates.pol === 0) return `${valPol.toFixed(2)} POL`; // Fallback
-      // Force USD
+      if (!exchangeRates.pol || exchangeRates.pol === 0) return `${valPol.toFixed(2)} POL`;
       const valUsd = valPol * exchangeRates.pol;
       return `${valUsd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} $`;
   };
@@ -431,8 +430,6 @@ function Home() {
         }
         .fw-light { font-weight: 300 !important; } .text-header-gray { color: #848E9C !important; } .cursor-pointer { cursor: pointer; } .hover-bg-gray:hover { background-color: #2B3139; }
         .mobile-card-wrapper::-webkit-scrollbar { display: none; } .mobile-card-wrapper { -ms-overflow-style: none; scrollbar-width: none; scroll-snap-type: x mandatory; } .mobile-card-item { scroll-snap-align: start; }
-        .static-asset { box-shadow: 0 15px 35px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(40, 40, 40, 0.5), inset 0 0 15px rgba(0,0,0,0.5); }
-        @media (max-width: 991px) { .static-asset { box-shadow: 0 5px 15px rgba(0,0,0,0.9) !important; border: 1px solid rgba(30, 30, 30, 0.8) !important; } }
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
         .filter-tab-hover:hover { color: #fff !important; } .binance-filter-btn:hover { color: #fff !important; } .mobile-filter-gap { margin-bottom: 1rem !important; } @media (max-width: 991px) { .mobile-filter-gap { row-gap: 12px !important; --bs-gutter-y: 12px !important; margin-bottom: 0.55rem !important; } }
@@ -445,6 +442,20 @@ function Home() {
         @media (max-width: 991px) { 
             .hero-grid-system { display: flex !important; overflow-x: auto; scroll-snap-type: x mandatory; } 
             .hero-card { flex: 0 0 85%; scroll-snap-align: start; height: 180px !important; } 
+        }
+        
+        /* --- NEW ASSET CARD STYLES --- */
+        .asset-card-container {
+            border: 1px solid rgba(255,255,255,0.05); /* Invisible/Very subtle frame */
+            border-radius: 12px;
+            padding: 10px;
+            background-color: transparent;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-4px); /* Slight Lift */
+            border-color: rgba(255,255,255,0.1); /* Slightly more visible on hover */
         }
       `}</style>
     </main>
