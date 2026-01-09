@@ -69,18 +69,18 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
-// Updated Action Button: Darker Gold, No Glass, Smaller Padding/Width
+// Action Button: Ultra Thin Border, "Buy - Bid", Right Aligned in Table
 const ActionButton = () => (
     <button className="btn btn-sm d-flex align-items-center justify-content-center hover-glass" style={{
-        background: 'transparent', // Removed glass opacity
-        border: '1px solid #8a6d1c', // Darker Gold Color
+        background: 'transparent', 
+        border: '1px solid #8a6d1c', // Darker Gold
         color: '#FCD535',
-        fontSize: '10px', // Smaller font
-        fontWeight: '300', // Thin font
-        padding: '0 2px', // Minimal padding (reduced 20% width)
+        fontSize: '10px', 
+        fontWeight: '300',
+        padding: '0 2px',
         borderRadius: '4px', 
         height: '26px',
-        width: '75px', // Reduced width
+        width: '75px', 
         cursor: 'pointer',
         letterSpacing: '0.5px',
         transition: 'all 0.3s ease'
@@ -442,7 +442,6 @@ function MarketPage() {
                   <table className="table align-middle mb-0" style={{ minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0' }}>
                       <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#1E1E1E' }}>
                           <tr style={{ borderBottom: '1px solid #333' }}>
-                              {/* Rank: Reduced Width for Mobile */}
                               <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '50px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
@@ -454,8 +453,10 @@ function MarketPage() {
                               <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '90px' }}>
                                   <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'pricePol'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap' }}>Last Sale</th>
-                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              {/* Last Sale: Shifted Right by 50px Padding */}
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px 4px 50px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap' }}>Last Sale</th>
+                              {/* Volume: Shifted Right by 50px Padding */}
+                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px 4px 50px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-start">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
                               {/* Listed: Added Padding Right for Gap */}
@@ -487,10 +488,12 @@ function MarketPage() {
                                             <span className="text-white" style={{ fontSize: '14px', fontWeight: '400', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
                                         </div>
                                     </td>
-                                    <td className="text-start" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    {/* Last Sale: Shifted Right 50px */}
+                                    <td className="text-start" style={{ padding: '12px 10px 12px 50px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{item.lastSale ? formatPrice(item.lastSale) : '---'}</span>
                                     </td>
-                                    <td className="text-start" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    {/* Volume: Shifted Right 50px */}
+                                    <td className="text-start" style={{ padding: '12px 10px 12px 50px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex flex-column align-items-start">
                                             <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{formatPrice(item.volume)}</span>
                                             {item.volume > 0 && <span style={{ fontSize: '10px', color: '#0ecb81' }}>+<i className="bi bi-caret-up-fill"></i></span>}
