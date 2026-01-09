@@ -13,12 +13,11 @@ import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
-// --- Constants & ABIs (MOVED FOX_PATH HERE) ---
+// --- CONSTANTS (MOVED TO TOP TO FIX ERROR) ---
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
-// FIXED: Moved FOX_PATH to top-level scope to avoid "used before declaration" error
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
 const resolveIPFS = (uri: string) => {
@@ -67,38 +66,38 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
-// --- ASSET CARD (FIXED IMAGE + TEXT OVERLAYS) ---
+// --- ASSET CARD (Corrected Design & Height) ---
 const AssetCard = ({ item }: { item: any }) => {
     return (
       <div className="asset-card-container hover-lift" style={{ cursor: 'pointer' }}>
           <Link href={`/asset/${item.id}`} className="text-decoration-none w-100">
               
-              {/* 1. Image Container (The Card) */}
+              {/* 1. Image Container (Height Reduced to 160px) */}
               <div className="position-relative w-100" style={{ 
-                  height: '190px', 
+                  height: '160px', 
                   borderRadius: '12px', 
                   overflow: 'hidden', 
                   boxShadow: '0 8px 20px rgba(0,0,0,0.6)', 
-                  marginBottom: '12px',
+                  marginBottom: '10px', 
                   border: '1px solid rgba(255,255,255,0.1)'
               }}>
-                   {/* Background Image */}
+                   {/* Background Image: Force Fill */}
                    <Image 
                         src="/cart.jpg" 
                         alt={item.name} 
                         fill 
-                        style={{ objectFit: 'cover', objectPosition: 'center' }} 
+                        style={{ objectFit: 'fill', objectPosition: 'center' }} 
                    />
 
-                   {/* OPTIONAL: Dark Overlay */}
-                   <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.2)' }}></div>
+                   {/* Dark Overlay */}
+                   <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.15)' }}></div>
 
-                   {/* A. NAME (Center Middle) */}
+                   {/* A. NAME (Center) */}
                    <div style={{
                        position: 'absolute',
                        top: '50%',
                        left: '50%',
-                       transform: 'translate(-50%, -40%)', 
+                       transform: 'translate(-50%, -45%)', 
                        textAlign: 'center',
                        width: '100%',
                        zIndex: 10
@@ -108,10 +107,11 @@ const AssetCard = ({ item }: { item: any }) => {
                            fontStyle: 'italic',
                            fontWeight: '700',
                            fontSize: '28px',
-                           background: 'linear-gradient(to bottom, #FCD535 0%, #FFF 50%, #B3882A 100%)',
+                           // Matte Antique Gold Gradient
+                           background: 'linear-gradient(180deg, #e6cf8b 0%, #c49938 50%, #9e7b2a 100%)',
                            WebkitBackgroundClip: 'text',
                            WebkitTextFillColor: 'transparent',
-                           filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.8))',
+                           filter: 'drop-shadow(0px 2px 3px rgba(0,0,0,0.9))',
                            margin: 0,
                            letterSpacing: '1px'
                        }}>
@@ -122,7 +122,7 @@ const AssetCard = ({ item }: { item: any }) => {
                    {/* B. FOOTER INFO (Bottom Center) */}
                    <div style={{
                        position: 'absolute',
-                       bottom: '12px',
+                       bottom: '10px',
                        width: '100%',
                        textAlign: 'center',
                        zIndex: 10,
@@ -131,30 +131,30 @@ const AssetCard = ({ item }: { item: any }) => {
                        <p style={{
                            fontFamily: 'serif',
                            fontSize: '9px',
-                           color: '#E0E0E0',
+                           color: '#D4D4D4',
                            letterSpacing: '1.5px',
                            margin: 0,
                            textTransform: 'uppercase',
                            fontWeight: '600',
                            textShadow: '0 1px 3px rgba(0,0,0,1)'
                        }}>
-                           <span style={{ color: '#FCD535' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED 2025
+                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED 2025
                        </p>
                    </div>
               </div>
               
-              {/* 2. Data Footer */}
+              {/* 2. Data Footer (Reduced Height/Spacing) */}
               <div className="w-100 d-flex justify-content-between align-items-end px-2">
                   <div className="text-start">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '3px' }}>Name</div>
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Name</div>
                       <h5 className="fw-bold m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.name}</h5>
                   </div>
                   <div className="text-center">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '3px' }}>Price</div>
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Price</div>
                       <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.priceUsdDisplay}</h5>
                   </div>
                   <div className="text-end">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '3px' }}>Vol</div>
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Vol</div>
                       <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.volumeUsdDisplay}</h5>
                   </div>
               </div>
@@ -178,6 +178,7 @@ function Home() {
   
   const publicClient = usePublicClient();
 
+  // Fetch Prices
   useEffect(() => {
       const fetchPrices = async () => {
           try {
@@ -193,6 +194,7 @@ function Home() {
       return () => clearInterval(interval);
   }, []);
 
+  // Fetch Data Logic
   useEffect(() => {
     const fetchRealData = async () => {
         if (!publicClient) return;
@@ -281,6 +283,7 @@ function Home() {
     fetchRealData();
   }, [publicClient, timeFilter]); 
 
+  // Process Data for View
   const processedData = useMemo(() => {
       let data = [...realListings];
       
