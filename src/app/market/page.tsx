@@ -69,18 +69,18 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
-// Updated Action Button: Ultra Thin Border, Dash separator, 20% smaller width
+// Action Button: Ultra Thin Border, "Buy - Bid", Right Aligned in Table
 const ActionButton = () => (
     <button className="btn btn-sm d-flex align-items-center justify-content-center hover-glass" style={{
         background: 'rgba(252, 213, 53, 0.05)', 
-        border: '0.5px solid #FCD535', // Ultra thin border
+        border: '0.5px solid #FCD535', // Ultra thin
         color: '#FCD535',
         fontSize: '11px', 
         fontWeight: '300',
         padding: '0 5px',
         borderRadius: '4px', 
         height: '28px',
-        width: '80px', // Reduced from 100px to ~80px (20%)
+        width: '85px', 
         backdropFilter: 'blur(4px)',
         cursor: 'pointer',
         letterSpacing: '0.5px',
@@ -106,20 +106,15 @@ const SortArrows = ({ active, direction, onClick }: any) => (
     </div>
 );
 
-// Updated Logic to handle weird dates
+// Updated Time Logic: Returns dots only if calc fails entirely
 const formatTimeAgo = (timestamp: number) => {
-    if (!timestamp || timestamp === 0) return 'Recent';
+    if (!timestamp || timestamp === 0) return '...'; // Not recently, just dots if data missing
     const now = Date.now();
     const diff = now - timestamp;
     
-    // If diff is massive (e.g. > 1 year), return 'Recently' to hide data glitch
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    if (days > 365) return 'Recently';
-
-    if (diff < 0) return 'Just now';
-    
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m`;
@@ -160,7 +155,7 @@ function MarketPage() {
 
   const [activeFilter, setActiveFilter] = useState('All Assets');
   const [timeFilter, setTimeFilter] = useState('24H');
-  const [currencyFilter, setCurrencyFilter] = useState('All'); // Default: All (USD)
+  const [currencyFilter, setCurrencyFilter] = useState('All'); 
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); 
   
   const [realListings, setRealListings] = useState<any[]>([]);
@@ -175,20 +170,29 @@ function MarketPage() {
   useEffect(() => {
       const fetchPrices = async () => {
           try {
-              const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=matic-network,ethereum&vs_currencies=usd');
+              // Using updated Coingecko IDs
+              const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
               const data = await res.json();
+              
+              // Try polygon-ecosystem-token first (POL), then matic-network fallback
+              const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
+              const ethPrice = data['ethereum']?.usd || 0;
+
               setExchangeRates({
-                  pol: data['matic-network']?.usd || 0.40, 
-                  eth: data['ethereum']?.usd || 3000
+                  pol: polPrice, 
+                  eth: ethPrice
               });
-          } catch (e) { console.error("Price API Error", e); }
+          } catch (e) { 
+              console.error("Price API Error", e); 
+              // If API fails, rates stay at 0, triggering fallback logic in formatPrice
+          }
       };
       fetchPrices();
       const interval = setInterval(fetchPrices, 60000); 
       return () => clearInterval(interval);
   }, []);
 
-  // --- FAVORITES LOGIC (CONFIRMED PRESENT) ---
+  // --- FAVORITES LOGIC ---
   useEffect(() => {
     if (isConnected && address) {
         const fetchFavorites = async () => {
@@ -205,10 +209,12 @@ function MarketPage() {
 
   const handleToggleFavorite = async (e: React.MouseEvent, id: number) => {
       e.preventDefault(); e.stopPropagation();
-      if (!isConnected || !address) return; 
+      // Optimistic Update: Update UI regardless of connection speed
       const nextFavs = new Set(favoriteIds);
       if (nextFavs.has(id)) nextFavs.delete(id); else nextFavs.add(id);
       setFavoriteIds(nextFavs); 
+
+      if (!isConnected || !address) return; // DB sync needs connection
       try {
           if (favoriteIds.has(id)) await supabase.from('favorites').delete().match({ wallet_address: address, token_id: id.toString() });
           else await supabase.from('favorites').insert({ wallet_address: address, token_id: id.toString() });
@@ -267,7 +273,8 @@ function MarketPage() {
                     }
 
                     if ((act.activity_type === 'List' || act.activity_type === 'Mint')) {
-                        if (statsMap[tid].listedTime === 0) {
+                        // Keep the MAX (latest) time found for listing
+                        if (actTime > statsMap[tid].listedTime) {
                             statsMap[tid].listedTime = actTime;
                         }
                     }
@@ -357,23 +364,25 @@ function MarketPage() {
 
   const goToPage = (page: number) => { if (page >= 1 && page <= totalPages) setCurrentPage(page); };
 
+  // --- Strict Currency Logic ---
   const formatPrice = (priceInPol: number) => {
-      // 1. All = USD (Based on POL Price)
+      // Safety Check: If API failed (rate is 0), Fallback to POL immediately
+      if (!exchangeRates.pol || exchangeRates.pol === 0 || !exchangeRates.eth || exchangeRates.eth === 0) {
+          return `${priceInPol.toFixed(2)} POL`;
+      }
+
+      // 1. All = USD
       if (currencyFilter === 'All') {
           const priceInUsd = priceInPol * exchangeRates.pol;
-          if (priceInUsd === 0) return '$0.00';
-          return `$${priceInUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          return `${priceInUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
       }
       // 2. ETH
       else if (currencyFilter === 'ETH') {
           const priceInUsd = priceInPol * exchangeRates.pol;
           const valInEth = priceInUsd / exchangeRates.eth;
-          
-          if (valInEth === 0) return '0 ETH';
-          if (valInEth < 0.0001) return '< 0.0001 ETH';
           return `${valInEth.toFixed(4)} ETH`;
       }
-      // 3. POL
+      // 3. POL (Default)
       return `${priceInPol.toFixed(2)} POL`;
   };
 
@@ -438,22 +447,21 @@ function MarketPage() {
                               <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '80px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', minWidth: '150px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              {/* Width auto + padding-right 0 to pull Price closer */}
+                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0 4px 10px', borderBottom: '1px solid #333', minWidth: '150px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Price Align Left, Width Reduced, Gap Closed */}
-                              <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '90px' }}>
+                              {/* Price Align Left, No padding-left */}
+                              <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '120px' }}>
                                   <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'pricePol'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Last Sale Align Left */}
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap' }}>Last Sale</th>
-                              {/* Volume Align Left */}
                               <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-start">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>Listed</th>
-                              {/* Action Align Left */}
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', width: '100px', whiteSpace: 'nowrap' }}>Action</th>
+                              {/* Action Align Right */}
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', width: '120px', whiteSpace: 'nowrap' }}>Action</th>
                           </tr>
                       </thead>
                       <tbody>
@@ -463,28 +471,27 @@ function MarketPage() {
                                 <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
                                     <td style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center gap-3">
-                                            <i className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} style={{ fontSize: '14px' }} onClick={(e) => handleToggleFavorite(e, item.id)}></i>
+                                            {/* Heart Reduced 10% */}
+                                            <i className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} style={{ fontSize: '12.5px', transform: 'scale(0.9)' }} onClick={(e) => handleToggleFavorite(e, item.id)}></i>
                                             <span style={getRankStyle(dynamicRank) as any}>{dynamicRank}</span>
                                         </div>
                                     </td>
-                                    {/* Minimized padding for Name */}
-                                    <td style={{ padding: '12px 5px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    {/* Name: Minimal padding right to merge visually with price */}
+                                    <td style={{ padding: '12px 0 12px 5px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <Link href={`/asset/${item.id}`} className="d-flex align-items-center gap-2 text-decoration-none group">
                                             <CoinIcon name={item.name} tier={item.tier} />
                                             <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '13.5px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
                                         </Link>
                                     </td>
-                                    {/* Minimized padding for Price + Normal Font Weight */}
+                                    {/* Price: Left Align, Text Left, Symbol Last */}
                                     <td className="text-start" style={{ padding: '12px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center justify-content-start gap-2">
                                             <span className="text-white" style={{ fontSize: '14px', fontWeight: '400', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
                                         </div>
                                     </td>
-                                    {/* Last Sale Left Align */}
                                     <td className="text-start" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{item.lastSale ? formatPrice(item.lastSale) : '---'}</span>
                                     </td>
-                                    {/* Volume Left Align */}
                                     <td className="text-start" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex flex-column align-items-start">
                                             <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{formatPrice(item.volume)}</span>
@@ -494,11 +501,13 @@ function MarketPage() {
                                     <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{formatTimeAgo(item.listedTime)}</span>
                                     </td>
-                                    {/* Action Left Align */}
-                                    <td className="text-start" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                        <Link href={`/asset/${item.id}`} className="text-decoration-none">
-                                            <ActionButton />
-                                        </Link>
+                                    {/* Action Right Align */}
+                                    <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <div className="d-flex justify-content-end">
+                                            <Link href={`/asset/${item.id}`} className="text-decoration-none">
+                                                <ActionButton />
+                                            </Link>
+                                        </div>
                                     </td>
                                 </tr>
                               );
