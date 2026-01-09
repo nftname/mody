@@ -1,26 +1,33 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType, CrosshairMode, AreaSeries } from 'lightweight-charts';
+import { createChart, ColorType, CrosshairMode, AreaSeries, ISeriesApi } from 'lightweight-charts';
+import { createClient } from '@supabase/supabase-js';
 
-// تم تعديل الترتيب بدقة: ALL هو الافتراضي، يليه Digital Names، ثم البقية
+// --- إعداد اتصال Supabase (للقراءة فقط) ---
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// --- تعريف القطاعات وربطها بمفاتيح قاعدة البيانات ---
 const SECTORS = [
-  { key: 'All NFTs Index', color: '#C0D860', startYear: 2017, baseValue: 40 },      // 1. الافتراضي
-  { key: 'Digital Name Assets', color: '#38BDF8', startYear: 2017, baseValue: 30 }, // 2. ديجيتال نيم
-  { key: 'Art NFTs', color: '#7B61FF', startYear: 2017, baseValue: 25 },            // 3. آرت
-  { key: 'Gaming NFTs', color: '#0ECB81', startYear: 2019, baseValue: 15 },         // 4. جيم
-  { key: 'Utility NFTs', color: '#00D8D6', startYear: 2020, baseValue: 10 }         // 5. الأخير
+  { key: 'All NFTs Index', dbKey: 'ALL', color: '#C0D860' },     
+  { key: 'Digital Name Assets', dbKey: 'NAM', color: '#38BDF8' }, 
+  { key: 'Art NFTs', dbKey: 'ART', color: '#7B61FF' },            
+  { key: 'Gaming NFTs', dbKey: 'GAM', color: '#0ECB81' },        
+  { key: 'Utility NFTs', dbKey: 'UTL', color: '#00D8D6' }         
 ];
 
 const TIMEFRAMES = [
-    { label: '1H', value: '1H' },
-    { label: '4H', value: '4H' },
-    { label: '1D', value: '1D' },
-    { label: '1W', value: '1W' },
-    { label: '1M', value: '1M' },
-    { label: '1Y', value: '1Y' },
-    { label: 'ALL', value: 'ALL' }
+    { label: '1H', value: '1H', days: 1 },    // سنعرض يوم واحد للتفاصيل الدقيقة
+    { label: '4H', value: '4H', days: 7 },    // أسبوع
+    { label: '1D', value: '1D', days: 30 },   // شهر
+    { label: '1W', value: '1W', days: 90 },   // 3 شهور
+    { label: '1M', value: '1M', days: 180 },  // 6 شهور
+    { label: '1Y', value: '1Y', days: 365 },  // سنة
+    { label: 'ALL', value: 'ALL', days: 0 }   // كل التاريخ
 ];
 
+// --- هوك لإغلاق القوائم عند النقر خارجها ---
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
     const listener = (event: any) => {
@@ -39,10 +46,12 @@ function useClickOutside(ref: any, handler: any) {
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [activeTimeframe, setActiveTimeframe] = useState('ALL');
-  // سيبدأ تلقائياً بأول عنصر في المصفوفة وهو All NFTs Index
   const [activeSector, setActiveSector] = useState(SECTORS[0].key);
+  
   const [chartInstance, setChartInstance] = useState<any>(null);
-  const [seriesInstance, setSeriesInstance] = useState<any>(null);
+  const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
+  const [chartData, setChartData] = useState<any[]>([]); // تخزين البيانات الخام
+  const [isLoading, setIsLoading] = useState(false);
 
   const [isSectorOpen, setIsSectorOpen] = useState(false);
   const [isTimeOpen, setIsTimeOpen] = useState(false);
@@ -53,49 +62,69 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  const generateData = (timeframe: string, sectorKey: string) => {
-    const data = [];
-    const now = new Date(); 
-    let startDate = new Date();
-    const sectorInfo = SECTORS.find(s => s.key === sectorKey) || SECTORS[0];
+  // --- دالة جلب البيانات من Supabase ---
+  const fetchData = async (sectorKey: string) => {
+    setIsLoading(true);
+    const sectorInfo = SECTORS.find(s => s.key === sectorKey);
+    if (!sectorInfo) return;
 
-    const effectiveStartYear = sectorInfo.startYear;
+    try {
+        let data: any[] = [];
 
-    switch (timeframe) {
-        case '1H': startDate.setHours(now.getHours() - 1); break;
-        case '4H': startDate.setHours(now.getHours() - 4); break;
-        case '1D': startDate.setDate(now.getDate() - 1); break;
-        case '1W': startDate.setDate(now.getDate() - 7); break;
-        case '1M': startDate.setMonth(now.getMonth() - 1); break;
-        case '1Y': startDate.setFullYear(now.getFullYear() - 1); break;
-        case 'ALL': startDate.setFullYear(effectiveStartYear, 0, 1); break;
-        default: startDate.setFullYear(effectiveStartYear, 0, 1);
+        if (sectorInfo.dbKey === 'ALL') {
+            // منطق حساب المؤشر العام: نجلب كل القطاعات ونحسب المتوسط
+            const { data: allData, error } = await supabase
+                .from('ngx_chart_history')
+                .select('timestamp, value, sector_key')
+                .order('timestamp', { ascending: true });
+
+            if (error) throw error;
+
+            // تجميع البيانات حسب التوقيت لحساب المتوسط
+            const groupedByTime: Record<number, number[]> = {};
+            allData.forEach((row: any) => {
+                if (!groupedByTime[row.timestamp]) groupedByTime[row.timestamp] = [];
+                groupedByTime[row.timestamp].push(Number(row.value));
+            });
+
+            // تحويلها لمصفوفة للرسم البياني
+            data = Object.keys(groupedByTime).map(ts => {
+                const values = groupedByTime[Number(ts)];
+                const avg = values.reduce((a, b) => a + b, 0) / values.length;
+                return {
+                    time: Math.floor(Number(ts) / 1000) as any, // تحويل لثواني
+                    value: avg
+                };
+            }).sort((a, b) => (a.time as number) - (b.time as number));
+
+        } else {
+            // جلب قطاع محدد
+            const { data: sectorData, error } = await supabase
+                .from('ngx_chart_history')
+                .select('timestamp, value')
+                .eq('sector_key', sectorInfo.dbKey)
+                .order('timestamp', { ascending: true });
+
+            if (error) throw error;
+
+            data = sectorData.map((row: any) => ({
+                time: Math.floor(row.timestamp / 1000) as any,
+                value: Number(row.value)
+            }));
+        }
+
+        // إزالة التكرارات إن وجدت لضمان الرسم السليم
+        const uniqueData = data.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
+        setChartData(uniqueData);
+
+    } catch (err) {
+        console.error("Failed to fetch chart data:", err);
+    } finally {
+        setIsLoading(false);
     }
-
-    if (startDate > now) startDate = new Date(now.getFullYear(), 0, 1); 
-
-    let currentValue = sectorInfo.baseValue;
-    const diffTime = Math.abs(now.getTime() - startDate.getTime());
-    
-    let totalPoints = 500;
-    if (timeframe === '1H') totalPoints = 60;
-    else if (timeframe === 'ALL') totalPoints = 2000;
-
-    const timeStep = diffTime / totalPoints;
-    let currentTime = startDate.getTime();
-    
-    for (let i = 0; i <= totalPoints; i++) {
-        let change = (Math.random() - 0.45) * 2; 
-
-        currentValue += change;
-        if (currentValue < 5) currentValue = 5;
-        
-        data.push({ time: Math.floor(currentTime / 1000) as any, value: currentValue });
-        currentTime += timeStep;
-    }
-    return data;
   };
 
+  // --- تهيئة الرسم البياني (تعمل مرة واحدة) ---
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -149,16 +178,15 @@ export default function NGXLiveChart() {
       handleScale: { axisPressedMouseMove: true },
     });
 
-    const currentSector = SECTORS.find(s => s.key === activeSector) || SECTORS[0];
     const newSeries = chart.addSeries(AreaSeries, {
-      lineColor: currentSector.color,
-      topColor: `${currentSector.color}66`,
-      bottomColor: `${currentSector.color}00`,
       lineWidth: 2,
+      lineColor: '#C0D860', // لون افتراضي
+      topColor: 'rgba(192, 216, 96, 0.4)',
+      bottomColor: 'rgba(192, 216, 96, 0.0)',
     });
 
-    newSeries.setData(generateData('ALL', activeSector));
-    chart.timeScale().fitContent();
+    setChartInstance(chart);
+    setSeriesInstance(newSeries);
 
     const handleResize = () => {
       if (chartContainerRef.current) {
@@ -174,8 +202,8 @@ export default function NGXLiveChart() {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    setChartInstance(chart);
-    setSeriesInstance(newSeries);
+    // جلب البيانات الأولية
+    fetchData(SECTORS[0].key);
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -183,19 +211,37 @@ export default function NGXLiveChart() {
     };
   }, []);
 
+  // --- تحديث البيانات عند تغيير القطاع ---
   useEffect(() => {
-    if (seriesInstance && chartInstance) {
-        const newData = generateData(activeTimeframe, activeSector);
-        const newColor = SECTORS.find(s => s.key === activeSector)?.color || '#C0D860';
+    fetchData(activeSector);
+  }, [activeSector]);
+
+  // --- تحديث الرسم عند وصول البيانات أو تغيير الفلتر الزمني ---
+  useEffect(() => {
+    if (seriesInstance && chartInstance && chartData.length > 0) {
+        const currentSector = SECTORS.find(s => s.key === activeSector);
+        if (!currentSector) return;
+
+        // تحديث الألوان
         seriesInstance.applyOptions({
-            lineColor: newColor,
-            topColor: `${newColor}66`,
-            bottomColor: `${newColor}00`,
+            lineColor: currentSector.color,
+            topColor: `${currentSector.color}66`, // شفافية 40%
+            bottomColor: `${currentSector.color}00`, // شفافية 0%
         });
-        seriesInstance.setData(newData);
+
+        // تطبيق الفلتر الزمني (Zoom)
+        const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
+        let filteredData = chartData;
+
+        if (tf && tf.days > 0) {
+            const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
+            filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
+        }
+
+        seriesInstance.setData(filteredData);
         chartInstance.timeScale().fitContent();
     }
-  }, [activeTimeframe, activeSector]);
+  }, [chartData, activeTimeframe, seriesInstance, chartInstance]);
 
   const currentColor = SECTORS.find(s => s.key === activeSector)?.color;
   const currentTimeframeLabel = TIMEFRAMES.find(t => t.value === activeTimeframe)?.label;
@@ -204,7 +250,7 @@ export default function NGXLiveChart() {
     <div className="ngx-chart-glass mb-4">
       
       <div className="filters-container">
-        
+        {/* Sector Selector */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
@@ -234,6 +280,14 @@ export default function NGXLiveChart() {
            )}
         </div>
 
+        {/* Loading Indicator */}
+        {isLoading && (
+            <div className="loading-indicator">
+                <span className="spinner"></span> Updating...
+            </div>
+        )}
+
+        {/* Timeframe Selector */}
         <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
@@ -267,7 +321,7 @@ export default function NGXLiveChart() {
       
       <div className="text-end px-2 pb-2">
           <small className="text-muted fst-italic" style={{ fontSize: '10px' }}>
-              * Data updated live via NGX Engine.
+              * Data sourced via CoinGecko & Processed by NGX Engine.
           </small>
       </div>
 
@@ -297,6 +351,22 @@ export default function NGXLiveChart() {
             position: relative;
             z-index: 50;
         }
+
+        .loading-indicator {
+            font-size: 10px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .spinner {
+            width: 8px; height: 8px;
+            border: 1px solid #666;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .filter-wrapper { position: relative; }
         .sector-wrapper { width: auto; min-width: 200px; max-width: 280px; }
