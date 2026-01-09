@@ -1,14 +1,28 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  // 1. إعدادات الصور (للسماح بجلب الصور من بيناتا)
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'gateway.pinata.cloud',
+      },
+    ],
+    // احتياطياً للدعم القديم
+    domains: ['gateway.pinata.cloud'],
+  },
+
+  // 2. إصلاحات الويب 3 (حافظنا عليها كما هي)
   webpack: (config) => {
-    // 1. Ignore React Native Async Storage (Fixes the warning)
+    // Ignore React Native Async Storage (Fixes the warning)
     config.resolve.alias = {
       ...config.resolve.alias,
       '@react-native-async-storage/async-storage': false, 
     };
 
-    // 2. Ignore standard node modules for browser (Standard Web3 fix)
+    // Ignore standard node modules for browser (Standard Web3 fix)
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
@@ -19,6 +33,41 @@ const nextConfig = {
 
     return config;
   },
+
+  // 3. الحصن الرقمي (Security Headers)
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin'
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block'
+          }
+        ]
+      }
+    ]
+  }
 };
 
 export default nextConfig;
