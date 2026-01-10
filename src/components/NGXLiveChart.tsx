@@ -76,7 +76,7 @@ export default function NGXLiveChart() {
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
             .order('timestamp', { ascending: true })
-            .limit(5000); 
+            .limit(20000); 
 
         if (error) throw error;
 
