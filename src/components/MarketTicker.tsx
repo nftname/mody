@@ -19,24 +19,12 @@ interface TickerItem {
   sub?: string;
 }
 
-interface TickerData {
-  ngx: number;
-  ngxChange: number;
-  eth: number;
-  ethChange: number;
-  pol: number; 
-  polChange: number;
-}
-
 export default function MarketTicker() {
-  const [tickerData, setTickerData] = useState<TickerData>({
-    ngx: 84.2, ngxChange: 1.5,
-    eth: 3200, ethChange: 0.0,
-    pol: 0.45, polChange: 0.0
-  });
+  const [prices, setPrices] = useState({ eth: 0, pol: 0 });
   
-  // بيانات مؤشرات NGX الإضافية
-  const [ngxCap, setNgxCap] = useState({ val: '$2.66B', change: 1.15 });
+  // بيانات مؤشرات NGX
+  const [ngxIndex, setNgxIndex] = useState({ val: '84.2', change: 1.5 });
+  const [ngxCap, setNgxCap] = useState({ val: '$2.54B', change: 4.88 });
   const [ngxVol, setNgxVol] = useState({ val: '2.4M', change: 0.86 });
   
   // بيانات NNM الداخلية
@@ -44,121 +32,154 @@ export default function MarketTicker() {
   const [topItems, setTopItems] = useState<TickerItem[]>([]);
   const [newItems, setNewItems] = useState<TickerItem[]>([]);
 
-  // 1. جلب أسعار العملات (CoinGecko) - تعديل جراحي لجلب النسبة المئوية
+  // 1. جلب أسعار العملات (CoinGecko) - لتوحيد السعر مع الماركت
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd&include_24hr_change=true');
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
         const data = await res.json();
-        
-        const polKey = data['polygon-ecosystem-token'] ? 'polygon-ecosystem-token' : 'matic-network';
-        
-        setTickerData(prev => ({
-            ...prev,
-            eth: data.ethereum.usd,
-            ethChange: data.ethereum.usd_24h_change,
-            pol: data[polKey].usd,
-            polChange: data[polKey].usd_24h_change
-        }));
-      } catch (e) { console.error("Price API Error", e); }
+        const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
+        const ethPrice = data['ethereum']?.usd || 0;
+        setPrices({ eth: ethPrice, pol: polPrice });
+      } catch (e) { console.error(e); }
     };
     fetchPrices();
     const interval = setInterval(fetchPrices, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // 2. جلب بيانات NGX APIs (إضافة الكاب والفوليوم للشريط)
+  // 2. جلب بيانات NGX APIs (Index, Cap, Volume)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchNgxData = async () => {
       try {
-        const res = await fetch('/api/ngx');
-        if (res.ok) {
-            const json = await res.json();
-            setTickerData(prev => ({
-                ...prev,
-                ngx: json.score || 84.2,
-                ngxChange: json.change24h || 1.5
-            }));
+        // NGX Index
+        const res1 = await fetch('/api/ngx');
+        if (res1.ok) {
+            const j1 = await res1.json();
+            setNgxIndex({ val: (j1.score || 84.2).toFixed(1), change: j1.change24h || 0 });
         }
-        // جلب NGX Cap
-        const resCap = await fetch('/api/ngx-cap');
-        if (resCap.ok) {
-            const jCap = await resCap.json();
-            setNgxCap({ val: jCap.marketCap || '$2.66B', change: jCap.change24h || 0 });
+        // NGX Cap
+        const res2 = await fetch('/api/ngx-cap');
+        if (res2.ok) {
+            const j2 = await res2.json();
+            setNgxCap({ val: j2.marketCap || '$2.54B', change: j2.change24h || 0 });
         }
-        // جلب NGX Volume
-        const resVol = await fetch('/api/ngx-volume');
-        if (resVol.ok) {
-            const jVol = await resVol.json();
+        // NGX Volume
+        const res3 = await fetch('/api/ngx-volume');
+        if (res3.ok) {
+            const j3 = await res3.json();
             setNgxVol({ 
-                val: jVol.marketStats?.totalVolumeDisplay || '2.4M', 
-                change: jVol.marketStats?.totalVolChange || 0 
+                val: j3.marketStats?.totalVolumeDisplay || '2.4M', 
+                change: j3.marketStats?.totalVolChange || 0 
             });
         }
-      } catch (error) { console.error("Ticker update failed"); }
+      } catch (e) { console.error(e); }
     };
-    fetchData();
-    const interval = setInterval(fetchData, 60000);
+    fetchNgxData();
+    const interval = setInterval(fetchNgxData, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // 3. الحسابات الهجينة (تعديل جراحي لجلب الأسماء الحقيقية)
+  // 3. الحسابات الهجينة (Supabase): NNM Vol, Top 3, New 3
   useEffect(() => {
     const fetchHybridData = async () => {
         try {
-            // أ) حساب NNM Volume %
-            const { data: sales } = await supabase.from('activities').select('price, created_at').eq('activity_type', 'Sale');
+            // أ) حساب NNM Volume % (مبيعات اليوم vs الأمس)
+            const { data: sales } = await supabase
+                .from('activities')
+                .select('price, created_at')
+                .eq('activity_type', 'Sale');
+            
             if (sales) {
                 const now = Date.now();
                 const oneDay = 24 * 60 * 60 * 1000;
-                let volT = 0, volY = 0;
-                sales.forEach((s: any) => {
-                    const time = new Date(s.created_at).getTime();
-                    if (now - time <= oneDay) volT += Number(s.price);
-                    else if (now - time <= 2 * oneDay) volY += Number(s.price);
+                let volToday = 0;
+                let volYesterday = 0;
+
+                sales.forEach((sale: any) => {
+                    const time = new Date(sale.created_at).getTime();
+                    const price = Number(sale.price) || 0;
+                    const diff = now - time;
+                    if (diff <= oneDay) volToday += price;
+                    else if (diff <= 2 * oneDay) volYesterday += price;
                 });
-                setNnmVolChange(volY === 0 ? (volT > 0 ? 100 : 0) : ((volT - volY) / volY) * 100);
+
+                let pct = 0;
+                if (volYesterday === 0) pct = volToday > 0 ? 100 : 0;
+                else pct = ((volToday - volYesterday) / volYesterday) * 100;
+                setNnmVolChange(pct);
             }
 
-            // ب) جلب أحدث 3 أسماء (NEW MINTS) - جلب الاسم وليس الـ ID
-            const { data: mints } = await supabase.from('activities').select('asset_name, token_id').eq('activity_type', 'Mint').order('created_at', { ascending: false }).limit(3);
+            // ب) جلب أحدث 3 (Mint)
+            const { data: mints } = await supabase
+                .from('activities')
+                .select('token_id, created_at')
+                .eq('activity_type', 'Mint')
+                .order('created_at', { ascending: false })
+                .limit(3);
+
             if (mints) {
                 setNewItems(mints.map((m, i) => ({
-                    id: `new-${i}`, label: 'NEW MINTS', value: m.asset_name || `Asset #${m.token_id}`, link: `/asset/${m.token_id}`, type: 'NEW'
+                    id: `new-${i}`,
+                    label: 'NEW',
+                    value: `Asset #${m.token_id}`,
+                    link: `/asset/${m.token_id}`,
+                    type: 'NEW',
+                    isUp: true
                 })));
             }
 
-            // ج) جلب أفضل 3 أسماء (TOP ASSETS) - جلب الاسم وليس الـ ID
-            const { data: tops } = await supabase.from('activities').select('asset_name, token_id, price').eq('activity_type', 'Sale').order('price', { ascending: false }).limit(3);
-            if (tops) {
-                setTopItems(tops.map((s, i) => ({
-                    id: `top-${i}`, label: 'TOP ASSETS', value: s.asset_name || `Asset #${s.token_id}`, link: `/asset/${s.token_id}`, type: 'TOP'
+            // ج) جلب أفضل 3 (Top Sales)
+            const { data: topSales } = await supabase
+                .from('activities')
+                .select('token_id, price')
+                .eq('activity_type', 'Sale')
+                .order('price', { ascending: false })
+                .limit(3);
+
+            if (topSales) {
+                setTopItems(topSales.map((s, i) => ({
+                    id: `top-${i}`,
+                    label: 'TOP',
+                    value: `Asset #${s.token_id}`,
+                    sub: `${Number(s.price).toFixed(0)} POL`,
+                    link: `/asset/${s.token_id}`,
+                    type: 'TOP',
+                    isUp: true
                 })));
             }
+
         } catch (e) { console.error("Hybrid fetch error", e); }
     };
     fetchHybridData();
+    const interval = setInterval(fetchHybridData, 30000);
+    return () => clearInterval(interval);
   }, []);
+
 
   // --- تجميع الشريط ---
   const items = useMemo(() => {
+    // العناصر الأساسية (السوق)
     const marketItems: TickerItem[] = [
-        { id: 'ngx', label: 'NGX INDEX', value: tickerData.ngx.toFixed(1), change: tickerData.ngxChange, isUp: tickerData.ngxChange >= 0, link: '/ngx', type: 'NGX' },
+        { id: 'ngx', label: 'NGX INDEX', value: ngxIndex.val, change: ngxIndex.change, isUp: ngxIndex.change >= 0, link: '/ngx', type: 'NGX' },
         { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: ngxCap.change, isUp: ngxCap.change >= 0, link: '/ngx', type: 'NGX' },
         { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: ngxVol.change, isUp: ngxVol.change >= 0, link: '/ngx', type: 'NGX' },
-        { id: 'eth', label: 'ETHEREUM', value: `$${tickerData.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: tickerData.ethChange, isUp: tickerData.ethChange >= 0, link: '/market', type: 'MARKET' },
-        { id: 'pol', label: 'POL', value: `$${tickerData.pol.toFixed(2)}`, change: tickerData.polChange, isUp: tickerData.polChange >= 0, link: '/market', type: 'MARKET' },
+        { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString()}`, link: '/market', type: 'MARKET' },
+        { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(3)}`, link: '/market', type: 'MARKET' },
         { id: 'nnm', label: 'NNM VOL', value: `${Math.abs(nnmVolChange).toFixed(1)}%`, change: nnmVolChange, isUp: nnmVolChange >= 0, link: '/market', type: 'MARKET' },
     ];
 
+    // خلط العناصر (سوق + جديد + متصدر)
     const combined = [...marketItems, ...newItems, ...topItems];
+    // تكرار القائمة لضمان استمرارية الشريط المتحرك
     return [...combined, ...combined]; 
-  }, [tickerData, ngxCap, ngxVol, nnmVolChange, newItems, topItems]);
+  }, [prices, ngxIndex, ngxCap, ngxVol, nnmVolChange, newItems, topItems]);
 
   const getColor = (item: TickerItem) => {
-      if (item.type === 'TOP') return '#0ecb81';
-      if (item.type === 'NEW') return '#38BDF8';
-      return '#FCD535'; // اللون الذهبي الافتراضي للعناوين
+      if (item.type === 'TOP') return '#0ecb81'; // أخضر
+      if (item.type === 'NEW') return '#38BDF8'; // أزرق سماوي
+      if (item.type === 'NGX') return '#FCD535'; // ذهبي
+      return '#FFFFFF'; // أبيض للعملات
   };
 
   return (
@@ -170,9 +191,8 @@ export default function MarketTicker() {
           <Link href={item.link} key={`${item.id}-${index}`} className="text-decoration-none h-100 d-flex align-items-center ticker-link">
             <div className="d-flex align-items-center px-4 h-100" style={{ whiteSpace: 'nowrap' }}>
               
-              {/* LABEL: ذهبي دائماً */}
               <span className="me-2" style={{ 
-                  color: '#FCD535', 
+                  color: getColor(item), 
                   fontSize: '11px', 
                   fontWeight: '800', 
                   letterSpacing: '0.5px' 
@@ -180,24 +200,23 @@ export default function MarketTicker() {
                 {item.label}:
               </span>
               
-              {/* VALUE: أبيض دائماً */}
               <span className="me-2" style={{ 
                   fontSize: '12px',
                   fontWeight: '500', 
                   fontFamily: '"Inter", sans-serif',
-                  color: '#FFFFFF' 
+                  color: item.type === 'MARKET' ? '#FFFFFF' : '#E0E0E0' 
               }}>
                 {item.value}
+                {item.sub && <span className="ms-2 text-secondary" style={{ fontSize: '11px' }}>({item.sub})</span>}
               </span>
               
-              {/* CHANGE: ملون مع سهم */}
               {item.change !== undefined && (
                 <span style={{ 
-                    color: item.change >= 0 ? '#0ecb81' : '#f6465d', 
+                    color: item.isUp ? '#0ecb81' : '#f6465d', 
                     fontSize: '10px', 
                     fontWeight: '600'
                 }}>
-                  {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change).toFixed(2)}%
+                  {item.isUp ? '▲' : '▼'} {Math.abs(item.change).toFixed(2)}%
                 </span>
               )}
             </div>
@@ -208,7 +227,7 @@ export default function MarketTicker() {
 
       <style jsx>{`
         .ticker-track {
-          animation: scroll 45s linear infinite;
+          animation: scroll 40s linear infinite;
           width: max-content;
         }
         .ticker-track:hover {
