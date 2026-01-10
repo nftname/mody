@@ -16,7 +16,6 @@ const SECTORS = [
   { key: 'Utility NFT', dbKey: 'UTL', color: '#00D8D6' }         
 ];
 
-// تعريف الفلاتر
 const TIMEFRAMES = [
     { label: '1H', value: '1H', days: 1 },    
     { label: '4H', value: '4H', days: 7 },    
@@ -78,9 +77,8 @@ export default function NGXLiveChart() {
 
         if (error) throw error;
 
-        // تحويل البيانات
         const data = sectorData.reverse().map((row: any) => ({
-            time: Math.floor(row.timestamp / 1000) as any, // Unix Timestamp
+            time: Math.floor(row.timestamp / 1000) as any,
             value: Number(row.value)
         })).filter((item: any) => item.time >= 1546300800);
 
@@ -97,7 +95,6 @@ export default function NGXLiveChart() {
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    // إعداد الشارت
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
@@ -111,23 +108,25 @@ export default function NGXLiveChart() {
       },
       width: chartContainerRef.current.clientWidth,
       height: 400,
-      // --- التعديل الجراحي هنا: إجبار الوقت على الظهور ---
+      // 1. إعدادات الوقت الأساسية
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true,
-        timeVisible: true,      // إظهار الوقت
-        secondsVisible: false,  // إخفاء الثواني
+        timeVisible: true,
+        secondsVisible: false,
+        fixLeftEdge: true,
+        fixRightEdge: true,
+        rightOffset: 10,
+        minBarSpacing: 0.5,
+        // 2. إجبار اللغة الإنجليزية في المحور الأفقي
         tickMarkFormatter: (time: number, tickMarkType: any, locale: any) => {
-            // تحويل الـ Timestamp إلى تاريخ
             const date = new Date(time * 1000);
-            
-            // إذا كنا في وضع 1H أو 4H، نعرض الساعة والدقيقة
             if (activeTimeframe === '1H' || activeTimeframe === '4H') {
-                return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
+                // عرض الساعة (مثال: 15:30)
+                return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
             }
-            
-            // في باقي الأوضاع نعرض اليوم والشهر
-            return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
+            // عرض التاريخ (مثال: Jan 10)
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         },
       },
       rightPriceScale: {
@@ -152,11 +151,20 @@ export default function NGXLiveChart() {
             labelVisible: true,
         },
       },
+      // 3. إجبار اللغة الإنجليزية في التلميح (Tooltip)
       localization: { 
           locale: 'en-US',
+          dateFormat: 'yyyy-MM-dd',
           timeFormatter: (timestamp: number) => {
               const date = new Date(timestamp * 1000);
-              return date.toLocaleString(); 
+              // تنسيق التاريخ والوقت بالإنجليزية حصراً
+              return date.toLocaleString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  hour: '2-digit', 
+                  minute: '2-digit', 
+                  hour12: false 
+              }); 
           }
       },
       handleScroll: { vertTouchDrag: false }, 
@@ -187,21 +195,18 @@ export default function NGXLiveChart() {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // تحميل البيانات الأولية
     fetchData(SECTORS[0].key);
 
     return () => {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, []); // تشغيل مرة واحدة عند التحميل
+  }, []);
 
-  // تحديث عند تغيير القطاع
   useEffect(() => {
     fetchData(activeSector);
   }, [activeSector]);
 
-  // تحديث عند تغيير البيانات أو الفلتر الزمني
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
@@ -213,20 +218,17 @@ export default function NGXLiveChart() {
             bottomColor: `${currentSector.color}00`, 
         });
 
-        // 2. تحديث إعدادات الوقت بناءً على الفلتر المختار
         const isIntraday = ['1H', '4H'].includes(activeTimeframe);
         
-        // نحدث الـ tickMarkFormatter ديناميكياً بناءً على الـ State الحالية
+        // تحديث إعدادات الوقت عند تغيير الفلتر
         chartInstance.applyOptions({
             timeScale: {
-                timeVisible: true, // دائماً true لكن الفورمات يتغير
+                timeVisible: true,
                 tickMarkFormatter: (time: number) => {
                     const date = new Date(time * 1000);
                     if (isIntraday) {
-                         // عرض الساعات فقط (مثل 14:00)
                         return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
                     }
-                    // عرض التاريخ (مثل Jan 12)
                     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 }
             }
@@ -243,7 +245,7 @@ export default function NGXLiveChart() {
         seriesInstance.setData(filteredData);
         chartInstance.timeScale().fitContent();
     }
-  }, [chartData, activeTimeframe, seriesInstance, chartInstance, activeSector]); // أضفت activeSector و chartData للمراقبة
+  }, [chartData, activeTimeframe, seriesInstance, chartInstance, activeSector]);
 
   const currentColor = SECTORS.find(s => s.key === activeSector)?.color;
   const currentTimeframeLabel = TIMEFRAMES.find(t => t.value === activeTimeframe)?.label;
