@@ -18,16 +18,15 @@ const SECTORS = [
 ];
 
 const TIMEFRAMES = [
-    { label: '1H', value: '1H', days: 1 },    // سنعرض يوم واحد للتفاصيل الدقيقة
-    { label: '4H', value: '4H', days: 7 },    // أسبوع
-    { label: '1D', value: '1D', days: 30 },   // شهر
-    { label: '1W', value: '1W', days: 90 },   // 3 شهور
-    { label: '1M', value: '1M', days: 180 },  // 6 شهور
-    { label: '1Y', value: '1Y', days: 365 },  // سنة
-    { label: 'ALL', value: 'ALL', days: 0 }   // كل التاريخ
+    { label: '1H', value: '1H', days: 1 },    
+    { label: '4H', value: '4H', days: 7 },    
+    { label: '1D', value: '1D', days: 30 },   
+    { label: '1W', value: '1W', days: 90 },   
+    { label: '1M', value: '1M', days: 180 },  
+    { label: '1Y', value: '1Y', days: 365 },  
+    { label: 'ALL', value: 'ALL', days: 0 }   
 ];
 
-// --- هوك لإغلاق القوائم عند النقر خارجها ---
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
     const listener = (event: any) => {
@@ -50,7 +49,7 @@ export default function NGXLiveChart() {
   
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
-  const [chartData, setChartData] = useState<any[]>([]); // تخزين البيانات الخام
+  const [chartData, setChartData] = useState<any[]>([]); 
   const [isLoading, setIsLoading] = useState(false);
 
   const [isSectorOpen, setIsSectorOpen] = useState(false);
@@ -62,59 +61,27 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- دالة جلب البيانات من Supabase ---
   const fetchData = async (sectorKey: string) => {
     setIsLoading(true);
     const sectorInfo = SECTORS.find(s => s.key === sectorKey);
     if (!sectorInfo) return;
 
     try {
-        let data: any[] = [];
+        // تعديل: جلب البيانات مباشرة لـ ALL أو أي قطاع آخر لأن السكربت أصبح يجهزها مسبقاً
+        const { data: sectorData, error } = await supabase
+            .from('ngx_chart_history')
+            .select('timestamp, value')
+            .eq('sector_key', sectorInfo.dbKey)
+            .order('timestamp', { ascending: true });
 
-        if (sectorInfo.dbKey === 'ALL') {
-            // منطق حساب المؤشر العام: نجلب كل القطاعات ونحسب المتوسط
-            const { data: allData, error } = await supabase
-                .from('ngx_chart_history')
-                .select('timestamp, value, sector_key')
-                .order('timestamp', { ascending: true });
+        if (error) throw error;
 
-            if (error) throw error;
+        const formattedData = sectorData.map((row: any) => ({
+            time: Math.floor(row.timestamp / 1000) as any,
+            value: Number(row.value)
+        }));
 
-            // تجميع البيانات حسب التوقيت لحساب المتوسط
-            const groupedByTime: Record<number, number[]> = {};
-            allData.forEach((row: any) => {
-                if (!groupedByTime[row.timestamp]) groupedByTime[row.timestamp] = [];
-                groupedByTime[row.timestamp].push(Number(row.value));
-            });
-
-            // تحويلها لمصفوفة للرسم البياني
-            data = Object.keys(groupedByTime).map(ts => {
-                const values = groupedByTime[Number(ts)];
-                const avg = values.reduce((a, b) => a + b, 0) / values.length;
-                return {
-                    time: Math.floor(Number(ts) / 1000) as any, // تحويل لثواني
-                    value: avg
-                };
-            }).sort((a, b) => (a.time as number) - (b.time as number));
-
-        } else {
-            // جلب قطاع محدد
-            const { data: sectorData, error } = await supabase
-                .from('ngx_chart_history')
-                .select('timestamp, value')
-                .eq('sector_key', sectorInfo.dbKey)
-                .order('timestamp', { ascending: true });
-
-            if (error) throw error;
-
-            data = sectorData.map((row: any) => ({
-                time: Math.floor(row.timestamp / 1000) as any,
-                value: Number(row.value)
-            }));
-        }
-
-        // إزالة التكرارات إن وجدت لضمان الرسم السليم
-        const uniqueData = data.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
+        const uniqueData = formattedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
         setChartData(uniqueData);
 
     } catch (err) {
@@ -124,7 +91,6 @@ export default function NGXLiveChart() {
     }
   };
 
-  // --- تهيئة الرسم البياني (تعمل مرة واحدة) ---
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -180,7 +146,7 @@ export default function NGXLiveChart() {
 
     const newSeries = chart.addSeries(AreaSeries, {
       lineWidth: 2,
-      lineColor: '#C0D860', // لون افتراضي
+      lineColor: '#C0D860', 
       topColor: 'rgba(192, 216, 96, 0.4)',
       bottomColor: 'rgba(192, 216, 96, 0.0)',
     });
@@ -201,8 +167,6 @@ export default function NGXLiveChart() {
     
     handleResize();
     window.addEventListener('resize', handleResize);
-
-    // جلب البيانات الأولية
     fetchData(SECTORS[0].key);
 
     return () => {
@@ -211,25 +175,21 @@ export default function NGXLiveChart() {
     };
   }, []);
 
-  // --- تحديث البيانات عند تغيير القطاع ---
   useEffect(() => {
     fetchData(activeSector);
   }, [activeSector]);
 
-  // --- تحديث الرسم عند وصول البيانات أو تغيير الفلتر الزمني ---
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
         if (!currentSector) return;
 
-        // تحديث الألوان
         seriesInstance.applyOptions({
             lineColor: currentSector.color,
-            topColor: `${currentSector.color}66`, // شفافية 40%
-            bottomColor: `${currentSector.color}00`, // شفافية 0%
+            topColor: `${currentSector.color}66`, 
+            bottomColor: `${currentSector.color}00`, 
         });
 
-        // تطبيق الفلتر الزمني (Zoom)
         const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
         let filteredData = chartData;
 
@@ -248,9 +208,7 @@ export default function NGXLiveChart() {
 
   return (
     <div className="ngx-chart-glass mb-4">
-      
       <div className="filters-container">
-        {/* Sector Selector */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
@@ -280,14 +238,12 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* Loading Indicator */}
         {isLoading && (
             <div className="loading-indicator">
                 <span className="spinner"></span> Updating...
             </div>
         )}
 
-        {/* Timeframe Selector */}
         <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
@@ -314,14 +270,13 @@ export default function NGXLiveChart() {
              </div>
            )}
         </div>
-
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper" />
       
       <div className="text-end px-2 pb-2">
           <small className="text-muted fst-italic" style={{ fontSize: '10px' }}>
-              * Data sourced via CoinGecko & Processed by NGX Engine.
+              * Data sourced via Yahoo Finance & Processed by NGX Engine.
           </small>
       </div>
 
