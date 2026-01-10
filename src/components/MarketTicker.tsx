@@ -2,11 +2,20 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
+import { usePublicClient } from 'wagmi'; 
+import { parseAbi, erc721Abi } from 'viem';
+import { NFT_COLLECTION_ADDRESS } from '@/data/config';
 
 // --- إعداد اتصال Supabase ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// --- دوال مساعدة (مثل Home) ---
+const resolveIPFS = (uri: string) => {
+    if (!uri) return '';
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
+};
 
 interface TickerItem {
   id: string;
@@ -20,24 +29,30 @@ interface TickerItem {
 }
 
 export default function MarketTicker() {
-  // الحالة (State) كما هي
+  const publicClient = usePublicClient(); // استخدام العميل العام للبلوكشين لجلب الأسماء
+  
+  // الحالة (State)
   const [prices, setPrices] = useState({ eth: 0, ethChange: 0, pol: 0, polChange: 0 });
+  
+  // بيانات NGX
   const [ngxIndex, setNgxIndex] = useState({ val: '84.2', change: 1.5 });
   const [ngxCap, setNgxCap] = useState({ val: '$2.54B', change: 4.88 });
   const [ngxVol, setNgxVol] = useState({ val: '2.4M', change: 0.86 });
   
-  // بيانات NNM الداخلية
+  // بيانات NNM والأصول
   const [nnmVolChange, setNnmVolChange] = useState(0);
   const [topItems, setTopItems] = useState<TickerItem[]>([]);
   const [newItems, setNewItems] = useState<TickerItem[]>([]);
+  
+  // نظام الكاش (التخزين المؤقت)
+  const [lastFetchTime, setLastFetchTime] = useState(0);
 
-  // 1. جلب أسعار العملات (CoinGecko)
+  // 1. جلب أسعار العملات (CoinGecko) - كل دقيقة
   useEffect(() => {
     const fetchPrices = async () => {
       try {
         const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd&include_24hr_change=true');
         const data = await res.json();
-        
         const polKey = data['polygon-ecosystem-token'] ? 'polygon-ecosystem-token' : 'matic-network';
         
         setPrices({ 
@@ -53,28 +68,14 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // 2. جلب بيانات NGX APIs
+  // 2. جلب بيانات NGX APIs - كل دقيقة
   useEffect(() => {
     const fetchNgxData = async () => {
       try {
-        const res1 = await fetch('/api/ngx');
-        if (res1.ok) {
-            const j1 = await res1.json();
-            setNgxIndex({ val: (j1.score || 84.2).toFixed(1), change: j1.change24h || 0 });
-        }
-        const res2 = await fetch('/api/ngx-cap');
-        if (res2.ok) {
-            const j2 = await res2.json();
-            setNgxCap({ val: j2.marketCap || '$2.54B', change: j2.change24h || 0 });
-        }
-        const res3 = await fetch('/api/ngx-volume');
-        if (res3.ok) {
-            const j3 = await res3.json();
-            setNgxVol({ 
-                val: j3.marketStats?.totalVolumeDisplay || '2.4M', 
-                change: j3.marketStats?.totalVolChange || 0 
-            });
-        }
+        const [r1, r2, r3] = await Promise.all([fetch('/api/ngx'), fetch('/api/ngx-cap'), fetch('/api/ngx-volume')]);
+        if (r1.ok) { const j = await r1.json(); setNgxIndex({ val: (j.score || 84.2).toFixed(1), change: j.change24h || 0 }); }
+        if (r2.ok) { const j = await r2.json(); setNgxCap({ val: j.marketCap || '$2.54B', change: j.change24h || 0 }); }
+        if (r3.ok) { const j = await r3.json(); setNgxVol({ val: j.marketStats?.totalVolumeDisplay || '2.4M', change: j.marketStats?.totalVolChange || 0 }); }
       } catch (e) { console.error(e); }
     };
     fetchNgxData();
@@ -82,108 +83,115 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. الحسابات الهجينة (Supabase) - تعديل جراحي لجلب الأسماء وإضافة التصنيفات
+  // 3. الحسابات الهجينة + جلب الأسماء من البلوكشين (مثل Home) - كل دقيقتين
   useEffect(() => {
     const fetchHybridData = async () => {
+        const now = Date.now();
+        // التحقق من الكاش (دقيقتين = 120000 مللي ثانية)
+        if (now - lastFetchTime < 120000 && lastFetchTime !== 0) return;
+
         try {
-            // أ) حساب NNM Volume %
-            const { data: sales } = await supabase
-                .from('activities')
-                .select('price, created_at')
-                .eq('activity_type', 'Sale');
-            
+            // أ) حساب NNM Volume % (Supabase سريع)
+            const { data: sales } = await supabase.from('activities').select('price, created_at').eq('activity_type', 'Sale');
             if (sales) {
-                const now = Date.now();
-                const oneDay = 24 * 60 * 60 * 1000;
-                let volToday = 0;
-                let volYesterday = 0;
-
-                sales.forEach((sale: any) => {
-                    const time = new Date(sale.created_at).getTime();
-                    const price = Number(sale.price) || 0;
-                    const diff = now - time;
-                    if (diff <= oneDay) volToday += price;
-                    else if (diff <= 2 * oneDay) volYesterday += price;
+                const oneDay = 86400000;
+                let volT = 0, volY = 0;
+                sales.forEach((s: any) => {
+                    const t = new Date(s.created_at).getTime();
+                    if (now - t <= oneDay) volT += Number(s.price);
+                    else if (now - t <= 2 * oneDay) volY += Number(s.price);
                 });
-
-                let pct = 0;
-                if (volYesterday === 0) pct = volToday > 0 ? 100 : 0;
-                else pct = ((volToday - volYesterday) / volYesterday) * 100;
-                setNnmVolChange(pct);
+                setNnmVolChange(volY === 0 ? (volT > 0 ? 100 : 0) : ((volT - volY) / volY) * 100);
             }
 
-            // ب) NEW Assets: جلب أحدث 3 عمليات Mint (الاسم الحقيقي)
-            const { data: mints } = await supabase
-                .from('activities')
-                .select('asset_name, token_id, created_at') 
-                .eq('activity_type', 'Mint')
-                .order('created_at', { ascending: false })
-                .limit(3);
+            // دالة مساعدة لجلب الاسم الحقيقي من البلوكشين
+            const getRealName = async (tokenId: string) => {
+                if (!publicClient) return `Asset #${tokenId}`;
+                try {
+                    // قراءة URI من العقد الذكي مباشرة
+                    const uri = await publicClient.readContract({
+                        address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                        abi: erc721Abi,
+                        functionName: 'tokenURI',
+                        args: [BigInt(tokenId)]
+                    });
+                    // جلب الميتا داتا من IPFS
+                    const metaRes = await fetch(resolveIPFS(uri as string));
+                    if (!metaRes.ok) return `Asset #${tokenId}`;
+                    const meta = await metaRes.json();
+                    return meta.name || `Asset #${tokenId}`;
+                } catch (err) {
+                    return `Asset #${tokenId}`;
+                }
+            };
 
+            // ب) NEW Assets: جلب IDs من Supabase -> ثم الاسم من البلوكشين
+            const { data: mints } = await supabase.from('activities').select('token_id').eq('activity_type', 'Mint').order('created_at', { ascending: false }).limit(3);
             if (mints) {
-                setNewItems(mints.map((m, i) => ({
-                    id: `new-${i}`,
-                    label: 'NEW Assets',
-                    value: m.asset_name || `Asset #${m.token_id}`, // عرض الاسم
-                    link: `/asset/${m.token_id}`,
-                    type: 'NEW'
-                })));
+                const newItemsPromises = mints.map(async (m, i) => {
+                    const realName = await getRealName(m.token_id);
+                    return {
+                        id: `new-${i}`,
+                        label: 'NEW Assets',
+                        value: realName,
+                        link: `/asset/${m.token_id}`,
+                        type: 'NEW' as const
+                    };
+                });
+                setNewItems(await Promise.all(newItemsPromises));
             }
 
-            // ج) TOP Assets: جلب أعلى 3 مبيعات (الاسم الحقيقي)
-            const { data: topSales } = await supabase
-                .from('activities')
-                .select('asset_name, token_id, price')
-                .eq('activity_type', 'Sale')
-                .order('price', { ascending: false })
-                .limit(3);
-
-            if (topSales) {
-                setTopItems(topSales.map((s, i) => ({
-                    id: `top-${i}`,
-                    label: 'TOP Assets',
-                    value: s.asset_name || `Asset #${s.token_id}`, // عرض الاسم
-                    sub: `${Number(s.price).toFixed(0)} POL`,
-                    link: `/asset/${s.token_id}`,
-                    type: 'TOP'
-                })));
+            // ج) TOP Assets: جلب IDs من Supabase (الأعلى سعراً) -> ثم الاسم من البلوكشين
+            const { data: tops } = await supabase.from('activities').select('token_id').eq('activity_type', 'Sale').order('price', { ascending: false }).limit(3);
+            if (tops) {
+                const topItemsPromises = tops.map(async (s, i) => {
+                    const realName = await getRealName(s.token_id);
+                    return {
+                        id: `top-${i}`,
+                        label: 'TOP Assets',
+                        value: realName,
+                        link: `/asset/${s.token_id}`,
+                        type: 'TOP' as const
+                    };
+                });
+                setTopItems(await Promise.all(topItemsPromises));
             }
 
-        } catch (e) { console.error("Hybrid fetch error", e); }
+            setLastFetchTime(now); // تحديث وقت الكاش
+
+        } catch (e) { console.error("Hybrid Logic Error", e); }
     };
+
     fetchHybridData();
-    const interval = setInterval(fetchHybridData, 30000);
+    // التحقق كل 30 ثانية، لكن الكود في الأعلى سيمنع التنفيذ إلا بعد مرور دقيقتين
+    const interval = setInterval(fetchHybridData, 30000); 
     return () => clearInterval(interval);
-  }, []);
+  }, [publicClient, lastFetchTime]); // يعتمد على publicClient والوقت
 
 
   // --- تجميع الشريط ---
   const items = useMemo(() => {
-    // العناصر الأساسية (السوق)
     const marketItems: TickerItem[] = [
         { id: 'ngx', label: 'NGX INDEX', value: ngxIndex.val, change: ngxIndex.change, isUp: ngxIndex.change >= 0, link: '/ngx', type: 'NGX' },
         { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: ngxCap.change, isUp: ngxCap.change >= 0, link: '/ngx', type: 'NGX' },
         { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: ngxVol.change, isUp: ngxVol.change >= 0, link: '/ngx', type: 'NGX' },
         
-        // تعديل: ETH (3 حروف فقط) + التغير
+        // ETH (3 حروف)
         { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: prices.ethChange, isUp: prices.ethChange >= 0, link: '/market', type: 'MARKET' },
         
-        // تعديل: POL + التغير
+        // POL
         { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: prices.polChange, isUp: prices.polChange >= 0, link: '/market', type: 'MARKET' },
         
-        // تعديل: NNM VOL (قيمة فارغة لعدم عرض الرقم الأبيض)
+        // NNM VOL (بدون رقم أبيض)
         { id: 'nnm', label: 'NNM VOL', value: '', change: nnmVolChange, isUp: nnmVolChange >= 0, link: '/market', type: 'MARKET' },
     ];
 
-    // خلط العناصر (سوق + جديد + متصدر)
     const combined = [...marketItems, ...newItems, ...topItems];
-    // تكرار القائمة لضمان استمرارية الشريط المتحرك
-    return [...combined, ...combined]; 
+    return [...combined, ...combined]; // تكرار للحركة المستمرة
   }, [prices, ngxIndex, ngxCap, ngxVol, nnmVolChange, newItems, topItems]);
 
   const getColor = (item: TickerItem) => {
-      // اللون الذهبي للعناوين فقط
-      return '#FCD535'; 
+      return '#FCD535'; // ذهبي للعناوين دائماً
   };
 
   return (
@@ -195,7 +203,7 @@ export default function MarketTicker() {
           <Link href={item.link} key={`${item.id}-${index}`} className="text-decoration-none h-100 d-flex align-items-center ticker-link">
             <div className="d-flex align-items-center px-4 h-100" style={{ whiteSpace: 'nowrap' }}>
               
-              {/* LABEL: ذهبي دائماً */}
+              {/* العنوان: ذهبي */}
               <span className="me-2" style={{ 
                   color: '#FCD535', 
                   fontSize: '11px', 
@@ -205,7 +213,7 @@ export default function MarketTicker() {
                 {item.label}:
               </span>
               
-              {/* VALUE: أبيض دائماً (يختفي إذا كان فارغاً كما في NNM VOL) */}
+              {/* القيمة: أبيض (إلا إذا كانت فارغة) */}
               {item.value && (
                 <span className="me-2" style={{ 
                     fontSize: '12px',
@@ -214,13 +222,11 @@ export default function MarketTicker() {
                     color: '#FFFFFF' 
                 }}>
                     {item.value}
-                    {item.sub && (
-                        <span className="ms-2 text-secondary" style={{ fontSize: '11px' }}>({item.sub})</span>
-                    )}
+                    {item.sub && <span className="ms-2 text-secondary" style={{ fontSize: '11px' }}>({item.sub})</span>}
                 </span>
               )}
               
-              {/* CHANGE: ملون مع سهم */}
+              {/* التغير: ملون */}
               {item.change !== undefined && (
                 <span style={{ 
                     color: item.change >= 0 ? '#0ecb81' : '#f6465d', 
