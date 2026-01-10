@@ -6,6 +6,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LegalModal from "@/components/LegalModal";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { Providers } from "@/app/providers";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -20,6 +21,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "NNM Market",
   description: "Next-Gen NFT Marketplace",
+  manifest: '/manifest.json',
   icons: {
     icon: [
       { url: '/icons/icon.svg', type: 'image/svg+xml' },
@@ -51,6 +53,7 @@ export default function RootLayout({
         <Providers>
             <div className="d-flex flex-column min-vh-100">
               <Navbar />
+              <PWAInstallPrompt />
               <LegalModal />
               <main className="flex-grow-1">
                 {children}
