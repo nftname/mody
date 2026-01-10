@@ -70,17 +70,18 @@ export default function NGXLiveChart() {
 
     try {
         // [تعديل جراحي]: طلب موحد لكل القطاعات (بما فيها ALL) مع كسر حاجز الـ 1000
-        // هذا السطر (.limit(5000)) هو الحل لظهور بيانات 2025 و 2026 التي كانت تختفي
+        // هذا السطر (.limit(20000)) هو الحل لظهور بيانات 2025 و 2026 التي كانت تختفي
         const { data: sectorData, error } = await supabase
             .from('ngx_chart_history')
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: false })
+            .order('timestamp', { ascending: true }) // تعديل 1: true لترتيب البيانات من القديم للحديث (2017 -> 2026)
             .limit(20000); 
 
         if (error) throw error;
 
-        const data = sectorData.reverse().map((row: any) => ({
+        // تعديل 2: حذفنا .reverse() لأن البيانات تأتي مرتبة جاهزة من الأقدم للأحدث
+        const data = sectorData.map((row: any) => ({
             time: Math.floor(row.timestamp / 1000) as any,
             value: Number(row.value)
         }));
