@@ -11,7 +11,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- دوال مساعدة لجلب الصور والبيانات (مثل Home) ---
+// --- دوال مساعدة (مثل Home) ---
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -38,9 +38,9 @@ export default function MarketTicker() {
   const [ngxVol, setNgxVol] = useState({ val: '2.4M', change: 0.86 });
   const [nnmVolChange, setNnmVolChange] = useState(0);
   
-  // القوائم الجديدة (الأسماء)
+  // القوائم: Top Performers & Just Listed
   const [topItems, setTopItems] = useState<TickerItem[]>([]);
-  const [newItems, setNewItems] = useState<TickerItem[]>([]); // هذا لـ Just Listed
+  const [newItems, setNewItems] = useState<TickerItem[]>([]);
   
   // نظام الكاش (دقيقتين)
   const [lastFetchTime, setLastFetchTime] = useState(0);
@@ -81,7 +81,7 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. الحسابات الهجينة + جلب الأسماء من البلوكشين (مثل Home)
+  // 3. الحسابات الهجينة + جلب الأسماء من البلوكشين
   useEffect(() => {
     const fetchHybridData = async () => {
         const now = Date.now();
@@ -102,9 +102,8 @@ export default function MarketTicker() {
                 setNnmVolChange(volY === 0 ? (volT > 0 ? 100 : 0) : ((volT - volY) / volY) * 100);
             }
 
-            // دالة مساعدة لجلب الاسم الحقيقي من البلوكشين (نفس منطق Home)
-            const getRealName = async (tokenId: string, fallbackName?: string) => {
-                if (fallbackName) return fallbackName; // إذا كان الاسم موجود في الداتا بيز استخدمه
+            // دالة مساعدة لجلب الاسم الحقيقي من البلوكشين
+            const getRealName = async (tokenId: string) => {
                 if (!publicClient) return `Asset #${tokenId}`;
                 try {
                     const uri = await publicClient.readContract({
@@ -122,21 +121,20 @@ export default function MarketTicker() {
                 }
             };
 
-            // ب) Just Listed: (نبحث عن آخر عمليات LIST في الداتا بيز لتطابق Home)
-            // ملاحظة: Home يفرز الـ Listings. نحن سنأخذ آخر 3 عمليات List كتقريب ممتاز وسريع
+            // ب) Just Listed: البحث عن عمليات 'List' لتطابق صفحة Home
             const { data: listings } = await supabase
                 .from('activities')
-                .select('asset_name, token_id')
-                .eq('activity_type', 'List') // تغيير من Mint إلى List لتطابق Just Listed
+                .select('token_id')
+                .eq('activity_type', 'List') // تعديل: List بدلاً من Mint
                 .order('created_at', { ascending: false })
                 .limit(3);
 
-            if (listings && listings.length > 0) {
+            if (listings) {
                 const newItemsPromises = listings.map(async (m, i) => {
-                    const realName = await getRealName(m.token_id, m.asset_name);
+                    const realName = await getRealName(m.token_id);
                     return {
                         id: `just-${i}`,
-                        label: 'Just Listed', // الاسم كما في Home
+                        label: 'Just Listed', // تعديل: التسمية مطابقة لـ Home
                         value: realName,
                         link: `/asset/${m.token_id}`,
                         type: 'NEW' as const
@@ -145,20 +143,20 @@ export default function MarketTicker() {
                 setNewItems(await Promise.all(newItemsPromises));
             }
 
-            // ج) Top Performers: (نبحث عن أعلى المبيعات سعراً)
-            const { data: topSales } = await supabase
+            // ج) Top Performers: البحث عن أعلى المبيعات
+            const { data: tops } = await supabase
                 .from('activities')
-                .select('asset_name, token_id, price')
+                .select('token_id, price')
                 .eq('activity_type', 'Sale')
                 .order('price', { ascending: false })
                 .limit(3);
 
-            if (topSales && topSales.length > 0) {
-                const topItemsPromises = topSales.map(async (s, i) => {
-                    const realName = await getRealName(s.token_id, s.asset_name);
+            if (tops) {
+                const topItemsPromises = tops.map(async (s, i) => {
+                    const realName = await getRealName(s.token_id);
                     return {
                         id: `top-${i}`,
-                        label: 'Top Performers', // الاسم كما في Home
+                        label: 'Top Performers', // تعديل: التسمية مطابقة لـ Home
                         value: realName,
                         link: `/asset/${s.token_id}`,
                         type: 'TOP' as const
@@ -185,12 +183,16 @@ export default function MarketTicker() {
         { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: ngxCap.change, isUp: ngxCap.change >= 0, link: '/ngx', type: 'NGX' },
         { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: ngxVol.change, isUp: ngxVol.change >= 0, link: '/ngx', type: 'NGX' },
         
+        // ETH
         { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: prices.ethChange, isUp: prices.ethChange >= 0, link: '/market', type: 'MARKET' },
+        
+        // POL
         { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: prices.polChange, isUp: prices.polChange >= 0, link: '/market', type: 'MARKET' },
+        
+        // NNM VOL
         { id: 'nnm', label: 'NNM VOL', value: '', change: nnmVolChange, isUp: nnmVolChange >= 0, link: '/market', type: 'MARKET' },
     ];
 
-    // دمج القوائم: السوق + Just Listed + Top Performers
     const combined = [...marketItems, ...newItems, ...topItems];
     return [...combined, ...combined]; 
   }, [prices, ngxIndex, ngxCap, ngxVol, nnmVolChange, newItems, topItems]);
@@ -204,7 +206,7 @@ export default function MarketTicker() {
           <Link href={item.link} key={`${item.id}-${index}`} className="text-decoration-none h-100 d-flex align-items-center ticker-link">
             <div className="d-flex align-items-center px-4 h-100" style={{ whiteSpace: 'nowrap' }}>
               
-              {/* العنوان: ذهبي (Top Performers, Just Listed, NGX...) */}
+              {/* العنوان: ذهبي */}
               <span className="me-2" style={{ 
                   color: '#FCD535', 
                   fontSize: '11px', 
@@ -214,7 +216,7 @@ export default function MarketTicker() {
                 {item.label}:
               </span>
               
-              {/* القيمة: أبيض (الاسم الحقيقي أو السعر) */}
+              {/* القيمة: أبيض */}
               {item.value && (
                 <span className="me-2" style={{ 
                     fontSize: '12px',
@@ -227,7 +229,7 @@ export default function MarketTicker() {
                 </span>
               )}
               
-              {/* التغير: ملون (للأسعار والفوليوم) */}
+              {/* التغير: ملون */}
               {item.change !== undefined && (
                 <span style={{ 
                     color: item.change >= 0 ? '#0ecb81' : '#f6465d', 
