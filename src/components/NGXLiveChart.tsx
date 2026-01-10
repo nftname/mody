@@ -3,12 +3,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries, ISeriesApi } from 'lightweight-charts';
 import { createClient } from '@supabase/supabase-js';
 
-// --- إعداد اتصال Supabase (للقراءة فقط) ---
+// --- إعداد اتصال Supabase ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- تعريف القطاعات وربطها بمفاتيح قاعدة البيانات ---
+// --- تعريف القطاعات ---
 const SECTORS = [
   { key: 'All NFTs Index', dbKey: 'ALL', color: '#C0D860' },     
   { key: 'Digital Name Assets', dbKey: 'NAM', color: '#38BDF8' }, 
@@ -18,13 +18,13 @@ const SECTORS = [
 ];
 
 const TIMEFRAMES = [
-    { label: '1H', value: '1H', days: 1 },    // سنعرض يوم واحد للتفاصيل الدقيقة
-    { label: '4H', value: '4H', days: 7 },    // أسبوع
-    { label: '1D', value: '1D', days: 30 },   // شهر
-    { label: '1W', value: '1W', days: 90 },   // 3 شهور
-    { label: '1M', value: '1M', days: 180 },  // 6 شهور
-    { label: '1Y', value: '1Y', days: 365 },  // سنة
-    { label: 'ALL', value: 'ALL', days: 0 }   // كل التاريخ
+    { label: '1H', value: '1H', days: 1 },    
+    { label: '4H', value: '4H', days: 7 },    
+    { label: '1D', value: '1D', days: 30 },   
+    { label: '1W', value: '1W', days: 90 },   
+    { label: '1M', value: '1M', days: 180 },  
+    { label: '1Y', value: '1Y', days: 365 },  
+    { label: 'ALL', value: 'ALL', days: 0 }   
 ];
 
 // --- هوك لإغلاق القوائم عند النقر خارجها ---
@@ -50,7 +50,7 @@ export default function NGXLiveChart() {
   
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
-  const [chartData, setChartData] = useState<any[]>([]); // تخزين البيانات الخام
+  const [chartData, setChartData] = useState<any[]>([]); 
   const [isLoading, setIsLoading] = useState(false);
 
   const [isSectorOpen, setIsSectorOpen] = useState(false);
@@ -62,31 +62,32 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- دالة جلب البيانات من Supabase ---
+  // --- دالة جلب البيانات ---
   const fetchData = async (sectorKey: string) => {
     setIsLoading(true);
     const sectorInfo = SECTORS.find(s => s.key === sectorKey);
     if (!sectorInfo) return;
 
     try {
-        // [تعديل جراحي]: طلب موحد لكل القطاعات (بما فيها ALL) مع كسر حاجز الـ 1000
-        // هذا السطر (.limit(20000)) هو الحل لظهور بيانات 2025 و 2026 التي كانت تختفي
+        // [التعديل الجراحي هنا]: 
+        // 1. طلب موحد لكل القطاعات (بما فيها ALL لأننا جهزناه في الداتا بيز).
+        // 2. استخدام .limit(20000) لضمان جلب كل السنوات (2021-2026) دفعة واحدة.
         const { data: sectorData, error } = await supabase
             .from('ngx_chart_history')
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: true }) // تعديل 1: true لترتيب البيانات من القديم للحديث (2017 -> 2026)
-            .range(0, 19999); 
+            .order('timestamp', { ascending: false })
+            .limit(20000); // كسرنا حاجز الـ 1000
 
         if (error) throw error;
 
-        // تعديل 2: حذفنا .reverse() لأن البيانات تأتي مرتبة جاهزة من الأقدم للأحدث
-        const data = sectorData.map((row: any) => ({
+        // تنسيق البيانات للرسم البياني
+        const data = sectorData.reverse().map((row: any) => ({
             time: Math.floor(row.timestamp / 1000) as any,
             value: Number(row.value)
         }));
 
-        // إزالة التكرارات إن وجدت لضمان الرسم السليم
+        // إزالة التكرارات لضمان سلامة الرسم
         const uniqueData = data.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
         setChartData(uniqueData);
 
@@ -97,7 +98,7 @@ export default function NGXLiveChart() {
     }
   };
 
-  // --- تهيئة الرسم البياني (تعمل مرة واحدة) ---
+  // --- إعداد الرسم البياني (مرة واحدة) ---
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -153,7 +154,7 @@ export default function NGXLiveChart() {
 
     const newSeries = chart.addSeries(AreaSeries, {
       lineWidth: 2,
-      lineColor: '#C0D860', // لون افتراضي
+      lineColor: '#C0D860',
       topColor: 'rgba(192, 216, 96, 0.4)',
       bottomColor: 'rgba(192, 216, 96, 0.0)',
     });
@@ -175,7 +176,6 @@ export default function NGXLiveChart() {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // جلب البيانات الأولية
     fetchData(SECTORS[0].key);
 
     return () => {
@@ -184,25 +184,23 @@ export default function NGXLiveChart() {
     };
   }, []);
 
-  // --- تحديث البيانات عند تغيير القطاع ---
+  // --- تحديث عند تغيير القطاع ---
   useEffect(() => {
     fetchData(activeSector);
   }, [activeSector]);
 
-  // --- تحديث الرسم عند وصول البيانات أو تغيير الفلتر الزمني ---
+  // --- تحديث الرسم عند وصول البيانات ---
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
         if (!currentSector) return;
 
-        // تحديث الألوان
         seriesInstance.applyOptions({
             lineColor: currentSector.color,
-            topColor: `${currentSector.color}66`, // شفافية 40%
-            bottomColor: `${currentSector.color}00`, // شفافية 0%
+            topColor: `${currentSector.color}66`, 
+            bottomColor: `${currentSector.color}00`, 
         });
 
-        // تطبيق الفلتر الزمني (Zoom)
         const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
         let filteredData = chartData;
 
@@ -221,8 +219,8 @@ export default function NGXLiveChart() {
 
   return (
     <div className="ngx-chart-glass mb-4">
-      
       <div className="filters-container">
+        
         {/* Sector Selector */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
@@ -253,7 +251,7 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* Loading Indicator */}
+        {/* Loading */}
         {isLoading && (
             <div className="loading-indicator">
                 <span className="spinner"></span> Updating...
@@ -287,7 +285,6 @@ export default function NGXLiveChart() {
              </div>
            )}
         </div>
-
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper" />
@@ -311,107 +308,50 @@ export default function NGXLiveChart() {
             min-height: 400px;
             overflow: hidden;
         }
-
         .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
         .chart-canvas-wrapper { width: 100%; height: 400px; }
-
         .filters-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 0 10px;
-            position: relative;
-            z-index: 50;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; padding: 0 10px; position: relative; z-index: 50;
         }
-
-        .loading-indicator {
-            font-size: 10px;
-            color: #666;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+        .loading-indicator { font-size: 10px; color: #666; display: flex; align-items: center; gap: 5px; }
         .spinner {
-            width: 8px; height: 8px;
-            border: 1px solid #666;
-            border-top-color: transparent;
-            border-radius: 50%;
+            width: 8px; height: 8px; border: 1px solid #666;
+            border-top-color: transparent; border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
         .filter-wrapper { position: relative; }
         .sector-wrapper { width: auto; min-width: 200px; max-width: 280px; }
         .time-wrapper { width: auto; min-width: 70px; }
-
         .custom-select-trigger {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 12px;
-            font-size: 13px;
-            font-weight: 700;
-            color: #E0E0E0;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            user-select: none;
-            white-space: nowrap;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 12px; font-size: 13px; font-weight: 700;
+            color: #E0E0E0; background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px;
+            cursor: pointer; transition: all 0.3s ease; user-select: none; white-space: nowrap;
         }
-
-        .custom-select-trigger:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .time-trigger {
-            justify-content: center;
-            font-weight: 600;
-        }
-
+        .custom-select-trigger:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.15); }
+        .time-trigger { justify-content: center; font-weight: 600; }
         .arrow { font-size: 8px; opacity: 0.7; }
-
         .custom-options {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            min-width: 100%;
-            background: rgba(30, 30, 30, 0.95);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            margin-top: 4px;
-            overflow: hidden;
-            z-index: 100;
+            position: absolute; top: 100%; left: 0; min-width: 100%;
+            background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px;
+            margin-top: 4px; overflow: hidden; z-index: 100;
             box-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
-
-        .time-options {
-            right: 0;
-            left: auto;
-            width: 100%;
-        }
-
+        .time-options { right: 0; left: auto; width: 100%; }
         .custom-option {
-            padding: 8px 10px;
-            font-size: 12px;
-            color: #B0B0B0;
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            text-align: left;
-            white-space: nowrap;
+            padding: 8px 10px; font-size: 12px; color: #B0B0B0; cursor: pointer;
+            transition: background 0.2s, color 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02);
+            text-align: left; white-space: nowrap;
         }
         .time-options .custom-option { text-align: center; }
-
         .custom-option:last-child { border-bottom: none; }
         .custom-option:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
-
         @media (max-width: 768px) {
             .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
             .chart-canvas-wrapper { height: 350px !important; }
