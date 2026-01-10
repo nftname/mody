@@ -76,7 +76,7 @@ export default function NGXLiveChart() {
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
             .order('timestamp', { ascending: true }) // تعديل 1: true لترتيب البيانات من القديم للحديث (2017 -> 2026)
-            .limit(20000); 
+            .range(0, 19999); 
 
         if (error) throw error;
 
