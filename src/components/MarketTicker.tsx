@@ -20,7 +20,8 @@ interface TickerItem {
 }
 
 export default function MarketTicker() {
-  const [prices, setPrices] = useState({ eth: 0, pol: 0 });
+  // تعديل: إضافة حالة لتغير السعر (Change)
+  const [prices, setPrices] = useState({ eth: 0, ethChange: 0, pol: 0, polChange: 0 });
   
   // بيانات مؤشرات NGX
   const [ngxIndex, setNgxIndex] = useState({ val: '84.2', change: 1.5 });
@@ -32,15 +33,22 @@ export default function MarketTicker() {
   const [topItems, setTopItems] = useState<TickerItem[]>([]);
   const [newItems, setNewItems] = useState<TickerItem[]>([]);
 
-  // 1. جلب أسعار العملات (CoinGecko) - لتوحيد السعر مع الماركت
+  // 1. جلب أسعار العملات (CoinGecko) - تعديل: جلب نسبة التغير 24 ساعة
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
+        // تمت إضافة &include_24hr_change=true للرابط
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd&include_24hr_change=true');
         const data = await res.json();
-        const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
-        const ethPrice = data['ethereum']?.usd || 0;
-        setPrices({ eth: ethPrice, pol: polPrice });
+        
+        const polKey = data['polygon-ecosystem-token'] ? 'polygon-ecosystem-token' : 'matic-network';
+        
+        setPrices({ 
+            eth: data.ethereum.usd || 0, 
+            ethChange: data.ethereum.usd_24h_change || 0,
+            pol: data[polKey]?.usd || 0,
+            polChange: data[polKey]?.usd_24h_change || 0
+        });
       } catch (e) { console.error(e); }
     };
     fetchPrices();
@@ -80,11 +88,11 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. الحسابات الهجينة (Supabase): NNM Vol, Top 3, New 3
+  // 3. الحسابات الهجينة (Supabase): NNM Vol, Top Assets, New Assets
   useEffect(() => {
     const fetchHybridData = async () => {
         try {
-            // أ) حساب NNM Volume % (مبيعات اليوم vs الأمس)
+            // أ) حساب NNM Volume %
             const { data: sales } = await supabase
                 .from('activities')
                 .select('price, created_at')
@@ -110,10 +118,10 @@ export default function MarketTicker() {
                 setNnmVolChange(pct);
             }
 
-            // ب) جلب أحدث 3 (Mint)
+            // ب) جلب أحدث 3 (New Assets) - تعديل: جلب asset_name
             const { data: mints } = await supabase
                 .from('activities')
-                .select('token_id, created_at')
+                .select('asset_name, token_id, created_at') // جلب الاسم
                 .eq('activity_type', 'Mint')
                 .order('created_at', { ascending: false })
                 .limit(3);
@@ -121,18 +129,17 @@ export default function MarketTicker() {
             if (mints) {
                 setNewItems(mints.map((m, i) => ({
                     id: `new-${i}`,
-                    label: 'NEW',
-                    value: `Asset #${m.token_id}`,
+                    label: 'NEW Assets', // تعديل الاسم
+                    value: m.asset_name || `Asset #${m.token_id}`, // عرض الاسم
                     link: `/asset/${m.token_id}`,
-                    type: 'NEW',
-                    isUp: true
+                    type: 'NEW'
                 })));
             }
 
-            // ج) جلب أفضل 3 (Top Sales)
+            // ج) جلب أفضل 3 (Top Assets) - تعديل: جلب asset_name
             const { data: topSales } = await supabase
                 .from('activities')
-                .select('token_id, price')
+                .select('asset_name, token_id, price') // جلب الاسم
                 .eq('activity_type', 'Sale')
                 .order('price', { ascending: false })
                 .limit(3);
@@ -140,12 +147,11 @@ export default function MarketTicker() {
             if (topSales) {
                 setTopItems(topSales.map((s, i) => ({
                     id: `top-${i}`,
-                    label: 'TOP',
-                    value: `Asset #${s.token_id}`,
+                    label: 'TOP Assets', // تعديل الاسم
+                    value: s.asset_name || `Asset #${s.token_id}`, // عرض الاسم
                     sub: `${Number(s.price).toFixed(0)} POL`,
                     link: `/asset/${s.token_id}`,
-                    type: 'TOP',
-                    isUp: true
+                    type: 'TOP'
                 })));
             }
 
@@ -164,9 +170,15 @@ export default function MarketTicker() {
         { id: 'ngx', label: 'NGX INDEX', value: ngxIndex.val, change: ngxIndex.change, isUp: ngxIndex.change >= 0, link: '/ngx', type: 'NGX' },
         { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: ngxCap.change, isUp: ngxCap.change >= 0, link: '/ngx', type: 'NGX' },
         { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: ngxVol.change, isUp: ngxVol.change >= 0, link: '/ngx', type: 'NGX' },
-        { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString()}`, link: '/market', type: 'MARKET' },
-        { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(3)}`, link: '/market', type: 'MARKET' },
-        { id: 'nnm', label: 'NNM VOL', value: `${Math.abs(nnmVolChange).toFixed(1)}%`, change: nnmVolChange, isUp: nnmVolChange >= 0, link: '/market', type: 'MARKET' },
+        
+        // تعديل ETH: إضافة التغير
+        { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: prices.ethChange, isUp: prices.ethChange >= 0, link: '/market', type: 'MARKET' },
+        
+        // تعديل POL: إضافة التغير
+        { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: prices.polChange, isUp: prices.polChange >= 0, link: '/market', type: 'MARKET' },
+        
+        // تعديل NNM VOL: إزالة القيمة الرقمية والاكتفاء بالنسبة
+        { id: 'nnm', label: 'NNM VOL', value: '', change: nnmVolChange, isUp: nnmVolChange >= 0, link: '/market', type: 'MARKET' },
     ];
 
     // خلط العناصر (سوق + جديد + متصدر)
@@ -176,10 +188,9 @@ export default function MarketTicker() {
   }, [prices, ngxIndex, ngxCap, ngxVol, nnmVolChange, newItems, topItems]);
 
   const getColor = (item: TickerItem) => {
-      if (item.type === 'TOP') return '#0ecb81'; // أخضر
-      if (item.type === 'NEW') return '#38BDF8'; // أزرق سماوي
-      if (item.type === 'NGX') return '#FCD535'; // ذهبي
-      return '#FFFFFF'; // أبيض للعملات
+      // تعديل: الألوان ثابتة للعناوين فقط (ذهبي)
+      // القيم ستكون بيضاء دائماً عبر الـ inline style في الأسفل
+      return '#FCD535'; 
   };
 
   return (
@@ -191,8 +202,9 @@ export default function MarketTicker() {
           <Link href={item.link} key={`${item.id}-${index}`} className="text-decoration-none h-100 d-flex align-items-center ticker-link">
             <div className="d-flex align-items-center px-4 h-100" style={{ whiteSpace: 'nowrap' }}>
               
+              {/* العنوان: ذهبي دائماً */}
               <span className="me-2" style={{ 
-                  color: getColor(item), 
+                  color: '#FCD535', 
                   fontSize: '11px', 
                   fontWeight: '800', 
                   letterSpacing: '0.5px' 
@@ -200,23 +212,29 @@ export default function MarketTicker() {
                 {item.label}:
               </span>
               
-              <span className="me-2" style={{ 
-                  fontSize: '12px',
-                  fontWeight: '500', 
-                  fontFamily: '"Inter", sans-serif',
-                  color: item.type === 'MARKET' ? '#FFFFFF' : '#E0E0E0' 
-              }}>
-                {item.value}
-                {item.sub && <span className="ms-2 text-secondary" style={{ fontSize: '11px' }}>({item.sub})</span>}
-              </span>
+              {/* القيمة: أبيض (إلا إذا كانت فارغة مثل NNM VOL) */}
+              {item.value && (
+                <span className="me-2" style={{ 
+                    fontSize: '12px',
+                    fontWeight: '500', 
+                    fontFamily: '"Inter", sans-serif',
+                    color: '#FFFFFF' 
+                }}>
+                    {item.value}
+                    {item.sub && (
+                        <span className="ms-2 text-secondary" style={{ fontSize: '11px' }}>({item.sub})</span>
+                    )}
+                </span>
+              )}
               
+              {/* التغير: ملون مع سهم */}
               {item.change !== undefined && (
                 <span style={{ 
-                    color: item.isUp ? '#0ecb81' : '#f6465d', 
+                    color: item.change >= 0 ? '#0ecb81' : '#f6465d', 
                     fontSize: '10px', 
                     fontWeight: '600'
                 }}>
-                  {item.isUp ? '▲' : '▼'} {Math.abs(item.change).toFixed(2)}%
+                  {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change).toFixed(2)}%
                 </span>
               )}
             </div>
