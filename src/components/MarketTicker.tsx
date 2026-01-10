@@ -3,15 +3,19 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { usePublicClient } from 'wagmi'; 
-import { parseAbi, erc721Abi } from 'viem';
-import { NFT_COLLECTION_ADDRESS } from '@/data/config';
+import { parseAbi, erc721Abi, formatEther } from 'viem'; // تمت إضافة formatEther
+import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config'; // تأكدنا من استيراد عنوان الماركت
 
 // --- إعداد اتصال Supabase ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- دوال مساعدة ---
+// --- ABI الخاص بالماركت (مأخوذ من كود Home) ---
+const MARKET_ABI = parseAbi([
+    "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
+]);
+
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -31,23 +35,19 @@ interface TickerItem {
 export default function MarketTicker() {
   const publicClient = usePublicClient(); 
   
-  // الحالة الأولية أصفار (لا توجد قيم وهمية)
+  // الحالة (State)
   const [prices, setPrices] = useState({ eth: 0, ethChange: 0, pol: 0, polChange: 0 });
-  
-  // بيانات NGX
   const [ngxIndex, setNgxIndex] = useState({ val: '84.2', change: 1.5 });
   const [ngxCap, setNgxCap] = useState({ val: '$2.54B', change: 4.88 });
   const [ngxVol, setNgxVol] = useState({ val: '2.4M', change: 0.86 });
-  
-  // بيانات NNM والأصول
   const [nnmVolChange, setNnmVolChange] = useState(0);
+  
   const [topItems, setTopItems] = useState<TickerItem[]>([]);
   const [newItems, setNewItems] = useState<TickerItem[]>([]);
   
-  // نظام الكاش (دقيقتين)
   const [lastFetchTime, setLastFetchTime] = useState(0);
 
-  // 1. جلب أسعار العملات (نفس الكود السليم الذي أرسلته)
+  // 1. جلب أسعار العملات (مستقل)
   useEffect(() => {
     const fetchPrices = async () => {
       try {
@@ -55,7 +55,6 @@ export default function MarketTicker() {
         const data = await res.json();
         const polKey = data['polygon-ecosystem-token'] ? 'polygon-ecosystem-token' : 'matic-network';
         
-        // تحديث الحالة فقط إذا وصلت البيانات
         if (data.ethereum && data[polKey]) {
             setPrices({ 
                 eth: data.ethereum.usd, 
@@ -71,7 +70,7 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // 2. جلب بيانات NGX APIs
+  // 2. جلب مؤشرات NGX
   useEffect(() => {
     const fetchNgxData = async () => {
       try {
@@ -86,100 +85,116 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. الحسابات الهجينة + جلب الأسماء (Logic مطابق لـ Home)
+  // 3. المنطق الهجين المتطابق مع Home (Contract + DB Aggregation)
   useEffect(() => {
-    const fetchHybridData = async () => {
+    const fetchHomeLogicData = async () => {
         const now = Date.now();
-        // الكاش: دقيقتين
+        // كاش لمدة دقيقتين
         if (now - lastFetchTime < 120000 && lastFetchTime !== 0) return;
 
+        if (!publicClient) return;
+
         try {
-            // أ) حساب NNM Volume %
-            const { data: sales } = await supabase.from('activities').select('price, created_at').eq('activity_type', 'Sale');
-            if (sales) {
-                const oneDay = 86400000;
-                let volT = 0, volY = 0;
-                sales.forEach((s: any) => {
-                    const t = new Date(s.created_at).getTime();
-                    if (now - t <= oneDay) volT += Number(s.price);
-                    else if (now - t <= 2 * oneDay) volY += Number(s.price);
+            // أ) جلب كل العروض من البلوكشين (مثل Home تماماً)
+            const data = await publicClient.readContract({
+                address: MARKETPLACE_ADDRESS as `0x${string}`,
+                abi: MARKET_ABI,
+                functionName: 'getAllListings'
+            });
+            const [tokenIds, pricesOnChain] = data; // sellers لا نحتاجه هنا
+
+            if (tokenIds.length === 0) return;
+
+            // ب) تجهيز خريطة الفوليوم من Supabase (لحساب Top Performers)
+            const { data: allActivities } = await supabase.from('activities').select('token_id, price, activity_type, created_at');
+            const volumeMap: any = {};
+            const oneDay = 24 * 60 * 60 * 1000;
+            let totalVolToday = 0; 
+            let totalVolYest = 0;
+
+            if (allActivities) {
+                allActivities.forEach((act: any) => {
+                    const tid = Number(act.token_id);
+                    const price = Number(act.price) || 0;
+                    const time = new Date(act.created_at).getTime();
+
+                    // حساب الفوليوم لكل أصل (لترتيب Top Performers)
+                    if (act.activity_type === 'Sale') {
+                        volumeMap[tid] = (volumeMap[tid] || 0) + price;
+                        
+                        // حساب NNM Vol الإجمالي للموقع
+                        if (now - time <= oneDay) totalVolToday += price;
+                        else if (now - time <= 2 * oneDay) totalVolYest += price;
+                    }
                 });
-                setNnmVolChange(volY === 0 ? (volT > 0 ? 100 : 0) : ((volT - volY) / volY) * 100);
             }
 
-            // دالة جلب الاسم الحقيقي (مثل Home)
-            const getRealName = async (tokenId: string) => {
-                if (!publicClient) return `Asset #${tokenId}`;
+            // ضبط نسبة NNM VOL
+            setNnmVolChange(totalVolYest === 0 ? (totalVolToday > 0 ? 100 : 0) : ((totalVolToday - totalVolYest) / totalVolYest) * 100);
+
+            // ج) دالة لجلب الاسم
+            const getRealName = async (tokenId: bigint) => {
                 try {
                     const uri = await publicClient.readContract({
                         address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                         abi: erc721Abi,
                         functionName: 'tokenURI',
-                        args: [BigInt(tokenId)]
+                        args: [tokenId]
                     });
                     const metaRes = await fetch(resolveIPFS(uri as string));
-                    if (!metaRes.ok) return `Asset #${tokenId}`;
                     const meta = await metaRes.json();
                     return meta.name || `Asset #${tokenId}`;
-                } catch (err) {
-                    return `Asset #${tokenId}`;
-                }
+                } catch { return `Asset #${tokenId}`; }
             };
 
-            // ب) Just Listed: (استخدام Mint كبديل مضمون لأن List غير متوفرة في DB)
-            const { data: mints } = await supabase
-                .from('activities')
-                .select('token_id')
-                .eq('activity_type', 'Mint')
-                .order('created_at', { ascending: false })
-                .limit(3);
+            // د) تحضير القائمة الأساسية
+            // ملاحظة: نحتاج فقط أعلى 3 وأحدث 3، لذا لا داعي لجلب أسماء الكل لتوفير الموارد
+            // سنقوم بالفرز (Sort) أولاً باستخدام الـ IDs والفوليوم، ثم نجلب أسماء الفائزين فقط.
 
-            if (mints) {
-                const newItemsPromises = mints.map(async (m, i) => {
-                    const realName = await getRealName(m.token_id);
-                    return {
-                        id: `just-${i}`,
-                        label: 'Just Listed', // الاسم كما في Home
-                        value: realName, // الاسم الحقيقي
-                        link: `/asset/${m.token_id}`,
-                        type: 'NEW' as const
-                    };
-                });
-                setNewItems(await Promise.all(newItemsPromises));
-            }
+            const allListings = tokenIds.map((id, index) => ({
+                id: Number(id),
+                price: pricesOnChain[index],
+                volume: volumeMap[Number(id)] || 0
+            }));
 
-            // ج) Top Performers: (أعلى المبيعات)
-            const { data: tops } = await supabase
-                .from('activities')
-                .select('token_id, price')
-                .eq('activity_type', 'Sale')
-                .order('price', { ascending: false })
-                .limit(3);
+            // --- 1. Just Listed (ترتيب حسب الـ ID تنازلي - الأحدث) ---
+            const sortedByNew = [...allListings].sort((a, b) => b.id - a.id).slice(0, 3);
+            const newListingsPromises = sortedByNew.map(async (item, i) => {
+                const name = await getRealName(BigInt(item.id));
+                return {
+                    id: `just-${i}`,
+                    label: 'Just Listed',
+                    value: name,
+                    link: `/asset/${item.id}`,
+                    type: 'NEW' as const
+                };
+            });
+            setNewItems(await Promise.all(newListingsPromises));
 
-            if (tops) {
-                const topItemsPromises = tops.map(async (s, i) => {
-                    const realName = await getRealName(s.token_id);
-                    return {
-                        id: `top-${i}`,
-                        label: 'Top Performers', // الاسم كما في Home
-                        value: realName, // الاسم الحقيقي
-                        link: `/asset/${s.token_id}`,
-                        type: 'TOP' as const
-                    };
-                });
-                setTopItems(await Promise.all(topItemsPromises));
-            }
+            // --- 2. Top Performers (ترتيب حسب الفوليوم تنازلي) ---
+            const sortedByVol = [...allListings].sort((a, b) => b.volume - a.volume).slice(0, 3);
+            const topListingsPromises = sortedByVol.map(async (item, i) => {
+                const name = await getRealName(BigInt(item.id));
+                return {
+                    id: `top-${i}`,
+                    label: 'Top Performers',
+                    value: name,
+                    // sub: `${item.volume.toFixed(1)} POL`, // اختياري: عرض الفوليوم بجانب الاسم
+                    link: `/asset/${item.id}`,
+                    type: 'TOP' as const
+                };
+            });
+            setTopItems(await Promise.all(topListingsPromises));
 
             setLastFetchTime(now);
 
-        } catch (e) { console.error("Hybrid Logic Error", e); }
+        } catch (e) { console.error("Ticker Hybrid Logic Error", e); }
     };
 
-    fetchHybridData();
-    const interval = setInterval(fetchHybridData, 30000); 
+    fetchHomeLogicData();
+    const interval = setInterval(fetchHomeLogicData, 30000);
     return () => clearInterval(interval);
   }, [publicClient, lastFetchTime]);
-
 
   // --- تجميع الشريط ---
   const items = useMemo(() => {
@@ -188,13 +203,9 @@ export default function MarketTicker() {
         { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: ngxCap.change, isUp: ngxCap.change >= 0, link: '/ngx', type: 'NGX' },
         { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: ngxVol.change, isUp: ngxVol.change >= 0, link: '/ngx', type: 'NGX' },
         
-        // ETH
         { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: prices.ethChange, isUp: prices.ethChange >= 0, link: '/market', type: 'MARKET' },
-        
-        // POL
         { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: prices.polChange, isUp: prices.polChange >= 0, link: '/market', type: 'MARKET' },
         
-        // NNM VOL
         { id: 'nnm', label: 'NNM VOL', value: '', change: nnmVolChange, isUp: nnmVolChange >= 0, link: '/market', type: 'MARKET' },
     ];
 
@@ -211,7 +222,6 @@ export default function MarketTicker() {
           <Link href={item.link} key={`${item.id}-${index}`} className="text-decoration-none h-100 d-flex align-items-center ticker-link">
             <div className="d-flex align-items-center px-4 h-100" style={{ whiteSpace: 'nowrap' }}>
               
-              {/* العنوان: ذهبي */}
               <span className="me-2" style={{ 
                   color: '#FCD535', 
                   fontSize: '11px', 
@@ -221,7 +231,6 @@ export default function MarketTicker() {
                 {item.label}:
               </span>
               
-              {/* القيمة: أبيض */}
               {item.value && (
                 <span className="me-2" style={{ 
                     fontSize: '12px',
@@ -234,7 +243,6 @@ export default function MarketTicker() {
                 </span>
               )}
               
-              {/* التغير: ملون */}
               {item.change !== undefined && (
                 <span style={{ 
                     color: item.change >= 0 ? '#0ecb81' : '#f6465d', 
