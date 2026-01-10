@@ -77,7 +77,7 @@ export default function NGXLiveChart() {
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
             .order('timestamp', { ascending: false })
-            .limit(20000); // كسرنا حاجز الـ 1000
+            .range(0, 20000); // كسرنا حاجز الـ 1000
 
         if (error) throw error;
 
