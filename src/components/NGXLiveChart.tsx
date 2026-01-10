@@ -8,13 +8,13 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- تعريف القطاعات ---
+// --- تعريف القطاعات (تم تعديل الأسماء بحذف حرف s) ---
 const SECTORS = [
-  { key: 'All NFTs Index', dbKey: 'ALL', color: '#C0D860' },     
+  { key: 'All NFT Index', dbKey: 'ALL', color: '#C0D860' },     
   { key: 'Digital Name Assets', dbKey: 'NAM', color: '#38BDF8' }, 
-  { key: 'Art NFTs', dbKey: 'ART', color: '#7B61FF' },            
-  { key: 'Gaming NFTs', dbKey: 'GAM', color: '#0ECB81' },        
-  { key: 'Utility NFTs', dbKey: 'UTL', color: '#00D8D6' }         
+  { key: 'Art NFT', dbKey: 'ART', color: '#7B61FF' },            
+  { key: 'Gaming NFT', dbKey: 'GAM', color: '#0ECB81' },        
+  { key: 'Utility NFT', dbKey: 'UTL', color: '#00D8D6' }         
 ];
 
 const TIMEFRAMES = [
@@ -69,25 +69,22 @@ export default function NGXLiveChart() {
     if (!sectorInfo) return;
 
     try {
-        // [التعديل الجراحي هنا]: 
-        // 1. طلب موحد لكل القطاعات (بما فيها ALL لأننا جهزناه في الداتا بيز).
-        // 2. استخدام .limit(20000) لضمان جلب كل السنوات (2021-2026) دفعة واحدة.
         const { data: sectorData, error } = await supabase
             .from('ngx_chart_history')
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
             .order('timestamp', { ascending: false })
-            .range(0, 20000); // كسرنا حاجز الـ 1000
+            .range(0, 20000); 
 
         if (error) throw error;
 
-        // تنسيق البيانات للرسم البياني
+        // تنسيق البيانات + قص الفترة الميتة (البدء من 2019)
         const data = sectorData.reverse().map((row: any) => ({
             time: Math.floor(row.timestamp / 1000) as any,
             value: Number(row.value)
-        }));
+        })).filter((item: any) => item.time >= 1546300800); // 1546300800 = 1 Jan 2019
 
-        // إزالة التكرارات لضمان سلامة الرسم
+        // إزالة التكرارات
         const uniqueData = data.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
         setChartData(uniqueData);
 
@@ -98,7 +95,7 @@ export default function NGXLiveChart() {
     }
   };
 
-  // --- إعداد الرسم البياني (مرة واحدة) ---
+  // --- إعداد الرسم البياني ---
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
