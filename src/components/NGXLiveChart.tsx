@@ -69,49 +69,21 @@ export default function NGXLiveChart() {
     if (!sectorInfo) return;
 
     try {
-        let data: any[] = [];
+        // [تعديل جراحي]: طلب موحد لكل القطاعات (بما فيها ALL) مع كسر حاجز الـ 1000
+        // هذا السطر (.limit(5000)) هو الحل لظهور بيانات 2025 و 2026 التي كانت تختفي
+        const { data: sectorData, error } = await supabase
+            .from('ngx_chart_history')
+            .select('timestamp, value')
+            .eq('sector_key', sectorInfo.dbKey)
+            .order('timestamp', { ascending: true })
+            .limit(5000); 
 
-        if (sectorInfo.dbKey === 'ALL') {
-            // منطق حساب المؤشر العام: نجلب كل القطاعات ونحسب المتوسط
-            const { data: allData, error } = await supabase
-                .from('ngx_chart_history')
-                .select('timestamp, value, sector_key')
-                .order('timestamp', { ascending: true });
+        if (error) throw error;
 
-            if (error) throw error;
-
-            // تجميع البيانات حسب التوقيت لحساب المتوسط
-            const groupedByTime: Record<number, number[]> = {};
-            allData.forEach((row: any) => {
-                if (!groupedByTime[row.timestamp]) groupedByTime[row.timestamp] = [];
-                groupedByTime[row.timestamp].push(Number(row.value));
-            });
-
-            // تحويلها لمصفوفة للرسم البياني
-            data = Object.keys(groupedByTime).map(ts => {
-                const values = groupedByTime[Number(ts)];
-                const avg = values.reduce((a, b) => a + b, 0) / values.length;
-                return {
-                    time: Math.floor(Number(ts) / 1000) as any, // تحويل لثواني
-                    value: avg
-                };
-            }).sort((a, b) => (a.time as number) - (b.time as number));
-
-        } else {
-            // جلب قطاع محدد
-            const { data: sectorData, error } = await supabase
-                .from('ngx_chart_history')
-                .select('timestamp, value')
-                .eq('sector_key', sectorInfo.dbKey)
-                .order('timestamp', { ascending: true });
-
-            if (error) throw error;
-
-            data = sectorData.map((row: any) => ({
-                time: Math.floor(row.timestamp / 1000) as any,
-                value: Number(row.value)
-            }));
-        }
+        const data = sectorData.map((row: any) => ({
+            time: Math.floor(row.timestamp / 1000) as any,
+            value: Number(row.value)
+        }));
 
         // إزالة التكرارات إن وجدت لضمان الرسم السليم
         const uniqueData = data.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
