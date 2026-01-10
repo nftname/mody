@@ -11,7 +11,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- دوال مساعدة (مثل Home) ---
+// --- دوال مساعدة ---
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -31,21 +31,23 @@ interface TickerItem {
 export default function MarketTicker() {
   const publicClient = usePublicClient(); 
   
-  // الحالة (State)
+  // الحالة الأولية أصفار (لا توجد قيم وهمية)
   const [prices, setPrices] = useState({ eth: 0, ethChange: 0, pol: 0, polChange: 0 });
+  
+  // بيانات NGX
   const [ngxIndex, setNgxIndex] = useState({ val: '84.2', change: 1.5 });
   const [ngxCap, setNgxCap] = useState({ val: '$2.54B', change: 4.88 });
   const [ngxVol, setNgxVol] = useState({ val: '2.4M', change: 0.86 });
-  const [nnmVolChange, setNnmVolChange] = useState(0);
   
-  // القوائم: Top Performers & Just Listed
+  // بيانات NNM والأصول
+  const [nnmVolChange, setNnmVolChange] = useState(0);
   const [topItems, setTopItems] = useState<TickerItem[]>([]);
   const [newItems, setNewItems] = useState<TickerItem[]>([]);
   
   // نظام الكاش (دقيقتين)
   const [lastFetchTime, setLastFetchTime] = useState(0);
 
-  // 1. جلب أسعار العملات (CoinGecko)
+  // 1. جلب أسعار العملات (نفس الكود السليم الذي أرسلته)
   useEffect(() => {
     const fetchPrices = async () => {
       try {
@@ -53,12 +55,15 @@ export default function MarketTicker() {
         const data = await res.json();
         const polKey = data['polygon-ecosystem-token'] ? 'polygon-ecosystem-token' : 'matic-network';
         
-        setPrices({ 
-            eth: data.ethereum.usd || 0, 
-            ethChange: data.ethereum.usd_24h_change || 0,
-            pol: data[polKey]?.usd || 0,
-            polChange: data[polKey]?.usd_24h_change || 0
-        });
+        // تحديث الحالة فقط إذا وصلت البيانات
+        if (data.ethereum && data[polKey]) {
+            setPrices({ 
+                eth: data.ethereum.usd, 
+                ethChange: data.ethereum.usd_24h_change,
+                pol: data[polKey].usd,
+                polChange: data[polKey].usd_24h_change
+            });
+        }
       } catch (e) { console.error(e); }
     };
     fetchPrices();
@@ -81,11 +86,11 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. الحسابات الهجينة + جلب الأسماء من البلوكشين
+  // 3. الحسابات الهجينة + جلب الأسماء (Logic مطابق لـ Home)
   useEffect(() => {
     const fetchHybridData = async () => {
         const now = Date.now();
-        // الكاش: إذا لم يمر دقيقتين، لا تعيد الطلب
+        // الكاش: دقيقتين
         if (now - lastFetchTime < 120000 && lastFetchTime !== 0) return;
 
         try {
@@ -102,7 +107,7 @@ export default function MarketTicker() {
                 setNnmVolChange(volY === 0 ? (volT > 0 ? 100 : 0) : ((volT - volY) / volY) * 100);
             }
 
-            // دالة مساعدة لجلب الاسم الحقيقي من البلوكشين
+            // دالة جلب الاسم الحقيقي (مثل Home)
             const getRealName = async (tokenId: string) => {
                 if (!publicClient) return `Asset #${tokenId}`;
                 try {
@@ -121,21 +126,21 @@ export default function MarketTicker() {
                 }
             };
 
-            // ب) Just Listed: البحث عن عمليات 'List' لتطابق صفحة Home
-            const { data: listings } = await supabase
+            // ب) Just Listed: (استخدام Mint كبديل مضمون لأن List غير متوفرة في DB)
+            const { data: mints } = await supabase
                 .from('activities')
                 .select('token_id')
-                .eq('activity_type', 'List') // تعديل: List بدلاً من Mint
+                .eq('activity_type', 'Mint')
                 .order('created_at', { ascending: false })
                 .limit(3);
 
-            if (listings) {
-                const newItemsPromises = listings.map(async (m, i) => {
+            if (mints) {
+                const newItemsPromises = mints.map(async (m, i) => {
                     const realName = await getRealName(m.token_id);
                     return {
                         id: `just-${i}`,
-                        label: 'Just Listed', // تعديل: التسمية مطابقة لـ Home
-                        value: realName,
+                        label: 'Just Listed', // الاسم كما في Home
+                        value: realName, // الاسم الحقيقي
                         link: `/asset/${m.token_id}`,
                         type: 'NEW' as const
                     };
@@ -143,7 +148,7 @@ export default function MarketTicker() {
                 setNewItems(await Promise.all(newItemsPromises));
             }
 
-            // ج) Top Performers: البحث عن أعلى المبيعات
+            // ج) Top Performers: (أعلى المبيعات)
             const { data: tops } = await supabase
                 .from('activities')
                 .select('token_id, price')
@@ -156,8 +161,8 @@ export default function MarketTicker() {
                     const realName = await getRealName(s.token_id);
                     return {
                         id: `top-${i}`,
-                        label: 'Top Performers', // تعديل: التسمية مطابقة لـ Home
-                        value: realName,
+                        label: 'Top Performers', // الاسم كما في Home
+                        value: realName, // الاسم الحقيقي
                         link: `/asset/${s.token_id}`,
                         type: 'TOP' as const
                     };
