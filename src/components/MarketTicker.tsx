@@ -3,19 +3,20 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { usePublicClient } from 'wagmi'; 
-import { parseAbi, erc721Abi, formatEther } from 'viem'; // تمت إضافة formatEther
-import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config'; // تأكدنا من استيراد عنوان الماركت
+import { parseAbi, erc721Abi } from 'viem';
+import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 
-// --- إعداد اتصال Supabase ---
+// --- Supabase Config ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- ABI الخاص بالماركت (مأخوذ من كود Home) ---
+// --- Market ABI (Same as Home) ---
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
+// --- Helper ---
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -35,7 +36,7 @@ interface TickerItem {
 export default function MarketTicker() {
   const publicClient = usePublicClient(); 
   
-  // الحالة (State)
+  // States
   const [prices, setPrices] = useState({ eth: 0, ethChange: 0, pol: 0, polChange: 0 });
   const [ngxIndex, setNgxIndex] = useState({ val: '84.2', change: 1.5 });
   const [ngxCap, setNgxCap] = useState({ val: '$2.54B', change: 4.88 });
@@ -44,10 +45,9 @@ export default function MarketTicker() {
   
   const [topItems, setTopItems] = useState<TickerItem[]>([]);
   const [newItems, setNewItems] = useState<TickerItem[]>([]);
-  
   const [lastFetchTime, setLastFetchTime] = useState(0);
 
-  // 1. جلب أسعار العملات (مستقل)
+  // 1. Fetch Prices (CoinGecko)
   useEffect(() => {
     const fetchPrices = async () => {
       try {
@@ -70,7 +70,7 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // 2. جلب مؤشرات NGX
+  // 2. Fetch NGX Data
   useEffect(() => {
     const fetchNgxData = async () => {
       try {
@@ -85,54 +85,54 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. المنطق الهجين المتطابق مع Home (Contract + DB Aggregation)
+  // 3. Hybrid Logic (Exact match to Home Page)
   useEffect(() => {
     const fetchHomeLogicData = async () => {
         const now = Date.now();
-        // كاش لمدة دقيقتين
-        if (now - lastFetchTime < 120000 && lastFetchTime !== 0) return;
-
+        if (now - lastFetchTime < 120000 && lastFetchTime !== 0) return; // 2 min cache
         if (!publicClient) return;
 
         try {
-            // أ) جلب كل العروض من البلوكشين (مثل Home تماماً)
+            // A. Get Listings from Smart Contract (Source of Truth)
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
                 functionName: 'getAllListings'
             });
-            const [tokenIds, pricesOnChain] = data; // sellers لا نحتاجه هنا
+            const [tokenIds] = data; // We only need IDs to sort
 
             if (tokenIds.length === 0) return;
 
-            // ب) تجهيز خريطة الفوليوم من Supabase (لحساب Top Performers)
-            const { data: allActivities } = await supabase.from('activities').select('token_id, price, activity_type, created_at');
-            const volumeMap: any = {};
+            // B. Get Volume Data from Supabase (For sorting Top Performers)
+            const { data: sales } = await supabase
+                .from('activities')
+                .select('token_id, price, created_at')
+                .eq('activity_type', 'Sale');
+
+            const volumeMap: Record<number, number> = {};
+            let volToday = 0; 
+            let volYest = 0;
             const oneDay = 24 * 60 * 60 * 1000;
-            let totalVolToday = 0; 
-            let totalVolYest = 0;
 
-            if (allActivities) {
-                allActivities.forEach((act: any) => {
-                    const tid = Number(act.token_id);
-                    const price = Number(act.price) || 0;
-                    const time = new Date(act.created_at).getTime();
+            if (sales) {
+                sales.forEach((s: any) => {
+                    const tid = Number(s.token_id);
+                    const price = Number(s.price) || 0;
+                    const time = new Date(s.created_at).getTime();
+                    
+                    // Map volume per ID
+                    volumeMap[tid] = (volumeMap[tid] || 0) + price;
 
-                    // حساب الفوليوم لكل أصل (لترتيب Top Performers)
-                    if (act.activity_type === 'Sale') {
-                        volumeMap[tid] = (volumeMap[tid] || 0) + price;
-                        
-                        // حساب NNM Vol الإجمالي للموقع
-                        if (now - time <= oneDay) totalVolToday += price;
-                        else if (now - time <= 2 * oneDay) totalVolYest += price;
-                    }
+                    // Calculate Global NNM Vol
+                    if (now - time <= oneDay) volToday += price;
+                    else if (now - time <= 2 * oneDay) volYest += price;
                 });
             }
+            
+            // Set NNM Vol Change
+            setNnmVolChange(volYest === 0 ? (volToday > 0 ? 100 : 0) : ((volToday - volYest) / volYest) * 100);
 
-            // ضبط نسبة NNM VOL
-            setNnmVolChange(totalVolYest === 0 ? (totalVolToday > 0 ? 100 : 0) : ((totalVolToday - totalVolYest) / totalVolYest) * 100);
-
-            // ج) دالة لجلب الاسم
+            // C. Helper to get Name from Chain
             const getRealName = async (tokenId: bigint) => {
                 try {
                     const uri = await publicClient.readContract({
@@ -147,19 +147,15 @@ export default function MarketTicker() {
                 } catch { return `Asset #${tokenId}`; }
             };
 
-            // د) تحضير القائمة الأساسية
-            // ملاحظة: نحتاج فقط أعلى 3 وأحدث 3، لذا لا داعي لجلب أسماء الكل لتوفير الموارد
-            // سنقوم بالفرز (Sort) أولاً باستخدام الـ IDs والفوليوم، ثم نجلب أسماء الفائزين فقط.
-
-            const allListings = tokenIds.map((id, index) => ({
+            // D. Prepare Base List
+            const allItems = tokenIds.map(id => ({
                 id: Number(id),
-                price: pricesOnChain[index],
                 volume: volumeMap[Number(id)] || 0
             }));
 
-            // --- 1. Just Listed (ترتيب حسب الـ ID تنازلي - الأحدث) ---
-            const sortedByNew = [...allListings].sort((a, b) => b.id - a.id).slice(0, 3);
-            const newListingsPromises = sortedByNew.map(async (item, i) => {
+            // --- Logic 1: Just Listed (Sort by ID Descending -> Newest ID first) ---
+            const sortedNew = [...allItems].sort((a, b) => b.id - a.id).slice(0, 3);
+            const newItemsData = await Promise.all(sortedNew.map(async (item, i) => {
                 const name = await getRealName(BigInt(item.id));
                 return {
                     id: `just-${i}`,
@@ -168,27 +164,26 @@ export default function MarketTicker() {
                     link: `/asset/${item.id}`,
                     type: 'NEW' as const
                 };
-            });
-            setNewItems(await Promise.all(newListingsPromises));
+            }));
+            setNewItems(newItemsData);
 
-            // --- 2. Top Performers (ترتيب حسب الفوليوم تنازلي) ---
-            const sortedByVol = [...allListings].sort((a, b) => b.volume - a.volume).slice(0, 3);
-            const topListingsPromises = sortedByVol.map(async (item, i) => {
+            // --- Logic 2: Top Performers (Sort by Volume Descending -> Highest Sales first) ---
+            const sortedTop = [...allItems].sort((a, b) => b.volume - a.volume).slice(0, 3);
+            const topItemsData = await Promise.all(sortedTop.map(async (item, i) => {
                 const name = await getRealName(BigInt(item.id));
                 return {
                     id: `top-${i}`,
                     label: 'Top Performers',
                     value: name,
-                    // sub: `${item.volume.toFixed(1)} POL`, // اختياري: عرض الفوليوم بجانب الاسم
                     link: `/asset/${item.id}`,
                     type: 'TOP' as const
                 };
-            });
-            setTopItems(await Promise.all(topListingsPromises));
+            }));
+            setTopItems(topItemsData);
 
             setLastFetchTime(now);
 
-        } catch (e) { console.error("Ticker Hybrid Logic Error", e); }
+        } catch (e) { console.error("Home Logic Error", e); }
     };
 
     fetchHomeLogicData();
@@ -196,7 +191,7 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, [publicClient, lastFetchTime]);
 
-  // --- تجميع الشريط ---
+  // --- Ticker Compilation ---
   const items = useMemo(() => {
     const marketItems: TickerItem[] = [
         { id: 'ngx', label: 'NGX INDEX', value: ngxIndex.val, change: ngxIndex.change, isUp: ngxIndex.change >= 0, link: '/ngx', type: 'NGX' },
