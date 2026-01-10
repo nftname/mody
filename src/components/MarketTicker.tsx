@@ -173,7 +173,7 @@ export default function MarketTicker() {
                 const name = await getRealName(BigInt(item.id));
                 return {
                     id: `top-${i}`,
-                    label: 'Top Performers',
+                    label: 'Top Assets',
                     value: name,
                     link: `/asset/${item.id}`,
                     type: 'TOP' as const

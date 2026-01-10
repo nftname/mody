@@ -17,10 +17,6 @@ const SECTORS = [
 ];
 
 export async function GET(request: Request) {
-  // (اختياري) التحقق من مفتاح سري لضمان أن لا أحد غيرك يستدعي هذا الرابط
-  // const authHeader = request.headers.get('authorization');
-  // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) { return new Response('Unauthorized', { status: 401 }); }
-
   try {
     const allTokenIds = SECTORS.flatMap(s => s.tokens).join(',');
     
@@ -32,6 +28,10 @@ export async function GET(request: Request) {
     const data = await response.json();
     const now = Date.now();
     const recordsToInsert = [];
+
+    // 1. حساب القطاعات الفرعية
+    let totalAllSum = 0;
+    let totalAllCount = 0;
 
     for (const sector of SECTORS) {
       let sumPrice = 0;
@@ -45,12 +45,27 @@ export async function GET(request: Request) {
       });
 
       if (count > 0) {
+        // إضافة سجل القطاع الفرعي
+        const sectorValue = sumPrice / count;
         recordsToInsert.push({
           sector_key: sector.key,
           timestamp: now,
-          value: sumPrice / count // نفس معادلة المتوسط في السكربت التاريخي
+          value: sectorValue
         });
+
+        // تجميع للقطاع العام
+        totalAllSum += sectorValue;
+        totalAllCount++;
       }
+    }
+
+    // 2. حساب وإضافة القطاع العام (ALL) - هذا كان ناقصاً
+    if (totalAllCount > 0) {
+        recordsToInsert.push({
+            sector_key: 'ALL',
+            timestamp: now,
+            value: totalAllSum / totalAllCount // متوسط المتوسطات
+        });
     }
 
     if (recordsToInsert.length > 0) {

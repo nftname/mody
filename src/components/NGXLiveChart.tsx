@@ -8,7 +8,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- تعريف القطاعات (تم تعديل الأسماء بحذف حرف s) ---
 const SECTORS = [
   { key: 'All NFT Index', dbKey: 'ALL', color: '#C0D860' },     
   { key: 'Digital Name Assets', dbKey: 'NAM', color: '#38BDF8' }, 
@@ -17,17 +16,17 @@ const SECTORS = [
   { key: 'Utility NFT', dbKey: 'UTL', color: '#00D8D6' }         
 ];
 
+// تعديل: تعريف الفلاتر ليكون أكثر دقة
 const TIMEFRAMES = [
-    { label: '1H', value: '1H', days: 1 },    
-    { label: '4H', value: '4H', days: 7 },    
-    { label: '1D', value: '1D', days: 30 },   
+    { label: '1H', value: '1H', days: 1 },    // آخر 24 ساعة
+    { label: '4H', value: '4H', days: 7 },    // آخر 7 أيام
+    { label: '1D', value: '1D', days: 30 },   // آخر 30 يوم
     { label: '1W', value: '1W', days: 90 },   
     { label: '1M', value: '1M', days: 180 },  
     { label: '1Y', value: '1Y', days: 365 },  
     { label: 'ALL', value: 'ALL', days: 0 }   
 ];
 
-// --- هوك لإغلاق القوائم عند النقر خارجها ---
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
     const listener = (event: any) => {
@@ -45,7 +44,9 @@ function useClickOutside(ref: any, handler: any) {
 
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const [activeTimeframe, setActiveTimeframe] = useState('ALL');
+  
+  // 1. التعديل الجراحي الأول: الفلتر الافتراضي أصبح 1D
+  const [activeTimeframe, setActiveTimeframe] = useState('1D');
   const [activeSector, setActiveSector] = useState(SECTORS[0].key);
   
   const [chartInstance, setChartInstance] = useState<any>(null);
@@ -62,7 +63,6 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- دالة جلب البيانات ---
   const fetchData = async (sectorKey: string) => {
     setIsLoading(true);
     const sectorInfo = SECTORS.find(s => s.key === sectorKey);
@@ -78,13 +78,11 @@ export default function NGXLiveChart() {
 
         if (error) throw error;
 
-        // تنسيق البيانات + قص الفترة الميتة (البدء من 2019)
         const data = sectorData.reverse().map((row: any) => ({
             time: Math.floor(row.timestamp / 1000) as any,
             value: Number(row.value)
-        })).filter((item: any) => item.time >= 1546300800); // 1546300800 = 1 Jan 2019
+        })).filter((item: any) => item.time >= 1546300800);
 
-        // إزالة التكرارات
         const uniqueData = data.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
         setChartData(uniqueData);
 
@@ -95,7 +93,6 @@ export default function NGXLiveChart() {
     }
   };
 
-  // --- إعداد الرسم البياني ---
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -115,7 +112,7 @@ export default function NGXLiveChart() {
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true,
-        timeVisible: true,
+        timeVisible: true, // مهم جداً: السماح بظهور الوقت
         secondsVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
@@ -173,6 +170,7 @@ export default function NGXLiveChart() {
     handleResize();
     window.addEventListener('resize', handleResize);
 
+    // تحميل البيانات الافتراضية للقطاع الأول (ALL)
     fetchData(SECTORS[0].key);
 
     return () => {
@@ -181,12 +179,10 @@ export default function NGXLiveChart() {
     };
   }, []);
 
-  // --- تحديث عند تغيير القطاع ---
   useEffect(() => {
     fetchData(activeSector);
   }, [activeSector]);
 
-  // --- تحديث الرسم عند وصول البيانات ---
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
@@ -198,10 +194,19 @@ export default function NGXLiveChart() {
             bottomColor: `${currentSector.color}00`, 
         });
 
+        // 2. التعديل الجراحي الثاني: ضبط عرض الوقت بناءً على الفلتر
+        // إذا كان الفلتر 1H أو 4H أو 1D نظهر الوقت (الساعات)، غير ذلك نظهر التاريخ فقط
+        const isIntraday = ['1H', '4H', '1D'].includes(activeTimeframe);
+        chartInstance.timeScale().applyOptions({
+            timeVisible: isIntraday,
+            secondsVisible: false,
+        });
+
         const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
         let filteredData = chartData;
 
         if (tf && tf.days > 0) {
+            // حساب وقت القطع بناءً على عدد الأيام المطلوبة
             const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
             filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
         }
