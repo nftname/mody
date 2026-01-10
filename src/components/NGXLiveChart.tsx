@@ -16,11 +16,11 @@ const SECTORS = [
   { key: 'Utility NFT', dbKey: 'UTL', color: '#00D8D6' }         
 ];
 
-// تعديل: تعريف الفلاتر ليكون أكثر دقة
+// تعريف الفلاتر
 const TIMEFRAMES = [
-    { label: '1H', value: '1H', days: 1 },    // آخر 24 ساعة
-    { label: '4H', value: '4H', days: 7 },    // آخر 7 أيام
-    { label: '1D', value: '1D', days: 30 },   // آخر 30 يوم
+    { label: '1H', value: '1H', days: 1 },    
+    { label: '4H', value: '4H', days: 7 },    
+    { label: '1D', value: '1D', days: 30 },   
     { label: '1W', value: '1W', days: 90 },   
     { label: '1M', value: '1M', days: 180 },  
     { label: '1Y', value: '1Y', days: 365 },  
@@ -45,7 +45,7 @@ function useClickOutside(ref: any, handler: any) {
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   
-  // 1. التعديل الجراحي الأول: الفلتر الافتراضي أصبح 1D
+  // الفلتر الافتراضي 1D
   const [activeTimeframe, setActiveTimeframe] = useState('1D');
   const [activeSector, setActiveSector] = useState(SECTORS[0].key);
   
@@ -78,8 +78,9 @@ export default function NGXLiveChart() {
 
         if (error) throw error;
 
+        // تحويل البيانات
         const data = sectorData.reverse().map((row: any) => ({
-            time: Math.floor(row.timestamp / 1000) as any,
+            time: Math.floor(row.timestamp / 1000) as any, // Unix Timestamp
             value: Number(row.value)
         })).filter((item: any) => item.time >= 1546300800);
 
@@ -96,6 +97,7 @@ export default function NGXLiveChart() {
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
+    // إعداد الشارت
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
@@ -109,15 +111,24 @@ export default function NGXLiveChart() {
       },
       width: chartContainerRef.current.clientWidth,
       height: 400,
+      // --- التعديل الجراحي هنا: إجبار الوقت على الظهور ---
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true,
-        timeVisible: true, // مهم جداً: السماح بظهور الوقت
-        secondsVisible: false,
-        fixLeftEdge: true,
-        fixRightEdge: true,
-        rightOffset: 10,
-        minBarSpacing: 0.5,
+        timeVisible: true,      // إظهار الوقت
+        secondsVisible: false,  // إخفاء الثواني
+        tickMarkFormatter: (time: number, tickMarkType: any, locale: any) => {
+            // تحويل الـ Timestamp إلى تاريخ
+            const date = new Date(time * 1000);
+            
+            // إذا كنا في وضع 1H أو 4H، نعرض الساعة والدقيقة
+            if (activeTimeframe === '1H' || activeTimeframe === '4H') {
+                return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
+            }
+            
+            // في باقي الأوضاع نعرض اليوم والشهر
+            return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
+        },
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -141,7 +152,13 @@ export default function NGXLiveChart() {
             labelVisible: true,
         },
       },
-      localization: { locale: 'en-US' },
+      localization: { 
+          locale: 'en-US',
+          timeFormatter: (timestamp: number) => {
+              const date = new Date(timestamp * 1000);
+              return date.toLocaleString(); 
+          }
+      },
       handleScroll: { vertTouchDrag: false }, 
       handleScale: { axisPressedMouseMove: true },
     });
@@ -170,19 +187,21 @@ export default function NGXLiveChart() {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // تحميل البيانات الافتراضية للقطاع الأول (ALL)
+    // تحميل البيانات الأولية
     fetchData(SECTORS[0].key);
 
     return () => {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, []);
+  }, []); // تشغيل مرة واحدة عند التحميل
 
+  // تحديث عند تغيير القطاع
   useEffect(() => {
     fetchData(activeSector);
   }, [activeSector]);
 
+  // تحديث عند تغيير البيانات أو الفلتر الزمني
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
@@ -194,19 +213,29 @@ export default function NGXLiveChart() {
             bottomColor: `${currentSector.color}00`, 
         });
 
-        // 2. التعديل الجراحي الثاني: ضبط عرض الوقت بناءً على الفلتر
-        // إذا كان الفلتر 1H أو 4H أو 1D نظهر الوقت (الساعات)، غير ذلك نظهر التاريخ فقط
-        const isIntraday = ['1H', '4H', '1D'].includes(activeTimeframe);
-        chartInstance.timeScale().applyOptions({
-            timeVisible: isIntraday,
-            secondsVisible: false,
+        // 2. تحديث إعدادات الوقت بناءً على الفلتر المختار
+        const isIntraday = ['1H', '4H'].includes(activeTimeframe);
+        
+        // نحدث الـ tickMarkFormatter ديناميكياً بناءً على الـ State الحالية
+        chartInstance.applyOptions({
+            timeScale: {
+                timeVisible: true, // دائماً true لكن الفورمات يتغير
+                tickMarkFormatter: (time: number) => {
+                    const date = new Date(time * 1000);
+                    if (isIntraday) {
+                         // عرض الساعات فقط (مثل 14:00)
+                        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    }
+                    // عرض التاريخ (مثل Jan 12)
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }
+            }
         });
 
         const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
         let filteredData = chartData;
 
         if (tf && tf.days > 0) {
-            // حساب وقت القطع بناءً على عدد الأيام المطلوبة
             const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
             filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
         }
@@ -214,7 +243,7 @@ export default function NGXLiveChart() {
         seriesInstance.setData(filteredData);
         chartInstance.timeScale().fitContent();
     }
-  }, [chartData, activeTimeframe, seriesInstance, chartInstance]);
+  }, [chartData, activeTimeframe, seriesInstance, chartInstance, activeSector]); // أضفت activeSector و chartData للمراقبة
 
   const currentColor = SECTORS.find(s => s.key === activeSector)?.color;
   const currentTimeframeLabel = TIMEFRAMES.find(t => t.value === activeTimeframe)?.label;
