@@ -3,11 +3,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries, ISeriesApi } from 'lightweight-charts';
 import { createClient } from '@supabase/supabase-js';
 
-// --- إعداد اتصال Supabase ---
+// --- إعداد اتصال Supabase (للقراءة فقط) ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// --- تعريف القطاعات وربطها بمفاتيح قاعدة البيانات ---
 const SECTORS = [
   { key: 'All NFTs Index', dbKey: 'ALL', color: '#C0D860' },     
   { key: 'Digital Name Assets', dbKey: 'NAM', color: '#38BDF8' }, 
@@ -17,16 +18,16 @@ const SECTORS = [
 ];
 
 const TIMEFRAMES = [
-    { label: '1H', value: '1H', days: 1 },    
-    { label: '4H', value: '4H', days: 7 },    
-    { label: '1D', value: '1D', days: 30 },   
-    { label: '1W', value: '1W', days: 90 },   
-    { label: '1M', value: '1M', days: 180 },  
-    { label: '1Y', value: '1Y', days: 365 },  
-    { label: 'ALL', value: 'ALL', days: 0 }   
+    { label: '1H', value: '1H', days: 1 },    // سنعرض يوم واحد للتفاصيل الدقيقة
+    { label: '4H', value: '4H', days: 7 },    // أسبوع
+    { label: '1D', value: '1D', days: 30 },   // شهر
+    { label: '1W', value: '1W', days: 90 },   // 3 شهور
+    { label: '1M', value: '1M', days: 180 },  // 6 شهور
+    { label: '1Y', value: '1Y', days: 365 },  // سنة
+    { label: 'ALL', value: 'ALL', days: 0 }   // كل التاريخ
 ];
 
-// Hook لإغلاق القوائم عند النقر خارجها
+// --- هوك لإغلاق القوائم عند النقر خارجها ---
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
     const listener = (event: any) => {
@@ -49,7 +50,7 @@ export default function NGXLiveChart() {
   
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
-  const [chartData, setChartData] = useState<any[]>([]); 
+  const [chartData, setChartData] = useState<any[]>([]); // تخزين البيانات الخام
   const [isLoading, setIsLoading] = useState(false);
 
   const [isSectorOpen, setIsSectorOpen] = useState(false);
@@ -61,36 +62,59 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
+  // --- دالة جلب البيانات من Supabase ---
   const fetchData = async (sectorKey: string) => {
     setIsLoading(true);
     const sectorInfo = SECTORS.find(s => s.key === sectorKey);
     if (!sectorInfo) return;
 
     try {
-        // --- التعديل هنا: إضافة .limit(5000) لكسر حاجز الـ 1000 صف الافتراضي ---
-        const { data: sectorData, error } = await supabase
-            .from('ngx_chart_history')
-            .select('timestamp, value')
-            .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: true })
-            .limit(5000); // <--- هذا هو الحل لجلب كل السنوات حتى 2026
+        let data: any[] = [];
 
-        if (error) throw error;
+        if (sectorInfo.dbKey === 'ALL') {
+            // منطق حساب المؤشر العام: نجلب كل القطاعات ونحسب المتوسط
+            const { data: allData, error } = await supabase
+                .from('ngx_chart_history')
+                .select('timestamp, value, sector_key')
+                .order('timestamp', { ascending: true });
 
-        if (!sectorData || sectorData.length === 0) {
-            console.warn("No data found for sector:", sectorInfo.dbKey);
-            setChartData([]);
-            return;
+            if (error) throw error;
+
+            // تجميع البيانات حسب التوقيت لحساب المتوسط
+            const groupedByTime: Record<number, number[]> = {};
+            allData.forEach((row: any) => {
+                if (!groupedByTime[row.timestamp]) groupedByTime[row.timestamp] = [];
+                groupedByTime[row.timestamp].push(Number(row.value));
+            });
+
+            // تحويلها لمصفوفة للرسم البياني
+            data = Object.keys(groupedByTime).map(ts => {
+                const values = groupedByTime[Number(ts)];
+                const avg = values.reduce((a, b) => a + b, 0) / values.length;
+                return {
+                    time: Math.floor(Number(ts) / 1000) as any, // تحويل لثواني
+                    value: avg
+                };
+            }).sort((a, b) => (a.time as number) - (b.time as number));
+
+        } else {
+            // جلب قطاع محدد
+            const { data: sectorData, error } = await supabase
+                .from('ngx_chart_history')
+                .select('timestamp, value')
+                .eq('sector_key', sectorInfo.dbKey)
+                .order('timestamp', { ascending: true });
+
+            if (error) throw error;
+
+            data = sectorData.map((row: any) => ({
+                time: Math.floor(row.timestamp / 1000) as any,
+                value: Number(row.value)
+            }));
         }
 
-        const formattedData = sectorData.map((row: any) => ({
-            time: Math.floor(row.timestamp / 1000) as any,
-            value: Number(row.value)
-        }));
-
-        // إزالة التكرار
-        const uniqueData = formattedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
-        
+        // إزالة التكرارات إن وجدت لضمان الرسم السليم
+        const uniqueData = data.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
         setChartData(uniqueData);
 
     } catch (err) {
@@ -100,7 +124,7 @@ export default function NGXLiveChart() {
     }
   };
 
-  // تهيئة الرسم البياني
+  // --- تهيئة الرسم البياني (تعمل مرة واحدة) ---
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -124,8 +148,8 @@ export default function NGXLiveChart() {
         secondsVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
-        rightOffset: 5,
-        minBarSpacing: 0.1, // لضغط الرسم وإظهار مدة أطول
+        rightOffset: 10,
+        minBarSpacing: 0.5,
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -134,13 +158,29 @@ export default function NGXLiveChart() {
       },
       crosshair: {
         mode: CrosshairMode.Normal,
+        vertLine: {
+            color: 'rgba(255, 255, 255, 0.3)',
+            width: 1,
+            style: 3,
+            labelBackgroundColor: '#242424',
+            labelVisible: true,
+        },
+        horzLine: {
+            color: 'rgba(255, 255, 255, 0.3)',
+            width: 1,
+            style: 3,
+            labelBackgroundColor: '#242424',
+            labelVisible: true,
+        },
       },
       localization: { locale: 'en-US' },
+      handleScroll: { vertTouchDrag: false }, 
+      handleScale: { axisPressedMouseMove: true },
     });
 
     const newSeries = chart.addSeries(AreaSeries, {
       lineWidth: 2,
-      lineColor: '#C0D860', 
+      lineColor: '#C0D860', // لون افتراضي
       topColor: 'rgba(192, 216, 96, 0.4)',
       bottomColor: 'rgba(192, 216, 96, 0.0)',
     });
@@ -161,7 +201,9 @@ export default function NGXLiveChart() {
     
     handleResize();
     window.addEventListener('resize', handleResize);
-    fetchData(SECTORS[0].key); // جلب البيانات عند البدء
+
+    // جلب البيانات الأولية
+    fetchData(SECTORS[0].key);
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -169,27 +211,28 @@ export default function NGXLiveChart() {
     };
   }, []);
 
-  // تحديث عند تغيير القطاع
+  // --- تحديث البيانات عند تغيير القطاع ---
   useEffect(() => {
     fetchData(activeSector);
   }, [activeSector]);
 
-  // تحديث الرسم عند وصول البيانات
+  // --- تحديث الرسم عند وصول البيانات أو تغيير الفلتر الزمني ---
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
         if (!currentSector) return;
 
+        // تحديث الألوان
         seriesInstance.applyOptions({
             lineColor: currentSector.color,
-            topColor: `${currentSector.color}66`, 
-            bottomColor: `${currentSector.color}00`, 
+            topColor: `${currentSector.color}66`, // شفافية 40%
+            bottomColor: `${currentSector.color}00`, // شفافية 0%
         });
 
+        // تطبيق الفلتر الزمني (Zoom)
         const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
         let filteredData = chartData;
 
-        // فلترة الوقت
         if (tf && tf.days > 0) {
             const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
             filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
@@ -205,8 +248,9 @@ export default function NGXLiveChart() {
 
   return (
     <div className="ngx-chart-glass mb-4">
-      {/* Filters UI */}
+      
       <div className="filters-container">
+        {/* Sector Selector */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
@@ -236,12 +280,14 @@ export default function NGXLiveChart() {
            )}
         </div>
 
+        {/* Loading Indicator */}
         {isLoading && (
             <div className="loading-indicator">
-                <span className="spinner"></span>
+                <span className="spinner"></span> Updating...
             </div>
         )}
 
+        {/* Timeframe Selector */}
         <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
@@ -268,13 +314,14 @@ export default function NGXLiveChart() {
              </div>
            )}
         </div>
+
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper" />
       
       <div className="text-end px-2 pb-2">
           <small className="text-muted fst-italic" style={{ fontSize: '10px' }}>
-              * NGX Global Index v1.0
+              * Data sourced via CoinGecko & Processed by NGX Engine.
           </small>
       </div>
 
@@ -282,46 +329,123 @@ export default function NGXLiveChart() {
         .ngx-chart-glass {
             background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 8px;
             padding: 15px;
             width: 100%;
             position: relative;
             min-height: 400px;
+            overflow: hidden;
         }
+
+        .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
         .chart-canvas-wrapper { width: 100%; height: 400px; }
+
         .filters-container {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; position: relative; z-index: 50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 10px;
+            position: relative;
+            z-index: 50;
         }
-        .loading-indicator { font-size: 10px; color: #666; }
+
+        .loading-indicator {
+            font-size: 10px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
         .spinner {
-            width: 10px; height: 10px; border: 1px solid #666;
-            border-top-color: transparent; border-radius: 50%;
+            width: 8px; height: 8px;
+            border: 1px solid #666;
+            border-top-color: transparent;
+            border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
         .filter-wrapper { position: relative; }
-        .sector-wrapper { width: auto; min-width: 200px; }
+        .sector-wrapper { width: auto; min-width: 200px; max-width: 280px; }
+        .time-wrapper { width: auto; min-width: 70px; }
+
         .custom-select-trigger {
-            padding: 6px 12px; font-size: 13px; font-weight: 700;
-            color: #E0E0E0; background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px;
-            cursor: pointer; display: flex; justify-content: space-between;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #E0E0E0;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            white-space: nowrap;
         }
-        .custom-options {
-            position: absolute; top: 100%; left: 0; width: 100%;
-            background: rgba(30, 30, 30, 0.95); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 6px; margin-top: 4px; z-index: 100;
+
+        .custom-select-trigger:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
         }
-        .custom-option {
-            padding: 8px 10px; font-size: 12px; color: #B0B0B0;
-            cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02);
+
+        .time-trigger {
+            justify-content: center;
+            font-weight: 600;
         }
-        .custom-option:hover { color: var(--hover-color, #fff); background: rgba(255,255,255,0.05); }
+
         .arrow { font-size: 8px; opacity: 0.7; }
+
+        .custom-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 100%;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            margin-top: 4px;
+            overflow: hidden;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        .time-options {
+            right: 0;
+            left: auto;
+            width: 100%;
+        }
+
+        .custom-option {
+            padding: 8px 10px;
+            font-size: 12px;
+            color: #B0B0B0;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            text-align: left;
+            white-space: nowrap;
+        }
+        .time-options .custom-option { text-align: center; }
+
+        .custom-option:last-child { border-bottom: none; }
+        .custom-option:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+        .custom-option:hover { color: var(--hover-color, #fff); }
+        .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
+
         @media (max-width: 768px) {
-             .chart-canvas-wrapper { height: 350px !important; }
+            .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
+            .chart-canvas-wrapper { height: 350px !important; }
+            .filters-container { padding: 5px 0px; margin-bottom: 5px; }
+            .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
+            .sector-wrapper { flex-grow: 0; width: 55%; max-width: 190px; margin-right: auto; }
+            .time-wrapper { width: auto; min-width: 60px; flex-shrink: 0; }
         }
       `}</style>
     </div>
