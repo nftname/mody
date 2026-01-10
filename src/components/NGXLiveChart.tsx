@@ -3,12 +3,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries, ISeriesApi } from 'lightweight-charts';
 import { createClient } from '@supabase/supabase-js';
 
-// --- إعداد اتصال Supabase (للقراءة فقط) ---
+// --- إعداد اتصال Supabase ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- تعريف القطاعات وربطها بمفاتيح قاعدة البيانات ---
 const SECTORS = [
   { key: 'All NFTs Index', dbKey: 'ALL', color: '#C0D860' },     
   { key: 'Digital Name Assets', dbKey: 'NAM', color: '#38BDF8' }, 
@@ -27,6 +26,7 @@ const TIMEFRAMES = [
     { label: 'ALL', value: 'ALL', days: 0 }   
 ];
 
+// Hook لإغلاق القوائم عند النقر خارجها
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
     const listener = (event: any) => {
@@ -67,21 +67,30 @@ export default function NGXLiveChart() {
     if (!sectorInfo) return;
 
     try {
-        // تعديل: جلب البيانات مباشرة لـ ALL أو أي قطاع آخر لأن السكربت أصبح يجهزها مسبقاً
+        // --- التعديل هنا: إضافة .limit(5000) لكسر حاجز الـ 1000 صف الافتراضي ---
         const { data: sectorData, error } = await supabase
             .from('ngx_chart_history')
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: true });
+            .order('timestamp', { ascending: true })
+            .limit(5000); // <--- هذا هو الحل لجلب كل السنوات حتى 2026
 
         if (error) throw error;
+
+        if (!sectorData || sectorData.length === 0) {
+            console.warn("No data found for sector:", sectorInfo.dbKey);
+            setChartData([]);
+            return;
+        }
 
         const formattedData = sectorData.map((row: any) => ({
             time: Math.floor(row.timestamp / 1000) as any,
             value: Number(row.value)
         }));
 
+        // إزالة التكرار
         const uniqueData = formattedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
+        
         setChartData(uniqueData);
 
     } catch (err) {
@@ -91,6 +100,7 @@ export default function NGXLiveChart() {
     }
   };
 
+  // تهيئة الرسم البياني
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -114,8 +124,8 @@ export default function NGXLiveChart() {
         secondsVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
-        rightOffset: 10,
-        minBarSpacing: 0.5,
+        rightOffset: 5,
+        minBarSpacing: 0.1, // لضغط الرسم وإظهار مدة أطول
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -124,24 +134,8 @@ export default function NGXLiveChart() {
       },
       crosshair: {
         mode: CrosshairMode.Normal,
-        vertLine: {
-            color: 'rgba(255, 255, 255, 0.3)',
-            width: 1,
-            style: 3,
-            labelBackgroundColor: '#242424',
-            labelVisible: true,
-        },
-        horzLine: {
-            color: 'rgba(255, 255, 255, 0.3)',
-            width: 1,
-            style: 3,
-            labelBackgroundColor: '#242424',
-            labelVisible: true,
-        },
       },
       localization: { locale: 'en-US' },
-      handleScroll: { vertTouchDrag: false }, 
-      handleScale: { axisPressedMouseMove: true },
     });
 
     const newSeries = chart.addSeries(AreaSeries, {
@@ -167,7 +161,7 @@ export default function NGXLiveChart() {
     
     handleResize();
     window.addEventListener('resize', handleResize);
-    fetchData(SECTORS[0].key);
+    fetchData(SECTORS[0].key); // جلب البيانات عند البدء
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -175,10 +169,12 @@ export default function NGXLiveChart() {
     };
   }, []);
 
+  // تحديث عند تغيير القطاع
   useEffect(() => {
     fetchData(activeSector);
   }, [activeSector]);
 
+  // تحديث الرسم عند وصول البيانات
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
@@ -193,6 +189,7 @@ export default function NGXLiveChart() {
         const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
         let filteredData = chartData;
 
+        // فلترة الوقت
         if (tf && tf.days > 0) {
             const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
             filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
@@ -208,6 +205,7 @@ export default function NGXLiveChart() {
 
   return (
     <div className="ngx-chart-glass mb-4">
+      {/* Filters UI */}
       <div className="filters-container">
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
@@ -240,7 +238,7 @@ export default function NGXLiveChart() {
 
         {isLoading && (
             <div className="loading-indicator">
-                <span className="spinner"></span> Updating...
+                <span className="spinner"></span>
             </div>
         )}
 
@@ -276,7 +274,7 @@ export default function NGXLiveChart() {
       
       <div className="text-end px-2 pb-2">
           <small className="text-muted fst-italic" style={{ fontSize: '10px' }}>
-              * Data sourced via Yahoo Finance & Processed by NGX Engine.
+              * NGX Global Index v1.0
           </small>
       </div>
 
@@ -284,123 +282,46 @@ export default function NGXLiveChart() {
         .ngx-chart-glass {
             background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 8px;
             padding: 15px;
             width: 100%;
             position: relative;
             min-height: 400px;
-            overflow: hidden;
         }
-
-        .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
         .chart-canvas-wrapper { width: 100%; height: 400px; }
-
         .filters-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 0 10px;
-            position: relative;
-            z-index: 50;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; position: relative; z-index: 50;
         }
-
-        .loading-indicator {
-            font-size: 10px;
-            color: #666;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+        .loading-indicator { font-size: 10px; color: #666; }
         .spinner {
-            width: 8px; height: 8px;
-            border: 1px solid #666;
-            border-top-color: transparent;
-            border-radius: 50%;
+            width: 10px; height: 10px; border: 1px solid #666;
+            border-top-color: transparent; border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
         .filter-wrapper { position: relative; }
-        .sector-wrapper { width: auto; min-width: 200px; max-width: 280px; }
-        .time-wrapper { width: auto; min-width: 70px; }
-
+        .sector-wrapper { width: auto; min-width: 200px; }
         .custom-select-trigger {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 12px;
-            font-size: 13px;
-            font-weight: 700;
-            color: #E0E0E0;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            user-select: none;
-            white-space: nowrap;
+            padding: 6px 12px; font-size: 13px; font-weight: 700;
+            color: #E0E0E0; background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px;
+            cursor: pointer; display: flex; justify-content: space-between;
         }
-
-        .custom-select-trigger:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .time-trigger {
-            justify-content: center;
-            font-weight: 600;
-        }
-
-        .arrow { font-size: 8px; opacity: 0.7; }
-
         .custom-options {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            min-width: 100%;
-            background: rgba(30, 30, 30, 0.95);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            margin-top: 4px;
-            overflow: hidden;
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            position: absolute; top: 100%; left: 0; width: 100%;
+            background: rgba(30, 30, 30, 0.95); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px; margin-top: 4px; z-index: 100;
         }
-
-        .time-options {
-            right: 0;
-            left: auto;
-            width: 100%;
-        }
-
         .custom-option {
-            padding: 8px 10px;
-            font-size: 12px;
-            color: #B0B0B0;
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            text-align: left;
-            white-space: nowrap;
+            padding: 8px 10px; font-size: 12px; color: #B0B0B0;
+            cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02);
         }
-        .time-options .custom-option { text-align: center; }
-
-        .custom-option:last-child { border-bottom: none; }
-        .custom-option:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
-        .custom-option:hover { color: var(--hover-color, #fff); }
-        .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
-
+        .custom-option:hover { color: var(--hover-color, #fff); background: rgba(255,255,255,0.05); }
+        .arrow { font-size: 8px; opacity: 0.7; }
         @media (max-width: 768px) {
-            .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
-            .chart-canvas-wrapper { height: 350px !important; }
-            .filters-container { padding: 5px 0px; margin-bottom: 5px; }
-            .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
-            .sector-wrapper { flex-grow: 0; width: 55%; max-width: 190px; margin-right: auto; }
-            .time-wrapper { width: auto; min-width: 60px; flex-shrink: 0; }
+             .chart-canvas-wrapper { height: 350px !important; }
         }
       `}</style>
     </div>
