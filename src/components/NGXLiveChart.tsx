@@ -75,12 +75,12 @@ export default function NGXLiveChart() {
             .from('ngx_chart_history')
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: true })
+            .order('timestamp', { ascending: false })
             .limit(20000); 
 
         if (error) throw error;
 
-        const data = sectorData.map((row: any) => ({
+        const data = sectorData.reverse().map((row: any) => ({
             time: Math.floor(row.timestamp / 1000) as any,
             value: Number(row.value)
         }));
