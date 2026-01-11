@@ -177,7 +177,6 @@ const Navbar = () => {
     'Partners': 'bi-people'
   };
 
-  // تم حذف Analytics مؤقتاً لتجنب خطأ 404
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
   const secondaryLinks = ['Newsletter', 'Blog', 'Careers', 'Partners'];
 
@@ -282,7 +281,8 @@ const Navbar = () => {
         </div>
 
         {/* DESKTOP LOGO (Always Visible on Desktop) */}
-        <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0, marginRight: '15px' }}> 
+        {/* ✅ Fix 2: Increased marginRight to 50px to push links away */}
+        <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0, marginRight: '50px' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <LogoSVG mobile={false} />
               <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '22px', letterSpacing: '1px', marginTop: '1px' }}>NNM</span>
@@ -303,7 +303,7 @@ const Navbar = () => {
             <CustomWalletTrigger isMobile={true} />
         </div>
 
-        {/* DESKTOP CONTENT (Force Visible) */}
+        {/* DESKTOP CONTENT */}
         <div className="d-none d-lg-flex flex-grow-1 align-items-center justify-content-between" id="desktopNav">
             
             {/* Desktop Links */}
@@ -322,7 +322,8 @@ const Navbar = () => {
                         </li>
                     ))}
                     
-                    <li className="nav-item dropdown" style={{ zIndex: 1055 }}
+                    {/* Insights Dropdown */}
+                    <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsInsightsOpen(true)}
                         onMouseLeave={() => setIsInsightsOpen(false)}>
                       <a className={`nav-link dropdown-toggle fw-medium shadow-none desktop-nav-link ${isInsightsOpen ? 'show' : ''}`} 
@@ -330,8 +331,13 @@ const Navbar = () => {
                         style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
                         Insights
                       </a>
+                      
+                      {/* ✅ Fix 1: Added position: absolute to fix the layout shift */}
                       <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
                           style={{ 
+                              position: 'absolute',
+                              top: '100%',
+                              left: '0',
                               backgroundColor: dropdownColor, 
                               border: `1px solid ${subtleBorder}`, 
                               minWidth: '160px', 
@@ -380,7 +386,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* MOBILE DRAWER (Fixed: Added d-lg-none to prevent flashing) */}
+      {/* MOBILE DRAWER */}
       <div 
         className={`mobile-drawer d-lg-none ${isDrawerOpen ? 'open' : ''}`} 
         style={{ 
