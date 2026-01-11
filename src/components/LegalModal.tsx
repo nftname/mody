@@ -33,8 +33,8 @@ export default function LegalModal() {
       left: 0, 
       width: '100%', 
       height: '100%', 
-      backgroundColor: 'rgba(60, 65, 70, 0.4)', 
-      backdropFilter: 'blur(4px)',
+      backgroundColor: 'rgba(0, 0, 0, 0.7)', // تعتيم الخلفية وراء النافذة لزيادة التركيز
+      backdropFilter: 'blur(5px)',
       zIndex: 999999, 
       display: 'flex', 
       alignItems: 'center', 
@@ -43,7 +43,7 @@ export default function LegalModal() {
     }}>
       <style jsx global>{`
         .legal-scroll::-webkit-scrollbar { width: 5px; }
-        .legal-scroll::-webkit-scrollbar-track { background: #2B3139; }
+        .legal-scroll::-webkit-scrollbar-track { background: #252525; }
         .legal-scroll::-webkit-scrollbar-thumb { background: #4a505c; border-radius: 3px; }
         .legal-scroll::-webkit-scrollbar-thumb:hover { background: #76808f; }
         .legal-ul { margin: 4px 0 8px 15px; padding-left: 0; }
@@ -51,18 +51,18 @@ export default function LegalModal() {
       `}</style>
 
       <div style={{
-        backgroundColor: '#2B3139', 
-        border: '1px solid rgba(252, 213, 53, 0.4)', 
+        backgroundColor: '#252525', // ✅ اللون الجديد: رمادي فحمي "أخف" قليلاً من خلفية الموقع
+        border: '1px solid rgba(252, 213, 53, 0.3)', // إطار ذهبي خافت
         borderRadius: '12px',
         width: '90%', 
         maxWidth: '600px', 
         maxHeight: '85vh', 
         display: 'flex', 
         flexDirection: 'column',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.45)'
+        boxShadow: '0 20px 60px rgba(0,0,0,0.6)'
       }}>
         
-        <div className="p-3 border-bottom" style={{ borderColor: '#363c45' }}>
+        <div className="p-3 border-bottom" style={{ borderColor: '#333' }}>
           <h5 className="fw-bold m-0 ps-2" style={{ fontFamily: 'sans-serif', fontSize: '21px', color: '#E6E8EA' }}>
             <span style={{ color: '#FCD535' }}>NNM</span> Terms of Service
           </h5>
@@ -82,7 +82,7 @@ export default function LegalModal() {
               <strong style={{ color: '#E6E8EA', fontWeight: '600' }}>IMPORTANT NOTICE:</strong> By accessing, browsing, connecting a wallet to, minting through, listing on, interacting with, or otherwise using the NFT Name Market (NNM) interface (the &quot;Site&quot;) and protocol, you acknowledge that you have read, understood, and fully agree to be legally bound by this User Agreement (&quot;Agreement&quot;). If you do not agree to any portion of these Terms, you must immediately discontinue all access to the Site and Protocol.
             </p>
 
-            <div style={{ height: '1px', backgroundColor: '#363c45', margin: '12px 0' }}></div>
+            <div style={{ height: '1px', backgroundColor: '#333', margin: '12px 0' }}></div>
 
             <h6 className="fw-bold mt-3 mb-2" style={{ fontSize: '13px', fontWeight: '600', color: '#E6E8EA' }}>I. TERMS OF SERVICE & LIABILITY</h6>
 
@@ -149,7 +149,7 @@ export default function LegalModal() {
               All disputes shall be resolved by binding individual arbitration. Class-actions are waived. Governed by the laws of <strong style={{ fontWeight: '500', color: '#E6E8EA' }}>Singapore</strong>.
             </p>
 
-            <div style={{ height: '1px', backgroundColor: '#363c45', margin: '12px 0' }}></div>
+            <div style={{ height: '1px', backgroundColor: '#333', margin: '12px 0' }}></div>
 
             <h6 className="fw-bold mt-3 mb-2" style={{ fontSize: '13px', fontWeight: '600', color: '#E6E8EA' }}>II. PRIVACY POLICY</h6>
 
@@ -162,7 +162,7 @@ export default function LegalModal() {
             </ul>
             <p className="mb-3">Note that blockchain transactions are inherently public.</p>
 
-            <div style={{ height: '1px', backgroundColor: '#363c45', margin: '12px 0' }}></div>
+            <div style={{ height: '1px', backgroundColor: '#333', margin: '12px 0' }}></div>
 
             <h6 className="fw-bold mt-3 mb-2" style={{ fontSize: '13px', fontWeight: '600', color: '#E6E8EA' }}>III. INTELLECTUAL PROPERTY</h6>
 
@@ -179,7 +179,7 @@ export default function LegalModal() {
             </p>
         </div>
 
-        <div className="p-3 border-top d-flex justify-content-end gap-3" style={{ borderColor: '#363c45', backgroundColor: '#2B3139', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+        <div className="p-3 border-top d-flex justify-content-end gap-3" style={{ borderColor: '#333', backgroundColor: '#252525', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
             <button 
                 onClick={handleCancel}
                 className="btn text-secondary"
