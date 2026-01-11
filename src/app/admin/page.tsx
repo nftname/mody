@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { supabase } from '@/lib/supabase';
 
-// ✅ تم وضع محفظتك هنا لتكون أنت المدير الوحيد
+// محفظتك (المدير)
 const OWNER_WALLET = "0x5f2f670df4Db14ddB4Bc1E3eCe86CA645fb01BE6".toLowerCase();
 
 export default function AdminPage() {
@@ -21,7 +21,7 @@ export default function AdminPage() {
   const [totalVolume, setTotalVolume] = useState(0);
 
   useEffect(() => {
-    // التأكد من أن المتصل هو صاحب المحفظة المحددة
+    // التأكد من أن المتصل هو صاحب المحفظة
     if (isConnected && address && address.toLowerCase() === OWNER_WALLET) {
         setIsAdmin(true);
         fetchSettings();
@@ -33,7 +33,7 @@ export default function AdminPage() {
   }, [address, isConnected]);
 
   const fetchSettings = async () => {
-      // قراءة الإعدادات من الصف رقم 1
+      // جلب الإعدادات (الصف رقم 1)
       const { data } = await supabase.from('app_settings').select('*').eq('id', 1).single();
       if (data) {
           setMaintenanceMode(data.is_maintenance_mode);
@@ -45,131 +45,281 @@ export default function AdminPage() {
       const { data: offers } = await supabase.from('offers').select('*').eq('status', 'active');
       if (offers) {
           setOffersStats(offers);
-          const total = offers.reduce((acc, curr) => acc + (Number(curr.offer_price) || 0), 0);
+          // (TS Fix) إصلاح خطأ التايب سكريبت هنا
+          const total = offers.reduce((acc: number, curr: any) => acc + (Number(curr.offer_price) || 0), 0);
           setTotalVolume(total);
       }
   };
 
   const toggleMaintenance = async () => {
       const newVal = !maintenanceMode;
-      const { error } = await supabase.from('app_settings').update({ is_maintenance_mode: newVal }).eq('id', 1);
+      // التأكد من وجود الصف رقم 1، إذا لم يوجد ننشئه، وإلا نحدثه
+      const { data: existing } = await supabase.from('app_settings').select('id').eq('id', 1).single();
+      
+      let error;
+      if (!existing) {
+          const { error: insertError } = await supabase.from('app_settings').insert([{ id: 1, is_maintenance_mode: newVal }]);
+          error = insertError;
+      } else {
+          const { error: updateError } = await supabase.from('app_settings').update({ is_maintenance_mode: newVal }).eq('id', 1);
+          error = updateError;
+      }
+
       if (!error) {
           setMaintenanceMode(newVal);
           alert(newVal ? "🚨 SITE IS NOW CLOSED (MAINTENANCE MODE)" : "✅ SITE IS NOW LIVE");
+      } else {
+          console.error(error);
+          alert("Error updating settings. check console.");
       }
   };
 
   const saveAnnouncement = async () => {
-      await supabase.from('app_settings').update({ announcement_text: announcement }).eq('id', 1);
+      const { data: existing } = await supabase.from('app_settings').select('id').eq('id', 1).single();
+      
+      if (!existing) {
+         await supabase.from('app_settings').insert([{ id: 1, announcement_text: announcement }]);
+      } else {
+         await supabase.from('app_settings').update({ announcement_text: announcement }).eq('id', 1);
+      }
       alert('Announcement Banner Updated!');
   };
 
-  if (loading) return <div className="p-10 text-white bg-black h-screen">Verifying Identity...</div>;
+  if (loading) return <div className="loading-screen">Verifying Identity...</div>;
 
   if (!isAdmin) {
       return (
-          <div className="flex h-screen items-center justify-center bg-black text-red-600 font-bold text-3xl flex-col gap-4">
-              <i className="bi bi-shield-lock-fill text-6xl"></i>
-              <span>ACCESS DENIED</span>
-              <span className="text-sm text-gray-500">Only the owner wallet can view this page.</span>
+          <div className="access-denied">
+              <i className="bi bi-shield-lock-fill icon-large"></i>
+              <h1>ACCESS DENIED</h1>
+              <p>Only the owner wallet can view this page.</p>
           </div>
       );
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-8 font-sans">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-[#FCD535] mb-8 border-b border-gray-800 pb-4 flex items-center gap-3">
-            <i className="bi bi-cpu-fill"></i> NNM Command Center
-        </h1>
+    <div className="admin-container">
+      <div className="admin-header">
+        <h1><i className="bi bi-cpu-fill"></i> NNM Command Center</h1>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="dashboard-grid">
             
-            {/* 1. EMERGENCY CONTROLS (التحكم بالطوارئ) */}
-            <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800 shadow-2xl">
-                <h2 className="text-xl font-bold mb-6 text-red-500 flex items-center gap-2">
+            {/* 1. EMERGENCY CONTROLS */}
+            <div className="card emergency-card">
+                <div className="card-header text-red">
                     <i className="bi bi-exclamation-triangle-fill"></i> Emergency Controls
-                </h2>
+                </div>
                 
                 {/* Kill Switch */}
-                <div className="flex items-center justify-between mb-8 p-5 bg-black rounded-lg border border-gray-800">
+                <div className="control-row">
                     <div>
-                        <h3 className="font-bold text-white text-lg">Site Status (Kill Switch)</h3>
-                        <p className="text-sm text-gray-400 mt-1">If OFF, visitors will see a "Maintenance" screen.</p>
+                        <h3>Site Status (Kill Switch)</h3>
+                        <p>If OFF, visitors will see a "Maintenance" screen.</p>
                     </div>
                     <button 
                         onClick={toggleMaintenance}
-                        className={`px-6 py-3 rounded-lg font-bold text-sm tracking-wider transition-all shadow-lg ${maintenanceMode ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+                        className={`status-btn ${maintenanceMode ? 'closed' : 'live'}`}
                     >
                         {maintenanceMode ? '⛔ SITE IS CLOSED' : '✅ SITE IS LIVE'}
                     </button>
                 </div>
 
                 {/* Announcement Banner */}
-                <div className="mb-2">
-                    <h3 className="font-bold mb-3 text-white flex items-center gap-2">
-                        <i className="bi bi-megaphone-fill text-[#FCD535]"></i> Global Announcement Bar
-                    </h3>
+                <div className="control-section">
+                    <h3><i className="bi bi-megaphone-fill text-gold"></i> Global Announcement Bar</h3>
                     <textarea 
-                        className="w-full bg-black border border-gray-700 p-3 rounded-lg text-sm text-gray-300 focus:border-[#FCD535] outline-none transition-colors"
                         rows={3}
                         value={announcement}
                         onChange={(e) => setAnnouncement(e.target.value)}
-                        placeholder="Type a message here to show it at the top of the website immediately..."
+                        placeholder="Type a message here..."
                     />
-                    <div className="flex justify-end mt-3">
-                        <button onClick={saveAnnouncement} className="bg-[#FCD535] hover:bg-[#e0bc2e] text-black px-6 py-2 rounded font-bold text-sm transition-all">
-                            Save & Publish Banner
-                        </button>
+                    <div className="action-row">
+                        <button onClick={saveAnnouncement} className="action-btn">Save & Publish Banner</button>
                     </div>
                 </div>
             </div>
 
-            {/* 2. ANALYTICS (التحليل) */}
-            <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800 shadow-2xl">
-                <h2 className="text-xl font-bold mb-6 text-blue-400 flex items-center gap-2">
+            {/* 2. ANALYTICS */}
+            <div className="card analytics-card">
+                <div className="card-header text-blue">
                     <i className="bi bi-graph-up-arrow"></i> Market Pulse
-                </h2>
+                </div>
                 
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-black p-5 rounded-lg border border-gray-800 text-center">
-                        <div className="text-gray-500 text-xs uppercase font-bold tracking-widest mb-2">Active Offers</div>
-                        <div className="text-3xl font-black text-white">{offersStats.length}</div>
+                <div className="stats-row">
+                    <div className="stat-box">
+                        <div className="stat-label">Active Offers</div>
+                        <div className="stat-value">{offersStats.length}</div>
                     </div>
-                    <div className="bg-black p-5 rounded-lg border border-gray-800 text-center">
-                        <div className="text-gray-500 text-xs uppercase font-bold tracking-widest mb-2">Total Bid Value</div>
-                        <div className="text-3xl font-black text-[#FCD535]">${totalVolume.toLocaleString()}</div>
+                    <div className="stat-box">
+                        <div className="stat-label">Total Bid Value</div>
+                        <div className="stat-value text-gold">${totalVolume.toLocaleString()}</div>
                     </div>
                 </div>
 
-                <div className="overflow-hidden border border-gray-800 rounded-lg bg-black">
-                    <div className="p-3 bg-gray-900 border-b border-gray-800 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                        Latest Active Offers
-                    </div>
-                    <div className="overflow-auto max-h-[300px]">
-                        <table className="w-full text-xs text-left">
-                            <thead className="bg-gray-800 text-gray-300 sticky top-0">
+                <div className="table-container">
+                    <div className="table-title">Latest Active Offers</div>
+                    <div className="table-scroll">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <th className="p-3">Token ID</th>
-                                    <th className="p-3">Price ($)</th>
-                                    <th className="p-3">From</th>
+                                    <th>Token ID</th>
+                                    <th>Price ($)</th>
+                                    <th>From</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {offersStats.map((offer, i) => (
-                                    <tr key={i} className="border-b border-gray-800 hover:bg-gray-900 transition-colors">
-                                        <td className="p-3 text-[#FCD535] font-mono">#{offer.token_id}</td>
-                                        <td className="p-3 text-white font-bold">${Number(offer.offer_price).toLocaleString()}</td>
-                                        <td className="p-3 text-gray-500 font-mono truncate max-w-[100px]">{offer.bidder}</td>
+                                    <tr key={i}>
+                                        <td className="text-gold font-mono">#{offer.token_id}</td>
+                                        <td className="font-bold">${Number(offer.offer_price).toLocaleString()}</td>
+                                        <td className="text-gray font-mono">{offer.bidder ? `${offer.bidder.substring(0,6)}...` : 'Unknown'}</td>
                                     </tr>
                                 ))}
+                                {offersStats.length === 0 && (
+                                    <tr><td colSpan={3} style={{textAlign: 'center', padding: '20px'}}>No active offers found</td></tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-        </div>
       </div>
+
+      <style jsx>{`
+        .admin-container {
+            min-height: 100vh;
+            background-color: #050505;
+            color: #fff;
+            padding: 40px 20px;
+            font-family: 'Inter', sans-serif;
+            padding-top: 100px; /* Space for Navbar */
+        }
+        .admin-header h1 {
+            color: #FCD535;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        @media (min-width: 992px) {
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+        }
+        
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .card-header { font-size: 20px; font-weight: bold; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .text-red { color: #ff4d4d; }
+        .text-blue { color: #38BDF8; }
+        .text-gold { color: #FCD535; }
+        .text-gray { color: #888; }
+
+        /* Controls */
+        .control-row {
+            background: #000;
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .control-row h3 { margin: 0; font-size: 16px; color: #fff; }
+        .control-row p { margin: 5px 0 0; font-size: 13px; color: #888; }
+        
+        .status-btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .status-btn.live { background: #198754; color: white; }
+        .status-btn.live:hover { background: #157347; }
+        .status-btn.closed { background: #dc3545; color: white; animation: pulse 2s infinite; }
+
+        textarea {
+            width: 100%;
+            background: #000;
+            border: 1px solid #333;
+            color: #ddd;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        textarea:focus { outline: none; border-color: #FCD535; }
+        
+        .action-row { text-align: right; margin-top: 15px; }
+        .action-btn {
+            background: #FCD535;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .action-btn:hover { background: #e0bc2e; }
+
+        /* Stats */
+        .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .stat-box {
+            background: #000;
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-label { font-size: 11px; text-transform: uppercase; color: #666; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; }
+        .stat-value { font-size: 28px; font-weight: 900; color: #fff; }
+
+        /* Table */
+        .table-container { border: 1px solid #333; border-radius: 8px; background: #000; overflow: hidden; }
+        .table-title { padding: 12px; background: #111; border-bottom: 1px solid #333; font-size: 12px; font-weight: bold; color: #888; text-transform: uppercase; }
+        .table-scroll { max-height: 300px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead th { text-align: left; padding: 12px; background: #1a1a1a; color: #ccc; position: sticky; top: 0; }
+        tbody td { padding: 12px; border-bottom: 1px solid #222; color: #eee; }
+        tbody tr:hover { background: #111; }
+        
+        .font-mono { font-family: monospace; }
+        .font-bold { font-weight: bold; }
+
+        /* Loading / Access Denied */
+        .loading-screen, .access-denied {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            color: #fff;
+        }
+        .access-denied { color: #dc3545; }
+        .access-denied h1 { font-size: 32px; margin: 10px 0; }
+        .icon-large { font-size: 60px; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+      `}</style>
     </div>
   );
 }
