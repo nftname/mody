@@ -179,7 +179,7 @@ export default function NGXPage() {
         </div>
       </div>
 
-      <div className="container-fluid py-4 px-3 px-md-4" style={{ paddingBottom: '0' }}> {/* تعديل: إزالة الـ padding السفلي الكبير من هنا */}
+      <div className="container-fluid py-4 px-3 px-md-4" style={{ paddingBottom: '0' }}> 
         {/* LIVE CHART */}
         <div className="content-container mb-4">
              <NGXLiveChart />
@@ -212,8 +212,9 @@ export default function NGXPage() {
                 <p className="article-text">The emergence of neutral market observatories, classification systems, and non-speculative indices will play a critical role in this evolution. They allow participants—creators, developers, institutions, and researchers—to understand the NFT ecosystem as a whole rather than through isolated data points.</p>
                 <p className="article-text mb-3">In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.</p>
 
-                <div className="w-100 mt-2 border-top border-secondary" style={{ borderColor: '#333 !important', paddingTop: '10px' }}>
-                    <p className="fst-italic mb-0 w-100" style={{ lineHeight: '1.4', fontSize: '11px', color: '#999999' }}>
+                {/* ✅ التعديل الأول: تصغير نص إخلاء المسؤولية لتقليل الحجم مع الحفاظ على النص كاملاً */}
+                <div className="w-100 mt-2 border-top border-secondary" style={{ borderColor: '#333 !important', paddingTop: '8px' }}>
+                    <p className="fst-italic mb-0 w-100" style={{ lineHeight: '1.2', fontSize: '9px', color: '#777', opacity: 0.9 }}>
                         This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
                     </p>
                 </div>
@@ -258,16 +259,14 @@ export default function NGXPage() {
 
       </div>
 
-      {/* حل جراحي: فصل المسافات عن الشريط الملون باستخدام Spacer Divs شفافة */}
-      
-      {/* 1. مسافة علوية شفافة (بدلاً من margin-top) */}
-      <div style={{ width: '100%', height: '5rem', background: 'transparent' }}></div>
+      {/* ✅ التعديل الثاني: تقليل المسافة الفاصلة قبل البراندات بنسبة 50% (من 5rem إلى 2.5rem) */}
+      <div style={{ width: '100%', height: '2.5rem', background: 'transparent' }}></div>
 
-      {/* 2. الشريط الأسود (بدون أي مارجن خارجي قد يسبب التداخل) */}
+      {/* 2. الشريط الأسود */}
       <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" 
            style={{ 
                borderColor: '#333 !important', 
-               backgroundColor: '#0b0e11', // اللون الأسود الصريح
+               backgroundColor: '#0b0e11', 
                maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', 
                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' 
            }}>
@@ -286,7 +285,7 @@ export default function NGXPage() {
           </div>
       </div>
 
-      {/* 3. مسافة سفلية شفافة (بدلاً من margin-bottom) تفصل الشريط عن الفوتر وتكشف الخلفية الفحمية */}
+      {/* 3. مسافة سفلية شفافة */}
       <div style={{ width: '100%', height: '80px', background: 'transparent' }}></div>
 
       <style jsx global>{`
