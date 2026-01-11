@@ -99,11 +99,11 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  // ✅ التعديل الجراحي: اللون الأسود الغني الموحد
+  // ✅ الألوان الموحدة (جراحي)
   const exactDarkColor = '#0B0E11'; 
   const drawerBgColor = '#1E1E1E'; 
   
-  const dropdownColor = '#0B0E11'; // تم توحيد لون القائمة المنسدلة أيضاً
+  const dropdownColor = '#0B0E11'; 
   const metallicGoldHex = '#F0C420'; 
   const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
   const offWhiteText = '#E0E0E0';
@@ -169,16 +169,15 @@ const Navbar = () => {
     'NNM Concept': 'bi-layers'
   };
 
-  const secondaryIcons: { [key: string]: string } = {
-    'Analytics': 'bi-graph-up',
-    'Newsletter': 'bi-newspaper',
-    'Blog': 'bi-pencil-square',
-    'Careers': 'bi-briefcase',
-    'Partners': 'bi-people'
-  };
-
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
-  const secondaryLinks = ['Newsletter', 'Blog', 'Careers', 'Partners'];
+
+  // ✅ القائمة السفلية الجديدة (تعديل الأسماء والروابط فقط)
+  const bottomDrawerItems = [
+    { label: 'News & Updates', href: '/news', icon: 'bi-newspaper' },
+    { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' },
+    { label: 'Affiliate Program', href: '/affiliate', icon: 'bi-briefcase' },
+    { label: 'Rankings', href: '/ranking', icon: 'bi-trophy' }
+  ];
 
   const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
     const height = isMobile ? '28px' : elementHeight; 
@@ -465,15 +464,16 @@ const Navbar = () => {
 
                   <hr className="m-0 my-2" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.03)', opacity: 1 }} />
 
+                  {/* ✅ هنا التعديل الذي طلبته: استخدام القائمة الجديدة بالأسماء والروابط الصحيحة */}
                   <div className="d-flex flex-column gap-2">
-                    {secondaryLinks.map((link) => (
-                        <Link key={link} 
-                                href={`/${link.toLowerCase()}`}
+                    {bottomDrawerItems.map((item) => (
+                        <Link key={item.label} 
+                                href={item.href}
                                 onClick={closeDrawer}
                                 className="text-decoration-none fw-normal py-1 d-flex align-items-center gap-3"
                                 style={{ fontSize: '13px', color: '#888' }}>
-                            <i className={`bi ${secondaryIcons[link]}`} style={{ fontSize: '14px', opacity: 0.8 }}></i>
-                            {link}
+                            <i className={`bi ${item.icon}`} style={{ fontSize: '14px', opacity: 0.8 }}></i>
+                            {item.label}
                         </Link>
                     ))}
                   </div>
@@ -494,7 +494,6 @@ const Navbar = () => {
       {isMobileSearchOpen && (
         <div className="d-lg-none position-absolute start-0 w-100" style={{ top: '64px', zIndex: 1049, backgroundColor: exactDarkColor, padding: '12px 15px', borderBottom: `1px solid ${subtleBorder}` }}>
             <form onSubmit={handleSearch} className="position-relative">
-                {/* ✅ إزالة bg-dark لضمان عدم فرض اللون الرمادي واستبداله بـ bg-dark في كلاس البوتستراب ولكن معتمد على الخلفية الأب */}
                 <input ref={mobileSearchInputRef} type="text" className="form-control text-white shadow-none" placeholder="Search..." 
                     value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '4px', fontSize: '14px', height: '42px', paddingLeft: '38px', paddingRight: '35px', border: `1px solid ${subtleBorder}`, caretColor: metallicGoldHex }} 
