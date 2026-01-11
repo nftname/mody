@@ -1,23 +1,21 @@
 'use client';
-import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 
-// الألوان الجديدة (ذهبي مطفي)
-const GOLD_MATTE = '#CBA135';
-const GOLD_HOVER = '#E0B848';
+// الألوان الجديدة (هادئة ومريحة للعين)
+const PALE_GOLD = '#D4C49D'; // ذهبي باهت (رملي) بدلاً من الأصفر الفاقع
+const DARK_PLACEHOLDER = '#444444'; // رمادي غامق جداً للنصوص الإرشادية
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    category: 'General Inquiry', // القيمة الافتراضية للعرض
+    category: 'General Inquiry',
     message: ''
   });
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // خيارات القائمة
   const departments = [
       "General Inquiry",
       "Technical Support",
@@ -25,7 +23,6 @@ export default function ContactPage() {
       "Legal & IP"
   ];
 
-  // إغلاق القائمة عند النقر خارجها
   useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
           if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -47,11 +44,11 @@ export default function ContactPage() {
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    alert("Thank you. Your message has been simulated (Frontend Demo).");
+    alert("Message simulation: Sent successfully.");
   };
 
     const inputStyle = {
-        backgroundColor: '#1A1A1A', // لون أغمق قليلاً من الخلفية للتباين
+        backgroundColor: '#1A1A1A',
         border: '1px solid #333',
         color: '#E0E0E0',
         width: '100%',
@@ -67,8 +64,8 @@ export default function ContactPage() {
         display: 'block',
         marginBottom: '8px',
         fontSize: '13px',
-        fontWeight: '600',
-        color: '#888', // رمادي أهدأ للعنوان
+        fontWeight: '500',
+        color: '#777', // رمادي متوسط للعنوان
         textTransform: 'uppercase' as const,
         letterSpacing: '0.5px'
     };
@@ -81,11 +78,10 @@ export default function ContactPage() {
         <div className="row justify-content-center mb-5">
             <div className="col-12 col-lg-8 text-center">
                 <h1 className="fw-bold text-white mb-3" style={{ fontSize: '2.2rem', letterSpacing: '-0.5px', color: '#E0E0E0' }}>
-                    Contact <span style={{ color: GOLD_MATTE }}>NNM</span>
+                    Contact <span style={{ color: PALE_GOLD }}>NNM</span>
                 </h1>
-                <p style={{ lineHeight: '1.6', color: '#999', fontSize: '16px' }}>
-                    We are here to assist with your sovereign asset journey. 
-                    Please select the appropriate channel below.
+                <p style={{ lineHeight: '1.6', color: '#888', fontSize: '15px' }}>
+                    Select the appropriate channel below for assistance.
                 </p>
             </div>
         </div>
@@ -105,7 +101,7 @@ export default function ContactPage() {
                             <h3 className="h6 text-white m-0 fw-bold">General Inquiries</h3>
                         </div>
                         <p className="card-desc">
-                            For platform assistance, account questions, or general information.
+                            For platform assistance and general information.
                         </p>
                         <a href="mailto:contact@nftnnm.com" className="contact-link">
                             contact@nftnnm.com
@@ -121,7 +117,7 @@ export default function ContactPage() {
                             <h3 className="h6 text-white m-0 fw-bold">Media & Partnerships</h3>
                         </div>
                         <p className="card-desc">
-                            For press releases, institutional partnerships, and brand assets.
+                            For press, partnerships, and brand assets.
                         </p>
                         <a href="mailto:media@nftnnm.com" className="contact-link">
                             media@nftnnm.com
@@ -137,7 +133,7 @@ export default function ContactPage() {
                             <h3 className="h6 text-white m-0 fw-bold">Legal & Compliance</h3>
                         </div>
                         <p className="card-desc">
-                            For verified institutional inquiries only: Regulatory, IP rights, and compliance.
+                            For verified institutional inquiries only.
                         </p>
                         <a href="mailto:legal@nftnnm.com" className="contact-link">
                             legal@nftnnm.com
@@ -156,7 +152,7 @@ export default function ContactPage() {
                     <form onSubmit={handleSubmit}>
                         <div className="row g-3">
                             <div className="col-12 col-md-6">
-                                <label style={labelStyle}>Name / Organization</label>
+                                <label style={labelStyle}>Name</label>
                                 <input 
                                     type="text" 
                                     name="name"
@@ -169,7 +165,7 @@ export default function ContactPage() {
                             </div>
 
                             <div className="col-12 col-md-6">
-                                <label style={labelStyle}>Email Address</label>
+                                <label style={labelStyle}>Email</label>
                                 <input 
                                     type="email" 
                                     name="email"
@@ -181,7 +177,7 @@ export default function ContactPage() {
                                 />
                             </div>
 
-                            {/* Custom Dropdown for Department */}
+                            {/* Custom Dropdown (No Blue!) */}
                             <div className="col-12" ref={dropdownRef}>
                                 <label style={labelStyle}>Department</label>
                                 <div 
@@ -223,20 +219,21 @@ export default function ContactPage() {
                                 ></textarea>
                             </div>
 
+                            {/* الزر الجديد: إطار خفيف، خلفية زجاجية، نص ذهبي */}
                             <div className="col-12 mt-4">
                                 <button type="submit" 
-                                        className="btn w-100 fw-bold py-3 glass-gold-btn"
+                                        className="btn w-100 py-3 minimalist-btn"
                                 >
-                                    Contact NNM
+                                    Send Message
                                 </button>
                             </div>
                         </div>
                     </form>
 
                     <div className="mt-4 pt-3 border-top border-secondary border-opacity-10 text-center">
-                        <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>
+                        <p style={{ margin: 0, fontSize: '11px', color: '#555' }}>
                             <i className="bi bi-lock-fill me-1"></i>
-                            Security Note: NNM support will <strong>never</strong> ask for your private keys or seed phrase.
+                            NNM support will never ask for your private keys.
                         </p>
                     </div>
 
@@ -247,21 +244,20 @@ export default function ContactPage() {
       </div>
 
             <style jsx>{`
-                /* Styling for Cards */
+                /* Cards */
                 .contact-card {
                     background-color: #242424;
                     border: 1px solid #2E2E2E;
-                    transition: transform 0.2s, border-color 0.2s;
+                    transition: transform 0.2s;
                 }
-                .contact-card:hover {
-                    transform: translateY(-2px);
-                    border-color: #3A3A3A;
-                }
+                .contact-card:hover { transform: translateY(-2px); }
+                
+                /* Soft Gold Icons */
                 .icon-box {
                     width: 36px; height: 36px;
                     border-radius: 50%;
-                    background-color: rgba(203, 161, 53, 0.1); /* Matte Gold BG */
-                    color: ${GOLD_MATTE};
+                    background-color: rgba(212, 196, 157, 0.08); /* Pale Gold Light BG */
+                    color: ${PALE_GOLD};
                     display: flex; align-items: center; justify-content: center;
                     font-size: 16px;
                 }
@@ -271,17 +267,16 @@ export default function ContactPage() {
                     margin-bottom: 12px;
                     line-height: 1.5;
                 }
+                
+                /* Email Links: Normal weight, soft color */
                 .contact-link {
                     text-decoration: none;
-                    font-weight: 600;
-                    color: ${GOLD_MATTE};
-                    font-size: 13px;
+                    font-weight: 400; /* خط عادي وليس عريض */
+                    color: ${PALE_GOLD};
+                    font-size: 14px;
                     transition: color 0.2s;
                 }
-                .contact-link:hover {
-                    color: ${GOLD_HOVER};
-                    text-decoration: underline;
-                }
+                .contact-link:hover { color: #fff; }
 
                 /* Form Container */
                 .form-container {
@@ -290,67 +285,66 @@ export default function ContactPage() {
                     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
                 }
 
-                /* Inputs Placeholders */
+                /* Inputs: Placeholder color fix */
                 .contact-input::placeholder {
-                    color: #555; /* خفيف جداً */
+                    color: ${DARK_PLACEHOLDER}; /* رمادي غامق جداً */
                     font-weight: 400;
+                    opacity: 1; /* Fix for Firefox */
                 }
                 .contact-input:focus {
-                    border-color: ${GOLD_MATTE} !important;
+                    border-color: ${PALE_GOLD} !important;
                     background-color: #1F1F1F !important;
                 }
 
-                /* Custom Dropdown Styling */
-                .custom-select {
-                    position: relative;
-                    user-select: none;
-                }
-                .custom-select.open {
-                    border-color: ${GOLD_MATTE} !important;
-                }
+                /* Custom Dropdown: Glassy Hover, No Blue */
+                .custom-select { position: relative; user-select: none; }
+                .custom-select.open { border-color: ${PALE_GOLD} !important; }
+                
                 .dropdown-options {
                     position: absolute;
                     top: 105%;
                     left: 0;
                     width: 100%;
-                    background-color: #2A2A2A;
-                    border: 1px solid #444;
+                    background-color: #222;
+                    border: 1px solid #333;
                     border-radius: 8px;
                     z-index: 100;
                     overflow: hidden;
-                    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
                 }
                 .dropdown-options .option {
                     padding: 12px 16px;
-                    color: #CCC;
+                    color: #BBB;
                     font-size: 14px;
                     cursor: pointer;
                     transition: background 0.2s;
                 }
+                /* تأثير الزجاج عند التحويم بدلاً من الأزرق */
                 .dropdown-options .option:hover {
-                    background-color: #333;
+                    background-color: rgba(255, 255, 255, 0.05);
                     color: #FFF;
                 }
                 .dropdown-options .option.selected {
-                    background-color: rgba(203, 161, 53, 0.1);
-                    color: ${GOLD_MATTE};
-                    font-weight: 600;
+                    background-color: rgba(212, 196, 157, 0.05);
+                    color: ${PALE_GOLD};
                 }
 
-                /* Glass Gold Button */
-                .glass-gold-btn {
-                    background: rgba(255, 255, 255, 0.03); /* شفافية عالية جداً */
-                    border: 1px solid ${GOLD_MATTE}; /* إطار رفيع ذهبي مطفي */
-                    color: ${GOLD_MATTE};
+                /* Minimalist Glass Button */
+                .minimalist-btn {
+                    background-color: rgba(255, 255, 255, 0.03) !important; /* 3% opacity */
+                    border: 1px solid rgba(212, 196, 157, 0.4) !important; /* إطار ذهبي باهت وشفاف */
+                    color: ${PALE_GOLD} !important;
                     border-radius: 8px;
-                    transition: all 0.3s ease;
                     font-size: 15px;
+                    font-weight: 500;
                     letter-spacing: 0.5px;
+                    transition: all 0.3s ease;
                 }
-                .glass-gold-btn:hover {
-                    background: ${GOLD_MATTE};
-                    color: #000;
-                    box-shadow: 0 0 15px rgba(203, 161, 53, 0.3);
+                .minimalist-btn:hover {
+                    background-color: rgba(212, 196, 157, 0.1) !important;
+                    border-color: ${PALE_GOLD} !important;
+                    color: #FFF !important;
+                    transform: translateY(-1px);
                 }
             `}</style>
     </main>
