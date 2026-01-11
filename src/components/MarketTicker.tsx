@@ -210,7 +210,7 @@ export default function MarketTicker() {
 
   return (
     <div className="w-100 overflow-hidden position-relative" 
-         style={{ backgroundColor: '#0b0e11', height: '40px', zIndex: 40, borderBottom: '1px solid #222' }}>
+         style={{ backgroundColor: '#0B0E11', height: '40px', zIndex: 40, borderBottom: '1px solid #222' }}>
       
       <div className="d-flex align-items-center h-100 ticker-track">
         {items.map((item, index) => (
