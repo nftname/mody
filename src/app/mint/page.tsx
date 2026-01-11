@@ -111,10 +111,7 @@ const MintContent = () => {
 
   if (!mounted) return null;
 
-  // تعريف التدرج الذهبي الأصلي المستخدم في الازرار لاستخدامه في العنوان
   const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
-  // تعريف تدرج السبيكة (Ingot) لاستخدامه في كلمة Digital Name
-  const INGOT_TEXT_GRADIENT = `linear-gradient(180deg, ${GOLD_BTN_HIGHLIGHT} 0%, ${GOLD_BTN_PRIMARY} 40%, ${GOLD_BTN_SHADOW} 100%)`;
 
   return (
     <main dir="ltr" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
@@ -129,8 +126,8 @@ const MintContent = () => {
             color: '#E0E0E0'
           }}
         >
-          {/* تعديل جراحي للعنوان: Nexus بالابيض، Digital Name بلون السبيكة */}
-          Claim Your Nexus <span style={{ background: INGOT_TEXT_GRADIENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Digital Name</span> Assets
+          Claim Your Nexus <span style={{ background: 'linear-gradient(180deg, #E6C76A 0%, #D4AF37 40%, #B8962E 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Digital Name</span> Assets
+
         </h1>
         <p
           className="mx-auto"
@@ -234,15 +231,61 @@ const MintContent = () => {
         </div>
       )}
 
-      <style>{`
+      <style jsx global>{`
+        /* استيراد خط Cinzel الفاخر للزر */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
+
         .force-ltr { direction: ltr !important; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .form-control::placeholder { color: #444; font-weight: 300; }
         .form-control:focus { background-color: #0d1117 !important; color: #fff !important; border-color: #FCD535 !important; }
-        .luxury-btn { position: relative; overflow: hidden; }
-        .luxury-btn::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transition: 0.5s; }
-        .luxury-btn:hover::after { left: 100%; }
+        
+        /* NEW ROYAL INGOT BUTTON STYLE */
+        .btn-ingot {
+            /* الخلفية: تدرج لوني عمودي يعطي إيحاء المعدن */
+            background: linear-gradient(180deg, ${GOLD_BTN_HIGHLIGHT} 0%, ${GOLD_BTN_PRIMARY} 40%, ${GOLD_BTN_SHADOW} 100%);
+            
+            /* الحدود: لون ظل لتعزيز الحواف */
+            border: 1px solid ${GOLD_BTN_SHADOW};
+            
+            /* النص: لون بني غامق جداً (شبه محروق) ليعطي تباين الحفر */
+            color: #2b1d00;
+            
+            /* الخط: Cinzel (خط سيريف كلاسيكي روماني) */
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            letter-spacing: 1px; /* تباعد الحروف للحفر */
+            font-size: 1rem;
+            
+            /* الظلال: ظل ناعم للزر + توهج ذهبي خفيف */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
+            
+            /* ظل النص: أبيض خفيف أسفل النص يعطي إيحاء الحفر (Engraved Effect) */
+            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+            
+            /* الحركة والتفاعل */
+            transition: filter 0.3s ease, transform 0.2s ease;
+            
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px; /* حواف ناعمة قليلاً */
+        }
+
+        .btn-ingot:hover {
+            filter: brightness(1.08); /* تفتيح بسيط عند المرور */
+            transform: translateY(-1px); /* رفع الزر قليلاً */
+            color: #1a1100; /* تغميق النص قليلاً */
+        }
+
+        .btn-ingot:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+
         .hero-container { padding-top: 20px; padding-bottom: 0px; }
         .select-asset-title { margin-bottom: 2rem !important; }
 
@@ -252,7 +295,8 @@ const MintContent = () => {
             .mobile-clean-stack { direction: ltr !important; display: flex !important; flex-direction: column !important; gap: 20px !important; width: 100% !important; padding: 0 20px !important; }
             .ingot-wrapper { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; }
             .luxury-btn-container { width: 140px !important; flex: 0 0 auto !important; }
-            .luxury-btn { width: 100% !important; height: 45px !important; background: linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%) !important; }
+            /* تم تحديث عرض الزر ليكون 100% من الحاوية الخاصة به */
+            .btn-ingot { width: 100% !important; height: 45px !important; font-size: 0.85rem; }
             .price-top-container { display: none !important; }
             .mobile-price-display { display: flex !important; flex-direction: column !important; align-items: flex-end !important; text-align: right !important; flex: 1 !important; }
             .hero-container { padding-top: 35px !important; padding-bottom: 25px !important; }
@@ -405,53 +449,3 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
 };
 
 export default dynamic(() => Promise.resolve(MintContent), { ssr: false });
-
-// Global Styles for the Ingot Button
-const globalStyles = `
-/* استيراد خط Cinzel الفاخر للزر */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
-
-.btn-ingot {
-    /* الخلفية: تدرج لوني عمودي يعطي إيحاء المعدن */
-    background: linear-gradient(180deg, ${GOLD_BTN_HIGHLIGHT} 0%, ${GOLD_BTN_PRIMARY} 40%, ${GOLD_BTN_SHADOW} 100%);
-    
-    /* الحدود: لون ظل لتعزيز الحواف */
-    border: 1px solid ${GOLD_BTN_SHADOW};
-    
-    /* النص: لون بني غامق جداً (شبه محروق) ليعطي تباين الحفر */
-    color: #2b1d00;
-    
-    /* الخط: Cinzel (خط سيريف كلاسيكي روماني) */
-    font-family: 'Cinzel', serif;
-    font-weight: 700;
-    letter-spacing: 1px; /* تباعد الحروف للحفر */
-    font-size: 1rem;
-    
-    /* الظلال: ظل ناعم للزر + توهج ذهبي خفيف */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
-    
-    /* ظل النص: أبيض خفيف أسفل النص يعطي إيحاء الحفر (Engraved Effect) */
-    text-shadow: 0 1px 0 rgba(255,255,255,0.4);
-    
-    /* الحركة والتفاعل */
-    transition: filter 0.3s ease, transform 0.2s ease;
-    
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px; /* حواف ناعمة قليلاً */
-}
-
-.btn-ingot:hover {
-    filter: brightness(1.08); /* تفتيح بسيط عند المرور */
-    transform: translateY(-1px); /* رفع الزر قليلاً */
-    color: #1a1100; /* تغميق النص قليلاً */
-}
-
-.btn-ingot:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    filter: grayscale(0.5);
-}
-`;
