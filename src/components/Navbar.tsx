@@ -180,7 +180,7 @@ const Navbar = () => {
   };
 
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
-  const secondaryLinks = ['Analytics', 'Newsletter', 'Blog', 'Careers', 'Partners'];
+  const secondaryLinks = ['Newsletter', 'Blog', 'Careers', 'Partners'];
 
   const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
     const height = isMobile ? '28px' : elementHeight; 
