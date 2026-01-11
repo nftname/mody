@@ -22,8 +22,7 @@ const Footer = () => {
                 <div className="col-6 col-md-3">
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: '12px', letterSpacing: '1px' }}>Resources</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
-                        {/* Help Center موجه لصفحة Contact */}
-                        <li><Link href="/contact" className="footer-link-item">Help Center</Link></li> 
+                        <li><Link href="/contact" className="footer-link-item">Help Center</Link></li>
                         <li><Link href="/blog" className="footer-link-item">Blog</Link></li>
                         <li><Link href="/news" className="footer-link-item">News & Updates</Link></li>
                     </ul>
@@ -34,8 +33,10 @@ const Footer = () => {
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: '12px', letterSpacing: '1px' }}>Company</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
                         <li><Link href="/about" className="footer-link-item">About Us</Link></li>
-                        {/* Careers الآن هي صفحة نظام الأفلييت */}
-                        <li><Link href="/careers" className="footer-link-item">Affiliate Program</Link></li>
+                        
+                        {/* ✅ تم التعديل هنا: الاسم والرابط */}
+                        <li><Link href="/affiliate" className="footer-link-item">Affiliate Program</Link></li>
+                        
                         <li><Link href="/legal" className="footer-link-item">Legal & Terms</Link></li>
                         <li><Link href="/contact" className="footer-link-item">Contact</Link></li>
                     </ul>
