@@ -184,7 +184,8 @@ function AssetPage() {
         try {
             const { data, error } = await supabase.from('favorites').select('token_id').eq('wallet_address', address);
             if (error) throw error;
-            if (data) setFavoriteIds(new Set(data.map(item => item.token_id)));
+            // ✅ Surgical Fix 1: Added (item: any)
+            if (data) setFavoriteIds(new Set(data.map((item: any) => item.token_id)));
         } catch (e) { console.error("Error fetching favorites", e); }
     };
 
@@ -254,9 +255,10 @@ function AssetPage() {
                     created_at: offer.created_at,
                     timeLeft: formatDuration(offer.expiration)
                 }));
-                if (offerSort === 'Newest') enrichedOffers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                if (offerSort === 'High Price') enrichedOffers.sort((a, b) => b.price - a.price);
-                if (offerSort === 'Low Price') enrichedOffers.sort((a, b) => a.price - b.price);
+                // ✅ Surgical Fix 2: Added (a: any, b: any) to all sorts to prevent implicit any errors
+                if (offerSort === 'Newest') enrichedOffers.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                if (offerSort === 'High Price') enrichedOffers.sort((a: any, b: any) => b.price - a.price);
+                if (offerSort === 'Low Price') enrichedOffers.sort((a: any, b: any) => a.price - b.price);
                 setOffersList(enrichedOffers);
             }
 
