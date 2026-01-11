@@ -177,7 +177,7 @@ const Navbar = () => {
     'Partners': 'bi-people'
   };
 
-  // ✅ تم حذف Analytics مؤقتاً لتجنب خطأ 404
+  // تم حذف Analytics مؤقتاً لتجنب خطأ 404
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
   const secondaryLinks = ['Newsletter', 'Blog', 'Careers', 'Partners'];
 
@@ -252,7 +252,6 @@ const Navbar = () => {
 
   return (
     <>
-    {/* تم حذف navbar-expand-lg لكي لا نعتمد على Bootstrap Toggle */}
     <nav className="navbar fixed-top py-0" 
          style={{ 
              backgroundColor: exactDarkColor, 
@@ -304,11 +303,7 @@ const Navbar = () => {
             <CustomWalletTrigger isMobile={true} />
         </div>
 
-        {/* ✅✅✅ THE SURGICAL FIX ✅✅✅
-            تم استبدال 'collapse navbar-collapse' بـ 'd-none d-lg-flex'
-            هذا يجبر المحتوى على الظهور في الشاشات الكبيرة ويخفيه في الصغيرة
-            بدون الاعتماد على جافاسكريبت البوتستراب الذي يسبب المشكلة
-        */}
+        {/* DESKTOP CONTENT (Force Visible) */}
         <div className="d-none d-lg-flex flex-grow-1 align-items-center justify-content-between" id="desktopNav">
             
             {/* Desktop Links */}
@@ -364,7 +359,7 @@ const Navbar = () => {
                 </ul>
             </div>
 
-            {/* Desktop Right Side (Search + Wallet) */}
+            {/* Desktop Right Side */}
             <div className="d-flex align-items-center justify-content-end gap-2" style={{ flexShrink: 0, marginLeft: '20px' }}> 
                 <form onSubmit={handleSearch} className="position-relative" style={{ width: '240px', height: elementHeight }}>
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." 
@@ -385,9 +380,9 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* MOBILE DRAWER (No Changes Needed Here) */}
+      {/* MOBILE DRAWER (Fixed: Added d-lg-none to prevent flashing) */}
       <div 
-        className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`} 
+        className={`mobile-drawer d-lg-none ${isDrawerOpen ? 'open' : ''}`} 
         style={{ 
             transform: isDrawerOpen ? `translateX(${drawerTranslate}px)` : 'translateX(-100%)',
             boxShadow: 'none', 
@@ -398,7 +393,7 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* ... Drawer Content Kept Same ... */}
+          {/* ... Drawer Content ... */}
           <div style={{
               position: 'absolute',
               right: '0',
