@@ -27,6 +27,7 @@ const publicClient = createPublicClient({
   transport: http() 
 });
 
+// ✅ Fix 1: Removed redundant export at bottom, kept this one.
 export default function ProfilePage() {
   const params = useParams();
   const targetAddress = params?.address as `0x${string}`; 
@@ -123,7 +124,7 @@ export default function ProfilePage() {
         
         if (error) throw error;
         if (data) {
-            setFavoriteIds(new Set(data.map(item => item.token_id)));
+            setFavoriteIds(new Set(data.map((item: any) => item.token_id)));
         }
     } catch (e) { console.error("Error fetching favorites", e); }
   };
@@ -261,7 +262,8 @@ export default function ProfilePage() {
           const { data, error } = await query;
           if (error) throw error;
 
-          const enrichedOffers = await Promise.all((data || []).map(async (offer) => {
+          // ✅ Fix 2: Added (offer: any)
+          const enrichedOffers = await Promise.all((data || []).map(async (offer: any) => {
               const knownAsset = myAssets.find(a => a.id === offer.token_id.toString());
               let assetName = knownAsset ? knownAsset.name : `NNM #${offer.token_id}`;
 
@@ -287,10 +289,10 @@ export default function ProfilePage() {
               };
           }));
 
-          if (offerSort === 'Newest') enrichedOffers.sort((a, b) => b.created_at?.localeCompare(a.created_at));
-          if (offerSort === 'High Price') enrichedOffers.sort((a, b) => b.price - a.price);
-          if (offerSort === 'Low Price') enrichedOffers.sort((a, b) => a.price - b.price);
-          if (offerSort === 'Ending Soon') enrichedOffers.sort((a, b) => a.expiration - b.expiration);
+          if (offerSort === 'Newest') enrichedOffers.sort((a: any, b: any) => b.created_at?.localeCompare(a.created_at));
+          if (offerSort === 'High Price') enrichedOffers.sort((a: any, b: any) => b.price - a.price);
+          if (offerSort === 'Low Price') enrichedOffers.sort((a: any, b: any) => a.price - b.price);
+          if (offerSort === 'Ending Soon') enrichedOffers.sort((a: any, b: any) => a.expiration - b.expiration);
 
           setOffersData(enrichedOffers);
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
@@ -317,7 +319,8 @@ export default function ProfilePage() {
           const dateMap: Record<string, string> = {};
           data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
 
-          const tokenIds = [...new Set(data.map(item => item.token_id))];
+          // ✅ Fix 3: Added (item: any)
+          const tokenIds = [...new Set(data.map((item: any) => item.token_id))];
           const batches = chunk(tokenIds, 4); 
           const loadedCreated: any[] = [];
 
@@ -385,7 +388,7 @@ export default function ProfilePage() {
               rawDate: new Date(item.created_at).getTime()
           }));
 
-          const merged = [...formattedActivities, ...formattedOffers].sort((a, b) => b.rawDate - a.rawDate);
+          const merged = [...formattedActivities, ...formattedOffers].sort((a: any, b: any) => b.rawDate - a.rawDate);
           setActivityData(merged);
 
       } catch (e) { 
