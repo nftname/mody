@@ -126,7 +126,7 @@ const MintContent = () => {
             color: '#E0E0E0'
           }}
         >
-          Claim Your Nexus <span style={{ background: 'linear-gradient(180deg, #E6C76A 0%, #D4AF37 40%, #B8962E 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Digital Name</span> Assets
+          Claim Your Nexus <span style={{ background: 'linear-gradient(180deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Digital Name</span> Assets
 
         </h1>
         <p
