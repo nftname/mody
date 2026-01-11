@@ -210,12 +210,7 @@ export default function MarketTicker() {
 
   return (
     <div className="w-100 overflow-hidden position-relative" 
-         style={{ 
-             backgroundColor: '#0B0E11', /* ✅ التعديل الجراحي: اللون الموحد الغني */
-             height: '40px', 
-             zIndex: 40, 
-             borderBottom: '1px solid rgba(255, 255, 255, 0.08)' /* ✅ توحيد الإطار الشفاف */
-         }}>
+         style={{ backgroundColor: '#0b0e11', height: '40px', zIndex: 40, borderBottom: '1px solid #222' }}>
       
       <div className="d-flex align-items-center h-100 ticker-track">
         {items.map((item, index) => (
@@ -270,7 +265,7 @@ export default function MarketTicker() {
             transition: background-color 0.2s;
         }
         .ticker-link:hover {
-            background-color: rgba(255, 255, 255, 0.05); /* تحسين التفاعل */
+            background-color: #1a1a1a;
         }
         @keyframes scroll {
           0% { transform: translateX(0); }
