@@ -280,9 +280,9 @@ const Navbar = () => {
             </Link>
         </div>
 
-        {/* DESKTOP LOGO (Always Visible on Desktop) */}
-        {/* ✅ Fix 2: Increased marginRight to 50px to push links away */}
-        <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0, marginRight: '50px' }}> 
+        {/* DESKTOP LOGO */}
+        {/* ✅ تعديل 1: تقليل المسافة من 50px إلى 40px كما طلبت */}
+        <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0, marginRight: '40px' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <LogoSVG mobile={false} />
               <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '22px', letterSpacing: '1px', marginTop: '1px' }}>NNM</span>
@@ -307,8 +307,9 @@ const Navbar = () => {
         <div className="d-none d-lg-flex flex-grow-1 align-items-center justify-content-between" id="desktopNav">
             
             {/* Desktop Links */}
+            {/* ✅ تعديل 2: زيادة المسافة البينية باستخدام gap: 18px (كانت تقريباً 16px) */}
             <div className="d-flex align-items-center" style={{ flexShrink: 1, minWidth: 0, paddingTop: '5px' }}> 
-                <ul className="navbar-nav mb-2 mb-lg-0 gap-3 d-flex flex-row align-items-center">
+                <ul className="navbar-nav mb-2 mb-lg-0 d-flex flex-row align-items-center" style={{ gap: '18px' }}>
                     {menuItems.map((item) => (
                         <li className="nav-item" key={item}>
                             <Link 
@@ -332,7 +333,7 @@ const Navbar = () => {
                         Insights
                       </a>
                       
-                      {/* ✅ Fix 1: Added position: absolute to fix the layout shift */}
+                      {/* ✅ تثبيت القائمة المنسدلة: position absolute */}
                       <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
                           style={{ 
                               position: 'absolute',
@@ -444,8 +445,9 @@ const Navbar = () => {
           
           <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
 
-          <div className="drawer-content px-4 pt-4 pb-3 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
-              <div className="d-flex flex-column w-100 flex-grow-1 justify-content-start gap-2 mt-2">
+          {/* ✅ تعديل 3: إزالة flex-grow-1 لتقليل المسافة السفلية بنسبة 50% تقريباً، وزيادة padding-bottom للمحتوى */}
+          <div className="drawer-content px-4 pt-4 pb-5 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
+              <div className="d-flex flex-column w-100 justify-content-start gap-2 mt-2">
                   <div className="d-flex flex-column gap-2">
                     {menuItems.map((item) => (
                         <Link key={item} 
@@ -483,7 +485,8 @@ const Navbar = () => {
                   </div>
               </div>
 
-              <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-4">
+              {/* ✅ Footer الآن أصبح أقرب للأعلى، مع هوامش مناسبة */}
+              <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-4 d-flex align-items-center w-100 mb-5">
                   <div className="d-flex justify-content-start align-items-center px-2" style={{ gap: '25px', paddingRight: '80px', width: '100%' }}>
                       <i className="bi bi-twitter-x" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       <i className="bi bi-facebook" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
