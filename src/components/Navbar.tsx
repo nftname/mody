@@ -99,15 +99,15 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  const exactDarkColor = '#0b0e11'; 
+  // ✅ التعديل الجراحي: اللون الأسود الغني الموحد
+  const exactDarkColor = '#0B0E11'; 
   const drawerBgColor = '#1E1E1E'; 
   
-  const dropdownColor = '#0a0c10'; 
+  const dropdownColor = '#0B0E11'; // تم توحيد لون القائمة المنسدلة أيضاً
   const metallicGoldHex = '#F0C420'; 
-  const paleGoldHex = '#D4C49D'; 
-  const matteGoldIcon = '#CBA135'; 
   const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
   const offWhiteText = '#E0E0E0';
+  const matteGoldIcon = '#CBA135';
 
   const elementHeight = '29px'; 
   const elementFontSize = '11px';
@@ -254,8 +254,6 @@ const Navbar = () => {
     <nav className="navbar fixed-top py-0" 
          style={{ 
              backgroundColor: exactDarkColor, 
-             backdropFilter: 'blur(10px)',
-             WebkitBackdropFilter: 'blur(10px)',
              zIndex: 1050, 
              height: '64px', 
              borderBottom: `1px solid ${subtleBorder}`,
@@ -281,7 +279,6 @@ const Navbar = () => {
         </div>
 
         {/* DESKTOP LOGO */}
-        {/* ✅ تعديل 1: تقليل المسافة من 50px إلى 40px كما طلبت */}
         <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0, marginRight: '40px' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <LogoSVG mobile={false} />
@@ -307,7 +304,6 @@ const Navbar = () => {
         <div className="d-none d-lg-flex flex-grow-1 align-items-center justify-content-between" id="desktopNav">
             
             {/* Desktop Links */}
-            {/* ✅ تعديل 2: زيادة المسافة البينية باستخدام gap: 18px (كانت تقريباً 16px) */}
             <div className="d-flex align-items-center" style={{ flexShrink: 1, minWidth: 0, paddingTop: '5px' }}> 
                 <ul className="navbar-nav mb-2 mb-lg-0 d-flex flex-row align-items-center" style={{ gap: '18px' }}>
                     {menuItems.map((item) => (
@@ -333,7 +329,6 @@ const Navbar = () => {
                         Insights
                       </a>
                       
-                      {/* ✅ تثبيت القائمة المنسدلة: position absolute */}
                       <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
                           style={{ 
                               position: 'absolute',
@@ -445,7 +440,6 @@ const Navbar = () => {
           
           <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
 
-          {/* ✅ تعديل 3: إزالة flex-grow-1 لتقليل المسافة السفلية بنسبة 50% تقريباً، وزيادة padding-bottom للمحتوى */}
           <div className="drawer-content px-4 pt-4 pb-5 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
               <div className="d-flex flex-column w-100 justify-content-start gap-2 mt-2">
                   <div className="d-flex flex-column gap-2">
@@ -485,7 +479,6 @@ const Navbar = () => {
                   </div>
               </div>
 
-              {/* ✅ Footer الآن أصبح أقرب للأعلى، مع هوامش مناسبة */}
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-4 d-flex align-items-center w-100 mb-5">
                   <div className="d-flex justify-content-start align-items-center px-2" style={{ gap: '25px', paddingRight: '80px', width: '100%' }}>
                       <i className="bi bi-twitter-x" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
@@ -501,9 +494,10 @@ const Navbar = () => {
       {isMobileSearchOpen && (
         <div className="d-lg-none position-absolute start-0 w-100" style={{ top: '64px', zIndex: 1049, backgroundColor: exactDarkColor, padding: '12px 15px', borderBottom: `1px solid ${subtleBorder}` }}>
             <form onSubmit={handleSearch} className="position-relative">
-                <input ref={mobileSearchInputRef} type="text" className="form-control bg-dark text-white shadow-none" placeholder="Search..." 
+                {/* ✅ إزالة bg-dark لضمان عدم فرض اللون الرمادي واستبداله بـ bg-dark في كلاس البوتستراب ولكن معتمد على الخلفية الأب */}
+                <input ref={mobileSearchInputRef} type="text" className="form-control text-white shadow-none" placeholder="Search..." 
                     value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{ borderRadius: '4px', fontSize: '14px', height: '42px', paddingLeft: '38px', paddingRight: '35px', border: `1px solid ${subtleBorder}`, caretColor: metallicGoldHex }} 
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '4px', fontSize: '14px', height: '42px', paddingLeft: '38px', paddingRight: '35px', border: `1px solid ${subtleBorder}`, caretColor: metallicGoldHex }} 
                 />
                 <button type="submit" className="btn p-0 position-absolute" style={{ top: '50%', left: '12px', transform: 'translateY(-50%)', border:'none', background:'transparent' }}>
                     <i className="bi bi-search" style={{ fontSize: '16px', color: metallicGoldHex }}></i>
