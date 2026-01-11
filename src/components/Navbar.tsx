@@ -301,7 +301,11 @@ const Navbar = () => {
             <CustomWalletTrigger isMobile={true} />
         </div>
 
-        <div className="collapse navbar-collapse flex-grow-1" id="navbarNav">
+        {/* FIX APPLIED HERE:
+            Added 'd-lg-flex' to force visibility on desktop screens.
+            Previously, 'collapse' might have been keeping it hidden.
+        */}
+        <div className="collapse navbar-collapse flex-grow-1 d-lg-flex" id="navbarNav">
           <div className="d-flex flex-column flex-lg-row align-items-center w-100 justify-content-between">
             
             <div className="d-flex align-items-center" style={{ flexShrink: 1, minWidth: 0, paddingTop: '5px' }}> 
