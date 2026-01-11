@@ -161,7 +161,6 @@ const Navbar = () => {
     height: '23px', 
   };
 
-  // Icon Mapping for Main Menu
   const menuIcons: { [key: string]: string } = {
     'Home': 'bi-house-door',
     'Market': 'bi-shop',
@@ -170,7 +169,6 @@ const Navbar = () => {
     'NNM Concept': 'bi-layers'
   };
 
-  // Icon Mapping for Secondary Menu
   const secondaryIcons: { [key: string]: string } = {
     'Analytics': 'bi-graph-up',
     'Newsletter': 'bi-newspaper',
@@ -179,6 +177,7 @@ const Navbar = () => {
     'Partners': 'bi-people'
   };
 
+  // ✅ تم حذف Analytics مؤقتاً لتجنب خطأ 404
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
   const secondaryLinks = ['Newsletter', 'Blog', 'Careers', 'Partners'];
 
@@ -253,7 +252,8 @@ const Navbar = () => {
 
   return (
     <>
-    <nav className="navbar navbar-expand-lg fixed-top py-0" 
+    {/* تم حذف navbar-expand-lg لكي لا نعتمد على Bootstrap Toggle */}
+    <nav className="navbar fixed-top py-0" 
          style={{ 
              backgroundColor: exactDarkColor, 
              backdropFilter: 'blur(10px)',
@@ -270,6 +270,7 @@ const Navbar = () => {
       
       <div className="container-fluid h-100 align-items-center d-flex flex-nowrap px-3 px-lg-4">
         
+        {/* MOBILE HEADER (Left Side) */}
         <div className="d-flex align-items-center d-lg-none me-auto gap-2">
             <button className="navbar-toggler border-0 p-0 shadow-none d-flex align-items-center" type="button" onClick={toggleDrawer} style={{ width: 'auto' }}>
                 <CustomHamburger />
@@ -281,6 +282,7 @@ const Navbar = () => {
             </Link>
         </div>
 
+        {/* DESKTOP LOGO (Always Visible on Desktop) */}
         <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0, marginRight: '15px' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <LogoSVG mobile={false} />
@@ -288,6 +290,7 @@ const Navbar = () => {
             </Link>
         </div>
 
+        {/* MOBILE RIGHT ICONS */}
         <div className="d-flex d-lg-none align-items-center ms-auto" style={{ gap: '8px', overflow: 'visible', paddingRight: '0px' }}>
             <button className="btn p-1 border-0" onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} style={{ width: '28px' }}>
                 <i className="bi bi-search" style={{ fontSize: '16px', color: metallicGoldHex }}></i>
@@ -301,15 +304,16 @@ const Navbar = () => {
             <CustomWalletTrigger isMobile={true} />
         </div>
 
-        {/* FIX APPLIED HERE:
-            Added 'd-lg-flex' to force visibility on desktop screens.
-            Previously, 'collapse' might have been keeping it hidden.
+        {/* ✅✅✅ THE SURGICAL FIX ✅✅✅
+            تم استبدال 'collapse navbar-collapse' بـ 'd-none d-lg-flex'
+            هذا يجبر المحتوى على الظهور في الشاشات الكبيرة ويخفيه في الصغيرة
+            بدون الاعتماد على جافاسكريبت البوتستراب الذي يسبب المشكلة
         */}
-        <div className="collapse navbar-collapse flex-grow-1 d-lg-flex" id="navbarNav">
-          <div className="d-flex flex-column flex-lg-row align-items-center w-100 justify-content-between">
+        <div className="d-none d-lg-flex flex-grow-1 align-items-center justify-content-between" id="desktopNav">
             
+            {/* Desktop Links */}
             <div className="d-flex align-items-center" style={{ flexShrink: 1, minWidth: 0, paddingTop: '5px' }}> 
-                <ul className="navbar-nav mb-2 mb-lg-0 gap-2 gap-xl-3 align-items-center">
+                <ul className="navbar-nav mb-2 mb-lg-0 gap-3 d-flex flex-row align-items-center">
                     {menuItems.map((item) => (
                         <li className="nav-item" key={item}>
                             <Link 
@@ -360,9 +364,8 @@ const Navbar = () => {
                 </ul>
             </div>
 
-            <div style={{ flexGrow: 1 }}></div>
-
-            <div className="d-none d-lg-flex align-items-center justify-content-end gap-2" style={{ flexShrink: 0, marginLeft: '20px' }}> 
+            {/* Desktop Right Side (Search + Wallet) */}
+            <div className="d-flex align-items-center justify-content-end gap-2" style={{ flexShrink: 0, marginLeft: '20px' }}> 
                 <form onSubmit={handleSearch} className="position-relative" style={{ width: '240px', height: elementHeight }}>
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." 
                         value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
@@ -379,10 +382,10 @@ const Navbar = () => {
 
                 <CustomWalletTrigger isMobile={false} />
             </div>
-          </div>
         </div>
       </div>
 
+      {/* MOBILE DRAWER (No Changes Needed Here) */}
       <div 
         className={`mobile-drawer ${isDrawerOpen ? 'open' : ''}`} 
         style={{ 
@@ -395,6 +398,7 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
+          {/* ... Drawer Content Kept Same ... */}
           <div style={{
               position: 'absolute',
               right: '0',
