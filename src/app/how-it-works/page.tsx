@@ -266,24 +266,7 @@ export default function HowItWorksPage() {
               </p>
             </section>
 
-            <section className="mb-5 ps-lg-3">
-              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
-                Platform Walkthrough
-              </h2>
-              <div className="d-flex align-items-center justify-content-center rounded-3" 
-                   style={{ 
-                       marginTop: '20px', 
-                       border: '1px dashed #2E2E2E', 
-                       backgroundColor: '#242424', 
-                       padding: '60px', 
-                       color: '#B0B0B0' 
-                   }}>
-                <div className="text-center">
-                    <i className="bi bi-play-circle d-block mb-2" style={{ fontSize: '30px', color: GOLD_MEDIUM }}></i>
-                    <span>Platform Video Guide Coming Soon</span>
-                </div>
-              </div>
-            </section>
+            {/* ✅ تم حذف قسم الفيديو (Platform Walkthrough) نهائياً من هنا */}
 
             <section className="mb-5 ps-lg-3">
               <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
@@ -318,13 +301,14 @@ export default function HowItWorksPage() {
               </p>
             </section>
 
-            {/* NEW FAQ SECTION */}
+            {/* FAQ SECTION */}
             <section className="mb-5 ps-lg-3">
                 <FAQSection />
             </section>
 
-            <footer className="ps-lg-3" style={{ borderTop: '1px solid #2E2E2E', paddingTop: '30px', marginTop: '40px' }}>
-              <p style={{ fontSize: '15px' }}>
+            {/* ✅ التعديل الجراحي: تصغير الخط، تفتيح اللون، وزيادة المسافة عن شريط البراندات */}
+            <footer className="ps-lg-3" style={{ borderTop: '1px solid #2E2E2E', paddingTop: '20px', marginTop: '40px', marginBottom: '60px' }}>
+              <p style={{ fontSize: '11px', color: '#777', lineHeight: '1.5' }}>
                 NNM is a decentralized discovery and exchange platform. All content is provided for informational purposes only.
               </p>
             </footer>
