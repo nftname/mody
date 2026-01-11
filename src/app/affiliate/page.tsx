@@ -9,12 +9,12 @@ import {
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 
-// --- Supabase Config ---
+// --- 1. Supabase Setup ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- Styles Constants ---
+// --- 2. Styles & Constants ---
 const BRAND_GOLD = '#FCD535';
 const BG_DARK = '#1E1E1E'; 
 const PANEL_BG = '#242424'; 
@@ -27,7 +27,7 @@ export default function AffiliatePage() {
   const [isCopied, setIsCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // --- Real Data States ---
+  // --- 3. Real Data States (No Mock Data) ---
   const [earnings, setEarnings] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,19 +40,20 @@ export default function AffiliatePage() {
   useEffect(() => {
       setMounted(true);
       if (address) {
-          // 1. Generate Link
+          // Generate Link
           const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
           setReferralLink(`${origin}/mint?ref=${address}`);
           
-          // 2. Fetch Data
+          // Fetch DB Data
           fetchAffiliateData(address);
       }
   }, [address]);
 
+  // --- 4. Database Fetch Logic ---
   const fetchAffiliateData = async (wallet: string) => {
     setLoading(true);
     try {
-        // A. جلب سجل الأرباح
+        // A. Get Earnings Ledger
         const { data: earningsData } = await supabase
             .from('affiliate_earnings')
             .select('*')
@@ -61,7 +62,7 @@ export default function AffiliatePage() {
         
         if (earningsData) setEarnings(earningsData);
 
-        // B. جلب سجل السحوبات
+        // B. Get Payout History
         const { data: payoutsData } = await supabase
             .from('affiliate_payouts')
             .select('*')
@@ -77,7 +78,14 @@ export default function AffiliatePage() {
     }
   };
 
-  // --- المنطق الحسابي (The Brain) ---
+  // --- 5. Helper: Truncate Wallet (3 start ... 3 end) ---
+  const shortAddress = (str: string) => {
+      if (!str || str.length < 8) return str;
+      // التعديل: 3 حروف في البداية + نقط + 3 حروف في النهاية
+      return `${str.substring(0, 3)}...${str.substring(str.length - 3)}`;
+  };
+
+  // --- 6. The Brain (Calculations) ---
   const stats = useMemo(() => {
     let totalRevenue = 0;
     let mintRevenue = 0;
@@ -106,13 +114,12 @@ export default function AffiliatePage() {
     return { totalRevenue, mintRevenue, royaltyRevenue, unpaidBalance, mintCount, royaltyCount };
   }, [earnings]);
 
-  // Chart Data
+  // Chart Data Preparation
   const pieData = [
     { name: 'Mint Commission (30%)', value: stats.mintRevenue || 1 }, 
     { name: 'Trading Royalties (10%)', value: stats.royaltyRevenue }, 
   ];
 
-  // Mock chart data (للعرض الجمالي حتى تتوفر بيانات تاريخية كافية)
   const areaChartData = [
     { name: 'Start', revenue: 0 },
     { name: 'Now', revenue: stats.totalRevenue },
@@ -120,11 +127,9 @@ export default function AffiliatePage() {
 
   const handleClaim = async () => {
       if (stats.unpaidBalance < 50) return;
-      
       const confirmClaim = confirm(`Request payout for $${stats.unpaidBalance.toFixed(2)}?`);
       if(confirmClaim) {
-          // هنا يتم تسجيل طلب السحب في قاعدة البيانات
-          // For demo logic:
+          // Logic to insert 'REQUESTED' into DB would go here
           alert("Payout requested successfully! Admin will process it shortly.");
       }
   };
@@ -135,7 +140,6 @@ export default function AffiliatePage() {
       setTimeout(() => setIsCopied(false), 2000);
   };
 
-  // Pagination Logic
   const currentEarnings = earnings.slice((ledgerPage - 1) * ITEMS_PER_PAGE, ledgerPage * ITEMS_PER_PAGE);
   const currentPayouts = payouts.slice((payoutPage - 1) * ITEMS_PER_PAGE, payoutPage * ITEMS_PER_PAGE);
 
@@ -200,8 +204,6 @@ export default function AffiliatePage() {
 
                     {/* STATS CARDS */}
                     <div className="row g-3 mb-4">
-                        
-                        {/* 1. Total Earned */}
                         <div className="col-md-3">
                             <div className="stat-card h-100 position-relative">
                                 <div className="d-flex justify-content-between align-items-start mb-2">
@@ -212,8 +214,6 @@ export default function AffiliatePage() {
                                 <div className="stat-label">Lifetime Revenue</div>
                             </div>
                         </div>
-
-                        {/* 2. Royalty */}
                         <div className="col-md-3">
                             <div className="stat-card h-100 position-relative">
                                 <div className="d-flex justify-content-between align-items-start mb-2">
@@ -224,8 +224,6 @@ export default function AffiliatePage() {
                                 <div className="stat-label">Royalty Earnings (10%)</div>
                             </div>
                         </div>
-
-                        {/* 3. Mint */}
                         <div className="col-md-3">
                             <div className="stat-card h-100 position-relative">
                                 <div className="d-flex justify-content-between align-items-start mb-2">
@@ -236,8 +234,6 @@ export default function AffiliatePage() {
                                 <div className="stat-label">Mint Commission (30%)</div>
                             </div>
                         </div>
-
-                        {/* 4. Unpaid Balance & Claim Button */}
                         <div className="col-md-3">
                             <div className="stat-card h-100 position-relative d-flex flex-column justify-content-between" style={{ border: `1px solid ${BRAND_GOLD}44` }}>
                                 <div>
@@ -248,7 +244,6 @@ export default function AffiliatePage() {
                                     <div className="stat-value" style={{ color: BRAND_GOLD }}>${stats.unpaidBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
                                     <div className="stat-label">Unpaid Balance</div>
                                 </div>
-
                                 <div className="mt-3">
                                     {stats.unpaidBalance >= 50 ? (
                                         <button onClick={handleClaim} className="claim-btn active w-100">
@@ -267,7 +262,6 @@ export default function AffiliatePage() {
                                 </div>
                             </div>
                         </div>
-
                     </div>
 
                     {/* CHARTS */}
@@ -299,7 +293,6 @@ export default function AffiliatePage() {
                                 </div>
                             </div>
                         </div>
-
                         <div className="col-lg-4">
                             <div className="chart-panel h-100">
                                 <div className="panel-header mb-4">
@@ -337,39 +330,41 @@ export default function AffiliatePage() {
                         </div>
                     </div>
 
-                    {/* TRANSACTION LEDGER TABLE */}
+                    {/* TRANSACTION LEDGER TABLE (Optimized Headers) */}
                     <div className="chart-panel mb-4">
                         <div className="panel-header mb-3">
-                            <h5 className="panel-title">Transaction Ledger (Detailed Earnings)</h5>
+                            <h5 className="panel-title">Transaction Ledger</h5>
                             <button className="btn-icon"><i className="bi bi-download"></i> CSV</button>
                         </div>
                         <div className="table-responsive">
                             <table className="table">
                                 <thead>
+                                    {/* ✅ 1. الاختصارات العالمية */}
                                     <tr>
                                         <th>DATE</th>
                                         <th>TYPE</th>
-                                        <th>SOURCE WALLET</th>
-                                        <th className="text-end">EARNINGS</th>
+                                        <th>WALLET</th>
+                                        <th className="text-end">PROFIT</th>
                                         <th className="text-end">STATUS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {loading ? (
-                                        <tr><td colSpan={5} className="text-center py-4 text-secondary">Loading ledger...</td></tr>
+                                        <tr><td colSpan={5} className="text-center py-4 text-secondary">Loading...</td></tr>
                                     ) : currentEarnings.length === 0 ? (
-                                        <tr><td colSpan={5} className="text-center py-4 text-secondary">No earnings yet. Share your link!</td></tr>
+                                        <tr><td colSpan={5} className="text-center py-4 text-secondary">No earnings yet.</td></tr>
                                     ) : (
                                         currentEarnings.map((item, i) => (
                                             <tr key={item.id || i}>
-                                                <td style={{ color: '#666', fontSize: '11px' }}>
+                                                <td style={{ color: '#666', fontSize: '11px', whiteSpace: 'nowrap' }}>
                                                     {new Date(item.created_at).toLocaleDateString()}
                                                 </td>
                                                 <td><span className="type-badge">{item.earnings_type}</span></td>
-                                                <td style={{ fontFamily: 'monospace', color: '#888' }}>
-                                                    {item.source_wallet ? `${item.source_wallet.substring(0,6)}...${item.source_wallet.substring(38)}` : 'Unknown'}
+                                                {/* ✅ 2. استخدام دالة الاختصار (3 حروف + 3 حروف) */}
+                                                <td style={{ fontFamily: 'monospace', color: '#888', whiteSpace: 'nowrap' }}>
+                                                    {shortAddress(item.source_wallet)}
                                                 </td>
-                                                <td className="text-end" style={{ color: BRAND_GOLD, fontWeight: 'bold' }}>+${Number(item.amount).toFixed(2)}</td>
+                                                <td className="text-end" style={{ color: BRAND_GOLD, fontWeight: 'bold', whiteSpace: 'nowrap' }}>+${Number(item.amount).toFixed(2)}</td>
                                                 <td className="text-end">
                                                     <span className={`status-badge ${item.status === 'PAID' ? 'success' : 'pending'}`}>
                                                         {item.status}
@@ -390,38 +385,40 @@ export default function AffiliatePage() {
                         )}
                     </div>
 
-                    {/* PAYOUT HISTORY TABLE */}
+                    {/* PAYOUT HISTORY TABLE (Optimized Headers) */}
                     <div className="chart-panel">
                         <div className="panel-header mb-3">
-                            <h5 className="panel-title">Payout History (Withdrawals)</h5>
+                            <h5 className="panel-title">Payout History</h5>
                         </div>
                         <div className="table-responsive">
                             <table className="table">
                                 <thead>
+                                    {/* ✅ 1. الاختصارات العالمية */}
                                     <tr>
-                                        <th>PAYOUT DATE</th>
-                                        <th>TX HASH</th>
-                                        <th className="text-end">AMOUNT PAID</th>
+                                        <th>DATE</th>
+                                        <th>TX ID</th>
+                                        <th className="text-end">AMT</th>
                                         <th className="text-end">STATUS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {loading ? (
-                                        <tr><td colSpan={4} className="text-center py-4 text-secondary">Loading history...</td></tr>
+                                        <tr><td colSpan={4} className="text-center py-4 text-secondary">Loading...</td></tr>
                                     ) : currentPayouts.length === 0 ? (
                                         <tr><td colSpan={4} className="text-center py-4 text-secondary">No payouts yet.</td></tr>
                                     ) : (
                                         currentPayouts.map((item, i) => (
                                             <tr key={item.id || i}>
-                                                <td style={{ color: '#666', fontSize: '11px' }}>
+                                                <td style={{ color: '#666', fontSize: '11px', whiteSpace: 'nowrap' }}>
                                                     {new Date(item.created_at).toLocaleDateString()}
                                                 </td>
-                                                <td style={{ fontFamily: 'monospace', color: BRAND_GOLD }}>
+                                                {/* ✅ 2. استخدام دالة الاختصار لـ TX Hash */}
+                                                <td style={{ fontFamily: 'monospace', color: BRAND_GOLD, whiteSpace: 'nowrap' }}>
                                                     <a href={item.tx_hash ? `https://polygonscan.com/tx/${item.tx_hash}` : '#'} target="_blank" className="text-decoration-none" style={{ color: 'inherit' }}>
-                                                        {item.tx_hash ? `${item.tx_hash.substring(0,8)}...` : 'Processing'} <i className="bi bi-box-arrow-up-right ms-1" style={{ fontSize: '10px' }}></i>
+                                                        {shortAddress(item.tx_hash) || 'Processing'} <i className="bi bi-box-arrow-up-right ms-1" style={{ fontSize: '10px' }}></i>
                                                     </a>
                                                 </td>
-                                                <td className="text-end" style={{ color: '#fff', fontWeight: 'bold' }}>${Number(item.amount).toFixed(2)}</td>
+                                                <td className="text-end" style={{ color: '#fff', fontWeight: 'bold', whiteSpace: 'nowrap' }}>${Number(item.amount).toFixed(2)}</td>
                                                 <td className="text-end"><span className="status-badge success">{item.status}</span></td>
                                             </tr>
                                         ))
@@ -473,7 +470,6 @@ export default function AffiliatePage() {
                 box-shadow: 0 0 15px rgba(252, 213, 53, 0.3);
             }
 
-            /* Claim Button Styles */
             .claim-btn {
                 padding: 8px 0;
                 border-radius: 6px;
@@ -482,7 +478,7 @@ export default function AffiliatePage() {
                 letter-spacing: 1px;
                 transition: all 0.3s;
                 text-transform: uppercase;
-                background: rgba(252, 213, 53, 0.05); /* زجاجي شفاف جداً */
+                background: rgba(252, 213, 53, 0.05);
                 border: 1px solid rgba(252, 213, 53, 0.3);
                 color: ${BRAND_GOLD};
                 backdrop-filter: blur(4px);
@@ -504,7 +500,6 @@ export default function AffiliatePage() {
                 box-shadow: none;
             }
 
-            /* Stats Cards */
             .stat-card {
                 background: ${PANEL_BG};
                 border: 1px solid ${BORDER_COLOR};
@@ -520,7 +515,6 @@ export default function AffiliatePage() {
             .trend-badge { font-size: 10px; color: #4caf50; background: rgba(76, 175, 80, 0.1); padding: 2px 6px; border-radius: 4px; }
             .status-dot { width: 8px; height: 8px; background: ${BRAND_GOLD}; border-radius: 50%; box-shadow: 0 0 10px ${BRAND_GOLD}; }
 
-            /* Charts Panels */
             .chart-panel {
                 background: ${PANEL_BG};
                 border: 1px solid ${BORDER_COLOR};
@@ -530,9 +524,9 @@ export default function AffiliatePage() {
             .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid ${BORDER_COLOR}; padding-bottom: 15px; margin-bottom: 15px; }
             .panel-title { font-size: 14px; color: #E0E0E0; margin: 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
             
-            /* Table Styling */
             .table { margin: 0; }
-            .table th { background: transparent; color: #666; font-size: 10px; font-weight: 600; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+            /* ✅ Added white-space: nowrap to keep headers on one line */
+            .table th { background: transparent; color: #666; font-size: 10px; font-weight: 600; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 15px; white-space: nowrap; }
             .table td { background: transparent; color: #E0E0E0; font-size: 13px; border-bottom: 1px solid #2E2E2E; padding: 15px 0; vertical-align: middle; }
             .table tr:last-child td { border-bottom: none; }
             
