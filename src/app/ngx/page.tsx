@@ -53,9 +53,16 @@ const EmbedCard = ({ title, component, width, height, embedId, label, isFullBar 
         <h6 className="d-none d-md-block mb-1 fw-bold text-white" style={{ fontSize: '11px' }}>{title}</h6>
         {label && <div className="mobile-label fw-bold mb-1">{label}</div>}
         
+        {/* ✅ التعديل الجراحي هنا: ضبط عرض الزر بناءً على نوع الكارت */}
         <button 
             onClick={handleCopy} 
-            className={`btn btn-sm w-100 mb-1 copy-btn ${copied ? 'btn-success' : 'btn-outline-secondary'}`}
+            className={`btn btn-sm mb-1 copy-btn ${copied ? 'btn-success' : 'btn-outline-secondary'}`}
+            style={{ 
+                width: isFullBar ? '32.5%' : '100%', // عرض مخصص للشريط الكامل ليماثل الأزرار تحته
+                minWidth: '120px',
+                margin: '0 auto', // توسيط الزر
+                display: 'block'
+            }}
         >
             {copied ? 'COPIED' : 'COPY'}
         </button>
@@ -212,7 +219,6 @@ export default function NGXPage() {
                 <p className="article-text">The emergence of neutral market observatories, classification systems, and non-speculative indices will play a critical role in this evolution. They allow participants—creators, developers, institutions, and researchers—to understand the NFT ecosystem as a whole rather than through isolated data points.</p>
                 <p className="article-text mb-3">In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.</p>
 
-                {/* ✅ التعديل الأول: تصغير نص إخلاء المسؤولية لتقليل الحجم مع الحفاظ على النص كاملاً */}
                 <div className="w-100 mt-2 border-top border-secondary" style={{ borderColor: '#333 !important', paddingTop: '8px' }}>
                     <p className="fst-italic mb-0 w-100" style={{ lineHeight: '1.2', fontSize: '9px', color: '#777', opacity: 0.9 }}>
                         This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
@@ -259,7 +265,6 @@ export default function NGXPage() {
 
       </div>
 
-      {/* ✅ التعديل الثاني: تقليل المسافة الفاصلة قبل البراندات بنسبة 50% (من 5rem إلى 2.5rem) */}
       <div style={{ width: '100%', height: '2.5rem', background: 'transparent' }}></div>
 
       {/* 2. الشريط الأسود */}
