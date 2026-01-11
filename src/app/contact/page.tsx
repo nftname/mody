@@ -1,9 +1,10 @@
 'use client';
+import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 
-// الألوان الجديدة (هادئة ومريحة للعين)
-const PALE_GOLD = '#D4C49D'; // ذهبي باهت (رملي) بدلاً من الأصفر الفاقع
-const DARK_PLACEHOLDER = '#444444'; // رمادي غامق جداً للنصوص الإرشادية
+// ✅ استخدام لون الهوية الرسمي (NNM Brand Gold)
+const BRAND_GOLD = '#FCD535'; 
+const DARK_PLACEHOLDER = '#444444'; 
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -65,7 +66,7 @@ export default function ContactPage() {
         marginBottom: '8px',
         fontSize: '13px',
         fontWeight: '500',
-        color: '#777', // رمادي متوسط للعنوان
+        color: '#777', 
         textTransform: 'uppercase' as const,
         letterSpacing: '0.5px'
     };
@@ -78,7 +79,7 @@ export default function ContactPage() {
         <div className="row justify-content-center mb-5">
             <div className="col-12 col-lg-8 text-center">
                 <h1 className="fw-bold text-white mb-3" style={{ fontSize: '2.2rem', letterSpacing: '-0.5px', color: '#E0E0E0' }}>
-                    Contact <span style={{ color: PALE_GOLD }}>NNM</span>
+                    Contact <span style={{ color: BRAND_GOLD }}>NNM</span>
                 </h1>
                 <p style={{ lineHeight: '1.6', color: '#888', fontSize: '15px' }}>
                     Select the appropriate channel below for assistance.
@@ -177,7 +178,7 @@ export default function ContactPage() {
                                 />
                             </div>
 
-                            {/* Custom Dropdown (No Blue!) */}
+                            {/* Custom Dropdown */}
                             <div className="col-12" ref={dropdownRef}>
                                 <label style={labelStyle}>Department</label>
                                 <div 
@@ -219,7 +220,6 @@ export default function ContactPage() {
                                 ></textarea>
                             </div>
 
-                            {/* الزر الجديد: إطار خفيف، خلفية زجاجية، نص ذهبي */}
                             <div className="col-12 mt-4">
                                 <button type="submit" 
                                         className="btn w-100 py-3 minimalist-btn"
@@ -252,12 +252,12 @@ export default function ContactPage() {
                 }
                 .contact-card:hover { transform: translateY(-2px); }
                 
-                /* Soft Gold Icons */
+                /* Brand Gold Icons */
                 .icon-box {
                     width: 36px; height: 36px;
                     border-radius: 50%;
-                    background-color: rgba(212, 196, 157, 0.08); /* Pale Gold Light BG */
-                    color: ${PALE_GOLD};
+                    background-color: rgba(252, 213, 53, 0.1); /* Brand Gold Light BG */
+                    color: ${BRAND_GOLD};
                     display: flex; align-items: center; justify-content: center;
                     font-size: 16px;
                 }
@@ -268,11 +268,11 @@ export default function ContactPage() {
                     line-height: 1.5;
                 }
                 
-                /* Email Links: Normal weight, soft color */
+                /* Email Links */
                 .contact-link {
                     text-decoration: none;
-                    font-weight: 400; /* خط عادي وليس عريض */
-                    color: ${PALE_GOLD};
+                    font-weight: 400; 
+                    color: ${BRAND_GOLD};
                     font-size: 14px;
                     transition: color 0.2s;
                 }
@@ -285,20 +285,20 @@ export default function ContactPage() {
                     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
                 }
 
-                /* Inputs: Placeholder color fix */
+                /* Inputs */
                 .contact-input::placeholder {
-                    color: ${DARK_PLACEHOLDER}; /* رمادي غامق جداً */
+                    color: ${DARK_PLACEHOLDER}; 
                     font-weight: 400;
-                    opacity: 1; /* Fix for Firefox */
+                    opacity: 1; 
                 }
                 .contact-input:focus {
-                    border-color: ${PALE_GOLD} !important;
+                    border-color: ${BRAND_GOLD} !important;
                     background-color: #1F1F1F !important;
                 }
 
-                /* Custom Dropdown: Glassy Hover, No Blue */
+                /* Custom Dropdown */
                 .custom-select { position: relative; user-select: none; }
-                .custom-select.open { border-color: ${PALE_GOLD} !important; }
+                .custom-select.open { border-color: ${BRAND_GOLD} !important; }
                 
                 .dropdown-options {
                     position: absolute;
@@ -319,21 +319,20 @@ export default function ContactPage() {
                     cursor: pointer;
                     transition: background 0.2s;
                 }
-                /* تأثير الزجاج عند التحويم بدلاً من الأزرق */
                 .dropdown-options .option:hover {
                     background-color: rgba(255, 255, 255, 0.05);
                     color: #FFF;
                 }
                 .dropdown-options .option.selected {
-                    background-color: rgba(212, 196, 157, 0.05);
-                    color: ${PALE_GOLD};
+                    background-color: rgba(252, 213, 53, 0.05);
+                    color: ${BRAND_GOLD};
                 }
 
-                /* Minimalist Glass Button */
+                /* Minimalist Glass Button (Updated with Brand Gold) */
                 .minimalist-btn {
                     background-color: rgba(255, 255, 255, 0.03) !important; /* 3% opacity */
-                    border: 1px solid rgba(212, 196, 157, 0.4) !important; /* إطار ذهبي باهت وشفاف */
-                    color: ${PALE_GOLD} !important;
+                    border: 1px solid rgba(252, 213, 53, 0.4) !important; /* إطار ذهبي (لون الهوية) باهت وشفاف */
+                    color: ${BRAND_GOLD} !important;
                     border-radius: 8px;
                     font-size: 15px;
                     font-weight: 500;
@@ -341,8 +340,8 @@ export default function ContactPage() {
                     transition: all 0.3s ease;
                 }
                 .minimalist-btn:hover {
-                    background-color: rgba(212, 196, 157, 0.1) !important;
-                    border-color: ${PALE_GOLD} !important;
+                    background-color: rgba(252, 213, 53, 0.1) !important;
+                    border-color: ${BRAND_GOLD} !important;
                     color: #FFF !important;
                     transform: translateY(-1px);
                 }
