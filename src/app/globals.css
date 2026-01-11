@@ -13,19 +13,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
-  /* Hide text selection highlight */
-  -webkit-text-fill-color: inherit;
-}
-
-/* Remove blue selection highlight */
-::selection {
-  background-color: transparent;
-  color: inherit;
-}
-
-::-moz-selection {
-  background-color: transparent;
-  color: inherit;
 }
 
 html, body {
