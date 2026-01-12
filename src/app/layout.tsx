@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next"; // ط£ط¶ظپظ†ط§ Viewport
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -20,6 +20,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.nftnnm.com'),
   title: "NNM Market",
   description: "Next-Gen NFT Marketplace",
   manifest: '/manifest.json',
