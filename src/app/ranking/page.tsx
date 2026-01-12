@@ -1,6 +1,5 @@
 'use client';
 import Link from 'next/link';
-import Image from 'next/image';
 import MarketTicker from '@/components/MarketTicker';
 
 // --- CONSTANTS & STYLES ---
@@ -9,10 +8,11 @@ const GOLD_BTN_HIGHLIGHT = '#E6C76A';
 const GOLD_BTN_SHADOW = '#B8962E';
 const GOLD_LIGHT = '#FFD700';
 const GOLD_DARK = '#B8860B';
+const GOLD_MEDIUM = '#FDB931'; // Added for Text
 const TEXT_BODY_COLOR = '#B0B0B0';
 const TEXT_OFF_WHITE = '#FFFFFF';
 
-// --- BRAND ICONS DATA (UNCHANGED) ---
+// --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
 const trustedBrands = [ 
@@ -66,27 +66,31 @@ export default function NNMConceptPage() {
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
         .font-imperium { font-family: 'Cinzel', serif; }
         
-        /* Typography adjustments */
-        h1, h2, h3, h4, .text-heading-white { color: #FFFFFF !important; }
-        p, li, .text-body-reduced { 
+        /* Helpers */
+        .text-gold-highlight { color: ${GOLD_MEDIUM} !important; }
+        .text-white { color: #FFFFFF !important; }
+        .text-body-gray { color: ${TEXT_BODY_COLOR}; }
+
+        /* Font Sizing Adjustments (Reduced by ~10% generally) */
+        p, li { 
             font-size: 0.95rem; 
             line-height: 1.6;
         }
 
-        /* Ingot Button Style - DESKTOP DEFAULT */
+        /* Ingot Button Style - RESTORED DARK TEXT */
         .btn-ingot {
             background: linear-gradient(180deg, ${GOLD_BTN_HIGHLIGHT} 0%, ${GOLD_BTN_PRIMARY} 40%, ${GOLD_BTN_SHADOW} 100%);
             border: 1px solid ${GOLD_BTN_SHADOW};
-            color: #FFFFFF !important; 
+            color: #2b1d00 !important; /* ORIGINAL DARK BROWN TEXT */
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 1px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
-            text-shadow: 0 1px 0 rgba(0,0,0,0.2);
+            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
             transition: filter 0.3s ease, transform 0.2s ease;
             padding: 10px 30px; 
-            font-size: 0.75rem; 
-            white-space: nowrap; /* Prevent wrapping generally */
+            font-size: 0.8rem; 
+            white-space: nowrap; 
         }
         .btn-ingot:hover {
             filter: brightness(1.08);
@@ -94,24 +98,21 @@ export default function NNMConceptPage() {
         }
         
         /* Mobile specific adjustments */
-        .btn-ingot-wrapper { width: auto; display: inline-block; }
-        
         @media (max-width: 768px) {
             .btn-ingot-wrapper { 
                 width: 50% !important; /* EXACTLY 50% WIDTH */
-                margin: 0; /* Left aligned relative to text above */
+                margin: 0 auto; /* CENTERED */
                 display: block;
             }
             .btn-ingot { 
                 width: 100%; 
-                padding: 12px 2px; /* Small padding to allow text space */
-                font-size: 11px !important; /* Calculated to fit 21 chars in 50% width */
-                white-space: nowrap !important; /* FORCED SINGLE LINE */
+                padding: 10px 0; 
+                font-size: 11px !important; /* Adjusted to fit text in 50% width */
+                white-space: nowrap !important;
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
-            /* Ensure images are responsive */
             .img-container { margin-bottom: 20px; }
         }
 
@@ -120,9 +121,6 @@ export default function NNMConceptPage() {
         .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
-
-        /* Helpers */
-        .text-body-gray { color: ${TEXT_BODY_COLOR}; }
         
         .section-spacer { margin-bottom: 80px; }
         @media (max-width: 768px) { .section-spacer { margin-bottom: 50px; } }
@@ -139,21 +137,22 @@ export default function NNMConceptPage() {
       <section className="container pt-5 pb-5">
           <div className="row justify-content-start text-start">
               <div className="col-lg-9">
-                  <h1 className="font-imperium display-6 fw-bold mb-4" style={{ color: '#FFFFFF' }}>
-                      The Three Tiers of Digital Naming
+                  {/* Title size reduced by ~25% (2rem) */}
+                  <h1 className="font-imperium fw-bold mb-4 text-white" style={{ fontSize: '2rem' }}>
+                      The Three Tiers of <span className="text-gold-highlight">Digital Naming</span>
                   </h1>
                   
-                  <h2 className="text-uppercase mb-4" style={{ letterSpacing: '2px', color: '#FFFFFF', fontSize: '1rem' }}>
+                  <h2 className="text-uppercase mb-4 text-white" style={{ letterSpacing: '2px', fontSize: '1rem' }}>
                       Choice, Positioning, and Intent
                   </h2>
                   
-                  <p className="text-body-gray" style={{ lineHeight: '1.7', fontSize: '1rem' }}>
+                  <p className="text-body-gray" style={{ lineHeight: '1.7' }}>
                       In every mature market, structure matters. Not all assets are created equal, and not all participants approach ownership with the same intent. As digital naming evolves into functional infrastructure, differentiation becomes a matter of clarity rather than hierarchy.
                   </p>
-                  <p className="text-body-gray" style={{ lineHeight: '1.7', fontSize: '0.9rem' }}>
+                  <p className="text-body-gray" style={{ lineHeight: '1.7' }}>
                       At NNM, digital names are minted across three clearly defined tiers. These tiers do not determine future market value, do not imply performance, and do not create expectations. They exist to provide structural context and optional positioning at the moment of minting.
                   </p>
-                  <p className="fw-bold fst-italic mt-3" style={{ color: '#FFFFFF', fontSize: '0.9rem' }}>
+                  <p className="fw-bold fst-italic mt-3 text-white">
                       What follows is not a ranking system. It is a framework of choice.
                   </p>
               </div>
@@ -163,54 +162,59 @@ export default function NNMConceptPage() {
       {/* --- CONTENT TIERS (ZIG-ZAG LAYOUT) --- */}
       <section className="container flex-grow-1">
         
-        {/* TIER 1: IMMORTALS */}
+        {/* TIER 1: IMMORTALS (Image 1000023703.jpg) */}
         <div className="row align-items-center section-spacer">
             <div className="col-12 col-lg-6 mb-4 mb-lg-0">
                 <div className="img-container">
-                    <img src="/images/immortals.jpg" alt="The Immortals Tier" className="img-fluid w-100" style={{ objectFit: 'cover' }} />
+                    <img src="/images/1000023703.jpg" alt="The Immortals Tier" className="img-fluid w-100" style={{ objectFit: 'cover' }} />
                 </div>
             </div>
             <div className="col-12 col-lg-6 ps-lg-5 text-start">
-                <h3 className="font-imperium h2 mb-3" style={{ color: '#FFFFFF' }}>The Immortals Tier</h3>
+                {/* Gold applied only to "Immortals" */}
+                <h3 className="font-imperium h2 mb-3 text-white">The <span className="text-gold-highlight">Immortals</span> Tier</h3>
                 <div className="text-body-gray">
                     <p>Some names are inherently scarce. Short character strings, culturally resonant words, and timeless identifiers often attract attention simply by their nature.</p>
-                    <p className="fw-bold" style={{ color: '#FFFFFF' }}>The Immortals Tier is designed for such names.</p>
+                    <p className="fw-bold text-white">The Immortals Tier is designed for such names.</p>
                     <p>Names minted under this tier carry a higher minting fee, not as a signal of guaranteed value, but as a reflection of personal intent. The protocol does not assign worth to the name. The registrant does.</p>
                     <p>Minting within the Immortals Tier does not ensure visibility, demand, liquidity, or market activity. It represents a deliberate decision at the point of creation, nothing more.</p>
                 </div>
             </div>
         </div>
 
-        {/* TIER 2: ELITE */}
+        {/* TIER 2: ELITE (Image 1000023702.jpg) */}
         <div className="row align-items-center section-spacer">
+            {/* Desktop: Order 2 (Right). Mobile: Order 1 (Top) */}
             <div className="col-12 col-lg-6 order-1 order-lg-2 mb-4 mb-lg-0">
                 <div className="img-container">
-                    <img src="/images/elite.jpg" alt="The Elite Tier" className="img-fluid w-100" style={{ objectFit: 'cover' }} />
+                    <img src="/images/1000023702.jpg" alt="The Elite Tier" className="img-fluid w-100" style={{ objectFit: 'cover' }} />
                 </div>
             </div>
+            {/* Desktop: Order 1 (Left). Mobile: Order 2 (Bottom) */}
             <div className="col-12 col-lg-6 order-2 order-lg-1 pe-lg-5 text-start">
-                <h3 className="font-imperium h2 mb-3" style={{ color: '#FFFFFF' }}>The Elite Tier</h3>
+                {/* Gold applied only to "Elite" */}
+                <h3 className="font-imperium h2 mb-3 text-white">The <span className="text-gold-highlight">Elite</span> Tier</h3>
                 <div className="text-body-gray">
                     <p>Between exclusivity and accessibility lies balance.</p>
-                    <p className="fw-bold" style={{ color: '#FFFFFF' }}>The Elite Tier is intended for names that are meaningful, strategically chosen, or identity-driven, without requiring extreme scarcity.</p>
+                    <p className="fw-bold text-white">The Elite Tier is intended for names that are meaningful, strategically chosen, or identity-driven, without requiring extreme scarcity.</p>
                     <p>This tier reflects a pragmatic approach to digital naming. Participants often use it for personal identifiers, brand-aligned names, or emerging use cases that may evolve over time.</p>
                     <p>As with all tiers, post-mint behavior is entirely market-driven. Activity and relevance emerge from use and demand, not from classification.</p>
                 </div>
             </div>
         </div>
 
-        {/* TIER 3: FOUNDERS */}
+        {/* TIER 3: FOUNDERS (Image 1000023701.jpg) */}
         <div className="row align-items-center section-spacer">
             <div className="col-12 col-lg-6 mb-4 mb-lg-0">
                 <div className="img-container">
-                    <img src="/images/founders.jpg" alt="The Founders Tier" className="img-fluid w-100" style={{ objectFit: 'cover' }} />
+                    <img src="/images/1000023701.jpg" alt="The Founders Tier" className="img-fluid w-100" style={{ objectFit: 'cover' }} />
                 </div>
             </div>
             <div className="col-12 col-lg-6 ps-lg-5 text-start">
-                <h3 className="font-imperium h2 mb-3" style={{ color: '#FFFFFF' }}>The Founders Tier</h3>
+                {/* Gold applied only to "Founders" */}
+                <h3 className="font-imperium h2 mb-3 text-white">The <span className="text-gold-highlight">Founders</span> Tier</h3>
                 <div className="text-body-gray">
                     <p>Every ecosystem begins with early participants. Not because outcomes are certain, but because exploration and belief in open systems come first.</p>
-                    <p className="fw-bold" style={{ color: '#FFFFFF' }}>The Founders Tier is designed to be accessible by design.</p>
+                    <p className="fw-bold text-white">The Founders Tier is designed to be accessible by design.</p>
                     <p>It allows participants to mint digital names with minimal friction, serving as a natural entry point into the naming ecosystem. Some names minted at this tier may later gain relevance through adoption or integration. Others may remain purely personal identifiers.</p>
                     <p>Origin does not define outcome. In open markets, value is shaped by interaction, not initial cost.</p>
                 </div>
@@ -224,7 +228,8 @@ export default function NNMConceptPage() {
           <div className="row justify-content-start text-start">
               <div className="col-12 col-lg-9 p-0">
                   
-                  <h4 className="font-imperium mb-4" style={{ color: '#FFFFFF', fontSize: '1.25rem' }}>What These Tiers Do and Do Not Represent</h4>
+                  {/* Outro Heading & Text (Left Aligned) */}
+                  <h4 className="font-imperium mb-4 text-white" style={{ fontSize: '1.25rem' }}>What These Tiers Do and Do Not Represent</h4>
                   
                   <p className="text-body-gray mb-3">
                       These tiers do not predict future value, influence secondary market performance, or grant ranking, priority, or algorithmic advantage.
@@ -232,23 +237,27 @@ export default function NNMConceptPage() {
                   <p className="text-body-gray mb-3">
                       They do provide clarity at minting, enable optional identity signaling, and reflect intent at the moment of creation.
                   </p>
-                  <p className="text-body-gray mb-4">
+                  <p className="text-body-gray mb-5">
                       A name minted at the Founders Tier may later circulate widely. A name minted at the Immortals Tier may never trade. Both outcomes are valid and entirely market-driven.
                   </p>
                   
-                  <div className="mb-5">
-                      <p className="font-imperium fs-6 mb-4" style={{ color: '#FFFFFF' }}>
+                  {/* CENTERED CTA AREA STARTS HERE */}
+                  <div className="text-center mt-4">
+                      {/* Text closer to button (mb-2) and smaller size (fs-7 equiv) */}
+                      <p className="font-imperium mb-2 text-white" style={{ fontSize: '0.85rem' }}>
                           The system provides structure.<br/>
                           The market provides meaning.
                       </p>
-                  </div>
 
-                   {/* CTA BUTTON - Left Aligned, 50% width on Mobile, ONE LINE TEXT */}
-                    <div className="btn-ingot-wrapper">
-                        <Link href="/mint" className="btn btn-ingot rounded-1 text-decoration-none">
-                            CLAIM YOUR NEXUS NAME
-                        </Link>
-                    </div>
+                       {/* CTA BUTTON - Centered, Dark Text, Responsive Width */}
+                        <div className="btn-ingot-wrapper">
+                            <Link href="/mint" className="btn btn-ingot rounded-1 text-decoration-none">
+                                CLAIM YOUR NEXUS NAME
+                            </Link>
+                        </div>
+                  </div>
+                  {/* CENTERED CTA AREA ENDS */}
+
               </div>
           </div>
       </section>
