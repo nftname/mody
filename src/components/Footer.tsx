@@ -2,23 +2,20 @@
 import Link from 'next/link';
 
 const Footer = () => {
-  // ✅ تعديل 1: تصغير الخط إلى 11px (تصغير 20%)
+  // ✅ التحكم المركزي في الألوان والأحجام
   const linkColor = 'rgba(255, 255, 255, 0.5)';
   const linkHoverColor = '#FCD535';
-  const fontSize = '11px'; 
+  const fontSize = '11px'; // 👈 هذا الرقم يتحكم في حجم خط الروابط ووسائل التواصل معاً
 
   return (
     <footer className="desktop-only-footer" style={{ backgroundColor: '#0B0E11', borderTop: '1px solid rgba(255, 255, 255, 0.08)', padding: '40px 0 20px', marginTop: 'auto' }}>
         <div className="container">
-            {/* ✅ تعديل 2: تقليل المسافات بين الأعمدة (g-3 بدلاً من g-4) */}
             <div className="row g-3">
                 
-                {/* SECTION 1: COMMUNITY (Socials) */}
-                {/* ✅ تعديل 3: تقليل الـ Padding الجانبي لتقريب المسافة (pe-md-2 بدلاً من 4) */}
+                {/* SECTION 1: COMMUNITY */}
                 <div className="col-6 col-md-3 pe-md-2" style={{ borderRight: '1px solid rgba(255, 255, 255, 0.05)' }}>
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: '12px', letterSpacing: '1px' }}>Community</h6>
                     <div className="d-flex flex-column gap-2">
-                        {/* ✅ تعديل 4: إعادة الترتيب (Twitter -> Telegram -> Discord...) */}
                         <a href="#" className="footer-social-row"><i className="bi bi-twitter-x"></i><span>Twitter</span></a>
                         <a href="#" className="footer-social-row"><i className="bi bi-telegram"></i><span>Telegram</span></a>
                         <a href="#" className="footer-social-row"><i className="bi bi-discord"></i><span>Discord</span></a>
@@ -43,9 +40,9 @@ const Footer = () => {
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: '12px', letterSpacing: '1px' }}>Resources</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
                         <li><Link href="/contact" className="footer-link-item">Help Center</Link></li>
-                        <li><Link href="/blog" className="footer-link-item">Blog</Link></li>
+                        {/* ✅ تم تعديل الرابط ليشير إلى صفحة الأخبار التي تعرض المقالات */}
+                        <li><Link href="/news" className="footer-link-item">Blog</Link></li>
                         <li><Link href="/news" className="footer-link-item">News & Updates</Link></li>
-                        {/* ✅ تعديل 5: إضافة NNM Concept هنا */}
                         <li><Link href="/nnm-concept" className="footer-link-item">NNM Concept</Link></li>
                     </ul>
                 </div>
@@ -76,17 +73,17 @@ const Footer = () => {
                 display: flex; align-items: center; gap: 10px; 
                 color: ${linkColor}; 
                 text-decoration: none; 
-                font-size: ${fontSize}; /* 11px Now */
+                font-size: ${fontSize}; /* ✅ موحد (11px) */
                 transition: all 0.2s ease; 
             }
             .footer-social-row:hover { color: #fff; transform: translateX(5px); }
-            .footer-social-row i { color: ${linkHoverColor}; font-size: 13px; } /* Slightly smaller icons to match text */
+            .footer-social-row i { color: ${linkHoverColor}; font-size: 13px; }
             
             /* General Links Style */
             .footer-link-item { 
                 text-decoration: none; 
                 color: ${linkColor}; 
-                font-size: ${fontSize}; /* 11px Now */
+                font-size: ${fontSize}; /* ✅ موحد (11px) */
                 transition: color 0.2s; 
             }
             .footer-link-item:hover { color: ${linkHoverColor}; }
