@@ -14,13 +14,11 @@ const Navbar = () => {
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // ✅ إصلاح: تحديد نوع البيانات للأرقام أو null
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [drawerTranslate, setDrawerTranslate] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // ✅ إصلاح: تحديد نوع المرجع كعنصر إدخال HTML
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -56,7 +54,6 @@ const Navbar = () => {
     setDrawerTranslate(0);
   };
 
-  // ✅ إصلاح: إضافة Types للمتغيرات (item, e)
   const handleNavClick = (item: string, e: React.MouseEvent) => {
     if (item === 'Portfolio') {
         e.preventDefault();
@@ -66,14 +63,12 @@ const Navbar = () => {
     setIsInsightsOpen(false);
   };
 
-  // ✅ إصلاح: إضافة Type للحدث e
   const handlePortfolioClick = (e: React.MouseEvent) => {
     e.preventDefault();
     router.push('/dashboard');
     closeDrawer();
   };
 
-  // ✅ إصلاح: إضافة Type للحدث e
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -82,7 +77,6 @@ const Navbar = () => {
     }
   };
 
-  // ✅ إصلاح: إضافة Type لأحداث اللمس
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
     setIsDragging(true);
@@ -105,12 +99,11 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  // ✅ تم التعديل: اللون أصبح "أسود مزرق" (#13171F)
-  const exactDarkColor = '#13171F'; 
+  // ✅ الألوان الموحدة (جراحي)
+  const exactDarkColor = '#0B0E11'; 
   const drawerBgColor = '#1E1E1E'; 
   
-  // ✅ تم توحيد ألوان القوائم مع النافبار
-  const dropdownColor = '#13171F'; 
+  const dropdownColor = '#0B0E11'; 
   const metallicGoldHex = '#F0C420'; 
   const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
   const offWhiteText = '#E0E0E0';
@@ -168,7 +161,6 @@ const Navbar = () => {
     height: '23px', 
   };
 
-  // ✅ إصلاح: تعريف نوع المصفوفة لتجنب خطأ الـ Index Signature
   const menuIcons: { [key: string]: string } = {
     'Home': 'bi-house-door',
     'Market': 'bi-shop',
@@ -179,15 +171,14 @@ const Navbar = () => {
 
   const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
 
-  // ✅ تم التعديل: رابط المدونة أصبح /news
+  // ✅ القائمة السفلية الجديدة (تعديل الأسماء والروابط فقط)
   const bottomDrawerItems = [
     { label: 'News & Updates', href: '/news', icon: 'bi-newspaper' },
-    { label: 'Blog', href: '/news', icon: 'bi-pencil-square' },
+    { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' },
     { label: 'Affiliate Program', href: '/affiliate', icon: 'bi-briefcase' },
     { label: 'Rankings', href: '/ranking', icon: 'bi-trophy' }
   ];
 
-  // ✅ إصلاح: تعريف props للمكون
   const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
     const height = isMobile ? '28px' : elementHeight; 
     const minWidth = isMobile ? '80px' : '110px'; 
