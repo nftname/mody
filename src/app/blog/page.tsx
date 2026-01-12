@@ -4,16 +4,15 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import MarketTicker from '@/components/MarketTicker';
-import NGXWidget from '@/components/NGXWidget';
-import NGXCapWidget from '@/components/NGXCapWidget';
-import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 
-// --- VISUAL IDENTITY CONSTANTS ---
-const BACKGROUND_DARK = '#13171F'; 
-const SURFACE_DARK = '#1E232B';
-const BORDER_COLOR = 'rgba(255, 255, 255, 0.05)';
-const GOLD_PRIMARY = '#F0C420';
-const TEXT_MUTED = '#9CA3AF';
+// --- COLORS EXTRACTED FROM NNM CONCEPT ---
+const BACKGROUND_MAIN = '#1E1E1E';
+const CARD_BG = '#242424';
+const CARD_BORDER = '#2E2E2E';
+const TEXT_OFF_WHITE = '#E0E0E0'; // For Headers
+const TEXT_BODY = '#B0B0B0';      // For Body Text
+const GOLD_BASE = '#F0C420';      // For Accents
+const GOLD_MEDIUM = '#FDB931';    // For Highlights
 
 export default function BlogLibrary() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -31,7 +30,7 @@ export default function BlogLibrary() {
         if (error) throw error;
         if (data) setPosts(data);
       } catch (err) {
-        console.error('Archive Error:', err);
+        console.error('Error fetching archives:', err);
       } finally {
         setLoading(false);
       }
@@ -41,75 +40,155 @@ export default function BlogLibrary() {
   }, []);
 
   return (
-    <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', fontFamily: '"Inter", sans-serif', paddingBottom: '80px' }}>
+    <main style={{ backgroundColor: BACKGROUND_MAIN, minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '0px' }}>
       
+      {/* --- GLOBAL STYLES (EXACTLY MATCHING CONCEPT PAGE) --- */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
+        
+        .font-imperium { font-family: 'Cinzel', serif; }
+        
+        /* THE INGOT BUTTON (Exact Replica) */
+        .btn-ingot {
+            background: linear-gradient(180deg, #E6C76A 0%, #D4AF37 40%, #B8962E 100%);
+            border: 1px solid #B8962E;
+            color: #2b1d00;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
+            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+            transition: filter 0.3s ease, transform 0.2s ease;
+            padding: 12px 30px; 
+            font-size: 1rem;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 2px;
+        }
+        .btn-ingot:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+            color: #1a1100;
+        }
+
+        /* CARD STYLES */
+        .archive-card {
+            background-color: ${CARD_BG};
+            border: 1px solid ${CARD_BORDER};
+            border-radius: 8px;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .archive-card:hover {
+            transform: translateY(-5px);
+            border-color: ${GOLD_BASE};
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .card-img-wrapper {
+            height: 220px;
+            overflow: hidden;
+            border-bottom: 1px solid ${CARD_BORDER};
+            position: relative;
+        }
+        
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+            opacity: 0.9;
+        }
+        
+        .archive-card:hover .card-img {
+            transform: scale(1.05);
+            opacity: 1;
+        }
+
+        /* TEXT UTILS */
+        .text-gold { color: ${GOLD_BASE} !important; }
+        .text-off-white { color: ${TEXT_OFF_WHITE} !important; }
+        .text-body-gray { color: ${TEXT_BODY} !important; }
+      `}</style>
+
       <MarketTicker />
 
-      {/* HEADER WIDGETS */}
-      <div className="header-wrapper shadow-sm border-bottom border-secondary d-none d-md-block" style={{ borderColor: 'rgba(255,255,255,0.05) !important', padding: '10px 0', backgroundColor: '#0B0E11' }}>
-        <div className="container-fluid p-0"> 
-            <div className="widgets-grid-container">
-                <div className="widget-item"> <NGXWidget theme="dark" /> </div>
-                <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
-                <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
-            </div>
-        </div>
-      </div>
-
-      <div className="container pt-5">
-        
-        {/* PAGE HEADER */}
-        <div className="row mb-5">
-            <div className="col-12 text-center">
-                <h1 className="fw-bold text-white mb-2" style={{letterSpacing: '-1px', fontSize: '2.5rem'}}>NNM INTELLIGENCE</h1>
-                <p style={{color: TEXT_MUTED, maxWidth: '600px', margin: '0 auto'}}>
-                    The definitive archive of Digital Name Assets market analysis, infrastructure updates, and sovereign identity research.
+      {/* --- PAGE HEADER SECTION (LEFT ALIGNED) --- */}
+      <section className="container pt-5 pb-5">
+        <div className="row">
+            <div className="col-12 text-start">
+                <h1 className="fw-bold mb-3 font-imperium text-off-white" style={{ fontSize: '2.2rem', letterSpacing: '-1px' }}>
+                    NNM <span style={{ color: GOLD_MEDIUM }}>INTELLIGENCE</span>
+                </h1>
+                <p className="text-body-gray" style={{ maxWidth: '800px', fontSize: '16px', lineHeight: '1.6', margin: 0 }}>
+                    The definitive archive of Digital Name Assets market analysis, infrastructure updates, and sovereign identity research. Access the full history of the Nexus ecosystem.
                 </p>
-                <div className="mt-4 mx-auto" style={{width: '60px', height: '3px', background: GOLD_PRIMARY}}></div>
+                <div className="mt-4" style={{ width: '80px', height: '2px', background: `linear-gradient(to right, ${GOLD_BASE}, transparent)` }}></div>
             </div>
         </div>
+      </section>
 
-        {/* LOADING STATE */}
+      {/* --- CONTENT GRID --- */}
+      <section className="container pb-5">
         {loading ? (
-            <div className="d-flex flex-column justify-content-center align-items-center py-5">
+            <div className="d-flex flex-column justify-content-center align-items-center py-5" style={{ minHeight: '300px' }}>
                  <div className="spinner-border text-secondary mb-3" role="status"></div>
-                 <span style={{fontSize:'12px', letterSpacing:'2px', color: '#666'}}>ACCESSING ARCHIVES...</span>
+                 <span style={{ fontSize:'12px', letterSpacing:'2px', color: TEXT_BODY, fontFamily: 'monospace' }}>ACCESSING ARCHIVES...</span>
             </div>
         ) : (
             <>
-                {/* POSTS GRID */}
                 <div className="row g-4">
                     {posts.length === 0 ? (
-                        <div className="col-12 text-center py-5 text-muted">No intelligence reports available.</div>
+                        <div className="col-12 text-start py-5 text-body-gray">
+                            No intelligence reports found in the registry.
+                        </div>
                     ) : (
                         posts.map((post) => (
                             <div key={post.id} className="col-12 col-md-6 col-lg-4">
                                 <Link href={`/blog/${post.id}`} className="text-decoration-none">
-                                    <div className="archive-card h-100 d-flex flex-column">
+                                    <div className="archive-card">
                                         {/* Image */}
-                                        <div className="card-image-wrapper">
+                                        <div className="card-img-wrapper">
                                             {post.image_url ? (
-                                                <img src={post.image_url} alt={post.title} />
+                                                <img src={post.image_url} alt={post.title} className="card-img" />
                                             ) : (
-                                                <div className="no-image-placeholder"><i className="bi bi-file-text"></i></div>
+                                                <div className="d-flex align-items-center justify-content-center h-100 bg-dark text-secondary">
+                                                    <i className="bi bi-image" style={{ fontSize: '2rem' }}></i>
+                                                </div>
                                             )}
-                                            <div className="category-tag">{post.category}</div>
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="card-content flex-grow-1">
-                                            <div className="meta-info mb-2">
-                                                <span>{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                            {/* Category Tag Overlay */}
+                                            <div style={{ position: 'absolute', top: '15px', left: '15px', backgroundColor: 'rgba(0,0,0,0.8)', padding: '4px 10px', borderRadius: '4px', border: `1px solid ${GOLD_BASE}44` }}>
+                                                <span style={{ color: GOLD_BASE, fontSize: '10px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                                                    {post.category}
+                                                </span>
                                             </div>
-                                            <h3 className="card-title">{post.title}</h3>
-                                            <p className="card-summary">
-                                                {post.summary ? post.summary.substring(0, 120) + '...' : ''}
-                                            </p>
                                         </div>
+                                        
+                                        {/* Content */}
+                                        <div className="p-4 flex-grow-1 d-flex flex-column">
+                                            <div className="mb-2">
+                                                <span style={{ fontSize:'11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>
+                                                    {new Date(post.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                                </span>
+                                            </div>
+                                            
+                                            <h3 className="h5 fw-bold mb-3 font-imperium text-off-white" style={{ lineHeight:'1.4', minHeight: '3.6rem' }}>
+                                                {post.title}
+                                            </h3>
+                                            
+                                            <p className="text-body-gray" style={{ fontSize:'14px', lineHeight:'1.6', marginBottom:'20px', display: '-webkit-box', WebkitLineClamp: '3', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                                {post.summary || "Click to read the full intelligence report..."}
+                                            </p>
 
-                                        {/* Footer */}
-                                        <div className="card-footer-custom mt-auto">
-                                            <span className="read-more">READ REPORT <i className="bi bi-arrow-right"></i></span>
+                                            <div className="mt-auto pt-3 border-top border-secondary" style={{ borderColor: 'rgba(255,255,255,0.05) !important' }}>
+                                                <span className="text-gold" style={{ fontSize:'11px', fontWeight:'700', letterSpacing:'1px', textTransform: 'uppercase' }}>
+                                                    READ REPORT <i className="bi bi-arrow-right ms-1"></i>
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </Link>
@@ -118,169 +197,24 @@ export default function BlogLibrary() {
                     )}
                 </div>
 
-                {/* BOTTOM CTA (GOLD INGOT) */}
-                <div className="row mt-5 pt-5">
+                {/* --- BOTTOM CTA (GOLD INGOT) --- */}
+                <div className="row mt-5 pt-5 mb-5">
                     <div className="col-12 text-center">
-                        <div className="cta-wrapper p-5 rounded-3" style={{backgroundColor: SURFACE_DARK, border: `1px solid ${BORDER_COLOR}`}}>
-                            <h4 className="text-white mb-4" style={{fontFamily: 'serif'}}>Establish Your Sovereign Identity</h4>
+                        <div className="p-5 rounded-3" style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}`, maxWidth: '800px', margin: '0 auto' }}>
+                            <h4 className="text-off-white mb-2 font-imperium">Establish Your Sovereign Identity</h4>
+                            <p className="text-body-gray mb-4" style={{ fontSize: '14px' }}>
+                                The registry is open. Secure your Nexus Name before the era of permanence begins.
+                            </p>
                             
-                            <Link href="/mint" className="ingot-btn">
-                                <span className="ingot-shine"></span>
-                                <span className="ingot-text">ACQUIRE ASSET</span>
-                                <i className="bi bi-gem ms-2"></i>
+                            <Link href="/mint" className="btn-ingot rounded-1">
+                                CLAIM YOUR NEXUS NAME
                             </Link>
                         </div>
                     </div>
                 </div>
             </>
         )}
-
-      </div>
-
-      <style jsx global>{`
-        /* Widgets */
-        .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; gap: 10px; }
-        .widget-item { flex: 1; min-width: 0; }
-
-        /* Archive Card Design */
-        .archive-card {
-            background-color: ${SURFACE_DARK};
-            border: 1px solid ${BORDER_COLOR};
-            border-radius: 4px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            position: relative;
-            top: 0;
-        }
-
-        .archive-card:hover {
-            transform: translateY(-5px);
-            border-color: ${GOLD_PRIMARY};
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        .card-image-wrapper {
-            height: 200px;
-            overflow: hidden;
-            position: relative;
-            background-color: #000;
-        }
-
-        .card-image-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-            opacity: 0.8;
-        }
-
-        .archive-card:hover .card-image-wrapper img {
-            transform: scale(1.05);
-            opacity: 1;
-        }
-
-        .category-tag {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            color: ${GOLD_PRIMARY};
-            padding: 4px 10px;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            border-radius: 2px;
-            border: 1px solid rgba(240, 196, 32, 0.3);
-        }
-
-        .card-content { padding: 20px; }
-        
-        .meta-info { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #E0E0E0;
-            margin-bottom: 10px;
-            line-height: 1.4;
-            transition: color 0.2s;
-        }
-
-        .archive-card:hover .card-title { color: ${GOLD_PRIMARY}; }
-
-        .card-summary {
-            font-size: 14px;
-            color: ${TEXT_MUTED};
-            line-height: 1.6;
-            margin-bottom: 0;
-        }
-
-        .card-footer-custom {
-            padding: 15px 20px;
-            border-top: 1px solid rgba(255,255,255,0.03);
-            background: rgba(0,0,0,0.1);
-        }
-
-        .read-more {
-            font-size: 11px;
-            font-weight: 700;
-            color: ${GOLD_PRIMARY};
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        /* --- THE GOLD INGOT BUTTON --- */
-        .ingot-btn {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 14px 40px;
-            font-family: "Cinzel", serif;
-            font-weight: 700;
-            font-size: 14px;
-            letter-spacing: 2px;
-            color: #241C04;
-            text-decoration: none;
-            overflow: hidden;
-            border-radius: 2px;
-            background: linear-gradient(180deg, #FFD700 0%, #FDB931 45%, #D4AF37 55%, #CBA135 100%);
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            transition: all 0.3s ease;
-            border: 1px solid #B8860B;
-        }
-
-        .ingot-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            filter: brightness(1.1);
-        }
-
-        .ingot-shine {
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0) 100%);
-            transform: skewX(-25deg);
-            animation: shine 4s infinite;
-        }
-
-        @keyframes shine {
-            0% { left: -100%; }
-            20% { left: 200%; }
-            100% { left: 200%; }
-        }
-
-        @media (max-width: 768px) {
-            .widgets-grid-container { display: none !important; }
-            .card-image-wrapper { height: 160px; }
-        }
-      `}</style>
+      </section>
     </main>
   );
 }
