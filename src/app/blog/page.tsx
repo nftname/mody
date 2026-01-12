@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import MarketTicker from '@/components/MarketTicker';
 
-// --- COLORS ---
 const BACKGROUND_MAIN = '#1E1E1E';
 const CARD_BG = '#242424';
 const CARD_BORDER = '#2E2E2E';
@@ -47,25 +46,31 @@ export default function BlogLibrary() {
         
         .font-imperium { font-family: 'Cinzel', serif; }
         
-        /* UPDATED BUTTON: 50% WIDTH, CENTERED, SMALLER TEXT */
+        /* --- FIXED INGOT BUTTON --- */
         .btn-ingot {
             background: linear-gradient(180deg, #E6C76A 0%, #D4AF37 40%, #B8962E 100%);
             border: 1px solid #B8962E;
             color: #2b1d00;
             font-family: 'Cinzel', serif;
             font-weight: 700;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px; /* Reduced spacing to fit text */
             box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
             text-shadow: 0 1px 0 rgba(255,255,255,0.4);
             transition: filter 0.3s ease, transform 0.2s ease;
-            padding: 10px 0; /* Reduced padding */
-            font-size: 0.8rem; /* Reduced font size (was 1rem) */
-            white-space: nowrap;
+            
+            /* SIZING & POSITIONING */
+            width: 50%;           /* 50% of parent width */
+            margin: 0 auto;       /* Centered */
+            display: block;
+            text-align: center;
+            
+            /* TEXT FITTING */
+            padding: 14px 10px;   /* Comfortable padding */
+            font-size: 0.85rem;   /* Adjusted size */
+            white-space: normal;  /* Allow text to wrap if needed */
+            line-height: 1.2;     /* Good spacing for wrapped text */
             text-decoration: none;
-            display: block; /* Important for centering with margin auto */
             border-radius: 2px;
-            width: 50%; /* 👈 EXACTLY 50% WIDTH */
-            margin: 0 auto; /* CENTER IT */
         }
         .btn-ingot:hover {
             filter: brightness(1.08);
@@ -73,6 +78,7 @@ export default function BlogLibrary() {
             color: #1a1100;
         }
 
+        /* CARD STYLES */
         .archive-card {
             background-color: ${CARD_BG};
             border: 1px solid ${CARD_BORDER};
@@ -112,19 +118,25 @@ export default function BlogLibrary() {
         .text-gold { color: ${GOLD_BASE} !important; }
         .text-off-white { color: ${TEXT_OFF_WHITE} !important; }
         .text-body-gray { color: ${TEXT_BODY} !important; }
+        
+        /* MOBILE ADJUSTMENTS */
+        @media (max-width: 768px) {
+            .btn-ingot { 
+                width: 60%; /* Slightly wider on mobile to fit text comfortably, visually looks like 50% */
+                font-size: 0.75rem; 
+            }
+        }
       `}</style>
 
       <MarketTicker />
 
-      {/* --- PAGE HEADER (SCALED DOWN 25%) --- */}
+      {/* --- PAGE HEADER --- */}
       <section className="container pt-5 pb-5">
         <div className="row">
             <div className="col-12 text-start">
-                {/* Font reduced from 2.2rem to 1.6rem */}
                 <h1 className="fw-bold mb-3 font-imperium text-off-white" style={{ fontSize: '1.6rem', letterSpacing: '-1px' }}>
                     NNM <span style={{ color: GOLD_MEDIUM }}>INTELLIGENCE</span>
                 </h1>
-                {/* Font reduced from 16px to 12px */}
                 <p className="text-body-gray" style={{ maxWidth: '800px', fontSize: '12px', lineHeight: '1.6', margin: 0 }}>
                     The definitive archive of Digital Name Assets market analysis, infrastructure updates, and sovereign identity research. Access the full history of the Nexus ecosystem.
                 </p>
@@ -194,7 +206,7 @@ export default function BlogLibrary() {
                     )}
                 </div>
 
-                {/* --- BOTTOM CTA (CENTERED, 50% WIDTH, SMALLER) --- */}
+                {/* --- BOTTOM CTA --- */}
                 <div className="row mt-5 pt-5 mb-5">
                     <div className="col-12 text-center"> 
                         <div className="p-4 rounded-3" style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}`, maxWidth: '100%', margin: '0 auto' }}>
@@ -203,6 +215,7 @@ export default function BlogLibrary() {
                                 The registry is open. Secure your Nexus Name before the era of permanence begins.
                             </p>
                             
+                            {/* Centered Button Container */}
                             <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                                 <Link href="/mint" className="btn-ingot rounded-1">
                                     CLAIM NEXUS NAME
