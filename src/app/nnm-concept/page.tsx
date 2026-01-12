@@ -71,7 +71,7 @@ export default function NNMConceptPage() {
           data: {
             labels: ['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026','2027','2028','2029','2030'],
             datasets: [{
-              label: 'Imperium Asset Value',
+              label: 'Nexus Asset Value', // تم التعديل
               data: [0.1, 0.3, 0.8, 1.5, 3.2, 6, 10, 15, 20, 35, 50, 70, 90, 120],
               borderColor: GOLD_BASE,
               backgroundColor: 'rgba(240, 196, 32, 0.08)', 
@@ -246,7 +246,7 @@ export default function NNMConceptPage() {
           <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
               <div className="text-start text-lg-center mx-auto">
                   
-                  {/* Main Title */}
+                  {/* Main Title - تم التعديل */}
                     <h1 style={{ 
                       fontFamily: '"Inter", "Segoe UI", sans-serif', 
                       fontSize: '1.5rem', 
@@ -256,10 +256,10 @@ export default function NNMConceptPage() {
                       margin: 0,
                       lineHeight: '1.2'
                     }}>
-                      NNM — The <span style={{ color: GOLD_MEDIUM }}>Imperium</span> <span style={{ color: TEXT_OFF_WHITE }}>Digital Name Asset Concept</span>
+                      NNM — The <span style={{ color: GOLD_MEDIUM }}>Nexus</span> <span style={{ color: TEXT_OFF_WHITE }}>Digital Name Asset Concept</span>
                     </h1>
                   
-                  {/* Main Subtext */}
+                  {/* Main Subtext - تم التعديل وإزالة اللون الذهبي الزائد */}
                     <p style={{ 
                       marginTop: '15px', 
                       marginBottom: 0,
@@ -268,7 +268,7 @@ export default function NNMConceptPage() {
                       marginLeft: 'auto', // Centering on Desktop
                       marginRight: 'auto', // Centering on Desktop
                     }}>
-                      The <span className="text-gold fw-bold">Imperium Asset</span> represents the ultimate tier of digital name ownership, far beyond standard tokens. Each <span className="text-gold fw-bold">Imperium Name</span> establishes immutable priority within the Web3 ecosystem, securing a permanent place in digital history. As we approach 2026, these assets are poised to become the cornerstone of digital identity and value.
+                      The <span className="fw-bold" style={{ color: TEXT_OFF_WHITE }}>Nexus Asset</span> represents the ultimate tier of digital name ownership, far beyond standard tokens. Each <span className="fw-bold" style={{ color: TEXT_OFF_WHITE }}>Nexus Name</span> establishes immutable priority within the Web3 ecosystem, securing a permanent place in digital history. As we approach 2026, these assets are poised to become the cornerstone of digital identity and value.
                   </p>
               </div>
           </div>
@@ -282,26 +282,26 @@ export default function NNMConceptPage() {
               {/* --- LEFT COLUMN (50%) --- */}
               <div className="col-12 col-lg-6">
                 
-                {/* Authority Section */}
+                {/* Authority Section - تم التعديل */}
                 <div className="mb-5">
                   <h2 className="text-white h5 mb-3 fw-bold font-imperium" style={{ color: GOLD_MEDIUM }}>Authority & Scarcity</h2>
                   <p style={{ lineHeight: '1.7', maxWidth: '95%' }}>
-                    Owning an Imperium Asset means more than participation — it means defining the future trajectory of high-value digital names. Scarcity, authenticity, and historical priority converge to create an asset of unparalleled distinction. This is the digital asset for those who aspire to permanence, recognition, and exclusivity.
+                    Owning a Nexus Asset means more than participation — it means defining the future trajectory of high-value digital names. Scarcity, authenticity, and historical priority converge to create an asset of unparalleled distinction. This is the digital asset for those who aspire to permanence, recognition, and exclusivity.
                   </p>
                 </div>
 
-                {/* Why Imperium Stands Apart */}
+                {/* Why Nexus Stands Apart - تم التعديل */}
                 <div className="mb-5">
-                   <h2 className="h4 mb-4 fw-bold font-imperium text-white" style={{ color: TEXT_OFF_WHITE }}>Why Imperium Stands Apart</h2>
+                   <h2 className="h4 mb-4 fw-bold font-imperium text-white" style={{ color: TEXT_OFF_WHITE }}>Why Nexus Stands Apart</h2>
                    
                    <div className="mb-3">
                          <h3 className="h6 text-white fw-bold mb-1" style={{ color: TEXT_OFF_WHITE }}>Immutable Priority:</h3>
-                         <p>Each Imperium Name is recorded permanently on-chain, establishing first-mover recognition in the emerging 2026 digital landscape.</p>
+                         <p>Each Nexus Name is recorded permanently on-chain, establishing first-mover recognition in the emerging 2026 digital landscape.</p>
                    </div>
                    
                    <div className="mb-3">
                          <h3 className="h6 text-white fw-bold mb-1" style={{ color: TEXT_OFF_WHITE }}>Global Recognition:</h3>
-                         <p>Accessible across all Web3 marketplaces, the Imperium Asset ensures your digital identity is universally acknowledged.</p>
+                         <p>Accessible across all Web3 marketplaces, the Nexus Asset ensures your digital identity is universally acknowledged.</p>
                    </div>
                    
                    <div className="mb-3">
@@ -310,7 +310,7 @@ export default function NNMConceptPage() {
                    </div>
                 </div>
 
-                {/* Hierarchy Box (UPDATED to Match NGX Chart Categories) */}
+                {/* Hierarchy Box */}
                 <div className="info-card-static">
                   <h3 className="text-white h6 mb-3 fw-bold border-bottom border-secondary pb-2" style={{ color: TEXT_OFF_WHITE }}>Asset Class Hierarchy</h3>
                   <ul className="list-unstyled mb-0">
@@ -332,11 +332,11 @@ export default function NNMConceptPage() {
               {/* --- RIGHT COLUMN (50%) --- */}
               <div className="col-12 col-lg-6">
                 
-                {/* Title Above Chart */}
+                {/* Title Above Chart - تم التعديل */}
                 <div className="mb-3">
                     <h3 className="text-white h5 mb-2 font-imperium fw-bold" style={{ color: TEXT_OFF_WHITE }}>Valuation Trajectory (2017–2030)</h3>
                     <p style={{ lineHeight: '1.5' }}>
-                        This visualization illustrates the historical growth of the NFT ecosystem and its projected evolution, highlighting the introduction of Imperium Assets in 2025 and their anticipated prominence as a foundational digital asset class by 2030.
+                        This visualization illustrates the historical growth of the NFT ecosystem and its projected evolution, highlighting the introduction of Nexus Assets in 2025 and their anticipated prominence as a foundational digital asset class by 2030.
                     </p>
                 </div>
 
