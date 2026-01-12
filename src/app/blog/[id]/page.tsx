@@ -6,7 +6,6 @@ import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import MarketTicker from '@/components/MarketTicker';
 
-// --- COLORS MATCHING NNM CONCEPT ---
 const BACKGROUND_MAIN = '#1E1E1E';
 const TEXT_OFF_WHITE = '#E0E0E0';
 const TEXT_BODY = '#B0B0B0';
@@ -42,15 +41,15 @@ export default function BlogPost() {
   if (loading) return (
       <div className="d-flex flex-column justify-content-center align-items-center" style={{backgroundColor: BACKGROUND_MAIN, minHeight:'100vh', color: TEXT_BODY}}>
           <div className="spinner-border text-secondary mb-3" role="status"></div>
-          <span style={{fontSize:'12px', letterSpacing:'2px', fontFamily: 'monospace'}}>RETRIEVING INTEL...</span>
+          <span style={{fontSize:'11px', letterSpacing:'2px', fontFamily: 'monospace'}}>RETRIEVING INTEL...</span>
       </div>
   );
   
   if (!post) return (
       <div className="d-flex flex-column justify-content-center align-items-center text-center px-3" style={{backgroundColor: BACKGROUND_MAIN, minHeight:'100vh'}}>
           <h2 className="fw-bold mb-2 text-white font-imperium">ASSET NOT FOUND</h2>
-          <p style={{color: TEXT_BODY}}>The requested report is unavailable.</p>
-          <Link href="/blog" className="text-decoration-none mt-4" style={{color: GOLD_BASE}}>RETURN TO ARCHIVE</Link>
+          <p style={{color: TEXT_BODY, fontSize: '12px'}}>The requested report is unavailable.</p>
+          <Link href="/blog" className="text-decoration-none mt-4" style={{color: GOLD_BASE, fontSize: '12px'}}>RETURN TO ARCHIVE</Link>
       </div>
   );
 
@@ -62,6 +61,7 @@ export default function BlogPost() {
         
         .font-imperium { font-family: 'Cinzel', serif; }
         
+        /* UPDATED INGOT BUTTON (50% WIDTH, CENTERED) */
         .btn-ingot {
             background: linear-gradient(180deg, #E6C76A 0%, #D4AF37 40%, #B8962E 100%);
             border: 1px solid #B8962E;
@@ -72,14 +72,14 @@ export default function BlogPost() {
             box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
             text-shadow: 0 1px 0 rgba(255,255,255,0.4);
             transition: filter 0.3s ease, transform 0.2s ease;
-            padding: 12px 0; 
-            font-size: 1rem;
+            padding: 10px 0; 
+            font-size: 0.8rem;
             white-space: nowrap;
             text-decoration: none;
-            display: inline-block;
+            display: block;
             border-radius: 2px;
             width: 50%; /* 👈 50% WIDTH */
-            min-width: 280px;
+            margin: 0 auto;
         }
         .btn-ingot:hover {
             filter: brightness(1.08);
@@ -87,23 +87,22 @@ export default function BlogPost() {
             color: #1a1100;
         }
 
+        /* SCALED DOWN TEXT SIZES */
         .article-content {
             color: ${TEXT_BODY};
-            font-size: 1.1rem;
-            line-height: 1.8;
+            font-size: 0.9rem; /* Reduced from 1.1rem (~14px) */
+            line-height: 1.7;
         }
         .article-content h2, .article-content h3 {
             color: ${TEXT_OFF_WHITE};
             font-family: 'Cinzel', serif;
-            margin-top: 2.5rem;
-            margin-bottom: 1rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
             letter-spacing: -0.5px;
+            font-size: 1.4rem; /* Reduced */
         }
         .article-content p {
-            margin-bottom: 1.5rem;
-        }
-        .article-content strong {
-            color: ${TEXT_OFF_WHITE};
+            margin-bottom: 1.2rem;
         }
         
         .note-box {
@@ -112,16 +111,12 @@ export default function BlogPost() {
           border-top: 1px solid rgba(240, 196, 32, 0.18);
           border-right: 1px solid rgba(240, 196, 32, 0.12);
           border-bottom: 1px solid rgba(240, 196, 32, 0.12);
-          padding: 20px;
-          font-size: 15px;
+          padding: 15px;
+          font-size: 12px; /* Reduced from 15px */
           color: ${TEXT_BODY};
           border-radius: 0 4px 4px 0;
           margin-top: 40px;
           line-height: 1.6;
-        }
-        
-        @media (max-width: 768px) {
-            .btn-ingot { width: 90%; }
         }
       `}</style>
 
@@ -132,22 +127,23 @@ export default function BlogPost() {
             <div className="col-12 col-lg-8 text-start"> 
                 
                 <div className="mb-4">
-                    <Link href="/blog" className="text-decoration-none d-inline-flex align-items-center gap-2" style={{color: TEXT_BODY, fontSize:'12px', fontWeight:'600', letterSpacing:'1px', transition: 'color 0.2s'}}>
+                    <Link href="/blog" className="text-decoration-none d-inline-flex align-items-center gap-2" style={{color: TEXT_BODY, fontSize:'11px', fontWeight:'600', letterSpacing:'1px', transition: 'color 0.2s'}}>
                         <i className="bi bi-arrow-left"></i> RETURN TO ARCHIVE
                     </Link>
                 </div>
 
-                <header className="mb-5 border-bottom border-secondary pb-4" style={{borderColor: 'rgba(255,255,255,0.1) !important'}}>
-                    <span className="d-inline-block mb-3" style={{color: GOLD_BASE, border: `1px solid rgba(240, 196, 32, 0.3)`, padding: '4px 10px', fontSize: '11px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase'}}>
+                <header className="mb-4 border-bottom border-secondary pb-3" style={{borderColor: 'rgba(255,255,255,0.1) !important'}}>
+                    <span className="d-inline-block mb-3" style={{color: GOLD_BASE, border: `1px solid rgba(240, 196, 32, 0.3)`, padding: '3px 8px', fontSize: '10px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase'}}>
                         {post.category}
                     </span>
                     
-                    <h1 className="display-5 fw-bold mb-3 font-imperium" style={{color: TEXT_OFF_WHITE, lineHeight: '1.2'}}>
+                    {/* SCALED DOWN H1 (approx 2rem) */}
+                    <h1 className="fw-bold mb-3 font-imperium" style={{color: TEXT_OFF_WHITE, lineHeight: '1.2', fontSize: '2rem'}}>
                         {post.title}
                     </h1>
                     
                     <div className="d-flex align-items-center text-start">
-                         <div style={{color: TEXT_BODY, fontSize: '13px'}}>
+                         <div style={{color: TEXT_BODY, fontSize: '11px'}}>
                             <span className="text-white fw-bold">NNM Editorial Desk</span>
                             <span className="mx-2 opacity-50">|</span>
                             {new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -170,13 +166,15 @@ export default function BlogPost() {
                 </div>
 
                 {/* --- CENTERED CTA SECTION --- */}
-                <div className="mt-5 pt-5 pb-5 text-center"> {/* 👈 CENTERED */}
-                    <h4 className="mb-3 font-imperium" style={{color: TEXT_OFF_WHITE, fontSize: '1.4rem'}}>Ready to claim your legacy?</h4>
-                    <p className="text-secondary mb-4" style={{fontSize: '14px'}}>Secure your unique Digital Name Asset before the registry closes.</p>
+                <div className="mt-5 pt-5 pb-5 text-center"> 
+                    <h4 className="mb-3 font-imperium" style={{color: TEXT_OFF_WHITE, fontSize: '1.2rem'}}>Ready to claim your legacy?</h4>
+                    <p className="text-secondary mb-4" style={{fontSize: '12px'}}>Secure your unique Digital Name Asset before the registry closes.</p>
                     
-                    <Link href="/mint" className="btn-ingot rounded-1">
-                        ACCESS REGISTRY
-                    </Link>
+                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                        <Link href="/mint" className="btn-ingot rounded-1">
+                            CLAIM NEXUS NAME
+                        </Link>
+                    </div>
                 </div>
 
             </div>

@@ -47,7 +47,7 @@ export default function BlogLibrary() {
         
         .font-imperium { font-family: 'Cinzel', serif; }
         
-        /* UPDATED INGOT BUTTON: CENTERED & 50% WIDTH */
+        /* UPDATED BUTTON: 50% WIDTH, CENTERED, SMALLER TEXT */
         .btn-ingot {
             background: linear-gradient(180deg, #E6C76A 0%, #D4AF37 40%, #B8962E 100%);
             border: 1px solid #B8962E;
@@ -58,14 +58,14 @@ export default function BlogLibrary() {
             box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
             text-shadow: 0 1px 0 rgba(255,255,255,0.4);
             transition: filter 0.3s ease, transform 0.2s ease;
-            padding: 12px 0; 
-            font-size: 1rem;
+            padding: 10px 0; /* Reduced padding */
+            font-size: 0.8rem; /* Reduced font size (was 1rem) */
             white-space: nowrap;
             text-decoration: none;
-            display: inline-block;
+            display: block; /* Important for centering with margin auto */
             border-radius: 2px;
-            width: 50%; /* 👈 طلبك: 50% من العرض */
-            min-width: 280px; /* ضمان عدم صغره في الجوال */
+            width: 50%; /* 👈 EXACTLY 50% WIDTH */
+            margin: 0 auto; /* CENTER IT */
         }
         .btn-ingot:hover {
             filter: brightness(1.08);
@@ -90,7 +90,7 @@ export default function BlogLibrary() {
         }
         
         .card-img-wrapper {
-            height: 220px;
+            height: 200px;
             overflow: hidden;
             border-bottom: 1px solid ${CARD_BORDER};
             position: relative;
@@ -112,24 +112,23 @@ export default function BlogLibrary() {
         .text-gold { color: ${GOLD_BASE} !important; }
         .text-off-white { color: ${TEXT_OFF_WHITE} !important; }
         .text-body-gray { color: ${TEXT_BODY} !important; }
-        
-        @media (max-width: 768px) {
-            .btn-ingot { width: 90%; }
-        }
       `}</style>
 
       <MarketTicker />
 
+      {/* --- PAGE HEADER (SCALED DOWN 25%) --- */}
       <section className="container pt-5 pb-5">
         <div className="row">
             <div className="col-12 text-start">
-                <h1 className="fw-bold mb-3 font-imperium text-off-white" style={{ fontSize: '2.2rem', letterSpacing: '-1px' }}>
+                {/* Font reduced from 2.2rem to 1.6rem */}
+                <h1 className="fw-bold mb-3 font-imperium text-off-white" style={{ fontSize: '1.6rem', letterSpacing: '-1px' }}>
                     NNM <span style={{ color: GOLD_MEDIUM }}>INTELLIGENCE</span>
                 </h1>
-                <p className="text-body-gray" style={{ maxWidth: '800px', fontSize: '16px', lineHeight: '1.6', margin: 0 }}>
-                    The definitive archive of Digital Name Assets market analysis, infrastructure updates, and sovereign identity research.
+                {/* Font reduced from 16px to 12px */}
+                <p className="text-body-gray" style={{ maxWidth: '800px', fontSize: '12px', lineHeight: '1.6', margin: 0 }}>
+                    The definitive archive of Digital Name Assets market analysis, infrastructure updates, and sovereign identity research. Access the full history of the Nexus ecosystem.
                 </p>
-                <div className="mt-4" style={{ width: '80px', height: '2px', background: `linear-gradient(to right, ${GOLD_BASE}, transparent)` }}></div>
+                <div className="mt-4" style={{ width: '60px', height: '2px', background: `linear-gradient(to right, ${GOLD_BASE}, transparent)` }}></div>
             </div>
         </div>
       </section>
@@ -138,7 +137,7 @@ export default function BlogLibrary() {
         {loading ? (
             <div className="d-flex flex-column justify-content-center align-items-center py-5" style={{ minHeight: '300px' }}>
                  <div className="spinner-border text-secondary mb-3" role="status"></div>
-                 <span style={{ fontSize:'12px', letterSpacing:'2px', color: TEXT_BODY, fontFamily: 'monospace' }}>ACCESSING ARCHIVES...</span>
+                 <span style={{ fontSize:'11px', letterSpacing:'2px', color: TEXT_BODY, fontFamily: 'monospace' }}>ACCESSING ARCHIVES...</span>
             </div>
         ) : (
             <>
@@ -160,8 +159,8 @@ export default function BlogLibrary() {
                                                     <i className="bi bi-image" style={{ fontSize: '2rem' }}></i>
                                                 </div>
                                             )}
-                                            <div style={{ position: 'absolute', top: '15px', left: '15px', backgroundColor: 'rgba(0,0,0,0.8)', padding: '4px 10px', borderRadius: '4px', border: `1px solid ${GOLD_BASE}44` }}>
-                                                <span style={{ color: GOLD_BASE, fontSize: '10px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                                            <div style={{ position: 'absolute', top: '15px', left: '15px', backgroundColor: 'rgba(0,0,0,0.8)', padding: '3px 8px', borderRadius: '4px', border: `1px solid ${GOLD_BASE}44` }}>
+                                                <span style={{ color: GOLD_BASE, fontSize: '9px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>
                                                     {post.category}
                                                 </span>
                                             </div>
@@ -169,21 +168,21 @@ export default function BlogLibrary() {
                                         
                                         <div className="p-4 flex-grow-1 d-flex flex-column">
                                             <div className="mb-2">
-                                                <span style={{ fontSize:'11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>
+                                                <span style={{ fontSize:'10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>
                                                     {new Date(post.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                                                 </span>
                                             </div>
                                             
-                                            <h3 className="h5 fw-bold mb-3 font-imperium text-off-white" style={{ lineHeight:'1.4', minHeight: '3.6rem' }}>
+                                            <h3 className="h6 fw-bold mb-3 font-imperium text-off-white" style={{ lineHeight:'1.4', minHeight: '3rem', fontSize: '1rem' }}>
                                                 {post.title}
                                             </h3>
                                             
-                                            <p className="text-body-gray" style={{ fontSize:'14px', lineHeight:'1.6', marginBottom:'20px', display: '-webkit-box', WebkitLineClamp: '3', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                            <p className="text-body-gray" style={{ fontSize:'12px', lineHeight:'1.6', marginBottom:'20px', display: '-webkit-box', WebkitLineClamp: '3', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                                 {post.summary || "Click to read full report..."}
                                             </p>
 
                                             <div className="mt-auto pt-3 border-top border-secondary" style={{ borderColor: 'rgba(255,255,255,0.05) !important' }}>
-                                                <span className="text-gold" style={{ fontSize:'11px', fontWeight:'700', letterSpacing:'1px', textTransform: 'uppercase' }}>
+                                                <span className="text-gold" style={{ fontSize:'10px', fontWeight:'700', letterSpacing:'1px', textTransform: 'uppercase' }}>
                                                     READ REPORT <i className="bi bi-arrow-right ms-1"></i>
                                                 </span>
                                             </div>
@@ -195,18 +194,20 @@ export default function BlogLibrary() {
                     )}
                 </div>
 
-                {/* --- BOTTOM CTA (CENTERED & 50%) --- */}
+                {/* --- BOTTOM CTA (CENTERED, 50% WIDTH, SMALLER) --- */}
                 <div className="row mt-5 pt-5 mb-5">
                     <div className="col-12 text-center"> 
-                        <div className="p-5 rounded-3" style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}`, maxWidth: '100%', margin: '0 auto' }}>
-                            <h4 className="text-off-white mb-2 font-imperium">Establish Your Sovereign Identity</h4>
-                            <p className="text-body-gray mb-4" style={{ fontSize: '14px' }}>
+                        <div className="p-4 rounded-3" style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}`, maxWidth: '100%', margin: '0 auto' }}>
+                            <h4 className="text-off-white mb-2 font-imperium" style={{ fontSize: '1.2rem' }}>Establish Your Sovereign Identity</h4>
+                            <p className="text-body-gray mb-4" style={{ fontSize: '12px' }}>
                                 The registry is open. Secure your Nexus Name before the era of permanence begins.
                             </p>
                             
-                            <Link href="/mint" className="btn-ingot rounded-1">
-                                CLAIM YOUR NEXUS NAME
-                            </Link>
+                            <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                                <Link href="/mint" className="btn-ingot rounded-1">
+                                    CLAIM NEXUS NAME
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </div>
