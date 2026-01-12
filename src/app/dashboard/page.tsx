@@ -413,6 +413,10 @@ export default function DashboardPage() {
       if (activeSection === 'Created') fetchCreated();
       if (activeSection === 'Activity') fetchActivity();
   }, [activeSection, offerType, offerSort, myAssets]);
+ // --- ADMIN CONFIG ---
+  // استبدل هذا العنوان بعنوان محفظة الأدمن الحقيقية (بأحرف صغيرة lowercase)
+  const ADMIN_WALLET = "0x5f2f670df4Db14ddB4Bc1E3eCe86CA645fb01BE6".toLowerCase();
+  const isAdmin = address ? address.toLowerCase() === ADMIN_WALLET : false;
 
   const copyToClipboard = () => {
     if (address) {
@@ -474,7 +478,27 @@ export default function DashboardPage() {
                 </Link>
                 <button onClick={copyToClipboard} className="btn p-0 border-0" style={{ color: '#8a939b' }}>
                     {isCopied ? <i className="bi bi-check-lg text-success"></i> : <i className="bi bi-copy"></i>}
-                </button>
+                </button>   {/* --- SECRET ADMIN BUTTON --- */}
+                {isAdmin && (
+                    <Link href="/admin" className="ms-3 text-decoration-none">
+                        <div 
+                            className="d-flex align-items-center justify-content-center" 
+                            style={{ 
+                                width: '24px', 
+                                height: '24px', 
+                                background: 'rgba(252, 213, 53, 0.1)', 
+                                border: '1px solid #FCD535', 
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                transition: '0.2s'
+                            }}
+                            title="Control Unit"
+                        >
+                            <i className="bi bi-shield-lock-fill" style={{ fontSize: '12px', color: '#FCD535' }}></i>
+                        </div>
+                    </Link>
+                )}
+
             </div>
 
             <div className="d-flex gap-5 mt-2 px-2">
