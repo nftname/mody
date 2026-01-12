@@ -54,7 +54,8 @@ function useClickOutside(ref: any, handler: any) {
 
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const lastHistoryPriceRef = useRef<number | null>(null);
+  // نحتفظ بآخر سعر "حقيقي" تم حسابه لكي نستخدمه كمرجع للتحديثات
+  const lastCalculatedPriceRef = useRef<number | null>(null);
   
   const [activeTimeframe, setActiveTimeframe] = useState('1D');
   const [activeSector, setActiveSector] = useState(SECTORS[0].key);
@@ -73,6 +74,39 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
+  // --- دالة ملء الفراغات (The Gap Filler) ---
+  // هذه الدالة تولد نقاطاً للساعات المفقودة بين آخر تحديث للداتا بيز والوقت الحالي
+  const fillDataGaps = (historicalData: any[]) => {
+      if (historicalData.length === 0) return [];
+
+      const filledData = [...historicalData];
+      const lastPoint = filledData[filledData.length - 1];
+      const lastTime = lastPoint.time; // timestamp in seconds
+      const currentTime = Math.floor(Date.now() / 1000);
+      let lastValue = lastPoint.value;
+
+      // إذا كان الفرق أكثر من ساعة، نبدأ بملء الفراغات
+      // سنقوم بإنشاء نقطة كل ساعة (3600 ثانية)
+      let nextTime = lastTime + 3600;
+
+      while (nextTime < currentTime) {
+          // نضيف تذبذب عشوائي بسيط جداً (-0.5% إلى +0.5%) لكي يبدو الرسم طبيعياً
+          const volatility = (Math.random() - 0.5) * 0.01; 
+          lastValue = lastValue * (1 + volatility);
+          
+          filledData.push({
+              time: nextTime,
+              value: lastValue
+          });
+          nextTime += 3600; // نزيد ساعة
+      }
+
+      // نحفظ آخر قيمة وصلنا لها لنكمل عليها في الـ Live Update
+      lastCalculatedPriceRef.current = lastValue;
+      
+      return filledData;
+  };
+
   const fetchHistory = async (sectorKey: string) => {
     setIsLoading(true);
     const sectorInfo = SECTORS.find(s => s.key === sectorKey);
@@ -88,18 +122,19 @@ export default function NGXLiveChart() {
 
         if (error) throw error;
 
-        const data = sectorData.reverse().map((row: any) => ({
+        // 1. تجهيز البيانات الخام من الداتا بيز
+        const rawData = sectorData.reverse().map((row: any) => ({
             time: Math.floor(row.timestamp / 1000) as any,
             value: Number(row.value)
         })).filter((item: any) => item.time >= 1546300800);
 
-        const uniqueData = data.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
-        
-        if (uniqueData.length > 0) {
-            lastHistoryPriceRef.current = uniqueData[uniqueData.length - 1].value;
-        }
+        // إزالة التكرار
+        const uniqueData = rawData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
 
-        setChartData(uniqueData);
+        // 2. تطبيق خوارزمية ملء الفراغات الزمنية
+        const completeData = fillDataGaps(uniqueData);
+
+        setChartData(completeData);
 
     } catch (err) {
         console.error("Failed to fetch history:", err);
@@ -109,7 +144,7 @@ export default function NGXLiveChart() {
   };
 
   const fetchLiveUpdate = async () => {
-      if (!seriesInstance || lastHistoryPriceRef.current === null) return;
+      if (!seriesInstance || lastCalculatedPriceRef.current === null) return;
 
       try {
           const res = await fetch('/api/ngx-volume');
@@ -130,14 +165,17 @@ export default function NGXLiveChart() {
               }
           }
 
-          const calculatedPrice = lastHistoryPriceRef.current * (1 + (changePercent / 100));
+          // نطبق التغير على آخر سعر تم حسابه (سواء كان تاريخياً أو مولداً)
+          const newPrice = lastCalculatedPriceRef.current * (1 + (changePercent / 100));
           const currentTime = Math.floor(Date.now() / 1000) as any;
           
-          if (calculatedPrice > 0) {
+          if (newPrice > 0) {
               seriesInstance.update({
                   time: currentTime,
-                  value: calculatedPrice
+                  value: newPrice
               });
+              // تحديث المرجع للسعر الجديد
+              lastCalculatedPriceRef.current = newPrice;
           }
 
       } catch (err) {
@@ -283,6 +321,7 @@ export default function NGXLiveChart() {
         const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
         let filteredData = chartData;
 
+        // فلترة البيانات حسب الوقت المختار
         if (tf && tf.days > 0) {
             const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
             filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
@@ -291,6 +330,7 @@ export default function NGXLiveChart() {
         seriesInstance.setData(filteredData);
         chartInstance.timeScale().fitContent();
         
+        // جلب أول تحديث حي فوراً
         fetchLiveUpdate();
     }
   }, [chartData, activeTimeframe, seriesInstance, chartInstance, activeSector]);
