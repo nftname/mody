@@ -3,15 +3,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries, ISeriesApi } from 'lightweight-charts';
 import { createClient } from '@supabase/supabase-js';
 
-// --- 1. إعداد اتصال Supabase (للبيانات التاريخية فقط) ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- 2. تعريف أنواع بيانات API الفوليوم الجديد ---
 interface SectorData {
   label: string;
-  value: number; // Volume Strength (0-100)
+  value: number; 
   change: number;
 }
 interface NGXVolumeResponse {
@@ -56,6 +54,7 @@ function useClickOutside(ref: any, handler: any) {
 
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const lastHistoryPriceRef = useRef<number | null>(null);
   
   const [activeTimeframe, setActiveTimeframe] = useState('1D');
   const [activeSector, setActiveSector] = useState(SECTORS[0].key);
@@ -74,7 +73,6 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- 3. جلب التاريخ من الداتا بيز (كما هو) ---
   const fetchHistory = async (sectorKey: string) => {
     setIsLoading(true);
     const sectorInfo = SECTORS.find(s => s.key === sectorKey);
@@ -90,13 +88,17 @@ export default function NGXLiveChart() {
 
         if (error) throw error;
 
-        // معالجة البيانات التاريخية
         const data = sectorData.reverse().map((row: any) => ({
             time: Math.floor(row.timestamp / 1000) as any,
             value: Number(row.value)
         })).filter((item: any) => item.time >= 1546300800);
 
         const uniqueData = data.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
+        
+        if (uniqueData.length > 0) {
+            lastHistoryPriceRef.current = uniqueData[uniqueData.length - 1].value;
+        }
+
         setChartData(uniqueData);
 
     } catch (err) {
@@ -106,12 +108,10 @@ export default function NGXLiveChart() {
     }
   };
 
-  // --- 4. الدالة الجديدة: جلب البيانات الحية من API الفوليوم ---
   const fetchLiveUpdate = async () => {
-      if (!seriesInstance) return;
+      if (!seriesInstance || lastHistoryPriceRef.current === null) return;
 
       try {
-          // استدعاء API الفوليوم الذي يعمل بنجاح
           const res = await fetch('/api/ngx-volume');
           if (!res.ok) return;
           
@@ -119,31 +119,24 @@ export default function NGXLiveChart() {
           const sectorInfo = SECTORS.find(s => s.key === activeSector);
           if (!sectorInfo) return;
 
-          let newValue = 0;
+          let changePercent = 0;
 
-          // منطق استخراج القيمة المناسبة للقطاع المختار
           if (sectorInfo.apiLabel === 'ALL') {
-              // للمؤشر العام: نأخذ متوسط القيم أو إحصائية السوق
-              const totalVal = data.sectors.reduce((acc, curr) => acc + curr.value, 0);
-              newValue = totalVal / 4; // متوسط بسيط للـ 4 قطاعات
+              changePercent = data.marketStats.totalVolChange;
           } else {
-              // للقطاعات الفرعية
               const targetSector = data.sectors.find(s => s.label === sectorInfo.apiLabel);
               if (targetSector) {
-                  newValue = targetSector.value;
+                  changePercent = targetSector.change;
               }
           }
 
-          // ** الجراحة الدقيقة: دمج البيانات الحية مع الرسم البياني **
-          // نستخدم التوقيت الحالي لكي نرسم نقطة "الآن"
+          const calculatedPrice = lastHistoryPriceRef.current * (1 + (changePercent / 100));
           const currentTime = Math.floor(Date.now() / 1000) as any;
           
-          // تحديث السلسلة بآخر نقطة حية
-          // ملاحظة: إذا كانت القيمة 0 أو غريبة، نتجاهلها للحفاظ على جمالية الرسم
-          if (newValue > 0) {
+          if (calculatedPrice > 0) {
               seriesInstance.update({
                   time: currentTime,
-                  value: newValue
+                  value: calculatedPrice
               });
           }
 
@@ -152,7 +145,6 @@ export default function NGXLiveChart() {
       }
   };
 
-  // --- تهيئة الرسم البياني ---
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -250,7 +242,6 @@ export default function NGXLiveChart() {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // التحميل الأولي للتاريخ
     fetchHistory(SECTORS[0].key);
 
     return () => {
@@ -259,12 +250,10 @@ export default function NGXLiveChart() {
     };
   }, []);
 
-  // عند تغيير القطاع، نجلب التاريخ من جديد
   useEffect(() => {
     fetchHistory(activeSector);
   }, [activeSector]);
 
-  // إعداد البيانات التاريخية في الرسم
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
@@ -302,20 +291,17 @@ export default function NGXLiveChart() {
         seriesInstance.setData(filteredData);
         chartInstance.timeScale().fitContent();
         
-        // ** تفعيل التحديث الحي فور انتهاء تحميل التاريخ **
         fetchLiveUpdate();
     }
   }, [chartData, activeTimeframe, seriesInstance, chartInstance, activeSector]);
 
-  // --- 5. دورة الحياة المستمرة (Live Loop) ---
   useEffect(() => {
-      // تحديث كل 60 ثانية من API الفوليوم
       const interval = setInterval(() => {
           fetchLiveUpdate();
       }, 60000); 
 
       return () => clearInterval(interval);
-  }, [seriesInstance, activeSector]); // يعيد تشغيل المؤقت إذا تغير القطاع
+  }, [seriesInstance, activeSector]);
 
   const currentColor = SECTORS.find(s => s.key === activeSector)?.color;
   const currentTimeframeLabel = TIMEFRAMES.find(t => t.value === activeTimeframe)?.label;
@@ -324,7 +310,6 @@ export default function NGXLiveChart() {
     <div className="ngx-chart-glass mb-4">
       <div className="filters-container">
         
-        {/* Sector Selector */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
@@ -354,7 +339,6 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* Live Indicator */}
         <div className="live-indicator-wrapper d-flex align-items-center">
             {isLoading ? (
                 <div className="loading-indicator">
@@ -368,7 +352,6 @@ export default function NGXLiveChart() {
             )}
         </div>
 
-        {/* Timeframe Selector */}
         <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
