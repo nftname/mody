@@ -1,287 +1,223 @@
 'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { supabase } from '@/lib/supabase';
 import MarketTicker from '@/components/MarketTicker';
+import NGXWidget from '@/components/NGXWidget';
+import NGXCapWidget from '@/components/NGXCapWidget';
+import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 
-// --- CONSTANTS & STYLES ---
-const GOLD_BTN_PRIMARY = '#D4AF37';
-const GOLD_BTN_HIGHLIGHT = '#E6C76A';
-const GOLD_BTN_SHADOW = '#B8962E';
-const GOLD_LIGHT = '#FFD700';
-const GOLD_DARK = '#B8860B';
-const TEXT_BODY_COLOR = '#B0B0B0';
-const TEXT_OFF_WHITE = '#FFFFFF'; // Changed to pure white for headings
+// --- UNIFIED STYLES (MATCHING BLOG & NGX) ---
+const BACKGROUND_DARK = '#1E1E1E';
+const SURFACE_DARK = '#242424';
+const BORDER_COLOR = '#2E2E2E';
+const TEXT_PRIMARY = '#E0E0E0'; // أبيض (للعناوين)
+const TEXT_MUTED = '#B0B0B0';   // رمادي (للنصوص)
+const GOLD_BASE = '#F0C420';    // ذهبي (للأزرار واللمسات)
 
-// --- BRAND ICONS DATA (UNCHANGED) ---
-const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
+export default function NewsPage() {
+  const [news, setNews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const trustedBrands = [ 
-    { name: "POLYGON", icon: "bi-link-45deg", isCustom: false },
-    { name: "BNB CHAIN", icon: "bi-diamond-fill", isCustom: false },
-    { name: "ETHEREUM", icon: "bi-currency-ethereum", isCustom: false },
-    { name: "SOLANA", icon: "bi-lightning-charge-fill", isCustom: false },
-    { name: "METAMASK", icon: FOX_PATH, isCustom: true }, 
-    { name: "UNISWAP", icon: "bi-arrow-repeat", isCustom: false },
-    { name: "CHAINLINK", icon: "bi-hexagon-fill", isCustom: false },
-    { name: "PINATA", icon: "bi-cloud-fill", isCustom: false }, 
-    { name: "IPFS", icon: "bi-box-seam-fill", isCustom: false },
-    { name: "ARWEAVE", icon: "bi-database-fill-lock", isCustom: false },
-    { name: "BUNDLR", icon: "bi-collection-fill", isCustom: false },
-    { name: "ZKSYNC", icon: "bi-shield-check", isCustom: false },
-    { name: "OPTIMISM", icon: "bi-graph-up-arrow", isCustom: false }
-];
+  // FETCH DATA FROM SUPABASE
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('news_posts')
+          .select('*')
+          .eq('is_published', true)
+          .order('created_at', { ascending: false }); // الأحدث أولاً
 
-const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: boolean }) => {
-    if (isCustomSVG) {
-        return (
-            <svg viewBox="0 0 32 32" width="22" height="22" style={{ marginBottom: '2px' }}>
-                <defs>
-                  <linearGradient id="goldGradientIcon" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor={GOLD_LIGHT} />
-                    <stop offset="100%" stopColor={GOLD_DARK} />
-                  </linearGradient>
-                </defs>
-                <path d={icon} fill="url(#goldGradientIcon)" />
-            </svg>
-        );
-    }
-    return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
-};
+        if (error) throw error;
+        if (data) setNews(data);
+      } catch (err) {
+        console.error('Error fetching news:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-export default function NNMConceptPage() {
+    fetchNews();
+  }, []);
+
+  // TIME AGO HELPER
+  const timeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " YEARS AGO";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " MONTHS AGO";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " DAYS AGO";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " HOURS AGO";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " MINUTES AGO";
+    return "JUST NOW";
+  };
 
   return (
-    <main className="concept-page" style={{ 
-      backgroundColor: '#1E1E1E', 
-      minHeight: '100vh', 
-      paddingBottom: '0px', 
-      fontFamily: '"Inter", "Segoe UI", sans-serif',
-      overflowX: 'hidden',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
+    <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px' }}>
       
-      {/* GLOBAL STYLES & ANIMATIONS */}
+      <MarketTicker />
+
+      {/* HEADER WIDGETS (IDENTICAL TO NGX) */}
+      <div className="header-wrapper shadow-sm border-bottom border-secondary d-none d-md-block" style={{ borderColor: '#333 !important', padding: '10px 0', backgroundColor: SURFACE_DARK }}>
+        <div className="container-fluid p-0"> 
+            <div className="widgets-grid-container">
+                <div className="widget-item"> <NGXWidget theme="dark" /> </div>
+                <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
+                <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
+            </div>
+        </div>
+      </div>
+
+      {/* MAIN CONTENT AREA */}
+      <div className="container pt-5">
+        <div className="row justify-content-center">
+            {/* MATCHING WIDTH (COL-LG-10) */}
+            <div className="col-12 col-lg-10">
+                
+                {/* PAGE TITLE */}
+                <div className="d-flex align-items-center mb-5 pb-2 border-bottom border-secondary" style={{ borderColor: 'rgba(255,255,255,0.1) !important' }}>
+                    <div className="live-dot"></div>
+                    <h1 className="h5 fw-bold mb-0 text-white text-uppercase" style={{ letterSpacing: '2px', fontSize: '14px' }}>Global Market Wire</h1>
+                </div>
+
+                {loading ? (
+                    <div className="d-flex flex-column justify-content-center align-items-center py-5 text-secondary">
+                         <div className="spinner-border text-secondary mb-3" role="status"></div>
+                         <span style={{fontSize:'12px', letterSpacing:'1px'}}>SYNCING FEED...</span>
+                    </div>
+                ) : (
+                    <div className="news-feed">
+                        {news.length === 0 ? (
+                           <div className="text-center py-5 text-muted">No market updates available at the moment.</div>
+                        ) : (
+                           news.map((item, index) => (
+                            <div key={item.id} className="news-item-wrapper">
+                                <div className="news-card d-flex flex-column flex-md-row gap-4 align-items-start">
+                                    
+                                    {/* TEXT SIDE (Left) */}
+                                    <div className="flex-grow-1">
+                                        <div className="d-flex align-items-center gap-2 mb-2">
+                                            <span className="badge-category">{item.category}</span>
+                                            <span className="text-date">{timeAgo(item.created_at)}</span>
+                                        </div>
+                                        
+                                        {/* TITLE: WHITE & INTER FONT */}
+                                        <h2 className="news-title">
+                                            <Link href={`/blog/${item.id}`} className="text-decoration-none text-white hover-gold">
+                                                {item.title}
+                                            </Link>
+                                        </h2>
+                                        
+                                        {/* SUMMARY: MUTED & READABLE */}
+                                        <p className="news-summary">
+                                            {item.summary}
+                                        </p>
+
+                                        <div className="mt-3">
+                                            <Link href={`/blog/${item.id}`} className="read-more-link">
+                                                READ ANALYSIS <i className="bi bi-arrow-right-short"></i>
+                                            </Link>
+                                        </div>
+                                    </div>
+
+                                    {/* IMAGE SIDE (Right - US Standard) */}
+                                    {item.image_url && (
+                                        <div className="news-thumbnail flex-shrink-0">
+                                            <Link href={`/blog/${item.id}`}>
+                                                <img src={item.image_url} alt="News" />
+                                            </Link>
+                                        </div>
+                                    )}
+
+                                </div>
+                                
+                                {/* DIVIDER */}
+                                {index < news.length - 1 && <div className="news-divider"></div>}
+                            </div>
+                           ))
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+      </div>
+
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
-        .font-imperium { font-family: 'Cinzel', serif; }
+        /* 1. Global Styles matching NGX */
+        .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; gap: 10px; }
+        .widget-item { flex: 1; min-width: 0; }
         
-        /* Typography adjustments */
-        h1, h2, h3, h4, .text-heading-white { color: #FFFFFF !important; }
-        p, li, .text-body-reduced { 
-            font-size: 0.95rem; /* Reduced by ~10% from standard 1.05rem */
-            line-height: 1.6;
+        /* 2. News Typography */
+        .news-item-wrapper { margin-bottom: 25px; }
+        
+        .badge-category { 
+            font-size: 10px; 
+            font-weight: 700; 
+            color: ${GOLD_BASE}; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            border: 1px solid ${GOLD_BASE}44; 
+            padding: 3px 8px; 
+            border-radius: 4px; 
         }
+        
+        .text-date { font-size: 10px; color: #666; font-weight: 600; text-transform: uppercase; }
+        
+        .news-title { 
+            font-family: "Inter", "Segoe UI", sans-serif; /* UNIFIED FONT */
+            font-size: 1.4rem; 
+            font-weight: 700; 
+            margin-bottom: 10px; 
+            line-height: 1.3; 
+            letter-spacing: -0.5px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .hover-gold:hover { color: ${GOLD_BASE} !important; }
+        
+        .news-summary { 
+            font-family: "Inter", "Segoe UI", sans-serif; /* UNIFIED FONT */
+            font-size: 15px; 
+            color: ${TEXT_MUTED}; 
+            line-height: 1.6; 
+            margin-bottom: 0; 
+            display: -webkit-box; 
+            -webkit-line-clamp: 3; 
+            -webkit-box-orient: vertical; 
+            overflow: hidden; 
+        }
+        
+        .read-more-link { font-size: 11px; color: ${GOLD_BASE}; text-decoration: none; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .read-more-link:hover { text-decoration: underline; filter: brightness(1.2); }
 
-        /* Ingot Button Style - MODIFIED */
-        .btn-ingot {
-            background: linear-gradient(180deg, ${GOLD_BTN_HIGHLIGHT} 0%, ${GOLD_BTN_PRIMARY} 40%, ${GOLD_BTN_SHADOW} 100%);
-            border: 1px solid ${GOLD_BTN_SHADOW};
-            color: #FFFFFF !important; /* Text White */
-            font-family: 'Cinzel', serif;
-            font-weight: 700;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
-            text-shadow: 0 1px 0 rgba(0,0,0,0.2);
-            transition: filter 0.3s ease, transform 0.2s ease;
-            padding: 10px 20px; 
-            font-size: 0.75rem; /* Reduced size by 25% */
-            white-space: nowrap;
-            width: 100%; /* Default width for wrapper control */
-        }
-        .btn-ingot:hover {
-            filter: brightness(1.08);
-            transform: translateY(-1px);
-        }
+        /* 3. Image Styling */
+        .news-thumbnail { width: 180px; height: 110px; border-radius: 4px; overflow: hidden; border: 1px solid #333; cursor: pointer; }
+        .news-thumbnail img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+        .news-card:hover .news-thumbnail img { transform: scale(1.05); }
+
+        /* 4. Live Dot Animation */
+        .live-dot { width: 6px; height: 6px; background-color: #F6465D; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 8px rgba(246, 70, 93, 0.6); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .news-divider { height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 15%, rgba(255,255,255,0.1) 85%, transparent 100%); margin-top: 30px; margin-bottom: 30px; }
         
-        /* Mobile specific adjustments */
-        .btn-ingot-wrapper { width: auto; display: inline-block; }
-        
+        /* Mobile */
         @media (max-width: 768px) {
-            .btn-ingot-wrapper { 
-                width: 50% !important; /* Exactly 50% width on mobile */
-                margin: 0 auto;
-                display: block;
-            }
-            .btn-ingot { 
-                width: 100%; 
-                padding: 10px 5px; /* Minimal padding to ensure text fits */
-                font-size: 0.70rem; /* Slightly smaller on mobile to ensure fit */
-                white-space: normal; /* Allow wrap if absolutely necessary, but preferred single line */
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            /* Ensure images are responsive */
-            .img-container { margin-bottom: 20px; }
-        }
-
-        /* Ticker Animations */
-        .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
-        .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
-        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
-        .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
-
-        /* Helpers */
-        .text-body-gray { color: ${TEXT_BODY_COLOR}; }
-        
-        .section-spacer { margin-bottom: 80px; }
-        @media (max-width: 768px) { .section-spacer { margin-bottom: 50px; } }
-        
-        .img-container {
-            border: 1px solid #333;
-            border-radius: 4px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            .news-card { flex-direction: column-reverse !important; }
+            .news-thumbnail { width: 100%; height: 180px; margin-bottom: 15px; }
+            .news-title { font-size: 1.25rem; }
+            .widgets-grid-container { display: none !important; } /* Hide widgets on mobile news feed to save space/clean look if preferred, or remove this line to show */
         }
       `}</style>
-
-      {/* --- HEADER / INTRO SECTION --- */}
-      <section className="container pt-5 pb-5">
-          {/* Changed to text-start for Left Alignment */}
-          <div className="row justify-content-start text-start">
-              <div className="col-lg-9">
-                  {/* Reduced font size by 25% (approx 2.2rem instead of 3rem) */}
-                  <h1 className="font-imperium display-6 fw-bold mb-4" style={{ color: '#FFFFFF' }}>
-                      The Three Tiers of Digital Naming
-                  </h1>
-                  
-                  {/* Reduced subheader size */}
-                  <h2 className="text-uppercase mb-4" style={{ letterSpacing: '2px', color: '#FFFFFF', fontSize: '1rem' }}>
-                      Choice, Positioning, and Intent
-                  </h2>
-                  
-                  {/* Reduced text size by 10% */}
-                  <p className="text-body-gray" style={{ lineHeight: '1.7', fontSize: '1rem' }}>
-                      In every mature market, structure matters. Not all assets are created equal, and not all participants approach ownership with the same intent. As digital naming evolves into functional infrastructure, differentiation becomes a matter of clarity rather than hierarchy.
-                  </p>
-                  <p className="text-body-gray" style={{ lineHeight: '1.7', fontSize: '0.9rem' }}>
-                      At NNM, digital names are minted across three clearly defined tiers. These tiers do not determine future market value, do not imply performance, and do not create expectations. They exist to provide structural context and optional positioning at the moment of minting.
-                  </p>
-                  {/* Removed Gold color, changed to White */}
-                  <p className="fw-bold fst-italic mt-3" style={{ color: '#FFFFFF', fontSize: '0.9rem' }}>
-                      What follows is not a ranking system. It is a framework of choice.
-                  </p>
-              </div>
-          </div>
-      </section>
-
-      {/* --- CONTENT TIERS (ZIG-ZAG LAYOUT) --- */}
-      <section className="container flex-grow-1">
-        
-        {/* TIER 1: IMMORTALS */}
-        <div className="row align-items-center section-spacer">
-            <div className="col-12 col-lg-6 mb-4 mb-lg-0">
-                <div className="img-container">
-                    <img src="/images/immortals.jpg" alt="The Immortals Tier" className="img-fluid w-100" style={{ objectFit: 'cover' }} />
-                </div>
-            </div>
-            <div className="col-12 col-lg-6 ps-lg-5 text-start">
-                {/* Heading White */}
-                <h3 className="font-imperium h2 mb-3" style={{ color: '#FFFFFF' }}>The Immortals Tier</h3>
-                <div className="text-body-gray">
-                    <p>Some names are inherently scarce. Short character strings, culturally resonant words, and timeless identifiers often attract attention simply by their nature.</p>
-                    <p className="fw-bold" style={{ color: '#FFFFFF' }}>The Immortals Tier is designed for such names.</p>
-                    <p>Names minted under this tier carry a higher minting fee, not as a signal of guaranteed value, but as a reflection of personal intent. The protocol does not assign worth to the name. The registrant does.</p>
-                    <p>Minting within the Immortals Tier does not ensure visibility, demand, liquidity, or market activity. It represents a deliberate decision at the point of creation, nothing more.</p>
-                </div>
-            </div>
-        </div>
-
-        {/* TIER 2: ELITE */}
-        <div className="row align-items-center section-spacer">
-            <div className="col-12 col-lg-6 order-1 order-lg-2 mb-4 mb-lg-0">
-                <div className="img-container">
-                    <img src="/images/elite.jpg" alt="The Elite Tier" className="img-fluid w-100" style={{ objectFit: 'cover' }} />
-                </div>
-            </div>
-            <div className="col-12 col-lg-6 order-2 order-lg-1 pe-lg-5 text-start">
-                {/* Heading White (Removed Red) */}
-                <h3 className="font-imperium h2 mb-3" style={{ color: '#FFFFFF' }}>The Elite Tier</h3>
-                <div className="text-body-gray">
-                    <p>Between exclusivity and accessibility lies balance.</p>
-                    <p className="fw-bold" style={{ color: '#FFFFFF' }}>The Elite Tier is intended for names that are meaningful, strategically chosen, or identity-driven, without requiring extreme scarcity.</p>
-                    <p>This tier reflects a pragmatic approach to digital naming. Participants often use it for personal identifiers, brand-aligned names, or emerging use cases that may evolve over time.</p>
-                    <p>As with all tiers, post-mint behavior is entirely market-driven. Activity and relevance emerge from use and demand, not from classification.</p>
-                </div>
-            </div>
-        </div>
-
-        {/* TIER 3: FOUNDERS */}
-        <div className="row align-items-center section-spacer">
-            <div className="col-12 col-lg-6 mb-4 mb-lg-0">
-                <div className="img-container">
-                    <img src="/images/founders.jpg" alt="The Founders Tier" className="img-fluid w-100" style={{ objectFit: 'cover' }} />
-                </div>
-            </div>
-            <div className="col-12 col-lg-6 ps-lg-5 text-start">
-                {/* Heading White (Removed Blue) */}
-                <h3 className="font-imperium h2 mb-3" style={{ color: '#FFFFFF' }}>The Founders Tier</h3>
-                <div className="text-body-gray">
-                    <p>Every ecosystem begins with early participants. Not because outcomes are certain, but because exploration and belief in open systems come first.</p>
-                    <p className="fw-bold" style={{ color: '#FFFFFF' }}>The Founders Tier is designed to be accessible by design.</p>
-                    <p>It allows participants to mint digital names with minimal friction, serving as a natural entry point into the naming ecosystem. Some names minted at this tier may later gain relevance through adoption or integration. Others may remain purely personal identifiers.</p>
-                    <p>Origin does not define outcome. In open markets, value is shaped by interaction, not initial cost.</p>
-                </div>
-            </div>
-        </div>
-
-      </section>
-
-      {/* --- OUTRO & CTA SECTION (MODIFIED) --- */}
-      <section className="container pb-5">
-          {/* Removed centered box/container styling */}
-          <div className="row justify-content-start text-start">
-              <div className="col-12 col-lg-9 p-0"> {/* Removed padding and background */}
-                  
-                  {/* Smaller Heading Size */}
-                  <h4 className="font-imperium mb-4" style={{ color: '#FFFFFF', fontSize: '1.25rem' }}>What These Tiers Do and Do Not Represent</h4>
-                  
-                  <p className="text-body-gray mb-3">
-                      These tiers do not predict future value, influence secondary market performance, or grant ranking, priority, or algorithmic advantage.
-                  </p>
-                  <p className="text-body-gray mb-3">
-                      They do provide clarity at minting, enable optional identity signaling, and reflect intent at the moment of creation.
-                  </p>
-                  <p className="text-body-gray mb-4">
-                      A name minted at the Founders Tier may later circulate widely. A name minted at the Immortals Tier may never trade. Both outcomes are valid and entirely market-driven.
-                  </p>
-                  
-                  <div className="mb-5">
-                      {/* Changed to White, smaller size */}
-                      <p className="font-imperium fs-6 mb-4" style={{ color: '#FFFFFF' }}>
-                          The system provides structure.<br/>
-                          The market provides meaning.
-                      </p>
-                  </div>
-
-                   {/* CTA BUTTON - Left Aligned, 50% width on Mobile */}
-                    <div className="btn-ingot-wrapper">
-                        <Link href="/mint" className="btn btn-ingot rounded-1 text-decoration-none">
-                            CLAIM YOUR NEXUS NAME
-                        </Link>
-                    </div>
-              </div>
-          </div>
-      </section>
-
-      {/* --- BRAND TICKER (STICKY FOOTER STYLE) --- */}
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
-          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
-          <div className="marquee-container overflow-hidden position-relative w-100">
-              <div className="marquee-track d-flex align-items-center">
-                  {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (
-                      <div key={index} className="brand-item d-flex align-items-center justify-content-center mx-5" style={{ minWidth: '120px', transition: '0.4s' }}>
-                          <div className="brand-logo d-flex align-items-center gap-2" style={{ fontSize: '18px', fontWeight: '800', fontFamily: 'Montserrat, sans-serif', letterSpacing: '1px' }}>
-                              <GoldIcon icon={brand.icon} isCustomSVG={brand.isCustom} />
-                              <span className="brand-text-gold">{brand.name}</span>
-                          </div>
-                      </div>
-                  ))}
-              </div>
-          </div>
-      </div>
-      
     </main>
   );
 }
+
