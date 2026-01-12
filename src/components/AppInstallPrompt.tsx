@@ -109,92 +109,51 @@ export default function AppInstallPrompt() {
     <div
       style={{
         position: "fixed",
-        bottom: "20px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "calc(100% - 30px)",
-        maxWidth: "420px",
+        top: "64px", // تحت النافبار الثابت
+        left: 0,
+        width: "100%",
         background: "#0B0E11",
         color: "#EAECEF",
-        border: "1px solid rgba(252, 213, 53, 0.35)",
-        borderRadius: "14px",
-        boxShadow: "0 18px 50px rgba(0,0,0,0.55)",
-        zIndex: 1200,
-        padding: "14px 16px",
+        borderBottom: "1px solid rgba(252, 213, 53, 0.25)",
+        zIndex: 1066, // أعلى من شريط الإعلان والنافبار
+        padding: "8px 12px",
+        boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
+        transform: "translateY(0)",
       }}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-        <div
-          style={{
-            width: "40px",
-            height: "40px",
-            borderRadius: "10px",
-            background: "linear-gradient(180deg, #FCD535 0%, #F0B90B 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#0B0E11",
-            fontWeight: 800,
-            letterSpacing: "0.5px",
-            boxShadow: "0 8px 20px rgba(252, 213, 53, 0.35)",
-            flexShrink: 0,
-          }}
-        >
-          N
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <img src="/icons/icon.svg" alt="NNM" width={22} height={22} style={{ display: "block" }} />
+          <span style={{ fontSize: "13px", fontWeight: 600 }}>Install App</span>
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-            <h6 style={{ margin: 0, fontSize: "15px", fontWeight: 700, color: "#FCD535" }}>Install NNM App</h6>
-            <button
-              aria-label="Close install prompt"
-              onClick={handleLater}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "#9ca3af",
-                cursor: "pointer",
-                padding: "2px",
-                lineHeight: 1,
-              }}
-            >
-              <i className="bi bi-x-lg" style={{ fontSize: "14px" }}></i>
-            </button>
-          </div>
-          <p style={{ margin: "6px 0 0", fontSize: "12.5px", color: "#cfd6e4", lineHeight: 1.5 }}>
-            Add the NNM experience to your home screen for faster access on mobile and desktop. We will remind you again in 12 hours.
-          </p>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "12px" }}>
-            <button
-              onClick={handleLater}
-              style={{
-                background: "transparent",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#cfd6e4",
-                padding: "8px 12px",
-                borderRadius: "8px",
-                fontSize: "12.5px",
-                cursor: "pointer",
-              }}
-            >
-              Later
-            </button>
-            <button
-              onClick={handleInstall}
-              style={{
-                background: "linear-gradient(180deg, #FCD535 0%, #F0B90B 100%)",
-                border: "none",
-                color: "#0B0E11",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                fontSize: "12.5px",
-                fontWeight: 700,
-                cursor: "pointer",
-                boxShadow: "0 10px 25px rgba(252, 213, 53, 0.35)",
-              }}
-            >
-              Install Now
-            </button>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <button
+            onClick={handleInstall}
+            style={{
+              background: "transparent",
+              border: "1px solid rgba(252, 213, 53, 0.5)",
+              color: "#FCD535",
+              padding: "4px 10px",
+              borderRadius: "6px",
+              fontSize: "12px",
+              cursor: "pointer",
+            }}
+          >
+            Install
+          </button>
+          <button
+            aria-label="Close"
+            onClick={handleLater}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#9ca3af",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            <i className="bi bi-x-lg" style={{ fontSize: "14px" }}></i>
+          </button>
         </div>
       </div>
     </div>
