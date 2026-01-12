@@ -3,17 +3,30 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries, ISeriesApi } from 'lightweight-charts';
 import { createClient } from '@supabase/supabase-js';
 
-// --- إعداد اتصال Supabase ---
+// --- 1. إعداد اتصال Supabase (للبيانات التاريخية فقط) ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// --- 2. تعريف أنواع بيانات API الفوليوم الجديد ---
+interface SectorData {
+  label: string;
+  value: number; // Volume Strength (0-100)
+  change: number;
+}
+interface NGXVolumeResponse {
+  sectors: SectorData[];
+  marketStats: {
+    totalVolChange: number;
+  };
+}
+
 const SECTORS = [
-  { key: 'All NFT Index', dbKey: 'ALL', color: '#C0D860' },     
-  { key: 'Digital Name Assets', dbKey: 'NAM', color: '#38BDF8' }, 
-  { key: 'Art NFT', dbKey: 'ART', color: '#7B61FF' },            
-  { key: 'Gaming NFT', dbKey: 'GAM', color: '#0ECB81' },        
-  { key: 'Utility NFT', dbKey: 'UTL', color: '#00D8D6' }         
+  { key: 'All NFT Index', dbKey: 'ALL', apiLabel: 'ALL', color: '#C0D860' },     
+  { key: 'Digital Name Assets', dbKey: 'NAM', apiLabel: 'NAM', color: '#38BDF8' }, 
+  { key: 'Art NFT', dbKey: 'ART', apiLabel: 'ART', color: '#7B61FF' },            
+  { key: 'Gaming NFT', dbKey: 'GAM', apiLabel: 'GAM', color: '#0ECB81' },        
+  { key: 'Utility NFT', dbKey: 'UTL', apiLabel: 'UTL', color: '#00D8D6' }         
 ];
 
 const TIMEFRAMES = [
@@ -44,7 +57,6 @@ function useClickOutside(ref: any, handler: any) {
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   
-  // الفلتر الافتراضي 1D
   const [activeTimeframe, setActiveTimeframe] = useState('1D');
   const [activeSector, setActiveSector] = useState(SECTORS[0].key);
   
@@ -62,7 +74,8 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  const fetchData = async (sectorKey: string) => {
+  // --- 3. جلب التاريخ من الداتا بيز (كما هو) ---
+  const fetchHistory = async (sectorKey: string) => {
     setIsLoading(true);
     const sectorInfo = SECTORS.find(s => s.key === sectorKey);
     if (!sectorInfo) return;
@@ -77,6 +90,7 @@ export default function NGXLiveChart() {
 
         if (error) throw error;
 
+        // معالجة البيانات التاريخية
         const data = sectorData.reverse().map((row: any) => ({
             time: Math.floor(row.timestamp / 1000) as any,
             value: Number(row.value)
@@ -86,12 +100,59 @@ export default function NGXLiveChart() {
         setChartData(uniqueData);
 
     } catch (err) {
-        console.error("Failed to fetch chart data:", err);
+        console.error("Failed to fetch history:", err);
     } finally {
         setIsLoading(false);
     }
   };
 
+  // --- 4. الدالة الجديدة: جلب البيانات الحية من API الفوليوم ---
+  const fetchLiveUpdate = async () => {
+      if (!seriesInstance) return;
+
+      try {
+          // استدعاء API الفوليوم الذي يعمل بنجاح
+          const res = await fetch('/api/ngx-volume');
+          if (!res.ok) return;
+          
+          const data: NGXVolumeResponse = await res.json();
+          const sectorInfo = SECTORS.find(s => s.key === activeSector);
+          if (!sectorInfo) return;
+
+          let newValue = 0;
+
+          // منطق استخراج القيمة المناسبة للقطاع المختار
+          if (sectorInfo.apiLabel === 'ALL') {
+              // للمؤشر العام: نأخذ متوسط القيم أو إحصائية السوق
+              const totalVal = data.sectors.reduce((acc, curr) => acc + curr.value, 0);
+              newValue = totalVal / 4; // متوسط بسيط للـ 4 قطاعات
+          } else {
+              // للقطاعات الفرعية
+              const targetSector = data.sectors.find(s => s.label === sectorInfo.apiLabel);
+              if (targetSector) {
+                  newValue = targetSector.value;
+              }
+          }
+
+          // ** الجراحة الدقيقة: دمج البيانات الحية مع الرسم البياني **
+          // نستخدم التوقيت الحالي لكي نرسم نقطة "الآن"
+          const currentTime = Math.floor(Date.now() / 1000) as any;
+          
+          // تحديث السلسلة بآخر نقطة حية
+          // ملاحظة: إذا كانت القيمة 0 أو غريبة، نتجاهلها للحفاظ على جمالية الرسم
+          if (newValue > 0) {
+              seriesInstance.update({
+                  time: currentTime,
+                  value: newValue
+              });
+          }
+
+      } catch (err) {
+          console.error("Live update pulse missed:", err);
+      }
+  };
+
+  // --- تهيئة الرسم البياني ---
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -108,7 +169,6 @@ export default function NGXLiveChart() {
       },
       width: chartContainerRef.current.clientWidth,
       height: 400,
-      // 1. إعدادات الوقت الأساسية
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true,
@@ -118,14 +178,11 @@ export default function NGXLiveChart() {
         fixRightEdge: true,
         rightOffset: 10,
         minBarSpacing: 0.5,
-        // 2. إجبار اللغة الإنجليزية في المحور الأفقي
-        tickMarkFormatter: (time: number, tickMarkType: any, locale: any) => {
+        tickMarkFormatter: (time: number) => {
             const date = new Date(time * 1000);
             if (activeTimeframe === '1H' || activeTimeframe === '4H') {
-                // عرض الساعة (مثال: 15:30)
                 return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
             }
-            // عرض التاريخ (مثال: Jan 10)
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         },
       },
@@ -151,13 +208,11 @@ export default function NGXLiveChart() {
             labelVisible: true,
         },
       },
-      // 3. إجبار اللغة الإنجليزية في التلميح (Tooltip)
       localization: { 
           locale: 'en-US',
           dateFormat: 'yyyy-MM-dd',
           timeFormatter: (timestamp: number) => {
               const date = new Date(timestamp * 1000);
-              // تنسيق التاريخ والوقت بالإنجليزية حصراً
               return date.toLocaleString('en-US', { 
                   month: 'short', 
                   day: 'numeric', 
@@ -195,7 +250,8 @@ export default function NGXLiveChart() {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    fetchData(SECTORS[0].key);
+    // التحميل الأولي للتاريخ
+    fetchHistory(SECTORS[0].key);
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -203,10 +259,12 @@ export default function NGXLiveChart() {
     };
   }, []);
 
+  // عند تغيير القطاع، نجلب التاريخ من جديد
   useEffect(() => {
-    fetchData(activeSector);
+    fetchHistory(activeSector);
   }, [activeSector]);
 
+  // إعداد البيانات التاريخية في الرسم
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
@@ -220,7 +278,6 @@ export default function NGXLiveChart() {
 
         const isIntraday = ['1H', '4H'].includes(activeTimeframe);
         
-        // تحديث إعدادات الوقت عند تغيير الفلتر
         chartInstance.applyOptions({
             timeScale: {
                 timeVisible: true,
@@ -244,8 +301,21 @@ export default function NGXLiveChart() {
 
         seriesInstance.setData(filteredData);
         chartInstance.timeScale().fitContent();
+        
+        // ** تفعيل التحديث الحي فور انتهاء تحميل التاريخ **
+        fetchLiveUpdate();
     }
   }, [chartData, activeTimeframe, seriesInstance, chartInstance, activeSector]);
+
+  // --- 5. دورة الحياة المستمرة (Live Loop) ---
+  useEffect(() => {
+      // تحديث كل 60 ثانية من API الفوليوم
+      const interval = setInterval(() => {
+          fetchLiveUpdate();
+      }, 60000); 
+
+      return () => clearInterval(interval);
+  }, [seriesInstance, activeSector]); // يعيد تشغيل المؤقت إذا تغير القطاع
 
   const currentColor = SECTORS.find(s => s.key === activeSector)?.color;
   const currentTimeframeLabel = TIMEFRAMES.find(t => t.value === activeTimeframe)?.label;
@@ -284,12 +354,19 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* Loading */}
-        {isLoading && (
-            <div className="loading-indicator">
-                <span className="spinner"></span> Updating...
-            </div>
-        )}
+        {/* Live Indicator */}
+        <div className="live-indicator-wrapper d-flex align-items-center">
+            {isLoading ? (
+                <div className="loading-indicator">
+                    <span className="spinner"></span> Syncing...
+                </div>
+            ) : (
+                <div className="live-pulse" style={{ fontSize: '9px', color: '#0ecb81', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', background: '#0ecb81', borderRadius: '50%', boxShadow: '0 0 5px #0ecb81' }}></span>
+                    LIVE DATA
+                </div>
+            )}
+        </div>
 
         {/* Timeframe Selector */}
         <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
@@ -324,7 +401,7 @@ export default function NGXLiveChart() {
       
       <div className="text-end px-2 pb-2">
           <small className="text-muted fst-italic" style={{ fontSize: '10px' }}>
-              * Data sourced via CoinGecko & Processed by NGX Engine.
+              * Powered by NGX Engine Volume Index.
           </small>
       </div>
 
