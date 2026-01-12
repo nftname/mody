@@ -44,7 +44,8 @@ const MintContent = () => {
   const [status, setStatus] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [errorTitle, setErrorTitle] = useState(''); // New state for polite title
+  // New State for Nice Title
+  const [errorTitle, setErrorTitle] = useState(''); 
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'process' | 'error' | 'success'>('process');
   const [mounted, setMounted] = useState(false);
@@ -103,7 +104,7 @@ const MintContent = () => {
     setShowModal(false);
   };
 
-  // --- SURGICAL UPDATE: Diplomatic Error Handling ---
+  // --- SURGICAL UPDATE: REPLACED OLD handleError WITH SMART DIPLOMAT ---
   const handleError = (err: any) => {
       console.error(err);
       
@@ -111,13 +112,15 @@ const MintContent = () => {
       let niceTitle = "Action Update";
       let niceMessage = "The process was interrupted. Please check your connection and try again.";
 
-      // Analyze the error gently
+      // 1. User Rejected
       if (errStr.includes("User rejected") || errStr.includes("User denied")) {
           niceTitle = "Action Cancelled";
-          niceMessage = "You cancelled the transaction in your wallet. No funds were deducted.";
-      } else if (errStr.includes("Insufficient funds") || errStr.includes("exceeds balance")) {
-          niceTitle = "Balance Update";
-          niceMessage = "Your POL balance is insufficient for this mint + gas. Please top up your wallet.";
+          niceMessage = "You cancelled the transaction. No funds were deducted.";
+      } 
+      // 2. Insufficient Funds
+      else if (errStr.includes("Insufficient funds") || errStr.includes("exceeds balance") || errStr.includes("low balance")) {
+          niceTitle = "Insufficient Balance";
+          niceMessage = "Your wallet balance is lower than the required amount (Price + Gas). Please top up POL and try again.";
       }
 
       setErrorTitle(niceTitle);
@@ -201,7 +204,7 @@ const MintContent = () => {
       <div className="container mt-0">
         <h5 className="text-white text-center mb-4 select-asset-title" style={{ letterSpacing: '2px', fontSize: '11px', textTransform: 'uppercase', color: '#888' }}>Select Asset Class</h5>
         <div className="row justify-content-center g-2 mobile-clean-stack"> 
-            {/* SURGICAL UPDATE: Visual Prices Changed to $15, $10, $5 */}
+            {/* SURGICAL UPDATE: Prices Updated to $15, $10, $5 */}
             <LuxuryIngot 
                 label="IMMORTAL" price="$15" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
                 tierName="IMMORTAL" tierIndex={0} nameToMint={searchTerm} isAdmin={isAdmin} 
@@ -222,7 +225,7 @@ const MintContent = () => {
 
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ width: '100%', maxWidth: '420px', backgroundColor: '#161b22', border: '1px solid #FCD535', borderRadius: '20px', padding: '30px', boxShadow: '0 0 50px rgba(252, 213, 53, 0.2)', textAlign: 'center', position: 'relative' }}>
+            <div style={{ width: '100%', maxWidth: '420px', backgroundColor: '#161b22', border: '1px solid #333', borderRadius: '20px', padding: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative' }}>
                 <button onClick={handleCloseModal} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#666', fontSize: '24px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
 
                 {modalType === 'success' && (
@@ -237,10 +240,10 @@ const MintContent = () => {
                    </div>
                 )}
 
-                {/* SURGICAL UPDATE: Replaced Red Scary Error with Gold/Diplomatic UI */}
+                {/* SURGICAL UPDATE: Replaced Red Style with Gold/Diplomatic Style */}
                 {modalType === 'error' && (
                     <div className="fade-in">
-                        <i className="bi bi-info-circle-fill mb-3" style={{ fontSize: '3rem', color: '#FCD535' }}></i>
+                        <i className="bi bi-info-circle-fill mb-3" style={{ fontSize: '3rem', color: '#E6C76A' }}></i>
                         <h5 className="text-white fw-bold mb-3">{errorTitle || "Notice"}</h5>
                         <p className="text-secondary mb-4" style={{ fontSize: '14px' }}>{errorMessage}</p>
                         <button onClick={handleCloseModal} className="btn w-100 fw-bold" style={{ backgroundColor: 'transparent', color: '#fff', border: '1px solid #666' }}>Close & Retry</button>
@@ -374,8 +377,12 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                 args: [nameToMint, tierIndex, tokenURI],
               });
             } else {
-              // SURGICAL UPDATE: Corrected Price Logic for the Contract (15, 10, 5)
-              const usdAmountWei = BigInt(tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5) * BigInt(10**18);
+              // --- SURGICAL UPDATE: PUBLIC MINT LOGIC (THE FIX) ---
+              // A. Define Price (15, 10, 5)
+              const usdVal = tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5;
+              const usdAmountWei = BigInt(usdVal) * BigInt(10**18);
+              
+              // B. Get Real Cost from Contract
               const costInMatic = await publicClient.readContract({
                  address: CONTRACT_ADDRESS as `0x${string}`,
                  abi: CONTRACT_ABI,
@@ -383,8 +390,19 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                  args: [usdAmountWei]
               });
               
+              // C. Add Buffer
               const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
+
+              // D. [CRITICAL FIX] PRE-FLIGHT BALANCE CHECK
+              // لا تفتح المحفظة إذا لم يكن هناك رصيد!
+              if (address) {
+                  const balance = await publicClient.getBalance({ address });
+                  if (balance < valueToSend) {
+                      throw new Error("Insufficient funds (Pre-flight check): Low POL balance.");
+                  }
+              }
               
+              // E. Execute Transaction (Wallet only opens if passed check D)
               hash = await writeContractAsync({
                 address: CONTRACT_ADDRESS as `0x${string}`,
                 abi: CONTRACT_ABI,
@@ -420,7 +438,7 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
         } catch (err) {
             onError(err);
         } finally {
-            setIsMinting(false); // This ensures the spinner stops
+            setIsMinting(false);
         }
     };
 
