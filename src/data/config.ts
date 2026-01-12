@@ -10,3 +10,4 @@ export const CONTRACT_ADDRESS = NFT_COLLECTION_ADDRESS;
 export const CONTRACT_NAME = "NNMRegistry10";
 
 export const MARKETPLACE_ADDRESS = "0xa2e45cc2d97a1a166ada5d097536c3eee28f8d7f";
+
