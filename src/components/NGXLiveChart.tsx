@@ -7,7 +7,20 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- SECTORS & TIMEFRAMES (كما هي في كودك الأصلي) ---
+// حافظنا على الواجهات كما في كودك الأصلي
+interface SectorData {
+  label: string;
+  value: number; 
+  change: number;
+}
+interface NGXVolumeResponse {
+  sectors: SectorData[];
+  marketStats: {
+    totalVolChange: number;
+  };
+}
+
+// حافظنا على apiLabel كما في كودك الأصلي
 const SECTORS = [
   { key: 'All NFT Index', dbKey: 'ALL', apiLabel: 'ALL', color: '#C0D860' },     
   { key: 'Digital Name Assets', dbKey: 'NAM', apiLabel: 'NAM', color: '#38BDF8' }, 
@@ -61,7 +74,7 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- التعديل الجراحي: جلب البيانات الحقيقية فقط ---
+  // --- التعديل الجراحي 1: دالة الجلب من الداتا بيز فقط (بدلاً من التوليد الوهمي) ---
   const fetchHistory = async (sectorKey: string) => {
     if (chartData.length === 0) setIsLoading(true);
 
@@ -69,12 +82,12 @@ export default function NGXLiveChart() {
     if (!sectorInfo) return;
 
     try {
-        // جلب البيانات من الداتا بيز (التي تحتوي الآن على بيانات Binance المردومة)
         const { data: sectorData, error } = await supabase
             .from('ngx_chart_history')
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: true }); // ترتيب تصاعدي للرسم الصحيح
+            .order('timestamp', { ascending: true }) // ترتيب تصاعدي سليم
+            .limit(10000); // زيادة الحد الأقصى لضمان جلب كل التاريخ القديم
 
         if (error) throw error;
 
@@ -83,15 +96,15 @@ export default function NGXLiveChart() {
             return;
         }
 
-        // تحويل الصيغة فقط بدون أي توليد وهمي
+        // تحويل البيانات كما هي (بدون ملء فراغات وهمي)
         const formattedData = sectorData.map((row: any) => ({
-            time: Math.floor(row.timestamp / 1000), 
+            time: Math.floor(row.timestamp / 1000),
             value: Number(row.value)
         }));
 
-        // تنظيف التكرار إن وجد
+        // إزالة التكرار
         const uniqueData = formattedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
-        
+
         setChartData(uniqueData);
 
     } catch (err) {
@@ -101,7 +114,8 @@ export default function NGXLiveChart() {
     }
   };
 
-  // 1. Initialize Chart (نفس إعداداتك القديمة تماماً مع إضافة بسيطة للتواريخ)
+  // --- ملاحظة: تم إزالة fetchLiveUpdate لأننا نعتمد الآن على تحديث الداتا بيز الموحد ---
+
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -125,9 +139,9 @@ export default function NGXLiveChart() {
         secondsVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
-        rightOffset: 10,
+        rightOffset: 12, // زيادة بسيطة للمساحة
         minBarSpacing: 0.5,
-        // تم الحفاظ على الفورمات الخاص بك
+        // نفس المنسق الزمني الخاص بك
         tickMarkFormatter: (time: number) => {
             const date = new Date(time * 1000);
             if (activeTimeframe === '1H' || activeTimeframe === '4H') {
@@ -189,7 +203,7 @@ export default function NGXLiveChart() {
     const handleResize = () => {
       if (chartContainerRef.current) {
         const isMobile = window.innerWidth <= 768;
-        // تعديل طفيف للارتفاع للموبايل كما طلبت لضمان ظهور التواريخ
+        // تقليل الارتفاع قليلاً في الموبايل لضمان ظهور التواريخ في الأسفل
         const newHeight = isMobile ? 320 : 400; 
         chart.applyOptions({ 
             width: chartContainerRef.current.clientWidth,
@@ -209,13 +223,11 @@ export default function NGXLiveChart() {
     };
   }, []);
 
-  // 2. تحديث عند تغيير القطاع
   useEffect(() => {
-    setChartData([]); // تصفير للبدء النظيف
+    setChartData([]); 
     fetchHistory(activeSector);
   }, [activeSector]);
 
-  // 3. تحديث عند تغيير البيانات أو الفريم الزمني
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
@@ -229,7 +241,7 @@ export default function NGXLiveChart() {
 
         const isIntraday = ['1H', '4H'].includes(activeTimeframe);
         
-        // تحديث إعدادات الوقت بناء على الفريم
+        // تحديث تنسيق الوقت لإظهار السنة في الفريمات الكبيرة
         chartInstance.applyOptions({
             timeScale: {
                 tickMarkFormatter: (time: number) => {
@@ -238,7 +250,6 @@ export default function NGXLiveChart() {
                         return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
                     }
                     if (['1M', '1Y', 'ALL'].includes(activeTimeframe)) {
-                         // إضافة السنة للفريمات الكبيرة
                          return `${date.toLocaleString('en-US', { month: 'short' })} '${date.getFullYear().toString().slice(-2)}`;
                     }
                     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -249,6 +260,7 @@ export default function NGXLiveChart() {
         const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
         let filteredData = chartData;
 
+        // فلترة البيانات
         if (tf && tf.days > 0) {
             const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
             filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
@@ -259,7 +271,7 @@ export default function NGXLiveChart() {
     }
   }, [chartData, activeTimeframe, seriesInstance, chartInstance, activeSector]);
 
-  // 4. التحديث التلقائي كل دقيقة (لجلب الجديد من الداتا بيز)
+  // التحديث التلقائي (استبدل دالة fetchLiveUpdate القديمة)
   useEffect(() => {
       const interval = setInterval(() => {
           fetchHistory(activeSector);
@@ -275,7 +287,6 @@ export default function NGXLiveChart() {
     <div className="ngx-chart-glass mb-4">
       <div className="filters-container">
         
-        {/* SECTOR DROPDOWN */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
@@ -305,7 +316,6 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* LIVE INDICATOR */}
         <div className="live-indicator-wrapper d-flex align-items-center">
             {isLoading && chartData.length === 0 ? (
                 <div className="loading-indicator">
@@ -319,7 +329,6 @@ export default function NGXLiveChart() {
             )}
         </div>
 
-        {/* TIMEFRAME DROPDOWN */}
         <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
@@ -349,7 +358,7 @@ export default function NGXLiveChart() {
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper">
-          {/* العلامة المائية NNM بدلاً من TradingView */}
+          {/* العلامة المائية NNM بحجم 17px كما طلبت */}
           <span className="nnm-watermark">NNM</span>
       </div>
       
@@ -360,11 +369,10 @@ export default function NGXLiveChart() {
       </div>
 
       <style jsx>{`
-        /* إخفاء شعار TradingView الأصلي */
+        /* إخفاء شعار TradingView الأصلي تماماً */
         .chart-canvas-wrapper :global(.tv-lightweight-charts) {
              padding-bottom: 0 !important;
         }
-        /* خدعة لإخفاء الرابط المزعج */
         .chart-canvas-wrapper :global(a[href*="tradingview"]) { 
             display: none !important; 
             visibility: hidden !important;
@@ -377,7 +385,7 @@ export default function NGXLiveChart() {
             position: absolute;
             bottom: 30px; 
             left: 10px;
-            font-size: 11px;
+            font-size: 17px; /* تكبير الحجم بنسبة 50% تقريباً */
             font-weight: 700;
             font-style: italic;
             color: rgba(255, 255, 255, 0.4);
@@ -404,7 +412,7 @@ export default function NGXLiveChart() {
             width: 100%; 
             height: 400px; 
             position: relative;
-            padding-bottom: 20px; /* مساحة للتواريخ */
+            padding-bottom: 20px; /* ضمان مساحة للتواريخ */
         }
         .filters-container {
             display: flex; justify-content: space-between; align-items: center;
@@ -448,7 +456,6 @@ export default function NGXLiveChart() {
         .custom-option:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
-        
         @media (max-width: 768px) {
             .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
             .chart-canvas-wrapper { height: 320px !important; }
