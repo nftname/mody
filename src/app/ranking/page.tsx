@@ -162,9 +162,7 @@ export default function NNMConceptPage() {
                   <p className="text-body-gray" style={{ lineHeight: '1.7' }}>
                       At NNM, digital names are minted across three clearly defined tiers. These tiers do not determine future market value, do not imply performance, and do not create expectations. They exist to provide structural context and optional positioning at the moment of minting.
                       <br/>
-                      <span className="d-block mt-3" style={{ fontSize: '0.9rem', color: '#888' }}>
-                          While these tiers define identity, the ecosystem's valuation logic is distinct. To explore the asset hierarchy and projected growth trajectory, view the <Link href="/ranking" className="text-gold-highlight text-decoration-none border-bottom border-warning">Ranking & Concept Protocol</Link>.
-                      </span>
+                      
                   </p>
 
                   <p className="fw-bold fst-italic mt-3 text-white">
