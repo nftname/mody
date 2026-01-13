@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType, CrosshairMode, AreaSeries, ISeriesApi } from 'lightweight-charts';
+import { createChart, ColorType, CrosshairMode, AreaSeries, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -15,14 +15,13 @@ const SECTORS = [
   { key: 'Utility NFT', dbKey: 'UTL', color: '#00D8D6' }         
 ];
 
-// تعديل منطق الأيام ليكون الفارق واضحاً بين الفلاتر
 const TIMEFRAMES = [
-    { label: '1H', value: '1H', days: 1 },      // عرض يوم واحد (بيانات ساعية)
-    { label: '4H', value: '4H', days: 7 },      // عرض أسبوع (بيانات ساعية)
-    { label: '1D', value: '1D', days: 30 },     // عرض شهر (بيانات 4 ساعات)
-    { label: '1W', value: '1W', days: 90 },     // عرض ربع سنة (بيانات يومية)
-    { label: '1M', value: '1M', days: 365 },    // عرض سنة (بيانات يومية)
-    { label: 'ALL', value: 'ALL', days: 0 }     // عرض كل التاريخ (بيانات يومية)
+    { label: '1H', value: '1H', days: 1 },      
+    { label: '4H', value: '4H', days: 7 },      
+    { label: '1D', value: '1D', days: 30 },     
+    { label: '1W', value: '1W', days: 90 },     
+    { label: '1M', value: '1M', days: 365 },    
+    { label: 'ALL', value: 'ALL', days: 0 }     
 ];
 
 function useClickOutside(ref: any, handler: any) {
@@ -43,12 +42,11 @@ function useClickOutside(ref: any, handler: any) {
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   
-  const [activeTimeframe, setActiveTimeframe] = useState('1D'); // الافتراضي 1 شهر
+  const [activeTimeframe, setActiveTimeframe] = useState('1D'); 
   const [activeSector, setActiveSector] = useState(SECTORS[0].key);
   
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
-  const [chartData, setChartData] = useState<any[]>([]); 
   const [isLoading, setIsLoading] = useState(false);
 
   const [isSectorOpen, setIsSectorOpen] = useState(false);
@@ -60,27 +58,53 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  const fetchHistory = async (sectorKey: string) => {
+  const fetchAndDraw = async (sectorKey: string, tfValue: string) => {
+    if(!seriesInstance || !chartInstance) return;
+    
     setIsLoading(true);
     const sectorInfo = SECTORS.find(s => s.key === sectorKey);
-    if (!sectorInfo) return;
+    const tfInfo = TIMEFRAMES.find(t => t.value === tfValue);
+    
+    if (!sectorInfo || !tfInfo) return;
 
     try {
-        const { data: sectorData, error } = await supabase
+        let query = supabase
             .from('ngx_volume_index')
             .select('timestamp, index_value')
             .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: true }); 
+            .order('timestamp', { ascending: true });
 
+        if (tfInfo.days > 0) {
+            const cutoffTimestamp = Math.floor(Date.now() / 1000) - (tfInfo.days * 24 * 60 * 60);
+            query = query.gte('timestamp', cutoffTimestamp);
+        }
+
+        const { data: sectorData, error } = await query;
         if (error) throw error;
 
-        const formattedData = sectorData.map((row: any) => ({
-            time: Number(row.timestamp),
+        if(!sectorData || sectorData.length === 0) {
+            seriesInstance.setData([]);
+            setIsLoading(false);
+            return;
+        }
+
+        // --- التصحيح هنا: استخدام as UTCTimestamp ---
+        let processedData = sectorData.map((row: any) => ({
+            time: Number(row.timestamp) as UTCTimestamp, // إجبار التايب ليقبلها
             value: Number(row.index_value)
         }));
 
-        const uniqueData = formattedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
-        setChartData(uniqueData);
+        if (tfValue === '1M' || tfValue === '1Y' || tfValue === 'ALL') {
+             processedData = processedData.filter((_, index) => index % 24 === 0);
+        } else if (tfValue === '1D') {
+             processedData = processedData.filter((_, index) => index % 4 === 0);
+        }
+
+        // فلترة التكرار
+        const uniqueData = processedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
+        
+        seriesInstance.setData(uniqueData);
+        chartInstance.timeScale().fitContent();
 
     } catch (err) {
         console.error("Failed to fetch history:", err);
@@ -89,9 +113,9 @@ export default function NGXLiveChart() {
     }
   };
 
-  const fetchLiveUpdate = async () => {
-      await fetchHistory(activeSector);
-  };
+  useEffect(() => {
+      fetchAndDraw(activeSector, activeTimeframe);
+  }, [activeSector, activeTimeframe, seriesInstance]);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -153,8 +177,6 @@ export default function NGXLiveChart() {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    fetchHistory(SECTORS[0].key);
-
     return () => {
       window.removeEventListener('resize', handleResize);
       chart.remove();
@@ -162,73 +184,50 @@ export default function NGXLiveChart() {
   }, []);
 
   useEffect(() => {
-    fetchHistory(activeSector);
-  }, [activeSector]);
-
-  useEffect(() => {
-    if (seriesInstance && chartInstance && chartData.length > 0) {
+    if (seriesInstance && chartInstance) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
-        if (!currentSector) return;
-
-        seriesInstance.applyOptions({
-            lineColor: currentSector.color,
-            topColor: `${currentSector.color}66`, 
-            bottomColor: `${currentSector.color}00`, 
-        });
-
-        // 1. تحديد نوع الفلترة (Resolution) بناءً على الفترة الزمنية
-        // هذا هو "السر" لجعل الفلاتر تختلف عن بعضها
-        let resolution = 1; // الافتراضي: كل الساعات (1H, 4H)
-        
-        if (activeTimeframe === '1D') {
-             // عند عرض شهر، خذ نقطة كل 4 ساعات لتخفيف الرسم قليلاً
-             resolution = 4; 
-        } else if (['1W', '1M', 'ALL'].includes(activeTimeframe)) {
-             // عند عرض سنوات أو شهور طويلة، خذ نقطة واحدة في اليوم (كل 24 ساعة)
-             // هذا يجعل الرسم ناعماً جداً وواضحاً للمدى الطويل
-             resolution = 24; 
+        if (currentSector) {
+            seriesInstance.applyOptions({
+                lineColor: currentSector.color,
+                topColor: `${currentSector.color}66`, 
+                bottomColor: `${currentSector.color}00`, 
+            });
         }
 
-        const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
-        let filteredData = chartData;
-
-        // تطبيق فلترة الوقت (قص التاريخ)
-        if (tf && tf.days > 0) {
-            const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
-            filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
-        }
-
-        // تطبيق فلترة الكثافة (Resolution Sampling)
-        if (resolution > 1) {
-            filteredData = filteredData.filter((_, index) => index % resolution === 0);
-        }
-
-        // ضبط محور الوقت بناءً على الفلتر
         const isIntraday = ['1H', '4H'].includes(activeTimeframe);
         chartInstance.applyOptions({
             timeScale: {
                 tickMarkFormatter: (time: number) => {
                     const date = new Date(time * 1000);
                     if (isIntraday) {
-                        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                        return date.toLocaleTimeString('en-GB', { 
+                            hour: '2-digit', 
+                            minute: '2-digit', 
+                            hour12: false,
+                            timeZone: 'UTC' 
+                        });
                     }
-                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: activeTimeframe === 'ALL' ? '2-digit' : undefined });
+                    return date.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: activeTimeframe === 'ALL' ? '2-digit' : undefined,
+                        timeZone: 'UTC'
+                    });
                 }
             }
         });
-
-        seriesInstance.setData(filteredData);
-        chartInstance.timeScale().fitContent();
     }
-  }, [chartData, activeTimeframe, seriesInstance, chartInstance, activeSector]);
+  }, [activeTimeframe, activeSector, seriesInstance, chartInstance]);
 
   useEffect(() => {
       const interval = setInterval(() => {
-          fetchLiveUpdate();
+          const sectorInfo = SECTORS.find(s => s.key === activeSector);
+          if(sectorInfo && seriesInstance) {
+             fetchAndDraw(activeSector, activeTimeframe);
+          }
       }, 60000); 
-
       return () => clearInterval(interval);
-  }, [activeSector]);
+  }, [activeSector, activeTimeframe]);
 
   const currentColor = SECTORS.find(s => s.key === activeSector)?.color;
   const currentTimeframeLabel = TIMEFRAMES.find(t => t.value === activeTimeframe)?.label;
@@ -345,7 +344,6 @@ export default function NGXLiveChart() {
         @keyframes spin { to { transform: rotate(360deg); } }
         .filter-wrapper { position: relative; }
         
-        /* ضبط العرض لتجنب التداخل */
         .sector-wrapper { width: auto; min-width: 150px; max-width: 200px; } 
         
         .time-wrapper { width: auto; min-width: 70px; }
@@ -380,15 +378,16 @@ export default function NGXLiveChart() {
 
         .chart-watermark {
             position: absolute;
-            bottom: 15px;
+            bottom: 20px;
             left: 20px;
-            font-size: 28px;
-            font-weight: 800;
+            font-size: 32px;
+            font-weight: 900;
             font-style: italic;
-            color: rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.25);
             pointer-events: none;
             z-index: 10;
             user-select: none;
+            letter-spacing: 1px;
         }
 
         @media (max-width: 768px) {
@@ -398,7 +397,7 @@ export default function NGXLiveChart() {
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: auto; min-width: 130px; max-width: 180px; margin-right: auto; }
             .time-wrapper { width: auto; min-width: 60px; flex-shrink: 0; }
-            .chart-watermark { font-size: 20px; bottom: 10px; left: 15px; }
+            .chart-watermark { font-size: 24px; bottom: 15px; left: 15px; }
         }
       `}</style>
     </div>
