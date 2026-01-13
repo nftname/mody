@@ -16,14 +16,12 @@ const SECTORS = [
   { key: 'UTL', symbols: ['MANAUSDT', 'SANDUSDT', 'HIGHUSDT'] }
 ];
 
-async function fetchBinanceRecentHourly(symbol: string) {
+async function fetchBinanceRecentPrice(symbol: string) {
   try {
-    // نطلب آخر 24 ساعة لضمان تحديث الساعات المفقودة
     const url = `https://data-api.binance.vision/api/v3/klines?symbol=${symbol}&interval=1h&limit=24`;
     let res = await fetch(url, { cache: 'no-store' });
     
     if (!res.ok) {
-        // Fallback
         res = await fetch(`https://api.binance.us/api/v3/klines?symbol=${symbol}&interval=1h&limit=24`, { cache: 'no-store' });
     }
     
@@ -33,7 +31,7 @@ async function fetchBinanceRecentHourly(symbol: string) {
 
     return data.map((d: any) => ({
       time: Math.floor(d[0] / 1000), 
-      vol: parseFloat(d[5])
+      price: parseFloat(d[4]) // Close Price
     }));
   } catch (e) { return []; }
 }
@@ -43,25 +41,26 @@ export async function GET(request: Request) {
     const recordsToUpsert: any[] = [];
 
     for (const sector of SECTORS) {
-      const allVolumes: Record<number, number> = {};
+      const allPrices: Record<number, number> = {};
+      const tokenCounts: Record<number, number> = {};
       let hasData = false;
 
       for (const symbol of sector.symbols) {
-        const history = await fetchBinanceRecentHourly(symbol);
+        const history = await fetchBinanceRecentPrice(symbol);
         if (history.length > 0) {
             hasData = true;
             history.forEach((h: any) => {
                 const roundedTime = Math.floor(h.time / 3600) * 3600;
-                allVolumes[roundedTime] = (allVolumes[roundedTime] || 0) + h.vol;
+                allPrices[roundedTime] = (allPrices[roundedTime] || 0) + h.price;
+                tokenCounts[roundedTime] = (tokenCounts[roundedTime] || 0) + 1;
             });
         }
       }
 
       if (!hasData) continue;
-      const sortedTimes = Object.keys(allVolumes).map(Number).sort((a, b) => a - b);
+      const sortedTimes = Object.keys(allPrices).map(Number).sort((a, b) => a - b);
 
-      // --- استرجاع الأساس الذكي ---
-      // نسترجع أول نقطة في التاريخ لنعرف ما هو الأساس الذي استخدمناه
+      // استرجاع معامل الأساس (Base 1000) من الداتا بيز
       const { data: firstRec } = await supabase
         .from('ngx_volume_index')
         .select('volume_raw, index_value')
@@ -70,22 +69,22 @@ export async function GET(request: Request) {
         .limit(1)
         .single();
 
-      // حساب الأساس عكسياً: Base = (Raw / Index) * 100
-      let baseVolume = 1;
+      // Base = (Price * 1000) / Index
+      let basePrice = 1;
       if (firstRec && firstRec.index_value > 0) {
-         baseVolume = (firstRec.volume_raw * 100) / firstRec.index_value;
+         basePrice = (firstRec.volume_raw * 1000) / firstRec.index_value;
       } else {
-         // احتياطي
-         baseVolume = allVolumes[sortedTimes[0]] || 1;
+         basePrice = (allPrices[sortedTimes[0]] / tokenCounts[sortedTimes[0]]) || 1;
       }
 
       sortedTimes.forEach(t => {
-        const rawVol = allVolumes[t];
-        const indexVal = baseVolume > 0 ? (rawVol / baseVolume) * 100 : 0;
+        const avgPrice = allPrices[t] / tokenCounts[t];
+        const indexVal = basePrice > 0 ? (avgPrice / basePrice) * 1000 : 0;
+        
         recordsToUpsert.push({
           sector_key: sector.key,
           timestamp: t,
-          volume_raw: rawVol,
+          volume_raw: avgPrice,
           index_value: parseFloat(indexVal.toFixed(2))
         });
       });
