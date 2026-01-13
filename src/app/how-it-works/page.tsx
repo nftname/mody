@@ -44,7 +44,7 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- 1. THE DIAGRAM COMPONENT (Global/Apple Style) ---
+// --- 1. THE DIAGRAM COMPONENT ---
 const OwnershipFlowDiagram = () => {
   return (
     <div className="w-100 overflow-hidden rounded-4 p-0 position-relative" 
@@ -250,7 +250,12 @@ export default function HowItWorksPage() {
                 Digital Name Assets are unique, non-fungible blockchain assets that represent rare digital identifiers. They are not identities, domains, or credentials. They are collectible, ownable digital assets secured by decentralized networks and verifiable on-chain.
               </p>
               <p style={{ lineHeight: '1.6' }}>
-                Each asset is defined by scarcity, provenance, and permanence. Ownership is recorded transparently on the blockchain, allowing users to hold, trade, or transfer assets without intermediaries.
+                Each asset is defined by scarcity, provenance, and permanence. Ownership is recorded transparently on the blockchain, allowing users to hold, trade, or transfer assets without intermediaries. 
+                {/* --- INSERTION START: Text color matches parent paragraph --- */}
+                <span className="ms-1">
+                   For insights into asset structuring and tiered classification, refer to the <Link href="/ranking" className="text-decoration-none" style={{ color: GOLD_MEDIUM, borderBottom: `1px solid ${GOLD_MEDIUM}` }}>Ranking Registry</Link>.
+                </span>
+                {/* --- INSERTION END --- */}
               </p>
             </section>
 
@@ -265,8 +270,6 @@ export default function HowItWorksPage() {
                 All transactions occur through user-connected wallets. NNM does not hold user funds, does not guarantee liquidity, and does not participate in pricing decisions.
               </p>
             </section>
-
-            {/* ✅ تم حذف قسم الفيديو (Platform Walkthrough) نهائياً من هنا */}
 
             <section className="mb-5 ps-lg-3">
               <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
@@ -306,7 +309,7 @@ export default function HowItWorksPage() {
                 <FAQSection />
             </section>
 
-            {/* ✅ التعديل الجراحي: تصغير الخط، تفتيح اللون، وزيادة المسافة عن شريط البراندات */}
+            {/* FOOTER */}
             <footer className="ps-lg-3" style={{ borderTop: '1px solid #2E2E2E', paddingTop: '20px', marginTop: '40px', marginBottom: '60px' }}>
               <p style={{ fontSize: '11px', color: '#777', lineHeight: '1.5' }}>
                 NNM is a decentralized discovery and exchange platform. All content is provided for informational purposes only.

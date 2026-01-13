@@ -98,7 +98,6 @@ export default function NNMConceptPage() {
         }
 
         /* --- DESKTOP SHIFT (The Fix) --- */
-        /* Only applies on large screens to push the button right by 25% relative to its container */
         @media (min-width: 992px) {
             .cta-desktop-shift {
                 margin-left: 25%;
@@ -107,7 +106,7 @@ export default function NNMConceptPage() {
         
         /* Mobile specific adjustments */
         @media (max-width: 768px) {
-            .cta-desktop-shift { margin-left: 0; } /* Reset on mobile */
+            .cta-desktop-shift { margin-left: 0; } 
             
             .btn-ingot-wrapper { 
                 width: 50% !important; 
@@ -158,9 +157,16 @@ export default function NNMConceptPage() {
                   <p className="text-body-gray" style={{ lineHeight: '1.7' }}>
                       In every mature market, structure matters. Not all assets are created equal, and not all participants approach ownership with the same intent. As digital naming evolves into functional infrastructure, differentiation becomes a matter of clarity rather than hierarchy.
                   </p>
+                  
+                  {/* --- LINK INSERTION --- */}
                   <p className="text-body-gray" style={{ lineHeight: '1.7' }}>
                       At NNM, digital names are minted across three clearly defined tiers. These tiers do not determine future market value, do not imply performance, and do not create expectations. They exist to provide structural context and optional positioning at the moment of minting.
+                      <br/>
+                      <span className="d-block mt-3" style={{ fontSize: '0.9rem', color: '#888' }}>
+                          While these tiers define identity, the ecosystem's valuation logic is distinct. To explore the asset hierarchy and projected growth trajectory, view the <Link href="/ranking" className="text-gold-highlight text-decoration-none border-bottom border-warning">Ranking & Concept Protocol</Link>.
+                      </span>
                   </p>
+
                   <p className="fw-bold fst-italic mt-3 text-white">
                       What follows is not a ranking system. It is a framework of choice.
                   </p>
@@ -246,9 +252,9 @@ export default function NNMConceptPage() {
                   
                   {/* CTA AREA with DESKTOP SHIFT */}
                   <div className="text-center mt-4 cta-desktop-shift">
-                      <p className="font-imperium mb-2 text-white" style={{ fontSize: '0.85rem' }}>
-                          The system provides structure.<br/>
-                          The market provides meaning.
+                      {/* MODIFIED: Italic (fst-italic) and Single Line (Removed <br/>) */}
+                      <p className="font-imperium mb-2 text-white fst-italic" style={{ fontSize: '0.85rem' }}>
+                          The system provides structure. The market provides meaning.
                       </p>
 
                        <div className="btn-ingot-wrapper">
@@ -263,7 +269,8 @@ export default function NNMConceptPage() {
       </section>
 
       {/* --- BRAND TICKER --- */}
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+      {/* ADDED marginBottom: '50px' to create space from footer */}
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '50px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
