@@ -7,6 +7,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// لا نحتاج لتعريف واجهات الـ API القديمة لأننا نعتمد على الداتا بيز فقط
+// ولكن سنبقي على هيكل البيانات كما هو لضمان عدم كسر أي مرجعية
+
 const SECTORS = [
   { key: 'All NFT Index', dbKey: 'ALL', color: '#C0D860' },     
   { key: 'Digital Name Assets', dbKey: 'NAM', color: '#38BDF8' }, 
@@ -21,10 +24,10 @@ const TIMEFRAMES = [
     { label: '1D', value: '1D', days: 30 },   
     { label: '1W', value: '1W', days: 90 },   
     { label: '1M', value: '1M', days: 180 },  
+    { label: '1Y', value: '1Y', days: 365 },  
     { label: 'ALL', value: 'ALL', days: 0 }   
 ];
 
-// Helper hook for handling clicks outside dropdowns
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
     const listener = (event: any) => {
@@ -60,20 +63,23 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- CORE FUNCTION: FETCH FROM DB ONLY ---
-  const fetchHistory = async (sectorKey: string) => {
-    if (chartData.length === 0) setIsLoading(true);
+  // --- تم حذف دالة fillDataGaps نهائياً لمنع البيانات الوهمية ---
 
+  // دالة جلب البيانات التاريخية من قاعدة البيانات فقط
+  const fetchHistory = async (sectorKey: string) => {
+    // نظهر التحميل فقط إذا لم تكن هناك بيانات، لتجنب الوميض عند التحديث التلقائي
+    if (chartData.length === 0) setIsLoading(true);
+    
     const sectorInfo = SECTORS.find(s => s.key === sectorKey);
     if (!sectorInfo) return;
 
     try {
-        // Fetch raw data from Supabase
+        // جلب البيانات مرتبة زمنياً بشكل صحيح
         const { data: sectorData, error } = await supabase
             .from('ngx_chart_history')
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: true }); 
+            .order('timestamp', { ascending: true }); // ترتيب تصاعدي من الأقدم للأحدث
 
         if (error) throw error;
 
@@ -82,15 +88,16 @@ export default function NGXLiveChart() {
             return;
         }
 
-        // Format for Chart (Seconds timestamp)
+        // تحويل البيانات لصيغة Lightweight Charts
         const formattedData = sectorData.map((row: any) => ({
-            time: Math.floor(row.timestamp / 1000), 
+            time: Math.floor(row.timestamp / 1000), // تحويل لثواني
             value: Number(row.value)
         }));
 
-        // Deduplicate based on time
+        // إزالة التكرار (Cleaning)
         const uniqueData = formattedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
-        
+
+        // هنا نضع البيانات كما هي بالضبط من الداتا بيز بدون أي إضافات وهمية
         setChartData(uniqueData);
 
     } catch (err) {
@@ -100,7 +107,9 @@ export default function NGXLiveChart() {
     }
   };
 
-  // 1. Initialize Chart
+  // --- تم حذف دالة fetchLiveUpdate واستبدالها بالتحديث من الداتا بيز ---
+
+  // 1. تهيئة الرسم البياني (Initial Setup)
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -119,18 +128,58 @@ export default function NGXLiveChart() {
       height: 400,
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
+        visible: true,
         timeVisible: true,
         secondsVisible: false,
-        rightOffset: 12,
+        fixLeftEdge: true,
+        fixRightEdge: true,
+        rightOffset: 10,
+        minBarSpacing: 0.5,
+        tickMarkFormatter: (time: number) => {
+            const date = new Date(time * 1000);
+            if (activeTimeframe === '1H' || activeTimeframe === '4H') {
+                return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            }
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        },
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
+        scaleMargins: { top: 0.2, bottom: 0.2 },
         visible: true,
       },
       crosshair: {
         mode: CrosshairMode.Normal,
+        vertLine: {
+            color: 'rgba(255, 255, 255, 0.3)',
+            width: 1,
+            style: 3,
+            labelBackgroundColor: '#242424',
+            labelVisible: true,
+        },
+        horzLine: {
+            color: 'rgba(255, 255, 255, 0.3)',
+            width: 1,
+            style: 3,
+            labelBackgroundColor: '#242424',
+            labelVisible: true,
+        },
       },
-      localization: { locale: 'en-US' }, 
+      localization: { 
+          locale: 'en-US',
+          dateFormat: 'yyyy-MM-dd',
+          timeFormatter: (timestamp: number) => {
+              const date = new Date(timestamp * 1000);
+              return date.toLocaleString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  hour: '2-digit', 
+                  minute: '2-digit', 
+                  hour12: false 
+              }); 
+          }
+      },
+      handleScroll: { vertTouchDrag: false }, 
       handleScale: { axisPressedMouseMove: true },
     });
 
@@ -147,14 +196,18 @@ export default function NGXLiveChart() {
     const handleResize = () => {
       if (chartContainerRef.current) {
         const isMobile = window.innerWidth <= 768;
+        const newHeight = isMobile ? 350 : 400; 
         chart.applyOptions({ 
             width: chartContainerRef.current.clientWidth,
-            height: isMobile ? 350 : 400 
+            height: newHeight 
         });
       }
     };
     
+    handleResize();
     window.addEventListener('resize', handleResize);
+
+    // التحميل الأولي للبيانات
     fetchHistory(SECTORS[0].key);
 
     return () => {
@@ -163,29 +216,44 @@ export default function NGXLiveChart() {
     };
   }, []);
 
-  // 2. Refetch when Sector changes
+  // 2. تحديث البيانات عند تغيير القطاع
   useEffect(() => {
-    setChartData([]); 
+    // نقوم بتصفير البيانات مؤقتاً لتجنب تداخل الرسم القديم مع الجديد
+    setChartData([]);
     fetchHistory(activeSector);
   }, [activeSector]);
 
-  // 3. Update Visuals & Data when Timeframe/Data changes
+  // 3. تحديث الرسم والفلترة الزمنية
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
         if (!currentSector) return;
 
-        // Apply Color Theme
         seriesInstance.applyOptions({
             lineColor: currentSector.color,
             topColor: `${currentSector.color}66`, 
             bottomColor: `${currentSector.color}00`, 
         });
 
-        // Filter Data by Timeframe
+        const isIntraday = ['1H', '4H'].includes(activeTimeframe);
+        
+        chartInstance.applyOptions({
+            timeScale: {
+                timeVisible: true,
+                tickMarkFormatter: (time: number) => {
+                    const date = new Date(time * 1000);
+                    if (isIntraday) {
+                        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    }
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }
+            }
+        });
+
         const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
         let filteredData = chartData;
 
+        // فلترة البيانات حسب الوقت المختار
         if (tf && tf.days > 0) {
             const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
             filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
@@ -196,7 +264,8 @@ export default function NGXLiveChart() {
     }
   }, [chartData, activeTimeframe, seriesInstance, chartInstance, activeSector]);
 
-  // 4. Auto-Refresh Interval (Every 60s)
+  // 4. التحديث التلقائي من الداتا بيز (بديل الـ Live Polling)
+  // يقوم بالتحقق من الداتا بيز كل 60 ثانية لجلب أي تحديثات جديدة وضعها الـ Cron Job
   useEffect(() => {
       const interval = setInterval(() => {
           fetchHistory(activeSector);
@@ -212,7 +281,6 @@ export default function NGXLiveChart() {
     <div className="ngx-chart-glass mb-4">
       <div className="filters-container">
         
-        {/* SECTOR DROPDOWN */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
@@ -242,7 +310,6 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* LIVE INDICATOR */}
         <div className="live-indicator-wrapper d-flex align-items-center">
             {isLoading && chartData.length === 0 ? (
                 <div className="loading-indicator">
@@ -251,12 +318,11 @@ export default function NGXLiveChart() {
             ) : (
                 <div className="live-pulse" style={{ fontSize: '9px', color: '#0ecb81', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span style={{ width: '6px', height: '6px', background: '#0ecb81', borderRadius: '50%', boxShadow: '0 0 5px #0ecb81' }}></span>
-                    LIVE
+                    LIVE DATA
                 </div>
             )}
         </div>
 
-        {/* TIMEFRAME DROPDOWN */}
         <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
@@ -306,6 +372,7 @@ export default function NGXLiveChart() {
             min-height: 400px;
             overflow: hidden;
         }
+        .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
         .chart-canvas-wrapper { width: 100%; height: 400px; }
         .filters-container {
             display: flex; justify-content: space-between; align-items: center;
@@ -346,9 +413,9 @@ export default function NGXLiveChart() {
         }
         .time-options .custom-option { text-align: center; }
         .custom-option:last-child { border-bottom: none; }
-        .custom-option:hover { color: var(--hover-color, #fff); background: rgba(255, 255, 255, 0.05); }
+        .custom-option:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+        .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
-        
         @media (max-width: 768px) {
             .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
             .chart-canvas-wrapper { height: 350px !important; }
