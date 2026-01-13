@@ -7,7 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- الواجهات الأصلية ---
+// --- الواجهات ---
 interface SectorData {
   label: string;
   value: number; 
@@ -28,13 +28,15 @@ const SECTORS = [
   { key: 'Utility NFT', dbKey: 'UTL', apiLabel: 'UTL', color: '#00D8D6' }         
 ];
 
+// --- التعديل الجذري هنا: إلغاء "المقص" الزمني ---
+// جعلنا days: 0 للجميع لكي يعرض كل التاريخ المتاح في الداتا بيز دون قص
 const TIMEFRAMES = [
-    { label: '1H', value: '1H', days: 1 },    
-    { label: '4H', value: '4H', days: 7 },    
-    { label: '1D', value: '1D', days: 30 },   
-    { label: '1W', value: '1W', days: 90 },   
-    { label: '1M', value: '1M', days: 180 },  
-    { label: '1Y', value: '1Y', days: 365 },  
+    { label: '1H', value: '1H', days: 0 },    // كان يقص عند يوم واحد، الآن يعرض كل ساعات الأسبوع
+    { label: '4H', value: '4H', days: 0 },    // كان يقص، الآن مفتوح
+    { label: '1D', value: '1D', days: 0 },    // كان يقص عند 30 يوم، الآن يعرض سنين
+    { label: '1W', value: '1W', days: 0 },   
+    { label: '1M', value: '1M', days: 0 },  
+    { label: '1Y', value: '1Y', days: 0 },  
     { label: 'ALL', value: 'ALL', days: 0 }   
 ];
 
@@ -73,9 +75,8 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- دالة الجلب (تمت إعادتها للمنطق الأصلي: تنازلي + قلب المصفوفة) ---
+  // --- دالة جلب البيانات (المنطق السليم: جلب كل شيء وترتيبه) ---
   const fetchHistory = async (sectorKey: string) => {
-    // لا نظهر اللودينج إذا كان مجرد تحديث صامت
     if (chartData.length === 0) setIsLoading(true);
 
     const sectorInfo = SECTORS.find(s => s.key === sectorKey);
@@ -86,9 +87,9 @@ export default function NGXLiveChart() {
             .from('ngx_chart_history')
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
-            // العودة للمنطق الأصلي: هات الأحدث أولاً (تنازلي)
+            // ترتيب تنازلي (الأحدث فالأقدم) لنضمن جلب آخر البيانات
             .order('timestamp', { ascending: false })
-            .range(0, 20000); // جلب كمية ضخمة لضمان تغطية التاريخ
+            .limit(10000); // حد كبير جداً لضمان عدم ضياع التاريخ القديم
 
         if (error) throw error;
 
@@ -97,16 +98,15 @@ export default function NGXLiveChart() {
             return;
         }
 
-        // استخدام .reverse() كما كان في كودك الأصلي لترتيب التواريخ للرسم
-        // هذا يضمن اتصال البيانات من الأقدم للأحدث بشكل صحيح
+        // قلب المصفوفة (reverse) لتصبح (قديم -> حديث) كما يطلب الرسم البياني
         const formattedData = sectorData.reverse().map((row: any) => ({
-            time: Math.floor(row.timestamp / 1000),
+            time: Math.floor(row.timestamp / 1000), 
             value: Number(row.value)
         }));
 
-        // إزالة التكرار (حماية إضافية)
+        // تنظيف التكرار
         const uniqueData = formattedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
-
+        
         setChartData(uniqueData);
 
     } catch (err) {
@@ -137,8 +137,8 @@ export default function NGXLiveChart() {
         visible: true,
         timeVisible: true,
         secondsVisible: false,
-        fixLeftEdge: true,
-        fixRightEdge: true,
+        fixLeftEdge: false, // السماح بالسحب لليسار لرؤية التاريخ
+        fixRightEdge: false,
         rightOffset: 12,
         minBarSpacing: 0.5,
         tickMarkFormatter: (time: number) => {
@@ -185,8 +185,17 @@ export default function NGXLiveChart() {
               }); 
           }
       },
-      handleScroll: { vertTouchDrag: false }, 
-      handleScale: { axisPressedMouseMove: true },
+      handleScroll: { 
+          vertTouchDrag: false,
+          horzTouchDrag: true, // تفعيل السحب
+          pressedMouseMove: true,
+          mouseWheel: true
+      }, 
+      handleScale: { 
+          axisPressedMouseMove: true,
+          mouseWheel: true,
+          pinch: true 
+      },
     });
 
     const newSeries = chart.addSeries(AreaSeries, {
@@ -212,7 +221,6 @@ export default function NGXLiveChart() {
     
     handleResize();
     window.addEventListener('resize', handleResize);
-
     fetchHistory(SECTORS[0].key);
 
     return () => {
@@ -226,6 +234,7 @@ export default function NGXLiveChart() {
     fetchHistory(activeSector);
   }, [activeSector]);
 
+  // --- منطق العرض (بدون فلترة قاطعة) ---
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
@@ -239,7 +248,7 @@ export default function NGXLiveChart() {
 
         const isIntraday = ['1H', '4H'].includes(activeTimeframe);
         
-        // تنسيق الوقت الذكي (إظهار السنة)
+        // تنسيق الوقت
         chartInstance.applyOptions({
             timeScale: {
                 tickMarkFormatter: (time: number) => {
@@ -258,7 +267,8 @@ export default function NGXLiveChart() {
         const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
         let filteredData = chartData;
 
-        // فلترة البيانات
+        // --- هنا كان الخطأ سابقاً: تم تعديل الشرط ---
+        // بما أن days أصبحت 0، هذا الشرط لن يتحقق أبداً، وبالتالي لن يتم قص البيانات
         if (tf && tf.days > 0) {
             const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
             filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
@@ -269,7 +279,6 @@ export default function NGXLiveChart() {
     }
   }, [chartData, activeTimeframe, seriesInstance, chartInstance, activeSector]);
 
-  // التحديث التلقائي
   useEffect(() => {
       const interval = setInterval(() => {
           fetchHistory(activeSector);
@@ -285,6 +294,7 @@ export default function NGXLiveChart() {
     <div className="ngx-chart-glass mb-4">
       <div className="filters-container">
         
+        {/* Sector Dropdown */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
@@ -314,6 +324,7 @@ export default function NGXLiveChart() {
            )}
         </div>
 
+        {/* Live Indicator */}
         <div className="live-indicator-wrapper d-flex align-items-center">
             {isLoading && chartData.length === 0 ? (
                 <div className="loading-indicator">
@@ -327,6 +338,7 @@ export default function NGXLiveChart() {
             )}
         </div>
 
+        {/* Timeframe Dropdown */}
         <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
@@ -356,7 +368,7 @@ export default function NGXLiveChart() {
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper">
-          {/* العلامة المائية NNM بحجم 17px */}
+          {/* العلامة المائية NNM 17px */}
           <span className="nnm-watermark">NNM</span>
       </div>
       
@@ -367,7 +379,7 @@ export default function NGXLiveChart() {
       </div>
 
       <style jsx>{`
-        /* إخفاء شعار TradingView */
+        /* إخفاء TradingView */
         .chart-canvas-wrapper :global(.tv-lightweight-charts) {
              padding-bottom: 0 !important;
         }
@@ -383,7 +395,7 @@ export default function NGXLiveChart() {
             position: absolute;
             bottom: 30px; 
             left: 10px;
-            font-size: 17px;
+            font-size: 17px; 
             font-weight: 700;
             font-style: italic;
             color: rgba(255, 255, 255, 0.4);
