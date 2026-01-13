@@ -2,98 +2,98 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; 
+export const maxDuration = 60; // دقيقة واحدة كافية للتحديث
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// نفس العملات التي استخدمناها في السكريبت (Binance Pairs)
 const SECTORS = [
-  { key: 'NAM', ids: ['ethereum-name-service', 'space-id', 'bonfida'] },
-  { key: 'ART', ids: ['apecoin', 'blur', 'render-token'] },
-  { key: 'GAM', ids: ['immutable-x', 'gala', 'beam-2'] },
-  { key: 'UTL', ids: ['decentraland', 'the-sandbox', 'highstreet'] }
+  { key: 'NAM', symbols: ['ENSUSDT', 'IDUSDT', 'FIDAUSDT'] },
+  { key: 'ART', symbols: ['APEUSDT', 'BLURUSDT', 'RNDRUSDT'] },
+  { key: 'GAM', symbols: ['IMXUSDT', 'GALAUSDT', 'BEAMXUSDT'] },
+  { key: 'UTL', symbols: ['MANAUSDT', 'SANDUSDT', 'HIGHUSDT'] }
 ];
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-async function fetchCoinGeckoHistory(coinId: string, days: string | number) {
+// دالة خفيفة تجلب آخر شمعتين فقط للتحديث المستمر
+async function fetchBinanceRecent(symbol: string) {
   try {
-    const url = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`;
+    // نطلب آخر شمعتين (اليوم وأمس) لضمان تحديث الشمعة الحالية وإغلاق الشمعة السابقة
+    const url = `https://data-api.binance.vision/api/v3/klines?symbol=${symbol}&interval=1d&limit=2`;
     const res = await fetch(url, { cache: 'no-store' });
     
     if (!res.ok) {
-        console.error(`Error fetching ${coinId}: ${res.status}`);
-        return null;
+        // محاولة بديلة في حال فشل Vision API (للسيرفرات الأمريكية)
+        const fallbackUrl = `https://api.binance.us/api/v3/klines?symbol=${symbol}&interval=1d&limit=2`;
+        const fallbackRes = await fetch(fallbackUrl, { cache: 'no-store' });
+        if (fallbackRes.ok) {
+            const data = await fallbackRes.json();
+            return data.map((d: any) => ({ time: Math.floor(d[0] / 1000), vol: parseFloat(d[5]) }));
+        }
+        return [];
     }
 
     const data = await res.json();
-    if (!data.total_volumes || !Array.isArray(data.total_volumes)) return null;
+    if (!Array.isArray(data)) return [];
 
-    return data.total_volumes.map((item: any[]) => ({
-      time: Math.floor(item[0] / 1000), 
-      vol: item[1]
+    return data.map((d: any) => ({
+      time: Math.floor(d[0] / 1000), 
+      vol: parseFloat(d[5])
     }));
-
   } catch (e) {
-    console.error(`Exception fetching ${coinId}:`, e);
-    return null;
+    console.error(`Error fetching update for ${symbol}:`, e);
+    return [];
   }
 }
 
 export async function GET(request: Request) {
   try {
-    const { count } = await supabase.from('ngx_volume_index').select('*', { count: 'exact', head: true });
-    
-    // التعديل هنا: إذا كان تأسيس، اطلب "max" (كل السنوات)، وإذا تحديث اطلب يوم واحد
-    const isSeeding = count === 0;
-    const DAYS = isSeeding ? 'max' : 1; 
-
     const recordsToUpsert: any[] = [];
 
     for (const sector of SECTORS) {
       const allVolumes: Record<number, number> = {};
       let hasData = false;
 
-      for (const coinId of sector.ids) {
-        const history = await fetchCoinGeckoHistory(coinId, DAYS);
-        
-        if (history) {
+      // 1. جلب البيانات الحديثة لكل عملة
+      for (const symbol of sector.symbols) {
+        const history = await fetchBinanceRecent(symbol);
+        if (history.length > 0) {
             hasData = true;
             history.forEach((h: any) => {
-                const roundedTime = Math.floor(h.time / 3600) * 3600;
+                // توحيد التوقيت (منتصف الليل)
+                const roundedTime = Math.floor(h.time / 86400) * 86400;
                 allVolumes[roundedTime] = (allVolumes[roundedTime] || 0) + h.vol;
             });
         }
-        if (isSeeding) await delay(1500); 
       }
 
       if (!hasData) continue;
-
       const sortedTimes = Object.keys(allVolumes).map(Number).sort((a, b) => a - b);
-      if (sortedTimes.length === 0) continue;
 
-      let baseVolume = 0;
+      // 2. جلب "قيمة الأساس" (Base Volume) من أول سجل في التاريخ
+      // هذا ضروري لكي يتم حساب المؤشر بنفس معيار الـ 8000 يوم السابقة
+      const { data: firstRec } = await supabase
+        .from('ngx_volume_index')
+        .select('volume_raw, index_value')
+        .eq('sector_key', sector.key)
+        .order('timestamp', { ascending: true }) // الأقدم أولاً
+        .limit(1)
+        .single();
 
-      if (isSeeding) {
-         baseVolume = allVolumes[sortedTimes[0]] || 1;
+      let baseVolume = 1;
+      if (firstRec && firstRec.volume_raw > 0) {
+         // استخراج معامل الأساس: (Volume / Index) * 100
+         // أو ببساطة: إذا كان المؤشر = (Vol / Base) * 100
+         // إذن Base = (Vol * 100) / Index
+         baseVolume = (firstRec.volume_raw * 100) / firstRec.index_value;
       } else {
-         const { data: firstRec } = await supabase
-            .from('ngx_volume_index')
-            .select('volume_raw, index_value')
-            .eq('sector_key', sector.key)
-            .order('timestamp', { ascending: true })
-            .limit(1)
-            .single();
-            
-         if (firstRec && firstRec.volume_raw > 0) {
-            baseVolume = (firstRec.volume_raw * 100) / firstRec.index_value; 
-         } else {
-            baseVolume = allVolumes[sortedTimes[0]] || 1; 
-         }
+         // في حالة نادرة جداً (الجدول فارغ)، نعتبر الحجم الحالي هو الأساس
+         baseVolume = allVolumes[sortedTimes[0]] || 1;
       }
 
+      // 3. حساب قيمة المؤشر الجديدة
       sortedTimes.forEach(t => {
         const rawVol = allVolumes[t];
         const indexVal = baseVolume > 0 ? (rawVol / baseVolume) * 100 : 0;
@@ -107,6 +107,7 @@ export async function GET(request: Request) {
       });
     }
 
+    // 4. حساب تحديث قطاع ALL
     const recordsByTime: Record<number, { sum: number, count: number }> = {};
     recordsToUpsert.forEach(r => {
         if (!recordsByTime[r.timestamp]) recordsByTime[r.timestamp] = { sum: 0, count: 0 };
@@ -117,7 +118,8 @@ export async function GET(request: Request) {
     Object.keys(recordsByTime).forEach(tStr => {
         const t = Number(tStr);
         const { sum, count } = recordsByTime[t];
-        if (count >= 2) { 
+        // نقبل التحديث حتى لو لقطاع واحد لضمان الاستمرارية، لكن الأفضل اكتمال البيانات
+        if (count >= 1) { 
             recordsToUpsert.push({
                 sector_key: 'ALL',
                 timestamp: t,
@@ -127,25 +129,23 @@ export async function GET(request: Request) {
         }
     });
 
+    // 5. الحفظ في قاعدة البيانات
     if (recordsToUpsert.length > 0) {
-      const chunkSize = 1000;
-      for (let i = 0; i < recordsToUpsert.length; i += chunkSize) {
-        const chunk = recordsToUpsert.slice(i, i + chunkSize);
-        const { error } = await supabase
-            .from('ngx_volume_index')
-            .upsert(chunk, { onConflict: 'sector_key, timestamp' });
-        if (error) console.error('Supabase Insert Error:', error);
-      }
+      const { error } = await supabase
+        .from('ngx_volume_index')
+        .upsert(recordsToUpsert, { onConflict: 'sector_key, timestamp' });
+      
+      if (error) throw error;
     }
 
     return NextResponse.json({ 
         success: true, 
-        source: 'CoinGecko',
-        mode: isSeeding ? 'SEEDING' : 'UPDATE', 
-        records: recordsToUpsert.length 
+        source: 'Binance (Live Update)', 
+        recordsUpdated: recordsToUpsert.length 
     });
 
   } catch (error: any) {
+    console.error("Cron Update Error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
