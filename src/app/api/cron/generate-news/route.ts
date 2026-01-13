@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // السماح بدقيقة كاملة للتنفيذ لأن GPT قد يأخذ وقتاً
+export const maxDuration = 60; // السماح بدقيقة كاملة للتنفيذ
 
 // 1. إعدادات الاتصال
 const supabase = createClient(
@@ -17,18 +17,18 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// 2. تعريفات البيانات (نفس العملات المستخدمة في مؤشراتك)
+// 2. تعريفات البيانات
 const TOKENS = {
     nam: ['ethereum-name-service', 'space-id', 'bonfida'],
     art: ['apecoin', 'blur', 'render-token'],
     gam: ['immutable-x', 'gala', 'beam-2'],
     utl: ['decentraland', 'the-sandbox', 'highstreet'],
-    market: ['ethereum', 'matic-network'] // ETH & POL
+    market: ['ethereum', 'matic-network']
 };
 
 // --- Helper Functions (Logic Core) ---
 
-// حساب نسبة تغير فوليوم البورصة الداخلي (نفس المنطق الدقيق الأصلي)
+// حساب نسبة تغير فوليوم البورصة الداخلي
 async function getNNMInternalVolume() {
     try {
         const now = new Date();
@@ -72,10 +72,8 @@ async function getNNMInternalVolume() {
 }
 
 // *** المنطق الجديد لاختيار الصور بالتسلسل ***
-// يبحث عن الصورة رقم (عدد المقالات + 1).jpg، إذا لم يجدها يستخدم A1.jpg
 async function getSequentialImage() {
     try {
-        // 1. معرفة عدد المقالات الحالي في الموقع
         const { count, error } = await supabase
             .from('news_posts')
             .select('*', { count: 'exact', head: true });
@@ -86,22 +84,21 @@ async function getSequentialImage() {
         }
 
         const currentCount = count || 0;
-        const nextImageNumber = currentCount + 1; // الصورة المطلوبة هي العدد الحالي + 1
+        const nextImageNumber = currentCount + 1;
         
-        // 2. التحقق هل الصورة موجودة فعلياً في المجلد؟
         const expectedFileName = `${nextImageNumber}.jpg`;
         const dirPath = path.join(process.cwd(), 'public', 'news-assets');
         const fullPath = path.join(dirPath, expectedFileName);
 
         if (fs.existsSync(fullPath)) {
-            return expectedFileName; // وجدنا الصورة الجديدة المتسلسلة
+            return expectedFileName;
         } else {
-            return 'A1.jpg'; // لم نجد صورة جديدة، نعود للصورة الافتراضية
+            return 'A1.jpg';
         }
 
     } catch (error) {
         console.error('Image selection error:', error);
-        return 'A1.jpg'; // في حال حدوث أي خطأ نضمن وجود صورة
+        return 'A1.jpg';
     }
 }
 
@@ -109,7 +106,6 @@ export async function GET() {
     try {
         // --- A. تجميع البيانات الحية (Data Aggregation) ---
         
-        // 1. جلب بيانات CoinGecko لجميع العملات
         const allIds = [
             ...TOKENS.nam, ...TOKENS.art, ...TOKENS.gam, ...TOKENS.utl, ...TOKENS.market
         ].join(',');
@@ -120,7 +116,7 @@ export async function GET() {
         );
         const cgData = await cgResponse.json();
 
-        // 2. حساب أداء القطاعات
+        // حساب أداء القطاعات
         const calculateSector = (ids: string[], name: string) => {
             let totalChange = 0;
             let count = 0;
@@ -133,67 +129,73 @@ export async function GET() {
             return { name, change: count ? (totalChange / count) : 0 };
         };
 
+        // هنا نستخدم أسماء عامة للكود، لكن في البرومبت سنعطي الأسماء السوقية الدقيقة
         const sectors = [
-            calculateSector(TOKENS.nam, 'Digital Names (DNA)'),
+            calculateSector(TOKENS.nam, 'Digital Names'),
             calculateSector(TOKENS.art, 'Digital Art'),
             calculateSector(TOKENS.gam, 'Gaming Assets'),
             calculateSector(TOKENS.utl, 'Virtual Land')
         ];
 
-        // ترتيب القطاعات
         sectors.sort((a, b) => b.change - a.change);
         const topSector = sectors[0];
         const lowSector = sectors[sectors.length - 1];
 
-        // 3. بيانات السوق العامة
         const ethPrice = cgData['ethereum']?.usd || 0;
         const ethChange = cgData['ethereum']?.usd_24h_change || 0;
         const polPrice = cgData['matic-network']?.usd || 0;
 
-        // 4. حالة السوق (السياق)
         const ngxMomentum = (sectors.reduce((acc, curr) => acc + curr.change, 0) / 4); 
         let marketMood = 'Neutral';
         if (ngxMomentum > 2) marketMood = 'Greed / High Demand';
         else if (ngxMomentum < -2) marketMood = 'Fear / Correction';
 
-        // 5. بيانات البورصة الداخلية (NNM Volume) - المعادلة الأصلية
         const nnmInternal = await getNNMInternalVolume();
-
-        // 6. اختيار الصورة (المنطق التسلسلي الجديد)
         const selectedImageFilename = await getSequentialImage();
 
 
-        // --- B. هندسة البرومبت (The Prompt Engineering) ---
+        // --- B. هندسة البرومبت SEO Professional (The SEO Engine) ---
         
+        // تعليمات النظام: نحدد شخصية الخبير في الـ SEO والسوق
         const systemPrompt = `
-        You are a senior crypto market analyst writing for "NNM News". 
-        Your goal is to write a sophisticated, narrative-driven article (NOT a listicle) based on real-time data.
+        You are a senior crypto market analyst and SEO Strategist for "NNM News".
+        Your goal is to write a sophisticated, narrative-driven market update that ranks #1 on Google for NFT and Web3 terms.
         
         Style Guide:
-        - Tone: Professional, Insightful, Wall Street Journal style.
-        - Structure: Start with the "Lead Story" (the biggest mover), then weave in other data points naturally.
-        - Philosophy: Promote the "Nexus Shift" (the move from speculation to utility/infrastructure).
-        - No Bullet Points: Use flowing paragraphs.
-        - Length: 300-400 words (HTML format).
+        - Tone: Professional, Authoritative (like Bloomberg/TechCrunch), yet engaging.
+        - Structure: Flowing narrative paragraphs (No bullet points).
+        - SEO Strategy: Use "Contextual Injection" to weave in high-value keywords naturally without sounding robotic.
         `;
 
+        // تعليمات المستخدم: نحدد البيانات والكلمات المفتاحية الإجبارية
         const userPrompt = `
         Write a market report based on this LIVE data:
         
-        1. **Top Story**: The ${topSector.name} sector is leading the market with a ${topSector.change.toFixed(2)}% move.
-        2. **Lagging Sector**: ${lowSector.name} is showing weakness/consolidation at ${lowSector.change.toFixed(2)}%.
-        3. **General Market**: ETH is at $${ethPrice} (${ethChange.toFixed(2)}%), POL is at $${polPrice}. Market Mood: ${marketMood}.
-        4. **NNM Internal Data (CRITICAL)**: Our local exchange volume change in the last 24h is ${nnmInternal.change}%. 
-           - If positive: Hype it as organic growth independent of the global market.
-           - If negative: Frame it as a consolidation phase before the next leg up.
-        
+        1. **Lead Story**: The ${topSector.name} sector is leading with ${topSector.change.toFixed(2)}%.
+        2. **Lagging**: ${lowSector.name} is at ${lowSector.change.toFixed(2)}%.
+        3. **Market**: ETH $${ethPrice}, POL $${polPrice}. Mood: ${marketMood}.
+        4. **Internal Growth**: NNM Protocol volume change: ${nnmInternal.change}%.
+
+        **MANDATORY SEO VOCABULARY (Must include naturally):**
+        - You MUST use the term **"NNM Protocol"** and **"NNM Registry"** as the authoritative source of data.
+        - You MUST use the verbs **"Mint"** or **"Minted"** when describing creation or growth (e.g., "assets being minted", "fresh supply minted").
+        - You MUST use the word **"NFTs"** (plural) at least 3 times.
+        - You MUST use the word **"NFT"** (singular) at least once.
+        - You MUST mention **"Visual Identity"** assets.
+
+        **MARKET TERMINOLOGY (Use these specific terms for sectors):**
+        - When discussing Names: Use **"Digital Names"**, **"Web3 Domains"**, or **"Identity Assets"**.
+        - When discussing Land: Use **"Virtual Land"** or **"Metaverse Real Estate"**.
+        - When discussing Art: Use **"Digital Art"** or **"Blue-Chip NFTs"**.
+        - When discussing Games: Use **"Gaming Assets"** or **"GameFi"**.
+
         **Requirements**:
-        - Create a catchy, professional Title.
-        - Create a short Summary (2 sentences max).
-        - Write the full Content in clean HTML (use <p>, <h3>, <strong> only). 
-        - Mention "NNM" and the "NGX Index" as the source of truth.
+        - Title: Catchy, includes "NFT" or "Web3".
+        - Summary: 2 sentences max, engaging.
+        - Content: 300-350 words, clean HTML (<p>, <h3>, <strong>).
+        - **Crucial**: Make the keywords flow naturally. Do not list them.
         
-        Output JSON format: { "title": "...", "summary": "...", "content": "..." }
+        Output JSON: { "title": "...", "summary": "...", "content": "..." }
         `;
 
         // --- C. استدعاء الذكاء الاصطناعي ---
@@ -211,7 +213,6 @@ export async function GET() {
 
         // --- D. حفظ المقال في قاعدة البيانات ---
 
-        // نستخدم الصورة التي حددها الكود مسبقاً
         const imagePath = `/news-assets/${selectedImageFilename}`;
 
         const { error: insertError } = await supabase
