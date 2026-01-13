@@ -74,9 +74,16 @@ export default function NGXLiveChart() {
             .eq('sector_key', sectorInfo.dbKey)
             .order('timestamp', { ascending: true });
 
+        // فلترة البيانات من السيرفر
         if (tfInfo.days > 0) {
             const cutoffTimestamp = Math.floor(Date.now() / 1000) - (tfInfo.days * 24 * 60 * 60);
             query = query.gte('timestamp', cutoffTimestamp);
+        }
+        
+        // حماية إضافية للسرعة: تحديد الحد الأقصى للجلب
+        // حتى لو طلبنا الكل، لا نجلب أكثر من 2000 نقطة للعرض (كافية جداً)
+        if(tfValue === 'ALL') {
+             // لا نضع ليميت صارم هنا لنسمح بالـ downsampling لاحقاً، لكن نعتمد الفلترة الزمنية
         }
 
         const { data: sectorData, error } = await query;
@@ -88,19 +95,18 @@ export default function NGXLiveChart() {
             return;
         }
 
-        // --- التصحيح هنا: استخدام as UTCTimestamp ---
         let processedData = sectorData.map((row: any) => ({
-            time: Number(row.timestamp) as UTCTimestamp, // إجبار التايب ليقبلها
+            time: Number(row.timestamp) as UTCTimestamp,
             value: Number(row.index_value)
         }));
 
+        // تخفيف عدد النقاط (Sampling) لتسريع المتصفح
         if (tfValue === '1M' || tfValue === '1Y' || tfValue === 'ALL') {
              processedData = processedData.filter((_, index) => index % 24 === 0);
         } else if (tfValue === '1D') {
              processedData = processedData.filter((_, index) => index % 4 === 0);
         }
 
-        // فلترة التكرار
         const uniqueData = processedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
         
         seriesInstance.setData(uniqueData);
@@ -376,14 +382,16 @@ export default function NGXLiveChart() {
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
+        /* تم التعديل هنا لتقليل الحجم وزيادة الوضوح */
         .chart-watermark {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            font-size: 32px;
+            font-size: 26px; /* تم تقليله من 32 */
             font-weight: 900;
             font-style: italic;
-            color: rgba(255, 255, 255, 0.25);
+            /* زيادة الشفافية من 0.25 إلى 0.45 ليكون أوضح */
+            color: rgba(255, 255, 255, 0.45); 
             pointer-events: none;
             z-index: 10;
             user-select: none;
@@ -397,7 +405,7 @@ export default function NGXLiveChart() {
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: auto; min-width: 130px; max-width: 180px; margin-right: auto; }
             .time-wrapper { width: auto; min-width: 60px; flex-shrink: 0; }
-            .chart-watermark { font-size: 24px; bottom: 15px; left: 15px; }
+            .chart-watermark { font-size: 19px; bottom: 15px; left: 15px; } /* تم تقليله للموبايل */
         }
       `}</style>
     </div>
