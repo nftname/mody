@@ -15,14 +15,14 @@ const SECTORS = [
   { key: 'Utility NFT', dbKey: 'UTL', color: '#00D8D6' }         
 ];
 
+// تعديل منطق الأيام ليكون الفارق واضحاً بين الفلاتر
 const TIMEFRAMES = [
-    { label: '1H', value: '1H', days: 1 },    
-    { label: '4H', value: '4H', days: 7 },    
-    { label: '1D', value: '1D', days: 30 },   
-    { label: '1W', value: '1W', days: 90 },   
-    { label: '1M', value: '1M', days: 180 },  
-    { label: '1Y', value: '1Y', days: 365 },  
-    { label: 'ALL', value: 'ALL', days: 0 }   
+    { label: '1H', value: '1H', days: 1 },      // عرض يوم واحد (بيانات ساعية)
+    { label: '4H', value: '4H', days: 7 },      // عرض أسبوع (بيانات ساعية)
+    { label: '1D', value: '1D', days: 30 },     // عرض شهر (بيانات 4 ساعات)
+    { label: '1W', value: '1W', days: 90 },     // عرض ربع سنة (بيانات يومية)
+    { label: '1M', value: '1M', days: 365 },    // عرض سنة (بيانات يومية)
+    { label: 'ALL', value: 'ALL', days: 0 }     // عرض كل التاريخ (بيانات يومية)
 ];
 
 function useClickOutside(ref: any, handler: any) {
@@ -43,7 +43,7 @@ function useClickOutside(ref: any, handler: any) {
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   
-  const [activeTimeframe, setActiveTimeframe] = useState('1D');
+  const [activeTimeframe, setActiveTimeframe] = useState('1D'); // الافتراضي 1 شهر
   const [activeSector, setActiveSector] = useState(SECTORS[0].key);
   
   const [chartInstance, setChartInstance] = useState<any>(null);
@@ -114,17 +114,13 @@ export default function NGXLiveChart() {
         visible: true,
         timeVisible: true,
         secondsVisible: false,
-        // إعدادات المسافة لتناسب الساعات
         barSpacing: 6,
         minBarSpacing: 0.5,
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true,
-        scaleMargins: {
-            top: 0.2, 
-            bottom: 0.1,
-        },
+        scaleMargins: { top: 0.2, bottom: 0.1 },
       },
       crosshair: { mode: CrosshairMode.Normal },
       localization: { locale: 'en-US' },
@@ -180,27 +176,46 @@ export default function NGXLiveChart() {
             bottomColor: `${currentSector.color}00`, 
         });
 
-        const isIntraday = ['1H', '4H'].includes(activeTimeframe);
+        // 1. تحديد نوع الفلترة (Resolution) بناءً على الفترة الزمنية
+        // هذا هو "السر" لجعل الفلاتر تختلف عن بعضها
+        let resolution = 1; // الافتراضي: كل الساعات (1H, 4H)
         
+        if (activeTimeframe === '1D') {
+             // عند عرض شهر، خذ نقطة كل 4 ساعات لتخفيف الرسم قليلاً
+             resolution = 4; 
+        } else if (['1W', '1M', 'ALL'].includes(activeTimeframe)) {
+             // عند عرض سنوات أو شهور طويلة، خذ نقطة واحدة في اليوم (كل 24 ساعة)
+             // هذا يجعل الرسم ناعماً جداً وواضحاً للمدى الطويل
+             resolution = 24; 
+        }
+
+        const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
+        let filteredData = chartData;
+
+        // تطبيق فلترة الوقت (قص التاريخ)
+        if (tf && tf.days > 0) {
+            const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
+            filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
+        }
+
+        // تطبيق فلترة الكثافة (Resolution Sampling)
+        if (resolution > 1) {
+            filteredData = filteredData.filter((_, index) => index % resolution === 0);
+        }
+
+        // ضبط محور الوقت بناءً على الفلتر
+        const isIntraday = ['1H', '4H'].includes(activeTimeframe);
         chartInstance.applyOptions({
             timeScale: {
                 tickMarkFormatter: (time: number) => {
                     const date = new Date(time * 1000);
                     if (isIntraday) {
-                        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
                     }
-                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: activeTimeframe === 'ALL' ? '2-digit' : undefined });
                 }
             }
         });
-
-        const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
-        let filteredData = chartData;
-
-        if (tf && tf.days > 0) {
-            const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
-            filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
-        }
 
         seriesInstance.setData(filteredData);
         chartInstance.timeScale().fitContent();
@@ -291,7 +306,9 @@ export default function NGXLiveChart() {
         </div>
       </div>
 
-      <div ref={chartContainerRef} className="chart-canvas-wrapper" />
+      <div ref={chartContainerRef} className="chart-canvas-wrapper">
+          <div className="chart-watermark">NNM</div>
+      </div>
       
       <div className="text-end px-2 pb-2">
           <small className="text-muted fst-italic" style={{ fontSize: '10px' }}>
@@ -313,7 +330,8 @@ export default function NGXLiveChart() {
             overflow: hidden;
         }
         .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
-        .chart-canvas-wrapper { width: 100%; height: 400px; }
+        
+        .chart-canvas-wrapper { width: 100%; height: 400px; position: relative; }
         .filters-container {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 15px; padding: 0 10px; position: relative; z-index: 50;
@@ -326,7 +344,10 @@ export default function NGXLiveChart() {
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .filter-wrapper { position: relative; }
-        .sector-wrapper { width: auto; min-width: 200px; max-width: 280px; }
+        
+        /* ضبط العرض لتجنب التداخل */
+        .sector-wrapper { width: auto; min-width: 150px; max-width: 200px; } 
+        
         .time-wrapper { width: auto; min-width: 70px; }
         .custom-select-trigger {
             display: flex; justify-content: space-between; align-items: center;
@@ -356,13 +377,28 @@ export default function NGXLiveChart() {
         .custom-option:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
+
+        .chart-watermark {
+            position: absolute;
+            bottom: 15px;
+            left: 20px;
+            font-size: 28px;
+            font-weight: 800;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+            z-index: 10;
+            user-select: none;
+        }
+
         @media (max-width: 768px) {
             .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
             .chart-canvas-wrapper { height: 350px !important; }
             .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
-            .sector-wrapper { flex-grow: 0; width: 55%; max-width: 190px; margin-right: auto; }
+            .sector-wrapper { flex-grow: 0; width: auto; min-width: 130px; max-width: 180px; margin-right: auto; }
             .time-wrapper { width: auto; min-width: 60px; flex-shrink: 0; }
+            .chart-watermark { font-size: 20px; bottom: 10px; left: 15px; }
         }
       `}</style>
     </div>
