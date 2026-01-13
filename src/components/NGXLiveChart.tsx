@@ -1,29 +1,35 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const SECTORS = [
-  { key: 'All NFT Index', dbKey: 'ALL', color: '#C0D860' },     
-  { key: 'Digital Name Assets', dbKey: 'NAM', color: '#38BDF8' }, 
-  { key: 'Art NFT', dbKey: 'ART', color: '#7B61FF' },            
-  { key: 'Gaming NFT', dbKey: 'GAM', color: '#0ECB81' },        
-  { key: 'Utility NFT', dbKey: 'UTL', color: '#00D8D6' }         
+  { key: 'All NFT Index', dbKey: 'ALL', color: '#C0D860' },
+  { key: 'Digital Name Assets', dbKey: 'NAM', color: '#38BDF8' },
+  { key: 'Art NFT', dbKey: 'ART', color: '#7B61FF' },
+  { key: 'Gaming NFT', dbKey: 'GAM', color: '#0ECB81' },
+  { key: 'Utility NFT', dbKey: 'UTL', color: '#00D8D6' }
 ];
 
-// إعدادات الفترات الزمنية
 const TIMEFRAMES = [
-    { label: '1H', value: '1H', days: 1 },      
-    { label: '4H', value: '4H', days: 7 },      
-    { label: '1D', value: '1D', days: 30 },     
-    { label: '1W', value: '1W', days: 90 },     
-    { label: '1M', value: '1M', days: 365 },    
-    { label: 'ALL', value: 'ALL', days: 0 }     
+    { label: '1H', value: '1H', days: 1 },
+    { label: '4H', value: '4H', days: 7 },
+    { label: '1D', value: '1D', days: 30 },
+    { label: '1W', value: '1W', days: 90 },
+    { label: '1M', value: '1M', days: 365 },
+    { label: 'ALL', value: 'ALL', days: 0 }
 ];
+
+// دالة مساعدة لدمج البيانات الجديدة (القديمة زمنياً) مع الحالية
+function mergeData(currentData: any[], newData: any[]) {
+    const existingTimes = new Set(currentData.map(d => d.time));
+    const uniqueNewData = newData.filter(d => !existingTimes.has(d.time));
+    return [...uniqueNewData, ...currentData].sort((a, b) => (a.time as number) - (b.time as number));
+}
 
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
@@ -43,12 +49,17 @@ function useClickOutside(ref: any, handler: any) {
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   
-  const [activeTimeframe, setActiveTimeframe] = useState('1D'); 
+  const [activeTimeframe, setActiveTimeframe] = useState('1D');
   const [activeSector, setActiveSector] = useState(SECTORS[0].key);
   
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
+  
+  // حالة التحميل وتخزين البيانات
   const [isLoading, setIsLoading] = useState(false);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [hasMoreHistory, setHasMoreHistory] = useState(true); // هل يوجد بيانات أقدم؟
+  const isFetchingRef = useRef(false); // لمنع التكرار أثناء السحب
 
   const [isSectorOpen, setIsSectorOpen] = useState(false);
   const [isTimeOpen, setIsTimeOpen] = useState(false);
@@ -59,73 +70,107 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  const fetchAndDraw = async (sectorKey: string, tfValue: string) => {
-    if(!seriesInstance || !chartInstance) return;
-    
+  // --- دالة جلب البيانات (الأساسية + التحميل الكسول) ---
+  const fetchHistory = useCallback(async (sectorKey: string, tfValue: string, endTime?: number) => {
+    // إذا كنا نحمل حالياً، لا تكرر الطلب
+    if (isFetchingRef.current) return null;
+    isFetchingRef.current = true;
     setIsLoading(true);
+
     const sectorInfo = SECTORS.find(s => s.key === sectorKey);
-    const tfInfo = TIMEFRAMES.find(t => t.value === tfValue);
-    
-    if (!sectorInfo || !tfInfo) return;
+    if (!sectorInfo) {
+        isFetchingRef.current = false;
+        setIsLoading(false);
+        return null;
+    }
 
     try {
         let query = supabase
             .from('ngx_volume_index')
             .select('timestamp, index_value')
             .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: true }); // ترتيب تصاعدي
+            .order('timestamp', { ascending: false }); // نجلب من الأحدث للأقدم
 
-        // 1. فلترة الزمن (Server-Side)
-        if (tfInfo.days > 0) {
-            const cutoffTimestamp = Math.floor(Date.now() / 1000) - (tfInfo.days * 24 * 60 * 60);
-            query = query.gte('timestamp', cutoffTimestamp);
+        // إذا كان لدينا وقت نهاية (لجلب ما قبله)
+        if (endTime) {
+            query = query.lt('timestamp', endTime);
         }
-        
-        // 2. 🔥 تحديد سقف البيانات (Limit)
-        // هذا هو الحل الجذري للبطء. نمنع جلب أكثر من 2500 نقطة.
-        // المتصفح لا يستطيع رسم 200 ألف نقطة بسلاسة، لذلك نحدد الكمية.
-        query = query.limit(2500);
+
+        // الحد الأقصى للجلب في المرة الواحدة (Chunk Size)
+        // 1000 نقطة خفيفة جداً وسريعة
+        query = query.limit(1000);
 
         const { data: sectorData, error } = await query;
         if (error) throw error;
 
-        if(!sectorData || sectorData.length === 0) {
-            seriesInstance.setData([]);
-            setIsLoading(false);
-            return;
+        if (!sectorData || sectorData.length === 0) {
+            setHasMoreHistory(false); // لا يوجد بيانات أقدم
+            return [];
         }
 
-        // تحويل البيانات وتجهيزها
+        // تنسيق البيانات
         let processedData = sectorData.map((row: any) => ({
             time: Number(row.timestamp) as UTCTimestamp,
             value: Number(row.index_value)
         }));
 
-        // 3. تخفيف الكثافة (Downsampling) للفترات الطويلة
-        if (tfValue === '1M' || tfValue === '1Y' || tfValue === 'ALL') {
-             // للفترات الطويلة جداً، نعرض نقطة واحدة كل 24 ساعة لتسريع الرسم
+        // الترتيب الزمني الصحيح (للرسم البياني يحتاج تصاعدي)
+        processedData.sort((a: any, b: any) => a.time - b.time);
+
+        // تخفيف الكثافة (Sampling) للفترات الطويلة فقط لتقليل الحمل
+        if (tfValue === 'ALL' || tfValue === '1Y') {
              processedData = processedData.filter((_, index) => index % 24 === 0);
-        } else if (tfValue === '1D') {
-             processedData = processedData.filter((_, index) => index % 4 === 0);
         }
 
-        // إزالة التكرار
-        const uniqueData = processedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
-        
-        seriesInstance.setData(uniqueData);
-        chartInstance.timeScale().fitContent();
+        return processedData;
 
     } catch (err) {
         console.error("Failed to fetch history:", err);
+        return [];
     } finally {
+        isFetchingRef.current = false;
         setIsLoading(false);
     }
+  }, []);
+
+  // --- دالة التهيئة الأولية (عند تغيير الفلتر أو القطاع) ---
+  const initChartData = async () => {
+      setChartData([]); // تصفير البيانات
+      setHasMoreHistory(true);
+      
+      // جلب أول دفعة (الأحدث)
+      const newData = await fetchHistory(activeSector, activeTimeframe);
+      if (newData && newData.length > 0) {
+          setChartData(newData);
+          if (seriesInstance) {
+              seriesInstance.setData(newData);
+              chartInstance?.timeScale().fitContent();
+          }
+      }
   };
 
-  // استدعاء البيانات عند تغيير الفلاتر
-  useEffect(() => {
-      fetchAndDraw(activeSector, activeTimeframe);
-  }, [activeSector, activeTimeframe, seriesInstance]);
+  // --- دالة تحميل المزيد عند السحب (Load More) ---
+  const loadMoreData = async () => {
+      if (!hasMoreHistory || chartData.length === 0) return;
+
+      // نأخذ أقدم وقت لدينا حالياً
+      const oldestTime = chartData[0].time; 
+      
+      // نجلب ما قبله
+      const olderData = await fetchHistory(activeSector, activeTimeframe, oldestTime);
+      
+      if (olderData && olderData.length > 0) {
+          // دمج البيانات القديمة مع الحالية
+          const merged = mergeData(chartData, olderData);
+          setChartData(merged);
+          if (seriesInstance) {
+              seriesInstance.setData(merged);
+              // لا نعمل fitContent هنا لكي لا يقفز الرسم، المستخدم هو من يسحب
+          }
+      } else {
+          setHasMoreHistory(false);
+      }
+  };
 
   // تهيئة الرسم البياني
   useEffect(() => {
@@ -174,6 +219,18 @@ export default function NGXLiveChart() {
     setChartInstance(chart);
     setSeriesInstance(newSeries);
 
+    // --- مراقب السحب (Infinite Scroll Observer) ---
+    // هذه هي القطعة السحرية التي تجلب البيانات عند الوصول لليسار
+    chart.timeScale().subscribeVisibleLogicalRangeChange((newVisibleLogicalRange) => {
+        if (!newVisibleLogicalRange) return;
+        
+        // إذا اقترب المستخدم من بداية البيانات (اليسار)
+        if (newVisibleLogicalRange.from < 10) { 
+            // نجلب المزيد
+            loadMoreData();
+        }
+    });
+
     const handleResize = () => {
       if (chartContainerRef.current) {
         const isMobile = window.innerWidth <= 768;
@@ -192,9 +249,18 @@ export default function NGXLiveChart() {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, []);
+  }, []); 
+  // ملاحظة: الـ useEffect هذا يعمل مرة واحدة عند التحميل، 
+  // دوال الجلب مربوطة بحالة المكون (Refs/State)
 
-  // تحديث التنسيقات عند التغيير
+  // عند تغيير الفلتر أو القطاع، نعيد التهيئة
+  useEffect(() => {
+      if(chartInstance && seriesInstance) {
+          initChartData();
+      }
+  }, [activeSector, activeTimeframe]);
+
+  // تحديث التنسيقات والوقت
   useEffect(() => {
     if (seriesInstance && chartInstance) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
@@ -215,7 +281,7 @@ export default function NGXLiveChart() {
                         return date.toLocaleTimeString('en-GB', { 
                             hour: '2-digit', 
                             minute: '2-digit', 
-                            hour12: false, // نظام 24 ساعة
+                            hour12: false, 
                             timeZone: 'UTC' 
                         });
                     }
@@ -231,16 +297,19 @@ export default function NGXLiveChart() {
     }
   }, [activeTimeframe, activeSector, seriesInstance, chartInstance]);
 
-  // تحديث تلقائي صامت كل دقيقة
+  // تحديث تلقائي (Live) للشمعة الحالية فقط
   useEffect(() => {
-      const interval = setInterval(() => {
-          const sectorInfo = SECTORS.find(s => s.key === activeSector);
-          if(sectorInfo && seriesInstance) {
-             fetchAndDraw(activeSector, activeTimeframe);
+      const interval = setInterval(async () => {
+          if(!seriesInstance) return;
+          // جلب بسيط لآخر شمعة فقط للتحديث
+          const latest = await fetchHistory(activeSector, activeTimeframe);
+          if (latest && latest.length > 0) {
+              const lastPoint = latest[latest.length - 1];
+              seriesInstance.update(lastPoint); // تحديث الشمعة الحالية دون إعادة رسم الكل
           }
-      }, 60000); 
+      }, 30000); // كل 30 ثانية
       return () => clearInterval(interval);
-  }, [activeSector, activeTimeframe]);
+  }, [activeSector, activeTimeframe, seriesInstance]);
 
   const currentColor = SECTORS.find(s => s.key === activeSector)?.color;
   const currentTimeframeLabel = TIMEFRAMES.find(t => t.value === activeTimeframe)?.label;
@@ -319,7 +388,7 @@ export default function NGXLiveChart() {
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper">
-          {/* العلامة المائية المحسنة: حجم أصغر (26px) وشفافية أعلى (0.45) */}
+          {/* العلامة المائية: حجم 26px وشفافية 0.45 */}
           <div className="chart-watermark">NNM</div>
       </div>
       
@@ -390,15 +459,14 @@ export default function NGXLiveChart() {
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
-        /* تعديلات العلامة المائية الجديدة */
         .chart-watermark {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            font-size: 26px; /* حجم أصغر */
+            font-size: 26px;
             font-weight: 900;
             font-style: italic;
-            color: rgba(255, 255, 255, 0.45); /* أكثر وضوحاً */
+            color: rgba(255, 255, 255, 0.45);
             pointer-events: none;
             z-index: 10;
             user-select: none;
