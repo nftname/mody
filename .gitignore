@@ -33,3 +33,5 @@ yarn-error.log
 scripts/
 *.json
 *.csv
+!vercel.json
+
