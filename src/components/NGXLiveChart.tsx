@@ -60,7 +60,7 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- 1. FETCH FROM DB (THE ONLY TRUTH) ---
+  // --- 1. جلب البيانات من الداتا بيز فقط ---
   const fetchHistory = async (sectorKey: string) => {
     if (chartData.length === 0) setIsLoading(true);
 
@@ -72,7 +72,7 @@ export default function NGXLiveChart() {
             .from('ngx_chart_history')
             .select('timestamp, value')
             .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: true }); // ترتيب صحيح للرسم
+            .order('timestamp', { ascending: true });
 
         if (error) throw error;
 
@@ -81,15 +81,12 @@ export default function NGXLiveChart() {
             return;
         }
 
-        // تحويل وتجهيز البيانات
         const formattedData = sectorData.map((row: any) => ({
-            time: Math.floor(row.timestamp / 1000), // Seconds
+            time: Math.floor(row.timestamp / 1000), 
             value: Number(row.value)
         }));
 
-        // تنظيف التكرار (هام جداً في حال تداخل البيانات القديمة والجديدة)
         const uniqueData = formattedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
-        
         setChartData(uniqueData);
 
     } catch (err) {
@@ -99,7 +96,7 @@ export default function NGXLiveChart() {
     }
   };
 
-  // --- 2. CHART INITIALIZATION ---
+  // --- 2. إعداد الشارت ---
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -108,7 +105,7 @@ export default function NGXLiveChart() {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#B0B0B0',
         fontFamily: '"Inter", sans-serif',
-        fontSize: 11,
+        fontSize: 10, // خط أصغر قليلاً ليناسب الموبايل
       },
       grid: {
         vertLines: { visible: false },
@@ -121,11 +118,11 @@ export default function NGXLiveChart() {
         visible: true,
         timeVisible: true,
         secondsVisible: false,
-        // تفعيل التمدد (Zoom/Scroll)
+        // تفعيل التمدد والزوم (Pro Features)
         fixLeftEdge: false, 
         fixRightEdge: false,
-        rightOffset: 12, // مساحة للمستقبل
-        minBarSpacing: 0.5,
+        rightOffset: 15,
+        minBarSpacing: 0.1,
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -139,30 +136,25 @@ export default function NGXLiveChart() {
             width: 1,
             style: 3,
             labelBackgroundColor: '#242424',
-            labelVisible: true,
         },
         horzLine: {
             color: 'rgba(255, 255, 255, 0.3)',
             width: 1,
             style: 3,
             labelBackgroundColor: '#242424',
-            labelVisible: true,
         },
       },
-      localization: { 
-          locale: 'en-US',
-      },
-      // تفعيل السحب والتحكم
+      // تفعيل التحكم باللمس والماوس
       handleScroll: { 
           vertTouchDrag: false,
-          horzTouchDrag: true, // السماح بالسحب الأفقي
+          horzTouchDrag: true, 
           pressedMouseMove: true,
           mouseWheel: true
       }, 
       handleScale: { 
           axisPressedMouseMove: true,
           mouseWheel: true,
-          pinch: true // زوم باللمس
+          pinch: true 
       },
     });
 
@@ -179,13 +171,15 @@ export default function NGXLiveChart() {
     const handleResize = () => {
       if (chartContainerRef.current) {
         const isMobile = window.innerWidth <= 768;
+        // تقليل الارتفاع في الموبايل لترك مساحة للتاريخ
         chart.applyOptions({ 
             width: chartContainerRef.current.clientWidth,
-            height: isMobile ? 350 : 400 
+            height: isMobile ? 320 : 400 
         });
       }
     };
     
+    handleResize(); // نداء فوري لضبط الحجم
     window.addEventListener('resize', handleResize);
     fetchHistory(SECTORS[0].key);
 
@@ -195,52 +189,46 @@ export default function NGXLiveChart() {
     };
   }, []);
 
-  // --- 3. RE-FETCH ON SECTOR CHANGE ---
+  // --- 3. إعادة الجلب ---
   useEffect(() => {
-    setChartData([]); // Clear old line
+    setChartData([]); 
     fetchHistory(activeSector);
   }, [activeSector]);
 
-  // --- 4. APPLY DATA & LOGIC ON TIMEFRAME CHANGE ---
+  // --- 4. المنطق الذكي للتاريخ والفلترة ---
   useEffect(() => {
     if (seriesInstance && chartInstance && chartData.length > 0) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
         if (!currentSector) return;
 
-        // Colors
         seriesInstance.applyOptions({
             lineColor: currentSector.color,
             topColor: `${currentSector.color}66`, 
             bottomColor: `${currentSector.color}00`, 
         });
 
-        // *** LOGIC: Smart Date Formatting ***
+        // *** تنسيق التواريخ الذكي (Smart Formatting) ***
         chartInstance.applyOptions({
             timeScale: {
                 tickMarkFormatter: (time: number) => {
                     const date = new Date(time * 1000);
-                    // 1. فريمات الساعة والأربع ساعات: عرض الوقت
-                    if (activeTimeframe === '1H' || activeTimeframe === '4H') {
+                    // 1. فريمات الساعة: عرض الوقت
+                    if (['1H', '4H'].includes(activeTimeframe)) {
                         return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
                     }
-                    // 2. الفريمات الطويلة (سنة/شهر/كل): عرض الشهر والسنة المختصرة
+                    // 2. فريمات السنة والكل: عرض الشهر والسنة (لإظهار السنة كما طلبت)
                     if (['1M', '1Y', 'ALL'].includes(activeTimeframe)) {
                          return `${date.toLocaleString('en-US', { month: 'short' })} '${date.getFullYear().toString().slice(-2)}`;
                     }
-                    // 3. الفريم اليومي/الاسبوعي: عرض الشهر واليوم
+                    // 3. الباقي: يوم وشهر
                     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 }
             },
             localization: {
-                // Tooltip Full Format
                 timeFormatter: (timestamp: number) => {
                      return new Date(timestamp * 1000).toLocaleString('en-US', { 
-                        year: 'numeric',
-                        month: 'short', 
-                        day: 'numeric', 
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                        hour12: false 
+                        year: 'numeric', month: 'short', day: 'numeric', 
+                        hour: '2-digit', minute: '2-digit', hour12: false 
                     }); 
                 }
             }
@@ -249,7 +237,6 @@ export default function NGXLiveChart() {
         const tf = TIMEFRAMES.find(t => t.value === activeTimeframe);
         let filteredData = chartData;
 
-        // فلترة البيانات
         if (tf && tf.days > 0) {
             const cutoffTime = Math.floor(Date.now() / 1000) - (tf.days * 24 * 60 * 60);
             filteredData = chartData.filter((d: any) => d.time >= cutoffTime);
@@ -260,12 +247,11 @@ export default function NGXLiveChart() {
     }
   }, [chartData, activeTimeframe, seriesInstance, chartInstance, activeSector]);
 
-  // --- 5. AUTO-REFRESH (Every 60s) ---
+  // --- 5. تحديث تلقائي ---
   useEffect(() => {
       const interval = setInterval(() => {
           fetchHistory(activeSector);
       }, 60000); 
-
       return () => clearInterval(interval);
   }, [activeSector]);
 
@@ -276,7 +262,7 @@ export default function NGXLiveChart() {
     <div className="ngx-chart-glass mb-4">
       <div className="filters-container">
         
-        {/* Sector Selector */}
+        {/* Sector Dropdown */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
@@ -320,7 +306,7 @@ export default function NGXLiveChart() {
             )}
         </div>
 
-        {/* Timeframe Selector */}
+        {/* Timeframe Dropdown */}
         <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
@@ -369,9 +355,16 @@ export default function NGXLiveChart() {
             position: relative;
             min-height: 400px;
             overflow: hidden;
+            /* إضافة مهمة لحل مشكلة اختفاء التواريخ في الموبايل */
+            display: flex;
+            flex-direction: column;
         }
-        .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
-        .chart-canvas-wrapper { width: 100%; height: 400px; }
+        .chart-canvas-wrapper { 
+            width: 100%; 
+            height: 400px;
+            /* نعطي مساحة في الأسفل للتواريخ */
+            padding-bottom: 5px; 
+        }
         .filters-container {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 15px; padding: 0 10px; position: relative; z-index: 50;
@@ -416,7 +409,7 @@ export default function NGXLiveChart() {
         
         @media (max-width: 768px) {
             .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
-            .chart-canvas-wrapper { height: 350px !important; }
+            .chart-canvas-wrapper { height: 320px !important; } /* ارتفاع مناسب للموبايل */
             .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: 55%; max-width: 190px; margin-right: auto; }
