@@ -18,6 +18,7 @@ const SECTORS = [
 
 async function fetchBinanceRecentPrice(symbol: string) {
   try {
+    // نطلب آخر 24 ساعة
     const url = `https://data-api.binance.vision/api/v3/klines?symbol=${symbol}&interval=1h&limit=24`;
     let res = await fetch(url, { cache: 'no-store' });
     
@@ -31,7 +32,7 @@ async function fetchBinanceRecentPrice(symbol: string) {
 
     return data.map((d: any) => ({
       time: Math.floor(d[0] / 1000), 
-      price: parseFloat(d[4]) // Close Price
+      price: parseFloat(d[4]) // Close Price (ويتحدث باستمرار للشمعة الحالية)
     }));
   } catch (e) { return []; }
 }
@@ -60,7 +61,7 @@ export async function GET(request: Request) {
       if (!hasData) continue;
       const sortedTimes = Object.keys(allPrices).map(Number).sort((a, b) => a - b);
 
-      // استرجاع معامل الأساس (Base 1000) من الداتا بيز
+      // جلب الأساس
       const { data: firstRec } = await supabase
         .from('ngx_volume_index')
         .select('volume_raw, index_value')
@@ -69,7 +70,6 @@ export async function GET(request: Request) {
         .limit(1)
         .single();
 
-      // Base = (Price * 1000) / Index
       let basePrice = 1;
       if (firstRec && firstRec.index_value > 0) {
          basePrice = (firstRec.volume_raw * 1000) / firstRec.index_value;
@@ -115,7 +115,11 @@ export async function GET(request: Request) {
       await supabase.from('ngx_volume_index').upsert(recordsToUpsert, { onConflict: 'sector_key, timestamp' });
     }
 
-    return NextResponse.json({ success: true, updated: recordsToUpsert.length });
+    return NextResponse.json({ 
+        success: true, 
+        updated: recordsToUpsert.length, 
+        lastTime: new Date().toISOString() 
+    });
 
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
