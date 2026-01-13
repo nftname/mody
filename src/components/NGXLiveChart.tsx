@@ -105,7 +105,7 @@ export default function NGXLiveChart() {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#B0B0B0',
         fontFamily: '"Inter", sans-serif',
-        fontSize: 10, // خط أصغر قليلاً ليناسب الموبايل
+        fontSize: 10, // خط صغير ومناسب
       },
       grid: {
         vertLines: { visible: false },
@@ -118,11 +118,10 @@ export default function NGXLiveChart() {
         visible: true,
         timeVisible: true,
         secondsVisible: false,
-        // تفعيل التمدد والزوم (Pro Features)
         fixLeftEdge: false, 
         fixRightEdge: false,
-        rightOffset: 15,
-        minBarSpacing: 0.1,
+        rightOffset: 12, // مساحة إضافية لليمين
+        minBarSpacing: 0.5,
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -144,7 +143,6 @@ export default function NGXLiveChart() {
             labelBackgroundColor: '#242424',
         },
       },
-      // تفعيل التحكم باللمس والماوس
       handleScroll: { 
           vertTouchDrag: false,
           horzTouchDrag: true, 
@@ -171,7 +169,7 @@ export default function NGXLiveChart() {
     const handleResize = () => {
       if (chartContainerRef.current) {
         const isMobile = window.innerWidth <= 768;
-        // تقليل الارتفاع في الموبايل لترك مساحة للتاريخ
+        // تقليل الارتفاع قليلاً في الموبايل لضمان ظهور التواريخ في الأسفل
         chart.applyOptions({ 
             width: chartContainerRef.current.clientWidth,
             height: isMobile ? 320 : 400 
@@ -179,7 +177,7 @@ export default function NGXLiveChart() {
       }
     };
     
-    handleResize(); // نداء فوري لضبط الحجم
+    handleResize(); 
     window.addEventListener('resize', handleResize);
     fetchHistory(SECTORS[0].key);
 
@@ -207,20 +205,20 @@ export default function NGXLiveChart() {
             bottomColor: `${currentSector.color}00`, 
         });
 
-        // *** تنسيق التواريخ الذكي (Smart Formatting) ***
+        // *** تنسيق التواريخ الذكي ***
         chartInstance.applyOptions({
             timeScale: {
                 tickMarkFormatter: (time: number) => {
                     const date = new Date(time * 1000);
-                    // 1. فريمات الساعة: عرض الوقت
+                    // 1. فريمات الساعة
                     if (['1H', '4H'].includes(activeTimeframe)) {
                         return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
                     }
-                    // 2. فريمات السنة والكل: عرض الشهر والسنة (لإظهار السنة كما طلبت)
+                    // 2. فريمات السنة والكل (تظهر السنة)
                     if (['1M', '1Y', 'ALL'].includes(activeTimeframe)) {
                          return `${date.toLocaleString('en-US', { month: 'short' })} '${date.getFullYear().toString().slice(-2)}`;
                     }
-                    // 3. الباقي: يوم وشهر
+                    // 3. الباقي
                     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 }
             },
@@ -335,7 +333,11 @@ export default function NGXLiveChart() {
         </div>
       </div>
 
-      <div ref={chartContainerRef} className="chart-canvas-wrapper" />
+      {/* CHART WRAPPER with NNM Watermark */}
+      <div ref={chartContainerRef} className="chart-canvas-wrapper">
+          {/* العلامة المائية NNM في الزاوية اليسرى السفلية */}
+          <span className="nnm-watermark">NNM</span>
+      </div>
       
       <div className="text-end px-2 pb-2">
           <small className="text-muted fst-italic" style={{ fontSize: '10px' }}>
@@ -355,16 +357,30 @@ export default function NGXLiveChart() {
             position: relative;
             min-height: 400px;
             overflow: hidden;
-            /* إضافة مهمة لحل مشكلة اختفاء التواريخ في الموبايل */
             display: flex;
             flex-direction: column;
         }
         .chart-canvas-wrapper { 
             width: 100%; 
             height: 400px;
-            /* نعطي مساحة في الأسفل للتواريخ */
-            padding-bottom: 5px; 
+            padding-bottom: 20px; /* مساحة للتواريخ */
+            position: relative; /* ضروري للعلامة المائية */
         }
+        /* تصميم العلامة المائية NNM */
+        .nnm-watermark {
+            position: absolute;
+            bottom: 32px; /* فوق التواريخ مباشرة */
+            left: 12px;   /* في الزاوية اليسرى */
+            font-size: 11px;
+            font-weight: 600;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.4); /* نفس لون TradingView */
+            z-index: 10;
+            pointer-events: none; /* لمنع تداخل اللمس */
+            font-family: sans-serif;
+            letter-spacing: 0.5px;
+        }
+
         .filters-container {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 15px; padding: 0 10px; position: relative; z-index: 50;
@@ -409,7 +425,7 @@ export default function NGXLiveChart() {
         
         @media (max-width: 768px) {
             .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
-            .chart-canvas-wrapper { height: 320px !important; } /* ارتفاع مناسب للموبايل */
+            .chart-canvas-wrapper { height: 320px !important; }
             .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: 55%; max-width: 190px; margin-right: auto; }
