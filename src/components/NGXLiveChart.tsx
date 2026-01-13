@@ -15,6 +15,7 @@ const SECTORS = [
   { key: 'Utility NFT', dbKey: 'UTL', color: '#00D8D6' }         
 ];
 
+// إعدادات الفترات الزمنية
 const TIMEFRAMES = [
     { label: '1H', value: '1H', days: 1 },      
     { label: '4H', value: '4H', days: 7 },      
@@ -72,19 +73,18 @@ export default function NGXLiveChart() {
             .from('ngx_volume_index')
             .select('timestamp, index_value')
             .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: true });
+            .order('timestamp', { ascending: true }); // ترتيب تصاعدي
 
-        // فلترة البيانات من السيرفر
+        // 1. فلترة الزمن (Server-Side)
         if (tfInfo.days > 0) {
             const cutoffTimestamp = Math.floor(Date.now() / 1000) - (tfInfo.days * 24 * 60 * 60);
             query = query.gte('timestamp', cutoffTimestamp);
         }
         
-        // حماية إضافية للسرعة: تحديد الحد الأقصى للجلب
-        // حتى لو طلبنا الكل، لا نجلب أكثر من 2000 نقطة للعرض (كافية جداً)
-        if(tfValue === 'ALL') {
-             // لا نضع ليميت صارم هنا لنسمح بالـ downsampling لاحقاً، لكن نعتمد الفلترة الزمنية
-        }
+        // 2. 🔥 تحديد سقف البيانات (Limit)
+        // هذا هو الحل الجذري للبطء. نمنع جلب أكثر من 2500 نقطة.
+        // المتصفح لا يستطيع رسم 200 ألف نقطة بسلاسة، لذلك نحدد الكمية.
+        query = query.limit(2500);
 
         const { data: sectorData, error } = await query;
         if (error) throw error;
@@ -95,18 +95,21 @@ export default function NGXLiveChart() {
             return;
         }
 
+        // تحويل البيانات وتجهيزها
         let processedData = sectorData.map((row: any) => ({
             time: Number(row.timestamp) as UTCTimestamp,
             value: Number(row.index_value)
         }));
 
-        // تخفيف عدد النقاط (Sampling) لتسريع المتصفح
+        // 3. تخفيف الكثافة (Downsampling) للفترات الطويلة
         if (tfValue === '1M' || tfValue === '1Y' || tfValue === 'ALL') {
+             // للفترات الطويلة جداً، نعرض نقطة واحدة كل 24 ساعة لتسريع الرسم
              processedData = processedData.filter((_, index) => index % 24 === 0);
         } else if (tfValue === '1D') {
              processedData = processedData.filter((_, index) => index % 4 === 0);
         }
 
+        // إزالة التكرار
         const uniqueData = processedData.filter((v, i, a) => i === a.findIndex(t => t.time === v.time));
         
         seriesInstance.setData(uniqueData);
@@ -119,10 +122,12 @@ export default function NGXLiveChart() {
     }
   };
 
+  // استدعاء البيانات عند تغيير الفلاتر
   useEffect(() => {
       fetchAndDraw(activeSector, activeTimeframe);
   }, [activeSector, activeTimeframe, seriesInstance]);
 
+  // تهيئة الرسم البياني
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -189,6 +194,7 @@ export default function NGXLiveChart() {
     };
   }, []);
 
+  // تحديث التنسيقات عند التغيير
   useEffect(() => {
     if (seriesInstance && chartInstance) {
         const currentSector = SECTORS.find(s => s.key === activeSector);
@@ -209,7 +215,7 @@ export default function NGXLiveChart() {
                         return date.toLocaleTimeString('en-GB', { 
                             hour: '2-digit', 
                             minute: '2-digit', 
-                            hour12: false,
+                            hour12: false, // نظام 24 ساعة
                             timeZone: 'UTC' 
                         });
                     }
@@ -225,6 +231,7 @@ export default function NGXLiveChart() {
     }
   }, [activeTimeframe, activeSector, seriesInstance, chartInstance]);
 
+  // تحديث تلقائي صامت كل دقيقة
   useEffect(() => {
       const interval = setInterval(() => {
           const sectorInfo = SECTORS.find(s => s.key === activeSector);
@@ -312,6 +319,7 @@ export default function NGXLiveChart() {
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper">
+          {/* العلامة المائية المحسنة: حجم أصغر (26px) وشفافية أعلى (0.45) */}
           <div className="chart-watermark">NNM</div>
       </div>
       
@@ -382,16 +390,15 @@ export default function NGXLiveChart() {
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
-        /* تم التعديل هنا لتقليل الحجم وزيادة الوضوح */
+        /* تعديلات العلامة المائية الجديدة */
         .chart-watermark {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            font-size: 26px; /* تم تقليله من 32 */
+            font-size: 26px; /* حجم أصغر */
             font-weight: 900;
             font-style: italic;
-            /* زيادة الشفافية من 0.25 إلى 0.45 ليكون أوضح */
-            color: rgba(255, 255, 255, 0.45); 
+            color: rgba(255, 255, 255, 0.45); /* أكثر وضوحاً */
             pointer-events: none;
             z-index: 10;
             user-select: none;
@@ -405,7 +412,7 @@ export default function NGXLiveChart() {
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: auto; min-width: 130px; max-width: 180px; margin-right: auto; }
             .time-wrapper { width: auto; min-width: 60px; flex-shrink: 0; }
-            .chart-watermark { font-size: 19px; bottom: 15px; left: 15px; } /* تم تقليله للموبايل */
+            .chart-watermark { font-size: 19px; bottom: 15px; left: 15px; }
         }
       `}</style>
     </div>
