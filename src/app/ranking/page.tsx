@@ -8,7 +8,7 @@ const GOLD_BTN_HIGHLIGHT = '#E6C76A';
 const GOLD_BTN_SHADOW = '#B8962E';
 const GOLD_LIGHT = '#FFD700';
 const GOLD_DARK = '#B8860B';
-const GOLD_MEDIUM = '#FDB931'; // Added for Text
+const GOLD_MEDIUM = '#FDB931'; 
 const TEXT_BODY_COLOR = '#B0B0B0';
 const TEXT_OFF_WHITE = '#FFFFFF';
 
@@ -71,17 +71,17 @@ export default function NNMConceptPage() {
         .text-white { color: #FFFFFF !important; }
         .text-body-gray { color: ${TEXT_BODY_COLOR}; }
 
-        /* Font Sizing Adjustments (Reduced by ~10% generally) */
+        /* Font Sizing */
         p, li { 
             font-size: 0.95rem; 
             line-height: 1.6;
         }
 
-        /* Ingot Button Style - RESTORED DARK TEXT */
+        /* Ingot Button Style */
         .btn-ingot {
             background: linear-gradient(180deg, ${GOLD_BTN_HIGHLIGHT} 0%, ${GOLD_BTN_PRIMARY} 40%, ${GOLD_BTN_SHADOW} 100%);
             border: 1px solid ${GOLD_BTN_SHADOW};
-            color: #2b1d00 !important; /* ORIGINAL DARK BROWN TEXT */
+            color: #2b1d00 !important; 
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 1px;
@@ -96,18 +96,28 @@ export default function NNMConceptPage() {
             filter: brightness(1.08);
             transform: translateY(-1px);
         }
+
+        /* --- DESKTOP SHIFT (The Fix) --- */
+        /* Only applies on large screens to push the button right by 25% relative to its container */
+        @media (min-width: 992px) {
+            .cta-desktop-shift {
+                margin-left: 25%;
+            }
+        }
         
         /* Mobile specific adjustments */
         @media (max-width: 768px) {
+            .cta-desktop-shift { margin-left: 0; } /* Reset on mobile */
+            
             .btn-ingot-wrapper { 
-                width: 50% !important; /* EXACTLY 50% WIDTH */
-                margin: 0 auto; /* CENTERED */
+                width: 50% !important; 
+                margin: 0 auto; 
                 display: block;
             }
             .btn-ingot { 
                 width: 100%; 
                 padding: 10px 0; 
-                font-size: 11px !important; /* Adjusted to fit text in 50% width */
+                font-size: 11px !important; 
                 white-space: nowrap !important;
                 display: flex;
                 align-items: center;
@@ -137,7 +147,6 @@ export default function NNMConceptPage() {
       <section className="container pt-5 pb-5">
           <div className="row justify-content-start text-start">
               <div className="col-lg-9">
-                  {/* Title size reduced by ~25% (2rem) */}
                   <h1 className="font-imperium fw-bold mb-4 text-white" style={{ fontSize: '2rem' }}>
                       The Three Tiers of <span className="text-gold-highlight">Digital Naming</span>
                   </h1>
@@ -159,10 +168,10 @@ export default function NNMConceptPage() {
           </div>
       </section>
 
-      {/* --- CONTENT TIERS (ZIG-ZAG LAYOUT) --- */}
+      {/* --- CONTENT TIERS --- */}
       <section className="container flex-grow-1">
         
-        {/* TIER 1: IMMORTALS (Image 1000023703.jpg) */}
+        {/* TIER 1: IMMORTALS */}
         <div className="row align-items-center section-spacer">
             <div className="col-12 col-lg-6 mb-4 mb-lg-0">
                 <div className="img-container">
@@ -170,7 +179,6 @@ export default function NNMConceptPage() {
                 </div>
             </div>
             <div className="col-12 col-lg-6 ps-lg-5 text-start">
-                {/* Gold applied only to "Immortals" */}
                 <h3 className="font-imperium h2 mb-3 text-white">The <span className="text-gold-highlight">Immortals</span> Tier</h3>
                 <div className="text-body-gray">
                     <p>Some names are inherently scarce. Short character strings, culturally resonant words, and timeless identifiers often attract attention simply by their nature.</p>
@@ -181,17 +189,14 @@ export default function NNMConceptPage() {
             </div>
         </div>
 
-        {/* TIER 2: ELITE (Image 1000023702.jpg) */}
+        {/* TIER 2: ELITE */}
         <div className="row align-items-center section-spacer">
-            {/* Desktop: Order 2 (Right). Mobile: Order 1 (Top) */}
             <div className="col-12 col-lg-6 order-1 order-lg-2 mb-4 mb-lg-0">
                 <div className="img-container">
                     <img src="/images/1000023702.jpg" alt="The Elite Tier" className="img-fluid w-100" style={{ objectFit: 'cover' }} />
                 </div>
             </div>
-            {/* Desktop: Order 1 (Left). Mobile: Order 2 (Bottom) */}
             <div className="col-12 col-lg-6 order-2 order-lg-1 pe-lg-5 text-start">
-                {/* Gold applied only to "Elite" */}
                 <h3 className="font-imperium h2 mb-3 text-white">The <span className="text-gold-highlight">Elite</span> Tier</h3>
                 <div className="text-body-gray">
                     <p>Between exclusivity and accessibility lies balance.</p>
@@ -202,7 +207,7 @@ export default function NNMConceptPage() {
             </div>
         </div>
 
-        {/* TIER 3: FOUNDERS (Image 1000023701.jpg) */}
+        {/* TIER 3: FOUNDERS */}
         <div className="row align-items-center section-spacer">
             <div className="col-12 col-lg-6 mb-4 mb-lg-0">
                 <div className="img-container">
@@ -210,7 +215,6 @@ export default function NNMConceptPage() {
                 </div>
             </div>
             <div className="col-12 col-lg-6 ps-lg-5 text-start">
-                {/* Gold applied only to "Founders" */}
                 <h3 className="font-imperium h2 mb-3 text-white">The <span className="text-gold-highlight">Founders</span> Tier</h3>
                 <div className="text-body-gray">
                     <p>Every ecosystem begins with early participants. Not because outcomes are certain, but because exploration and belief in open systems come first.</p>
@@ -228,7 +232,6 @@ export default function NNMConceptPage() {
           <div className="row justify-content-start text-start">
               <div className="col-12 col-lg-9 p-0">
                   
-                  {/* Outro Heading & Text (Left Aligned) */}
                   <h4 className="font-imperium mb-4 text-white" style={{ fontSize: '1.25rem' }}>What These Tiers Do and Do Not Represent</h4>
                   
                   <p className="text-body-gray mb-3">
@@ -241,22 +244,19 @@ export default function NNMConceptPage() {
                       A name minted at the Founders Tier may later circulate widely. A name minted at the Immortals Tier may never trade. Both outcomes are valid and entirely market-driven.
                   </p>
                   
-                  {/* CENTERED CTA AREA STARTS HERE */}
-                  <div className="text-center mt-4">
-                      {/* Text closer to button (mb-2) and smaller size (fs-7 equiv) */}
+                  {/* CTA AREA with DESKTOP SHIFT */}
+                  <div className="text-center mt-4 cta-desktop-shift">
                       <p className="font-imperium mb-2 text-white" style={{ fontSize: '0.85rem' }}>
                           The system provides structure.<br/>
                           The market provides meaning.
                       </p>
 
-                       {/* CTA BUTTON - Centered, Dark Text, Responsive Width */}
-                        <div className="btn-ingot-wrapper">
+                       <div className="btn-ingot-wrapper">
                             <Link href="/mint" className="btn btn-ingot rounded-1 text-decoration-none">
                                 CLAIM YOUR NEXUS NAME
                             </Link>
                         </div>
                   </div>
-                  {/* CENTERED CTA AREA ENDS */}
 
               </div>
           </div>

@@ -71,7 +71,7 @@ export default function NNMConceptPage() {
           data: {
             labels: ['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026','2027','2028','2029','2030'],
             datasets: [{
-              label: 'Nexus Asset Value', // تم التعديل
+              label: 'Nexus Asset Value', 
               data: [0.1, 0.3, 0.8, 1.5, 3.2, 6, 10, 15, 20, 35, 50, 70, 90, 120],
               borderColor: GOLD_BASE,
               backgroundColor: 'rgba(240, 196, 32, 0.08)', 
@@ -246,7 +246,7 @@ export default function NNMConceptPage() {
           <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
               <div className="text-start text-lg-center mx-auto">
                   
-                  {/* Main Title - تم التعديل */}
+                  {/* Main Title */}
                     <h1 style={{ 
                       fontFamily: '"Inter", "Segoe UI", sans-serif', 
                       fontSize: '1.5rem', 
@@ -259,16 +259,20 @@ export default function NNMConceptPage() {
                       NNM — The <span style={{ color: GOLD_MEDIUM }}>Nexus</span> <span style={{ color: TEXT_OFF_WHITE }}>Digital Name Asset Concept</span>
                     </h1>
                   
-                  {/* Main Subtext - تم التعديل وإزالة اللون الذهبي الزائد */}
+                  {/* Main Subtext - LINK ADDED HERE */}
                     <p style={{ 
                       marginTop: '15px', 
                       marginBottom: 0,
                       maxWidth: '900px',
                       lineHeight: '1.6',
-                      marginLeft: 'auto', // Centering on Desktop
-                      marginRight: 'auto', // Centering on Desktop
+                      marginLeft: 'auto', 
+                      marginRight: 'auto', 
                     }}>
                       The <span className="fw-bold" style={{ color: TEXT_OFF_WHITE }}>Nexus Asset</span> represents the ultimate tier of digital name ownership, far beyond standard tokens. Each <span className="fw-bold" style={{ color: TEXT_OFF_WHITE }}>Nexus Name</span> establishes immutable priority within the Web3 ecosystem, securing a permanent place in digital history. As we approach 2026, these assets are poised to become the cornerstone of digital identity and value.
+                      <br />
+                      <span className="d-block mt-3" style={{ fontSize: '0.95rem', color: '#888' }}>
+                          To understand how these assets are indexed and valued within the ecosystem's hierarchy, consult the <Link href="/ranking" className="text-decoration-none" style={{ color: GOLD_MEDIUM, borderBottom: `1px solid ${GOLD_MEDIUM}` }}>Live Ranking Registry</Link>.
+                      </span>
                   </p>
               </div>
           </div>
@@ -282,7 +286,7 @@ export default function NNMConceptPage() {
               {/* --- LEFT COLUMN (50%) --- */}
               <div className="col-12 col-lg-6">
                 
-                {/* Authority Section - تم التعديل */}
+                {/* Authority Section */}
                 <div className="mb-5">
                   <h2 className="text-white h5 mb-3 fw-bold font-imperium" style={{ color: GOLD_MEDIUM }}>Authority & Scarcity</h2>
                   <p style={{ lineHeight: '1.7', maxWidth: '95%' }}>
@@ -290,7 +294,7 @@ export default function NNMConceptPage() {
                   </p>
                 </div>
 
-                {/* Why Nexus Stands Apart - تم التعديل */}
+                {/* Why Nexus Stands Apart */}
                 <div className="mb-5">
                    <h2 className="h4 mb-4 fw-bold font-imperium text-white" style={{ color: TEXT_OFF_WHITE }}>Why Nexus Stands Apart</h2>
                    
@@ -332,7 +336,7 @@ export default function NNMConceptPage() {
               {/* --- RIGHT COLUMN (50%) --- */}
               <div className="col-12 col-lg-6">
                 
-                {/* Title Above Chart - تم التعديل */}
+                {/* Title Above Chart */}
                 <div className="mb-3">
                     <h3 className="text-white h5 mb-2 font-imperium fw-bold" style={{ color: TEXT_OFF_WHITE }}>Valuation Trajectory (2017–2030)</h3>
                     <p style={{ lineHeight: '1.5' }}>
