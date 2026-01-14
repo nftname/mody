@@ -17,22 +17,33 @@ const VIEW_MODES = [
     { label: '2026 - 2030', value: 'FORECAST' }
 ];
 
-// --- محرك المحاكاة ---
+// --- مولد أرقام عشوائية ثابتة (Deterministic Random) ---
+// هذه الدالة هي السر: تعطي أرقاماً تبدو عشوائية لكنها ثابتة دائماً
+const seededRandom = (seed: number) => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+};
+
+// --- محرك المحاكاة الثابت ---
 function generateSimulation(sectorKey: string, mode: string) {
     const data = [];
     let date = mode === 'HISTORY' ? new Date('2017-01-01') : new Date('2026-01-15');
     const endDate = mode === 'HISTORY' ? new Date('2026-01-14') : new Date('2030-12-31');
     
+    // إعدادات ثابتة لكل قطاع
     let value = 100;
     let volatility = 0.05;
+    let seed = sectorKey.length; // بذرة أولية تعتمد على اسم القطاع
 
-    if (sectorKey.includes('Name')) { value = 40; volatility = 0.07; }
-    if (sectorKey.includes('Art')) { value = 80; volatility = 0.15; }
-    if (sectorKey.includes('Gaming')) { value = 60; volatility = 0.10; }
+    if (sectorKey.includes('Name')) { value = 40; volatility = 0.07; seed += 10; }
+    if (sectorKey.includes('Art')) { value = 80; volatility = 0.15; seed += 20; }
+    if (sectorKey.includes('Gaming')) { value = 60; volatility = 0.10; seed += 30; }
     
     if (mode === 'FORECAST') value = sectorKey.includes('Name') ? 1200 : 800;
 
+    let index = 0;
     while (date <= endDate) {
+        index++;
         const year = date.getFullYear();
         let trend = 1.00;
 
@@ -48,7 +59,11 @@ function generateSimulation(sectorKey: string, mode: string) {
             trend = 1.006; 
         }
 
-        const randomMove = 1 + (Math.random() - 0.5) * volatility;
+        // استخدام الدالة الثابتة بدلاً من Math.random()
+        // هذا يضمن أن الشكل لن يتغير أبداً عند الريفريش
+        const fixedRandom = seededRandom(index + seed * 100);
+        const randomMove = 1 + (fixedRandom - 0.5) * volatility;
+        
         value = value * trend * randomMove;
         if (value < 10) value = 10;
 
@@ -62,7 +77,7 @@ function generateSimulation(sectorKey: string, mode: string) {
     return data;
 }
 
-// --- دالة إغلاق القوائم ---
+// --- هوك لإغلاق القوائم ---
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
     const listener = (event: any) => {
@@ -99,8 +114,12 @@ export default function NGXLiveChart() {
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
+    // تحديد حجم الخط بناءً على الشاشة (للجوال 9px، للكمبيوتر 11px)
+    const isMobile = window.innerWidth <= 768;
+    const fontSize = isMobile ? 9 : 11;
+
     const chart = createChart(chartContainerRef.current, {
-      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#B0B0B0', fontFamily: '"Inter", sans-serif', fontSize: 11 },
+      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#B0B0B0', fontFamily: '"Inter", sans-serif', fontSize: fontSize },
       grid: { vertLines: { visible: false }, horzLines: { color: 'rgba(255, 255, 255, 0.05)' } },
       width: chartContainerRef.current.clientWidth,
       height: 400,
@@ -108,7 +127,10 @@ export default function NGXLiveChart() {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true, timeVisible: true, secondsVisible: false,
         barSpacing: 6, minBarSpacing: 0.5,
-        // تم إزالة bottomOffset لحل مشكلة الخطأ الأحمر
+        // إعدادات لضمان ظهور التواريخ في الجوال
+        fixLeftEdge: true,
+        fixRightEdge: true,
+        borderVisible: true, 
       },
       rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.1)', visible: true, scaleMargins: { top: 0.2, bottom: 0.2 } },
       crosshair: { mode: CrosshairMode.Normal },
@@ -130,10 +152,10 @@ export default function NGXLiveChart() {
 
     const handleResize = () => {
       if (chartContainerRef.current) {
-         const isMobile = window.innerWidth <= 768;
+         const isMobileNow = window.innerWidth <= 768;
          chart.applyOptions({ 
              width: chartContainerRef.current.clientWidth,
-             height: isMobile ? 350 : 400 
+             height: isMobileNow ? 350 : 400 
          });
       }
     };
@@ -141,7 +163,7 @@ export default function NGXLiveChart() {
     return () => { window.removeEventListener('resize', handleResize); chart.remove(); };
   }, []);
 
-  // 2. تحديث البيانات
+  // 2. تحديث البيانات (باستخدام الدالة الثابتة)
   useEffect(() => {
       if (!seriesInstance || !chartInstance) return;
 
@@ -214,9 +236,27 @@ export default function NGXLiveChart() {
         </div>
       </div>
 
-      <div ref={chartContainerRef} className="chart-canvas-wrapper">
-          {/* العلامة المائية NNM: أبيض بنسبة 80% */}
-          <div className="chart-watermark">NNM</div>
+      <div ref={chartContainerRef} className="chart-canvas-wrapper" style={{ position: 'relative' }}>
+          
+          {/* --- طبقة الحماية والرابط الخفي (The Protective Overlay) --- */}
+          {/* هذه الطبقة تغطي الرسم بالكامل، وتجعل أي ضغطة تأخذك للرابط، وتجعل إزالة العلامة المائية صعبة */}
+          <a 
+            href="https://nftnnm.com/ngx" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="chart-link-overlay"
+            style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, bottom: 0,
+                zIndex: 20, // فوق الرسم البياني
+                cursor: 'pointer',
+                textDecoration: 'none'
+            }}
+          >
+              {/* العلامة المائية جزء من الرابط الآن، إزالتها قد تكسر الرابط أو الشكل */}
+              <div className="chart-watermark">NNM</div>
+          </a>
+
       </div>
       
       <div className="text-end px-2 pb-2">
@@ -274,18 +314,16 @@ export default function NGXLiveChart() {
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
-        /* العلامة المائية: لون أبيض بنسبة 80% */
+        /* العلامة المائية المحسنة: أبيض بنسبة 80% ومحاذاة ممتازة */
         .chart-watermark {
             position: absolute;
-            bottom: 35px;
-            left: 20px;
+            bottom: 12px; /* تم الضبط بدقة لتكون فوق الشريط مباشرة */
+            left: 15px;
             font-size: 20px;
             font-weight: 900;
             font-style: italic;
-            color: rgba(255, 255, 255, 0.8); /* تم التعديل هنا لنسبة 80% */
-            pointer-events: none;
-            z-index: 10;
-            user-select: none;
+            color: rgba(255, 255, 255, 0.8);
+            pointer-events: none; /* يسمح بمرور النقرة للرابط المحيط */
             letter-spacing: 1px;
         }
 
@@ -295,6 +333,7 @@ export default function NGXLiveChart() {
             .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 11px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: auto; min-width: 120px; max-width: 150px; margin-right: auto; }
+            /* تعديل الجوال: خط أصغر ومكان مناسب */
             .chart-watermark { font-size: 16px; bottom: 30px; left: 15px; }
         }
       `}</style>
