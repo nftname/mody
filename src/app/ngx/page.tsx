@@ -1,65 +1,18 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
 import NGXWidget from '@/components/NGXWidget';
 import NGXCapWidget from '@/components/NGXCapWidget';
 import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 import NGXLiveChart from '@/components/NGXLiveChart';
 import MarketTicker from '@/components/MarketTicker';
 
-// --- إعدادات Supabase ---
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// --- الألوان والستايل ---
 const BACKGROUND_DARK = '#1E1E1E';
 const SURFACE_DARK = '#242424';
 const BORDER_COLOR = '#2E2E2E';
 const TEXT_PRIMARY = '#E0E0E0';
 const TEXT_MUTED = '#B0B0B0';
-const GOLD_COLOR = '#FFB300'; // للتناسق مع الأزرار
-const GOLD_BASE = '#F0C420';  // للتناسق مع الأخبار
-
-// --- أيقونة ميتاماسك ---
+const GOLD_COLOR = '#FFB300';
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
-
-// --- مكون الرسم البياني المصغر الثابت (خفيف جداً) ---
-const StaticMiniChart = () => (
-    <div style={{ width: '100%', height: '100%', position: 'relative', background: 'transparent' }}>
-        {/* رسم بياني SVG ثابت يحاكي شكل السوق (هبوط ثم صعود) */}
-        <svg viewBox="0 0 300 100" preserveAspectRatio="none" style={{ width: '100%', height: '100%', opacity: 0.8 }}>
-            <defs>
-                <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#C0D860" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#C0D860" stopOpacity="0" />
-                </linearGradient>
-            </defs>
-            {/* خط المنحنى */}
-            <path 
-                d="M0,70 C50,65 80,90 120,95 C160,100 200,80 240,40 L280,10 L300,5" 
-                fill="none" 
-                stroke="#C0D860" 
-                strokeWidth="2" 
-            />
-            {/* التعبئة اللونية */}
-            <path 
-                d="M0,70 C50,65 80,90 120,95 C160,100 200,80 240,40 L280,10 L300,5 V100 H0 Z" 
-                fill="url(#chartFill)" 
-                stroke="none" 
-            />
-        </svg>
-        {/* العلامة المائية الثابتة */}
-        <div style={{ position: 'absolute', bottom: '5px', left: '10px', fontSize: '12px', fontWeight: '900', fontStyle: 'italic', color: 'rgba(255,255,255,0.6)' }}>
-            NNM
-        </div>
-        {/* نص توضيحي */}
-        <div style={{ position: 'absolute', top: '5px', right: '10px', fontSize: '9px', color: '#C0D860' }}>
-            ● LIVE INDEX PREVIEW
-        </div>
-    </div>
-);
 
 const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: boolean }) => {
     if (isCustomSVG) {
@@ -78,18 +31,11 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- مكون بطاقة التضمين (تم تحديثه ليدعم التخطيط الجديد) ---
-const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any) => {
+const EmbedCard = ({ title, component, width, height, embedId, label, isFullBar }: any) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    // تحديد الأبعاد بناءً على النوع
-    let w = "320";
-    let h = "100";
-    if (isFullBar) { w = "100%"; h = "90"; }
-    if (isChart) { w = "100%"; h = "400"; } // حجم الرسم البياني الكامل
-
-    const code = `<iframe src="https://nftnnm.com/embed/${embedId}?theme=auto" width="${w}" height="${h}" frameborder="0" style="border-radius:12px; overflow:hidden;"></iframe>`;
+    const code = `<iframe src="https://nftnnm.com/embed/${embedId}?theme=auto" width="${width}" height="${height}" frameborder="0" style="border-radius:12px; overflow:hidden;"></iframe>`;
     navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -97,8 +43,8 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
 
   return (
     <div className="embed-card h-100 d-flex flex-column justify-content-between">
-      <div className="preview-area" style={{ height: isChart ? '120px' : '70px' }}>
-        <div className={`widget-scale-wrapper ${isFullBar ? 'full-bar-scale' : isChart ? 'chart-scale' : 'individual-scale'}`}>
+      <div className="preview-area">
+        <div className={`widget-scale-wrapper ${isFullBar ? 'full-bar-scale' : 'individual-scale'}`}>
           {component}
         </div>
       </div>
@@ -107,18 +53,23 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         <h6 className="d-none d-md-block mb-1 fw-bold text-white" style={{ fontSize: '11px' }}>{title}</h6>
         {label && <div className="mobile-label fw-bold mb-1">{label}</div>}
         
+        {/* ✅ التعديل الجراحي هنا: ضبط عرض الزر بناءً على نوع الكارت */}
         <button 
             onClick={handleCopy} 
             className={`btn btn-sm mb-1 copy-btn ${copied ? 'btn-success' : 'btn-outline-secondary'}`}
             style={{ 
-                width: (isFullBar || isChart) ? '32.5%' : '100%', 
+                width: isFullBar ? '32.5%' : '100%', // عرض مخصص للشريط الكامل ليماثل الأزرار تحته
                 minWidth: '120px',
-                margin: '0 auto', 
+                margin: '0 auto', // توسيط الزر
                 display: 'block'
             }}
         >
             {copied ? 'COPIED' : 'COPY'}
         </button>
+        
+        <div className="watermark">
+            Powered by NNM Sovereign Name Assets
+        </div>
       </div>
 
       <style jsx>{`
@@ -131,27 +82,59 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
             overflow: hidden;
             position: relative;
         }
-        .embed-card:hover { border-color: rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.04); }
-        .preview-area { display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
-        .widget-scale-wrapper { transform-origin: center; width: 100%; display: flex; justify-content: center; }
-        
+        .embed-card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .preview-area {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .widget-scale-wrapper {
+            transform-origin: center;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
         .full-bar-scale { transform: scale(0.85); }
         .individual-scale { transform: scale(0.75); }
-        .chart-scale { width: 100%; height: 100%; } /* الرسم البياني لا يحتاج تصغير */
 
-        .copy-btn { font-size: 10px; padding: 4px 0; border-radius: 4px; color: #ddd; border-color: #444; }
-        .mobile-label { display: none; color: ${GOLD_COLOR}; font-size: 10px; letter-spacing: 0.5px; }
+        .copy-btn {
+            font-size: 10px;
+            padding: 4px 0;
+            border-radius: 4px;
+            color: #ddd;
+            border-color: #444;
+        }
+        .mobile-label {
+            display: none;
+            color: ${GOLD_COLOR};
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+        .watermark {
+            font-size: 9px;
+            color: #777;
+            font-style: italic;
+            opacity: 0.8;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
         @media (max-width: 768px) {
             .embed-card { padding: 4px; border: 1px solid rgba(255,255,255,0.05); }
-            .preview-area { height: 45px !important; }
+            .preview-area { height: 45px; }
             .full-bar-scale { transform: scale(0.55); width: 180%; margin-left: -40%; }
             .individual-scale { transform: scale(0.48); width: 280px; }
-            /* إخفاء الرسم البياني المصغر في الجوال لتوفير المساحة */
-            .chart-scale { display: none; } 
-            
             .copy-btn { font-size: 8px; padding: 2px 0; margin-top: 2px; background: rgba(0,0,0,0.3); }
             .mobile-label { display: block; font-size: 8px; margin-bottom: 2px !important; }
+            .watermark { display: none; }
         }
       `}</style>
     </div>
@@ -175,50 +158,16 @@ export default function NGXPage() {
     { name: "OPTIMISM", icon: "bi-graph-up-arrow", isCustom: false }
   ];
 
-  // --- NEWS STATE ---
-  const [latestNews, setLatestNews] = useState<any>(null);
-  const [loadingNews, setLoadingNews] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  useEffect(() => {
-    const fetchLatestNews = async () => {
-      try {
-        // جلب أحدث خبر واحد فقط
-        const { data, error } = await supabase
-          .from('news_posts')
-          .select('*')
-          .eq('is_published', true)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (error) throw error;
-        if (data && data.length > 0) setLatestNews(data[0]);
-      } catch (err) {
-        console.error('Error fetching latest news:', err);
-      } finally {
-        setLoadingNews(false);
-      }
-    };
-    fetchLatestNews();
-  }, []);
-
-  // Time Ago Helper
-  const timeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    if (seconds < 60) return "JUST NOW";
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} MINS AGO`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} HOURS AGO`;
-    return `${Math.floor(hours / 24)} DAYS AGO`;
-  };
+  if (!mounted) return <div className="p-5 text-center">Loading Analytics...</div>;
 
   return (
     <main className="ngx-page" style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', color: TEXT_PRIMARY }}>
       <MarketTicker />
 
-      {/* HEADER SECTION (Top Widgets) */}
+      {/* HEADER SECTION */}
       <div className="header-wrapper shadow-sm">
         <div className="container-fluid p-0"> 
             <div className="widgets-grid-container">
@@ -226,8 +175,6 @@ export default function NGXPage() {
                 <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
                 <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
             </div>
-            
-            {/* Title & Desc (Left Aligned on Mobile) */}
             <div className="row px-2 mt-3 text-section align-items-center">
                 <div className="col-lg-12">
                     <h1 className="fw-bold mb-2 main-title">NGX NFT Index — The Global Benchmark</h1>
@@ -240,84 +187,53 @@ export default function NGXPage() {
       </div>
 
       <div className="container-fluid py-4 px-3 px-md-4" style={{ paddingBottom: '0' }}> 
-        {/* LIVE CHART (Main) */}
+        {/* LIVE CHART */}
         <div className="content-container mb-4">
              <NGXLiveChart />
         </div>
 
-        {/* --- ARTICLE SECTION --- */}
+        {/* ARTICLE */}
         <div className="content-container">
             <div className="article-wrapper">
                 <h2 className="article-heading mb-3">NFTs as a Market Infrastructure: From Digital Collectibles to Asset Class Architecture</h2>
-                {/* (تم اختصار النص هنا للحفاظ على نظافة الكود، المحتوى الأصلي موجود) */}
-                <p className="article-text">Since their emergence in the late 2010s, Non-Fungible Tokens (NFTs) have undergone a fundamental transformation...</p>
+                <p className="article-text">Since their emergence in the late 2010s, Non-Fungible Tokens (NFTs) have undergone a fundamental transformation. What began as a niche experiment in digital ownership has evolved into a multi-layered market infrastructure spanning art, gaming, identity, finance, and cultural capital.</p>
+                <p className="article-text">In their earliest phase, NFTs were primarily perceived as speculative digital collectibles—artifacts whose value was driven by novelty, scarcity, and community-driven hype. However, as the market matured, this narrow definition proved insufficient to describe the expanding utility and structural complexity of NFT-based assets.</p>
+                <p className="article-text">By the early 2020s, NFTs began to establish themselves not merely as digital items, but as programmable ownership primitives—capable of representing access rights, intellectual property, virtual land, in-game economies, and decentralized identities. This shift marked the beginning of NFTs as a legitimate asset class rather than a transient trend.</p>
+
+                <h3 className="article-heading mt-4 mb-2">The Evolution of NFT Market Structure</h3>
+                <p className="article-text">As NFT ecosystems expanded, a clear hierarchy of asset types began to emerge. Art NFTs continued to function as cultural and collectible instruments. Utility NFTs enabled access mechanisms across platforms and communities. Gaming NFTs introduced interactive value, while domain-based NFTs bridged identity and digital real estate.</p>
+                <p className="article-text">This diversification created a structural challenge: traditional valuation models—largely price-driven and speculative—were no longer sufficient to capture the true composition of the NFT market. Volume alone could not explain influence. Floor price could not define importance. A more systemic lens became necessary.</p>
+
+                <h3 className="article-heading mt-4 mb-2">Why Market Indexing Matters in NFTs</h3>
+                <p className="article-text">In traditional financial markets, indices serve as neutral observatories—tools that reflect market structure rather than predict outcomes. As NFTs mature, similar indexing frameworks are beginning to surface, not to forecast prices, but to contextualize market evolution.</p>
                 <p className="article-text">Indexing in NFT markets provides a way to observe asset-class balance, category dominance, and structural shifts over time. Rather than focusing on individual projects, indices analyze the ecosystem itself.</p>
+                <p className="article-text">Within this context, independent frameworks such as the NGX Index have emerged to monitor NFT market architecture through classification models, asset weighting, and scarcity dynamics. The NGX Index does not function as a pricing oracle or investment signal. Instead, it operates as a structural reference—tracking how different NFT asset classes evolve relative to one another as the market matures.</p>
+                <p className="article-text">This approach reflects a broader transition in NFTs: from speculation-driven discovery toward infrastructure-level understanding.</p>
+
+                <h3 className="article-heading mt-4 mb-2">NFTs as a Recognized Asset Class</h3>
+                <p className="article-text">By 2024–2025, NFTs had firmly entered institutional, corporate, and cultural conversations. Major brands, gaming studios, and digital platforms adopted NFTs not as speculative instruments, but as ownership layers embedded within larger systems.</p>
+                <p className="article-text">At this stage, the question is no longer whether NFTs will persist, but how they will be organized, measured, and understood over the long term. Asset-class frameworks, standardized terminology, and analytical indices are becoming essential components of this next phase.</p>
+
+                <h3 className="article-heading mt-4 mb-2">Looking Ahead: 2026 and Beyond</h3>
+                <p className="article-text">As regulatory clarity improves and technical standards stabilize, NFTs are expected to transition further into infrastructure assets—integrated seamlessly into digital economies rather than existing as standalone products.</p>
+                <p className="article-text">The emergence of neutral market observatories, classification systems, and non-speculative indices will play a critical role in this evolution. They allow participants—creators, developers, institutions, and researchers—to understand the NFT ecosystem as a whole rather than through isolated data points.</p>
                 <p className="article-text mb-3">In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.</p>
 
                 <div className="w-100 mt-2 border-top border-secondary" style={{ borderColor: '#333 !important', paddingTop: '8px' }}>
                     <p className="fst-italic mb-0 w-100" style={{ lineHeight: '1.2', fontSize: '9px', color: '#777', opacity: 0.9 }}>
-                        This article is provided for informational and educational purposes only...
+                        This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
                     </p>
                 </div>
                 
-                {/* --- LATEST MARKET INSIGHTS (NEW NEWS SECTION) --- */}
-                <div className="mt-5 pt-3">
-                     <div className="d-flex align-items-center mb-3 border-bottom border-secondary pb-2" style={{borderColor: 'rgba(255,255,255,0.1) !important'}}>
-                         <div style={{ width: '6px', height: '6px', background: '#F6465D', borderRadius: '50%', marginRight: '10px' }}></div>
-                         <h4 className="fw-bold mb-0 text-white text-uppercase" style={{ fontSize: '14px', letterSpacing: '1px' }}>Global Market Wire</h4>
-                     </div>
-
-                     {loadingNews ? (
-                         <div className="text-muted text-center py-3" style={{ fontSize: '12px' }}>Loading Insights...</div>
-                     ) : latestNews ? (
-                         <div className="news-item-wrapper">
-                            <div className="news-card d-flex flex-column flex-md-row gap-4 align-items-start">
-                                {/* TEXT */}
-                                <div className="flex-grow-1">
-                                    <div className="d-flex align-items-center gap-2 mb-2">
-                                        <span className="badge-category">{latestNews.category || 'MARKET'}</span>
-                                        <span className="text-date">{timeAgo(latestNews.created_at)}</span>
-                                    </div>
-                                    
-                                    <h2 className="news-title">
-                                        <Link href={`/blog/${latestNews.id}`} className="text-decoration-none text-white hover-gold">
-                                            {latestNews.title}
-                                        </Link>
-                                    </h2>
-                                    
-                                    <p className="news-summary">{latestNews.summary}</p>
-                                    
-                                    <div className="mt-2">
-                                        <Link href={`/blog/${latestNews.id}`} className="read-more-link">
-                                            READ ANALYSIS <i className="bi bi-arrow-right-short"></i>
-                                        </Link>
-                                    </div>
-                                </div>
-                                {/* IMAGE */}
-                                {latestNews.image_url && (
-                                    <div className="news-thumbnail flex-shrink-0">
-                                        <Link href={`/blog/${latestNews.id}`}>
-                                            <img src={latestNews.image_url} alt="News" />
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
-                         </div>
-                     ) : (
-                         <div className="text-muted" style={{ fontSize: '13px' }}>No updates currently available.</div>
-                     )}
-                </div>
-
-                {/* --- DEVELOPERS TOOLKIT (UPDATED LAYOUT) --- */}
+                {/* DEVELOPERS EMBED SECTION */}
                 <div className="mt-5 pt-4">
                     <div className="d-flex align-items-center mb-3">
                          <div style={{ width: '30px', height: '2px', background: GOLD_COLOR, marginRight: '10px' }}></div>
                          <h4 className="fw-bold mb-0 text-white" style={{ fontSize: '14px', letterSpacing: '1px' }}>DEVELOPERS & MARKET DATA</h4>
                     </div>
                     
-                    <div className="row g-2">
-                        {/* ROW 1: FULL BAR (50%) + CHART WIDGET (50%) */}
-                        <div className="col-md-6 col-12">
+                    <div className="row g-1">
+                        <div className="col-12 mb-2">
                              <EmbedCard 
                                 title="NGX Full Market Bar"
                                 isFullBar={true}
@@ -328,27 +244,18 @@ export default function NGXPage() {
                                         <NGXVolumeWidget theme="dark" />
                                     </div>
                                 }
-                                embedId="ngx-full-bar"
-                             />
-                        </div>
-                        <div className="col-md-6 col-12">
-                             <EmbedCard 
-                                title="NGX Live Chart Widget"
-                                isChart={true}
-                                component={<StaticMiniChart />} 
-                                embedId="ngx-chart-widget"
+                                width="100%" height="90" embedId="ngx-full-bar"
                              />
                         </div>
 
-                        {/* ROW 2: INDIVIDUAL CAPSULES */}
                         <div className="col-4">
-                            <EmbedCard title="Sentiment" label="Sentiment" component={<NGXWidget theme="dark" />} embedId="ngx-sentiment" />
+                            <EmbedCard title="Sentiment" label="Sentiment" component={<NGXWidget theme="dark" />} width="320" height="100" embedId="ngx-sentiment" />
                         </div>
                         <div className="col-4">
-                            <EmbedCard title="Market Cap" label="Cap" component={<NGXCapWidget theme="dark" />} embedId="ngx-cap" />
+                            <EmbedCard title="Market Cap" label="Market Cap" component={<NGXCapWidget theme="dark" />} width="320" height="100" embedId="ngx-cap" />
                         </div>
                         <div className="col-4">
-                            <EmbedCard title="Volume" label="Volume" component={<NGXVolumeWidget theme="dark" />} embedId="ngx-volume" />
+                            <EmbedCard title="Volume" label="Volume" component={<NGXVolumeWidget theme="dark" />} width="320" height="100" embedId="ngx-volume" />
                         </div>
                     </div>
                 </div>
@@ -360,7 +267,7 @@ export default function NGXPage() {
 
       <div style={{ width: '100%', height: '2.5rem', background: 'transparent' }}></div>
 
-      {/* FOOTER STRIP */}
+      {/* 2. الشريط الأسود */}
       <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" 
            style={{ 
                borderColor: '#333 !important', 
@@ -383,49 +290,30 @@ export default function NGXPage() {
           </div>
       </div>
 
+      {/* 3. مسافة سفلية شفافة */}
       <div style={{ width: '100%', height: '80px', background: 'transparent' }}></div>
 
       <style jsx global>{`
-        /* --- GENERAL --- */
         .header-wrapper { background: ${SURFACE_DARK}; border-bottom: 1px solid ${BORDER_COLOR}; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
         .content-container { max-width: 1050px; margin: 0 auto; }
         .widget-item { flex: 0 0 310px; }
         .main-title { font-size: 1.65rem; color: ${TEXT_PRIMARY}; letter-spacing: -0.5px; }
         .main-desc { font-size: 15px; color: ${TEXT_MUTED}; max-width: 650px; }
-        
-        /* --- ARTICLE --- */
-        .article-wrapper { margin-left: 0; padding-left: 0; }
+        .text-section { max-width: 1050px; margin: 0 auto; }
         .article-heading { font-size: 1.65rem; color: ${TEXT_PRIMARY}; letter-spacing: -0.5px; font-weight: 700; font-family: "Inter", "Segoe UI", sans-serif; line-height: 1.3; }
+        .article-heading.mt-4 { font-size: 1.3rem; }
         .article-text { color: ${TEXT_MUTED}; font-family: "Inter", "Segoe UI", sans-serif; font-size: 15px; line-height: 1.6; margin-bottom: 0.8rem; text-align: justify; }
+        .article-wrapper { margin-left: 0; padding-left: 0; }
 
-        /* --- NEWS STYLES (Copied from News.tsx) --- */
-        .badge-category { font-size: 9px; font-weight: 700; color: ${GOLD_BASE}; text-transform: uppercase; letter-spacing: 1px; border: 1px solid ${GOLD_BASE}44; padding: 2px 6px; border-radius: 4px; }
-        .text-date { font-size: 9px; color: #666; font-weight: 600; text-transform: uppercase; }
-        .news-title { font-family: "Inter", sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; line-height: 1.3; letter-spacing: -0.3px; transition: color 0.2s; }
-        .hover-gold:hover { color: ${GOLD_BASE} !important; }
-        .news-summary { font-family: "Inter", sans-serif; font-size: 13px; color: ${TEXT_MUTED}; line-height: 1.5; margin-bottom: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .read-more-link { font-size: 10px; color: ${GOLD_BASE}; text-decoration: none; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-        .read-more-link:hover { text-decoration: underline; filter: brightness(1.2); }
-        .news-thumbnail { width: 140px; height: 90px; border-radius: 4px; overflow: hidden; border: 1px solid #333; cursor: pointer; }
-        .news-thumbnail img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
-        .news-card:hover .news-thumbnail img { transform: scale(1.05); }
-
-        /* --- MOBILE TWEAKS --- */
         @media (max-width: 768px) {
             .header-wrapper { padding: 2px 0 !important; }
             .widgets-grid-container { display: flex !important; flex-wrap: nowrap !important; justify-content: space-between !important; gap: 2px !important; padding: 0 4px !important; max-width: 100% !important; overflow-x: hidden; }
             .widget-item { flex: 1 1 auto !important; min-width: 0 !important; max-width: 33% !important; }
-            
-            /* FORCED LEFT ALIGNMENT FOR MOBILE */
-            .main-title { font-size: 1.25rem; text-align: left !important; }
-            .main-desc { font-size: 13px; text-align: left !important; margin: 0; }
-            .text-section { text-align: left !important; }
-            
-            /* News Mobile */
-            .news-card { flex-direction: column-reverse !important; }
-            .news-thumbnail { width: 100%; height: 160px; margin-bottom: 10px; }
-            .news-title { font-size: 1.1rem; }
+            .main-title { font-size: 1.25rem; text-align: center; }
+            .main-desc { font-size: 13px; text-align: center; margin: 0 auto; }
+            .article-heading { font-size: 1.25rem; text-align: left; }
+            .article-text { font-size: 14px; text-align: left; }
         }
 
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
@@ -436,3 +324,4 @@ export default function NGXPage() {
     </main>
   );
 }
+
