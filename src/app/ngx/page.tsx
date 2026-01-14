@@ -41,11 +41,10 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- الرسم البياني المصغر الثابت (تم تعديل الارتفاع ليكون مناسباً) ---
+// --- الرسم البياني المصغر الثابت ---
 const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: 'linear-gradient(180deg, rgba(30,30,30,0) 0%, rgba(14,203,129,0.05) 100%)' }}>
         <svg viewBox="0 0 300 150" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
-            {/* خط بياني أنحف */}
             <path 
                 d="M0,100 C40,90 60,120 100,110 C150,90 180,60 220,50 C260,40 280,20 300,10" 
                 fill="none" 
@@ -65,14 +64,13 @@ const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
                 </linearGradient>
             </defs>
         </svg>
-        {/* العلامة المائية */}
         <div style={{ position: 'absolute', bottom: '8px', left: '10px', fontSize: isMobile ? '12px' : '14px', fontWeight: '900', fontStyle: 'italic', color: 'rgba(255,255,255,0.5)' }}>
             NNM
         </div>
     </div>
 );
 
-// --- كارت التضمين (تم التعديل الجراحي للأزرار والمقاسات) ---
+// --- كارت التضمين (Embed Card) ---
 const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any) => {
   const [copied, setCopied] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -96,16 +94,15 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // تحديد ارتفاع منطقة المعاينة
+  // ضبط الارتفاعات لتناسب التصغير
   let previewHeight = '60px';
-  if (isChart) previewHeight = isMobile ? '80px' : '100px'; // تصغير ارتفاع الرسم البياني في الجوال
-  if (isFullBar) previewHeight = '75px'; // زيادة ارتفاع الشريط الكامل
+  if (isChart) previewHeight = isMobile ? '50px' : '60px'; // تصغير ارتفاع الرسم البياني
+  if (isFullBar) previewHeight = '50px'; 
 
   return (
     <div className="embed-card h-100 d-flex flex-column justify-content-between">
       <div className="preview-area" style={{ height: previewHeight }}>
         <div className={`widget-scale-wrapper ${isFullBar ? 'full-bar-scale' : isChart ? 'chart-scale' : 'individual-scale'}`}>
-          {/* إذا كان رسم بياني، نمرر له حالة الجوال لضبط العلامة المائية */}
           {isChart ? <StaticMiniChart isMobile={isMobile} /> : component}
         </div>
       </div>
@@ -114,14 +111,14 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         <h6 className="d-none d-md-block mb-1 unified-title" style={{ fontSize: '10px', marginBottom: '4px' }}>{title}</h6>
         {label && <div className="mobile-label fw-bold mb-1">{label}</div>}
         
-        {/* --- التعديل الجراحي للزر: عرض 30% وتوسيط --- */}
+        {/* زر النسخ: 30% عرض في الكمبيوتر والجوال كما طلبت */}
         <button 
             onClick={handleCopy} 
             className={`btn btn-sm mb-1 copy-btn ${copied ? 'btn-success' : 'btn-outline-secondary'}`}
             style={{ 
-                width: isMobile ? '30%' : '80%', // في الجوال 30%، في الكمبيوتر 80%
+                width: '30%', 
                 minWidth: '60px',
-                margin: '4px auto 0', // هامش علوي صغير وتوسيط
+                margin: '4px auto 0', 
                 display: 'block',
                 padding: '2px 0'
             }}
@@ -143,20 +140,28 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         }
         .preview-area { display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; width: 100%; flex-grow: 1; }
         
-        /* Scaling Logic (تم التعديل) */
+        /* Scaling Logic - التعديلات الجراحية */
         .widget-scale-wrapper { transform-origin: center; display: flex; justify-content: center; width: 100%; }
-        .full-bar-scale { transform: scale(0.85); width: 100%; } /* تكبير الشريط الكامل ليملأ العرض */
-        .individual-scale { transform: scale(0.75); } /* تكبير الكبسولات الفردية قليلاً */
-        .chart-scale { width: 100%; height: 100%; } 
+        
+        /* Full Bar: تصغير 50% (scale 0.5) */
+        .full-bar-scale { transform: scale(0.5); width: 200%; } 
+        
+        /* Individual Caps: تصغير 25% (scale 0.75) */
+        .individual-scale { transform: scale(0.75); } 
+        
+        /* Chart: تصغير 50% (scale 0.5) */
+        .chart-scale { transform: scale(0.5); width: 200%; height: 200%; } 
 
         .copy-btn { font-size: 9px; border-radius: 4px; color: #ddd; border-color: #444; }
         .mobile-label { display: none; color: ${GOLD_COLOR}; font-size: 9px; letter-spacing: 0.5px; }
 
         @media (max-width: 768px) {
-            .embed-card { padding: 6px 4px; border: 1px solid rgba(255,255,255,0.05); min-height: 110px; }
-            /* ضبط المقاسات للجوال */
-            .full-bar-scale { transform: scale(0.55); width: 180%; margin-left: -40%; } /* تصغير الشريط الكامل في الجوال */
+            .embed-card { padding: 6px 4px; border: 1px solid rgba(255,255,255,0.05); min-height: 100px; }
+            
+            /* ضبط الجوال */
+            .full-bar-scale { transform: scale(0.4); width: 250%; margin-left: -75%; }
             .individual-scale { transform: scale(0.6); width: 100%; }
+            .chart-scale { transform: scale(0.5); width: 200%; height: 200%; }
             
             .mobile-label { display: block; font-size: 8px; margin-bottom: 4px !important; }
             .copy-btn { font-size: 8px; }
@@ -278,11 +283,10 @@ export default function NGXPage() {
                 <p className="unified-text mb-3">The emergence of neutral market observatories, classification systems, and non-speculative indices will play a critical role in this evolution. They allow participants—creators, developers, institutions, and researchers—to understand the NFT ecosystem as a whole rather than through isolated data points.</p>
                 <p className="unified-text mb-3">In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.</p>
 
-                {/* --- LATEST NEWS SECTION --- */}
+                {/* --- LATEST NEWS SECTION (Exacting Copy of News.tsx Design) --- */}
                 <div className="mt-5 pt-3 mb-4">
                      <div className="d-flex align-items-center mb-3 border-bottom border-secondary pb-2" style={{borderColor: 'rgba(255,255,255,0.1) !important'}}>
                          <div style={{ width: '6px', height: '6px', background: '#F6465D', borderRadius: '50%', marginRight: '10px' }}></div>
-                         {/* --- التعديل الجراحي 1: تصغير عنوان الأخبار بنسبة 20% (من 14px إلى 11.5px) --- */}
                          <h4 className="fw-bold mb-0 text-white text-uppercase" style={{ fontSize: '11.5px', letterSpacing: '1px' }}>Global Market Wire</h4>
                      </div>
 
@@ -290,8 +294,9 @@ export default function NGXPage() {
                          <div className="text-muted text-center py-3" style={{ fontSize: '12px' }}>Loading Insights...</div>
                      ) : latestNews ? (
                          <div className="news-item-wrapper">
+                            {/* --- SAME STRUCTURE AS News.tsx --- */}
                             <div className="news-card d-flex flex-column flex-md-row gap-4 align-items-start">
-                                {/* TEXT */}
+                                {/* TEXT (Left on Desktop, Bottom on Mobile) */}
                                 <div className="flex-grow-1">
                                     <div className="d-flex align-items-center gap-2 mb-2">
                                         <span className="badge-category">{latestNews.category || 'MARKET'}</span>
@@ -312,7 +317,7 @@ export default function NGXPage() {
                                         </Link>
                                     </div>
                                 </div>
-                                {/* IMAGE */}
+                                {/* IMAGE (Right on Desktop, Top on Mobile) */}
                                 {latestNews.image_url && (
                                     <div className="news-thumbnail flex-shrink-0">
                                         <Link href={`/blog/${latestNews.id}`}>
@@ -334,7 +339,7 @@ export default function NGXPage() {
                     </p>
                 </div>
                 
-                {/* --- DEVELOPERS TOOLKIT (التعديل الجراحي للمقاسات والتوزيع) --- */}
+                {/* --- DEVELOPERS TOOLKIT --- */}
                 <div className="mt-5 pt-4">
                     <div className="d-flex align-items-center mb-3">
                          <div style={{ width: '30px', height: '2px', background: GOLD_COLOR, marginRight: '10px' }}></div>
@@ -342,16 +347,15 @@ export default function NGXPage() {
                     </div>
                     
                     <div className="row g-2 justify-content-center">
-                        {/* 1. الشريط الكامل (الثلاثة مؤشرات) */}
+                        {/* 1. الشريط الكامل (الثلاثة ملتصقين) */}
                         <div className="col-12">
                              <EmbedCard 
                                 title="NGX Full Market Bar"
                                 isFullBar={true}
                                 component={
-                                    <div className="d-flex gap-2 w-100"> {/* إضافة w-100 لضمان ملء العرض */}
+                                    <div className="d-flex gap-0 w-100"> {/* gap-0 للالتصاق */}
                                         <div style={{ flex: 1 }}><NGXWidget theme="dark" /></div>
                                         <div style={{ flex: 1 }}><NGXCapWidget theme="dark" /></div>
-                                        {/* --- التعديل الجراحي 2: إضافة المؤشر الثالث المفقود --- */}
                                         <div style={{ flex: 1 }}><NGXVolumeWidget theme="dark" /></div>
                                     </div>
                                 }
@@ -359,14 +363,14 @@ export default function NGXPage() {
                              />
                         </div>
 
-                        {/* 2. الرسم البياني المصغر (عرض 80% في الجوال وتوسيطه) */}
-                        <div className="col-12 col-md-12"> {/* في الجوال يأخذ col-10 مع إزاحة ليكون متوسطاً */}
+                        {/* 2. الرسم البياني المصغر */}
+                        <div className="col-12 col-md-12"> 
                             <div className="d-flex justify-content-center">
-                                 <div style={{ width: '100%', maxWidth: '100%' }}> {/* حاوية للتحكم في العرض */}
+                                 <div style={{ width: '100%', maxWidth: '100%' }}> 
                                      <EmbedCard 
                                         title="Live Chart Widget"
                                         isChart={true}
-                                        component={<StaticMiniChart isMobile={false} />} // سيتم تحديد الموبايل داخلياً
+                                        component={<StaticMiniChart isMobile={false} />} 
                                         embedId="ngx-chart-widget"
                                      />
                                  </div>
@@ -418,31 +422,15 @@ export default function NGXPage() {
       <div style={{ width: '100%', height: '80px', background: 'transparent' }}></div>
 
       <style jsx global>{`
-        /* --- UNIFIED TYPOGRAPHY (السر في توحيد الخطوط) --- */
-        .unified-title {
-            font-size: 1.65rem;
-            color: ${TEXT_PRIMARY};
-            letter-spacing: -0.5px;
-            font-weight: 700;
-            font-family: "Inter", "Segoe UI", sans-serif;
-            line-height: 1.3;
-        }
-        
-        .unified-text {
-            font-size: 15px;
-            color: ${TEXT_MUTED};
-            font-family: "Inter", "Segoe UI", sans-serif;
-            font-weight: 400;
-            line-height: 1.6;
-        }
+        /* --- UNIFIED TYPOGRAPHY --- */
+        .unified-title { font-size: 1.65rem; color: ${TEXT_PRIMARY}; letter-spacing: -0.5px; font-weight: 700; font-family: "Inter", "Segoe UI", sans-serif; line-height: 1.3; }
+        .unified-text { font-size: 15px; color: ${TEXT_MUTED}; font-family: "Inter", "Segoe UI", sans-serif; font-weight: 400; line-height: 1.6; }
 
         /* --- GENERAL --- */
         .header-wrapper { background: ${SURFACE_DARK}; border-bottom: 1px solid ${BORDER_COLOR}; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
         .content-container { max-width: 1050px; margin: 0 auto; }
         .widget-item { flex: 0 0 310px; }
-        
-        /* --- ARTICLE --- */
         .article-wrapper { margin-left: 0; padding-left: 0; }
 
         /* --- NEWS STYLES --- */
@@ -461,13 +449,11 @@ export default function NGXPage() {
             .header-wrapper { padding: 2px 0 !important; }
             .widgets-grid-container { display: flex !important; flex-wrap: nowrap !important; justify-content: space-between !important; gap: 2px !important; padding: 0 4px !important; max-width: 100% !important; overflow-x: hidden; }
             .widget-item { flex: 1 1 auto !important; min-width: 0 !important; max-width: 33% !important; }
-            
-            /* FORCED LEFT ALIGNMENT ON MOBILE */
             .unified-title { font-size: 1.25rem; text-align: left !important; }
             .unified-text { font-size: 13px; text-align: left !important; }
             .text-section { text-align: left !important; }
             
-            /* News Mobile */
+            /* News Mobile: Image Top */
             .news-card { flex-direction: column-reverse !important; }
             .news-thumbnail { width: 100%; height: 160px; margin-bottom: 10px; }
         }
