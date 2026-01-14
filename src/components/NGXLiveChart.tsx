@@ -21,47 +21,6 @@ const VIEW_MODES = [
     { label: '2026 - 2030', value: 'FORECAST' }
 ];
 
-// --- دالة مساعدة لتوليد البيانات (للحفظ في الداتا بيز فقط - زر الطوارئ) ---
-function generateDataForDB(sectorKey: string, mode: string) {
-    const data = [];
-    let date = mode === 'HISTORY' ? new Date('2017-01-01') : new Date('2026-01-15');
-    const endDate = mode === 'HISTORY' ? new Date('2026-01-14') : new Date('2030-12-31');
-    
-    let value = 100;
-    let volatility = 0.05;
-    if (sectorKey.includes('Name')) { value = 40; volatility = 0.07; }
-    if (sectorKey.includes('Art')) { value = 80; volatility = 0.15; }
-    if (sectorKey.includes('Gaming')) { value = 60; volatility = 0.10; }
-    if (mode === 'FORECAST') value = sectorKey.includes('Name') ? 1200 : 800;
-
-    while (date <= endDate) {
-        const year = date.getFullYear();
-        let trend = 1.00;
-        if (mode === 'HISTORY') {
-            if (year === 2017) trend = 1.015;
-            if (year >= 2018 && year < 2020) trend = 0.997;
-            if (year === 2020) trend = 1.008;
-            if (year === 2021) trend = 1.025;
-            if (year === 2022) trend = 0.982;
-            if (year === 2023) trend = 0.998;
-            if (year >= 2024) trend = 1.010;
-        } else { trend = 1.006; }
-
-        const randomMove = 1 + (Math.random() - 0.5) * volatility;
-        value = value * trend * randomMove;
-        if (value < 10) value = 10;
-
-        data.push({
-            sector_key: sectorKey,
-            mode: mode,
-            timestamp: Math.floor(date.getTime() / 1000),
-            value: parseFloat(value.toFixed(2))
-        });
-        date.setDate(date.getDate() + 3);
-    }
-    return data;
-}
-
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
     const listener = (event: any) => {
@@ -85,9 +44,8 @@ export default function NGXLiveChart() {
   
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [needsSeeding, setNeedsSeeding] = useState(false); // زر الطوارئ
-
+  
+  // حالة القوائم
   const [isSectorOpen, setIsSectorOpen] = useState(false);
   const [isTimeOpen, setIsTimeOpen] = useState(false);
   const sectorRef = useRef<HTMLDivElement>(null);
@@ -96,40 +54,9 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- دالة زر الطوارئ (تعبئة الداتا بيز) ---
-  const seedDatabase = async () => {
-      setIsLoading(true);
-      try {
-          // حذف القديم أولاً لتجنب التكرار
-          await supabase.from('ngx_static_chart').delete().neq('id', 0);
-          
-          let allRows: any[] = [];
-          for (const sec of SECTORS) {
-              for (const mode of VIEW_MODES) {
-                  const rows = generateDataForDB(sec.key, mode.value);
-                  allRows = [...allRows, ...rows];
-              }
-          }
-          // رفع البيانات (دفعات)
-          const chunkSize = 1000;
-          for (let i = 0; i < allRows.length; i += chunkSize) {
-              await supabase.from('ngx_static_chart').insert(allRows.slice(i, i + chunkSize));
-          }
-          alert("Database seeded successfully! Now refresing chart...");
-          setNeedsSeeding(false);
-          fetchFromDB(activeSector.key, activeViewMode.value);
-      } catch (err) {
-          console.error(err);
-          alert("Error seeding DB. Check console.");
-      } finally {
-          setIsLoading(false);
-      }
-  };
-
-  // --- دالة الجلب من الداتا بيز (الأساس) ---
+  // --- دالة الجلب من الداتا بيز ---
   const fetchFromDB = async (sectorKey: string, mode: string) => {
       if(!seriesInstance || !chartInstance) return;
-      setIsLoading(true);
       
       try {
           const { data, error } = await supabase
@@ -141,35 +68,26 @@ export default function NGXLiveChart() {
 
           if (error) throw error;
 
-          if (!data || data.length === 0) {
-              // إذا كان الجدول فارغاً، نظهر زر الطوارئ
-              setNeedsSeeding(true);
-              seriesInstance.setData([]);
-              return;
+          if (data && data.length > 0) {
+              const formattedData = data.map((d: any) => ({
+                  time: Number(d.timestamp) as UTCTimestamp,
+                  value: Number(d.value)
+              }));
+              seriesInstance.setData(formattedData);
+              chartInstance.timeScale().fitContent();
           }
-
-          const formattedData = data.map((d: any) => ({
-              time: Number(d.timestamp) as UTCTimestamp,
-              value: Number(d.value)
-          }));
-
-          seriesInstance.setData(formattedData);
-          chartInstance.timeScale().fitContent();
-          
       } catch (err) {
           console.error("Fetch error:", err);
-      } finally {
-          setIsLoading(false);
       }
   };
 
-  // 1. تهيئة الرسم البياني (إعادة التفاعل)
+  // 1. تهيئة الرسم البياني
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    // إعدادات الجوال
+    // خط صغير جداً للجوال لضمان ظهور التاريخ
     const isMobile = window.innerWidth <= 768;
-    const fontSize = isMobile ? 9 : 11; // خط صغير جداً للجوال
+    const fontSize = isMobile ? 9 : 11;
 
     const chart = createChart(chartContainerRef.current, {
       layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#B0B0B0', fontFamily: '"Inter", sans-serif', fontSize: fontSize },
@@ -180,16 +98,15 @@ export default function NGXLiveChart() {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true, timeVisible: true, secondsVisible: false,
         barSpacing: 6, minBarSpacing: 0.5,
-        fixLeftEdge: true,  // إصلاح قص التاريخ
-        fixRightEdge: true, // إصلاح قص التاريخ
+        fixLeftEdge: true,
+        fixRightEdge: true,
         borderVisible: true,
       },
-      // تفعيل الحركة الكاملة
+      // تفعيل كل خيارات التفاعل (Touch & Mouse)
       handleScroll: { mouseWheel: true, pressedMouseMove: true, vertTouchDrag: false }, 
       handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
-      
       rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.1)', visible: true, scaleMargins: { top: 0.2, bottom: 0.2 } },
-      crosshair: { mode: CrosshairMode.Normal }, // تفعيل التقاطع والماوس
+      crosshair: { mode: CrosshairMode.Normal },
       localization: { locale: 'en-US' },
     });
 
@@ -217,7 +134,7 @@ export default function NGXLiveChart() {
     return () => { window.removeEventListener('resize', handleResize); chart.remove(); };
   }, []);
 
-  // 2. تحديث البيانات (من الداتا بيز)
+  // 2. تحديث البيانات عند التغيير
   useEffect(() => {
       if (!seriesInstance || !chartInstance) return;
 
@@ -233,16 +150,8 @@ export default function NGXLiveChart() {
 
   return (
     <div className="ngx-chart-glass mb-4">
-      {/* زر الطوارئ - يظهر فقط إذا كانت الداتا بيز فارغة */}
-      {needsSeeding && (
-          <div style={{position:'absolute', top: 50, left: '50%', transform: 'translate(-50%)', zIndex: 100}}>
-              <button onClick={seedDatabase} style={{background:'red', color:'white', padding: '10px', border:'none', borderRadius: '5px'}}>
-                  ⚠ CLICK ONCE TO SEED DB
-              </button>
-          </div>
-      )}
-
       <div className="filters-container">
+        
         {/* فلتر القطاعات */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
@@ -297,8 +206,7 @@ export default function NGXLiveChart() {
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper" style={{ position: 'relative' }}>
-          {/* تم إزالة طبقة الحماية التي كانت تمنع الحركة */}
-          {/* العلامة المائية مرفوعة عن القاع 40 بكسل حتى لا تغطي التاريخ */}
+          {/* العلامة المائية NNM (بدون رابط) */}
           <div className="chart-watermark">NNM</div>
       </div>
       
@@ -357,7 +265,7 @@ export default function NGXLiveChart() {
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
-        /* العلامة المائية: مرفوعة 40 بكسل وشفافة */
+        /* العلامة المائية للديسكتوب (مرتفعة) */
         .chart-watermark {
             position: absolute;
             bottom: 40px;
@@ -378,7 +286,9 @@ export default function NGXLiveChart() {
             .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 11px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: auto; min-width: 120px; max-width: 150px; margin-right: auto; }
-            .chart-watermark { font-size: 16px; bottom: 35px; left: 15px; }
+            
+            /* تعديل الجوال: العلامة المائية تنخفض لتكون فوق الخط مباشرة */
+            .chart-watermark { font-size: 16px; bottom: 10px; left: 15px; }
         }
       `}</style>
     </div>
