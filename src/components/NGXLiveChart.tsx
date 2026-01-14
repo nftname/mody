@@ -55,7 +55,7 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- دالة الجلب ---
+  // --- دالة الجلب من الداتا بيز ---
   const fetchFromDB = async (sectorKey: string, mode: string) => {
       if(!seriesInstance || !chartInstance) return;
       
@@ -90,7 +90,7 @@ export default function NGXLiveChart() {
       }
   };
 
-  // 1. تهيئة الرسم البياني (ضبط الألوان والحدود للجوال)
+  // 1. تهيئة الرسم البياني (ضبط المسافات للجوال)
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -99,10 +99,9 @@ export default function NGXLiveChart() {
     const chart = createChart(chartContainerRef.current, {
       layout: { 
           background: { type: ColorType.Solid, color: 'transparent' }, 
-          // تغيير لون النص للأبيض الناصع لضمان الظهور على الخلفية السوداء
-          textColor: '#FFFFFF', 
+          textColor: '#DDDDDD', // لون نص فاتح للوضوح
           fontFamily: '"Inter", sans-serif', 
-          fontSize: isMobile ? 11 : 12 
+          fontSize: isMobile ? 10 : 11 
       },
       grid: { 
           vertLines: { visible: false }, 
@@ -111,20 +110,21 @@ export default function NGXLiveChart() {
       width: chartContainerRef.current.clientWidth,
       height: 400,
       timeScale: {
-        borderColor: 'rgba(255, 255, 255, 0.2)', // جعل الحدود مرئية لتحديد المنطقة
+        borderColor: 'rgba(255, 255, 255, 0.2)',
         visible: true, 
         timeVisible: true, 
         secondsVisible: false,
-        // تفعيل الحدود لكي لا يظهر "مستطيل أسود مجهول"
         borderVisible: true,
+        // *** الحل السحري للنقاط ***
+        // نزيد المسافة بين الشموع في الجوال لكي يكون هناك مكان للكتابة
+        barSpacing: isMobile ? 8 : 6, 
+        minBarSpacing: 0.5,
         fixLeftEdge: true,
         fixRightEdge: true,
-        // تقليل المسافات في الجوال
-        minBarSpacing: 0.6,
-        // حيلة لتنسيق التاريخ: عرض السنة مختصرة فقط لتوفير مساحة
-        tickMarkFormatter: (time: number, tickMarkType: any, locale: any) => {
+        // تنسيق التاريخ: يظهر السنة فقط بصيغة قصيرة جداً
+        tickMarkFormatter: (time: number) => {
             const date = new Date(time * 1000);
-            return `'${date.getFullYear().toString().slice(-2)}`; // يظهر '24, '25
+            return `'${date.getFullYear().toString().slice(-2)}`; // النتيجة: '24
         },
       },
       handleScroll: { mouseWheel: true, pressedMouseMove: true, vertTouchDrag: false }, 
@@ -155,6 +155,8 @@ export default function NGXLiveChart() {
          chart.applyOptions({ 
              width: chartContainerRef.current.clientWidth,
              height: mobileNow ? 350 : 400,
+             // التأكد من بقاء المسافة واسعة عند تغيير الحجم
+             timeScale: { barSpacing: mobileNow ? 8 : 6 }
          });
       }
     };
@@ -183,7 +185,7 @@ export default function NGXLiveChart() {
   return (
     <div className="ngx-chart-glass mb-4">
       
-      {/* مؤشر التحميل (أكثر شفافية وسلاسة) */}
+      {/* مؤشر التحميل الذهبي */}
       {isLoading && (
         <div className="loading-overlay">
             <div className="spinner"></div>
@@ -257,7 +259,6 @@ export default function NGXLiveChart() {
 
       <style jsx>{`
         .ngx-chart-glass {
-            /* تعديل الخلفية لتكون داكنة قليلاً لتبرز الرسم عن خلفية الموقع */
             background: rgba(20, 20, 20, 0.4); 
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -272,20 +273,20 @@ export default function NGXLiveChart() {
         .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
         .chart-canvas-wrapper { width: 100%; height: 400px; position: relative; }
         
-        /* تحسين مؤشر التحميل */
+        /* مؤشر التحميل الذهبي */
         .loading-overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             display: flex; justify-content: center; align-items: center;
-            background: rgba(0,0,0,0.1); /* شفافية عالية لكي لا يزعج العين */
+            background: rgba(0,0,0,0); /* خلفية شفافة بالكامل */
             z-index: 20;
-            transition: opacity 0.3s ease;
+            pointer-events: none; /* يسمح بالضغط من خلاله */
         }
         .spinner {
-            width: 24px; height: 24px; /* تصغير الحجم قليلاً */
-            border: 2px solid rgba(255,255,255,0.1);
+            width: 25px; height: 25px;
+            border: 2px solid rgba(255,215,0, 0.2); /* ذهبي باهت */
             border-radius: 50%;
-            border-top-color: #0ecb81; /* لون أخضر متناسق */
-            animation: spin 0.8s linear infinite;
+            border-top-color: #F0B90B; /* ذهبي الشعار (Binance Gold) */
+            animation: spin 0.6s linear infinite; /* سرعة دوران عالية */
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -345,11 +346,11 @@ export default function NGXLiveChart() {
             .custom-select-trigger { font-size: 11px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: auto; min-width: 120px; max-width: 150px; margin-right: auto; }
             
-            /* العلامة المائية للجوال: ضبط دقيق */
+            /* العلامة المائية للجوال (مضبوطة لعدم التداخل) */
             .chart-watermark { 
                 font-size: 14px; 
-                bottom: 25px; /* رفعها قليلاً لتفادي التداخل مع التواريخ التي ستظهر الآن */
-                left: 15px; 
+                bottom: 28px; /* ارتفاع كافٍ لظهور التاريخ تحتها */
+                left: 10px; 
             }
         }
       `}</style>
