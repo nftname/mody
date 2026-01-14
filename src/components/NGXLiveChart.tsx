@@ -11,28 +11,25 @@ const SECTORS = [
   { key: 'Utility NFT', color: '#00D8D6' }         
 ];
 
-// --- إعدادات الفلتر الزمني الجديد ---
+// --- إعدادات الفلتر الزمني الجديد (مختصرة) ---
 const VIEW_MODES = [
-    { label: 'Historic Data (2017-2026)', value: 'HISTORY' },
-    { label: 'Market Forecast (2030)', value: 'FORECAST' }
+    { label: '2017 - 2026', value: 'HISTORY' },
+    { label: '2026 - 2030', value: 'FORECAST' }
 ];
 
 // --- محرك المحاكاة الذكي (Simulation Engine) ---
-// هذا الكود هو "العقل" الذي يرسم السيناريوهات بدقة
 function generateSimulation(sectorKey: string, mode: string) {
     const data = [];
     let date = mode === 'HISTORY' ? new Date('2017-01-01') : new Date('2026-01-15');
     const endDate = mode === 'HISTORY' ? new Date('2026-01-14') : new Date('2030-12-31');
     
-    // إعدادات أولية لكل قطاع ليكون مميزاً
     let value = 100;
-    let volatility = 0.05; // حدة التذبذب
+    let volatility = 0.05;
 
-    if (sectorKey.includes('Name')) { value = 40; volatility = 0.07; } // يبدأ منخفض
-    if (sectorKey.includes('Art')) { value = 80; volatility = 0.15; } // متذبذب جداً
+    if (sectorKey.includes('Name')) { value = 40; volatility = 0.07; }
+    if (sectorKey.includes('Art')) { value = 80; volatility = 0.15; }
     if (sectorKey.includes('Gaming')) { value = 60; volatility = 0.10; }
     
-    // إذا كان توقعات، نبدأ من نقطة مرتفعة (استكمالاً للحاضر)
     if (mode === 'FORECAST') value = sectorKey.includes('Name') ? 1200 : 800;
 
     while (date <= endDate) {
@@ -40,33 +37,26 @@ function generateSimulation(sectorKey: string, mode: string) {
         let trend = 1.00;
 
         if (mode === 'HISTORY') {
-            // محاكاة دورات السوق الحقيقية
-            if (year === 2017) trend = 1.015; // البداية
-            if (year >= 2018 && year < 2020) trend = 0.997; // شتاء الكريبتو
-            if (year === 2020) trend = 1.008; // بداية التعافي
-            if (year === 2021) trend = 1.025; // القمة التاريخية (Bull Run)
-            if (year === 2022) trend = 0.982; // الانهيار الكبير
-            if (year === 2023) trend = 0.998; // ركود
-            if (year >= 2024) trend = 1.010; // التعافي الحالي
+            if (year === 2017) trend = 1.015;
+            if (year >= 2018 && year < 2020) trend = 0.997;
+            if (year === 2020) trend = 1.008;
+            if (year === 2021) trend = 1.025;
+            if (year === 2022) trend = 0.982;
+            if (year === 2023) trend = 0.998;
+            if (year >= 2024) trend = 1.010;
         } else {
-            // سيناريو التفاؤل للمستقبل (Exponential Growth)
             trend = 1.006; 
         }
 
-        // إضافة العشوائية "الطبيعية" للرسم
         const randomMove = 1 + (Math.random() - 0.5) * volatility;
         value = value * trend * randomMove;
-
-        // منع القيم السالبة
         if (value < 10) value = 10;
 
-        // إضافة النقطة
         data.push({
             time: (date.getTime() / 1000) as UTCTimestamp,
             value: value
         });
 
-        // القفز 3 أيام للأمام (لتسريع الرسم وتنعيمه)
         date.setDate(date.getDate() + 3);
     }
     return data;
@@ -91,14 +81,12 @@ function useClickOutside(ref: any, handler: any) {
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   
-  // الحالة (State)
   const [activeSector, setActiveSector] = useState(SECTORS[0]);
-  const [activeViewMode, setActiveViewMode] = useState(VIEW_MODES[0]); // الافتراضي: التاريخ
+  const [activeViewMode, setActiveViewMode] = useState(VIEW_MODES[0]);
   
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
 
-  // حالة القوائم المنسدلة
   const [isSectorOpen, setIsSectorOpen] = useState(false);
   const [isTimeOpen, setIsTimeOpen] = useState(false);
   const sectorRef = useRef<HTMLDivElement>(null);
@@ -107,7 +95,7 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // 1. تهيئة الرسم البياني (مرة واحدة)
+  // 1. تهيئة الرسم البياني
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -120,8 +108,10 @@ export default function NGXLiveChart() {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true, timeVisible: true, secondsVisible: false,
         barSpacing: 6, minBarSpacing: 0.5,
+        // fix: إضافة مساحة سفلية لضمان ظهور التواريخ على الجوال
+        bottomOffset: 10, 
       },
-      rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.1)', visible: true, scaleMargins: { top: 0.2, bottom: 0.1 } },
+      rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.1)', visible: true, scaleMargins: { top: 0.2, bottom: 0.2 } },
       crosshair: { mode: CrosshairMode.Normal },
       localization: { locale: 'en-US' },
       handleScroll: { vertTouchDrag: false }, 
@@ -152,21 +142,17 @@ export default function NGXLiveChart() {
     return () => { window.removeEventListener('resize', handleResize); chart.remove(); };
   }, []);
 
-  // 2. تحديث البيانات عند تغيير الفلتر أو القطاع
+  // 2. تحديث البيانات
   useEffect(() => {
       if (!seriesInstance || !chartInstance) return;
 
-      // أ) تحديث الألوان
       seriesInstance.applyOptions({
           lineColor: activeSector.color,
           topColor: `${activeSector.color}66`,
           bottomColor: `${activeSector.color}00`,
       });
 
-      // ب) توليد البيانات الجديدة
       const data = generateSimulation(activeSector.key, activeViewMode.value);
-      
-      // ج) وضع البيانات وتحديث الزوم
       seriesInstance.setData(data);
       chartInstance.timeScale().fitContent();
 
@@ -203,20 +189,15 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* --- مؤشر البث الحي (وسط) --- */}
-        <div className="live-indicator-wrapper d-flex align-items-center">
-            <div className="live-pulse" style={{ fontSize: '9px', color: '#0ecb81', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '6px', height: '6px', background: '#0ecb81', borderRadius: '50%', boxShadow: '0 0 5px #0ecb81' }}></span>
-                LIVE INDEX
-            </div>
-        </div>
+        {/* --- تم إزالة مؤشر LIVE INDEX من هنا --- */}
 
         {/* --- فلتر الزمن الجديد (يمين) --- */}
-        <div className="filter-wrapper time-wrapper ms-2" ref={timeRef} style={{ minWidth: '160px' }}>
+        <div className="filter-wrapper time-wrapper" ref={timeRef} style={{ minWidth: '110px' }}> {/* تقليل العرض */}
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
              onClick={() => setIsTimeOpen(!isTimeOpen)}
             >
+              {/* النصوص المختصرة */}
               <span>{activeViewMode.label}</span>
               <span className="arrow ms-1">▼</span>
            </div>
@@ -238,7 +219,7 @@ export default function NGXLiveChart() {
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper">
-          {/* العلامة المائية NNM */}
+          {/* العلامة المائية NNM المحسنة (لون أبيض، أصغر، مرفوعة) */}
           <div className="chart-watermark">NNM</div>
       </div>
       
@@ -268,11 +249,11 @@ export default function NGXLiveChart() {
             margin-bottom: 15px; padding: 0 10px; position: relative; z-index: 50;
         }
         .filter-wrapper { position: relative; }
-        .sector-wrapper { width: auto; min-width: 150px; max-width: 200px; } 
+        .sector-wrapper { width: auto; min-width: 140px; max-width: 180px; } 
         
         .custom-select-trigger {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 6px 12px; font-size: 12px; font-weight: 700;
+            padding: 6px 10px; font-size: 12px; font-weight: 700;
             color: #E0E0E0; background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px;
             cursor: pointer; transition: all 0.3s ease; user-select: none; white-space: nowrap;
@@ -297,14 +278,15 @@ export default function NGXLiveChart() {
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
+        /* العلامة المائية المحسنة */
         .chart-watermark {
             position: absolute;
-            bottom: 20px;
+            bottom: 35px; /* تم رفعها للأعلى */
             left: 20px;
-            font-size: 26px;
+            font-size: 20px; /* تم تقليل الحجم */
             font-weight: 900;
             font-style: italic;
-            color: rgba(255, 255, 255, 0.45);
+            color: #FFFFFF; /* لون أبيض ناصع بدون شفافية */
             pointer-events: none;
             z-index: 10;
             user-select: none;
@@ -316,8 +298,9 @@ export default function NGXLiveChart() {
             .chart-canvas-wrapper { height: 350px !important; }
             .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 11px; padding: 6px 8px; }
-            .sector-wrapper { flex-grow: 0; width: auto; min-width: 130px; max-width: 150px; margin-right: auto; }
-            .chart-watermark { font-size: 19px; bottom: 15px; left: 15px; }
+            .sector-wrapper { flex-grow: 0; width: auto; min-width: 120px; max-width: 150px; margin-right: auto; }
+            /* تنسيق خاص للعلامة المائية على الجوال */
+            .chart-watermark { font-size: 16px; bottom: 30px; left: 15px; }
         }
       `}</style>
     </div>
