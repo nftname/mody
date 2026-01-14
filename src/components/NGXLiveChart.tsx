@@ -1,394 +1,189 @@
 'use client';
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
-import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
+// --- الألوان والتفاصيل المحفوظة ---
 const SECTORS = [
-  { key: 'All NFT Index', dbKey: 'ALL', color: '#C0D860' },
-  { key: 'Digital Name Assets', dbKey: 'NAM', color: '#38BDF8' },
-  { key: 'Art NFT', dbKey: 'ART', color: '#7B61FF' },
-  { key: 'Gaming NFT', dbKey: 'GAM', color: '#0ECB81' },
-  { key: 'Utility NFT', dbKey: 'UTL', color: '#00D8D6' }
+  { key: 'All NFT Index', color: '#C0D860' },     
+  { key: 'Digital Name Assets', color: '#38BDF8' }, 
+  { key: 'Art NFT', color: '#7B61FF' },            
+  { key: 'Gaming NFT', color: '#0ECB81' },        
+  { key: 'Utility NFT', color: '#00D8D6' }         
 ];
 
-const TIMEFRAMES = [
-    { label: '1H', value: '1H', days: 1 },
-    { label: '4H', value: '4H', days: 7 },
-    { label: '1D', value: '1D', days: 30 },
-    { label: '1W', value: '1W', days: 90 },
-    { label: '1M', value: '1M', days: 365 },
-    { label: 'ALL', value: 'ALL', days: 0 }
-];
+// --- مولد البيانات الوهمية (الذكاء الرياضي) ---
+function generateMockData(sectorKey: string, mode: 'HISTORY' | 'FORECAST') {
+    const data = [];
+    let date = new Date('2017-01-01');
+    let value = 100; // نقطة البداية
+    let volatility = 0.05; // حدة التذبذب
 
-// دالة مساعدة لدمج البيانات الجديدة (القديمة زمنياً) مع الحالية
-function mergeData(currentData: any[], newData: any[]) {
-    const existingTimes = new Set(currentData.map(d => d.time));
-    const uniqueNewData = newData.filter(d => !existingTimes.has(d.time));
-    return [...uniqueNewData, ...currentData].sort((a, b) => (a.time as number) - (b.time as number));
-}
+    // تحديد خصائص كل قطاع ليكون مميزاً
+    if (sectorKey.includes('Name')) { volatility = 0.08; value = 50; } // NAM يبدأ منخفض
+    if (sectorKey.includes('Art')) { volatility = 0.12; value = 80; } // ART متذبذب جداً
+    if (sectorKey.includes('Gaming')) { volatility = 0.10; value = 60; }
 
-function useClickOutside(ref: any, handler: any) {
-  useEffect(() => {
-    const listener = (event: any) => {
-      if (!ref.current || ref.current.contains(event.target)) return;
-      handler(event);
-    };
-    document.addEventListener("mousedown", listener);
-    document.addEventListener("touchstart", listener);
-    return () => {
-      document.removeEventListener("mousedown", listener);
-      document.removeEventListener("touchstart", listener);
-    };
-  }, [ref, handler]);
+    const endDate = mode === 'HISTORY' ? new Date('2026-01-14') : new Date('2030-12-31');
+    const startDate = mode === 'HISTORY' ? new Date('2017-01-01') : new Date('2026-01-15');
+
+    // إذا كان توقعات، نبدأ من آخر قيمة منطقية
+    if (mode === 'FORECAST') value = 1000; 
+
+    while (date <= endDate) {
+        // معادلة رياضية لمحاكاة دورات السوق (Crypto Cycles)
+        // 2021 كانت قمة (Boom)، 2022/23 كانت قاع (Bust)
+        const year = date.getFullYear();
+        let trend = 1.002; // صعود طبيعي بسيط
+
+        if (mode === 'HISTORY') {
+            if (year === 2017) trend = 1.01; // صعود البداية
+            if (year >= 2018 && year < 2020) trend = 0.998; // هبوط 2018
+            if (year === 2020) trend = 1.005; // تعافي
+            if (year === 2021) trend = 1.02; // قمة 2021 الجنونية (Boom)
+            if (year === 2022) trend = 0.985; // انهيار 2022
+            if (year === 2023) trend = 0.995; // ركود
+            if (year >= 2024) trend = 1.008; // تعافي قوي (الحاضر)
+        } else {
+            // التوقعات للمستقبل (صعود مستمر)
+            trend = 1.005; 
+        }
+
+        // إضافة عشوائية بسيطة ليكون الخط "طبيعياً" وليس مسطرة
+        const randomMove = 1 + (Math.random() - 0.5) * volatility;
+        value = value * trend * randomMove;
+
+        // منع القيم السالبة
+        if (value < 10) value = 10;
+
+        // إضافة النقطة (نأخذ نقطة كل 3 أيام لنعومة الرسم)
+        data.push({
+            time: (date.getTime() / 1000) as UTCTimestamp,
+            value: value
+        });
+
+        // زيادة التاريخ 3 أيام
+        date.setDate(date.getDate() + 3);
+    }
+    return data;
 }
 
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   
-  const [activeTimeframe, setActiveTimeframe] = useState('1D');
-  const [activeSector, setActiveSector] = useState(SECTORS[0].key);
-  
+  // التحكم اليدوي للتصوير
+  const [activeSector, setActiveSector] = useState(SECTORS[0]);
+  const [viewMode, setViewMode] = useState<'HISTORY' | 'FORECAST'>('HISTORY');
+
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
-  
-  // حالة التحميل وتخزين البيانات
-  const [isLoading, setIsLoading] = useState(false);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [hasMoreHistory, setHasMoreHistory] = useState(true); // هل يوجد بيانات أقدم؟
-  const isFetchingRef = useRef(false); // لمنع التكرار أثناء السحب
 
-  const [isSectorOpen, setIsSectorOpen] = useState(false);
-  const [isTimeOpen, setIsTimeOpen] = useState(false);
-  
-  const sectorRef = useRef<HTMLDivElement>(null);
-  const timeRef = useRef<HTMLDivElement>(null);
-
-  useClickOutside(sectorRef, () => setIsSectorOpen(false));
-  useClickOutside(timeRef, () => setIsTimeOpen(false));
-
-  // --- دالة جلب البيانات (الأساسية + التحميل الكسول) ---
-  const fetchHistory = useCallback(async (sectorKey: string, tfValue: string, endTime?: number) => {
-    // إذا كنا نحمل حالياً، لا تكرر الطلب
-    if (isFetchingRef.current) return null;
-    isFetchingRef.current = true;
-    setIsLoading(true);
-
-    const sectorInfo = SECTORS.find(s => s.key === sectorKey);
-    if (!sectorInfo) {
-        isFetchingRef.current = false;
-        setIsLoading(false);
-        return null;
-    }
-
-    try {
-        let query = supabase
-            .from('ngx_volume_index')
-            .select('timestamp, index_value')
-            .eq('sector_key', sectorInfo.dbKey)
-            .order('timestamp', { ascending: false }); // نجلب من الأحدث للأقدم
-
-        // إذا كان لدينا وقت نهاية (لجلب ما قبله)
-        if (endTime) {
-            query = query.lt('timestamp', endTime);
-        }
-
-        // الحد الأقصى للجلب في المرة الواحدة (Chunk Size)
-        // 1000 نقطة خفيفة جداً وسريعة
-        query = query.limit(1000);
-
-        const { data: sectorData, error } = await query;
-        if (error) throw error;
-
-        if (!sectorData || sectorData.length === 0) {
-            setHasMoreHistory(false); // لا يوجد بيانات أقدم
-            return [];
-        }
-
-        // تنسيق البيانات
-        let processedData = sectorData.map((row: any) => ({
-            time: Number(row.timestamp) as UTCTimestamp,
-            value: Number(row.index_value)
-        }));
-
-        // الترتيب الزمني الصحيح (للرسم البياني يحتاج تصاعدي)
-        processedData.sort((a: any, b: any) => a.time - b.time);
-
-        // تخفيف الكثافة (Sampling) للفترات الطويلة فقط لتقليل الحمل
-        if (tfValue === 'ALL' || tfValue === '1Y') {
-             processedData = processedData.filter((_, index) => index % 24 === 0);
-        }
-
-        return processedData;
-
-    } catch (err) {
-        console.error("Failed to fetch history:", err);
-        return [];
-    } finally {
-        isFetchingRef.current = false;
-        setIsLoading(false);
-    }
-  }, []);
-
-  // --- دالة التهيئة الأولية (عند تغيير الفلتر أو القطاع) ---
-  const initChartData = async () => {
-      setChartData([]); // تصفير البيانات
-      setHasMoreHistory(true);
-      
-      // جلب أول دفعة (الأحدث)
-      const newData = await fetchHistory(activeSector, activeTimeframe);
-      if (newData && newData.length > 0) {
-          setChartData(newData);
-          if (seriesInstance) {
-              seriesInstance.setData(newData);
-              chartInstance?.timeScale().fitContent();
-          }
-      }
-  };
-
-  // --- دالة تحميل المزيد عند السحب (Load More) ---
-  const loadMoreData = async () => {
-      if (!hasMoreHistory || chartData.length === 0) return;
-
-      // نأخذ أقدم وقت لدينا حالياً
-      const oldestTime = chartData[0].time; 
-      
-      // نجلب ما قبله
-      const olderData = await fetchHistory(activeSector, activeTimeframe, oldestTime);
-      
-      if (olderData && olderData.length > 0) {
-          // دمج البيانات القديمة مع الحالية
-          const merged = mergeData(chartData, olderData);
-          setChartData(merged);
-          if (seriesInstance) {
-              seriesInstance.setData(merged);
-              // لا نعمل fitContent هنا لكي لا يقفز الرسم، المستخدم هو من يسحب
-          }
-      } else {
-          setHasMoreHistory(false);
-      }
-  };
-
-  // تهيئة الرسم البياني
+  // تهيئة الرسم البياني (نفس الستايل بالضبط)
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
     const chart = createChart(chartContainerRef.current, {
-      layout: {
-        background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#B0B0B0',
-        fontFamily: '"Inter", sans-serif',
-        fontSize: 11,
-      },
-      grid: {
-        vertLines: { visible: false },
-        horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
-      },
+      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#B0B0B0', fontFamily: '"Inter", sans-serif', fontSize: 11 },
+      grid: { vertLines: { visible: false }, horzLines: { color: 'rgba(255, 255, 255, 0.05)' } },
       width: chartContainerRef.current.clientWidth,
       height: 400,
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
-        visible: true,
-        timeVisible: true,
-        secondsVisible: false,
-        barSpacing: 6,
-        minBarSpacing: 0.5,
+        visible: true, timeVisible: true, secondsVisible: false,
+        barSpacing: 6, minBarSpacing: 0.5,
       },
-      rightPriceScale: {
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        visible: true,
-        scaleMargins: { top: 0.2, bottom: 0.1 },
-      },
+      rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.1)', visible: true, scaleMargins: { top: 0.2, bottom: 0.1 } },
       crosshair: { mode: CrosshairMode.Normal },
       localization: { locale: 'en-US' },
-      handleScroll: { vertTouchDrag: false }, 
-      handleScale: { axisPressedMouseMove: true },
     });
 
     const newSeries = chart.addSeries(AreaSeries, {
       lineWidth: 2,
-      lineColor: '#C0D860',
-      topColor: 'rgba(192, 216, 96, 0.4)',
-      bottomColor: 'rgba(192, 216, 96, 0.0)',
+      lineColor: activeSector.color, // اللون المتغير
+      topColor: `${activeSector.color}66`, // نفس التنسيق
+      bottomColor: `${activeSector.color}00`,
       priceLineVisible: false,
     });
 
     setChartInstance(chart);
     setSeriesInstance(newSeries);
 
-    // --- مراقب السحب (Infinite Scroll Observer) ---
-    // هذه هي القطعة السحرية التي تجلب البيانات عند الوصول لليسار
-    chart.timeScale().subscribeVisibleLogicalRangeChange((newVisibleLogicalRange) => {
-        if (!newVisibleLogicalRange) return;
-        
-        // إذا اقترب المستخدم من بداية البيانات (اليسار)
-        if (newVisibleLogicalRange.from < 10) { 
-            // نجلب المزيد
-            loadMoreData();
-        }
-    });
-
     const handleResize = () => {
       if (chartContainerRef.current) {
-        const isMobile = window.innerWidth <= 768;
-        const newHeight = isMobile ? 350 : 400; 
-        chart.applyOptions({ 
-            width: chartContainerRef.current.clientWidth,
-            height: newHeight 
-        });
+        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
       }
     };
-    
-    handleResize();
     window.addEventListener('resize', handleResize);
+    return () => { window.removeEventListener('resize', handleResize); chart.remove(); };
+  }, []);
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      chart.remove();
-    };
-  }, []); 
-  // ملاحظة: الـ useEffect هذا يعمل مرة واحدة عند التحميل، 
-  // دوال الجلب مربوطة بحالة المكون (Refs/State)
-
-  // عند تغيير الفلتر أو القطاع، نعيد التهيئة
+  // تحديث الرسم عند ضغط الأزرار
   useEffect(() => {
-      if(chartInstance && seriesInstance) {
-          initChartData();
-      }
-  }, [activeSector, activeTimeframe]);
+      if (!seriesInstance || !chartInstance) return;
 
-  // تحديث التنسيقات والوقت
-  useEffect(() => {
-    if (seriesInstance && chartInstance) {
-        const currentSector = SECTORS.find(s => s.key === activeSector);
-        if (currentSector) {
-            seriesInstance.applyOptions({
-                lineColor: currentSector.color,
-                topColor: `${currentSector.color}66`, 
-                bottomColor: `${currentSector.color}00`, 
-            });
-        }
+      // 1. تحديث اللون
+      seriesInstance.applyOptions({
+          lineColor: activeSector.color,
+          topColor: `${activeSector.color}66`,
+          bottomColor: `${activeSector.color}00`,
+      });
 
-        const isIntraday = ['1H', '4H'].includes(activeTimeframe);
-        chartInstance.applyOptions({
-            timeScale: {
-                tickMarkFormatter: (time: number) => {
-                    const date = new Date(time * 1000);
-                    if (isIntraday) {
-                        return date.toLocaleTimeString('en-GB', { 
-                            hour: '2-digit', 
-                            minute: '2-digit', 
-                            hour12: false, 
-                            timeZone: 'UTC' 
-                        });
-                    }
-                    return date.toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: activeTimeframe === 'ALL' ? '2-digit' : undefined,
-                        timeZone: 'UTC'
-                    });
-                }
-            }
-        });
-    }
-  }, [activeTimeframe, activeSector, seriesInstance, chartInstance]);
+      // 2. توليد البيانات الجديدة
+      const data = generateMockData(activeSector.key, viewMode);
+      seriesInstance.setData(data);
+      chartInstance.timeScale().fitContent();
 
-  // تحديث تلقائي (Live) للشمعة الحالية فقط
-  useEffect(() => {
-      const interval = setInterval(async () => {
-          if(!seriesInstance) return;
-          // جلب بسيط لآخر شمعة فقط للتحديث
-          const latest = await fetchHistory(activeSector, activeTimeframe);
-          if (latest && latest.length > 0) {
-              const lastPoint = latest[latest.length - 1];
-              seriesInstance.update(lastPoint); // تحديث الشمعة الحالية دون إعادة رسم الكل
-          }
-      }, 30000); // كل 30 ثانية
-      return () => clearInterval(interval);
-  }, [activeSector, activeTimeframe, seriesInstance]);
-
-  const currentColor = SECTORS.find(s => s.key === activeSector)?.color;
-  const currentTimeframeLabel = TIMEFRAMES.find(t => t.value === activeTimeframe)?.label;
+  }, [activeSector, viewMode, seriesInstance, chartInstance]);
 
   return (
     <div className="ngx-chart-glass mb-4">
+      
+      {/* --- لوحة تحكم مؤقتة للتصوير (لن تظهر في الصورة إذا قصصتها) --- */}
+      <div style={{ marginBottom: '10px', padding: '10px', background: 'rgba(0,0,0,0.5)', borderRadius: '8px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          <span style={{color:'white', fontSize:'12px'}}>اختر للتصوير:</span>
+          {SECTORS.map(s => (
+              <button 
+                key={s.key} 
+                onClick={() => setActiveSector(s)}
+                style={{
+                    background: activeSector.key === s.key ? s.color : '#333',
+                    color: activeSector.key === s.key ? 'black' : 'white',
+                    border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer'
+                }}
+              >
+                  {s.key}
+              </button>
+          ))}
+          <div style={{width: '1px', background: '#555'}}></div>
+          <button onClick={() => setViewMode('HISTORY')} style={{ background: viewMode === 'HISTORY' ? 'white' : '#333', color: viewMode === 'HISTORY' ? 'black' : 'white', border:'none', padding:'4px 8px', borderRadius:'4px', fontSize:'10px' }}>التاريخ (2017-2026)</button>
+          <button onClick={() => setViewMode('FORECAST')} style={{ background: viewMode === 'FORECAST' ? 'white' : '#333', color: viewMode === 'FORECAST' ? 'black' : 'white', border:'none', padding:'4px 8px', borderRadius:'4px', fontSize:'10px' }}>توقعات (2030)</button>
+      </div>
+
+      {/* --- نفس الهيدر القديم --- */}
       <div className="filters-container">
-        <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
-           <div 
-             className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
-             onClick={() => setIsSectorOpen(!isSectorOpen)}
-             style={{ color: currentColor }}
-           >
-              <span className="text-truncate">{activeSector}</span>
+        <div className="filter-wrapper sector-wrapper">
+           <div className="custom-select-trigger" style={{ color: activeSector.color }}>
+              <span className="text-truncate">{activeSector.key}</span>
               <span className="arrow">▼</span>
            </div>
-           
-           {isSectorOpen && (
-             <div className="custom-options">
-               {SECTORS.map((s) => (
-                 <div 
-                    key={s.key} 
-                    className={`custom-option ${activeSector === s.key ? 'selected' : ''}`}
-                    onClick={() => {
-                        setActiveSector(s.key);
-                        setIsSectorOpen(false);
-                    }}
-                    style={{ '--hover-color': s.color } as React.CSSProperties}
-                 >
-                    {s.key}
-                 </div>
-               ))}
-             </div>
-           )}
         </div>
 
         <div className="live-indicator-wrapper d-flex align-items-center">
-            {isLoading ? (
-                <div className="loading-indicator">
-                    <span className="spinner"></span> Syncing...
-                </div>
-            ) : (
-                <div className="live-pulse" style={{ fontSize: '9px', color: '#0ecb81', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: '6px', height: '6px', background: '#0ecb81', borderRadius: '50%', boxShadow: '0 0 5px #0ecb81' }}></span>
-                    LIVE INDEX
-                </div>
-            )}
+            <div className="live-pulse" style={{ fontSize: '9px', color: '#0ecb81', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', background: '#0ecb81', borderRadius: '50%', boxShadow: '0 0 5px #0ecb81' }}></span>
+                LIVE INDEX
+            </div>
         </div>
 
-        <div className="filter-wrapper time-wrapper ms-2" ref={timeRef}>
-            <div 
-             className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
-             onClick={() => setIsTimeOpen(!isTimeOpen)}
-            >
-              <span>{currentTimeframeLabel}</span>
+        <div className="filter-wrapper time-wrapper ms-2">
+            <div className="custom-select-trigger time-trigger">
+              <span>{viewMode === 'HISTORY' ? 'ALL' : '2030'}</span>
               <span className="arrow ms-1">▼</span>
            </div>
-           
-           {isTimeOpen && (
-             <div className="custom-options time-options">
-               {TIMEFRAMES.map((tf) => (
-                 <div 
-                    key={tf.value} 
-                    className={`custom-option ${activeTimeframe === tf.value ? 'selected' : ''}`}
-                    onClick={() => {
-                        setActiveTimeframe(tf.value);
-                        setIsTimeOpen(false);
-                    }}
-                 >
-                    {tf.label}
-                 </div>
-               ))}
-             </div>
-           )}
         </div>
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper">
-          {/* العلامة المائية: حجم 26px وشفافية 0.45 */}
+          {/* العلامة المائية: NNM بنفس التنسيق المعتمد */}
           <div className="chart-watermark">NNM</div>
       </div>
       
@@ -411,75 +206,24 @@ export default function NGXLiveChart() {
             min-height: 400px;
             overflow: hidden;
         }
-        .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
-        
         .chart-canvas-wrapper { width: 100%; height: 400px; position: relative; }
-        .filters-container {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; padding: 0 10px; position: relative; z-index: 50;
-        }
-        .loading-indicator { font-size: 10px; color: #666; display: flex; align-items: center; gap: 5px; }
-        .spinner {
-            width: 8px; height: 8px; border: 1px solid #666;
-            border-top-color: transparent; border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .filter-wrapper { position: relative; }
-        
-        .sector-wrapper { width: auto; min-width: 150px; max-width: 200px; } 
-        
-        .time-wrapper { width: auto; min-width: 70px; }
-        .custom-select-trigger {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 6px 12px; font-size: 13px; font-weight: 700;
-            color: #E0E0E0; background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px;
-            cursor: pointer; transition: all 0.3s ease; user-select: none; white-space: nowrap;
-        }
-        .custom-select-trigger:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.15); }
-        .time-trigger { justify-content: center; font-weight: 600; }
+        .filters-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 10px; position: relative; z-index: 50; }
+        .custom-select-trigger { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; font-size: 13px; font-weight: 700; color: #E0E0E0; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; user-select: none; white-space: nowrap; }
         .arrow { font-size: 8px; opacity: 0.7; }
-        .custom-options {
-            position: absolute; top: 100%; left: 0; min-width: 100%;
-            background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px;
-            margin-top: 4px; overflow: hidden; z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        }
-        .time-options { right: 0; left: auto; width: 100%; }
-        .custom-option {
-            padding: 8px 10px; font-size: 12px; color: #B0B0B0; cursor: pointer;
-            transition: background 0.2s, color 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02);
-            text-align: left; white-space: nowrap;
-        }
-        .time-options .custom-option { text-align: center; }
-        .custom-option:last-child { border-bottom: none; }
-        .custom-option:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
-        .custom-option:hover { color: var(--hover-color, #fff); }
-        .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
-
+        
+        /* العلامة المائية المحسنة */
         .chart-watermark {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            font-size: 26px;
-            font-weight: 900;
-            font-style: italic;
+            bottom: 20px; left: 20px;
+            font-size: 26px; font-weight: 900; font-style: italic;
             color: rgba(255, 255, 255, 0.45);
-            pointer-events: none;
-            z-index: 10;
-            user-select: none;
-            letter-spacing: 1px;
+            pointer-events: none; z-index: 10; user-select: none; letter-spacing: 1px;
         }
-
         @media (max-width: 768px) {
             .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
             .chart-canvas-wrapper { height: 350px !important; }
             .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
-            .sector-wrapper { flex-grow: 0; width: auto; min-width: 130px; max-width: 180px; margin-right: auto; }
-            .time-wrapper { width: auto; min-width: 60px; flex-shrink: 0; }
             .chart-watermark { font-size: 19px; bottom: 15px; left: 15px; }
         }
       `}</style>
