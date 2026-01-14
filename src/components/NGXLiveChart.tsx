@@ -11,13 +11,13 @@ const SECTORS = [
   { key: 'Utility NFT', color: '#00D8D6' }         
 ];
 
-// --- إعدادات الفلتر الزمني الجديد (مختصرة) ---
+// --- إعدادات الفلتر الزمني ---
 const VIEW_MODES = [
     { label: '2017 - 2026', value: 'HISTORY' },
     { label: '2026 - 2030', value: 'FORECAST' }
 ];
 
-// --- محرك المحاكاة الذكي (Simulation Engine) ---
+// --- محرك المحاكاة ---
 function generateSimulation(sectorKey: string, mode: string) {
     const data = [];
     let date = mode === 'HISTORY' ? new Date('2017-01-01') : new Date('2026-01-15');
@@ -62,7 +62,7 @@ function generateSimulation(sectorKey: string, mode: string) {
     return data;
 }
 
-// --- دالة لإغلاق القوائم عند الضغط خارجها ---
+// --- دالة إغلاق القوائم ---
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
     const listener = (event: any) => {
@@ -108,8 +108,7 @@ export default function NGXLiveChart() {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true, timeVisible: true, secondsVisible: false,
         barSpacing: 6, minBarSpacing: 0.5,
-        // fix: إضافة مساحة سفلية لضمان ظهور التواريخ على الجوال
-        bottomOffset: 10, 
+        // تم إزالة bottomOffset لحل مشكلة الخطأ الأحمر
       },
       rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.1)', visible: true, scaleMargins: { top: 0.2, bottom: 0.2 } },
       crosshair: { mode: CrosshairMode.Normal },
@@ -162,7 +161,7 @@ export default function NGXLiveChart() {
     <div className="ngx-chart-glass mb-4">
       <div className="filters-container">
         
-        {/* --- فلتر القطاعات (يسار) --- */}
+        {/* فلتر القطاعات */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
            <div 
              className={`custom-select-trigger ${isSectorOpen ? 'open' : ''}`} 
@@ -189,15 +188,12 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* --- تم إزالة مؤشر LIVE INDEX من هنا --- */}
-
-        {/* --- فلتر الزمن الجديد (يمين) --- */}
-        <div className="filter-wrapper time-wrapper" ref={timeRef} style={{ minWidth: '110px' }}> {/* تقليل العرض */}
+        {/* فلتر الزمن (يمين) */}
+        <div className="filter-wrapper time-wrapper" ref={timeRef} style={{ minWidth: '110px' }}>
             <div 
              className={`custom-select-trigger time-trigger ${isTimeOpen ? 'open' : ''}`} 
              onClick={() => setIsTimeOpen(!isTimeOpen)}
             >
-              {/* النصوص المختصرة */}
               <span>{activeViewMode.label}</span>
               <span className="arrow ms-1">▼</span>
            </div>
@@ -219,7 +215,7 @@ export default function NGXLiveChart() {
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper">
-          {/* العلامة المائية NNM المحسنة (لون أبيض، أصغر، مرفوعة) */}
+          {/* العلامة المائية NNM: أبيض بنسبة 80% */}
           <div className="chart-watermark">NNM</div>
       </div>
       
@@ -278,15 +274,15 @@ export default function NGXLiveChart() {
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
-        /* العلامة المائية المحسنة */
+        /* العلامة المائية: لون أبيض بنسبة 80% */
         .chart-watermark {
             position: absolute;
-            bottom: 35px; /* تم رفعها للأعلى */
+            bottom: 35px;
             left: 20px;
-            font-size: 20px; /* تم تقليل الحجم */
+            font-size: 20px;
             font-weight: 900;
             font-style: italic;
-            color: #FFFFFF; /* لون أبيض ناصع بدون شفافية */
+            color: rgba(255, 255, 255, 0.8); /* تم التعديل هنا لنسبة 80% */
             pointer-events: none;
             z-index: 10;
             user-select: none;
@@ -299,7 +295,6 @@ export default function NGXLiveChart() {
             .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 11px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: auto; min-width: 120px; max-width: 150px; margin-right: auto; }
-            /* تنسيق خاص للعلامة المائية على الجوال */
             .chart-watermark { font-size: 16px; bottom: 30px; left: 15px; }
         }
       `}</style>
