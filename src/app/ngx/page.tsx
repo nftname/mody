@@ -41,11 +41,11 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- الرسم البياني المصغر الثابت (تم التعديل: خط أنحف، إزالة LIVE) ---
-const StaticMiniChart = () => (
+// --- الرسم البياني المصغر الثابت (تم تعديل الارتفاع ليكون مناسباً) ---
+const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: 'linear-gradient(180deg, rgba(30,30,30,0) 0%, rgba(14,203,129,0.05) 100%)' }}>
         <svg viewBox="0 0 300 150" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
-            {/* خط بياني أنحف (strokeWidth="1.5") */}
+            {/* خط بياني أنحف */}
             <path 
                 d="M0,100 C40,90 60,120 100,110 C150,90 180,60 220,50 C260,40 280,20 300,10" 
                 fill="none" 
@@ -65,16 +65,24 @@ const StaticMiniChart = () => (
                 </linearGradient>
             </defs>
         </svg>
-        {/* العلامة المائية فقط */}
-        <div style={{ position: 'absolute', bottom: '8px', left: '10px', fontSize: '14px', fontWeight: '900', fontStyle: 'italic', color: 'rgba(255,255,255,0.5)' }}>
+        {/* العلامة المائية */}
+        <div style={{ position: 'absolute', bottom: '8px', left: '10px', fontSize: isMobile ? '12px' : '14px', fontWeight: '900', fontStyle: 'italic', color: 'rgba(255,255,255,0.5)' }}>
             NNM
         </div>
     </div>
 );
 
-// --- كارت التضمين (Embed Card) ---
+// --- كارت التضمين (تم التعديل الجراحي للأزرار والمقاسات) ---
 const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any) => {
   const [copied, setCopied] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+      const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleCopy = () => {
     let w = "320";
@@ -88,11 +96,17 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // تحديد ارتفاع منطقة المعاينة
+  let previewHeight = '60px';
+  if (isChart) previewHeight = isMobile ? '80px' : '100px'; // تصغير ارتفاع الرسم البياني في الجوال
+  if (isFullBar) previewHeight = '75px'; // زيادة ارتفاع الشريط الكامل
+
   return (
     <div className="embed-card h-100 d-flex flex-column justify-content-between">
-      <div className="preview-area" style={{ height: isChart ? '100px' : '60px' }}>
+      <div className="preview-area" style={{ height: previewHeight }}>
         <div className={`widget-scale-wrapper ${isFullBar ? 'full-bar-scale' : isChart ? 'chart-scale' : 'individual-scale'}`}>
-          {component}
+          {/* إذا كان رسم بياني، نمرر له حالة الجوال لضبط العلامة المائية */}
+          {isChart ? <StaticMiniChart isMobile={isMobile} /> : component}
         </div>
       </div>
       
@@ -100,13 +114,16 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         <h6 className="d-none d-md-block mb-1 unified-title" style={{ fontSize: '10px', marginBottom: '4px' }}>{title}</h6>
         {label && <div className="mobile-label fw-bold mb-1">{label}</div>}
         
+        {/* --- التعديل الجراحي للزر: عرض 30% وتوسيط --- */}
         <button 
             onClick={handleCopy} 
             className={`btn btn-sm mb-1 copy-btn ${copied ? 'btn-success' : 'btn-outline-secondary'}`}
             style={{ 
-                width: '90%', 
-                margin: '0 auto', 
-                display: 'block'
+                width: isMobile ? '30%' : '80%', // في الجوال 30%، في الكمبيوتر 80%
+                minWidth: '60px',
+                margin: '4px auto 0', // هامش علوي صغير وتوسيط
+                display: 'block',
+                padding: '2px 0'
             }}
         >
             {copied ? 'COPIED' : 'COPY'}
@@ -121,25 +138,27 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
             padding: 5px;
             overflow: hidden;
             position: relative;
+            display: flex; 
+            flex-direction: column;
         }
-        .preview-area { display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; width: 100%; }
+        .preview-area { display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; width: 100%; flex-grow: 1; }
         
-        /* Scaling Logic */
-        .widget-scale-wrapper { transform-origin: center; display: flex; justify-content: center; }
-        .full-bar-scale { transform: scale(0.65); width: 150%; } 
-        .individual-scale { transform: scale(0.6); }
+        /* Scaling Logic (تم التعديل) */
+        .widget-scale-wrapper { transform-origin: center; display: flex; justify-content: center; width: 100%; }
+        .full-bar-scale { transform: scale(0.85); width: 100%; } /* تكبير الشريط الكامل ليملأ العرض */
+        .individual-scale { transform: scale(0.75); } /* تكبير الكبسولات الفردية قليلاً */
         .chart-scale { width: 100%; height: 100%; } 
 
-        .copy-btn { font-size: 9px; padding: 2px 0; border-radius: 4px; color: #ddd; border-color: #444; }
+        .copy-btn { font-size: 9px; border-radius: 4px; color: #ddd; border-color: #444; }
         .mobile-label { display: none; color: ${GOLD_COLOR}; font-size: 9px; letter-spacing: 0.5px; }
 
         @media (max-width: 768px) {
-            .embed-card { padding: 4px; border: 1px solid rgba(255,255,255,0.05); }
+            .embed-card { padding: 6px 4px; border: 1px solid rgba(255,255,255,0.05); min-height: 110px; }
             /* ضبط المقاسات للجوال */
-            .full-bar-scale { transform: scale(0.38); width: 260%; margin-left: -80%; }
-            .individual-scale { transform: scale(0.45); width: 220px; }
+            .full-bar-scale { transform: scale(0.55); width: 180%; margin-left: -40%; } /* تصغير الشريط الكامل في الجوال */
+            .individual-scale { transform: scale(0.6); width: 100%; }
             
-            .mobile-label { display: block; font-size: 8px; margin-bottom: 2px !important; }
+            .mobile-label { display: block; font-size: 8px; margin-bottom: 4px !important; }
             .copy-btn { font-size: 8px; }
         }
       `}</style>
@@ -215,9 +234,7 @@ export default function NGXPage() {
             
             <div className="row px-2 mt-3 text-section align-items-center">
                 <div className="col-lg-12">
-                    {/* المصدر الرئيسي للستايل (Title Style Source) */}
                     <h1 className="mb-2 unified-title">NGX NFT Index — The Global Benchmark</h1>
-                    {/* المصدر الرئيسي للستايل (Text Style Source) */}
                     <p className="mb-0 unified-text">
                         The premier benchmark tracking the global NFT market, aggregating sentiment, liquidity, and rare digital name assets across all platforms.
                     </p>
@@ -236,7 +253,6 @@ export default function NGXPage() {
         {/* --- ARTICLE SECTION --- */}
         <div className="content-container">
             <div className="article-wrapper">
-                {/* تم تطبيق unified-title و unified-text على جميع العناصر */}
                 <h2 className="unified-title mb-3">NFTs as a Market Infrastructure: From Digital Collectibles to Asset Class Architecture</h2>
                 
                 <p className="unified-text mb-3">Since their emergence in the late 2010s, Non-Fungible Tokens (NFTs) have undergone a fundamental transformation. What began as a niche experiment in digital ownership has evolved into a multi-layered market infrastructure spanning art, gaming, identity, finance, and cultural capital.</p>
@@ -266,7 +282,8 @@ export default function NGXPage() {
                 <div className="mt-5 pt-3 mb-4">
                      <div className="d-flex align-items-center mb-3 border-bottom border-secondary pb-2" style={{borderColor: 'rgba(255,255,255,0.1) !important'}}>
                          <div style={{ width: '6px', height: '6px', background: '#F6465D', borderRadius: '50%', marginRight: '10px' }}></div>
-                         <h4 className="fw-bold mb-0 text-white text-uppercase" style={{ fontSize: '14px', letterSpacing: '1px' }}>Global Market Wire</h4>
+                         {/* --- التعديل الجراحي 1: تصغير عنوان الأخبار بنسبة 20% (من 14px إلى 11.5px) --- */}
+                         <h4 className="fw-bold mb-0 text-white text-uppercase" style={{ fontSize: '11.5px', letterSpacing: '1px' }}>Global Market Wire</h4>
                      </div>
 
                      {loadingNews ? (
@@ -317,38 +334,43 @@ export default function NGXPage() {
                     </p>
                 </div>
                 
-                {/* --- DEVELOPERS TOOLKIT (Reordered Layout) --- */}
+                {/* --- DEVELOPERS TOOLKIT (التعديل الجراحي للمقاسات والتوزيع) --- */}
                 <div className="mt-5 pt-4">
                     <div className="d-flex align-items-center mb-3">
                          <div style={{ width: '30px', height: '2px', background: GOLD_COLOR, marginRight: '10px' }}></div>
                          <h4 className="fw-bold mb-0 text-white" style={{ fontSize: '14px', letterSpacing: '1px' }}>DEVELOPERS & MARKET DATA</h4>
                     </div>
                     
-                    <div className="row g-2">
-                        {/* 1. الشريط الكامل (عرض كامل) */}
+                    <div className="row g-2 justify-content-center">
+                        {/* 1. الشريط الكامل (الثلاثة مؤشرات) */}
                         <div className="col-12">
                              <EmbedCard 
                                 title="NGX Full Market Bar"
                                 isFullBar={true}
                                 component={
-                                    <div className="d-flex gap-2">
-                                        <NGXWidget theme="dark" />
-                                        <NGXCapWidget theme="dark" />
-                                        <NGXVolumeWidget theme="dark" />
+                                    <div className="d-flex gap-2 w-100"> {/* إضافة w-100 لضمان ملء العرض */}
+                                        <div style={{ flex: 1 }}><NGXWidget theme="dark" /></div>
+                                        <div style={{ flex: 1 }}><NGXCapWidget theme="dark" /></div>
+                                        {/* --- التعديل الجراحي 2: إضافة المؤشر الثالث المفقود --- */}
+                                        <div style={{ flex: 1 }}><NGXVolumeWidget theme="dark" /></div>
                                     </div>
                                 }
                                 embedId="ngx-full-bar"
                              />
                         </div>
 
-                        {/* 2. الرسم البياني المصغر (عرض كامل - تحته مباشرة) */}
-                        <div className="col-12">
-                             <EmbedCard 
-                                title="Live Chart Widget"
-                                isChart={true}
-                                component={<StaticMiniChart />} 
-                                embedId="ngx-chart-widget"
-                             />
+                        {/* 2. الرسم البياني المصغر (عرض 80% في الجوال وتوسيطه) */}
+                        <div className="col-12 col-md-12"> {/* في الجوال يأخذ col-10 مع إزاحة ليكون متوسطاً */}
+                            <div className="d-flex justify-content-center">
+                                 <div style={{ width: '100%', maxWidth: '100%' }}> {/* حاوية للتحكم في العرض */}
+                                     <EmbedCard 
+                                        title="Live Chart Widget"
+                                        isChart={true}
+                                        component={<StaticMiniChart isMobile={false} />} // سيتم تحديد الموبايل داخلياً
+                                        embedId="ngx-chart-widget"
+                                     />
+                                 </div>
+                            </div>
                         </div>
 
                         {/* 3. الكبسولات الثلاث (في الأسفل) */}
