@@ -21,6 +21,7 @@ const VIEW_MODES = [
     { label: '2026 - 2030', value: 'FORECAST' }
 ];
 
+// دالة مساعدة لإغلاق القوائم
 function useClickOutside(ref: any, handler: any) {
   useEffect(() => {
     const listener = (event: any) => {
@@ -45,6 +46,9 @@ export default function NGXLiveChart() {
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
   
+  // حالة التحميل (لحل مشكلة الشعور بالبطء)
+  const [isLoading, setIsLoading] = useState(true);
+
   // حالة القوائم
   const [isSectorOpen, setIsSectorOpen] = useState(false);
   const [isTimeOpen, setIsTimeOpen] = useState(false);
@@ -54,58 +58,85 @@ export default function NGXLiveChart() {
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- دالة الجلب من الداتا بيز ---
+  // --- دالة الجلب من الداتا بيز (محسنة) ---
   const fetchFromDB = async (sectorKey: string, mode: string) => {
       if(!seriesInstance || !chartInstance) return;
       
+      setIsLoading(true); // تفعيل التحميل
       try {
           const { data, error } = await supabase
             .from('ngx_static_chart')
             .select('timestamp, value')
             .eq('sector_key', sectorKey)
             .eq('mode', mode)
-            .order('timestamp', { ascending: true });
+            .order('timestamp', { ascending: true }); // التأكد من الترتيب
 
           if (error) throw error;
 
           if (data && data.length > 0) {
-              const formattedData = data.map((d: any) => ({
+              // إزالة التكرار إن وجد لضمان سرعة الرسم
+              const uniqueData = Array.from(new Map(data.map(item => [item['timestamp'], item])).values());
+              
+              const formattedData = uniqueData.map((d: any) => ({
                   time: Number(d.timestamp) as UTCTimestamp,
                   value: Number(d.value)
               }));
+              
               seriesInstance.setData(formattedData);
               chartInstance.timeScale().fitContent();
+          } else {
+              seriesInstance.setData([]);
           }
       } catch (err) {
           console.error("Fetch error:", err);
+      } finally {
+          setIsLoading(false); // إيقاف التحميل
       }
   };
 
-  // 1. تهيئة الرسم البياني
+  // 1. تهيئة الرسم البياني (ضبط دقيق للجوال)
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    // خط صغير جداً للجوال لضمان ظهور التاريخ
     const isMobile = window.innerWidth <= 768;
-    const fontSize = isMobile ? 9 : 11;
 
     const chart = createChart(chartContainerRef.current, {
-      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#B0B0B0', fontFamily: '"Inter", sans-serif', fontSize: fontSize },
-      grid: { vertLines: { visible: false }, horzLines: { color: 'rgba(255, 255, 255, 0.05)' } },
+      layout: { 
+          background: { type: ColorType.Solid, color: 'transparent' }, 
+          textColor: '#B0B0B0', 
+          fontFamily: '"Inter", sans-serif', 
+          fontSize: isMobile ? 10 : 11 // خط أصغر للجوال
+      },
+      grid: { 
+          vertLines: { visible: false }, 
+          horzLines: { color: 'rgba(255, 255, 255, 0.05)' } 
+      },
       width: chartContainerRef.current.clientWidth,
       height: 400,
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
-        visible: true, timeVisible: true, secondsVisible: false,
-        barSpacing: 6, minBarSpacing: 0.5,
+        visible: true, 
+        timeVisible: true, 
+        secondsVisible: false,
+        barSpacing: isMobile ? 3 : 6, // تقليل المسافات في الجوال لعرض المزيد
+        minBarSpacing: 0.5,
         fixLeftEdge: true,
         fixRightEdge: true,
-        borderVisible: true,
+        borderVisible: false, // شكل أنظف
+        // الحيلة لظهور التاريخ في الجوال: اختصار السنة
+        tickMarkFormatter: (time: number) => {
+            const date = new Date(time * 1000);
+            return `'${date.getFullYear().toString().slice(-2)}`; // يظهر '23 بدلاً من 2023
+        },
       },
-      // تفعيل كل خيارات التفاعل (Touch & Mouse)
       handleScroll: { mouseWheel: true, pressedMouseMove: true, vertTouchDrag: false }, 
       handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
-      rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.1)', visible: true, scaleMargins: { top: 0.2, bottom: 0.2 } },
+      rightPriceScale: { 
+          borderColor: 'rgba(255, 255, 255, 0.1)', 
+          visible: true, 
+          scaleMargins: { top: 0.2, bottom: 0.2 },
+          borderVisible: false // شكل أنظف
+      },
       crosshair: { mode: CrosshairMode.Normal },
       localization: { locale: 'en-US' },
     });
@@ -121,20 +152,26 @@ export default function NGXLiveChart() {
     setChartInstance(chart);
     setSeriesInstance(newSeries);
 
+    // مراقب تغيير الحجم (بدون إعادة طلب البيانات)
     const handleResize = () => {
       if (chartContainerRef.current) {
          const mobileNow = window.innerWidth <= 768;
          chart.applyOptions({ 
              width: chartContainerRef.current.clientWidth,
-             height: mobileNow ? 350 : 400 
+             height: mobileNow ? 350 : 400,
+             timeScale: { barSpacing: mobileNow ? 3 : 6 }
          });
       }
     };
     window.addEventListener('resize', handleResize);
-    return () => { window.removeEventListener('resize', handleResize); chart.remove(); };
-  }, []);
+    
+    return () => { 
+        window.removeEventListener('resize', handleResize); 
+        chart.remove(); 
+    };
+  }, []); // تشغيل مرة واحدة فقط
 
-  // 2. تحديث البيانات عند التغيير
+  // 2. تحديث البيانات عند التغيير (Trigger Fetch)
   useEffect(() => {
       if (!seriesInstance || !chartInstance) return;
 
@@ -150,6 +187,13 @@ export default function NGXLiveChart() {
 
   return (
     <div className="ngx-chart-glass mb-4">
+      {/* مؤشر التحميل (يظهر في المنتصف) */}
+      {isLoading && (
+        <div className="loading-overlay">
+            <div className="spinner"></div>
+        </div>
+      )}
+
       <div className="filters-container">
         
         {/* فلتر القطاعات */}
@@ -206,7 +250,7 @@ export default function NGXLiveChart() {
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper" style={{ position: 'relative' }}>
-          {/* العلامة المائية NNM (بدون رابط) */}
+          {/* العلامة المائية NNM */}
           <div className="chart-watermark">NNM</div>
       </div>
       
@@ -231,6 +275,22 @@ export default function NGXLiveChart() {
         }
         .chart-canvas-wrapper :global(a[href*="tradingview"]) { display: none !important; }
         .chart-canvas-wrapper { width: 100%; height: 400px; position: relative; }
+        
+        /* مؤشر التحميل */
+        .loading-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.2); z-index: 20;
+        }
+        .spinner {
+            width: 30px; height: 30px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         .filters-container {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 15px; padding: 0 10px; position: relative; z-index: 50;
@@ -265,10 +325,10 @@ export default function NGXLiveChart() {
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
-        /* العلامة المائية للديسكتوب (مرتفعة) */
+        /* العلامة المائية: الإعدادات الافتراضية (كمبيوتر) */
         .chart-watermark {
             position: absolute;
-            bottom: 40px;
+            bottom: 35px; /* ارتفاع مناسب للكمبيوتر */
             left: 20px;
             font-size: 20px;
             font-weight: 900;
@@ -280,6 +340,7 @@ export default function NGXLiveChart() {
             letter-spacing: 1px;
         }
 
+        /* تعديلات الجوال (الضبط الدقيق) */
         @media (max-width: 768px) {
             .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
             .chart-canvas-wrapper { height: 350px !important; }
@@ -287,8 +348,13 @@ export default function NGXLiveChart() {
             .custom-select-trigger { font-size: 11px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: auto; min-width: 120px; max-width: 150px; margin-right: auto; }
             
-            /* تعديل الجوال: العلامة المائية تنخفض لتكون فوق الخط مباشرة */
-            .chart-watermark { font-size: 16px; bottom: 10px; left: 15px; }
+            /* العلامة المائية في الجوال: حجم أصغر ومكان أدنى */
+            .chart-watermark { 
+                font-size: 12px; /* تصغير الخط */
+                bottom: 8px; /* ملتصقة بالأسفل تقريباً لتجنب الطيران */
+                left: 10px; 
+                opacity: 0.6; /* تقليل الشفافية لعدم التشويش */
+            }
         }
       `}</style>
     </div>
