@@ -39,14 +39,16 @@ function useClickOutside(ref: any, handler: any) {
 
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const watermarkRef = useRef<HTMLDivElement>(null); // مرجع للعلامة المائية للحماية
   
   // الحالة (State)
   const [activeSector, setActiveSector] = useState(SECTORS[0]);
-  const [activeViewMode, setActiveViewMode] = useState(VIEW_MODES[0]); // الوضع الافتراضي: التاريخ
+  const [activeViewMode, setActiveViewMode] = useState(VIEW_MODES[0]); 
   
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isChartBroken, setIsChartBroken] = useState(false); // حالة لكسر الرسم البياني عند التلاعب
 
   const [isSectorOpen, setIsSectorOpen] = useState(false);
   const [isTimeOpen, setIsTimeOpen] = useState(false);
@@ -59,7 +61,7 @@ export default function NGXLiveChart() {
 
   // --- الموتور الجديد: الجلب من ngx_static_chart ---
   const fetchFromDB = async (sectorKey: string, mode: string) => {
-    if (!seriesInstance || !chartInstance) return;
+    if (!seriesInstance || !chartInstance || isChartBroken) return; // لا تجلب بيانات إذا كان الرسم مكسوراً
     setIsLoading(true);
 
     try {
@@ -94,9 +96,59 @@ export default function NGXLiveChart() {
     }
   };
 
+  // --- نظام الحماية (Security System) ---
+  useEffect(() => {
+    // دالة التحقق من سلامة العلامة المائية
+    const checkIntegrity = () => {
+        const watermark = watermarkRef.current;
+        // شروط الحماية: يجب أن يكون العنصر موجوداً، ويحتوي على النص الصحيح، ويكون مرئياً
+        if (!watermark || watermark.innerText !== 'NNM' || getComputedStyle(watermark).display === 'none' || getComputedStyle(watermark).visibility === 'hidden' || getComputedStyle(watermark).opacity === '0') {
+            // إذا تم التلاعب، اكسر الرسم البياني
+            setIsChartBroken(true);
+            if (seriesInstance) seriesInstance.setData([]); // مسح البيانات
+            if (chartInstance) chartInstance.applyOptions({ layout: { textColor: 'transparent' }, grid: { vertLines: { visible: false }, horzLines: { visible: false } } }); // إخفاء المحاور والشبكة
+        }
+    };
+
+    // تشغيل التحقق بشكل دوري كل ثانية
+    const intervalId = setInterval(checkIntegrity, 1000);
+
+    // تحقق أولي بعد وقت قصير لضمان التحميل
+    const timeoutId = setTimeout(checkIntegrity, 2000);
+    
+    // مراقب التغييرات في الـ DOM (MutationObserver) لحماية أقوى
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.removedNodes) {
+                mutation.removedNodes.forEach((node) => {
+                    if (node === watermarkRef.current) {
+                        checkIntegrity(); // تحقق فوراً عند الحذف
+                    }
+                });
+            }
+            if (mutation.target === watermarkRef.current) {
+                 checkIntegrity(); // تحقق عند تعديل خصائص العنصر
+            }
+        });
+    });
+    
+    if (chartContainerRef.current && watermarkRef.current) {
+        observer.observe(chartContainerRef.current, { childList: true, subtree: true });
+        observer.observe(watermarkRef.current, { attributes: true, attributeFilter: ['style', 'class'] });
+    }
+
+
+    return () => {
+        clearInterval(intervalId);
+        clearTimeout(timeoutId);
+        observer.disconnect();
+    };
+  }, [chartInstance, seriesInstance]);
+
+
   // 1. تهيئة الرسم البياني (باستخدام إعدادات الكود القديم حرفياً)
   useEffect(() => {
-    if (!chartContainerRef.current) return;
+    if (!chartContainerRef.current || isChartBroken) return;
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
@@ -188,11 +240,11 @@ export default function NGXLiveChart() {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, []);
+  }, [isChartBroken]);
 
   // 2. تحديث البيانات عند تغيير الفلتر
   useEffect(() => {
-    if (seriesInstance && chartInstance) {
+    if (seriesInstance && chartInstance && !isChartBroken) {
         // تحديث الألوان
         seriesInstance.applyOptions({
             lineColor: activeSector.color,
@@ -203,11 +255,22 @@ export default function NGXLiveChart() {
         // جلب البيانات الجديدة
         fetchFromDB(activeSector.key, activeViewMode.value);
     }
-  }, [activeSector, activeViewMode, seriesInstance, chartInstance]);
+  }, [activeSector, activeViewMode, seriesInstance, chartInstance, isChartBroken]);
 
   return (
-    <div className="ngx-chart-glass mb-4">
-      <div className="filters-container">
+    <div className="ngx-chart-glass mb-4" style={{ position: 'relative' }}>
+      {isChartBroken && (
+          <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              display: 'flex', justifyContent: 'center', alignItems: 'center',
+              background: 'rgba(0,0,0,0.8)', color: 'red', fontWeight: 'bold', zIndex: 100,
+              flexDirection: 'column', textAlign: 'center', padding: '20px'
+          }}>
+              <div>⚠️ Security Violation Detected ⚠️</div>
+              <div style={{ fontSize: '12px', marginTop: '10px', color: '#ccc' }}>chart disabled due to tampering.</div>
+          </div>
+      )}
+      <div className="filters-container" style={{ opacity: isChartBroken ? 0.2 : 1, pointerEvents: isChartBroken ? 'none' : 'auto' }}>
         
         {/* Sector Filter */}
         <div className="filter-wrapper sector-wrapper" ref={sectorRef}>
@@ -240,7 +303,7 @@ export default function NGXLiveChart() {
         </div>
 
         {/* Loading Indicator (بسيط كما في الكود القديم) */}
-        {isLoading && (
+        {isLoading && !isChartBroken && (
             <div className="loading-indicator">
                 <span className="spinner"></span> Updating...
             </div>
@@ -275,12 +338,12 @@ export default function NGXLiveChart() {
         </div>
       </div>
 
-      <div ref={chartContainerRef} className="chart-canvas-wrapper" style={{ position: 'relative' }}>
-          {/* العلامة المائية NNM */}
-          <div className="chart-watermark">NNM</div>
+      <div ref={chartContainerRef} className="chart-canvas-wrapper" style={{ position: 'relative', opacity: isChartBroken ? 0.2 : 1 }}>
+          {/* العلامة المائية NNM - مربوطة بمرجع للحماية */}
+          <div ref={watermarkRef} className="chart-watermark" style={{ userSelect: 'none', pointerEvents: 'none' }}>NNM</div>
       </div>
       
-      <div className="text-end px-2 pb-2">
+      <div className="text-end px-2 pb-2" style={{ opacity: isChartBroken ? 0.2 : 1 }}>
           <small className="text-muted fst-italic" style={{ fontSize: '10px' }}>
               * Powered by NGX Engine Volume Index.
           </small>
@@ -295,7 +358,7 @@ export default function NGXLiveChart() {
             border-radius: 8px;
             padding: 15px;
             width: 100%;
-            position: relative;
+            /* position: relative;  <-- moved to inline style for safety box */
             min-height: 400px;
             overflow: hidden;
         }
@@ -344,6 +407,7 @@ export default function NGXLiveChart() {
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
+        /* تنسيق العلامة المائية الافتراضي (للكمبيوتر) */
         .chart-watermark {
             position: absolute;
             bottom: 35px;
@@ -358,6 +422,7 @@ export default function NGXLiveChart() {
             letter-spacing: 1px;
         }
 
+        /* --- التعديل المطلوب: رفع العلامة المائية في الجوال --- */
         @media (max-width: 768px) {
             .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
             .chart-canvas-wrapper { height: 350px !important; }
@@ -365,7 +430,12 @@ export default function NGXLiveChart() {
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: auto; min-width: 120px; max-width: 150px; margin-right: auto; }
             .time-wrapper { width: auto; min-width: 60px; flex-shrink: 0; }
-            .chart-watermark { font-size: 14px; bottom: 12px; left: 15px; }
+            /* تم رفع العلامة المائية هنا لتكون فوق خط التاريخ */
+            .chart-watermark { 
+                font-size: 14px; 
+                bottom: 40px; /* <-- تم التعديل لرفعها فوق الخط */
+                left: 15px; 
+            }
         }
       `}</style>
     </div>
