@@ -41,16 +41,16 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- الرسم البياني المصغر الثابت (SVG خفيف جداً) ---
+// --- الرسم البياني المصغر الثابت (تم التعديل: خط أنحف، إزالة LIVE) ---
 const StaticMiniChart = () => (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: 'linear-gradient(180deg, rgba(30,30,30,0) 0%, rgba(14,203,129,0.05) 100%)' }}>
         <svg viewBox="0 0 300 150" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
-            {/* خط بياني وهمي يحاكي السوق */}
+            {/* خط بياني أنحف (strokeWidth="1.5") */}
             <path 
                 d="M0,100 C40,90 60,120 100,110 C150,90 180,60 220,50 C260,40 280,20 300,10" 
                 fill="none" 
                 stroke="#0ECB81" 
-                strokeWidth="3" 
+                strokeWidth="1.5" 
                 vectorEffect="non-scaling-stroke"
             />
              <path 
@@ -60,19 +60,14 @@ const StaticMiniChart = () => (
             />
             <defs>
                 <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0ECB81" stopOpacity="0.2"/>
+                    <stop offset="0%" stopColor="#0ECB81" stopOpacity="0.15"/>
                     <stop offset="100%" stopColor="#0ECB81" stopOpacity="0"/>
                 </linearGradient>
             </defs>
         </svg>
-        {/* العلامة المائية */}
+        {/* العلامة المائية فقط */}
         <div style={{ position: 'absolute', bottom: '8px', left: '10px', fontSize: '14px', fontWeight: '900', fontStyle: 'italic', color: 'rgba(255,255,255,0.5)' }}>
             NNM
-        </div>
-        {/* مؤشر زائف */}
-        <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '5px', alignItems: 'center' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#0ECB81', boxShadow: '0 0 5px #0ECB81' }}></div>
-            <span style={{ fontSize: '8px', color: '#0ECB81' }}>LIVE</span>
         </div>
     </div>
 );
@@ -95,14 +90,14 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
 
   return (
     <div className="embed-card h-100 d-flex flex-column justify-content-between">
-      <div className="preview-area" style={{ height: isChart ? '80px' : '60px' }}> {/* ارتفاع ثابت للصورة المصغرة */}
+      <div className="preview-area" style={{ height: isChart ? '100px' : '60px' }}>
         <div className={`widget-scale-wrapper ${isFullBar ? 'full-bar-scale' : isChart ? 'chart-scale' : 'individual-scale'}`}>
           {component}
         </div>
       </div>
       
       <div className="info-area mt-1 text-center">
-        <h6 className="d-none d-md-block mb-1 fw-bold text-white" style={{ fontSize: '10px' }}>{title}</h6>
+        <h6 className="d-none d-md-block mb-1 unified-title" style={{ fontSize: '10px', marginBottom: '4px' }}>{title}</h6>
         {label && <div className="mobile-label fw-bold mb-1">{label}</div>}
         
         <button 
@@ -131,9 +126,9 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         
         /* Scaling Logic */
         .widget-scale-wrapper { transform-origin: center; display: flex; justify-content: center; }
-        .full-bar-scale { transform: scale(0.6); width: 160%; } /* تصغير الشريط الكامل ليناسب الصندوق */
+        .full-bar-scale { transform: scale(0.65); width: 150%; } 
         .individual-scale { transform: scale(0.6); }
-        .chart-scale { width: 100%; height: 100%; } /* الرسم البياني يأخذ الحجم كاملاً */
+        .chart-scale { width: 100%; height: 100%; } 
 
         .copy-btn { font-size: 9px; padding: 2px 0; border-radius: 4px; color: #ddd; border-color: #444; }
         .mobile-label { display: none; color: ${GOLD_COLOR}; font-size: 9px; letter-spacing: 0.5px; }
@@ -141,7 +136,7 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         @media (max-width: 768px) {
             .embed-card { padding: 4px; border: 1px solid rgba(255,255,255,0.05); }
             /* ضبط المقاسات للجوال */
-            .full-bar-scale { transform: scale(0.35); width: 280%; margin-left: -90%; }
+            .full-bar-scale { transform: scale(0.38); width: 260%; margin-left: -80%; }
             .individual-scale { transform: scale(0.45); width: 220px; }
             
             .mobile-label { display: block; font-size: 8px; margin-bottom: 2px !important; }
@@ -169,7 +164,6 @@ export default function NGXPage() {
     { name: "OPTIMISM", icon: "bi-graph-up-arrow", isCustom: false }
   ];
 
-  // --- News State ---
   const [latestNews, setLatestNews] = useState<any>(null);
   const [loadingNews, setLoadingNews] = useState(true);
 
@@ -221,8 +215,10 @@ export default function NGXPage() {
             
             <div className="row px-2 mt-3 text-section align-items-center">
                 <div className="col-lg-12">
-                    <h1 className="fw-bold mb-2 main-title">NGX NFT Index — The Global Benchmark</h1>
-                    <p className="mb-0 main-desc">
+                    {/* المصدر الرئيسي للستايل (Title Style Source) */}
+                    <h1 className="mb-2 unified-title">NGX NFT Index — The Global Benchmark</h1>
+                    {/* المصدر الرئيسي للستايل (Text Style Source) */}
+                    <p className="mb-0 unified-text">
                         The premier benchmark tracking the global NFT market, aggregating sentiment, liquidity, and rare digital name assets across all platforms.
                     </p>
                 </div>
@@ -237,35 +233,36 @@ export default function NGXPage() {
              <NGXLiveChart />
         </div>
 
-        {/* --- ARTICLE SECTION (Restored Full Text) --- */}
+        {/* --- ARTICLE SECTION --- */}
         <div className="content-container">
             <div className="article-wrapper">
-                <h2 className="article-heading mb-3">NFTs as a Market Infrastructure: From Digital Collectibles to Asset Class Architecture</h2>
+                {/* تم تطبيق unified-title و unified-text على جميع العناصر */}
+                <h2 className="unified-title mb-3">NFTs as a Market Infrastructure: From Digital Collectibles to Asset Class Architecture</h2>
                 
-                <p className="article-text">Since their emergence in the late 2010s, Non-Fungible Tokens (NFTs) have undergone a fundamental transformation. What began as a niche experiment in digital ownership has evolved into a multi-layered market infrastructure spanning art, gaming, identity, finance, and cultural capital.</p>
-                <p className="article-text">In their earliest phase, NFTs were primarily perceived as speculative digital collectibles—artifacts whose value was driven by novelty, scarcity, and community-driven hype. However, as the market matured, this narrow definition proved insufficient to describe the expanding utility and structural complexity of NFT-based assets.</p>
-                <p className="article-text">By the early 2020s, NFTs began to establish themselves not merely as digital items, but as programmable ownership primitives—capable of representing access rights, intellectual property, virtual land, in-game economies, and decentralized identities. This shift marked the beginning of NFTs as a legitimate asset class rather than a transient trend.</p>
+                <p className="unified-text mb-3">Since their emergence in the late 2010s, Non-Fungible Tokens (NFTs) have undergone a fundamental transformation. What began as a niche experiment in digital ownership has evolved into a multi-layered market infrastructure spanning art, gaming, identity, finance, and cultural capital.</p>
+                <p className="unified-text mb-3">In their earliest phase, NFTs were primarily perceived as speculative digital collectibles—artifacts whose value was driven by novelty, scarcity, and community-driven hype. However, as the market matured, this narrow definition proved insufficient to describe the expanding utility and structural complexity of NFT-based assets.</p>
+                <p className="unified-text mb-3">By the early 2020s, NFTs began to establish themselves not merely as digital items, but as programmable ownership primitives—capable of representing access rights, intellectual property, virtual land, in-game economies, and decentralized identities. This shift marked the beginning of NFTs as a legitimate asset class rather than a transient trend.</p>
 
-                <h3 className="article-heading mt-4 mb-2">The Evolution of NFT Market Structure</h3>
-                <p className="article-text">As NFT ecosystems expanded, a clear hierarchy of asset types began to emerge. Art NFTs continued to function as cultural and collectible instruments. Utility NFTs enabled access mechanisms across platforms and communities. Gaming NFTs introduced interactive value, while domain-based NFTs bridged identity and digital real estate.</p>
-                <p className="article-text">This diversification created a structural challenge: traditional valuation models—largely price-driven and speculative—were no longer sufficient to capture the true composition of the NFT market. Volume alone could not explain influence. Floor price could not define importance. A more systemic lens became necessary.</p>
+                <h3 className="unified-title mt-4 mb-2" style={{ fontSize: '1.3rem' }}>The Evolution of NFT Market Structure</h3>
+                <p className="unified-text mb-3">As NFT ecosystems expanded, a clear hierarchy of asset types began to emerge. Art NFTs continued to function as cultural and collectible instruments. Utility NFTs enabled access mechanisms across platforms and communities. Gaming NFTs introduced interactive value, while domain-based NFTs bridged identity and digital real estate.</p>
+                <p className="unified-text mb-3">This diversification created a structural challenge: traditional valuation models—largely price-driven and speculative—were no longer sufficient to capture the true composition of the NFT market. Volume alone could not explain influence. Floor price could not define importance. A more systemic lens became necessary.</p>
 
-                <h3 className="article-heading mt-4 mb-2">Why Market Indexing Matters in NFTs</h3>
-                <p className="article-text">In traditional financial markets, indices serve as neutral observatories—tools that reflect market structure rather than predict outcomes. As NFTs mature, similar indexing frameworks are beginning to surface, not to forecast prices, but to contextualize market evolution.</p>
-                <p className="article-text">Indexing in NFT markets provides a way to observe asset-class balance, category dominance, and structural shifts over time. Rather than focusing on individual projects, indices analyze the ecosystem itself.</p>
-                <p className="article-text">Within this context, independent frameworks such as the NGX Index have emerged to monitor NFT market architecture through classification models, asset weighting, and scarcity dynamics. The NGX Index does not function as a pricing oracle or investment signal. Instead, it operates as a structural reference—tracking how different NFT asset classes evolve relative to one another as the market matures.</p>
-                <p className="article-text">This approach reflects a broader transition in NFTs: from speculation-driven discovery toward infrastructure-level understanding.</p>
+                <h3 className="unified-title mt-4 mb-2" style={{ fontSize: '1.3rem' }}>Why Market Indexing Matters in NFTs</h3>
+                <p className="unified-text mb-3">In traditional financial markets, indices serve as neutral observatories—tools that reflect market structure rather than predict outcomes. As NFTs mature, similar indexing frameworks are beginning to surface, not to forecast prices, but to contextualize market evolution.</p>
+                <p className="unified-text mb-3">Indexing in NFT markets provides a way to observe asset-class balance, category dominance, and structural shifts over time. Rather than focusing on individual projects, indices analyze the ecosystem itself.</p>
+                <p className="unified-text mb-3">Within this context, independent frameworks such as the NGX Index have emerged to monitor NFT market architecture through classification models, asset weighting, and scarcity dynamics. The NGX Index does not function as a pricing oracle or investment signal. Instead, it operates as a structural reference—tracking how different NFT asset classes evolve relative to one another as the market matures.</p>
+                <p className="unified-text mb-3">This approach reflects a broader transition in NFTs: from speculation-driven discovery toward infrastructure-level understanding.</p>
 
-                <h3 className="article-heading mt-4 mb-2">NFTs as a Recognized Asset Class</h3>
-                <p className="article-text">By 2024–2025, NFTs had firmly entered institutional, corporate, and cultural conversations. Major brands, gaming studios, and digital platforms adopted NFTs not as speculative instruments, but as ownership layers embedded within larger systems.</p>
-                <p className="article-text">At this stage, the question is no longer whether NFTs will persist, but how they will be organized, measured, and understood over the long term. Asset-class frameworks, standardized terminology, and analytical indices are becoming essential components of this next phase.</p>
+                <h3 className="unified-title mt-4 mb-2" style={{ fontSize: '1.3rem' }}>NFTs as a Recognized Asset Class</h3>
+                <p className="unified-text mb-3">By 2024–2025, NFTs had firmly entered institutional, corporate, and cultural conversations. Major brands, gaming studios, and digital platforms adopted NFTs not as speculative instruments, but as ownership layers embedded within larger systems.</p>
+                <p className="unified-text mb-3">At this stage, the question is no longer whether NFTs will persist, but how they will be organized, measured, and understood over the long term. Asset-class frameworks, standardized terminology, and analytical indices are becoming essential components of this next phase.</p>
 
-                <h3 className="article-heading mt-4 mb-2">Looking Ahead: 2026 and Beyond</h3>
-                <p className="article-text">As regulatory clarity improves and technical standards stabilize, NFTs are expected to transition further into infrastructure assets—integrated seamlessly into digital economies rather than existing as standalone products.</p>
-                <p className="article-text">The emergence of neutral market observatories, classification systems, and non-speculative indices will play a critical role in this evolution. They allow participants—creators, developers, institutions, and researchers—to understand the NFT ecosystem as a whole rather than through isolated data points.</p>
-                <p className="article-text mb-3">In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.</p>
+                <h3 className="unified-title mt-4 mb-2" style={{ fontSize: '1.3rem' }}>Looking Ahead: 2026 and Beyond</h3>
+                <p className="unified-text mb-3">As regulatory clarity improves and technical standards stabilize, NFTs are expected to transition further into infrastructure assets—integrated seamlessly into digital economies rather than existing as standalone products.</p>
+                <p className="unified-text mb-3">The emergence of neutral market observatories, classification systems, and non-speculative indices will play a critical role in this evolution. They allow participants—creators, developers, institutions, and researchers—to understand the NFT ecosystem as a whole rather than through isolated data points.</p>
+                <p className="unified-text mb-3">In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.</p>
 
-                {/* --- LATEST NEWS SECTION (Placed HERE as requested) --- */}
+                {/* --- LATEST NEWS SECTION --- */}
                 <div className="mt-5 pt-3 mb-4">
                      <div className="d-flex align-items-center mb-3 border-bottom border-secondary pb-2" style={{borderColor: 'rgba(255,255,255,0.1) !important'}}>
                          <div style={{ width: '6px', height: '6px', background: '#F6465D', borderRadius: '50%', marginRight: '10px' }}></div>
@@ -284,13 +281,13 @@ export default function NGXPage() {
                                         <span className="text-date">{timeAgo(latestNews.created_at)}</span>
                                     </div>
                                     
-                                    <h2 className="news-title">
+                                    <h2 className="unified-title" style={{ fontSize: '1.3rem', cursor: 'pointer' }}>
                                         <Link href={`/blog/${latestNews.id}`} className="text-decoration-none text-white hover-gold">
                                             {latestNews.title}
                                         </Link>
                                     </h2>
                                     
-                                    <p className="news-summary">{latestNews.summary}</p>
+                                    <p className="unified-text news-summary">{latestNews.summary}</p>
                                     
                                     <div className="mt-2">
                                         <Link href={`/blog/${latestNews.id}`} className="read-more-link">
@@ -313,14 +310,14 @@ export default function NGXPage() {
                      )}
                 </div>
 
-                {/* --- DISCLAIMER (Placed after News) --- */}
+                {/* --- DISCLAIMER --- */}
                 <div className="w-100 mt-2 border-top border-secondary" style={{ borderColor: '#333 !important', paddingTop: '8px' }}>
                     <p className="fst-italic mb-0 w-100" style={{ lineHeight: '1.2', fontSize: '9px', color: '#777', opacity: 0.9 }}>
                         This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
                     </p>
                 </div>
                 
-                {/* --- DEVELOPERS TOOLKIT (New 50/50 Layout on Row 1) --- */}
+                {/* --- DEVELOPERS TOOLKIT (Reordered Layout) --- */}
                 <div className="mt-5 pt-4">
                     <div className="d-flex align-items-center mb-3">
                          <div style={{ width: '30px', height: '2px', background: GOLD_COLOR, marginRight: '10px' }}></div>
@@ -328,8 +325,8 @@ export default function NGXPage() {
                     </div>
                     
                     <div className="row g-2">
-                        {/* ROW 1: المناصفة (50% | 50%) */}
-                        <div className="col-6">
+                        {/* 1. الشريط الكامل (عرض كامل) */}
+                        <div className="col-12">
                              <EmbedCard 
                                 title="NGX Full Market Bar"
                                 isFullBar={true}
@@ -343,7 +340,9 @@ export default function NGXPage() {
                                 embedId="ngx-full-bar"
                              />
                         </div>
-                        <div className="col-6">
+
+                        {/* 2. الرسم البياني المصغر (عرض كامل - تحته مباشرة) */}
+                        <div className="col-12">
                              <EmbedCard 
                                 title="Live Chart Widget"
                                 isChart={true}
@@ -352,7 +351,7 @@ export default function NGXPage() {
                              />
                         </div>
 
-                        {/* ROW 2: الكبسولات الثلاث */}
+                        {/* 3. الكبسولات الثلاث (في الأسفل) */}
                         <div className="col-4">
                             <EmbedCard title="Sentiment" label="Sentiment" component={<NGXWidget theme="dark" />} embedId="ngx-sentiment" />
                         </div>
@@ -397,47 +396,58 @@ export default function NGXPage() {
       <div style={{ width: '100%', height: '80px', background: 'transparent' }}></div>
 
       <style jsx global>{`
-        /* GENERAL */
+        /* --- UNIFIED TYPOGRAPHY (السر في توحيد الخطوط) --- */
+        .unified-title {
+            font-size: 1.65rem;
+            color: ${TEXT_PRIMARY};
+            letter-spacing: -0.5px;
+            font-weight: 700;
+            font-family: "Inter", "Segoe UI", sans-serif;
+            line-height: 1.3;
+        }
+        
+        .unified-text {
+            font-size: 15px;
+            color: ${TEXT_MUTED};
+            font-family: "Inter", "Segoe UI", sans-serif;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        /* --- GENERAL --- */
         .header-wrapper { background: ${SURFACE_DARK}; border-bottom: 1px solid ${BORDER_COLOR}; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
         .content-container { max-width: 1050px; margin: 0 auto; }
         .widget-item { flex: 0 0 310px; }
-        .main-title { font-size: 1.65rem; color: ${TEXT_PRIMARY}; letter-spacing: -0.5px; }
-        .main-desc { font-size: 15px; color: ${TEXT_MUTED}; max-width: 650px; }
         
-        /* ARTICLE */
+        /* --- ARTICLE --- */
         .article-wrapper { margin-left: 0; padding-left: 0; }
-        .article-heading { font-size: 1.65rem; color: ${TEXT_PRIMARY}; letter-spacing: -0.5px; font-weight: 700; font-family: "Inter", "Segoe UI", sans-serif; line-height: 1.3; }
-        .article-heading.mt-4 { font-size: 1.3rem; }
-        .article-text { color: ${TEXT_MUTED}; font-family: "Inter", "Segoe UI", sans-serif; font-size: 15px; line-height: 1.6; margin-bottom: 0.8rem; text-align: justify; }
 
-        /* NEWS STYLES */
+        /* --- NEWS STYLES --- */
         .badge-category { font-size: 9px; font-weight: 700; color: ${GOLD_BASE}; text-transform: uppercase; letter-spacing: 1px; border: 1px solid ${GOLD_BASE}44; padding: 2px 6px; border-radius: 4px; }
         .text-date { font-size: 9px; color: #666; font-weight: 600; text-transform: uppercase; }
-        .news-title { font-family: "Inter", sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; line-height: 1.3; letter-spacing: -0.3px; transition: color 0.2s; }
         .hover-gold:hover { color: ${GOLD_BASE} !important; }
-        .news-summary { font-family: "Inter", sans-serif; font-size: 13px; color: ${TEXT_MUTED}; line-height: 1.5; margin-bottom: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-summary { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .read-more-link { font-size: 10px; color: ${GOLD_BASE}; text-decoration: none; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
         .read-more-link:hover { text-decoration: underline; filter: brightness(1.2); }
         .news-thumbnail { width: 140px; height: 90px; border-radius: 4px; overflow: hidden; border: 1px solid #333; cursor: pointer; }
         .news-thumbnail img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
         .news-card:hover .news-thumbnail img { transform: scale(1.05); }
 
-        /* MOBILE ADJUSTMENTS */
+        /* --- MOBILE ADJUSTMENTS --- */
         @media (max-width: 768px) {
             .header-wrapper { padding: 2px 0 !important; }
             .widgets-grid-container { display: flex !important; flex-wrap: nowrap !important; justify-content: space-between !important; gap: 2px !important; padding: 0 4px !important; max-width: 100% !important; overflow-x: hidden; }
             .widget-item { flex: 1 1 auto !important; min-width: 0 !important; max-width: 33% !important; }
             
-            /* FORCED LEFT ALIGNMENT */
-            .main-title { font-size: 1.25rem; text-align: left !important; }
-            .main-desc { font-size: 13px; text-align: left !important; margin: 0; }
+            /* FORCED LEFT ALIGNMENT ON MOBILE */
+            .unified-title { font-size: 1.25rem; text-align: left !important; }
+            .unified-text { font-size: 13px; text-align: left !important; }
             .text-section { text-align: left !important; }
             
             /* News Mobile */
             .news-card { flex-direction: column-reverse !important; }
             .news-thumbnail { width: 100%; height: 160px; margin-bottom: 10px; }
-            .news-title { font-size: 1.1rem; }
         }
 
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
