@@ -21,7 +21,7 @@ const TEXT_PRIMARY = '#E0E0E0';
 const TEXT_MUTED = '#B0B0B0';
 const GOLD_COLOR = '#FFB300';
 const GOLD_BASE = '#F0C420'; 
-const LIME_COLOR = '#C0D860'; // تم التعديل للون الليموني
+const LIME_COLOR = '#C0D860'; // اللون الليموني
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
 // --- أيقونة الذهب ---
@@ -42,11 +42,10 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- الرسم البياني المصغر الثابت (معدل: لون ليموني + حماية) ---
+// --- الرسم البياني المصغر الثابت ---
 const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: 'linear-gradient(180deg, rgba(30,30,30,0) 0%, rgba(192, 216, 96, 0.05) 100%)' }}>
         <svg viewBox="0 0 300 150" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
-            {/* الخط باللون الليموني */}
             <path 
                 d="M0,100 C40,90 60,120 100,110 C150,90 180,60 220,50 C260,40 280,20 300,10" 
                 fill="none" 
@@ -54,7 +53,6 @@ const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
                 strokeWidth="2" 
                 vectorEffect="non-scaling-stroke"
             />
-            {/* التدرج اللوني الليموني */}
              <path 
                 d="M0,100 C40,90 60,120 100,110 C150,90 180,60 220,50 C260,40 280,20 300,10 V150 H0 Z" 
                 fill="url(#limeGradient)" 
@@ -67,8 +65,20 @@ const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
                 </linearGradient>
             </defs>
         </svg>
-        {/* نص الحماية المدمج */}
-        <div style={{ position: 'absolute', bottom: '8px', left: '0', width: '100%', textAlign: 'center', fontSize: isMobile ? '8px' : '10px', fontWeight: '900', fontStyle: 'italic', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }}>
+        <div style={{ 
+            position: 'absolute', 
+            bottom: '5px', 
+            left: '0', 
+            width: '100%',
+            textAlign: 'center',
+            fontSize: isMobile ? '8px' : '10px', 
+            fontWeight: '600', 
+            fontStyle: 'italic', 
+            color: 'rgba(255,255,255,0.4)',
+            pointerEvents: 'none',
+            letterSpacing: '0.5px',
+            fontFamily: '"Inter", sans-serif'
+        }}>
             NNM Protocol Register Blockchain
         </div>
     </div>
@@ -98,21 +108,20 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // ضبط الارتفاعات لتناسب التصغير
+  // ضبط الارتفاعات
   let previewHeight = '60px';
   if (isChart) previewHeight = isMobile ? '120px' : '160px'; 
-  if (isFullBar) previewHeight = isMobile ? '80px' : '60px'; 
+  if (isFullBar) previewHeight = isMobile ? '90px' : '60px'; 
 
   return (
     <div className="embed-card h-100 d-flex flex-column justify-content-between">
       <div className="preview-area" style={{ height: previewHeight }}>
-        {/* pointerEvents: none تمنع الضغط على الروابط داخل المعاينة */}
         <div className={`widget-scale-wrapper ${isFullBar ? 'full-bar-scale' : isChart ? 'chart-scale' : 'individual-scale'}`} style={{ pointerEvents: 'none' }}>
           {isChart ? <StaticMiniChart isMobile={isMobile} /> : component}
         </div>
       </div>
       
-      <div className="info-area mt-1 text-center">
+      <div className="info-area mt-1 text-center" style={{ zIndex: 10 }}>
         <h6 className="d-none d-md-block mb-1 unified-title" style={{ fontSize: '10px', marginBottom: '4px' }}>{title}</h6>
         {label && <div className="mobile-label fw-bold mb-1">{label}</div>}
         
@@ -141,18 +150,11 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
             position: relative;
             display: flex; 
             flex-direction: column;
-            align-items: center; /* توسيط المحتوى */
+            align-items: center; 
         }
         .preview-area { display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; width: 100%; flex-grow: 1; }
         
-        /* Scaling Wrapper */
-        .widget-scale-wrapper { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            transform-origin: center center;
-            width: 100%;
-        }
+        .widget-scale-wrapper { transform-origin: center; display: flex; justify-content: center; width: 100%; }
         
         /* Desktop Defaults */
         .full-bar-scale { transform: scale(0.5); width: auto; } 
@@ -165,11 +167,11 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         @media (max-width: 768px) {
             .embed-card { padding: 6px 4px; border: 1px solid rgba(255,255,255,0.05); min-height: 100px; }
             
-            /* --- التعديل الحاسم للجوال (Full Bar) --- */
-            /* العرض auto يترك المحتوى يحدد العرض (وهو 950px كما حددناه في الـ Div) */
-            /* الـ Scale يصغر هذا العرض الكبير ليناسب الشاشة */
+            /* --- التعديل الحاسم للجوال: Full Bar --- */
             .full-bar-scale { 
+                /* زيادة الحجم قليلاً لملء الشاشة بوضوح */
                 transform: scale(0.42); 
+                /* العرض الثابت يجبرهم على الاصطفاف */
                 width: auto; 
                 margin: 0 auto;
             }
@@ -185,18 +187,17 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
   );
 };
 
-// --- مكون الحماية الإضافي (للودجات العادية) ---
 const ProtectedWidgetWrapper = ({ children }: { children: React.ReactNode }) => (
     <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {children}
         <div style={{ 
-            marginTop: '2px', 
-            fontSize: '8px', 
-            fontWeight: '900', 
-            fontStyle: 'italic', 
-            color: 'rgba(255,255,255,0.3)', 
-            fontFamily: '"Inter", sans-serif',
-            whiteSpace: 'nowrap'
+            marginTop: '2px',
+            fontSize: '8px',
+            fontWeight: '600',
+            fontStyle: 'italic',
+            color: 'rgba(255,255,255,0.3)',
+            whiteSpace: 'nowrap',
+            fontFamily: '"Inter", sans-serif'
         }}>
             NNM Protocol Register Blockchain
         </div>
@@ -368,7 +369,7 @@ export default function NGXPage() {
                     </p>
                 </div>
                 
-                {/* --- DEVELOPERS TOOLKIT (FINAL) --- */}
+                {/* --- DEVELOPERS TOOLKIT (FINAL CORRECTED) --- */}
                 <div className="mt-5 pt-4">
                     <div className="d-flex align-items-center mb-3">
                          <div style={{ width: '30px', height: '2px', background: GOLD_COLOR, marginRight: '10px' }}></div>
@@ -376,18 +377,18 @@ export default function NGXPage() {
                     </div>
                     
                     <div className="row g-2 justify-content-center">
-                        {/* 1. الشريط الكامل: حاوية ثابتة العرض لضمان الاصطفاف */}
+                        {/* 1. الشريط الكامل: حاوية ثابتة مع إلغاء الهوامش الداخلية قسراً */}
                         <div className="col-12">
                              <EmbedCard 
                                 title="NGX Full Market Bar"
                                 isFullBar={true}
                                 component={
                                     <ProtectedWidgetWrapper>
-                                        {/* نحدد عرضاً ثابتاً 950 بكسل لإجبار العناصر على البقاء بجوار بعضها، ونلغي المسافات */}
-                                        <div style={{ display: 'flex', gap: '0', minWidth: '950px', justifyContent: 'center' }}>
-                                            <div style={{ flex: 1 }}><NGXWidget theme="dark" /></div>
-                                            <div style={{ flex: 1 }}><NGXCapWidget theme="dark" /></div>
-                                            <div style={{ flex: 1 }}><NGXVolumeWidget theme="dark" /></div>
+                                        <div className="d-flex justify-content-center align-items-center w-100" style={{ minWidth: '950px', gap: '0' }}>
+                                            {/* إجبار كل عنصر على التخلي عن أي هامش */}
+                                            <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NGXWidget theme="dark" /></div>
+                                            <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NGXCapWidget theme="dark" /></div>
+                                            <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NGXVolumeWidget theme="dark" /></div>
                                         </div>
                                     </ProtectedWidgetWrapper>
                                 }
@@ -504,7 +505,6 @@ export default function NGXPage() {
         .news-card:hover .news-thumbnail img { transform: scale(1.05); }
 
         /* --- CHART RESPONSIVE SIZE --- */
-        /* Desktop: 50% width */
         .chart-wrapper-responsive { width: 50%; max-width: 500px; }
 
         /* --- MOBILE ADJUSTMENTS --- */
@@ -518,8 +518,8 @@ export default function NGXPage() {
             .news-card { flex-direction: column-reverse !important; }
             .news-thumbnail { width: 100%; height: 160px; margin-bottom: 10px; }
             
-            /* Chart Mobile: 80% width */
-            .chart-wrapper-responsive { width: 80%; }
+            /* Chart Mobile Size: 70% width */
+            .chart-wrapper-responsive { width: 70%; }
         }
 
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
