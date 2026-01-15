@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // السماح بدقيقة كاملة للتنفيذ لمحاولات جلب البيانات
+export const maxDuration = 60; // السماح بدقيقة كاملة للتنفيذ
 
 // 1. إعدادات الاتصال
 const supabase = createClient(
@@ -26,22 +26,20 @@ const TOKENS = {
     market: ['ethereum', 'matic-network']
 };
 
-// --- Helper Functions (Logic Core) ---
+// --- Helper Functions ---
 
-// دالة جلب البيانات مع نظام إعادة المحاولة (Retry Mechanism)
-// تحاول 5 مرات مع انتظار 5 ثواني بين كل محاولة (المجموع حوالي 25-30 ثانية)
+// دالة جلب البيانات مع نظام إعادة المحاولة
 async function fetchWithRetry(url: string, retries = 5, delay = 5000) {
     for (let i = 0; i < retries; i++) {
         try {
             const res = await fetch(url, { cache: 'no-store' });
             if (!res.ok) throw new Error(`CoinGecko Status: ${res.status}`);
             const data = await res.json();
-            // تأكد أن البيانات ليست فارغة
             if (Object.keys(data).length === 0) throw new Error("Empty Data");
             return data;
         } catch (err) {
             console.warn(`Fetch attempt ${i + 1} failed. Retrying in ${delay}ms...`);
-            if (i === retries - 1) throw err; // إذا فشلت آخر محاولة، ارمِ الخطأ
+            if (i === retries - 1) throw err;
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
@@ -82,37 +80,53 @@ async function getNNMInternalVolume() {
     }
 }
 
-// اختيار الصور بالتسلسل
+// --- [تعديل هام] دالة اختيار الصور الذكية (Loop 1-30 with Fallback) ---
 async function getSequentialImage() {
     try {
+        // 1. معرفة عدد المقالات الكلي لتحديد "الدور"
         const { count, error } = await supabase
             .from('news_posts')
             .select('*', { count: 'exact', head: true });
         
-        if (error) return 'A1.jpg';
+        // في حال حدوث خطأ في العد، نعود للماستر فوراً
+        if (error) {
+            console.error("Image count error, using Master.");
+            return 'A1.jpg';
+        }
 
         const currentCount = count || 0;
-        const nextImageNumber = currentCount + 1;
+        
+        // 2. المعادلة الذكية: (العدد الكلي % 30) + 1
+        // هذا يضمن أن النتيجة دائماً بين 1 و 30 مهما زاد عدد المقالات
+        // مثال: المقال رقم 31 سيعطي النتيجة 1، المقال 32 يعطي 2، وهكذا
+        const nextImageNumber = (currentCount % 30) + 1;
         
         const expectedFileName = `${nextImageNumber}.jpg`;
         const dirPath = path.join(process.cwd(), 'public', 'news-assets');
         const fullPath = path.join(dirPath, expectedFileName);
 
-        return fs.existsSync(fullPath) ? expectedFileName : 'A1.jpg';
+        // 3. التحقق من وجود الصورة فعلياً في المجلد
+        if (fs.existsSync(fullPath)) {
+            return expectedFileName; // الصورة موجودة، استخدمها
+        } else {
+            console.warn(`Image ${expectedFileName} not found in folder. Using Master A1.jpg.`);
+            return 'A1.jpg'; // الصورة مفقودة، استخدم الماستر
+        }
+
     } catch (error) {
-        return 'A1.jpg';
+        console.error("Filesystem error, using Master.", error);
+        return 'A1.jpg'; // خطأ غير متوقع، استخدم الماستر
     }
 }
 
 export async function GET() {
     try {
-        // --- A. تجميع البيانات الحية (Data Aggregation & Safety) ---
+        // --- A. تجميع البيانات الحية ---
         
         const allIds = [
             ...TOKENS.nam, ...TOKENS.art, ...TOKENS.gam, ...TOKENS.utl, ...TOKENS.market
         ].join(',');
 
-        // 1. جلب البيانات باستخدام نظام إعادة المحاولة
         let cgData;
         try {
             cgData = await fetchWithRetry(
@@ -123,7 +137,6 @@ export async function GET() {
             return NextResponse.json({ success: false, message: "Market data unavailable. Article skipped." }, { status: 503 });
         }
 
-        // 2. منطق تحليل القطاعات (Sector Analysis)
         const calculateSector = (ids: string[], name: string) => {
             let totalChange = 0;
             let count = 0;
@@ -132,7 +145,6 @@ export async function GET() {
             ids.forEach(id => {
                 const coin = cgData[id];
                 if (coin && coin.usd !== undefined) {
-                    // استبعاد العملات الصفرية
                     if (coin.usd > 0) {
                         totalChange += coin.usd_24h_change || 0;
                         count++;
@@ -141,11 +153,7 @@ export async function GET() {
                 }
             });
 
-            // حساب المتوسط
             const avgChange = count ? (totalChange / count) : 0;
-            
-            // **Crash Protection**: التحقق هل القطاع سليم؟
-            // يعتبر "تالف" إذا كان التغير أقل من -20% (انهيار) أو لا توجد بيانات (validPrices = 0)
             const isCrashed = avgChange < -20;
             const isZeroData = validPrices === 0;
 
@@ -159,21 +167,17 @@ export async function GET() {
             calculateSector(TOKENS.utl, 'Virtual Land')
         ];
 
-        // 3. فلترة القطاعات (Kill Switch Check)
         const validSectors = rawSectors.filter(s => s.isValid);
         
-        // **Kill Switch Condition**: إذا تم رفض أكثر من قطاعين (أي تبقى أقل من 2)، نلغي المقال
         if (validSectors.length < 2) {
             console.warn("Market Alert: More than 2 sectors have zero data or >20% crash. Skipping article.");
             return NextResponse.json({ success: false, message: "Market instability detected. Article skipped for safety." });
         }
 
-        // ترتيب القطاعات الصالحة فقط
         validSectors.sort((a, b) => b.change - a.change);
         const topSector = validSectors[0];
         const lowSector = validSectors[validSectors.length - 1];
 
-        // 4. منطق السوق العام (ETH & POL Zero Logic)
         const ethCoin = cgData['ethereum'];
         const polCoin = cgData['matic-network'];
         
@@ -181,7 +185,6 @@ export async function GET() {
         const ethChange = ethCoin?.usd_24h_change || 0;
         const polPrice = (polCoin?.usd > 0) ? polCoin.usd : 0;
 
-        // بناء جملة السوق بناءً على توفر البيانات
         let marketString = "";
         if (ethPrice > 0 && polPrice > 0) {
             marketString = `General Market: ETH is $${ethPrice} (${ethChange.toFixed(2)}%), POL is $${polPrice}.`;
@@ -190,17 +193,17 @@ export async function GET() {
         } else if (polPrice > 0) {
             marketString = `General Market: POL is $${polPrice}.`;
         } else {
-            // إذا كلاهما صفر، لا نكتب شيئاً
             marketString = "General Market data is currently neutral.";
         }
 
-        // 5. حالة السوق
         const ngxMomentum = (validSectors.reduce((acc, curr) => acc + curr.change, 0) / validSectors.length); 
         let marketMood = 'Neutral';
         if (ngxMomentum > 2) marketMood = 'Greed / High Demand';
         else if (ngxMomentum < -2) marketMood = 'Fear / Correction';
 
         const nnmInternal = await getNNMInternalVolume();
+        
+        // استدعاء دالة الصور الجديدة
         const selectedImageFilename = await getSequentialImage();
 
 
@@ -259,8 +262,7 @@ export async function GET() {
 
         const result = JSON.parse(completion.choices[0].message.content || '{}');
 
-        // --- D. إضافة الحماية القانونية (Legal Disclaimer) ---
-        // يتم إضافتها تلقائياً لنهاية محتوى المقال
+        // --- D. إضافة الحماية القانونية ---
         const legalDisclaimer = `
         <br><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
         <p style="font-size: 0.85rem; color: #888; font-style: italic; line-height: 1.4;">

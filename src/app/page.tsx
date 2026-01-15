@@ -158,6 +158,69 @@ const AssetCard = ({ item }: { item: any }) => {
   
 function Home() {
   
+  // ============================================
+  // 🛡️ SECURITY & MAINTENANCE LAYER (ADDED) 🛡️
+  // ============================================
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  const [isMaintenanceLoading, setIsMaintenanceLoading] = useState(true);
+
+  useEffect(() => {
+    const checkMaintenance = async () => {
+      try {
+        const { data } = await supabase.from('app_settings').select('is_maintenance_mode').eq('id', 1).single();
+        if (data?.is_maintenance_mode) {
+           setIsMaintenanceMode(true);
+        }
+      } catch (e) {
+        console.error("System Check:", e);
+      } finally {
+        setIsMaintenanceLoading(false);
+      }
+    };
+    checkMaintenance();
+  }, []);
+
+  // 1. Loading Screen (while checking database)
+  if (isMaintenanceLoading) {
+     return <div style={{height: '100vh', width: '100vw', background: '#050505', position: 'fixed', top: 0, left: 0, zIndex: 99999}}></div>;
+  }
+
+  // 2. The Maintenance Curtain (If Closed)
+  if (isMaintenanceMode) {
+     return (
+        <div style={{
+          height: '100vh',
+          width: '100vw',
+          backgroundColor: '#050505',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          color: '#fff',
+          fontFamily: 'monospace',
+          textAlign: 'center',
+          padding: '20px',
+          zIndex: 99999,
+          position: 'fixed',
+          top: 0,
+          left: 0
+        }}>
+          <div style={{ fontSize: '50px', marginBottom: '20px' }}>🚧</div>
+          <h1 style={{ color: '#FCD535', fontSize: '2rem', marginBottom: '10px' }}>MAINTENANCE MODE</h1>
+          <p style={{ color: '#888', maxWidth: '500px' }}>
+            The platform is currently undergoing scheduled upgrades.
+            <br/>Access is restricted by the administrator.
+          </p>
+          <div style={{ marginTop: '50px', fontSize: '12px', color: '#333', borderTop: '1px solid #222', paddingTop: '20px' }}>
+            SECURE CONNECTION • NNM SYSTEM
+          </div>
+        </div>
+     );
+  }
+  // ============================================
+  // END OF SECURITY LAYER - NORMAL SITE BELOW
+  // ============================================
+
   const [activeTab, setActiveTab] = useState<'trending' | 'top'>('trending');
   const [timeFilter, setTimeFilter] = useState('24H');
   const [currencyFilter, setCurrencyFilter] = useState('All');
