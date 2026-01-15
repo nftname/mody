@@ -67,14 +67,14 @@ const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
         </svg>
         <div style={{ 
             position: 'absolute', 
-            bottom: '5px', 
+            bottom: '8px', 
             left: '0', 
             width: '100%',
             textAlign: 'center',
             fontSize: isMobile ? '8px' : '10px', 
-            fontWeight: '600', 
+            fontWeight: '900', 
             fontStyle: 'italic', 
-            color: 'rgba(255,255,255,0.4)',
+            color: 'rgba(255,255,255,0.3)',
             pointerEvents: 'none',
             letterSpacing: '0.5px',
             fontFamily: '"Inter", sans-serif'
@@ -167,11 +167,10 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         @media (max-width: 768px) {
             .embed-card { padding: 6px 4px; border: 1px solid rgba(255,255,255,0.05); min-height: 100px; }
             
-            /* --- التعديل الحاسم للجوال: Full Bar --- */
+            /* --- التعديل الجراحي: زيادة الحجم بنسبة 50% --- */
             .full-bar-scale { 
-                /* زيادة الحجم قليلاً لملء الشاشة بوضوح */
-                transform: scale(0.42); 
-                /* العرض الثابت يجبرهم على الاصطفاف */
+                /* تم تغيير القيمة من 0.42 إلى 0.63 لزيادة الحجم */
+                transform: scale(0.63); 
                 width: auto; 
                 margin: 0 auto;
             }
@@ -191,13 +190,13 @@ const ProtectedWidgetWrapper = ({ children }: { children: React.ReactNode }) => 
     <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {children}
         <div style={{ 
-            marginTop: '2px',
-            fontSize: '8px',
-            fontWeight: '600',
-            fontStyle: 'italic',
-            color: 'rgba(255,255,255,0.3)',
-            whiteSpace: 'nowrap',
-            fontFamily: '"Inter", sans-serif'
+            marginTop: '2px', 
+            fontSize: '8px', 
+            fontWeight: '900', 
+            fontStyle: 'italic', 
+            color: 'rgba(255,255,255,0.3)', 
+            fontFamily: '"Inter", sans-serif',
+            whiteSpace: 'nowrap'
         }}>
             NNM Protocol Register Blockchain
         </div>
@@ -369,7 +368,7 @@ export default function NGXPage() {
                     </p>
                 </div>
                 
-                {/* --- DEVELOPERS TOOLKIT (FINAL CORRECTED) --- */}
+                {/* --- DEVELOPERS TOOLKIT (FINAL) --- */}
                 <div className="mt-5 pt-4">
                     <div className="d-flex align-items-center mb-3">
                          <div style={{ width: '30px', height: '2px', background: GOLD_COLOR, marginRight: '10px' }}></div>
@@ -385,7 +384,6 @@ export default function NGXPage() {
                                 component={
                                     <ProtectedWidgetWrapper>
                                         <div className="d-flex justify-content-center align-items-center w-100" style={{ minWidth: '950px', gap: '0' }}>
-                                            {/* إجبار كل عنصر على التخلي عن أي هامش */}
                                             <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NGXWidget theme="dark" /></div>
                                             <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NGXCapWidget theme="dark" /></div>
                                             <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NGXVolumeWidget theme="dark" /></div>
@@ -505,6 +503,7 @@ export default function NGXPage() {
         .news-card:hover .news-thumbnail img { transform: scale(1.05); }
 
         /* --- CHART RESPONSIVE SIZE --- */
+        /* Desktop: 50% width */
         .chart-wrapper-responsive { width: 50%; max-width: 500px; }
 
         /* --- MOBILE ADJUSTMENTS --- */
@@ -518,8 +517,8 @@ export default function NGXPage() {
             .news-card { flex-direction: column-reverse !important; }
             .news-thumbnail { width: 100%; height: 160px; margin-bottom: 10px; }
             
-            /* Chart Mobile Size: 70% width */
-            .chart-wrapper-responsive { width: 70%; }
+            /* Chart Mobile: 80% width */
+            .chart-wrapper-responsive { width: 80%; }
         }
 
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
