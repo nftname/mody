@@ -56,12 +56,26 @@ export default function NGXLiveChart() {
   const sectorRef = useRef<HTMLDivElement>(null);
   const timeRef = useRef<HTMLDivElement>(null);
 
+  // [تعديل 1: إضافة مرجع الذاكرة المؤقتة]
+  // هذا المتغير سيحفظ البيانات ولن يمسحها عند إعادة الرسم
+  const dataCache = useRef<Record<string, any[]>>({});
+
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
   // --- الموتور الجديد: الجلب من ngx_static_chart ---
   const fetchFromDB = async (sectorKey: string, mode: string) => {
     if (!seriesInstance || !chartInstance || isChartBroken) return; // لا تجلب بيانات إذا كان الرسم مكسوراً
+    
+    // [تعديل 2: الفحص في الذاكرة أولاً]
+    const cacheKey = `${sectorKey}_${mode}`;
+    if (dataCache.current[cacheKey]) {
+        // إذا البيانات موجودة، استخدمها فوراً ولا تتصل بالسيرفر
+        seriesInstance.setData(dataCache.current[cacheKey]);
+        chartInstance.timeScale().fitContent();
+        return; 
+    }
+
     setIsLoading(true);
 
     try {
@@ -82,6 +96,9 @@ export default function NGXLiveChart() {
                 time: Number(d.timestamp) as UTCTimestamp,
                 value: Number(d.value)
             }));
+
+            // [تعديل 3: حفظ البيانات في الذاكرة للمستقبل]
+            dataCache.current[cacheKey] = formattedData;
 
             seriesInstance.setData(formattedData);
             chartInstance.timeScale().fitContent();
