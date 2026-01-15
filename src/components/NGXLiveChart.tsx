@@ -56,26 +56,60 @@ export default function NGXLiveChart() {
   const sectorRef = useRef<HTMLDivElement>(null);
   const timeRef = useRef<HTMLDivElement>(null);
 
-  // [تعديل 1: إضافة مرجع الذاكرة المؤقتة]
-  // هذا المتغير سيحفظ البيانات ولن يمسحها عند إعادة الرسم
+  // مرجع الذاكرة المؤقتة
   const dataCache = useRef<Record<string, any[]>>({});
 
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- الموتور الجديد: الجلب من ngx_static_chart ---
-  const fetchFromDB = async (sectorKey: string, mode: string) => {
-    if (!seriesInstance || !chartInstance || isChartBroken) return; // لا تجلب بيانات إذا كان الرسم مكسوراً
+  // --- [جديد] وظيفة التحميل المسبق الشامل في الخلفية ---
+  useEffect(() => {
+    const prefetchAllData = async () => {
+        // جلب كل البيانات دفعة واحدة (أسرع بكثير من طلبات منفصلة)
+        const { data } = await supabase
+            .from('ngx_static_chart')
+            .select('sector_key, mode, timestamp, value')
+            .order('timestamp', { ascending: true });
+
+        if (data) {
+            // توزيع البيانات على الكاش
+            data.forEach((item: any) => {
+                const key = `${item.sector_key}_${item.mode}`;
+                if (!dataCache.current[key]) dataCache.current[key] = [];
+                
+                // إضافة النقطة (يمكن تحسين الأداء هنا بعدم التكرار، لكن الذاكرة تتحمل)
+                dataCache.current[key].push({
+                    time: Number(item.timestamp) as UTCTimestamp,
+                    value: Number(item.value)
+                });
+            });
+
+            // تنظيف وترتيب الكاش لكل قطاع لضمان عدم التكرار
+            Object.keys(dataCache.current).forEach(key => {
+                 const unique = Array.from(new Map(dataCache.current[key].map(i => [i.time, i])).values());
+                 dataCache.current[key] = unique.sort((a, b) => (a.time as number) - (b.time as number));
+            });
+        }
+    };
     
-    // [تعديل 2: الفحص في الذاكرة أولاً]
+    // تأخير بسيط للسماح للرسم الأول بالظهور أولاً
+    setTimeout(prefetchAllData, 500);
+  }, []);
+
+  // --- الموتور: الجلب من الذاكرة أو الداتا بيز ---
+  const fetchFromDB = async (sectorKey: string, mode: string) => {
+    if (!seriesInstance || !chartInstance || isChartBroken) return;
+    
     const cacheKey = `${sectorKey}_${mode}`;
-    if (dataCache.current[cacheKey]) {
-        // إذا البيانات موجودة، استخدمها فوراً ولا تتصل بالسيرفر
+
+    // 1. الفحص الفوري في الذاكرة (سنجد البيانات هنا غالباً بفضل التحميل المسبق)
+    if (dataCache.current[cacheKey] && dataCache.current[cacheKey].length > 0) {
         seriesInstance.setData(dataCache.current[cacheKey]);
         chartInstance.timeScale().fitContent();
         return; 
     }
 
+    // 2. إذا لم نجدها (لأول مرة فقط)، نجلبها من السيرفر
     setIsLoading(true);
 
     try {
@@ -89,7 +123,6 @@ export default function NGXLiveChart() {
         if (error) throw error;
 
         if (data && data.length > 0) {
-            // إزالة التكرار (Cleaning)
             const uniqueData = Array.from(new Map(data.map(item => [item['timestamp'], item])).values());
             
             const formattedData = uniqueData.map((d: any) => ({
@@ -97,8 +130,7 @@ export default function NGXLiveChart() {
                 value: Number(d.value)
             }));
 
-            // [تعديل 3: حفظ البيانات في الذاكرة للمستقبل]
-            dataCache.current[cacheKey] = formattedData;
+            dataCache.current[cacheKey] = formattedData; // حفظ للمستقبل
 
             seriesInstance.setData(formattedData);
             chartInstance.timeScale().fitContent();
@@ -120,7 +152,6 @@ export default function NGXLiveChart() {
         const watermark = watermarkRef.current;
         // شروط الحماية: يجب أن يكون العنصر موجوداً، ويحتوي على النص الصحيح، ويكون مرئياً
         if (!watermark || watermark.innerText !== 'NNM' || getComputedStyle(watermark).display === 'none' || getComputedStyle(watermark).visibility === 'hidden' || getComputedStyle(watermark).opacity === '0') {
-            // إذا تم التلاعب، اكسر الرسم البياني
             setIsChartBroken(true);
             if (seriesInstance) seriesInstance.setData([]); // مسح البيانات
             if (chartInstance) chartInstance.applyOptions({ layout: { textColor: 'transparent' }, grid: { vertLines: { visible: false }, horzLines: { visible: false } } }); // إخفاء المحاور والشبكة
