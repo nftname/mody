@@ -1,23 +1,48 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
 import { parseAbi, formatEther, parseEther } from 'viem';
 import { supabase } from '@/lib/supabase';
-import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
+import { NFT_COLLECTION_ADDRESS } from '@/data/config';
+
+// --- TYPESCRIPT INTERFACES (لحل مشاكل الأنواع) ---
+interface Activity {
+  created_at: string;
+  activity_type: string;
+  price: number | string;
+  to_address?: string;
+  from_address?: string;
+}
+
+interface WalletData {
+  address: string;
+  volume: number;
+  txCount: number;
+  history: Activity[];
+}
+
+interface Payout {
+  id: number;
+  wallet_address: string;
+  amount: number;
+  status: string;
+}
+
+interface AppSettings {
+  id: number;
+  is_maintenance_mode: boolean;
+  announcement_text: string;
+}
 
 // 1. CONFIGURATION
 const OWNER_WALLET = "0x5f2f670df4Db14ddB4Bc1E3eCe86CA645fb01BE6".toLowerCase();
-const ACCESS_CODE_SECRET = "NNM-2026"; // كود الحماية للدخول
+const ACCESS_CODE_SECRET = "8573"; 
 
 // 2. ABIs
 const REGISTRY_ABI = parseAbi([
   "function setPrices(uint256 _immortal, uint256 _elite, uint256 _founder) external",
-  "function withdraw() external",
-  "function setAuthorizedMinter(address _wallet, bool _status) external"
-]);
-const MARKET_ABI = parseAbi([
-  "function setPlatformFee(uint256 _newFee) external"
+  "function withdraw() external"
 ]);
 
 export default function AdminPage() {
@@ -38,16 +63,16 @@ export default function AdminPage() {
   // Financials
   const [contractBalance, setContractBalance] = useState('0');
   const [mintPrices, setMintPrices] = useState({ immortal: '', elite: '', founder: '' });
-  const [marketFee, setMarketFee] = useState('');
   
   // Analytics Data
   const [visitorsCount, setVisitorsCount] = useState(0);
   const [mintStats, setMintStats] = useState({ total: 0, immortal: 0, elite: 0, founder: 0, revenue: 0 });
-  const [walletStats, setWalletStats] = useState<any[]>([]);
-  const [selectedWallet, setSelectedWallet] = useState<any>(null); // For Popup
   
-  // Affiliate Data
-  const [pendingPayouts, setPendingPayouts] = useState<any[]>([]);
+  // *** تم تحديد الأنواع هنا لحل مشكلة never[] ***
+  const [walletStats, setWalletStats] = useState<WalletData[]>([]);
+  const [selectedWallet, setSelectedWallet] = useState<WalletData | null>(null);
+  const [pendingPayouts, setPendingPayouts] = useState<Payout[]>([]);
+  
   const [affiliateLiability, setAffiliateLiability] = useState(0);
 
   // --- Initialization ---
@@ -68,6 +93,7 @@ export default function AdminPage() {
   }, [isAuthenticated]);
 
   // --- Login Handler ---
+  // تمت إضافة النوع React.FormEvent
   const handleLogin = (e: React.FormEvent) => {
       e.preventDefault();
       if (accessInput === ACCESS_CODE_SECRET) setIsAuthenticated(true);
@@ -86,28 +112,34 @@ export default function AdminPage() {
   const fetchSupabaseData = async () => {
       // 1. Settings
       const { data: set } = await supabase.from('app_settings').select('*').eq('id', 1).single();
-      if (set) { setMaintenanceMode(set.is_maintenance_mode); setAnnouncement(set.announcement_text); }
+      if (set) { 
+          const settings = set as AppSettings;
+          setMaintenanceMode(settings.is_maintenance_mode); 
+          setAnnouncement(settings.announcement_text || ''); 
+      }
 
       // 2. Mint Stats & Wallet Radar
       const { data: activities } = await supabase.from('activities').select('*');
       if (activities) {
-          // Mint Stats
           let mStats = { total: 0, immortal: 0, elite: 0, founder: 0, revenue: 0 };
-          let wallets: any = {};
+          // تعريف النوع هنا كـ Record لحل مشكلة Indexing
+          let wallets: Record<string, WalletData> = {};
 
-          activities.forEach((act: any) => {
-              // Wallet Analysis
+          // تمت إضافة النوع (act: Activity)
+          (activities as Activity[]).forEach((act) => {
               const wallet = act.to_address || act.from_address;
-              if (!wallets[wallet]) wallets[wallet] = { address: wallet, volume: 0, txCount: 0, history: [] };
-              wallets[wallet].volume += Number(act.price || 0);
-              wallets[wallet].txCount += 1;
-              wallets[wallet].history.push(act);
+              if (wallet) {
+                  if (!wallets[wallet]) {
+                      wallets[wallet] = { address: wallet, volume: 0, txCount: 0, history: [] };
+                  }
+                  wallets[wallet].volume += Number(act.price || 0);
+                  wallets[wallet].txCount += 1;
+                  wallets[wallet].history.push(act);
+              }
 
-              // Mint Analysis
               if (act.activity_type === 'Mint') {
                   mStats.total++;
                   mStats.revenue += Number(act.price || 0);
-                  // Estimate Tier based on price (Approximate logic if tier not stored)
                   const p = Number(act.price);
                   if (p >= 50) mStats.immortal++;
                   else if (p >= 30) mStats.elite++;
@@ -116,22 +148,20 @@ export default function AdminPage() {
           });
           
           setMintStats(mStats);
-          // Sort Wallets by Volume (Whale Watch)
-          setWalletStats(Object.values(wallets).sort((a: any, b: any) => b.volume - a.volume).slice(0, 50));
+          setWalletStats(Object.values(wallets).sort((a, b) => b.volume - a.volume).slice(0, 50));
       }
 
       // 3. Affiliate Data
       const { data: payouts } = await supabase.from('affiliate_payouts').select('*').eq('status', 'PENDING');
-      if (payouts) setPendingPayouts(payouts);
+      if (payouts) setPendingPayouts(payouts as Payout[]);
       
       const { data: earnings } = await supabase.from('affiliate_earnings').select('amount').eq('status', 'UNPAID');
       if (earnings) {
-          // --- FIX: Added types (acc: number, curr: any) ---
+          // تمت إضافة الأنواع للمتغيرات داخل reduce
           const liability = earnings.reduce((acc: number, curr: any) => acc + (Number(curr.amount)||0), 0);
           setAffiliateLiability(liability);
       }
 
-      // 4. Fake Live Visitors (Simulation based on recent activity)
       setVisitorsCount(Math.floor(Math.random() * 20) + 5); 
   };
 
@@ -146,7 +176,7 @@ export default function AdminPage() {
               args: [parseEther(mintPrices.immortal), parseEther(mintPrices.elite), parseEther(mintPrices.founder)]
           });
           alert("Prices Updated!");
-      } catch(e: any) { alert(e.message); }
+      } catch(e: any) { alert(e.message || "Error"); }
   };
 
   const withdrawFunds = async () => {
@@ -155,20 +185,24 @@ export default function AdminPage() {
           await writeContractAsync({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: REGISTRY_ABI, functionName: 'withdraw' });
           alert("Withdrawal Success!");
           fetchBlockchainData();
-      } catch(e: any) { alert(e.message); }
+      } catch(e: any) { alert(e.message || "Error"); }
   };
 
   const markPayoutPaid = async (id: number) => {
       if(!confirm("Mark as PAID? Ensure you sent the funds manually.")) return;
       await supabase.from('affiliate_payouts').update({ status: 'PAID' }).eq('id', id);
-      fetchSupabaseData(); // Refresh
+      fetchSupabaseData(); 
   };
 
   const toggleMaintenance = async () => {
       const newVal = !maintenanceMode;
       const { data: ex } = await supabase.from('app_settings').select('id').eq('id', 1).single();
-      if (!ex) await supabase.from('app_settings').insert([{ id: 1, is_maintenance_mode: newVal }]);
-      else await supabase.from('app_settings').update({ is_maintenance_mode: newVal }).eq('id', 1);
+      
+      if (!ex) {
+          await supabase.from('app_settings').insert([{ id: 1, is_maintenance_mode: newVal }]);
+      } else {
+          await supabase.from('app_settings').update({ is_maintenance_mode: newVal }).eq('id', 1);
+      }
       setMaintenanceMode(newVal);
   };
 
@@ -183,7 +217,6 @@ export default function AdminPage() {
   if (loading) return <div className="loading-screen">Verifying...</div>;
   if (!isWalletAdmin) return <div className="access-denied"><i className="bi bi-shield-lock-fill icon-large"></i><h1>ACCESS DENIED</h1></div>;
   
-  // Security Layer (Login)
   if (!isAuthenticated) return (
       <div className="loading-screen">
           <div className="card" style={{width: '350px', textAlign: 'center'}}>
@@ -204,7 +237,6 @@ export default function AdminPage() {
 
   return (
     <div className="admin-container">
-      {/* HEADER & LIVE PULSE */}
       <div className="admin-header">
         <h1><i className="bi bi-cpu-fill"></i> NNM COMMAND UNIT</h1>
         <div className="live-pulse">
@@ -212,7 +244,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* TOP STATS ROW */}
+      {/* TOP STATS */}
       <div className="dashboard-grid mb-4" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
            <div className="stat-box">
                <div className="stat-label">Treasury Balance</div>
@@ -238,7 +270,7 @@ export default function AdminPage() {
 
       <div className="dashboard-grid">
             
-            {/* 1. FINANCIAL CONTROL (Mint Prices) */}
+            {/* 1. FINANCIAL CONTROL */}
             <div className="card">
                 <div className="card-header text-gold">
                     <i className="bi bi-coin"></i> Revenue Control (Set Prices $)
@@ -278,7 +310,7 @@ export default function AdminPage() {
                 </div>
             </div>
 
-            {/* 3. WALLET RADAR (WHALE WATCH) */}
+            {/* 3. WALLET RADAR */}
             <div className="card" style={{ gridColumn: '1 / -1' }}>
                 <div className="card-header text-blue">
                     <i className="bi bi-radar"></i> Wallet Radar (Top Traders)
@@ -313,7 +345,7 @@ export default function AdminPage() {
                 </div>
             </div>
 
-            {/* 4. EMERGENCY CONTROLS (Existing) */}
+            {/* 4. EMERGENCY CONTROLS */}
             <div className="card emergency-card">
                 <div className="card-header text-red">
                     <i className="bi bi-exclamation-triangle-fill"></i> System Ops
@@ -375,7 +407,7 @@ export default function AdminPage() {
                       <div className="table-scroll" style={{maxHeight: '200px', border: '1px solid #333'}}>
                           <table>
                               <tbody>
-                                  {selectedWallet.history.map((h: any, i: number) => (
+                                  {selectedWallet.history.map((h, i) => (
                                       <tr key={i}>
                                           <td style={{fontSize:'11px'}}>{new Date(h.created_at).toLocaleDateString()}</td>
                                           <td style={{fontSize:'11px'}}>{h.activity_type}</td>
@@ -391,7 +423,7 @@ export default function AdminPage() {
       )}
 
       <style jsx>{`
-        /* SAME STYLES AS PROVIDED + NEW HELPER CLASSES */
+        /* --- STYLES --- */
         .admin-container {
             min-height: 100vh;
             background-color: #050505;
