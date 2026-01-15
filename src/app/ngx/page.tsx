@@ -21,7 +21,7 @@ const TEXT_PRIMARY = '#E0E0E0';
 const TEXT_MUTED = '#B0B0B0';
 const GOLD_COLOR = '#FFB300';
 const GOLD_BASE = '#F0C420'; 
-const LIME_COLOR = '#C0D860'; // اللون الليموني
+const LIME_COLOR = '#C0D860'; 
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
 // --- أيقونة الذهب ---
@@ -108,15 +108,14 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // ضبط الارتفاعات للحاوية لتناسب المحتوى بعد التصغير
+  // ضبط الارتفاعات
   let previewHeight = '60px';
-  if (isChart) previewHeight = isMobile ? '120px' : '160px'; 
-  if (isFullBar) previewHeight = isMobile ? '90px' : '60px'; // زيادة الارتفاع في الجوال لاستيعاب الحجم الجديد
+  if (isChart) previewHeight = isMobile ? '120px' : '160px'; // تقليل الارتفاع قليلاً ليتناسب مع العرض الصغير
+  if (isFullBar) previewHeight = isMobile ? '70px' : '60px'; // زيادة الارتفاع للجوال قليلاً لاستيعاب الحجم الجديد
 
   return (
     <div className="embed-card h-100 d-flex flex-column justify-content-between">
       <div className="preview-area" style={{ height: previewHeight }}>
-        {/* pointer-events: none لمنع النقر */}
         <div className={`widget-scale-wrapper ${isFullBar ? 'full-bar-scale' : isChart ? 'chart-scale' : 'individual-scale'}`} style={{ pointerEvents: 'none' }}>
           {isChart ? <StaticMiniChart isMobile={isMobile} /> : component}
         </div>
@@ -151,20 +150,15 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
             position: relative;
             display: flex; 
             flex-direction: column;
+            /* توسيط المحتوى داخلياً */
             align-items: center; 
         }
         .preview-area { display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; width: 100%; flex-grow: 1; }
         
-        /* هذا الكلاس يضمن توسط العناصر */
-        .widget-scale-wrapper { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            transform-origin: center center;
-        }
+        .widget-scale-wrapper { transform-origin: center; display: flex; justify-content: center; width: 100%; }
         
         /* Desktop Defaults */
-        .full-bar-scale { transform: scale(0.5); width: auto; } 
+        .full-bar-scale { transform: scale(0.5); width: 200%; } 
         .individual-scale { transform: scale(0.75); } 
         .chart-scale { width: 100%; height: 100%; } 
 
@@ -174,13 +168,13 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         @media (max-width: 768px) {
             .embed-card { padding: 6px 4px; border: 1px solid rgba(255,255,255,0.05); min-height: 100px; }
             
-            /* --- التعديل الجوهري للشريط الكامل في الجوال --- */
+            /* --- تعديل الجوال: الشريط الكامل --- */
+            /* زيادة الحجم 50% (من 0.35 إلى 0.55) */
+            /* ضبط العرض والهوامش لإجبارها على التمركز والالتصاق */
             .full-bar-scale { 
-                /* زيادة الحجم إلى 0.45 ليكون واضحاً */
-                transform: scale(0.45); 
-                /* العرض max-content يجبره على أخذ حجم المحتوى بالضبط مما يلغي الفراغات */
-                width: max-content; 
-                margin: 0 auto;
+                transform: scale(0.55); 
+                width: 185%; /* مساحة كافية للتمدد */
+                margin-left: 0; 
             }
             
             .individual-scale { transform: scale(0.6); width: 100%; }
@@ -194,7 +188,6 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
   );
 };
 
-// --- مكون الحماية ---
 const ProtectedWidgetWrapper = ({ children }: { children: React.ReactNode }) => (
     <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {children}
@@ -377,7 +370,7 @@ export default function NGXPage() {
                     </p>
                 </div>
                 
-                {/* --- DEVELOPERS TOOLKIT (FIXED) --- */}
+                {/* --- DEVELOPERS TOOLKIT (FINAL ADJUSTMENT) --- */}
                 <div className="mt-5 pt-4">
                     <div className="d-flex align-items-center mb-3">
                          <div style={{ width: '30px', height: '2px', background: GOLD_COLOR, marginRight: '10px' }}></div>
@@ -385,18 +378,17 @@ export default function NGXPage() {
                     </div>
                     
                     <div className="row g-2 justify-content-center">
-                        {/* 1. الشريط الكامل: التصاق إجباري وتوسط */}
+                        {/* 1. الشريط الكامل: نستخدم justify-content-center ونضمن عدم وجود كود آخر يغير المحاذاة */}
                         <div className="col-12">
                              <EmbedCard 
                                 title="NGX Full Market Bar"
                                 isFullBar={true}
                                 component={
                                     <ProtectedWidgetWrapper>
-                                        {/* نستخدم max-content ليأخذ الحجم بالضبط بدون زيادات تسبب فجوات */}
-                                        <div className="d-flex justify-content-center align-items-center w-100 no-gap-container" style={{ width: 'max-content', minWidth: '930px' }}>
-                                            <div style={{ flex: 0, padding: 0, margin: 0 }}><NGXWidget theme="dark" /></div>
-                                            <div style={{ flex: 0, padding: 0, margin: 0 }}><NGXCapWidget theme="dark" /></div>
-                                            <div style={{ flex: 0, padding: 0, margin: 0 }}><NGXVolumeWidget theme="dark" /></div>
+                                        <div className="d-flex gap-0 w-100 justify-content-center" style={{ minWidth: '950px' }}>
+                                            <div style={{ flex: 1 }}><NGXWidget theme="dark" /></div>
+                                            <div style={{ flex: 1 }}><NGXCapWidget theme="dark" /></div>
+                                            <div style={{ flex: 1 }}><NGXVolumeWidget theme="dark" /></div>
                                         </div>
                                     </ProtectedWidgetWrapper>
                                 }
@@ -404,7 +396,7 @@ export default function NGXPage() {
                              />
                         </div>
 
-                        {/* 2. الرسم البياني: تقييد العرض 50% (Desktop) / 80% (Mobile) */}
+                        {/* 2. الرسم البياني: تقييد العرض إلى 50% (desktop) و 80% (mobile) */}
                         <div className="col-12 col-md-12"> 
                             <div className="d-flex justify-content-center">
                                  <div className="chart-wrapper-responsive"> 
@@ -513,11 +505,7 @@ export default function NGXPage() {
         .news-card:hover .news-thumbnail img { transform: scale(1.05); }
 
         /* --- CHART RESPONSIVE SIZE --- */
-        /* Desktop: 50% width */
         .chart-wrapper-responsive { width: 50%; max-width: 500px; }
-
-        /* --- Force Zero Gap for Children --- */
-        .no-gap-container > * { margin: 0 !important; }
 
         /* --- MOBILE ADJUSTMENTS --- */
         @media (max-width: 768px) {
@@ -530,8 +518,8 @@ export default function NGXPage() {
             .news-card { flex-direction: column-reverse !important; }
             .news-thumbnail { width: 100%; height: 160px; margin-bottom: 10px; }
             
-            /* Chart Mobile: 80% width for better visibility */
-            .chart-wrapper-responsive { width: 80%; }
+            /* Chart Mobile Size: 70% width */
+            .chart-wrapper-responsive { width: 70%; }
         }
 
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
