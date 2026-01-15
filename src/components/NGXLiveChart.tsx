@@ -8,9 +8,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- البيانات الافتتاحية (Hardcoded Data) للظهور الفوري ---
-// تم تحويل البيانات التي أرسلتها إلى صيغة يفهمها الرسم البياني فوراً
-const INITIAL_HISTORY_DATA = [
+// --- بيانات HISTORY المحفوظة مسبقاً (للتبديل السريع) ---
+// هذه هي البيانات الـ 100 صف التي أرسلتها لي (فترة 2017)
+const PRELOADED_HISTORY_DATA = [
   { time: 1483228800, value: 101.796397 }, { time: 1483488000, value: 104.792976 }, { time: 1483747200, value: 106.574411 },
   { time: 1484006400, value: 108.578017 }, { time: 1484265600, value: 110.661348 }, { time: 1484524800, value: 113.715277 },
   { time: 1484784000, value: 117.088432 }, { time: 1485043200, value: 118.399049 }, { time: 1485302400, value: 120.159505 },
@@ -55,6 +55,7 @@ const SECTORS = [
   { key: 'Utility NFT', color: '#00D8D6' }         
 ];
 
+// --- الفلتر الافتراضي سيكون الثاني (Forecast) ---
 const VIEW_MODES = [
     { label: '2017 - 2026', value: 'HISTORY' },
     { label: '2026 - 2030', value: 'FORECAST' }
@@ -79,9 +80,9 @@ export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const watermarkRef = useRef<HTMLDivElement>(null); 
   
-  // الحالة
   const [activeSector, setActiveSector] = useState(SECTORS[0]);
-  const [activeViewMode, setActiveViewMode] = useState(VIEW_MODES[0]); 
+  // [تعديل 1] الحالة الافتراضية الآن هي FORECAST (العنصر الثاني في المصفوفة)
+  const [activeViewMode, setActiveViewMode] = useState(VIEW_MODES[1]); 
   
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
@@ -94,15 +95,15 @@ export default function NGXLiveChart() {
   const sectorRef = useRef<HTMLDivElement>(null);
   const timeRef = useRef<HTMLDivElement>(null);
 
-  // [تعديل هام] تهيئة الذاكرة بالبيانات الموجودة لدينا مسبقاً
+  // [تعديل 2] تهيئة الذاكرة ببيانات History لكي تكون جاهزة عند التبديل
   const dataCache = useRef<Record<string, any[]>>({
-      'All NFT Index_HISTORY': INITIAL_HISTORY_DATA
+      'All NFT Index_HISTORY': PRELOADED_HISTORY_DATA
   });
 
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- التحميل المسبق لباقي البيانات في الخلفية ---
+  // --- التحميل المسبق ---
   useEffect(() => {
     const prefetchAllData = async () => {
         const { data } = await supabase
@@ -113,7 +114,6 @@ export default function NGXLiveChart() {
         if (data) {
             data.forEach((item: any) => {
                 const key = `${item.sector_key}_${item.mode}`;
-                // لا نكتب فوق البيانات الافتتاحية إذا كانت موجودة بالفعل لضمان السرعة
                 if (!dataCache.current[key]) dataCache.current[key] = [];
                 
                 dataCache.current[key].push({
@@ -123,8 +123,7 @@ export default function NGXLiveChart() {
             });
 
             Object.keys(dataCache.current).forEach(key => {
-                 // تنظيف البيانات
-                 if(key !== 'All NFT Index_HISTORY') { // نستثني البيانات الثابتة من إعادة المعالجة
+                 if(key !== 'All NFT Index_HISTORY') { 
                      const unique = Array.from(new Map(dataCache.current[key].map(i => [i.time, i])).values());
                      dataCache.current[key] = unique.sort((a, b) => (a.time as number) - (b.time as number));
                  }
@@ -132,7 +131,6 @@ export default function NGXLiveChart() {
         }
     };
     
-    // تأخير بسيط جداً في الخلفية
     setTimeout(prefetchAllData, 100);
   }, []);
 
@@ -141,8 +139,8 @@ export default function NGXLiveChart() {
     
     const cacheKey = `${sectorKey}_${mode}`;
 
-    // الفحص في الذاكرة (سيجد البيانات الافتتاحية فوراً)
-    if (dataCache.current[cacheKey]) {
+    // الفحص في الذاكرة (سنجد History جاهزة، أما Forecast فستُجلب أول مرة)
+    if (dataCache.current[cacheKey] && dataCache.current[cacheKey].length > 0) {
         seriesInstance.setData(dataCache.current[cacheKey]);
         chartInstance.timeScale().fitContent();
         return; 
@@ -281,15 +279,13 @@ export default function NGXLiveChart() {
       bottomColor: `${activeSector.color}00`,
     });
 
-    // --- [تعديل جوهري] تعيين البيانات فوراً عند الإنشاء ---
-    // هذا يضمن ظهور الرسم فوراً بدون انتظار useEffect آخر
-    if (activeSector.key === 'All NFT Index' && activeViewMode.value === 'HISTORY') {
-        newSeries.setData(INITIAL_HISTORY_DATA);
-        chart.timeScale().fitContent();
-    }
-
+    // [تعديل 3] بمجرد الإنشاء، اطلب بيانات Forecast فوراً لأنها الافتراضية
+    // بما أننا لا نملكها كنص، يجب أن نطلبها من fetchFromDB
     setChartInstance(chart);
     setSeriesInstance(newSeries);
+
+    // استدعاء أولي للبيانات
+    // fetchFromDB(activeSector.key, VIEW_MODES[1].value); <--- سيتم استدعاؤها في الـ useEffect التالي تلقائياً
 
     const handleResize = () => {
       if (chartContainerRef.current) {
@@ -311,7 +307,7 @@ export default function NGXLiveChart() {
     };
   }, [isChartBroken]);
 
-  // تحديث البيانات عند تغيير الفلتر
+  // تحديث البيانات عند تغيير الفلتر (أو عند التحميل الأول)
   useEffect(() => {
     if (seriesInstance && chartInstance && !isChartBroken) {
         seriesInstance.applyOptions({
@@ -320,8 +316,8 @@ export default function NGXLiveChart() {
             bottomColor: `${activeSector.color}00`, 
         });
         
-        // إذا كنا في الصفحة الرئيسية (HISTORY) لا تعيد التحميل، البيانات موجودة
-        // سيقوم fetchFromDB بفحص الكاش ويجده ممتلئاً ويعود فوراً
+        // هذا السطر سيجلب بيانات FORECAST تلقائياً عند فتح الصفحة
+        // وعند التبديل لـ HISTORY سيجد البيانات جاهزة في الكاش
         fetchFromDB(activeSector.key, activeViewMode.value);
     }
   }, [activeSector, activeViewMode, seriesInstance, chartInstance, isChartBroken]);
