@@ -2,9 +2,9 @@
 import Link from 'next/link';
 
 const Footer = () => {
-  // الأحجام المطلوبة
-  const headerFontSize = '12px'; // العناوين
-  const linkFontSize = '8px';    // الروابط (تم التصغير كما طلبت)
+  const headerFontSize = '12px';
+  const socialFontSize = '8px'; 
+  const generalLinkFontSize = '10px';
   
   const linkColor = 'rgba(255, 255, 255, 0.5)';
   const linkHoverColor = '#FCD535';
@@ -18,23 +18,18 @@ const Footer = () => {
                 <div className="col-6 col-md-3 pe-md-2" style={{ borderRight: '1px solid rgba(255, 255, 255, 0.05)' }}>
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Community</h6>
                     <div className="d-flex flex-column gap-2">
-                        {/* 1. X (Twitter) */}
                         <a href="https://x.com/nnmmarket" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-twitter-x"></i><span>Twitter</span>
                         </a>
-                        {/* 2. Discord */}
                         <a href="#" className="footer-social-row">
                             <i className="bi bi-discord"></i><span>Discord</span>
                         </a>
-                        {/* 3. Medium */}
                         <a href="https://medium.com/@nftnnmmarket" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-medium"></i><span>Medium</span>
                         </a>
-                        {/* 4. Facebook */}
                         <a href="#" className="footer-social-row">
                             <i className="bi bi-facebook"></i><span>Facebook</span>
                         </a>
-                        {/* 5. Instagram */}
                         <a href="https://www.instagram.com/NNM_Assets" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-instagram"></i><span>Instagram</span>
                         </a>
@@ -78,7 +73,7 @@ const Footer = () => {
             
             <div className="row mt-5 pt-3 border-top border-secondary" style={{ borderColor: 'rgba(255, 255, 255, 0.05) !important' }}>
                 <div className="col-12 text-center text-secondary" style={{ fontSize: '10px' }}>
-                    &copy; 2025 NNM Digital Name Asset. All rights reserved.
+                    &copy; 2025 NNM NFT Digital Name Asset. All rights reserved.
                 </div>
             </div>
         </div>
@@ -89,23 +84,20 @@ const Footer = () => {
                 display: flex; align-items: center; gap: 8px; 
                 color: ${linkColor}; 
                 text-decoration: none; 
-                /* استخدام !important لفرض الحجم ومنع الوراثة */
-                font-size: ${linkFontSize} !important; 
-                font-weight: 400 !important; /* خط رفيع وليس عريض */
+                font-size: ${socialFontSize} !important; 
+                font-weight: 400 !important;
                 line-height: 1.5;
                 transition: all 0.2s ease; 
             }
             .footer-social-row:hover { color: #fff; transform: translateX(5px); }
-            /* تصغير الأيقونات قليلاً لتتناسب مع الخط الجديد */
             .footer-social-row i { color: ${linkHoverColor}; font-size: 11px !important; } 
             
             /* General Links Style */
             .footer-link-item { 
-                display: inline-block; /* يساعد في ضبط الحجم */
+                display: inline-block;
                 text-decoration: none; 
                 color: ${linkColor}; 
-                /* استخدام !important لفرض الحجم بقوة */
-                font-size: ${linkFontSize} !important; 
+                font-size: ${generalLinkFontSize} !important; 
                 font-weight: 400 !important;
                 line-height: 1.5;
                 transition: color 0.2s; 
