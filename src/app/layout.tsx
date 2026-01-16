@@ -17,7 +17,7 @@ import { useAccount } from "wagmi";
 
 const inter = Inter({ subsets: ["latin"] });
 
-// محفظة المالك (المفتاح الرئيسي)
+// Owner Wallet (Master Key)
 const OWNER_WALLET = "0x5f2f670df4Db14ddB4Bc1E3eCe86CA645fb01BE6".toLowerCase();
 
 function MaintenanceGuard({ children }: { children: React.ReactNode }) {
@@ -32,20 +32,19 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        // فحص حالة الصيانة
+        // Check Maintenance Status
         const { data: settings } = await supabase.from('app_settings').select('*').eq('id', 1).single();
         if (settings) {
           setIsMaintenance(settings.is_maintenance_mode);
-          setMaintenanceMsg(settings.announcement_text || "Soon you will be able to enter.");
+          // Default fallback in English if DB is empty
+          setMaintenanceMsg(settings.announcement_text || "Our platform is currently undergoing scheduled upgrades.");
         }
 
-        // فحص حالة الحظر (Ban Check)
+        // Check Ban Status
         if (isConnected && address) {
           const { data: banned } = await supabase.from('banned_wallets').select('id').eq('wallet_address', address.toLowerCase()).single();
           if (banned) {
-             // يمكن توجيه المستخدم لصفحة حظر أو عرض رسالة هنا
-             // حالياً سنكتفي بمنعه عبر الصيانة، أو يمكن إضافة حالة isBanned منفصلة
-             // لكن حسب طلبك التركيز الآن على شاشة الصيانة
+             // Ban logic can be handled here if needed later
           }
         }
 
@@ -55,35 +54,35 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
     checkStatus();
   }, [pathname, isConnected, address]);
 
-  // المنطق الأمني: السماح للمالك أو لصفحة الأدمن بالمرور
+  // Security Logic: Bypass for Admin Route or Connected Owner
   const isAdminRoute = pathname?.startsWith('/admin');
   const isOwner = isConnected && address?.toLowerCase() === OWNER_WALLET;
   const bypass = isAdminRoute || isOwner;
 
   if (loading) return <div style={{background:'#F9F9F7', height:'100vh'}} />;
 
-  // --- شاشة الصيانة (التصميم الجديد: أوف وايت + لمبة خضراء) ---
+  // --- Maintenance Screen (Off-White / English / Professional) ---
   if (isMaintenance && !bypass) {
     return (
       <div className="maintenance-container">
         <div className="maintenance-card">
-            {/* اللمبة الخضراء والمؤشر */}
+            {/* Green Pulse Indicator */}
             <div className="status-indicator">
                 <div className="pulse-green"></div>
-                <span className="status-text">System Active</span>
+                <span className="status-text">SYSTEM ACTIVE</span>
             </div>
 
-            {/* النصوص */}
-            <h2 className="main-title">الموقع في وضع الصيانة</h2>
+            {/* Content (English Only) */}
+            <h2 className="main-title">System Under Maintenance</h2>
             <p className="sub-text">
               {maintenanceMsg}
             </p>
-            <p className="coming-soon">قريباً جداً ستتمكن من الدخول</p>
+            <p className="coming-soon">We will be back shortly.</p>
 
-            {/* المفتاح الذكي للأدمن */}
+            {/* Hidden Admin Key */}
             <div className="admin-access-area">
                 <button onClick={() => router.push('/admin')} className="admin-link">
-                    هل أنت من المشرفين؟ (Admin Login)
+                    Admin Login
                 </button>
             </div>
         </div>
@@ -95,7 +94,7 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #F9F9F7; /* أوف وايت / عاجي */
+            background-color: #F9F9F7; /* Ivory / Off-White */
             position: fixed;
             top: 0;
             left: 0;
@@ -105,16 +104,16 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
 
           .maintenance-card {
             background: #FFFFFF;
-            width: 400px; /* حجم متوسط وملموم */
+            width: 400px;
             max-width: 90%;
             padding: 40px 30px;
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.05); /* ظل ناعم جداً */
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
             text-align: center;
             border: 1px solid #EAEAEA;
           }
 
-          /* المؤشر الأخضر */
+          /* Green Pulse */
           .status-indicator {
             display: inline-flex;
             align-items: center;
@@ -128,7 +127,7 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
           .pulse-green {
             width: 8px;
             height: 8px;
-            background-color: #22C55E; /* أخضر حي */
+            background-color: #22C55E;
             border-radius: 50%;
             box-shadow: 0 0 0 rgba(34, 197, 94, 0.4);
             animation: pulse-green 2s infinite;
@@ -136,31 +135,33 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
           .status-text {
             font-size: 11px;
             color: #15803D;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
           }
 
-          /* النصوص */
+          /* Typography */
           .main-title {
-            font-size: 22px;
-            color: #1A1A1A; /* أسود هادئ */
+            font-size: 24px;
+            color: #1A1A1A;
             margin-bottom: 15px;
-            font-weight: 700;
+            font-weight: 800;
+            letter-spacing: -0.5px;
           }
           .sub-text {
-            font-size: 14px;
-            color: #666666; /* رمادي متوسط */
+            font-size: 15px;
+            color: #666666;
             line-height: 1.6;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
           }
           .coming-soon {
             font-size: 13px;
-            color: #888;
+            color: #999;
+            font-weight: 500;
             margin-bottom: 30px;
           }
 
-          /* زر الأدمن */
+          /* Admin Link */
           .admin-access-area {
             border-top: 1px solid #F0F0F0;
             padding-top: 20px;
@@ -170,10 +171,12 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
             background: none;
             border: none;
             font-size: 11px;
-            color: #999;
+            color: #CCC;
             cursor: pointer;
-            text-decoration: underline;
             transition: 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
           }
           .admin-link:hover {
             color: #333;
@@ -189,7 +192,7 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // --- الموقع الطبيعي (عند الفتح) ---
+  // --- Live Site Render ---
   return (
     <div className="d-flex flex-column min-vh-100">
       <Navbar />
