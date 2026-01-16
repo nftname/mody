@@ -62,8 +62,8 @@ export default function AdminPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [visitorsCount, setVisitorsCount] = useState(0);
   
-  // Settings (Status & Announcement)
-  const [maintenanceMode, setMaintenanceMode] = useState(false); // true = CLOSED, false = OPEN
+  // Settings
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   
   // Pricing
@@ -74,15 +74,18 @@ export default function AdminPage() {
   const [bannedWallets, setBannedWallets] = useState<BannedWallet[]>([]);
   const [banInput, setBanInput] = useState('');
 
-  // Filtering
-  const [timeFilter, setTimeFilter] = useState<'ALL' | '24H' | '7D' | 'MONTH'>('ALL');
+  // --- Filter States ---
+  const [filterType, setFilterType] = useState('ALL'); 
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [activeFilter, setActiveFilter] = useState({ type: 'ALL', start: '', end: '' });
 
   // --- Initialization ---
   useEffect(() => {
     if (isConnected && address && address.toLowerCase() === OWNER_WALLET) {
         setIsAdmin(true);
         fetchBlockchainData();
-        fetchSupabaseData(); // This loads the current status from DB
+        fetchSupabaseData();
     } else {
         setIsAdmin(false);
     }
@@ -99,11 +102,9 @@ export default function AdminPage() {
   };
 
   const fetchSupabaseData = async () => {
-      // 1. App Settings (The critical part for Site Status)
-      const { data: set } = await supabase.from('app_settings').select('*').single();
-      if (set) { 
-          // Database says: true (maintenance) -> UI should show CLOSE (Red active)
-          // Database says: false (live) -> UI should show OPEN (Green active)
+      // 1. Settings (Read Existing)
+      const { data: set, error } = await supabase.from('app_settings').select('*').single();
+      if (!error && set) { 
           setMaintenanceMode(set.is_maintenance_mode); 
           setAnnouncement(set.announcement_text || ''); 
       }
@@ -119,20 +120,49 @@ export default function AdminPage() {
       // 4. Bans
       const { data: bans } = await supabase.from('banned_wallets').select('*');
       if (bans) setBannedWallets(bans as BannedWallet[]);
-
-      setVisitorsCount(Math.floor(Math.random() * (45 - 20 + 1) + 20)); 
+      
+      // Visitor Logic (Estimate)
+      if (act) {
+          const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+          const activeWallets = new Set(act.filter((a: any) => new Date(a.created_at) > oneHourAgo).map((a:any) => a.from_address));
+          setVisitorsCount(activeWallets.size > 0 ? activeWallets.size : 1);
+      }
   };
 
-  // --- Logic ---
+  // --- Filter Logic ---
+  const applyFilter = () => {
+      setActiveFilter({ type: filterType, start: startDate, end: endDate });
+  };
+
   const filteredActivities = useMemo(() => {
     let data = activities;
     const now = new Date();
-    if (timeFilter === '24H') data = data.filter(a => new Date(a.created_at) >= new Date(now.getTime() - 24 * 3600 * 1000));
-    else if (timeFilter === '7D') data = data.filter(a => new Date(a.created_at) >= new Date(now.getTime() - 7 * 24 * 3600 * 1000));
-    else if (timeFilter === 'MONTH') data = data.filter(a => new Date(a.created_at) >= new Date(now.getTime() - 30 * 24 * 3600 * 1000));
-    return data;
-  }, [activities, timeFilter]);
+    const { type, start, end } = activeFilter;
 
+    if (start && end) {
+        const s = new Date(start);
+        const e = new Date(end);
+        e.setHours(23, 59, 59);
+        data = data.filter(a => {
+            const d = new Date(a.created_at);
+            return d >= s && d <= e;
+        });
+    } else {
+        let cutoff = 0;
+        if (type === '1H') cutoff = 60 * 60 * 1000;
+        else if (type === '24H') cutoff = 24 * 60 * 60 * 1000;
+        else if (type === '7D') cutoff = 7 * 24 * 60 * 60 * 1000;
+        else if (type === 'MONTH') cutoff = 30 * 24 * 60 * 60 * 1000;
+        else if (type === 'YEAR') cutoff = 365 * 24 * 60 * 60 * 1000;
+
+        if (cutoff > 0) {
+            data = data.filter(a => new Date(a.created_at) >= new Date(now.getTime() - cutoff));
+        }
+    }
+    return data;
+  }, [activities, activeFilter]);
+
+  // --- Real Stats Calculation ---
   const stats = useMemo(() => {
       let totalRevenue = 0, marketFees = 0, adminMints = 0;
       let immortal = 0, elite = 0, founder = 0;
@@ -140,11 +170,16 @@ export default function AdminPage() {
       filteredActivities.forEach(act => {
           const price = Number(act.price || 0);
           const isOwner = act.from_address?.toLowerCase() === OWNER_WALLET || act.to_address?.toLowerCase() === OWNER_WALLET;
+          
           if (act.activity_type === 'Mint') {
-              if (isOwner) adminMints++;
-              else {
+              if (isOwner) {
+                  adminMints++;
+              } else {
                   totalRevenue += price;
-                  if (price >= 50) immortal++; else if (price >= 30) elite++; else founder++;
+                  // تصنيف حقيقي بناءً على السعر المدفوع
+                  if (price >= 50) immortal++; 
+                  else if (price >= 30) elite++; 
+                  else founder++;
               }
           } else if (act.activity_type === 'MarketSale') {
               marketFees += (price * 0.01);
@@ -166,39 +201,48 @@ export default function AdminPage() {
       return Object.values(wallets).sort((a, b) => b.volume - a.volume);
   }, [filteredActivities]);
 
-  // --- ACTIONS (Fixed & Tested Logic) ---
+  // --- ACTIONS ---
   
-  // FIX: This now waits for DB update before changing UI state
+  // FIX: Use UPDATE instead of UPSERT to respect existing table
   const handleSiteStatus = async (shouldClose: boolean) => {
     try {
-        const { error } = await supabase.from('app_settings').upsert({ id: 1, is_maintenance_mode: shouldClose });
+        // نستخدم update فقط للسطر رقم 1 الموجود بالفعل
+        const { error } = await supabase
+            .from('app_settings')
+            .update({ is_maintenance_mode: shouldClose })
+            .eq('id', 1);
+
         if (error) throw error;
-        setMaintenanceMode(shouldClose); // Update UI only on success
-    } catch (err) {
-        alert("Error updating site status");
+        setMaintenanceMode(shouldClose);
+    } catch (err: any) {
+        alert("Error updating: " + err.message);
         console.error(err);
     }
   };
 
   const saveAnnouncement = async () => {
-    await supabase.from('app_settings').upsert({ id: 1, announcement_text: announcement });
-    alert("Announcement Saved ✅");
+    const { error } = await supabase
+        .from('app_settings')
+        .update({ announcement_text: announcement })
+        .eq('id', 1);
+    
+    if(error) alert("Error saving msg"); else alert("Saved ✅");
   };
 
   const handleWithdraw = async () => {
-      if(!confirm("⚠️ Siphon all funds to admin wallet?")) return;
+      if(!confirm("Withdraw funds?")) return;
       try {
           await writeContractAsync({ 
               address: NFT_COLLECTION_ADDRESS as `0x${string}`, 
               abi: REGISTRY_ABI, 
               functionName: 'withdraw' 
           });
-          alert("Withdrawal Executed ✅");
+          alert("Tx Sent ✅");
       } catch(e) { console.error(e); }
   };
 
   const handleUpdatePrices = async () => {
-      if(!mintPrices.immortal) return alert("Enter prices first");
+      if(!mintPrices.immortal) return alert("Enter prices");
       try {
           await writeContractAsync({
               address: NFT_COLLECTION_ADDRESS as `0x${string}`,
@@ -206,16 +250,14 @@ export default function AdminPage() {
               functionName: 'setPrices',
               args: [parseEther(mintPrices.immortal), parseEther(mintPrices.elite), parseEther(mintPrices.founder)]
           });
-          alert("Contract Prices Updated ✅");
+          alert("Prices Updated ✅");
       } catch(e) { console.error(e); }
   };
 
   const handleBanWallet = async () => {
       if(!banInput) return;
       await supabase.from('banned_wallets').insert([{ wallet_address: banInput.toLowerCase(), reason: 'Admin Ban' }]);
-      setBanInput(''); 
-      fetchSupabaseData();
-      alert("Wallet Banned 🚫");
+      setBanInput(''); fetchSupabaseData();
   };
 
   const markPayoutPaid = async (id: number) => {
@@ -224,124 +266,123 @@ export default function AdminPage() {
   };
 
   // --- UI RENDER ---
-  if (loading) return <div className="loading">Checking Admin Access...</div>;
-  if (!isAdmin) return <div className="denied">ACCESS DENIED</div>;
+  if (loading) return <div className="loading">Auth...</div>;
+  if (!isAdmin) return <div className="denied">DENIED</div>;
 
   return (
     <div className="admin-container">
         
-        {/* 1. HEADER */}
+        {/* HEADER */}
         <div className="admin-header">
             <div className="brand">
-                <h1>ADMIN CONSOLE <span className="badge-pro">PRO</span></h1>
-                <div className="online-status"><span className="dot"></span> {visitorsCount} Online</div>
+                <h1>ADMIN <span className="badge-pro">PRO</span></h1>
+                <div className="online-status"><span className="dot"></span> {visitorsCount} Active</div>
             </div>
             <div className="treasury-box">
-                <div className="info">
-                    <span className="label">Registry Balance</span>
-                    <span className="val">{parseFloat(contractBalance).toFixed(4)} POL</span>
-                </div>
+                <span className="val">{parseFloat(contractBalance).toFixed(4)} POL</span>
                 <button onClick={handleWithdraw} className="withdraw-btn">
-                    <i className="bi bi-safe-fill"></i> Siphon Funds
+                    <i className="bi bi-download"></i>
                 </button>
             </div>
         </div>
 
-        {/* 2. SITE CONTROL (Fixed Logic) */}
+        {/* SITE CONTROL */}
         <div className="control-panel">
             <div className="status-toggle">
-                <span className="label-text">SITE STATUS:</span>
-                <div className="btn-group">
-                    {/* OPEN BUTTON: Active if mode is FALSE (Not Maintenance) */}
-                    <button 
-                        onClick={() => handleSiteStatus(false)} 
-                        className={`status-btn open ${!maintenanceMode ? 'active' : ''}`}
-                    >
-                        OPEN
-                    </button>
-                    {/* CLOSE BUTTON: Active if mode is TRUE (Maintenance) */}
-                    <button 
-                        onClick={() => handleSiteStatus(true)} 
-                        className={`status-btn close ${maintenanceMode ? 'active' : ''}`}
-                    >
-                        CLOSE
-                    </button>
-                </div>
+                <button onClick={() => handleSiteStatus(false)} className={`status-btn open ${!maintenanceMode ? 'active' : ''}`}>OPEN</button>
+                <button onClick={() => handleSiteStatus(true)} className={`status-btn close ${maintenanceMode ? 'active' : ''}`}>CLOSE</button>
             </div>
             <div className="announcement-box">
-                <input 
-                    type="text" 
-                    value={announcement} 
-                    onChange={e => setAnnouncement(e.target.value)}
-                    placeholder="Broadcast message..." 
-                />
-                <button onClick={saveAnnouncement}>UPDATE MSG</button>
+                <input value={announcement} onChange={e => setAnnouncement(e.target.value)} placeholder="Alert Msg..." />
+                <button onClick={saveAnnouncement}>SAVE</button>
             </div>
         </div>
 
-        {/* 3. FILTERS */}
-        <div className="filter-row">
-            {['24H', '7D', 'MONTH', 'ALL'].map((f) => (
-                <button key={f} className={timeFilter === f ? 'active' : ''} onClick={() => setTimeFilter(f as any)}>{f}</button>
-            ))}
-        </div>
-
-        {/* 4. STATS GRID (Fixed: 3 Columns, White Text) */}
-        <div className="stats-grid">
-            <div className="stat-card">
-                <span className="stat-title">Total Revenue</span>
-                <span className="stat-value text-green">${stats.totalRevenue.toLocaleString()}</span>
-            </div>
-            <div className="stat-card">
-                <span className="stat-title">Market Fees (1%)</span>
-                <span className="stat-value text-gold">${stats.marketFees.toFixed(2)}</span>
-            </div>
-            <div className="stat-card">
-                <span className="stat-title">Mint Counts</span>
-                <div className="mint-breakdown">
-                    <span>Immortal: {stats.immortal}</span>
-                    <span>Elite: {stats.elite}</span>
-                    <span>Founder: {stats.founder}</span>
-                </div>
-            </div>
-        </div>
-
-        {/* 5. PRICING & BAN (Row Layout) */}
-        <div className="management-row">
-            {/* Pricing Section */}
-            <div className="manage-card pricing">
-                <h3>Set Mint Prices ($)</h3>
-                <div className="pricing-inputs">
-                    <input type="number" placeholder="Immortal" onChange={e=>setMintPrices({...mintPrices, immortal: e.target.value})} />
-                    <input type="number" placeholder="Elite" onChange={e=>setMintPrices({...mintPrices, elite: e.target.value})} />
-                    <input type="number" placeholder="Founder" onChange={e=>setMintPrices({...mintPrices, founder: e.target.value})} />
-                    <button onClick={handleUpdatePrices}>UPDATE PRICES</button>
-                </div>
-            </div>
-
-            {/* Ban Wallet Section */}
-            <div className="manage-card ban">
-                <h3>Ban Wallet (Block Access)</h3>
-                <div className="ban-inputs">
-                    <input value={banInput} onChange={e=>setBanInput(e.target.value)} placeholder="0x..." />
-                    <button onClick={handleBanWallet} className="btn-red">BAN</button>
-                </div>
-            </div>
-        </div>
-
-        {/* 6. DATA TABLES (Full Width) */}
-        <div className="tables-section">
+        {/* NEW FILTER SYSTEM */}
+        <div className="filter-system">
+            <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="filter-select">
+                <option value="ALL">All Time</option>
+                <option value="1H">Last Hour</option>
+                <option value="24H">Last 24H</option>
+                <option value="7D">Last 7 Days</option>
+                <option value="MONTH">Last Month</option>
+                <option value="YEAR">Last Year</option>
+            </select>
             
-            {/* Whale Radar */}
+            <div className="date-group">
+                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="date-input" />
+                <span className="arrow">→</span>
+                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="date-input" />
+            </div>
+            
+            <button onClick={applyFilter} className="search-btn">
+                <i className="bi bi-search"></i>
+            </button>
+        </div>
+
+        {/* REVENUE STATS (3 Columns Mobile) */}
+        <div className="compact-grid">
+            <div className="compact-card">
+                <span className="c-val green">${stats.totalRevenue.toLocaleString()}</span>
+                <span className="c-label">Revenue</span>
+            </div>
+            <div className="compact-card">
+                <span className="c-val gold">${stats.marketFees.toFixed(2)}</span>
+                <span className="c-label">Fees</span>
+            </div>
+            <div className="compact-card">
+                <span className="c-val">{stats.adminMints}</span>
+                <span className="c-label">Admins</span>
+            </div>
+        </div>
+
+        {/* MINT COUNTS (3 Columns Mobile - Real Data) */}
+        <div className="compact-grid mt-2">
+            <div className="compact-card">
+                <span className="c-val white">{stats.immortal}</span>
+                <span className="c-label">Immortal</span>
+            </div>
+            <div className="compact-card">
+                <span className="c-val white">{stats.elite}</span>
+                <span className="c-label">Elite</span>
+            </div>
+            <div className="compact-card">
+                <span className="c-val white">{stats.founder}</span>
+                <span className="c-label">Founder</span>
+            </div>
+        </div>
+
+        {/* PRICING (3 Columns Mobile) */}
+        <div className="panel mt-20">
+            <div className="panel-label">Set Mint Prices ($)</div>
+            <div className="inputs-row">
+                <input type="number" placeholder="Immort" onChange={e=>setMintPrices({...mintPrices, immortal: e.target.value})} />
+                <input type="number" placeholder="Elite" onChange={e=>setMintPrices({...mintPrices, elite: e.target.value})} />
+                <input type="number" placeholder="Found" onChange={e=>setMintPrices({...mintPrices, founder: e.target.value})} />
+            </div>
+            <button onClick={handleUpdatePrices} className="action-btn">UPDATE PRICES</button>
+        </div>
+
+        {/* BAN WALLET */}
+        <div className="panel mt-20">
+            <div className="panel-label">Ban Wallet</div>
+            <div className="ban-row">
+                <input value={banInput} onChange={e=>setBanInput(e.target.value)} placeholder="0x..." />
+                <button onClick={handleBanWallet} className="btn-red">BAN</button>
+            </div>
+        </div>
+
+        {/* TABLES */}
+        <div className="tables-section">
             <div className="table-container">
-                <h3>Whale Radar (Top Traders)</h3>
+                <div className="panel-label">Whale Radar</div>
                 <table>
                     <thead><tr><th>Wallet</th><th>Vol</th><th>Tx</th></tr></thead>
                     <tbody>
                         {walletRadar.slice(0, 5).map((w, i) => (
                             <tr key={i}>
-                                <td className="mono">{w.address.substring(0,8)}... {w.isWhale && '🐋'}</td>
-                                <td className="val-white">${w.volume}</td>
+                                <td className="mono">{w.address.substring(0,4)}..{w.address.substring(38)}</td>
+                                <td className="white">${w.volume}</td>
                                 <td>{w.txCount}</td>
                             </tr>
                         ))}
@@ -349,100 +390,89 @@ export default function AdminPage() {
                 </table>
             </div>
 
-            {/* Affiliate Payouts */}
             <div className="table-container">
-                <h3>Affiliate Payouts (Pending)</h3>
+                <div className="panel-label">Payouts</div>
                 <table>
-                    <thead><tr><th>Wallet</th><th>Amount</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Wallet</th><th>$</th><th>Act</th></tr></thead>
                     <tbody>
                         {payouts.filter(p=>p.status === 'PENDING').slice(0,5).map((p, i) => (
                             <tr key={i}>
-                                <td className="mono">{p.wallet_address.substring(0,8)}...</td>
-                                <td className="text-green">${p.amount}</td>
-                                <td><button onClick={()=>markPayoutPaid(p.id)} className="pay-btn">PAY</button></td>
+                                <td className="mono">{p.wallet_address.substring(0,4)}..</td>
+                                <td className="green">${p.amount}</td>
+                                <td><button onClick={()=>markPayoutPaid(p.id)} className="pay-btn">OK</button></td>
                             </tr>
                         ))}
-                        {payouts.filter(p=>p.status === 'PENDING').length === 0 && <tr><td colSpan={3}>No pending payouts</td></tr>}
                     </tbody>
                 </table>
             </div>
         </div>
 
-        {/* --- STYLES (Adjusted for requirements) --- */}
+        {/* CSS STYLES (Fixed Mobile Grid) */}
         <style jsx>{`
-            .admin-container { background: #121212; color: #e0e0e0; min-height: 100vh; padding: 20px; font-family: sans-serif; padding-top: 80px; }
-            .badge-pro { background: #FCD535; color: #000; padding: 2px 6px; font-size: 10px; border-radius: 4px; vertical-align: middle; }
+            .admin-container { background: #121212; color: #eee; min-height: 100vh; padding: 15px; font-family: sans-serif; padding-top: 80px; }
+            .badge-pro { background: #FCD535; color: #000; padding: 1px 4px; font-size: 9px; border-radius: 3px; }
             
             /* Header */
-            .admin-header { display: flex; justify-content: space-between; align-items: end; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
-            .brand h1 { margin: 0; font-size: 22px; color: #fff; }
-            .online-status { font-size: 12px; color: #0ecb81; display: flex; align-items: center; gap: 5px; margin-top: 5px; }
-            .dot { width: 8px; height: 8px; background: #0ecb81; border-radius: 50%; animation: pulse 2s infinite; }
-            .treasury-box { background: #1E1E1E; display: flex; align-items: center; gap: 15px; padding: 8px 15px; border-radius: 6px; border: 1px solid #333; }
-            .treasury-box .val { font-size: 16px; color: #FCD535; font-weight: bold; }
-            .withdraw-btn { background: #333; color: #fff; border: 1px solid #555; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+            .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+            .brand h1 { margin: 0; font-size: 18px; color: #fff; }
+            .online-status { font-size: 10px; color: #0ecb81; display: flex; align-items: center; gap: 4px; }
+            .dot { width: 6px; height: 6px; background: #0ecb81; border-radius: 50%; }
+            .treasury-box { background: #1E1E1E; display: flex; align-items: center; gap: 10px; padding: 5px 10px; border-radius: 4px; border: 1px solid #333; }
+            .treasury-box .val { font-size: 13px; color: #FCD535; font-weight: bold; }
+            .withdraw-btn { background: #333; color: #fff; border: 1px solid #555; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
 
-            /* Control Panel */
-            .control-panel { display: flex; gap: 20px; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 25px; flex-wrap: wrap; }
-            .status-toggle { display: flex; align-items: center; gap: 10px; }
-            .label-text { font-size: 11px; font-weight: bold; color: #888; }
-            .btn-group { display: flex; gap: 0; }
-            .status-btn { border: none; padding: 8px 20px; font-weight: bold; font-size: 12px; cursor: pointer; opacity: 0.3; transition: 0.2s; color: #fff; background: #333; }
-            .status-btn.open { border-radius: 4px 0 0 4px; }
-            .status-btn.close { border-radius: 0 4px 4px 0; }
-            .status-btn.open.active { background: #00e676; color: #000; opacity: 1; box-shadow: 0 0 10px rgba(0,230,118,0.3); }
-            .status-btn.close.active { background: #ff1744; color: #fff; opacity: 1; box-shadow: 0 0 10px rgba(255,23,68,0.3); }
+            /* Control */
+            .control-panel { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+            .status-toggle { display: flex; }
+            .status-btn { border: none; padding: 8px 15px; font-weight: bold; font-size: 11px; cursor: pointer; opacity: 0.4; color: #fff; background: #333; flex: 1; }
+            .status-btn.open.active { background: #00e676; color: #000; opacity: 1; }
+            .status-btn.close.active { background: #ff1744; color: #fff; opacity: 1; }
+            .announcement-box { flex: 1; display: flex; gap: 5px; min-width: 200px; }
+            .announcement-box input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; font-size: 12px; }
+            .announcement-box button { background: #333; color: #fff; border: none; padding: 0 10px; border-radius: 4px; font-size: 10px; font-weight: bold; }
 
-            .announcement-box { flex: 1; display: flex; gap: 10px; }
-            .announcement-box input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; }
-            .announcement-box button { background: #333; color: #fff; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
-            .announcement-box button:hover { background: #FCD535; color: #000; }
+            /* Filter System */
+            .filter-system { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; background: #1a1a1a; padding: 10px; border-radius: 6px; }
+            .filter-select { background: #111; color: #fff; border: 1px solid #333; padding: 5px; border-radius: 4px; font-size: 11px; }
+            .date-group { display: flex; align-items: center; gap: 5px; }
+            .date-input { background: #111; color: #fff; border: 1px solid #333; padding: 4px; border-radius: 4px; font-size: 11px; width: 85px; }
+            .search-btn { background: #FCD535; color: #000; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; margin-left: auto; }
 
-            /* Filter Row */
-            .filter-row { display: flex; gap: 10px; margin-bottom: 15px; }
-            .filter-row button { background: transparent; border: none; color: #666; cursor: pointer; padding: 5px; font-size: 12px; }
-            .filter-row button.active { color: #fff; border-bottom: 2px solid #FCD535; }
+            /* Compact Grid (FORCE 3-COLS Mobile) */
+            .compact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+            .compact-card { background: #1E1E1E; padding: 10px 5px; border-radius: 4px; border: 1px solid #333; text-align: center; }
+            .c-val { display: block; font-size: 14px; font-weight: bold; color: #fff; }
+            .c-label { display: block; font-size: 9px; color: #888; margin-top: 3px; text-transform: uppercase; }
+            .green { color: #00e676; } .gold { color: #FCD535; } .white { color: #fff; }
+            .mt-2 { margin-top: 5px; } .mt-20 { margin-top: 20px; }
 
-            /* Stats Grid (3 Columns) */
-            .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-            .stat-card { background: #1E1E1E; padding: 15px; border-radius: 6px; border: 1px solid #2a2a2a; }
-            .stat-title { display: block; font-size: 10px; color: #777; margin-bottom: 5px; text-transform: uppercase; }
-            .stat-value { display: block; font-size: 20px; font-weight: bold; color: #f5f5f5; } /* White Text */
-            .text-green { color: #00e676; } .text-gold { color: #FCD535; }
-            .mint-breakdown { font-size: 11px; display: flex; flex-direction: column; gap: 2px; color: #ccc; }
-
-            /* Management Row (Pricing + Ban) */
-            .management-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 25px; }
-            .manage-card { background: #1E1E1E; padding: 15px; border-radius: 6px; border: 1px solid #2a2a2a; }
-            .manage-card h3 { font-size: 12px; color: #aaa; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+            /* Panels */
+            .panel { background: #1E1E1E; padding: 10px; border-radius: 4px; border: 1px solid #333; }
+            .panel-label { font-size: 10px; color: #aaa; margin-bottom: 8px; text-transform: uppercase; }
             
-            .pricing-inputs { display: flex; gap: 8px; }
-            .pricing-inputs input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; font-size: 12px; }
-            .pricing-inputs button { background: #FCD535; color: #000; border: none; padding: 0 15px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
+            /* Inputs Row (FORCE 3-COLS Mobile) */
+            .inputs-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 8px; }
+            .inputs-row input { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; font-size: 12px; text-align: center; }
+            .action-btn { width: 100%; background: #FCD535; color: #000; border: none; padding: 8px; font-weight: bold; font-size: 11px; border-radius: 4px; }
 
-            .ban-inputs { display: flex; gap: 8px; }
-            .ban-inputs input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; }
-            .btn-red { background: #d32f2f; color: #fff; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
+            .ban-row { display: flex; gap: 5px; }
+            .ban-row input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; font-size: 12px; }
+            .btn-red { background: #d32f2f; color: #fff; border: none; padding: 0 15px; border-radius: 4px; font-size: 11px; font-weight: bold; }
 
-            /* Tables Section */
-            .tables-section { display: flex; flex-direction: column; gap: 20px; }
-            .table-container { background: #1E1E1E; padding: 15px; border-radius: 6px; border: 1px solid #2a2a2a; width: 100%; }
-            .table-container h3 { font-size: 12px; color: #aaa; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px; }
-            
-            table { width: 100%; border-collapse: collapse; font-size: 12px; }
-            th { text-align: left; color: #666; padding: 8px; border-bottom: 1px solid #333; }
-            td { padding: 8px; border-bottom: 1px solid #222; color: #ccc; }
+            /* Tables */
+            .tables-section { display: grid; gap: 15px; margin-top: 20px; }
+            .table-container { background: #1E1E1E; padding: 10px; border-radius: 4px; border: 1px solid #333; }
+            table { width: 100%; font-size: 11px; border-collapse: collapse; }
+            th { text-align: left; color: #666; padding: 4px; }
+            td { padding: 4px; border-bottom: 1px solid #222; color: #ccc; }
             .mono { font-family: monospace; color: #888; }
-            .val-white { color: #fff; font-weight: bold; }
-            .pay-btn { background: #333; color: #fff; border: none; padding: 4px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; }
+            .pay-btn { background: #333; color: #fff; border: none; padding: 2px 6px; border-radius: 2px; font-size: 9px; }
 
-            /* Mobile Responsiveness */
-            @media (max-width: 768px) {
-                .stats-grid { grid-template-columns: 1fr; }
-                .management-row { grid-template-columns: 1fr; }
-                .pricing-inputs { flex-direction: column; }
+            @media (min-width: 768px) {
+                .compact-grid { gap: 15px; }
+                .compact-card { padding: 15px; }
+                .compact-grid, .inputs-row { grid-template-columns: repeat(3, 1fr); }
             }
-            @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         `}</style>
     </div>
   );
