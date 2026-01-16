@@ -46,12 +46,15 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   // المنطق: هل أنت في صفحة الأدمن؟ أو هل أنت المالك ومتصل بمحفظتك؟
+  // إذا كنت في صفحة الأدمن، نسمح لك بالدخول لتستطيع ربط المحفظة وفك الحظر عن نفسك
   const isAdminPage = pathname?.startsWith('/admin');
   const isOwnerConnected = isConnected && address?.toLowerCase() === OWNER_WALLET;
+  
+  // الاستثناء: نمرر الطلب إذا كان الأدمن متصل، أو إذا كان المستخدم يحاول دخول صفحة الأدمن
   const shouldBypass = isAdminPage || isOwnerConnected;
 
-  // شاشة تحميل لحظية
-  if (loading) return null;
+  // شاشة تحميل لحظية (لمنع الوميض)
+  if (loading) return <div style={{background:'#121212', height:'100vh'}} />;
 
   // --- الحالة 1: الموقع في صيانة وأنت لست الأدمن (إظهار الستارة بالتصميم الاحترافي) ---
   if (isMaintenance && !shouldBypass) {
@@ -71,19 +74,15 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
             </p>
 
             <div className="status-badge">
-              <span className="pulse-dot"></span> ACCESS RESTRICTED
+              <span className="pulse-dot"></span> MAINTENANCE IN PROGRESS
             </div>
-
-            {/* تنبيه صغير للأدمن فقط */}
-            {!isConnected && (
-               <div className="admin-hint">
-                 Admin? Connect Wallet to enter.
-               </div>
-            )}
 
             <div className="footer-copyright">
               NNM MARKETPLACE &copy; 2026
             </div>
+            
+            {/* سر صغير: رابط مخفي للأدمن للدخول وقت الطوارئ */}
+            <a href="/admin" className="admin-link-hidden">Admin Login</a>
         </div>
 
         <style jsx>{`
@@ -176,11 +175,15 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
             color: #555;
             letter-spacing: 1px;
           }
-          .admin-hint {
+          .admin-link-hidden {
+            display: block;
             margin-top: 20px;
-            font-size: 10px;
-            color: #444;
+            font-size: 9px;
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
           }
+          .admin-link-hidden:hover { color: #555; }
           @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
         `}</style>
       </div>
@@ -190,6 +193,7 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   // --- الحالة 2: الموقع مفتوح أو أنت الأدمن (عرض الموقع الطبيعي) ---
   return (
     <div className="d-flex flex-column min-vh-100">
+      {/* Navbar يظهر دائماً في الوضع الطبيعي، أو للأدمن حتى وقت الصيانة */}
       <Navbar />
       <AppInstallPrompt />
       <LegalModal />
