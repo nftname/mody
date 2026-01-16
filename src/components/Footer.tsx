@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 const Footer = () => {
   // ✅ إعدادات الأحجام الموحدة (ثوابت لضمان الدقة)
-  const headerFontSize = '12px'; // للعناوين الرئيسية الأربعة
+  const headerFontSize = '16px'; // للعناوين الرئيسية الأربعة
   const linkFontSize = '10px';   // لجميع الفروع والروابط بلا استثناء
   
   const linkColor = 'rgba(255, 255, 255, 0.5)';
