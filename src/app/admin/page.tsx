@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
 import { parseAbi, formatEther, parseEther } from 'viem';
 import { supabase } from '@/lib/supabase';
 import { NFT_COLLECTION_ADDRESS } from '@/data/config';
 
-// --- TYPESCRIPT INTERFACES (لحل مشاكل الأنواع) ---
+// --- TYPES & INTERFACES ---
 interface Activity {
   created_at: string;
   activity_type: string;
@@ -19,6 +19,8 @@ interface WalletData {
   address: string;
   volume: number;
   txCount: number;
+  lastActive: string;
+  isWhale: boolean; // VIP marker
   history: Activity[];
 }
 
@@ -27,6 +29,14 @@ interface Payout {
   wallet_address: string;
   amount: number;
   status: string;
+  created_at: string;
+}
+
+interface BannedWallet {
+  id: number;
+  wallet_address: string;
+  reason?: string;
+  created_at: string;
 }
 
 interface AppSettings {
@@ -37,9 +47,8 @@ interface AppSettings {
 
 // 1. CONFIGURATION
 const OWNER_WALLET = "0x5f2f670df4Db14ddB4Bc1E3eCe86CA645fb01BE6".toLowerCase();
-const ACCESS_CODE_SECRET = "8573"; 
 
-// 2. ABIs
+// 2. ABIs (تم التأكد من وجود دالة السحب وتعديل الأسعار)
 const REGISTRY_ABI = parseAbi([
   "function setPrices(uint256 _immortal, uint256 _elite, uint256 _founder) external",
   "function withdraw() external"
@@ -50,55 +59,42 @@ export default function AdminPage() {
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
 
-  // --- Auth States ---
-  const [isWalletAdmin, setIsWalletAdmin] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [accessInput, setAccessInput] = useState('');
-  
-  // --- Data States ---
+  // --- States ---
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // Data States
+  const [contractBalance, setContractBalance] = useState('0');
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [visitorsCount, setVisitorsCount] = useState(0);
+  
+  // Settings & Financials
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [announcement, setAnnouncement] = useState('');
-  
-  // Financials
-  const [contractBalance, setContractBalance] = useState('0');
   const [mintPrices, setMintPrices] = useState({ immortal: '', elite: '', founder: '' });
-  
-  // Analytics Data
-  const [visitorsCount, setVisitorsCount] = useState(0);
-  const [mintStats, setMintStats] = useState({ total: 0, immortal: 0, elite: 0, founder: 0, revenue: 0 });
-  
-  // *** تم تحديد الأنواع هنا لحل مشكلة never[] ***
-  const [walletStats, setWalletStats] = useState<WalletData[]>([]);
-  const [selectedWallet, setSelectedWallet] = useState<WalletData | null>(null);
-  const [pendingPayouts, setPendingPayouts] = useState<Payout[]>([]);
-  
-  const [affiliateLiability, setAffiliateLiability] = useState(0);
+
+  // Affiliate & Ban System
+  const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [bannedWallets, setBannedWallets] = useState<BannedWallet[]>([]);
+  const [banInput, setBanInput] = useState('');
+
+  // Filtering System
+  const [timeFilter, setTimeFilter] = useState<'ALL' | '24H' | '7D' | 'MONTH'>('ALL');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   // --- Initialization ---
   useEffect(() => {
+    // التحقق الصارم من المحفظة
     if (isConnected && address && address.toLowerCase() === OWNER_WALLET) {
-        setIsWalletAdmin(true);
+        setIsAdmin(true);
+        fetchBlockchainData();
+        fetchSupabaseData();
     } else {
-        setIsWalletAdmin(false);
+        setIsAdmin(false);
     }
     setLoading(false);
   }, [address, isConnected]);
-
-  useEffect(() => {
-      if (isAuthenticated) {
-          fetchBlockchainData();
-          fetchSupabaseData();
-      }
-  }, [isAuthenticated]);
-
-  // --- Login Handler ---
-  // تمت إضافة النوع React.FormEvent
-  const handleLogin = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (accessInput === ACCESS_CODE_SECRET) setIsAuthenticated(true);
-      else alert("INVALID CODE");
-  };
 
   // --- Fetchers ---
   const fetchBlockchainData = async () => {
@@ -106,68 +102,139 @@ export default function AdminPage() {
       try {
           const bal = await publicClient.getBalance({ address: NFT_COLLECTION_ADDRESS as `0x${string}` });
           setContractBalance(formatEther(bal));
-      } catch (e) { console.error(e); }
+      } catch (e) { console.error("Contract Read Error:", e); }
   };
 
   const fetchSupabaseData = async () => {
       // 1. Settings
-      const { data: set } = await supabase.from('app_settings').select('*').eq('id', 1).single();
+      const { data: set } = await supabase.from('app_settings').select('*').single();
       if (set) { 
-          const settings = set as AppSettings;
-          setMaintenanceMode(settings.is_maintenance_mode); 
-          setAnnouncement(settings.announcement_text || ''); 
+          setMaintenanceMode(set.is_maintenance_mode); 
+          setAnnouncement(set.announcement_text || ''); 
       }
 
-      // 2. Mint Stats & Wallet Radar
-      const { data: activities } = await supabase.from('activities').select('*');
-      if (activities) {
-          let mStats = { total: 0, immortal: 0, elite: 0, founder: 0, revenue: 0 };
-          // تعريف النوع هنا كـ Record لحل مشكلة Indexing
-          let wallets: Record<string, WalletData> = {};
+      // 2. Activities (Mints & Market)
+      const { data: act } = await supabase.from('activities').select('*').order('created_at', { ascending: false });
+      if (act) setActivities(act as Activity[]);
 
-          // تمت إضافة النوع (act: Activity)
-          (activities as Activity[]).forEach((act) => {
-              const wallet = act.to_address || act.from_address;
-              if (wallet) {
-                  if (!wallets[wallet]) {
-                      wallets[wallet] = { address: wallet, volume: 0, txCount: 0, history: [] };
-                  }
-                  wallets[wallet].volume += Number(act.price || 0);
-                  wallets[wallet].txCount += 1;
-                  wallets[wallet].history.push(act);
-              }
+      // 3. Affiliate Payouts
+      const { data: pay } = await supabase.from('affiliate_payouts').select('*').order('created_at', { ascending: false });
+      if (pay) setPayouts(pay as Payout[]);
 
-              if (act.activity_type === 'Mint') {
-                  mStats.total++;
-                  mStats.revenue += Number(act.price || 0);
-                  const p = Number(act.price);
-                  if (p >= 50) mStats.immortal++;
-                  else if (p >= 30) mStats.elite++;
-                  else mStats.founder++;
-              }
-          });
-          
-          setMintStats(mStats);
-          setWalletStats(Object.values(wallets).sort((a, b) => b.volume - a.volume).slice(0, 50));
-      }
+      // 4. Banned Wallets (ستحتاج لإنشاء هذا الجدول في Supabase)
+      const { data: bans } = await supabase.from('banned_wallets').select('*');
+      if (bans) setBannedWallets(bans as BannedWallet[]);
 
-      // 3. Affiliate Data
-      const { data: payouts } = await supabase.from('affiliate_payouts').select('*').eq('status', 'PENDING');
-      if (payouts) setPendingPayouts(payouts as Payout[]);
-      
-      const { data: earnings } = await supabase.from('affiliate_earnings').select('amount').eq('status', 'UNPAID');
-      if (earnings) {
-          // تمت إضافة الأنواع للمتغيرات داخل reduce
-          const liability = earnings.reduce((acc: number, curr: any) => acc + (Number(curr.amount)||0), 0);
-          setAffiliateLiability(liability);
-      }
-
-      setVisitorsCount(Math.floor(Math.random() * 20) + 5); 
+      // Simulated Live Visitors (يمكن ربطها بـ Google Analytics لاحقاً)
+      setVisitorsCount(Math.floor(Math.random() * (45 - 20 + 1) + 20)); 
   };
 
+  // --- Advanced Filtering Logic ---
+  const filteredActivities = useMemo(() => {
+    let data = activities;
+    const now = new Date();
+
+    if (timeFilter === '24H') {
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        data = data.filter(a => new Date(a.created_at) >= oneDayAgo);
+    } else if (timeFilter === '7D') {
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        data = data.filter(a => new Date(a.created_at) >= sevenDaysAgo);
+    } else if (timeFilter === 'MONTH') {
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        data = data.filter(a => new Date(a.created_at) >= monthAgo);
+    }
+
+    if (customStartDate && customEndDate) {
+        data = data.filter(a => {
+            const d = new Date(a.created_at);
+            return d >= new Date(customStartDate) && d <= new Date(customEndDate);
+        });
+    }
+    
+    return data;
+  }, [activities, timeFilter, customStartDate, customEndDate]);
+
+  // --- Analytics Calculation ---
+  const stats = useMemo(() => {
+      let totalMints = 0;
+      let totalRevenue = 0;
+      let marketFees = 0; // 1% estimation
+      let adminMints = 0;
+      
+      // Breakdown
+      let immortal = 0, elite = 0, founder = 0;
+
+      filteredActivities.forEach(act => {
+          const price = Number(act.price || 0);
+          const isOwner = act.from_address?.toLowerCase() === OWNER_WALLET || act.to_address?.toLowerCase() === OWNER_WALLET;
+
+          if (act.activity_type === 'Mint') {
+              if (isOwner) {
+                  adminMints++;
+              } else {
+                  totalMints++;
+                  totalRevenue += price;
+                  
+                  if (price >= 50) immortal++;
+                  else if (price >= 30) elite++;
+                  else founder++;
+              }
+          } else if (act.activity_type === 'MarketSale') {
+              // افتراض أن عمولة الماركت 1%
+              marketFees += (price * 0.01);
+          }
+      });
+
+      return { totalMints, totalRevenue, marketFees, adminMints, immortal, elite, founder };
+  }, [filteredActivities]);
+
+  // --- Wallet Radar (Whale Tracking) ---
+  const walletRadar = useMemo(() => {
+      const wallets: Record<string, WalletData> = {};
+      
+      filteredActivities.forEach(act => {
+          const addr = act.to_address || act.from_address;
+          if(!addr) return;
+          
+          if (!wallets[addr]) {
+              wallets[addr] = { 
+                  address: addr, 
+                  volume: 0, 
+                  txCount: 0, 
+                  lastActive: act.created_at, 
+                  history: [], 
+                  isWhale: false 
+              };
+          }
+          wallets[addr].volume += Number(act.price || 0);
+          wallets[addr].txCount += 1;
+          wallets[addr].history.push(act);
+          
+          // تحديد الحيتان (مثلاً أكثر من 500$ تداول)
+          if(wallets[addr].volume > 500) wallets[addr].isWhale = true;
+      });
+
+      return Object.values(wallets).sort((a, b) => b.volume - a.volume);
+  }, [filteredActivities]);
+
+
   // --- Actions ---
-  const updatePrices = async () => {
-      if(!mintPrices.immortal || !mintPrices.elite || !mintPrices.founder) return;
+  const handleWithdraw = async () => {
+      if(!confirm("⚠️ تأكيد سحب جميع الأموال من العقد الذكي إلى محفظتك؟")) return;
+      try {
+          await writeContractAsync({ 
+              address: NFT_COLLECTION_ADDRESS as `0x${string}`, 
+              abi: REGISTRY_ABI, 
+              functionName: 'withdraw' 
+          });
+          alert("تمت عملية السحب بنجاح ✅");
+          fetchBlockchainData();
+      } catch(e: any) { alert("خطأ في السحب: " + (e.message || "Unknown")); }
+  };
+
+  const handleUpdatePrices = async () => {
+      if(!mintPrices.immortal || !mintPrices.elite || !mintPrices.founder) return alert("يرجى ملء جميع الخانات");
       try {
           await writeContractAsync({
               address: NFT_COLLECTION_ADDRESS as `0x${string}`,
@@ -175,319 +242,336 @@ export default function AdminPage() {
               functionName: 'setPrices',
               args: [parseEther(mintPrices.immortal), parseEther(mintPrices.elite), parseEther(mintPrices.founder)]
           });
-          alert("Prices Updated!");
-      } catch(e: any) { alert(e.message || "Error"); }
+          alert("تم تحديث الأسعار ✅");
+      } catch(e) { console.error(e); }
   };
 
-  const withdrawFunds = async () => {
-      if(!confirm("Withdraw all funds?")) return;
-      try {
-          await writeContractAsync({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: REGISTRY_ABI, functionName: 'withdraw' });
-          alert("Withdrawal Success!");
-          fetchBlockchainData();
-      } catch(e: any) { alert(e.message || "Error"); }
+  const handleBanWallet = async () => {
+      if(!banInput) return;
+      const { error } = await supabase.from('banned_wallets').insert([{ wallet_address: banInput.toLowerCase(), reason: 'Admin Ban' }]);
+      if(!error) {
+          setBanInput('');
+          fetchSupabaseData();
+          alert("تم حظر المحفظة");
+      }
+  };
+
+  const handleRemoveBan = async (id: number) => {
+      await supabase.from('banned_wallets').delete().eq('id', id);
+      fetchSupabaseData();
   };
 
   const markPayoutPaid = async (id: number) => {
-      if(!confirm("Mark as PAID? Ensure you sent the funds manually.")) return;
+      if(!confirm("هل قمت بتحويل الأموال يدوياً؟ سيتم تغيير الحالة إلى مدفوع.")) return;
       await supabase.from('affiliate_payouts').update({ status: 'PAID' }).eq('id', id);
-      fetchSupabaseData(); 
+      fetchSupabaseData();
   };
 
   const toggleMaintenance = async () => {
-      const newVal = !maintenanceMode;
-      const { data: ex } = await supabase.from('app_settings').select('id').eq('id', 1).single();
-      
-      if (!ex) {
-          await supabase.from('app_settings').insert([{ id: 1, is_maintenance_mode: newVal }]);
-      } else {
-          await supabase.from('app_settings').update({ is_maintenance_mode: newVal }).eq('id', 1);
-      }
-      setMaintenanceMode(newVal);
+    const newVal = !maintenanceMode;
+    await supabase.from('app_settings').upsert({ id: 1, is_maintenance_mode: newVal });
+    setMaintenanceMode(newVal);
   };
 
   const saveAnnouncement = async () => {
-      const { data: ex } = await supabase.from('app_settings').select('id').eq('id', 1).single();
-      if (!ex) await supabase.from('app_settings').insert([{ id: 1, announcement_text: announcement }]);
-      else await supabase.from('app_settings').update({ announcement_text: announcement }).eq('id', 1);
-      alert('Announcement Saved');
+    await supabase.from('app_settings').upsert({ id: 1, announcement_text: announcement });
+    alert("تم حفظ الإعلان");
   };
 
-  // --- RENDER ---
-  if (loading) return <div className="loading-screen">Verifying...</div>;
-  if (!isWalletAdmin) return <div className="access-denied"><i className="bi bi-shield-lock-fill icon-large"></i><h1>ACCESS DENIED</h1></div>;
-  
-  if (!isAuthenticated) return (
-      <div className="loading-screen">
-          <div className="card" style={{width: '350px', textAlign: 'center'}}>
-             <i className="bi bi-fingerprint icon-large text-gold mb-3"></i>
-             <h3>SECURITY CHECK</h3>
-             <form onSubmit={handleLogin} className="mt-4">
-                 <input type="password" value={accessInput} onChange={e=>setAccessInput(e.target.value)} placeholder="Enter Access Code" className="auth-input" autoFocus />
-                 <button type="submit" className="action-btn w-100 mt-3">UNLOCK CONSOLE</button>
-             </form>
-          </div>
+  // --- UI RENDER ---
+  if (loading) return <div className="loading-screen">Authenticating Admin...</div>;
+  if (!isAdmin) return (
+      <div className="access-denied">
+          <i className="bi bi-shield-lock-fill icon-large"></i>
+          <h1>ACCESS DENIED</h1>
+          <p>This panel is restricted to the Contract Owner only.</p>
+          <p className="wallet-ref">{address}</p>
           <style jsx>{`
-            .loading-screen { height: 100vh; display: flex; justify-content: center; align-items: center; background: #000; color: #fff; }
-            .auth-input { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; text-align: center; border-radius: 6px; font-size: 18px; letter-spacing: 3px; }
-            .icon-large { font-size: 50px; }
+            .access-denied { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #121212; color: #ff4d4d; }
+            .wallet-ref { color: #555; font-family: monospace; margin-top: 20px; }
+            .icon-large { font-size: 60px; margin-bottom: 20px; }
           `}</style>
       </div>
   );
 
   return (
     <div className="admin-container">
-      <div className="admin-header">
-        <h1><i className="bi bi-cpu-fill"></i> NNM COMMAND UNIT</h1>
-        <div className="live-pulse">
-            <span className="pulse-dot"></span> {visitorsCount} Visitors Online
-        </div>
-      </div>
-
-      {/* TOP STATS */}
-      <div className="dashboard-grid mb-4" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-           <div className="stat-box">
-               <div className="stat-label">Treasury Balance</div>
-               <div className="stat-value text-gold">{parseFloat(contractBalance).toFixed(4)} POL</div>
-               <button onClick={withdrawFunds} className="mini-btn mt-2">Withdraw</button>
-           </div>
-           <div className="stat-box">
-               <div className="stat-label">Mint Revenue (Today)</div>
-               <div className="stat-value text-green">${mintStats.revenue}</div>
-               <div className="stat-sub">{mintStats.total} Total Mints</div>
-           </div>
-           <div className="stat-box">
-               <div className="stat-label">Affiliate Liability</div>
-               <div className="stat-value text-red">${affiliateLiability.toFixed(2)}</div>
-               <div className="stat-sub">Unpaid Commissions</div>
-           </div>
-           <div className="stat-box">
-               <div className="stat-label">Pending Payouts</div>
-               <div className="stat-value">{pendingPayouts.length}</div>
-               <div className="stat-sub">Requests</div>
-           </div>
-      </div>
-
-      <div className="dashboard-grid">
+        {/* --- HEADER --- */}
+        <div className="admin-header">
+            <div className="header-left">
+                <h1><i className="bi bi-grid-1x2-fill"></i> ADMIN CONSOLE <span className="pro-badge">PRO</span></h1>
+                <div className="live-indicator">
+                    <span className="dot"></span> {visitorsCount} Online Visitors
+                </div>
+            </div>
             
-            {/* 1. FINANCIAL CONTROL */}
-            <div className="card">
-                <div className="card-header text-gold">
-                    <i className="bi bi-coin"></i> Revenue Control (Set Prices $)
+            {/* TREASURY MODULE */}
+            <div className="treasury-module">
+                <div className="treasury-info">
+                    <span className="label">Contract Balance</span>
+                    <span className="value">{parseFloat(contractBalance).toFixed(4)} POL</span>
                 </div>
-                <div className="control-row" style={{display: 'block'}}>
-                    <div className="d-flex gap-2 mb-2">
-                        <input type="number" placeholder="Immortal (50)" onChange={e=>setMintPrices({...mintPrices, immortal: e.target.value})} className="price-input" />
-                        <input type="number" placeholder="Elite (30)" onChange={e=>setMintPrices({...mintPrices, elite: e.target.value})} className="price-input" />
-                        <input type="number" placeholder="Founder (10)" onChange={e=>setMintPrices({...mintPrices, founder: e.target.value})} className="price-input" />
-                    </div>
-                    <button onClick={updatePrices} className="action-btn w-100">UPDATE MINT PRICES</button>
+                <button onClick={handleWithdraw} className="withdraw-btn">
+                    <i className="bi bi-box-arrow-down"></i> Siphon Funds (Withdraw)
+                </button>
+            </div>
+        </div>
+
+        {/* --- CONTROL BAR (FILTERS) --- */}
+        <div className="control-bar">
+            <div className="filter-group">
+                <button className={`filter-btn ${timeFilter==='24H' ? 'active' : ''}`} onClick={()=>setTimeFilter('24H')}>24H</button>
+                <button className={`filter-btn ${timeFilter==='7D' ? 'active' : ''}`} onClick={()=>setTimeFilter('7D')}>7 Days</button>
+                <button className={`filter-btn ${timeFilter==='MONTH' ? 'active' : ''}`} onClick={()=>setTimeFilter('MONTH')}>Month</button>
+                <button className={`filter-btn ${timeFilter==='ALL' ? 'active' : ''}`} onClick={()=>setTimeFilter('ALL')}>All Time</button>
+            </div>
+            <div className="date-inputs">
+                <input type="date" onChange={(e)=>setCustomStartDate(e.target.value)} />
+                <span className="arrow">→</span>
+                <input type="date" onChange={(e)=>setCustomEndDate(e.target.value)} />
+            </div>
+        </div>
+
+        {/* --- ANALYTICS GRID --- */}
+        <div className="stats-grid">
+            <div className="stat-card">
+                <div className="stat-title">Total Revenue</div>
+                <div className="stat-value text-green">${stats.totalRevenue.toLocaleString()}</div>
+                <div className="stat-sub">From Mints</div>
+            </div>
+            <div className="stat-card">
+                <div className="stat-title">Market Fees (1%)</div>
+                <div className="stat-value text-gold">${stats.marketFees.toFixed(2)}</div>
+                <div className="stat-sub">Trading Commission</div>
+            </div>
+            <div className="stat-card">
+                <div className="stat-title">Mint Counts</div>
+                <div className="stat-row">
+                    <span className="badge-immortal">Immortal: {stats.immortal}</span>
+                    <span className="badge-elite">Elite: {stats.elite}</span>
+                </div>
+                <div className="stat-row mt-1">
+                    <span className="badge-founder">Founder: {stats.founder}</span>
                 </div>
             </div>
+            <div className="stat-card highlight">
+                <div className="stat-title">Admin Activity</div>
+                <div className="stat-value">{stats.adminMints}</div>
+                <div className="stat-sub">Internal Mints (Gas Only)</div>
+            </div>
+        </div>
 
-            {/* 2. AFFILIATE COMMAND CENTER */}
-            <div className="card">
-                <div className="card-header text-red">
-                    <i className="bi bi-people-fill"></i> Affiliate Requests
+        <div className="main-layout">
+            {/* --- LEFT COLUMN --- */}
+            <div className="col-left">
+                
+                {/* 1. MINT PRICE CONTROL */}
+                <div className="panel-card">
+                    <div className="panel-head"><i className="bi bi-tags-fill"></i> Mint Pricing Engine</div>
+                    <div className="price-inputs">
+                        <div className="input-wrap">
+                            <label>Immortal ($)</label>
+                            <input type="number" placeholder="Current" onChange={e=>setMintPrices({...mintPrices, immortal: e.target.value})} />
+                        </div>
+                        <div className="input-wrap">
+                            <label>Elite ($)</label>
+                            <input type="number" placeholder="Current" onChange={e=>setMintPrices({...mintPrices, elite: e.target.value})} />
+                        </div>
+                        <div className="input-wrap">
+                            <label>Founder ($)</label>
+                            <input type="number" placeholder="Current" onChange={e=>setMintPrices({...mintPrices, founder: e.target.value})} />
+                        </div>
+                    </div>
+                    <button onClick={handleUpdatePrices} className="action-btn w-100 mt-3">UPDATE CONTRACT PRICES</button>
                 </div>
-                <div className="table-container">
-                    <div className="table-scroll" style={{maxHeight: '180px'}}>
-                        <table>
-                            <thead><tr><th>Wallet</th><th>Amt</th><th>Action</th></tr></thead>
-                            <tbody>
-                                {pendingPayouts.length === 0 ? <tr><td colSpan={3} className="text-center p-3 text-gray">No Pending Requests</td></tr> : 
-                                    pendingPayouts.map((p, i) => (
-                                        <tr key={i}>
-                                            <td className="font-mono text-gray">{p.wallet_address.substring(0,6)}...</td>
-                                            <td className="font-bold">${p.amount}</td>
-                                            <td><button onClick={()=>markPayoutPaid(p.id)} className="mini-btn success">Mark Paid</button></td>
-                                        </tr>
-                                    ))
-                                }
-                            </tbody>
-                        </table>
+
+                {/* 2. SYSTEM OPERATIONS & BAN */}
+                <div className="panel-card mt-4">
+                    <div className="panel-head text-red"><i className="bi bi-shield-slash-fill"></i> Security & Ops</div>
+                    
+                    <div className="ops-row">
+                        <span>Maintenance Mode</span>
+                        <button onClick={toggleMaintenance} className={`toggle-btn ${maintenanceMode ? 'on' : 'off'}`}>
+                            {maintenanceMode ? 'ACTIVE (CLOSED)' : 'INACTIVE (OPEN)'}
+                        </button>
+                    </div>
+
+                    <div className="ban-section mt-3">
+                        <label>Blacklist Wallet (Ban Hammer)</label>
+                        <div className="d-flex gap-2">
+                            <input type="text" value={banInput} onChange={e=>setBanInput(e.target.value)} placeholder="0x..." className="ban-input" />
+                            <button onClick={handleBanWallet} className="ban-btn">BAN</button>
+                        </div>
+                        <div className="banned-list mt-2">
+                            {bannedWallets.map(b => (
+                                <div key={b.id} className="banned-item">
+                                    <span>{b.wallet_address.substring(0,8)}...</span>
+                                    <button onClick={()=>handleRemoveBan(b.id)} className="unban-btn">x</button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mt-3">
+                        <label>Global Announcement</label>
+                        <textarea rows={2} value={announcement} onChange={e=>setAnnouncement(e.target.value)} className="announce-input" />
+                        <button onClick={saveAnnouncement} className="mini-btn mt-1">Save</button>
                     </div>
                 </div>
+
             </div>
 
-            {/* 3. WALLET RADAR */}
-            <div className="card" style={{ gridColumn: '1 / -1' }}>
-                <div className="card-header text-blue">
-                    <i className="bi bi-radar"></i> Wallet Radar (Top Traders)
-                </div>
-                <div className="table-container">
-                    <div className="table-scroll">
-                        <table>
+            {/* --- RIGHT COLUMN --- */}
+            <div className="col-right">
+                
+                {/* 3. WALLET RADAR (WHALES) */}
+                <div className="panel-card">
+                    <div className="panel-head text-blue"><i className="bi bi-radar"></i> Market Depth (Top Wallets)</div>
+                    <div className="table-responsive">
+                        <table className="pro-table">
                             <thead>
                                 <tr>
-                                    <th>Wallet Address</th>
-                                    <th>Total Volume</th>
-                                    <th>Tx Count</th>
-                                    <th>Action</th>
+                                    <th>Wallet</th>
+                                    <th>Vol ($)</th>
+                                    <th>Tx</th>
+                                    <th>Type</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {walletStats.map((w, i) => (
-                                    <tr key={i}>
-                                        <td className="font-mono text-gold">{w.address}</td>
-                                        <td className="font-bold">${w.volume.toLocaleString()}</td>
-                                        <td>{w.txCount}</td>
-                                        <td>
-                                            <button onClick={()=>setSelectedWallet(w)} className="mini-btn">
-                                                <i className="bi bi-eye"></i> Analyze
-                                            </button>
+                                {walletRadar.slice(0, 10).map((w, i) => (
+                                    <tr key={i} className={w.isWhale ? 'whale-row' : ''}>
+                                        <td className="font-mono">
+                                            {w.address.substring(0,6)}...
+                                            {w.isWhale && <i className="bi bi-stars text-gold ms-1" title="Whale"></i>}
                                         </td>
+                                        <td>${w.volume.toLocaleString()}</td>
+                                        <td>{w.txCount}</td>
+                                        <td>{w.isWhale ? '🐋 WHALE' : 'User'}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
 
-            {/* 4. EMERGENCY CONTROLS */}
-            <div className="card emergency-card">
-                <div className="card-header text-red">
-                    <i className="bi bi-exclamation-triangle-fill"></i> System Ops
-                </div>
-                <div className="control-row">
-                    <div>
-                        <h3>Maintenance Mode</h3>
-                        <p className="text-gray" style={{fontSize: '11px'}}>Freeze site for all visitors.</p>
+                {/* 4. AFFILIATE NETWORK */}
+                <div className="panel-card mt-4">
+                    <div className="panel-head text-purple"><i className="bi bi-diagram-3-fill"></i> Affiliate Payouts</div>
+                    <div className="table-responsive" style={{maxHeight: '200px'}}>
+                        <table className="pro-table">
+                            <thead><tr><th>Wallet</th><th>Amt ($)</th><th>Action</th></tr></thead>
+                            <tbody>
+                                {payouts.filter(p=>p.status === 'PENDING').map((p, i) => (
+                                    <tr key={i}>
+                                        <td className="font-mono">{p.wallet_address.substring(0,6)}...</td>
+                                        <td className="text-green font-bold">${p.amount}</td>
+                                        <td><button onClick={()=>markPayoutPaid(p.id)} className="pay-btn">PAY</button></td>
+                                    </tr>
+                                ))}
+                                {payouts.filter(p=>p.status === 'PENDING').length === 0 && (
+                                    <tr><td colSpan={3} className="text-center text-muted">No pending payouts</td></tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
-                    <button onClick={toggleMaintenance} className={`status-btn ${maintenanceMode ? 'closed' : 'live'}`}>
-                        {maintenanceMode ? 'CLOSED' : 'LIVE'}
-                    </button>
                 </div>
-                <div className="control-section">
-                    <h3>Announcement Bar</h3>
-                    <textarea rows={2} value={announcement} onChange={(e) => setAnnouncement(e.target.value)} placeholder="Type alert..." />
-                    <button onClick={saveAnnouncement} className="action-btn mt-2" style={{fontSize: '12px', padding: '8px'}}>Update</button>
-                </div>
+
             </div>
+        </div>
+
+        {/* --- CSS STYLES --- */}
+        <style jsx>{`
+            /* DARK CHARCOAL THEME */
+            .admin-container {
+                min-height: 100vh;
+                background-color: #121212; /* Very Dark Charcoal */
+                color: #e0e0e0;
+                font-family: 'Inter', system-ui, sans-serif;
+                padding: 20px;
+                padding-top: 80px;
+            }
+
+            /* Header */
+            .admin-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                padding-bottom: 20px;
+                border-bottom: 1px solid #333;
+                margin-bottom: 25px;
+            }
+            .header-left h1 { margin: 0; font-size: 24px; color: #fff; letter-spacing: 1px; }
+            .pro-badge { background: #FCD535; color: #000; font-size: 10px; padding: 2px 6px; border-radius: 4px; vertical-align: middle; }
+            .live-indicator { font-size: 12px; color: #0ecb81; margin-top: 5px; display: flex; align-items: center; gap: 6px; }
+            .dot { width: 8px; height: 8px; background: #0ecb81; border-radius: 50%; animation: pulse 2s infinite; }
+
+            /* Treasury Module */
+            .treasury-module { display: flex; align-items: center; gap: 20px; background: #1E1E1E; padding: 10px 20px; border-radius: 8px; border: 1px solid #333; }
+            .treasury-info { display: flex; flex-direction: column; }
+            .treasury-info .label { font-size: 10px; color: #888; text-transform: uppercase; }
+            .treasury-info .value { font-size: 18px; font-weight: bold; color: #FCD535; }
+            .withdraw-btn { background: #333; color: #fff; border: 1px solid #555; padding: 8px 15px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 12px; display: flex; gap: 5px; align-items: center; }
+            .withdraw-btn:hover { background: #FCD535; color: #000; border-color: #FCD535; }
+
+            /* Control Bar */
+            .control-bar { display: flex; justify-content: space-between; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+            .filter-group { display: flex; gap: 5px; background: #1E1E1E; padding: 5px; border-radius: 6px; }
+            .filter-btn { background: transparent; border: none; color: #888; padding: 6px 15px; font-size: 13px; cursor: pointer; border-radius: 4px; }
+            .filter-btn.active { background: #333; color: #fff; font-weight: bold; }
+            .date-inputs { display: flex; align-items: center; gap: 10px; }
+            .date-inputs input { background: #1E1E1E; border: 1px solid #333; color: #fff; padding: 5px 10px; border-radius: 4px; color-scheme: dark; }
+
+            /* Stats Grid */
+            .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+            .stat-card { background: #1E1E1E; padding: 20px; border-radius: 10px; border: 1px solid #2D2D2D; position: relative; overflow: hidden; }
+            .stat-card.highlight { background: linear-gradient(145deg, #1E1E1E, #252525); border-color: #444; }
+            .stat-title { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+            .stat-value { font-size: 24px; font-weight: 700; color: #fff; }
+            .stat-sub { font-size: 11px; color: #666; margin-top: 5px; }
+            .text-green { color: #0ecb81; } .text-gold { color: #FCD535; }
             
-            {/* 5. MINT INTELLIGENCE */}
-            <div className="card analytics-card">
-                <div className="card-header text-green">
-                    <i className="bi bi-bar-chart-fill"></i> Mint Breakdown
-                </div>
-                <div className="stats-row">
-                    <div className="stat-box">
-                        <div className="stat-label">Immortal</div>
-                        <div className="stat-value">{mintStats.immortal}</div>
-                    </div>
-                    <div className="stat-box">
-                        <div className="stat-label">Elite</div>
-                        <div className="stat-value">{mintStats.elite}</div>
-                    </div>
-                    <div className="stat-box">
-                        <div className="stat-label">Founder</div>
-                        <div className="stat-value">{mintStats.founder}</div>
-                    </div>
-                </div>
-            </div>
+            .badge-immortal { color: #FCD535; font-size: 11px; margin-right: 8px; }
+            .badge-elite { color: #c0c0c0; font-size: 11px; }
+            .badge-founder { color: #cd7f32; font-size: 11px; }
 
-      </div>
+            /* Layout Columns */
+            .main-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 25px; }
+            @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
 
-      {/* WALLET POPUP MODAL */}
-      {selectedWallet && (
-          <div className="modal-overlay" onClick={()=>setSelectedWallet(null)}>
-              <div className="modal-content" onClick={e=>e.stopPropagation()}>
-                  <div className="modal-header">
-                      <h3>Wallet Inspector</h3>
-                      <button onClick={()=>setSelectedWallet(null)}><i className="bi bi-x-lg"></i></button>
-                  </div>
-                  <div className="p-3">
-                      <p className="text-gold font-mono mb-3">{selectedWallet.address}</p>
-                      <div className="stats-row">
-                          <div className="stat-box"><div className="stat-label">Total Spent</div><div className="stat-value">${selectedWallet.volume}</div></div>
-                          <div className="stat-box"><div className="stat-label">Transactions</div><div className="stat-value">{selectedWallet.txCount}</div></div>
-                      </div>
-                      <h5 className="mt-3 mb-2 text-gray" style={{fontSize: '12px'}}>ACTIVITY LOG</h5>
-                      <div className="table-scroll" style={{maxHeight: '200px', border: '1px solid #333'}}>
-                          <table>
-                              <tbody>
-                                  {selectedWallet.history.map((h, i) => (
-                                      <tr key={i}>
-                                          <td style={{fontSize:'11px'}}>{new Date(h.created_at).toLocaleDateString()}</td>
-                                          <td style={{fontSize:'11px'}}>{h.activity_type}</td>
-                                          <td className="text-gold" style={{fontSize:'11px'}}>${h.price}</td>
-                                      </tr>
-                                  ))}
-                              </tbody>
-                          </table>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      )}
+            /* Panels */
+            .panel-card { background: #1E1E1E; border-radius: 12px; padding: 20px; border: 1px solid #2D2D2D; height: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+            .panel-head { font-size: 14px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: #ccc; border-bottom: 1px solid #2D2D2D; padding-bottom: 10px; }
+            .text-red { color: #ff5252; } .text-blue { color: #448aff; } .text-purple { color: #b388ff; }
 
-      <style jsx>{`
-        /* --- STYLES --- */
-        .admin-container {
-            min-height: 100vh;
-            background-color: #050505;
-            color: #fff;
-            padding: 40px 20px;
-            font-family: 'Inter', sans-serif;
-            padding-top: 100px;
-        }
-        .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-        .admin-header h1 { color: #FCD535; font-size: 28px; margin: 0; }
-        
-        .live-pulse { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #0ecb81; font-weight: bold; background: rgba(14,203,129,0.1); padding: 5px 15px; border-radius: 20px; }
-        .pulse-dot { width: 8px; height: 8px; background: #0ecb81; border-radius: 50%; box-shadow: 0 0 8px #0ecb81; animation: pulse 2s infinite; }
+            /* Inputs */
+            .price-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+            .input-wrap label { display: block; font-size: 10px; color: #666; margin-bottom: 4px; }
+            input, textarea { width: 100%; background: #121212; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; font-size: 13px; }
+            input:focus, textarea:focus { border-color: #FCD535; outline: none; }
+            
+            /* Buttons */
+            .action-btn { background: #FCD535; color: #000; border: none; font-weight: bold; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+            .toggle-btn { width: 100%; padding: 8px; border-radius: 4px; border: none; font-weight: bold; font-size: 11px; cursor: pointer; }
+            .toggle-btn.on { background: #d32f2f; color: #fff; }
+            .toggle-btn.off { background: #388e3c; color: #fff; }
+            
+            /* Tables */
+            .table-responsive { overflow-x: auto; }
+            .pro-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            .pro-table th { text-align: left; color: #666; font-weight: 500; padding: 8px; border-bottom: 1px solid #333; }
+            .pro-table td { padding: 8px; border-bottom: 1px solid #262626; color: #ddd; }
+            .whale-row { background: rgba(252, 213, 53, 0.05); }
+            .font-mono { font-family: 'Roboto Mono', monospace; }
+            
+            .pay-btn { background: #388e3c; color: #fff; border: none; padding: 4px 12px; border-radius: 4px; font-size: 10px; cursor: pointer; }
+            .ban-btn { background: #d32f2f; color: #fff; border: none; padding: 0 15px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+            
+            .banned-item { display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; background: #121212; padding: 5px; margin-top: 5px; border-radius: 4px; }
+            .unban-btn { background: none; border: none; color: #666; cursor: pointer; }
+            .unban-btn:hover { color: #fff; }
 
-        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 30px; max-width: 1200px; margin: 0 auto; }
-        @media (min-width: 992px) { .dashboard-grid { grid-template-columns: 1fr 1fr; } }
-        
-        .card { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .card-header { font-size: 18px; font-weight: bold; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        
-        .text-red { color: #ff4d4d; } .text-blue { color: #38BDF8; } .text-gold { color: #FCD535; } .text-green { color: #0ecb81; } .text-gray { color: #888; }
-        
-        .control-row { background: #000; border: 1px solid #333; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .control-row h3 { margin: 0; font-size: 16px; color: #fff; }
-        
-        .status-btn { padding: 8px 20px; border-radius: 6px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; transition: 0.3s; }
-        .status-btn.live { background: #198754; color: white; }
-        .status-btn.closed { background: #dc3545; color: white; }
-
-        textarea, .price-input { width: 100%; background: #000; border: 1px solid #333; color: #ddd; padding: 10px; border-radius: 8px; font-size: 14px; }
-        .price-input { text-align: center; }
-        
-        .action-btn { background: #FCD535; color: #000; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .action-btn:hover { background: #e0bc2e; }
-
-        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin-bottom: 0; }
-        .stat-box { background: #000; border: 1px solid #333; padding: 15px; border-radius: 8px; text-align: center; }
-        .stat-label { font-size: 10px; text-transform: uppercase; color: #666; font-weight: bold; margin-bottom: 5px; }
-        .stat-value { font-size: 22px; font-weight: 900; color: #fff; }
-        .stat-sub { font-size: 10px; color: #666; margin-top: 2px; }
-
-        .table-container { border: 1px solid #333; border-radius: 8px; background: #000; overflow: hidden; }
-        .table-scroll { max-height: 300px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        thead th { text-align: left; padding: 10px; background: #1a1a1a; color: #ccc; position: sticky; top: 0; }
-        tbody td { padding: 10px; border-bottom: 1px solid #222; color: #eee; }
-        
-        .mini-btn { padding: 4px 10px; font-size: 10px; border: 1px solid #444; background: #222; color: #fff; border-radius: 4px; cursor: pointer; }
-        .mini-btn:hover { border-color: #FCD535; color: #FCD535; }
-        .mini-btn.success { border-color: #0ecb81; color: #0ecb81; } .mini-btn.success:hover { background: #0ecb81; color: #000; }
-        
-        .font-mono { font-family: monospace; }
-        .font-bold { font-weight: bold; }
-
-        /* MODAL STYLES */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; display: flex; justify-content: center; align-items: center; }
-        .modal-content { background: #111; border: 1px solid #FCD535; width: 90%; max-width: 500px; border-radius: 12px; overflow: hidden; }
-        .modal-header { background: #1a1a1a; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        .modal-header h3 { margin: 0; font-size: 16px; color: #fff; }
-        .modal-header button { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; }
-        
-        .access-denied { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #dc3545; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-      `}</style>
+            @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        `}</style>
     </div>
   );
 }
