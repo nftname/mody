@@ -78,7 +78,7 @@ const Footer = () => {
             
             <div className="row mt-5 pt-3 border-top border-secondary" style={{ borderColor: 'rgba(255, 255, 255, 0.05) !important' }}>
                 <div className="col-12 text-center text-secondary" style={{ fontSize: '10px' }}>
-                    &copy; 2025 NNM NFT Name Market. All rights reserved.
+                    &copy; 2025 NNM Digital Name Assets Market. All rights reserved.
                 </div>
             </div>
         </div>
@@ -99,7 +99,7 @@ const Footer = () => {
             .footer-link-item { 
                 text-decoration: none; 
                 color: ${linkColor}; 
-                font-size: ${linkFontSize}; /* تم توحيده: 10px */
+                ​font-size: 10px !important; /* تم توحيده: 10px */
                 transition: color 0.2s; 
             }
             .footer-link-item:hover { color: ${linkHoverColor}; }
