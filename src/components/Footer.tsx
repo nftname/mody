@@ -2,9 +2,9 @@
 import Link from 'next/link';
 
 const Footer = () => {
-  // الأحجام المطلوبة
-  const headerFontSize = '12px'; // العناوين
-  const linkFontSize = '8px';    // الروابط (تم التصغير كما طلبت)
+  // ✅ إعدادات الأحجام الموحدة (ثوابت لضمان الدقة)
+  const headerFontSize = '12px'; // للعناوين الرئيسية الأربعة
+  const linkFontSize = '10px';   // لجميع الفروع والروابط بلا استثناء
   
   const linkColor = 'rgba(255, 255, 255, 0.5)';
   const linkHoverColor = '#FCD535';
@@ -86,28 +86,20 @@ const Footer = () => {
         <style jsx>{`
             /* Social Rows Style */
             .footer-social-row { 
-                display: flex; align-items: center; gap: 8px; 
+                display: flex; align-items: center; gap: 10px; 
                 color: ${linkColor}; 
                 text-decoration: none; 
-                /* استخدام !important لفرض الحجم ومنع الوراثة */
-                font-size: ${linkFontSize} !important; 
-                font-weight: 400 !important; /* خط رفيع وليس عريض */
-                line-height: 1.5;
+                font-size: ${linkFontSize}; /* تم توحيده: 10px */
                 transition: all 0.2s ease; 
             }
             .footer-social-row:hover { color: #fff; transform: translateX(5px); }
-            /* تصغير الأيقونات قليلاً لتتناسب مع الخط الجديد */
-            .footer-social-row i { color: ${linkHoverColor}; font-size: 11px !important; } 
+            .footer-social-row i { color: ${linkHoverColor}; font-size: 13px; } 
             
             /* General Links Style */
             .footer-link-item { 
-                display: inline-block; /* يساعد في ضبط الحجم */
                 text-decoration: none; 
                 color: ${linkColor}; 
-                /* استخدام !important لفرض الحجم بقوة */
-                font-size: ${linkFontSize} !important; 
-                font-weight: 400 !important;
-                line-height: 1.5;
+                font-size: ${linkFontSize}; /* تم توحيده: 10px */
                 transition: color 0.2s; 
             }
             .footer-link-item:hover { color: ${linkHoverColor}; }
