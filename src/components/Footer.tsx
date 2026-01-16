@@ -99,7 +99,7 @@ const Footer = () => {
             .footer-link-item { 
                 text-decoration: none; 
                 color: ${linkColor}; 
-                ​font-size: 10px !important; /* تم توحيده: 10px */
+                ​font-size: 16px !important; /* تم توحيده: 10px */
                 transition: color 0.2s; 
             }
             .footer-link-item:hover { color: ${linkHoverColor}; }
