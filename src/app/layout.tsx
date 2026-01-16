@@ -10,7 +10,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LegalModal from "@/components/LegalModal";
-import ContentProtection from "@/components/ContentProtection";
+// تم حذف سطر استيراد الحماية للسماح بالنسخ
+// import ContentProtection from "@/components/ContentProtection"; 
 import { Providers } from "@/app/providers";
 import AppInstallPrompt from "@/components/AppInstallPrompt";
 import { useAccount } from "wagmi";
@@ -40,11 +41,13 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
           setMaintenanceMsg(settings.announcement_text || "Our platform is currently undergoing scheduled upgrades.");
         }
 
-        // Check Ban Status
+        // Check Ban Status (تم استرجاع هذا الجزء الذي اختفى سابقاً)
         if (isConnected && address) {
           const { data: banned } = await supabase.from('banned_wallets').select('id').eq('wallet_address', address.toLowerCase()).single();
           if (banned) {
-             // Ban logic can be handled here if needed later
+             // Future Ban Logic: You can redirect to a ban page here if needed
+             // currently we just check, but don't block based on ban yet in this specific guard
+             console.log("Wallet is banned:", address);
           }
         }
 
@@ -104,11 +107,11 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
 
           .maintenance-card {
             background: #FFFFFF;
-            width: 400px;
+            width: 420px;
             max-width: 90%;
-            padding: 40px 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            padding: 45px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.03);
             text-align: center;
             border: 1px solid #EAEAEA;
           }
@@ -117,23 +120,23 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
           .status-indicator {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             background: #F0FDF4;
-            padding: 6px 15px;
+            padding: 5px 12px;
             border-radius: 50px;
             border: 1px solid #DCFCE7;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
           }
           .pulse-green {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background-color: #22C55E;
             border-radius: 50%;
             box-shadow: 0 0 0 rgba(34, 197, 94, 0.4);
             animation: pulse-green 2s infinite;
           }
           .status-text {
-            font-size: 11px;
+            font-size: 10px;
             color: #15803D;
             font-weight: 700;
             text-transform: uppercase;
@@ -142,49 +145,52 @@ function MaintenanceGuard({ children }: { children: React.ReactNode }) {
 
           /* Typography */
           .main-title {
-            font-size: 24px;
-            color: #1A1A1A;
-            margin-bottom: 15px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
+            font-size: 20px;
+            color: #2D2D2D;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
           }
           .sub-text {
-            font-size: 15px;
-            color: #666666;
-            line-height: 1.6;
-            margin-bottom: 10px;
+            font-size: 14px;
+            color: #555555;
+            line-height: 1.5;
+            margin-bottom: 8px;
+            max-width: 90%;
+            margin-left: auto;
+            margin-right: auto;
           }
           .coming-soon {
-            font-size: 13px;
-            color: #999;
-            font-weight: 500;
-            margin-bottom: 30px;
+            font-size: 12px;
+            color: #999999;
+            font-weight: 400;
+            margin-bottom: 25px;
           }
 
           /* Admin Link */
           .admin-access-area {
-            border-top: 1px solid #F0F0F0;
-            padding-top: 20px;
-            margin-top: 20px;
+            border-top: 1px solid #F5F5F5;
+            padding-top: 15px;
+            margin-top: 10px;
           }
           .admin-link {
             background: none;
             border: none;
-            font-size: 11px;
+            font-size: 10px;
             color: #CCC;
             cursor: pointer;
             transition: 0.2s;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: bold;
+            letter-spacing: 0.5px;
+            font-weight: 600;
           }
           .admin-link:hover {
-            color: #333;
+            color: #555;
           }
 
           @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            70% { box-shadow: 0 0 0 5px rgba(34, 197, 94, 0); }
             100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
           }
         `}</style>
@@ -224,7 +230,7 @@ export default function RootLayout({
           strategy="beforeInteractive" 
         />
         <Providers>
-            <ContentProtection />
+            {/* تم إزالة ContentProtection من هنا */}
             <MaintenanceGuard>
                 {children}
             </MaintenanceGuard>
