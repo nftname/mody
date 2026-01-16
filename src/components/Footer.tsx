@@ -2,42 +2,38 @@
 import Link from 'next/link';
 
 const Footer = () => {
-  // ✅ تعديل 1: تصغير الخط بنسبة 25% عن 11px (أصبح 8.25px)
+  // ✅ إعدادات الأحجام الموحدة (ثوابت لضمان الدقة)
+  const headerFontSize = '12px'; // للعناوين الرئيسية الأربعة
+  const linkFontSize = '10px';   // لجميع الفروع والروابط بلا استثناء
+  
   const linkColor = 'rgba(255, 255, 255, 0.5)';
   const linkHoverColor = '#FCD535';
-  const fontSize = '8.25px'; 
 
   return (
     <footer className="desktop-only-footer" style={{ backgroundColor: '#0B0E11', borderTop: '1px solid rgba(255, 255, 255, 0.08)', padding: '40px 0 20px', marginTop: 'auto' }}>
         <div className="container">
             <div className="row g-3">
                 
-                {/* SECTION 1: COMMUNITY (Socials) */}
+                {/* SECTION 1: COMMUNITY */}
                 <div className="col-6 col-md-3 pe-md-2" style={{ borderRight: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: '12px', letterSpacing: '1px' }}>Community</h6>
+                    <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Community</h6>
                     <div className="d-flex flex-column gap-2">
-                        {/* ✅ تعديل 2: ترتيب الأيقونات الجديد مع إضافة الروابط وتغيير تيليجرام إلى Medium */}
-                        
                         {/* 1. X (Twitter) */}
                         <a href="https://x.com/nnmmarket" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-twitter-x"></i><span>Twitter</span>
                         </a>
-
-                        {/* 2. Discord (No Link yet) */}
+                        {/* 2. Discord */}
                         <a href="#" className="footer-social-row">
                             <i className="bi bi-discord"></i><span>Discord</span>
                         </a>
-
-                        {/* 3. Medium (New - Replaced Telegram) */}
+                        {/* 3. Medium */}
                         <a href="https://medium.com/@nftnnmmarket" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-medium"></i><span>Medium</span>
                         </a>
-
-                        {/* 4. Facebook (No Link yet) */}
+                        {/* 4. Facebook */}
                         <a href="#" className="footer-social-row">
                             <i className="bi bi-facebook"></i><span>Facebook</span>
                         </a>
-
                         {/* 5. Instagram */}
                         <a href="https://www.instagram.com/NNM_Assets" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-instagram"></i><span>Instagram</span>
@@ -47,7 +43,7 @@ const Footer = () => {
 
                 {/* SECTION 2: MARKETPLACE */}
                 <div className="col-6 col-md-3 ps-md-4">
-                    <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: '12px', letterSpacing: '1px' }}>Marketplace</h6>
+                    <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Marketplace</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
                         <li><Link href="/market" className="footer-link-item">Market</Link></li>
                         <li><Link href="/ngx" className="footer-link-item">Analysis (NGX)</Link></li>
@@ -58,9 +54,8 @@ const Footer = () => {
 
                 {/* SECTION 3: RESOURCES */}
                 <div className="col-6 col-md-3">
-                    <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: '10px', letterSpacing: '1px' }}>Resources</h6>
+                    <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Resources</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
-                        {/* ✅ تعديل 3: إعادة ترتيب القائمة (News -> Blog -> NNM Concept -> Help Center) */}
                         <li><Link href="/news" className="footer-link-item">News & Updates</Link></li>
                         <li><Link href="/blog" className="footer-link-item">Blog</Link></li>
                         <li><Link href="/nnm-concept" className="footer-link-item">NNM Concept</Link></li>
@@ -70,7 +65,7 @@ const Footer = () => {
 
                 {/* SECTION 4: COMPANY */}
                 <div className="col-6 col-md-3">
-                    <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: '12px', letterSpacing: '1px' }}>Company</h6>
+                    <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Company</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
                         <li><Link href="/about" className="footer-link-item">About Us</Link></li>
                         <li><Link href="/affiliate" className="footer-link-item">Affiliate Program</Link></li>
@@ -94,7 +89,7 @@ const Footer = () => {
                 display: flex; align-items: center; gap: 10px; 
                 color: ${linkColor}; 
                 text-decoration: none; 
-                font-size: ${fontSize}; /* أصبح 8.25px */
+                font-size: ${linkFontSize}; /* تم توحيده: 10px */
                 transition: all 0.2s ease; 
             }
             .footer-social-row:hover { color: #fff; transform: translateX(5px); }
@@ -104,7 +99,7 @@ const Footer = () => {
             .footer-link-item { 
                 text-decoration: none; 
                 color: ${linkColor}; 
-                font-size: ${fontSize}; /* أصبح 8.25px */
+                font-size: ${linkFontSize}; /* تم توحيده: 10px */
                 transition: color 0.2s; 
             }
             .footer-link-item:hover { color: ${linkHoverColor}; }
