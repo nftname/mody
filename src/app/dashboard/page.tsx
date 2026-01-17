@@ -425,7 +425,7 @@ export default function DashboardPage() {
 
           const { data: supportLogs } = await supabase.from('nnm_conviction_ledger').select('*').or(`supporter_wallet.eq.${address},owner_wallet.eq.${address}`);
           const { data: payouts } = await supabase.from('nnm_payout_logs').select('*').eq('wallet_address', address);
-          const { data: saleActivities } = await supabase.from('activities').select('*').eq('type', 'Sale').eq('to_address', address);
+          const { data: saleActivities } = await supabase.from('activities').select('*').eq('activity_type', 'Sale').ilike('to_address', address);
           
           let history: any[] = [];
           if (supportLogs) {
