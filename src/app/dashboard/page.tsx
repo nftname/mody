@@ -39,6 +39,14 @@ export default function DashboardPage() {
   
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('Items');
+
+  // --- Conviction & Audit States ---
+  const [convictionLogs, setConvictionLogs] = useState<any[]>([]);
+  const [walletBalances, setWalletBalances] = useState({ wnnm: 0, nnm: 0 });
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [claimStep, setClaimStep] = useState<'audit' | 'confirm' | 'processing' | 'success' | 'error'>('audit');
+  const [auditDetails, setAuditDetails] = useState({ totalEarned: 0, totalPaid: 0, claimable: 0 });
+  const [claimTx, setClaimTx] = useState('');
   
   const [viewModeState, setViewModeState] = useState(0); 
   const viewModes = ['grid', 'large', 'list'];
@@ -401,6 +409,95 @@ export default function DashboardPage() {
       } finally { setLoading(false); }
   };
 
+  // --- 5. CONVICTION & AUDIT ---
+  const fetchConvictionData = async () => {
+      if (!address) return;
+      setLoading(true);
+      try {
+          // 1. Fetch Raw Data
+          const { data: allActivities } = await supabase
+            .from('activities')
+            .select('*')
+            .or(`to_address.ilike.${address},from_address.ilike.${address}`)
+            .order('created_at', { ascending: false });
+
+          const { data: spendings } = await supabase.from('nnm_conviction_ledger').select('*').ilike('supporter_wallet', address);
+          
+          // 2. Fetch NNM Balance (Cash) from DB directly (since it's managed by claims)
+          const { data: walletDb } = await supabase.from('nnm_wallets').select('nnm_balance').eq('wallet_address', address).single();
+          const currentNNM = walletDb ? parseFloat(walletDb.nnm_balance) : 0;
+
+          // 3. Local Calculation (The Calculator)
+          let earnedWNNM = 0;
+          let history: any[] = [];
+
+          // A) Process Mints (+3) & Sales (+1)
+          allActivities?.forEach((act: any) => {
+              // Mint Logic
+              if (act.activity_type === 'Mint' && act.to_address.toLowerCase() === address.toLowerCase()) {
+                  earnedWNNM += 3;
+                  history.push({ type: 'Mint Reward', amount: 3, currency: 'WNNM', date: act.created_at });
+              }
+              // Sale Logic (Buyer Reward)
+              else if (act.activity_type === 'Sale' && act.to_address.toLowerCase() === address.toLowerCase()) {
+                  earnedWNNM += 1;
+                  history.push({ type: 'Market Reward', amount: 1, currency: 'WNNM', date: act.created_at });
+              }
+          });
+
+          // B) Subtract Spending
+          let spentWNNM = 0;
+          spendings?.forEach((sp: any) => {
+              spentWNNM += sp.wnnm_spent;
+              history.push({ type: 'Support Given', amount: -sp.wnnm_spent, currency: 'WNNM', date: sp.created_at });
+          });
+
+          // C) Final Result
+          const finalWNNM = earnedWNNM - spentWNNM;
+
+          // 4. Update UI Immediately
+          setWalletBalances({ wnnm: finalWNNM, nnm: currentNNM });
+          setConvictionLogs(history.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+
+          // 5. Sync to Database (Persistence)
+          await supabase.from('nnm_wallets').upsert({ 
+              wallet_address: address.toLowerCase(), 
+              wnnm_balance: finalWNNM, 
+              updated_at: new Date().toISOString() 
+          }, { onConflict: 'wallet_address' });
+
+      } catch (e) { console.error("Conviction Calc Error", e); } 
+      finally { setLoading(false); }
+  };
+
+  const handleSmartClaim = async () => {
+      setShowClaimModal(true);
+      setClaimStep('audit');
+      setTimeout(() => {
+          setAuditDetails({ totalEarned: 0, totalPaid: 0, claimable: walletBalances.nnm });
+      }, 1500);
+  };
+
+  const confirmClaim = async () => {
+      if (auditDetails.claimable <= 0) return;
+      setClaimStep('processing');
+      try {
+          const res = await fetch('/api/nnm/claim', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ userWallet: address, amountNNM: auditDetails.claimable })
+          });
+          const data = await res.json();
+          if (data.success) {
+              setClaimTx(data.txHash);
+              setClaimStep('success');
+              fetchConvictionData(); 
+          } else {
+              setClaimStep('error');
+          }
+      } catch (e) { setClaimStep('error'); }
+  };
+
   useEffect(() => { 
       if (isConnected) {
           fetchAssets();
@@ -412,6 +509,7 @@ export default function DashboardPage() {
       if (activeSection === 'Offers') fetchOffers();
       if (activeSection === 'Created') fetchCreated();
       if (activeSection === 'Activity') fetchActivity();
+      if (activeSection === 'Conviction') fetchConvictionData();
   }, [activeSection, offerType, offerSort, myAssets]);
  // --- ADMIN CONFIG ---
   // استبدل هذا العنوان بعنوان محفظة الأدمن الحقيقية (بأحرف صغيرة lowercase)
@@ -525,7 +623,7 @@ export default function DashboardPage() {
 
         {/* Tabs */}
         <div className="d-flex gap-4 mb-3 overflow-auto" style={{ borderBottom: 'none' }}>
-            {['Items', 'Listings', 'Offers', 'Created', 'Activity'].map((tab) => (
+            {['Items', 'Listings', 'Offers', 'Created', 'Activity', 'Conviction'].map((tab) => (
                 <button 
                     key={tab} 
                     onClick={() => setActiveSection(tab)} 
@@ -787,11 +885,109 @@ export default function DashboardPage() {
             </div>
         )}
 
+        {/* --- 6. CONVICTION --- */}
+        {activeSection === 'Conviction' && (
+            <div className="mt-4 pb-5 fade-in">
+                {/* Header: Balances & Claim */}
+                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 p-4 rounded-4" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d' }}>
+                    <div className="d-flex gap-5">
+                        <div className="d-flex flex-column">
+                            <span style={{ fontSize: '12px', color: '#8a939b', textTransform: 'uppercase', letterSpacing: '1px' }}>WNNM Balance</span>
+                            <span className="text-white fw-bold" style={{ fontSize: '24px', fontFamily: 'monospace' }}>
+                                {walletBalances.wnnm} <span style={{ fontSize: '14px', color: '#FCD535' }}>WNNM</span>
+                            </span>
+                        </div>
+                        <div className="d-flex flex-column" style={{ borderLeft: '1px solid #333', paddingLeft: '20px' }}>
+                            <span style={{ fontSize: '12px', color: '#8a939b', textTransform: 'uppercase', letterSpacing: '1px' }}>NNM Balance</span>
+                            <span className="text-white fw-bold" style={{ fontSize: '24px', fontFamily: 'monospace' }}>
+                                {walletBalances.nnm} <span style={{ fontSize: '14px', color: '#FCD535' }}>NNM</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        onClick={handleSmartClaim}
+                        disabled={walletBalances.nnm <= 0}
+                        className="btn fw-bold px-4 py-2"
+                        style={{ 
+                            background: walletBalances.nnm > 0 ? 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)' : '#2d2d2d', 
+                            color: walletBalances.nnm > 0 ? '#000' : '#666', 
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            opacity: walletBalances.nnm > 0 ? 1 : 0.7
+                        }}
+                    >
+                        {walletBalances.nnm > 0 ? 'Claim Rewards' : 'No Claimable Balance'}
+                    </button>
+                </div>
+
+                {/* Data Table */}
+                <div className="table-responsive rounded-3" style={{ border: '1px solid #2d2d2d' }}>
+                    <table className="table mb-0" style={{ backgroundColor: '#161b22', color: '#fff', fontSize: '13px' }}>
+                        <thead style={{ backgroundColor: '#1E1E1E' }}>
+                            <tr>
+                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Type</th>
+                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Currency</th>
+                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Amount</th>
+                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px', textAlign: 'right' }}>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr><td colSpan={4} className="text-center py-5"><div className="spinner-border text-secondary spinner-border-sm"></div></td></tr>
+                            ) : convictionLogs.length === 0 ? (
+                                <tr><td colSpan={4} className="text-center py-5 text-secondary">No conviction history found.</td></tr>
+                            ) : (
+                                convictionLogs.map((log, idx) => (
+                                    <tr key={idx} className="align-middle" style={{ borderBottom: '1px solid #2d2d2d' }}>
+                                        <td style={{ padding: '15px', color: '#fff' }}>{log.type}</td>
+                                        <td style={{ padding: '15px', color: '#8a939b' }}>{log.currency}</td>
+                                        <td style={{ padding: '15px', fontWeight: 'bold', color: log.amount > 0 ? '#0ecb81' : '#f6465d' }}>
+                                            {log.amount > 0 ? '+' : ''}{log.amount}
+                                        </td>
+                                        <td style={{ padding: '15px', textAlign: 'right', color: '#8a939b' }}>
+                                            {new Date(log.date).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )}
+
       </div>
       <style jsx global>{`
         .listing-row:hover td { background-color: rgba(255, 255, 255, 0.03) !important; }
         table, th, td, tr, .table { background-color: transparent !important; }
       `}</style>
+
+      {showClaimModal && (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="bg-dark rounded-4 p-4 text-center position-relative border border-secondary" style={{ width: '90%', maxWidth: '400px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+                    <button onClick={() => setShowClaimModal(false)} className="btn btn-link position-absolute top-0 end-0 text-secondary text-decoration-none fs-4"><i className="bi bi-x"></i></button>
+                    
+                    {claimStep === 'audit' && (
+                        <div className="py-4">
+                            <div className="spinner-border text-warning mb-3" role="status"></div>
+                            <h5 className="text-white">Auditing Ledger...</h5>
+                            <p className="text-secondary small">Verifying your on-chain conviction history.</p>
+                        </div>
+                    )}
+                    
+                    {claimStep === 'confirm' && (
+                        <div>
+                             <h4 className="text-white mt-2">Audit Passed</h4>
+                             <div className="my-4 text-white fw-bold fs-4">Claimable: <span style={{color:'#FCD535'}}>{auditDetails.claimable} NNM</span></div>
+                             <button onClick={confirmClaim} className="btn w-100 fw-bold py-3" style={{ background: 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)', border: 'none', color: '#000' }}>Confirm</button>
+                        </div>
+                    )}
+                    {/* Add success/error states as needed */}
+                </div>
+            </div>
+      )}
     </main>
   );
 }
