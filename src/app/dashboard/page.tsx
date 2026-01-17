@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAccount, useBalance } from "wagmi";
-import { createPublicClient, http, parseAbi, formatEther, fallback } from 'viem';
-import { polygon } from 'viem/chains';
+import { useAccount, useBalance, usePublicClient } from "wagmi";
+import { parseAbi, formatEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
@@ -21,20 +20,10 @@ const MARKETPLACE_ABI = parseAbi([
   "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
-// --- OPTIMIZED BLOCKCHAIN CONNECTION (Your Solution) ---
-const publicClient = createPublicClient({
-  chain: polygon,
-  transport: fallback([
-    http("https://polygon-bor.publicnode.com"), // Free & Fast
-    http("https://polygon-rpc.com"),             // Official
-    http("https://rpc.ankr.com/polygon")         // Backup
-  ])
-});
-// -------------------------------------------------------
-
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
+  const publicClient = usePublicClient(); // Use the global shared client
   
   // --- States ---
   const [myAssets, setMyAssets] = useState<any[]>([]);
@@ -171,7 +160,7 @@ export default function DashboardPage() {
 
   // --- 1. ITEMS ---
   const fetchAssets = async () => {
-    if (!address) return;
+    if (!address || !publicClient) return;
     setLoading(true);
     try {
       const balanceBigInt = await publicClient.readContract({
@@ -246,7 +235,7 @@ export default function DashboardPage() {
 
   // --- 2. OFFERS ---
   const fetchOffers = async () => {
-      if (!address) return;
+      if (!address || !publicClient) return;
       setLoading(true);
       try {
           let query = supabase.from('offers').select('*');
@@ -316,7 +305,7 @@ export default function DashboardPage() {
 
   // --- 3. CREATED ---
   const fetchCreated = async () => {
-      if (!address) return;
+      if (!address || !publicClient) return;
       setLoading(true);
       try {
           const { data, error } = await supabase
