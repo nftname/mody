@@ -7,15 +7,26 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+// تعريف البروفايدر في الخارج عادي لأنه لا يحتاج مفاتيح سرية
 const RPC_URL = "https://polygon-rpc.com"; 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
-// نستخدم متغير البيئة للمحفظة
-const wallet = new ethers.Wallet(process.env.NNM_HOT_WALLET_PRIVATE_KEY, provider);
 
 export async function POST(request) {
   try {
     const body = await request.json();
     const { userWallet, amountNNM } = body;
+
+    // --- التصحيح هنا: تعريف المحفظة داخل الدالة فقط ---
+    const privateKey = process.env.NNM_HOT_WALLET_PRIVATE_KEY;
+    
+    // فحص أمان إضافي حتى لا ينهار السيرفر
+    if (!privateKey) {
+        console.error("Server Error: Wallet Key Missing");
+        return NextResponse.json({ error: 'System Configuration Error' }, { status: 500 });
+    }
+
+    const wallet = new ethers.Wallet(privateKey, provider);
+    // --------------------------------------------------
 
     if (!userWallet || !amountNNM || amountNNM <= 0) {
       return NextResponse.json({ error: 'Invalid request parameters' }, { status: 400 });
@@ -43,6 +54,8 @@ export async function POST(request) {
     if (!currentPolPrice) throw new Error('Failed to fetch POL price');
 
     const polToSend = totalUsdValue / currentPolPrice;
+    
+    // تحويل القيمة للتعامل مع الكسور بدقة
     const txValue = ethers.parseEther(polToSend.toFixed(18));
 
     // 3. التحويل
