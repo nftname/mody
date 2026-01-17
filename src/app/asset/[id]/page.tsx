@@ -361,18 +361,7 @@ function AssetPage() {
         try {
             const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'buyItem', args: [BigInt(tokenId)], value: parseEther(listing.price) });
             await publicClient!.waitForTransactionReceipt({ hash });
-            // --- NEW: Call Market Hook for Rewards & Logging ---
-            await fetch('/api/nnm/market-hook', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    buyerWallet: address,       
-                    sellerWallet: listing.seller, 
-                    nftId: tokenId,
-                    price: listing.price
-                })
-            });
-            // ---------------------------------------------------
+            await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: listing.seller, to_address: address, price: listing.price }]);
             showModal('success', 'Bought!', 'Asset purchased.');
         } catch(e) { setIsPending(false); }
     };
@@ -383,18 +372,7 @@ function AssetPage() {
             const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'acceptOffChainOffer', args: [BigInt(tokenId), offer.bidder_address, parseEther(offer.price.toString()), BigInt(offer.expiration), offer.signature] });
             await publicClient!.waitForTransactionReceipt({ hash });
             await supabase.from('offers').update({ status: 'accepted' }).eq('id', offer.id);
-            // --- NEW: Call Market Hook for Rewards & Logging ---
-            await fetch('/api/nnm/market-hook', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    buyerWallet: offer.bidder_address, 
-                    sellerWallet: address,             
-                    nftId: tokenId,
-                    price: offer.price
-                })
-            });
-            // ---------------------------------------------------
+            await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: address, to_address: offer.bidder_address, price: offer.price }]);
             showModal('success', 'Sold!', 'Offer accepted.');
         } catch(e) { setIsPending(false); }
     };
