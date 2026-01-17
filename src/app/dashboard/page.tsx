@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount, useBalance } from "wagmi";
-import { createPublicClient, http, parseAbi, formatEther } from 'viem';
+import { createPublicClient, http, parseAbi, formatEther, fallback } from 'viem';
 import { polygon } from 'viem/chains';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
@@ -21,10 +21,16 @@ const MARKETPLACE_ABI = parseAbi([
   "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
+// --- OPTIMIZED BLOCKCHAIN CONNECTION (Your Solution) ---
 const publicClient = createPublicClient({
   chain: polygon,
-  transport: http("https://polygon-rpc.com")
+  transport: fallback([
+    http("https://polygon-bor.publicnode.com"), // Free & Fast
+    http("https://polygon-rpc.com"),             // Official
+    http("https://rpc.ankr.com/polygon")         // Backup
+  ])
 });
+// -------------------------------------------------------
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
