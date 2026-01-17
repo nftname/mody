@@ -37,14 +37,6 @@ export default function DashboardPage() {
   const [activityData, setActivityData] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set()); 
   
-  // --- NEW: Conviction & Audit States ---
-  const [convictionLogs, setConvictionLogs] = useState<any[]>([]);
-  const [walletBalances, setWalletBalances] = useState({ wnnm: 0, nnm: 0 });
-  const [showClaimModal, setShowClaimModal] = useState(false);
-  const [claimStep, setClaimStep] = useState<'audit' | 'confirm' | 'processing' | 'success' | 'error'>('audit');
-  const [auditDetails, setAuditDetails] = useState({ totalEarned: 0, totalPaid: 0, claimable: 0 });
-  const [claimTx, setClaimTx] = useState('');
-
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('Items');
   
@@ -409,96 +401,6 @@ export default function DashboardPage() {
       } finally { setLoading(false); }
   };
 
-  // --- 5. CONVICTION LOGIC (NEW SECTION) ---
-  const fetchConvictionData = async () => {
-      if (!address) return;
-      setLoading(true);
-      try {
-          const res = await fetch(`/api/nnm/balance?wallet=${address}`);
-          const balanceJson = await res.json();
-          if (balanceJson.success) {
-              setWalletBalances({ 
-                  wnnm: parseFloat(balanceJson.data.wnnm_balance || 0), 
-                  nnm: parseFloat(balanceJson.data.nnm_balance || 0) 
-              });
-          }
-
-          const { data: supportLogs } = await supabase.from('nnm_conviction_ledger').select('*').or(`supporter_wallet.eq.${address},owner_wallet.eq.${address}`);
-          const { data: payouts } = await supabase.from('nnm_payout_logs').select('*').eq('wallet_address', address);
-          const { data: saleActivities } = await supabase.from('activities').select('*').eq('activity_type', 'Sale').ilike('to_address', address);
-          
-          let history: any[] = [];
-          if (supportLogs) {
-              history = supportLogs.map((log: any) => ({
-                  type: log.supporter_wallet.toLowerCase() === address.toLowerCase() ? 'Support Given' : 'Support Received',
-                  amount: log.supporter_wallet.toLowerCase() === address.toLowerCase() ? -log.wnnm_spent : +log.nnm_earned_owner,
-                  currency: log.supporter_wallet.toLowerCase() === address.toLowerCase() ? 'WNNM' : 'NNM',
-                  date: log.created_at,
-                  hash: '-' 
-              }));
-          }
-          if (payouts) {
-              payouts.forEach((pay: any) => {
-                  history.push({
-                      type: 'Claim Payout',
-                      amount: -pay.amount_nnm,
-                      currency: 'NNM',
-                      date: pay.created_at,
-                      hash: pay.tx_hash
-                  });
-              });
-          }
-          if (saleActivities) {
-              saleActivities.forEach((sale: any) => {
-                  history.push({
-                      type: 'Market Reward',
-                      amount: +1,
-                      currency: 'WNNM',
-                      date: sale.created_at,
-                      hash: '-'
-                  });
-              });
-          }
-          history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-          setConvictionLogs(history);
-
-      } catch (e) { console.error("Conviction Error", e); } 
-      finally { setLoading(false); }
-  };
-
-  const handleSmartClaim = async () => {
-      setShowClaimModal(true);
-      setClaimStep('audit');
-      setTimeout(() => {
-          const claimable = walletBalances.nnm; 
-          setAuditDetails({ 
-              totalEarned: 0, 
-              totalPaid: 0, 
-              claimable: claimable 
-          });
-      }, 1500);
-  };
-
-  const confirmClaim = async () => {
-      if (auditDetails.claimable <= 0) return;
-      setClaimStep('processing');
-      try {
-          const res = await fetch('/api/nnm/claim', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ userWallet: address, amountNNM: auditDetails.claimable })
-          });
-          const data = await res.json();
-          if (data.success) {
-              setClaimTx(data.txHash);
-              setClaimStep('success');
-              fetchConvictionData(); 
-          } else {
-              setClaimStep('error');
-          }
-      } catch (e) { setClaimStep('error'); }
-  };
-
   useEffect(() => { 
       if (isConnected) {
           fetchAssets();
@@ -510,10 +412,9 @@ export default function DashboardPage() {
       if (activeSection === 'Offers') fetchOffers();
       if (activeSection === 'Created') fetchCreated();
       if (activeSection === 'Activity') fetchActivity();
-      if (activeSection === 'Conviction') fetchConvictionData();
   }, [activeSection, offerType, offerSort, myAssets]);
-
-  // --- ADMIN CONFIG ---
+ // --- ADMIN CONFIG ---
+  // استبدل هذا العنوان بعنوان محفظة الأدمن الحقيقية (بأحرف صغيرة lowercase)
   const ADMIN_WALLET = "0x5f2f670df4Db14ddB4Bc1E3eCe86CA645fb01BE6".toLowerCase();
   const isAdmin = address ? address.toLowerCase() === ADMIN_WALLET : false;
 
@@ -529,6 +430,7 @@ export default function DashboardPage() {
 
   const totalAssetValue = myAssets.reduce((acc, curr) => acc + parseFloat(curr.price || 0), 0);
   
+  // Updated Filter Logic
   const filteredAssets = myAssets.filter(asset => {
       const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase());
       if (selectedTier === 'FAVORITES') {
@@ -552,6 +454,7 @@ export default function DashboardPage() {
         </main>
     );
   }
+
   return (
     <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', width: '100%', overflowX: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
       
@@ -575,7 +478,7 @@ export default function DashboardPage() {
                 </Link>
                 <button onClick={copyToClipboard} className="btn p-0 border-0" style={{ color: '#8a939b' }}>
                     {isCopied ? <i className="bi bi-check-lg text-success"></i> : <i className="bi bi-copy"></i>}
-                </button>
+                </button>   {/* --- SECRET ADMIN BUTTON --- */}
                 {isAdmin && (
                     <Link href="/admin" className="ms-3 text-decoration-none">
                         <div 
@@ -595,6 +498,7 @@ export default function DashboardPage() {
                         </div>
                     </Link>
                 )}
+
             </div>
 
             <div className="d-flex gap-5 mt-2 px-2">
@@ -621,7 +525,7 @@ export default function DashboardPage() {
 
         {/* Tabs */}
         <div className="d-flex gap-4 mb-3 overflow-auto" style={{ borderBottom: 'none' }}>
-            {['Items', 'Listings', 'Offers', 'Created', 'Activity', 'Conviction'].map((tab) => (
+            {['Items', 'Listings', 'Offers', 'Created', 'Activity'].map((tab) => (
                 <button 
                     key={tab} 
                     onClick={() => setActiveSection(tab)} 
@@ -657,6 +561,7 @@ export default function DashboardPage() {
                                 {openDropdown === 'filter' && (
                                     <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
                                         <div style={{ fontSize: '10px', color: '#8a939b', padding: '4px 8px', textTransform: 'uppercase' }}>Filter by Category</div>
+                                        {/* Updated Filter Options with Favorites at the end */}
                                         {['ALL', 'IMMORTAL', 'ELITE', 'FOUNDERS', 'FAVORITES'].map(tier => (
                                             <button key={tier} onClick={() => { setSelectedTier(tier); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: selectedTier === tier ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{tier}</button>
                                         ))}
@@ -766,7 +671,7 @@ export default function DashboardPage() {
             </div>
         )}
 
-        {/* --- 4. CREATED --- */}
+        {/* --- 4. CREATED (Updated UI) --- */}
         {activeSection === 'Created' && (
             <>
                 <div className="row g-3 mb-4 d-none d-lg-flex align-items-center">
@@ -832,7 +737,7 @@ export default function DashboardPage() {
             </>
         )}
 
-        {/* --- 5. ACTIVITY --- */}
+        {/* --- 5. ACTIVITY (Updated UI) --- */}
         {activeSection === 'Activity' && (
             <div className="mt-4 pb-5">
                 <div className="table-responsive">
@@ -882,163 +787,10 @@ export default function DashboardPage() {
             </div>
         )}
 
-        {/* --- 6. CONVICTION SECTION (BINANCE STYLE) --- */}
-        {activeSection === 'Conviction' && (
-            <div className="mt-4 pb-5 fade-in">
-                {/* Header: Balances & Claim Button */}
-                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 p-4 rounded-4" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d' }}>
-                    <div className="d-flex gap-5">
-                        <div className="d-flex flex-column">
-                            <span style={{ fontSize: '12px', color: '#8a939b', textTransform: 'uppercase', letterSpacing: '1px' }}>WNNM Balance</span>
-                            <span className="text-white fw-bold" style={{ fontSize: '24px', fontFamily: 'monospace' }}>
-                                {walletBalances.wnnm} <span style={{ fontSize: '14px', color: GOLD_COLOR }}>WNNM</span>
-                            </span>
-                        </div>
-                        <div className="d-flex flex-column" style={{ borderLeft: '1px solid #333', paddingLeft: '20px' }}>
-                            <span style={{ fontSize: '12px', color: '#8a939b', textTransform: 'uppercase', letterSpacing: '1px' }}>NNM Balance</span>
-                            <span className="text-white fw-bold" style={{ fontSize: '24px', fontFamily: 'monospace' }}>
-                                {walletBalances.nnm} <span style={{ fontSize: '14px', color: GOLD_COLOR }}>NNM</span>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <button 
-                        onClick={handleSmartClaim}
-                        disabled={walletBalances.nnm <= 0}
-                        className="btn fw-bold px-4 py-2"
-                        style={{ 
-                            background: walletBalances.nnm > 0 ? GOLD_GRADIENT : '#2d2d2d', 
-                            color: walletBalances.nnm > 0 ? '#000' : '#666', 
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            opacity: walletBalances.nnm > 0 ? 1 : 0.7
-                        }}
-                    >
-                        {walletBalances.nnm > 0 ? 'Claim Rewards' : 'No Claimable Balance'}
-                    </button>
-                </div>
-
-                {/* Table Header Filter */}
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                    <h5 className="text-white m-0" style={{ fontSize: '16px' }}>Transaction History</h5>
-                    <div className="d-flex gap-2">
-                        {/* Fake Filters for Visual Only */}
-                        <button className="btn btn-sm text-white" style={{ background: '#2d2d2d', fontSize: '12px' }}>All</button>
-                        <button className="btn btn-sm text-secondary" style={{ background: 'transparent', fontSize: '12px' }}>In</button>
-                        <button className="btn btn-sm text-secondary" style={{ background: 'transparent', fontSize: '12px' }}>Out</button>
-                    </div>
-                </div>
-
-                {/* Data Table */}
-                <div className="table-responsive rounded-3" style={{ border: '1px solid #2d2d2d' }}>
-                    <table className="table mb-0" style={{ backgroundColor: '#161b22', color: '#fff', fontSize: '13px' }}>
-                        <thead style={{ backgroundColor: '#1E1E1E' }}>
-                            <tr>
-                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Type</th>
-                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Currency</th>
-                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Amount</th>
-                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px', textAlign: 'right' }}>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan={4} className="text-center py-5"><div className="spinner-border text-secondary spinner-border-sm"></div></td></tr>
-                            ) : convictionLogs.length === 0 ? (
-                                <tr><td colSpan={4} className="text-center py-5 text-secondary">No conviction history found.</td></tr>
-                            ) : (
-                                convictionLogs.map((log, idx) => (
-                                    <tr key={idx} className="align-middle" style={{ borderBottom: '1px solid #2d2d2d' }}>
-                                        <td style={{ padding: '15px', color: '#fff' }}>
-                                            <div className="d-flex align-items-center gap-2">
-                                                <i className={`bi ${log.amount > 0 ? 'bi-arrow-down-left-circle text-success' : 'bi-arrow-up-right-circle text-danger'}`} style={{ fontSize: '16px' }}></i>
-                                                {log.type}
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '15px', color: '#8a939b' }}>{log.currency}</td>
-                                        <td style={{ padding: '15px', fontWeight: 'bold', color: log.amount > 0 ? '#0ecb81' : '#f6465d' }}>
-                                            {log.amount > 0 ? '+' : ''}{log.amount}
-                                        </td>
-                                        <td style={{ padding: '15px', textAlign: 'right', color: '#8a939b' }}>
-                                            {new Date(log.date).toLocaleDateString()} <span style={{ fontSize: '11px' }}>{new Date(log.date).toLocaleTimeString()}</span>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        )}
-
       </div>
-
-      {/* --- CLAIM MODAL (SMART AUDIT) --- */}
-      {showClaimModal && (
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="bg-dark rounded-4 p-4 text-center position-relative border border-secondary" style={{ width: '90%', maxWidth: '400px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-                    <button onClick={() => setShowClaimModal(false)} className="btn btn-link position-absolute top-0 end-0 text-secondary text-decoration-none fs-4"><i className="bi bi-x"></i></button>
-                    
-                    {claimStep === 'audit' && (
-                        <div className="py-4">
-                            <div className="spinner-border text-warning mb-3" role="status"></div>
-                            <h5 className="text-white">Auditing Ledger...</h5>
-                            <p className="text-secondary small">Verifying your on-chain conviction history.</p>
-                        </div>
-                    )}
-
-                    {claimStep === 'audit' && auditDetails.claimable > 0 && setTimeout(() => setClaimStep('confirm'), 1000) ? null : null}
-
-                    {claimStep === 'confirm' && (
-                        <div className="fade-in">
-                            <i className="bi bi-shield-check text-success" style={{ fontSize: '3rem' }}></i>
-                            <h4 className="text-white mt-2">Audit Passed</h4>
-                            <div className="my-4 p-3 rounded-3" style={{ backgroundColor: '#2d2d2d' }}>
-                                <div className="d-flex justify-content-between text-secondary mb-2"><span>Total Earned</span><span>Calculated</span></div>
-                                <div className="d-flex justify-content-between text-white fw-bold fs-4">
-                                    <span>Claimable</span>
-                                    <span style={{ color: GOLD_COLOR }}>{auditDetails.claimable} NNM</span>
-                                </div>
-                                <div className="d-flex justify-content-between text-secondary mt-2 small"><span>Est. Value</span><span>~${(auditDetails.claimable * 0.10).toFixed(2)}</span></div>
-                            </div>
-                            <button onClick={confirmClaim} className="btn w-100 fw-bold py-3" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000' }}>Confirm Withdrawal</button>
-                        </div>
-                    )}
-
-                    {claimStep === 'processing' && (
-                        <div className="py-4">
-                            <div className="spinner-grow text-warning mb-3" role="status"></div>
-                            <h5 className="text-white">Processing Payout...</h5>
-                            <p className="text-secondary small">Interacting with Treasury Contract.</p>
-                        </div>
-                    )}
-
-                    {claimStep === 'success' && (
-                        <div className="fade-in">
-                            <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '3rem' }}></i>
-                            <h4 className="text-white mt-2">Payout Sent!</h4>
-                            <p className="text-secondary small mb-4">Funds have been sent to your wallet (POL).</p>
-                            {claimTx && <a href={`https://polygonscan.com/tx/${claimTx}`} target="_blank" className="btn btn-outline-secondary btn-sm mb-3">View Transaction</a>}
-                            <button onClick={() => { setShowClaimModal(false); }} className="btn btn-light w-100">Close</button>
-                        </div>
-                    )}
-                     {claimStep === 'error' && (
-                        <div className="fade-in">
-                            <i className="bi bi-exclamation-triangle-fill text-danger" style={{ fontSize: '3rem' }}></i>
-                            <h4 className="text-white mt-2">Payout Failed</h4>
-                            <p className="text-secondary small mb-4">Treasury might be busy or empty. Your request is queued.</p>
-                            <button onClick={() => setShowClaimModal(false)} className="btn btn-secondary w-100">Close</button>
-                        </div>
-                    )}
-                </div>
-            </div>
-      )}
-
       <style jsx global>{`
         .listing-row:hover td { background-color: rgba(255, 255, 255, 0.03) !important; }
         table, th, td, tr, .table { background-color: transparent !important; }
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </main>
   );
