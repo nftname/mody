@@ -336,6 +336,20 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
     const publicClient = usePublicClient();
     const [isMinting, setIsMinting] = useState(false);
     
+    // --- NEW: NNM REWARD SYSTEM HOOK (ADDED SURGICALLY) ---
+    const notifyRewardSystem = async (userWallet: any) => {
+        try {
+            await fetch('/api/nnm/mint-hook', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ wallet: userWallet }),
+            });
+            console.log('Reward point added!');
+        } catch (error) {
+            console.error('Failed to add reward', error);
+        }
+    };
+
     const handleMintClick = async () => {
         if (!nameToMint || !publicClient) return;
         setIsMinting(true);
@@ -434,6 +448,11 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                 ]);
             }
             
+            // --- NEW: TRIGGER NNM REWARD (SURGICAL INSERTION) ---
+            if (address) {
+                await notifyRewardSystem(address);
+            }
+
             onSuccess();
         } catch (err) {
             onError(err);
