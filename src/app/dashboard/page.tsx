@@ -41,7 +41,7 @@ export default function DashboardPage() {
   const [convictionLogs, setConvictionLogs] = useState<any[]>([]);
   const [walletBalances, setWalletBalances] = useState({ wnnm: 0, nnm: 0 });
   const [showClaimModal, setShowClaimModal] = useState(false);
-  const [claimStep, setClaimStep] = useState<'audit' | 'processing' | 'success' | 'error'>('audit');
+  const [claimStep, setClaimStep] = useState<'audit' | 'confirm' | 'processing' | 'success' | 'error'>('audit');
   const [auditDetails, setAuditDetails] = useState({ totalEarned: 0, totalPaid: 0, claimable: 0 });
   const [claimTx, setClaimTx] = useState('');
 
@@ -428,7 +428,7 @@ export default function DashboardPage() {
           
           let history: any[] = [];
           if (supportLogs) {
-              history = supportLogs.map(log => ({
+              history = supportLogs.map((log: any) => ({
                   type: log.supporter_wallet.toLowerCase() === address.toLowerCase() ? 'Support Given' : 'Support Received',
                   amount: log.supporter_wallet.toLowerCase() === address.toLowerCase() ? -log.wnnm_spent : +log.nnm_earned_owner,
                   currency: log.supporter_wallet.toLowerCase() === address.toLowerCase() ? 'WNNM' : 'NNM',
@@ -437,7 +437,7 @@ export default function DashboardPage() {
               }));
           }
           if (payouts) {
-              payouts.forEach(pay => {
+              payouts.forEach((pay: any) => {
                   history.push({
                       type: 'Claim Payout',
                       amount: -pay.amount_nnm,
