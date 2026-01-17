@@ -1,24 +1,24 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { ethers } from 'ethers';
 import { NextResponse } from 'next/server';
 
-// إعداد الاتصال بقاعدة البيانات
+// 1. إصلاح مشكلة المتغيرات (Undefined): أضفنا علامة ! لنؤكد للنظام أنها موجودة
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 // إعداد الاتصال بشبكة بوليجون
 const RPC_URL = "https://polygon-rpc.com"; 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 
-export async function POST(request) {
+// 2. إصلاح مشكلة نوع الـ Request: حددنا النوع بـ : Request
+export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { userWallet, amountNNM } = body;
 
-    // 1. جلب المفتاح السري من متغيرات البيئة (السيرفر فقط يراه)
+    // جلب المفتاح السري
     const privateKey = process.env.NNM_HOT_WALLET_PRIVATE_KEY;
     
     if (!privateKey) {
@@ -31,11 +31,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
-    // 2. خطوة أمان: التأكد من أن المستخدم يملك هذا الرصيد فعلاً في قاعدة البيانات
-    // (رغم أن الداشبورد حسبها، السيرفر يجب أن يتأكد قبل دفع المال)
+    // التأكد من أن المستخدم يملك هذا الرصيد فعلاً في قاعدة البيانات
     const { data: userData, error: fetchError } = await supabase
       .from('nnm_wallets')
-      .select('nnm_balance') // نتحقق من رصيد الكاش NNM
+      .select('nnm_balance')
       .eq('wallet_address', userWallet)
       .single();
 
@@ -44,8 +43,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Insufficient NNM balance in records' }, { status: 400 });
     }
 
-    // 3. حساب القيمة المالية (1 NNM = 0.10$) وتحويلها لعملة POL
-    const FIXED_RATE = 0.10; // سعر العملة بالدولار
+    // حساب القيمة المالية (1 NNM = 0.10$) وتحويلها لعملة POL
+    const FIXED_RATE = 0.10; 
     const totalUsdValue = amountNNM * FIXED_RATE;
 
     // جلب سعر POL الحالي
@@ -61,14 +60,13 @@ export async function POST(request) {
     // تحويل الرقم لصيغة البلوكشين (Wei)
     const txValue = ethers.parseEther(polToSend.toFixed(18));
 
-    // 4. تنفيذ التحويل (إرسال المال)
+    // تنفيذ التحويل (إرسال المال)
     const tx = await wallet.sendTransaction({
       to: userWallet,
       value: txValue
     });
 
-    // 5. خصم الرصيد وتوثيق العملية
-    // نخصم المبلغ من رصيد NNM
+    // خصم الرصيد وتوثيق العملية
     const { error: updateError } = await supabase
       .from('nnm_wallets')
       .update({
