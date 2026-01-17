@@ -23,7 +23,7 @@ const MARKETPLACE_ABI = parseAbi([
 
 const publicClient = createPublicClient({
   chain: polygon,
-  transport: http() 
+  transport: http("https://polygon-rpc.com")
 });
 
 export default function DashboardPage() {
