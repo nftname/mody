@@ -12,17 +12,15 @@ import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
-// --- Constants & ABIs ---
+// --- ABIs ---
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
 const ITEMS_PER_PAGE = 30;
-const GOLD_GRADIENT = 'linear-gradient(180deg, #FFD700 0%, #B3882A 100%)';
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
 // --- Components ---
-
 const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: boolean }) => {
     if (isCustomSVG) {
         return (
@@ -69,11 +67,10 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
-// Action Button: Ultra Thin Border, "Buy - Bid", Right Aligned in Table
 const ActionButton = () => (
     <button className="btn btn-sm d-flex align-items-center justify-content-center hover-glass" style={{
         background: 'transparent', 
-        border: '1px solid #8a6d1c', // Darker Gold
+        border: '1px solid #8a6d1c', 
         color: '#FCD535',
         fontSize: '10px', 
         fontWeight: '300',
@@ -105,12 +102,10 @@ const SortArrows = ({ active, direction, onClick }: any) => (
     </div>
 );
 
-// Updated Time Logic
 const formatTimeAgo = (timestamp: number) => {
     if (!timestamp || timestamp === 0) return '...'; 
     const now = Date.now();
     const diff = now - timestamp;
-    
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
@@ -155,7 +150,8 @@ function MarketPage() {
     { name: "OPTIMISM", icon: "bi-graph-up-arrow", isCustom: false }
   ];
 
-  const [activeFilter, setActiveFilter] = useState('All Assets');
+  // Default filter: 'Conviction'
+  const [activeFilter, setActiveFilter] = useState('Conviction');
   const [timeFilter, setTimeFilter] = useState('24H');
   const [currencyFilter, setCurrencyFilter] = useState('All'); 
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); 
@@ -177,8 +173,6 @@ function MarketPage() {
               
               const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
               const ethPrice = data['ethereum']?.usd || 0;
-
-              console.log(`[Market] Live Prices - POL: $${polPrice}, ETH: $${ethPrice}`);
 
               setExchangeRates({
                   pol: polPrice, 
@@ -210,11 +204,9 @@ function MarketPage() {
 
   const handleToggleFavorite = async (e: React.MouseEvent, id: number) => {
       e.preventDefault(); e.stopPropagation();
-      
       const nextFavs = new Set(favoriteIds);
       if (nextFavs.has(id)) nextFavs.delete(id); else nextFavs.add(id);
       setFavoriteIds(nextFavs); 
-
       if (!isConnected || !address) return; 
       try {
           if (favoriteIds.has(id)) await supabase.from('favorites').delete().match({ wallet_address: address, token_id: id.toString() });
@@ -235,6 +227,7 @@ function MarketPage() {
 
             if (tokenIds.length === 0) { setRealListings([]); setLoading(false); return; }
 
+            // 1. Fetching Off-Chain Data
             const { data: allActivities } = await supabase
                 .from('activities')
                 .select('*')
@@ -245,6 +238,21 @@ function MarketPage() {
                 .select('token_id')
                 .eq('status', 'active');
 
+            // NEW: Fetch Conviction Votes
+            const { data: votesData } = await supabase
+                .from('conviction_votes')
+                .select('token_id');
+            
+            // Map Conviction Votes
+            const votesMap: Record<number, number> = {};
+            if (votesData) {
+                votesData.forEach((v: any) => {
+                   const t = Number(v.token_id); // Ensure Number type
+                   votesMap[t] = (votesMap[t] || 0) + 1;
+                });
+            }
+
+            // Map Stats (Activities) - Key Fix: Ensure ID Types Match
             const statsMap: Record<number, any> = {}; 
             const now = Date.now();
 
@@ -257,7 +265,7 @@ function MarketPage() {
 
             if (allActivities) {
                 allActivities.forEach((act: any) => {
-                    const tid = Number(act.token_id);
+                    const tid = Number(act.token_id); // Ensure Number type for matching
                     const actTime = new Date(act.created_at).getTime();
                     const price = Number(act.price) || 0;
 
@@ -281,11 +289,15 @@ function MarketPage() {
             }
 
             const offersCountMap: any = {};
-            if (offersData) offersData.forEach((o: any) => offersCountMap[o.token_id] = (offersCountMap[o.token_id] || 0) + 1);
+            if (offersData) offersData.forEach((o: any) => {
+                const tid = Number(o.token_id); // Ensure Number type
+                offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
+            });
 
+            // 2. Merging On-Chain and Off-Chain Data
             const items = await Promise.all(tokenIds.map(async (id, index) => {
                 try {
-                    const tid = Number(id);
+                    const tid = Number(id); // Convert BigInt to Number once
                     const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
                     const metaRes = await fetch(resolveIPFS(uri));
                     const meta = metaRes.ok ? await metaRes.json() : {};
@@ -294,6 +306,10 @@ function MarketPage() {
                     const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
                     const offersCount = offersCountMap[tid] || 0;
                     
+                    // Add Conviction Score
+                    const conviction = votesMap[tid] || 0;
+                    
+                    // Standard Trending Score
                     const trendingScore = stats.sales + offersCount; 
 
                     return {
@@ -306,6 +322,7 @@ function MarketPage() {
                         listedTime: stats.listedTime,
                         trendingScore: trendingScore,
                         offersCount: offersCount,
+                        convictionScore: conviction, // Store score
                         listed: 'Now', 
                         change: 0,
                         currencySymbol: 'POL'
@@ -323,6 +340,7 @@ function MarketPage() {
   const finalData = useMemo(() => {
       let processedData = [...realListings];
       
+      // Strict Logic for Filters
       if (activeFilter === 'Top') {
           processedData.sort((a, b) => b.volume - a.volume);
       } else if (activeFilter === 'Trending') {
@@ -331,7 +349,11 @@ function MarketPage() {
           processedData.sort((a, b) => b.offersCount - a.offersCount);
       } else if (activeFilter === 'Watchlist') {
           processedData = processedData.filter(item => favoriteIds.has(item.id));
+      } else if (activeFilter === 'Conviction') {
+          // New Filter Logic
+          processedData.sort((a, b) => b.convictionScore - a.convictionScore);
       } else {
+          // Default Sort (Fallback)
           processedData.sort((a, b) => a.id - b.id); 
       }
       
@@ -363,7 +385,6 @@ function MarketPage() {
 
   const goToPage = (page: number) => { if (page >= 1 && page <= totalPages) setCurrentPage(page); };
 
-  // --- STRICT CURRENCY LOGIC ---
   const formatPrice = (priceInPol: number) => {
       if (!exchangeRates.pol || exchangeRates.pol === 0 || !exchangeRates.eth || exchangeRates.eth === 0) {
           return `${priceInPol.toFixed(2)} POL`;
@@ -384,7 +405,6 @@ function MarketPage() {
       return `${priceInPol.toFixed(2)} POL`;
   };
 
-  // --- NEW: SPECIAL VOLUME FORMATTER (ALWAYS USD) ---
   const formatVolumeUSD = (valPol: number) => {
       if (!exchangeRates.pol || exchangeRates.pol === 0) return '$0.00';
       const valUsd = valPol * exchangeRates.pol;
@@ -421,7 +441,13 @@ function MarketPage() {
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" style={{ borderColor: '#222 !important', padding: '2px 0' }}>
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
                   <div onClick={() => setActiveFilter('Watchlist')} className={`cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : 'text-header-gray'}`} style={{ fontSize: '13.5px', fontWeight: 'bold', paddingBottom: '4px' }}>Watchlist</div>
-                  {['Trending', 'Top', 'Most Offers', 'All Assets'].map(f => (
+                  
+                  {/* Conviction Filter (Replaces All Assets) */}
+                  <div onClick={() => setActiveFilter('Conviction')} className={`cursor-pointer filter-item fw-bold ${activeFilter === 'Conviction' ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
+                      Conviction <i className="bi bi-fire text-warning ms-1"></i>
+                  </div>
+
+                  {['Trending', 'Top', 'Most Offers'].map(f => (
                       <div key={f} onClick={() => setActiveFilter(f)} className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>{f}</div>
                   ))}
               </div>
@@ -452,22 +478,22 @@ function MarketPage() {
                               <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '50px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Name: Minimal Width to pull price left */}
                               <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0 4px 10px', borderBottom: '1px solid #333', width: 'auto', maxWidth: '100px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Price: Forced Left, No Padding Left */}
                               <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '90px' }}>
                                   <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'pricePol'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Last Sale: Shifted Right by 50px Padding */}
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px 4px 50px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap' }}>Last Sale</th>
-                              {/* Volume: Shifted Right by 50px Padding */}
                               <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px 4px 50px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-start">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Listed: Added Padding Right for Gap */}
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 40px 4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>Listed</th>
+                              
+                              {/* Conviction Column (Replaces Listed) */}
+                              <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 40px 4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                                  <div className="d-flex align-items-center justify-content-end">Conviction <SortArrows active={sortConfig?.key === 'convictionScore'} direction={sortConfig?.direction} /></div>
+                              </th>
+
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', width: '120px', whiteSpace: 'nowrap' }}>Action</th>
                           </tr>
                       </thead>
@@ -482,34 +508,41 @@ function MarketPage() {
                                             <span style={getRankStyle(dynamicRank) as any}>{dynamicRank}</span>
                                         </div>
                                     </td>
-                                    {/* Name: Minimal width logic */}
                                     <td style={{ padding: '12px 0 12px 5px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <Link href={`/asset/${item.id}`} className="d-flex align-items-center gap-2 text-decoration-none group">
                                             <CoinIcon name={item.name} tier={item.tier} />
                                             <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '13.5px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
                                         </Link>
                                     </td>
-                                    {/* Price: Zero padding left to touch name */}
                                     <td className="text-start" style={{ padding: '12px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center justify-content-start gap-2">
                                             <span className="text-white" style={{ fontSize: '14px', fontWeight: '400', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
                                         </div>
                                     </td>
-                                    {/* Last Sale: Shifted Right 50px */}
                                     <td className="text-start" style={{ padding: '12px 10px 12px 50px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{item.lastSale ? formatPrice(item.lastSale) : '---'}</span>
                                     </td>
-                                    {/* Volume: Shifted Right 50px */}
                                     <td className="text-start" style={{ padding: '12px 10px 12px 50px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex flex-column align-items-start">
                                             <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{formatVolumeUSD(item.volume)}</span>
                                             {item.volume > 0 && <span style={{ fontSize: '10px', color: '#0ecb81' }}>+<i className="bi bi-caret-up-fill"></i></span>}
                                         </div>
                                     </td>
-                                    {/* Listed: Padding Right 40px for Gap */}
+                                    
+                                    {/* Conviction Cell (Replaces Listed) */}
                                     <td className="text-end" style={{ padding: '12px 40px 12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                        <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{formatTimeAgo(item.listedTime)}</span>
+                                        <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>
+                                            {item.convictionScore > 0 ? (
+                                                <>
+                                                    {dynamicRank <= 3 && <i className="bi bi-fire text-warning me-1"></i>}
+                                                    {item.convictionScore}
+                                                </>
+                                            ) : (
+                                                <span className="text-muted">---</span>
+                                            )}
+                                        </span>
                                     </td>
+
                                     <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex justify-content-end">
                                             <Link href={`/asset/${item.id}`} className="text-decoration-none">
