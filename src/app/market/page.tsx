@@ -155,7 +155,7 @@ function MarketPage() {
     { name: "OPTIMISM", icon: "bi-graph-up-arrow", isCustom: false }
   ];
 
-  // Modified: Default filter is now 'Conviction' as requested (replacing 'All Assets')
+  // 1. Set default filter to 'Conviction' instead of 'All Assets'
   const [activeFilter, setActiveFilter] = useState('Conviction');
   const [timeFilter, setTimeFilter] = useState('24H');
   const [currencyFilter, setCurrencyFilter] = useState('All'); 
@@ -236,19 +236,17 @@ function MarketPage() {
 
             if (tokenIds.length === 0) { setRealListings([]); setLoading(false); return; }
 
-            // --- STRICTLY PRESERVED ACTIVITY FETCH ---
             const { data: allActivities } = await supabase
                 .from('activities')
                 .select('*')
                 .order('created_at', { ascending: false }); 
             
-            // --- STRICTLY PRESERVED OFFERS FETCH ---
             const { data: offersData } = await supabase
                 .from('offers')
                 .select('token_id')
                 .eq('status', 'active');
 
-            // --- ONLY NEW ADDITION: Conviction Votes ---
+            // 2. Fetch Conviction Votes (New Data Source)
             const { data: votesData } = await supabase
                 .from('conviction_votes')
                 .select('token_id');
@@ -261,7 +259,6 @@ function MarketPage() {
                 });
             }
 
-            // --- STRICTLY PRESERVED STATS LOGIC ---
             const statsMap: Record<number, any> = {}; 
             const now = Date.now();
 
@@ -311,9 +308,9 @@ function MarketPage() {
                     const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
                     const offersCount = offersCountMap[tid] || 0;
                     
-                    // New mapping for Conviction
+                    // 3. Map Conviction Score
                     const conviction = votesMap[tid] || 0;
-
+                    
                     const trendingScore = stats.sales + offersCount; 
 
                     return {
@@ -326,7 +323,7 @@ function MarketPage() {
                         listedTime: stats.listedTime,
                         trendingScore: trendingScore,
                         offersCount: offersCount,
-                        convictionScore: conviction, // Added score
+                        convictionScore: conviction, // Add score to item
                         listed: 'Now', 
                         change: 0,
                         currencySymbol: 'POL'
@@ -344,7 +341,7 @@ function MarketPage() {
   const finalData = useMemo(() => {
       let processedData = [...realListings];
       
-      // --- STRICTLY PRESERVED SORTING LOGIC ---
+      // 4. Strict Logic: Only add 'Conviction' case, don't touch others.
       if (activeFilter === 'Top') {
           processedData.sort((a, b) => b.volume - a.volume);
       } else if (activeFilter === 'Trending') {
@@ -354,10 +351,10 @@ function MarketPage() {
       } else if (activeFilter === 'Watchlist') {
           processedData = processedData.filter(item => favoriteIds.has(item.id));
       } else if (activeFilter === 'Conviction') {
-          // New Sort Case
+          // New separate logic for Conviction
           processedData.sort((a, b) => b.convictionScore - a.convictionScore);
       } else {
-          // Default ID Sort (All Assets replacement logic falls here or uses Conviction if active)
+          // Default fallback (originally was All Assets)
           processedData.sort((a, b) => a.id - b.id); 
       }
       
@@ -410,7 +407,7 @@ function MarketPage() {
       return `${priceInPol.toFixed(2)} POL`;
   };
 
-  // --- SPECIAL VOLUME FORMATTER (ALWAYS USD) ---
+  // --- NEW: SPECIAL VOLUME FORMATTER (ALWAYS USD) ---
   const formatVolumeUSD = (valPol: number) => {
       if (!exchangeRates.pol || exchangeRates.pol === 0) return '$0.00';
       const valUsd = valPol * exchangeRates.pol;
@@ -447,7 +444,7 @@ function MarketPage() {
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" style={{ borderColor: '#222 !important', padding: '2px 0' }}>
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
                   <div onClick={() => setActiveFilter('Watchlist')} className={`cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : 'text-header-gray'}`} style={{ fontSize: '13.5px', fontWeight: 'bold', paddingBottom: '4px' }}>Watchlist</div>
-                  {/* MODIFIED: Conviction Filter Replaces All Assets - First in list as per image analysis request or user preference */}
+                  {/* 5. Add Conviction Filter Tab (Replacing 'All Assets' visually and functionally) */}
                   <div onClick={() => setActiveFilter('Conviction')} className={`cursor-pointer filter-item fw-bold ${activeFilter === 'Conviction' ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
                       Conviction <i className="bi bi-fire text-warning ms-1"></i>
                   </div>
@@ -482,21 +479,17 @@ function MarketPage() {
                               <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '50px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Name: Minimal Width to pull price left */}
                               <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0 4px 10px', borderBottom: '1px solid #333', width: 'auto', maxWidth: '100px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Price: Forced Left, No Padding Left */}
                               <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '90px' }}>
                                   <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'pricePol'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Last Sale: Shifted Right by 50px Padding */}
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px 4px 50px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap' }}>Last Sale</th>
-                              {/* Volume: Shifted Right by 50px Padding */}
                               <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px 4px 50px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-start">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* MODIFIED: Conviction Column Replaces Listed */}
+                              {/* 6. Replaced 'Listed' Column with 'Conviction' */}
                               <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 40px 4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-end">Conviction <SortArrows active={sortConfig?.key === 'convictionScore'} direction={sortConfig?.direction} /></div>
                               </th>
@@ -514,35 +507,36 @@ function MarketPage() {
                                             <span style={getRankStyle(dynamicRank) as any}>{dynamicRank}</span>
                                         </div>
                                     </td>
-                                    {/* Name: Minimal width logic */}
+                                    {/* Name */}
                                     <td style={{ padding: '12px 0 12px 5px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <Link href={`/asset/${item.id}`} className="d-flex align-items-center gap-2 text-decoration-none group">
                                             <CoinIcon name={item.name} tier={item.tier} />
                                             <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '13.5px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
                                         </Link>
                                     </td>
-                                    {/* Price: Zero padding left to touch name */}
+                                    {/* Price */}
                                     <td className="text-start" style={{ padding: '12px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center justify-content-start gap-2">
                                             <span className="text-white" style={{ fontSize: '14px', fontWeight: '400', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
                                         </div>
                                     </td>
-                                    {/* Last Sale: Shifted Right 50px */}
+                                    {/* Last Sale */}
                                     <td className="text-start" style={{ padding: '12px 10px 12px 50px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{item.lastSale ? formatPrice(item.lastSale) : '---'}</span>
                                     </td>
-                                    {/* Volume: Shifted Right 50px */}
+                                    {/* Volume */}
                                     <td className="text-start" style={{ padding: '12px 10px 12px 50px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex flex-column align-items-start">
                                             <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{formatVolumeUSD(item.volume)}</span>
                                             {item.volume > 0 && <span style={{ fontSize: '10px', color: '#0ecb81' }}>+<i className="bi bi-caret-up-fill"></i></span>}
                                         </div>
                                     </td>
-                                    {/* MODIFIED: Conviction Data Cell (Top 3 Logic) */}
+                                    {/* 7. New Conviction Cell Logic */}
                                     <td className="text-end" style={{ padding: '12px 40px 12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>
                                             {item.convictionScore > 0 ? (
                                                 <>
+                                                    {/* Show Flame only for top 3 in the current view */}
                                                     {dynamicRank <= 3 && <i className="bi bi-fire text-warning me-1"></i>}
                                                     {item.convictionScore}
                                                 </>
