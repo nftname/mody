@@ -155,7 +155,10 @@ function MarketPage() {
     { name: "OPTIMISM", icon: "bi-graph-up-arrow", isCustom: false }
   ];
 
-  const [activeFilter, setActiveFilter] = useState('All Assets');
+  // Set default to Conviction as requested by replacement logic in previous turn, or keep default as preferred. 
+  // Based on "Add the element ... in the filter", I will initialize with Conviction to highlight it or keep All Assets if preferred.
+  // I will stick to 'Conviction' being the new main focus as per "replace All Assets".
+  const [activeFilter, setActiveFilter] = useState('Conviction'); 
   const [timeFilter, setTimeFilter] = useState('24H');
   const [currencyFilter, setCurrencyFilter] = useState('All'); 
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); 
@@ -245,6 +248,19 @@ function MarketPage() {
                 .select('token_id')
                 .eq('status', 'active');
 
+            // NEW: Fetch Conviction Votes from Supabase
+            const { data: votesData } = await supabase
+                .from('conviction_votes')
+                .select('token_id');
+            
+            const votesMap: Record<number, number> = {};
+            if (votesData) {
+                votesData.forEach((v: any) => {
+                   const t = Number(v.token_id);
+                   votesMap[t] = (votesMap[t] || 0) + 1;
+                });
+            }
+
             const statsMap: Record<number, any> = {}; 
             const now = Date.now();
 
@@ -294,6 +310,9 @@ function MarketPage() {
                     const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
                     const offersCount = offersCountMap[tid] || 0;
                     
+                    // Add Conviction Score Mapping
+                    const conviction = votesMap[tid] || 0;
+                    
                     const trendingScore = stats.sales + offersCount; 
 
                     return {
@@ -306,6 +325,7 @@ function MarketPage() {
                         listedTime: stats.listedTime,
                         trendingScore: trendingScore,
                         offersCount: offersCount,
+                        convictionScore: conviction, // Store score
                         listed: 'Now', 
                         change: 0,
                         currencySymbol: 'POL'
@@ -331,6 +351,9 @@ function MarketPage() {
           processedData.sort((a, b) => b.offersCount - a.offersCount);
       } else if (activeFilter === 'Watchlist') {
           processedData = processedData.filter(item => favoriteIds.has(item.id));
+      } else if (activeFilter === 'Conviction') {
+          // SORT BY CONVICTION
+          processedData.sort((a, b) => b.convictionScore - a.convictionScore);
       } else {
           processedData.sort((a, b) => a.id - b.id); 
       }
@@ -421,7 +444,11 @@ function MarketPage() {
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" style={{ borderColor: '#222 !important', padding: '2px 0' }}>
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
                   <div onClick={() => setActiveFilter('Watchlist')} className={`cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : 'text-header-gray'}`} style={{ fontSize: '13.5px', fontWeight: 'bold', paddingBottom: '4px' }}>Watchlist</div>
-                  {['Trending', 'Top', 'Most Offers', 'All Assets'].map(f => (
+                  {/* NEW: Conviction Filter Replaces All Assets */}
+                  <div onClick={() => setActiveFilter('Conviction')} className={`cursor-pointer filter-item fw-bold ${activeFilter === 'Conviction' ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
+                      Conviction <i className="bi bi-fire text-warning ms-1"></i>
+                  </div>
+                  {['Trending', 'Top', 'Most Offers'].map(f => (
                       <div key={f} onClick={() => setActiveFilter(f)} className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>{f}</div>
                   ))}
               </div>
@@ -466,8 +493,10 @@ function MarketPage() {
                               <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px 4px 50px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-start">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Listed: Added Padding Right for Gap */}
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 40px 4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap' }}>Listed</th>
+                              {/* NEW: Conviction Column replaces Listed */}
+                              <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 40px 4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                                  <div className="d-flex align-items-center justify-content-end">Conviction <SortArrows active={sortConfig?.key === 'convictionScore'} direction={sortConfig?.direction} /></div>
+                              </th>
                               <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', width: '120px', whiteSpace: 'nowrap' }}>Action</th>
                           </tr>
                       </thead>
@@ -506,9 +535,18 @@ function MarketPage() {
                                             {item.volume > 0 && <span style={{ fontSize: '10px', color: '#0ecb81' }}>+<i className="bi bi-caret-up-fill"></i></span>}
                                         </div>
                                     </td>
-                                    {/* Listed: Padding Right 40px for Gap */}
+                                    {/* NEW: Conviction Cell replaces Listed */}
                                     <td className="text-end" style={{ padding: '12px 40px 12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                        <span className="text-white" style={{ fontSize: '12px', color: '#E0E0E0' }}>{formatTimeAgo(item.listedTime)}</span>
+                                        <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>
+                                            {item.convictionScore > 0 ? (
+                                                <>
+                                                    {dynamicRank <= 3 && <i className="bi bi-fire text-warning me-1"></i>}
+                                                    {item.convictionScore}
+                                                </>
+                                            ) : (
+                                                <span className="text-muted">---</span>
+                                            )}
+                                        </span>
                                     </td>
                                     <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex justify-content-end">
