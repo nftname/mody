@@ -218,6 +218,7 @@ function MarketPage() {
     const fetchMarketData = async () => {
         if (!publicClient) return;
         try {
+            // 1. Fetch Listings from Smart Contract
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -227,7 +228,7 @@ function MarketPage() {
 
             if (tokenIds.length === 0) { setRealListings([]); setLoading(false); return; }
 
-            // 1. Fetching Off-Chain Data
+            // 2. Fetch Data from Supabase (Activities, Offers, Votes)
             const { data: allActivities } = await supabase
                 .from('activities')
                 .select('*')
@@ -238,7 +239,6 @@ function MarketPage() {
                 .select('token_id')
                 .eq('status', 'active');
 
-            // NEW: Fetch Conviction Votes
             const { data: votesData } = await supabase
                 .from('conviction_votes')
                 .select('token_id');
@@ -247,33 +247,39 @@ function MarketPage() {
             const votesMap: Record<number, number> = {};
             if (votesData) {
                 votesData.forEach((v: any) => {
-                   const t = Number(v.token_id); // Ensure Number type
+                   const t = Number(v.token_id);
                    votesMap[t] = (votesMap[t] || 0) + 1;
                 });
             }
 
-            // Map Stats (Activities) - Key Fix: Ensure ID Types Match
             const statsMap: Record<number, any> = {}; 
             const now = Date.now();
 
-            let timeLimit = 0;
+            // --- Time Filter Logic ---
+            let timeLimit = Infinity;
             if (timeFilter === '1H') timeLimit = 3600 * 1000;
             else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
             else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
             else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
-            else timeLimit = 315360000000; 
 
             if (allActivities) {
                 allActivities.forEach((act: any) => {
-                    const tid = Number(act.token_id); // Ensure Number type for matching
+                    const tid = Number(act.token_id);
                     const actTime = new Date(act.created_at).getTime();
                     const price = Number(act.price) || 0;
 
                     if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
 
-                    if (act.activity_type === 'Sale') {
-                        if (statsMap[tid].lastSale === 0) statsMap[tid].lastSale = price; 
-                        
+                    // === CORE FIX: Include BOTH 'Sale' AND 'Mint' in Volume ===
+                    if (act.activity_type === 'Sale' || act.activity_type === 'Mint') {
+                        // Priority for Last Sale: Sale > Mint
+                        if (act.activity_type === 'Sale' && statsMap[tid].lastSale === 0) {
+                             statsMap[tid].lastSale = price; 
+                        } else if (act.activity_type === 'Mint' && statsMap[tid].lastSale === 0) {
+                             statsMap[tid].lastSale = price;
+                        }
+
+                        // Calculate Volume if within Time Filter
                         if (now - actTime <= timeLimit) {
                             statsMap[tid].volume += price;
                             statsMap[tid].sales += 1;
@@ -290,14 +296,14 @@ function MarketPage() {
 
             const offersCountMap: any = {};
             if (offersData) offersData.forEach((o: any) => {
-                const tid = Number(o.token_id); // Ensure Number type
+                const tid = Number(o.token_id);
                 offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
             });
 
-            // 2. Merging On-Chain and Off-Chain Data
+            // 3. Merge On-Chain & Off-Chain Data
             const items = await Promise.all(tokenIds.map(async (id, index) => {
                 try {
-                    const tid = Number(id); // Convert BigInt to Number once
+                    const tid = Number(id); 
                     const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
                     const metaRes = await fetch(resolveIPFS(uri));
                     const meta = metaRes.ok ? await metaRes.json() : {};
@@ -305,12 +311,10 @@ function MarketPage() {
                     
                     const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
                     const offersCount = offersCountMap[tid] || 0;
-                    
-                    // Add Conviction Score
                     const conviction = votesMap[tid] || 0;
                     
-                    // Standard Trending Score
-                    const trendingScore = stats.sales + offersCount; 
+                    // Trending Score Formula
+                    const trendingScore = stats.volume + (offersCount * 5); 
 
                     return {
                         id: tid,
@@ -322,7 +326,7 @@ function MarketPage() {
                         listedTime: stats.listedTime,
                         trendingScore: trendingScore,
                         offersCount: offersCount,
-                        convictionScore: conviction, // Store score
+                        convictionScore: conviction,
                         listed: 'Now', 
                         change: 0,
                         currencySymbol: 'POL'
@@ -340,7 +344,6 @@ function MarketPage() {
   const finalData = useMemo(() => {
       let processedData = [...realListings];
       
-      // Strict Logic for Filters
       if (activeFilter === 'Top') {
           processedData.sort((a, b) => b.volume - a.volume);
       } else if (activeFilter === 'Trending') {
@@ -350,10 +353,9 @@ function MarketPage() {
       } else if (activeFilter === 'Watchlist') {
           processedData = processedData.filter(item => favoriteIds.has(item.id));
       } else if (activeFilter === 'Conviction') {
-          // New Filter Logic
+          // New Sort Logic for Conviction
           processedData.sort((a, b) => b.convictionScore - a.convictionScore);
       } else {
-          // Default Sort (Fallback)
           processedData.sort((a, b) => a.id - b.id); 
       }
       
