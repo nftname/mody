@@ -108,8 +108,13 @@ export default function MarketTicker() {
                 .from('activities')
                 .select('token_id, price, created_at')
                 .eq('activity_type', 'Sale');
+            const { data: lists } = await supabase
+              .from('activities')
+              .select('token_id, created_at')
+              .eq('activity_type', 'List');
 
             const volumeMap: Record<number, number> = {};
+            const latestListTimeMap: Record<number, number> = {};
             let volToday = 0; 
             let volYest = 0;
             const oneDay = 24 * 60 * 60 * 1000;
@@ -128,6 +133,15 @@ export default function MarketTicker() {
                     else if (now - time <= 2 * oneDay) volYest += price;
                 });
             }
+              if (lists) {
+                lists.forEach((l: any) => {
+                  const tid = Number(l.token_id);
+                  const time = new Date(l.created_at).getTime();
+                  if (!latestListTimeMap[tid] || time > latestListTimeMap[tid]) {
+                    latestListTimeMap[tid] = time;
+                  }
+                });
+              }
             
             // Set NNM Vol Change
             setNnmVolChange(volYest === 0 ? (volToday > 0 ? 100 : 0) : ((volToday - volYest) / volYest) * 100);
@@ -149,12 +163,15 @@ export default function MarketTicker() {
 
             // D. Prepare Base List
             const allItems = tokenIds.map(id => ({
-                id: Number(id),
-                volume: volumeMap[Number(id)] || 0
+              id: Number(id),
+              volume: volumeMap[Number(id)] || 0,
+              listedAt: latestListTimeMap[Number(id)] || 0
             }));
 
             // --- Logic 1: Just Listed (Sort by ID Descending -> Newest ID first) ---
-            const sortedNew = [...allItems].sort((a, b) => b.id - a.id).slice(0, 3);
+            const sortedNew = [...allItems]
+              .sort((a, b) => (b.listedAt || 0) - (a.listedAt || 0))
+              .slice(0, 3);
             const newItemsData = await Promise.all(sortedNew.map(async (item, i) => {
                 const name = await getRealName(BigInt(item.id));
                 return {
