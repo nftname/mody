@@ -143,12 +143,13 @@ function AssetPage() {
     const [isApproved, setIsApproved] = useState(false);
     const [isPending, setIsPending] = useState(false);
     const [isListingMode, setIsListingMode] = useState(false);
-    const [sellPrice, setSellPrice] = useState('10');
+    const [sellPrice, setSellPrice] = useState('');
     const [isOfferMode, setIsOfferMode] = useState(false);
     const [offerStep, setOfferStep] = useState<'select' | 'input'>('select');
     const [offerPrice, setOfferPrice] = useState('');
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
+    const [exchangeRates, setExchangeRates] = useState({ pol: POL_TO_USD_RATE, eth: 0 });
     
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
@@ -171,6 +172,23 @@ function AssetPage() {
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        const fetchPrices = async () => {
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
+                const data = await res.json();
+
+                const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
+                const ethPrice = data['ethereum']?.usd || 0;
+
+                setExchangeRates({ pol: polPrice, eth: ethPrice });
+            } catch (e) { console.error("Price API Error", e); }
+        };
+        fetchPrices();
+        const interval = setInterval(fetchPrices, 300000);
+        return () => clearInterval(interval);
     }, []);
 
     const toggleDropdown = (name: string) => {
@@ -427,6 +445,11 @@ function AssetPage() {
         setOfferStep(listing ? 'select' : 'input');
         setIsOfferMode(true);
         setOfferPrice('');
+    };
+
+    const closeListingModal = () => {
+        setIsListingMode(false);
+        setIsPending(false);
     };
 
     // Shared Button Component
@@ -708,27 +731,30 @@ function AssetPage() {
             {isListingMode && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${GOLD_SOLID}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
-                        <button onClick={() => setIsListingMode(false)} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
+                        {/* Close Button: Triggers Hard Reset */}
+                        <button onClick={closeListingModal} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
                         
                         <h4 className="fw-bold mb-4 text-center" style={{ color: TEXT_PRIMARY }}>List for Sale</h4>
 
                         <div className="mb-4 text-center">
                             <div style={{ color: TEXT_MUTED, fontSize: '13px', marginBottom: '8px' }}>Set your price in POL</div>
                             <div className="d-flex align-items-center justify-content-center border rounded-3 overflow-hidden p-2" style={{ borderColor: BORDER_COLOR, backgroundColor: BACKGROUND_DARK }}>
+                                {/* Placeholder is 1000 (hint only) */}
                                 <input 
                                     autoFocus
                                     type="number" 
                                     className="form-control border-0 bg-transparent text-white p-0 text-end" 
                                     style={{ fontSize: '24px', fontWeight: 'bold', width: '120px', boxShadow: 'none' }} 
-                                    placeholder="0" 
+                                    placeholder="1000" 
                                     value={sellPrice} 
                                     onChange={(e) => setSellPrice(e.target.value)} 
                                 />
                                 <span className="text-white fw-bold ps-2" style={{ fontSize: '20px' }}>POL</span>
                             </div>
-                            {/* Optional USD Estimate */}
+                            
+                            {/* Live USD Estimate using exchangeRates.pol */}
                             <div className="mt-2" style={{ fontSize: '12px', color: '#0ecb81' }}>
-                                ≈ ${(parseFloat(sellPrice || '0') * POL_TO_USD_RATE).toFixed(2)} USD
+                                ≈ ${(parseFloat(sellPrice || '0') * (exchangeRates.pol || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
                             </div>
                         </div>
 
@@ -742,7 +768,8 @@ function AssetPage() {
                                     {isPending ? 'Listing...' : '2. Confirm Listing'}
                                 </button>
                             )}
-                            <button onClick={() => setIsListingMode(false)} className="btn btn-link text-secondary text-decoration-none" style={{ fontSize: '14px' }}>Cancel</button>
+                            {/* Cancel Button: Triggers Hard Reset */}
+                            <button onClick={closeListingModal} className="btn btn-link text-secondary text-decoration-none" style={{ fontSize: '14px' }}>Cancel</button>
                         </div>
                     </div>
                 </div>
