@@ -170,18 +170,36 @@ export default function MarketTicker() {
 
             // --- Logic 1: Just Listed (Sort by ID Descending -> Newest ID first) ---
             const sortedNew = [...allItems]
-              .sort((a, b) => (b.listedAt || 0) - (a.listedAt || 0))
+              .sort((a, b) => (b.listedAt || 0) - (a.listedAt || 0) || b.id - a.id)
               .slice(0, 3);
-            const newItemsData = await Promise.all(sortedNew.map(async (item, i) => {
+            let newItemsData = await Promise.all(sortedNew.map(async (item, i) => {
+              const name = await getRealName(BigInt(item.id));
+              return {
+                id: `just-${i}`,
+                label: 'Just Listed',
+                value: name,
+                link: `/asset/${item.id}`,
+                type: 'NEW' as const
+              };
+            }));
+            if (newItemsData.length < 3) {
+              const needed = 3 - newItemsData.length;
+              const fallbackPool = allItems
+                .filter(a => !sortedNew.some(s => s.id === a.id))
+                .sort((a, b) => b.id - a.id)
+                .slice(0, needed);
+              const fallbackItems = await Promise.all(fallbackPool.map(async (item, idx) => {
                 const name = await getRealName(BigInt(item.id));
                 return {
-                    id: `just-${i}`,
-                    label: 'Just Listed',
-                    value: name,
-                    link: `/asset/${item.id}`,
-                    type: 'NEW' as const
+                  id: `just-fb-${idx}`,
+                  label: 'Just Listed',
+                  value: name,
+                  link: `/asset/${item.id}`,
+                  type: 'NEW' as const
                 };
-            }));
+              }));
+              newItemsData = [...newItemsData, ...fallbackItems];
+            }
             setNewItems(newItemsData);
 
             // --- Logic 2: Top Performers (Sort by Volume Descending -> Highest Sales first) ---
