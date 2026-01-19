@@ -197,6 +197,22 @@ function AssetPage() {
         else setOpenDropdown(name);
     };
 
+    // --- DYNAMIC CHART DATA ---
+    const getDynamicChartData = () => {
+        const priceEvents = activityList
+            .filter(act => act.type === 'Sale' || act.type === 'Mint')
+            .sort((a: any, b: any) => a.rawDate - b.rawDate);
+
+        if (priceEvents.length === 0) {
+            return [{ name: 'No Data', price: 0 }];
+        }
+
+        return priceEvents.map((event: any) => ({
+            name: new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            price: parseFloat(event.price || '0')
+        }));
+    };
+
     // --- FAVORITES LOGIC ---
     const fetchFavorites = async () => {
         if (!address) return;
@@ -572,10 +588,10 @@ function AssetPage() {
                                         <Accordion title="Price history" icon="bi-graph-up">
                                             <div style={{ height: '200px', width: '100%' }} className="px-3">
                                                 <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={mockChartData}>
+                                                    <AreaChart data={getDynamicChartData()}>
                                                         <defs><linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#d4f936" stopOpacity={0.2}/><stop offset="95%" stopColor="#d4f936" stopOpacity={0}/></linearGradient></defs>
                                                         <CartesianGrid strokeDasharray="3 3" stroke={BORDER_COLOR} vertical={false} />
-                                                        <Tooltip contentStyle={{ backgroundColor: 'rgba(30,30,30,0.8)', backdropFilter: 'blur(5px)', border: 'none', borderRadius: '8px', color: '#fff' }} />
+                                                        <Tooltip contentStyle={{ backgroundColor: '#1E1E1E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} formatter={(value: any) => [`${value} POL`, 'Price']} />
                                                         <Area type="monotone" dataKey="price" stroke="#d4f936" strokeWidth={2} fill="url(#colorPrice)" />
                                                     </AreaChart>
                                                 </ResponsiveContainer>
