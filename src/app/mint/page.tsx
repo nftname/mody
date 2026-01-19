@@ -49,6 +49,8 @@ const MintContent = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'process' | 'error' | 'success'>('process');
   const [mounted, setMounted] = useState(false);
+  const [isMinting, setIsMinting] = useState(false);
+  const [timer, setTimer] = useState(60);
 
   // Read owner from the new contract
   const { data: ownerAddress } = useReadContract({
@@ -70,7 +72,12 @@ const MintContent = () => {
 
   const checkAvailability = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!searchTerm || searchTerm.length < 1) return;
+    
+    if (!searchTerm || searchTerm.length < 2) {
+        setStatus('too_short');
+        setIsSearching(false);
+        return;
+    }
     
     const cleanName = searchTerm.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
     if (cleanName !== searchTerm) setSearchTerm(cleanName);
@@ -100,11 +107,23 @@ const MintContent = () => {
     }
   };
 
+  useEffect(() => {
+    let interval: any;
+    if (showModal && modalType === 'process' && timer > 0) {
+        interval = setInterval(() => setTimer(prev => prev - 1), 1000);
+    } else if (timer === 0 && modalType === 'process') {
+        handleCloseModal(); 
+    }
+    return () => clearInterval(interval);
+  }, [showModal, modalType, timer]);
+
   const handleCloseModal = () => {
     setShowModal(false);
     setIsSearching(false);
-    // CRITICAL: Reset any pending minting states
+    setIsMinting(false);
+    setTimer(60);
     setStatus(null);
+    setErrorMessage('');
   };
 
   // --- SURGICAL UPDATE: REPLACED OLD handleError WITH SMART DIPLOMAT ---
@@ -200,6 +219,7 @@ const MintContent = () => {
           <div style={{ height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '6px', marginBottom: '0px' }}>
             {status === 'available' && <div className="d-inline-flex align-items-center gap-2 px-4 py-1 rounded-pill fade-in" style={{ backgroundColor: 'rgba(14, 203, 129, 0.1)', border: '1px solid #0ecb81' }}><i className="bi bi-check-circle-fill" style={{ color: '#0ecb81', fontSize: '14px' }}></i><span className="text-white fw-bold" style={{ fontSize: '13px' }}>Available! You can mint now.</span></div>}
             {status === 'taken' && <div className="d-inline-flex align-items-center gap-2 px-4 py-1 rounded-pill fade-in" style={{ backgroundColor: 'rgba(246, 70, 93, 0.1)', border: '1px solid #f6465d' }}><i className="bi bi-x-circle-fill" style={{ color: '#f6465d', fontSize: '14px' }}></i><span className="text-white fw-bold" style={{ fontSize: '13px' }}>Taken! Please choose another.</span></div>}
+            {status === 'too_short' && <div className="d-inline-flex align-items-center gap-2 px-4 py-1 rounded-pill fade-in" style={{ backgroundColor: 'rgba(246, 70, 93, 0.1)', border: '1px solid #f6465d' }}><i className="bi bi-exclamation-circle-fill" style={{ color: '#f6465d', fontSize: '14px' }}></i><span className="text-white fw-bold" style={{ fontSize: '13px' }}>Min. 2 characters required!</span></div>}
           </div>
         </div>
       </div>
@@ -248,12 +268,13 @@ const MintContent = () => {
 
                 {modalType === 'process' && (
                    <div className="fade-in">
-                     <div className="mb-4">
-                        <div className="spinner-border" style={{ color: '#FCD535', width: '3rem', height: '3rem' }} role="status"></div>
+                     <div className="mb-4 position-relative d-inline-block">
+                        <div className="spinner-border" style={{ color: '#FCD535', width: '4rem', height: '4rem', borderWidth: '0.25em' }} role="status"></div>
+                        <div className="position-absolute top-50 start-50 translate-middle text-white fw-bold" style={{ fontSize: '14px' }}>{timer}</div>
                      </div>
-                     <h4 className="text-white fw-bold mb-2">Processing Transaction</h4>
-                     <p className="text-secondary mb-4">Please confirm the action in your wallet and wait for network confirmation.</p>
-                     <button onClick={handleCloseModal} className="btn btn-link text-muted text-decoration-none" style={{fontSize: '13px'}}>Cancel & Reset</button>
+                     <h4 className="text-white fw-bold mb-2">Processing...</h4>
+                     <p className="text-secondary mb-4" style={{ fontSize: '13px' }}>Confirm in your wallet. This window will reset in {timer}s to prevent UI hanging.</p>
+                     <button onClick={handleCloseModal} className="btn btn-link text-muted text-decoration-none" style={{fontSize: '12px'}}>Cancel & Reset UI</button>
                    </div>
                 )}
 
