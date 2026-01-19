@@ -8,15 +8,15 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
 
-const PROMPT_STORAGE_KEY = "nnm_install_prompt_last_shown_v2";
-const PROMPT_INTERVAL_MS = 12 * 60 * 60 * 1000; // 12 hours
+const PROMPT_STORAGE_KEY = "nnm_install_prompt_last_shown_v3";
+const PROMPT_INTERVAL_MS = 1 * 60 * 60 * 1000; // 1 hour
 
 export default function AppInstallPrompt() {
   const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
 
-  const eligiblePath = pathname === "/" || pathname?.startsWith("/market");
+  const eligiblePath = pathname === "/";
 
   const isStandalone = () => {
     if (typeof window === "undefined") return false;
