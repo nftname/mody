@@ -788,11 +788,21 @@ function AssetPage() {
                         <div className="d-flex flex-column gap-2">
                             {!isApproved ? (
                                 <button onClick={handleApproveNft} disabled={isPending} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>
-                                    {isPending ? 'Approving...' : '1. Approve NFT'}
+                                    {isPending ? (
+                                        <span className="d-flex align-items-center justify-content-center gap-2">
+                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            Approving...
+                                        </span>
+                                    ) : '1. Approve NFT'}
                                 </button>
                             ) : (
                                 <button onClick={handleList} disabled={isPending || !sellPrice || parseFloat(sellPrice) <= 0 || exchangeRates.pol <= 0} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>
-                                    {isPending ? 'Listing...' : '2. Confirm Listing'}
+                                    {isPending ? (
+                                        <span className="d-flex align-items-center justify-content-center gap-2">
+                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            Listing...
+                                        </span>
+                                    ) : '2. Confirm Listing'}
                                 </button>
                             )}
                             {/* Cancel Button: Triggers Hard Reset */}
