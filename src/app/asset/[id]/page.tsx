@@ -386,7 +386,27 @@ function AssetPage() {
     };
 
     const handleApproveNft = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'setApprovalForAll', args: [MARKETPLACE_ADDRESS as `0x${string}`, true] }); await publicClient!.waitForTransactionReceipt({ hash }); setIsApproved(true); } catch (err) { console.error(err); } finally { setIsPending(false); } };
-    const handleList = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listItem', args: [BigInt(tokenId), parseEther(sellPrice)] }); await publicClient!.waitForTransactionReceipt({ hash }); fetchAllData(); setIsListingMode(false); } catch (err) { console.error(err); } finally { setIsPending(false); } };
+    const handleList = async () => { 
+        setIsPending(true); 
+        try { 
+            const hash = await writeContractAsync({ 
+                address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                abi: MARKETPLACE_ABI, 
+                functionName: 'listItem', 
+                args: [BigInt(tokenId), parseEther(sellPrice)] 
+            }); 
+            await publicClient!.waitForTransactionReceipt({ hash }); 
+            
+            // Refresh Data & Show Success
+            await fetchAllData(); 
+            setIsListingMode(false); 
+            showModal('success', 'Listed Successfully', `Your asset is now listed for ${sellPrice} POL.`);
+        } catch (err) { 
+            console.error(err); 
+        } finally { 
+            setIsPending(false); 
+        } 
+    };
     
     // Cancel Listing Function
     const handleCancelListing = async () => {
@@ -429,21 +449,11 @@ function AssetPage() {
         }
 
         if (isOwner) {
-            if (isListingMode) {
-                return (
-                    <div className="d-flex gap-2 w-100 justify-content-center" style={{maxWidth: mobile ? '600px' : '100%'}}>
-                        {!isApproved ? 
-                            <button onClick={handleApproveNft} disabled={isPending} className="btn py-2 fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>Approve NFT</button>
-                            : <button onClick={handleList} disabled={isPending} className="btn py-2 fw-bold flex-grow-1" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>Confirm List</button>
-                        }
-                        <button onClick={() => setIsListingMode(false)} className="btn btn-secondary py-2 fw-bold flex-grow-1" style={{ borderRadius: '12px', fontSize: '16px' }}>Cancel</button>
-                    </div>
-                );
-            }
-            // Logic Fix: Show Cancel Listing if already listed
+            // If already listed, show Cancel Listing
             if (listing) {
                 return <button onClick={handleCancelListing} disabled={isPending} className={btnClass} style={{ ...OUTLINE_BTN_STYLE, borderRadius: '12px', width: mobile ? '65%' : '100%', maxWidth: mobile ? '500px' : 'none', fontSize: '16px' }}>Cancel Listing</button>;
             }
+            // If not listed, show "List for Sale" which triggers the Modal
             return <button onClick={() => setIsListingMode(true)} className={btnClass} style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', width: mobile ? '65%' : '100%', maxWidth: mobile ? '500px' : 'none', fontSize: '16px' }}>List for Sale</button>;
         }
 
@@ -693,6 +703,50 @@ function AssetPage() {
                     <RenderActionButtons mobile={true} />
                 </div>
             </div>
+
+            {/* --- NEW LISTING MODAL --- */}
+            {isListingMode && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${GOLD_SOLID}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
+                        <button onClick={() => setIsListingMode(false)} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
+                        
+                        <h4 className="fw-bold mb-4 text-center" style={{ color: TEXT_PRIMARY }}>List for Sale</h4>
+
+                        <div className="mb-4 text-center">
+                            <div style={{ color: TEXT_MUTED, fontSize: '13px', marginBottom: '8px' }}>Set your price in POL</div>
+                            <div className="d-flex align-items-center justify-content-center border rounded-3 overflow-hidden p-2" style={{ borderColor: BORDER_COLOR, backgroundColor: BACKGROUND_DARK }}>
+                                <input 
+                                    autoFocus
+                                    type="number" 
+                                    className="form-control border-0 bg-transparent text-white p-0 text-end" 
+                                    style={{ fontSize: '24px', fontWeight: 'bold', width: '120px', boxShadow: 'none' }} 
+                                    placeholder="0" 
+                                    value={sellPrice} 
+                                    onChange={(e) => setSellPrice(e.target.value)} 
+                                />
+                                <span className="text-white fw-bold ps-2" style={{ fontSize: '20px' }}>POL</span>
+                            </div>
+                            {/* Optional USD Estimate */}
+                            <div className="mt-2" style={{ fontSize: '12px', color: '#0ecb81' }}>
+                                ≈ ${(parseFloat(sellPrice || '0') * POL_TO_USD_RATE).toFixed(2)} USD
+                            </div>
+                        </div>
+
+                        <div className="d-flex flex-column gap-2">
+                            {!isApproved ? (
+                                <button onClick={handleApproveNft} disabled={isPending} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>
+                                    {isPending ? 'Approving...' : '1. Approve NFT'}
+                                </button>
+                            ) : (
+                                <button onClick={handleList} disabled={isPending || !sellPrice || parseFloat(sellPrice) <= 0} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>
+                                    {isPending ? 'Listing...' : '2. Confirm Listing'}
+                                </button>
+                            )}
+                            <button onClick={() => setIsListingMode(false)} className="btn btn-link text-secondary text-decoration-none" style={{ fontSize: '14px' }}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {isOfferMode && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
