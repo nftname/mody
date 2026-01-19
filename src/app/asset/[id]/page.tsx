@@ -149,7 +149,8 @@ function AssetPage() {
     const [offerPrice, setOfferPrice] = useState('');
     const [wpolBalance, setWpolBalance] = useState<number>(0);
     const [wpolAllowance, setWpolAllowance] = useState<number>(0);
-    const [exchangeRates, setExchangeRates] = useState({ pol: POL_TO_USD_RATE, eth: 0 });
+    const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
+    const [isUsdMode, setIsUsdMode] = useState(false);
     
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
@@ -187,7 +188,7 @@ function AssetPage() {
             } catch (e) { console.error("Price API Error", e); }
         };
         fetchPrices();
-        const interval = setInterval(fetchPrices, 300000);
+        const interval = setInterval(fetchPrices, 60000);
         return () => clearInterval(interval);
     }, []);
 
@@ -405,20 +406,26 @@ function AssetPage() {
 
     const handleApproveNft = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'setApprovalForAll', args: [MARKETPLACE_ADDRESS as `0x${string}`, true] }); await publicClient!.waitForTransactionReceipt({ hash }); setIsApproved(true); } catch (err) { console.error(err); } finally { setIsPending(false); } };
     const handleList = async () => { 
+        if (!sellPrice || parseFloat(sellPrice) <= 0 || exchangeRates.pol <= 0) return;
         setIsPending(true); 
         try { 
+            // Logic: If USD mode, divide USD by POL price to get POL amount.
+            const polPrice = isUsdMode 
+                ? (parseFloat(sellPrice) / exchangeRates.pol).toString() 
+                : sellPrice;
+
             const hash = await writeContractAsync({ 
                 address: MARKETPLACE_ADDRESS as `0x${string}`, 
                 abi: MARKETPLACE_ABI, 
                 functionName: 'listItem', 
-                args: [BigInt(tokenId), parseEther(sellPrice)] 
+                args: [BigInt(tokenId), parseEther(polPrice)] 
             }); 
             await publicClient!.waitForTransactionReceipt({ hash }); 
             
             // Refresh Data & Show Success
             await fetchAllData(); 
             setIsListingMode(false); 
-            showModal('success', 'Listed Successfully', `Your asset is now listed for ${sellPrice} POL.`);
+            showModal('success', 'Listed Successfully', `Your asset is now listed for ${polPrice} POL.`);
         } catch (err) { 
             console.error(err); 
         } finally { 
@@ -737,24 +744,44 @@ function AssetPage() {
                         <h4 className="fw-bold mb-4 text-center" style={{ color: TEXT_PRIMARY }}>List for Sale</h4>
 
                         <div className="mb-4 text-center">
-                            <div style={{ color: TEXT_MUTED, fontSize: '13px', marginBottom: '8px' }}>Set your price in POL</div>
+                            <div style={{ color: TEXT_MUTED, fontSize: '13px', marginBottom: '8px' }}>
+                                Set your price in {isUsdMode ? 'USD' : 'POL'}
+                            </div>
                             <div className="d-flex align-items-center justify-content-center border rounded-3 overflow-hidden p-2" style={{ borderColor: BORDER_COLOR, backgroundColor: BACKGROUND_DARK }}>
-                                {/* Placeholder is 1000 (hint only) */}
                                 <input 
                                     autoFocus
                                     type="number" 
                                     className="form-control border-0 bg-transparent text-white p-0 text-end" 
                                     style={{ fontSize: '24px', fontWeight: 'bold', width: '120px', boxShadow: 'none' }} 
-                                    placeholder="1000" 
+                                    placeholder="0" 
                                     value={sellPrice} 
                                     onChange={(e) => setSellPrice(e.target.value)} 
                                 />
-                                <span className="text-white fw-bold ps-2" style={{ fontSize: '20px' }}>POL</span>
+                                <span className="text-white fw-bold ps-2" style={{ fontSize: '20px' }}>{isUsdMode ? 'USD' : 'POL'}</span>
                             </div>
                             
-                            {/* Live USD Estimate using exchangeRates.pol */}
-                            <div className="mt-2" style={{ fontSize: '12px', color: '#0ecb81' }}>
-                                ≈ ${(parseFloat(sellPrice || '0') * (exchangeRates.pol || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                            {/* Dynamic Green Dollar Toggle & Conversion Display */}
+                            <div className="mt-3 d-flex flex-column align-items-center gap-2">
+                                <button 
+                                    onClick={() => setIsUsdMode(!isUsdMode)}
+                                    className="btn p-0 border-0 d-flex align-items-center gap-1"
+                                    style={{ color: '#0ecb81', fontSize: '14px', background: 'transparent' }}
+                                >
+                                    <i className="bi bi-currency-dollar" style={{ fontSize: '18px' }}></i>
+                                    <span>Switch to {isUsdMode ? 'POL' : 'USD'}</span>
+                                </button>
+                                
+                                <div style={{ fontSize: '14px', color: '#fff', fontWeight: '500' }}>
+                                    {exchangeRates.pol > 0 ? (
+                                        isUsdMode ? (
+                                            <>≈ {(parseFloat(sellPrice || '0') / exchangeRates.pol).toFixed(4)} POL</>
+                                        ) : (
+                                            <>≈ ${(parseFloat(sellPrice || '0') * exchangeRates.pol).toFixed(2)} USD</>
+                                        )
+                                    ) : (
+                                        <span className="text-muted" style={{fontSize: '11px'}}>Fetching live price...</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -764,7 +791,7 @@ function AssetPage() {
                                     {isPending ? 'Approving...' : '1. Approve NFT'}
                                 </button>
                             ) : (
-                                <button onClick={handleList} disabled={isPending || !sellPrice || parseFloat(sellPrice) <= 0} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>
+                                <button onClick={handleList} disabled={isPending || !sellPrice || parseFloat(sellPrice) <= 0 || exchangeRates.pol <= 0} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>
                                     {isPending ? 'Listing...' : '2. Confirm Listing'}
                                 </button>
                             )}
