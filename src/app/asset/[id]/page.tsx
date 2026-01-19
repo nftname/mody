@@ -230,7 +230,8 @@ function AssetPage() {
                 tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founder',
                 price: listingData[2] ? formatEther(listingData[1]) : (meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'),
                 owner: owner,
-                image: resolveIPFS(meta.image)
+                image: resolveIPFS(meta.image),
+                mintDate: meta.attributes?.find((a: any) => a.trait_type === 'Mint Date')?.value
             });
 
             if (listingData[2]) setListing({ price: formatEther(listingData[1]), seller: listingData[0] });
@@ -522,7 +523,7 @@ function AssetPage() {
                                                 <div className="col-6 col-md-4"><TraitBox type="ASSET TYPE" value="Digital Name" percent="100%" /></div>
                                                 <div className="col-6 col-md-4"><TraitBox type="COLLECTION" value="Genesis - 001" percent="100%" /></div>
                                                 <div className="col-6 col-md-4"><TraitBox type="GENERATION" value="Gen-0" percent="100%" /></div>
-                                                <div className="col-6 col-md-4"><TraitBox type="MINT DATE" value="Dec 2025" percent="100%" /></div>
+                                                <div className="col-6 col-md-4"><TraitBox type="MINT DATE" value={asset.mintDate || 'Unknown'} percent="100%" /></div>
                                                 <div className="col-6 col-md-4"><TraitBox type="PLATFORM" value="NNM Registry" percent="100%" /></div>
                                                 <div className="col-6 col-md-4"><TraitBox type="TIER" value={asset.tier} percent="21%" /></div>
                                             </div>

@@ -265,27 +265,29 @@ function MarketPage() {
             if (allActivities) {
                 allActivities.forEach((act: any) => {
                     const tid = Number(act.token_id);
-                    const actTime = new Date(act.created_at).getTime();
                     const price = Number(act.price) || 0;
-
+                    // Parse date strictly
+                    const actTime = new Date(act.created_at).getTime(); 
+                    
                     if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
 
-                    // === CORE FIX: Include BOTH 'Sale' AND 'Mint' in Volume ===
-                    if (act.activity_type === 'Sale' || act.activity_type === 'Mint') {
-                        // Priority for Last Sale: Sale > Mint
-                        if (act.activity_type === 'Sale' && statsMap[tid].lastSale === 0) {
-                             statsMap[tid].lastSale = price; 
-                        } else if (act.activity_type === 'Mint' && statsMap[tid].lastSale === 0) {
-                             statsMap[tid].lastSale = price;
-                        }
+                    // 1. Capture Last Sale Price (Regardless of time filter, we always want the LATEST price)
+                    // We iterate desc (newest first), so the first 'Sale' or 'Mint' we hit is the latest.
+                    if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
+                            statsMap[tid].lastSale = price;
+                    }
 
-                        // Calculate Volume if within Time Filter
-                        if (now - actTime <= timeLimit) {
+                    // 2. Calculate Volume (STRICTLY based on Time Filter)
+                    if (act.activity_type === 'Sale' || act.activity_type === 'Mint') {
+                        const timeDiff = now - actTime;
+                        // Check if activity is within the selected Time Window
+                        if (timeDiff >= 0 && timeDiff <= timeLimit) {
                             statsMap[tid].volume += price;
                             statsMap[tid].sales += 1;
                         }
                     }
 
+                    // 3. Track Listing Time
                     if ((act.activity_type === 'List' || act.activity_type === 'Mint')) {
                         if (actTime > statsMap[tid].listedTime) {
                             statsMap[tid].listedTime = actTime;
@@ -483,11 +485,11 @@ function MarketPage() {
                               <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0 4px 10px', borderBottom: '1px solid #333', width: 'auto', maxWidth: '100px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '90px' }}>
+                              <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '12%' }}>
                                   <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'pricePol'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px 4px 50px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap' }}>Last Sale</th>
-                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px 4px 50px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', width: '15%' }}>Last Sale</th>
+                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '15%' }}>
                                   <div className="d-flex align-items-center justify-content-start">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
                               
@@ -524,10 +526,20 @@ function MarketPage() {
                                     <td className="text-start" style={{ padding: '12px 10px 12px 50px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{item.lastSale ? formatPrice(item.lastSale) : '---'}</span>
                                     </td>
-                                    <td className="text-start" style={{ padding: '12px 10px 12px 50px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                        <div className="d-flex flex-column align-items-start">
-                                            <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{formatVolumeUSD(item.volume)}</span>
-                                            {item.volume > 0 && <span style={{ fontSize: '10px', color: '#0ecb81' }}>+<i className="bi bi-caret-up-fill"></i></span>}
+                                    <td className="text-start" style={{ padding: '12px 10px 12px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <div className="d-flex align-items-center justify-content-start gap-2">
+                                            {/* Main Volume Price */}
+                                            <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
+                                                {formatVolumeUSD(item.volume)}
+                                            </span>
+                                            
+                                            {/* Percentage/Arrow Indicator - Now on the RIGHT, Larger Size */}
+                                            {item.volume > 0 && (
+                                                <span className="d-flex align-items-center" style={{ fontSize: '11.5px', fontWeight: '700', color: '#0ecb81', paddingLeft: '4px' }}>
+                                                    <i className="bi bi-caret-up-fill" style={{ fontSize: '10px', marginRight: '1px' }}></i>
+                                                    <span>+</span>
+                                                </span>
+                                            )}
                                         </div>
                                     </td>
                                     
