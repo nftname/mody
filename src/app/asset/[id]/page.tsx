@@ -425,7 +425,6 @@ function AssetPage() {
         if (!sellPrice || parseFloat(sellPrice) <= 0 || exchangeRates.pol <= 0) return;
         setIsPending(true); 
         try { 
-            // Logic: If USD mode, divide USD by POL price to get POL amount.
             const polPrice = isUsdMode 
                 ? (parseFloat(sellPrice) / exchangeRates.pol).toString() 
                 : sellPrice;
@@ -436,9 +435,19 @@ function AssetPage() {
                 functionName: 'listItem', 
                 args: [BigInt(tokenId), parseEther(polPrice)] 
             }); 
-            await publicClient!.waitForTransactionReceipt({ hash }); 
+            await publicClient!.waitForTransactionReceipt({ hash });
             
-            // Refresh Data & Show Success
+            await supabase.from('activities').insert([
+                {
+                    token_id: tokenId,
+                    activity_type: 'List',
+                    from_address: address,
+                    to_address: MARKETPLACE_ADDRESS,
+                    price: parseFloat(polPrice),
+                    created_at: new Date().toISOString()
+                }
+            ]);
+
             await fetchAllData(); 
             setIsListingMode(false); 
             showModal('success', 'Listed Successfully', `Your asset is now listed for ${polPrice} POL.`);
