@@ -33,7 +33,7 @@ export default function LegalModal() {
       left: 0, 
       width: '100%', 
       height: '100%', 
-      backgroundColor: 'rgba(0, 0, 0, 0.7)', // تعتيم الخلفية وراء النافذة لزيادة التركيز
+      backgroundColor: 'rgba(0, 0, 0, 0.7)', 
       backdropFilter: 'blur(5px)',
       zIndex: 999999, 
       display: 'flex', 
@@ -51,8 +51,8 @@ export default function LegalModal() {
       `}</style>
 
       <div style={{
-        backgroundColor: '#252525', // ✅ اللون الجديد: رمادي فحمي "أخف" قليلاً من خلفية الموقع
-        border: '1px solid rgba(252, 213, 53, 0.3)', // إطار ذهبي خافت
+        backgroundColor: '#252525', 
+        border: '1px solid rgba(252, 213, 53, 0.3)', 
         borderRadius: '12px',
         width: '90%', 
         maxWidth: '600px', 
@@ -66,7 +66,7 @@ export default function LegalModal() {
           <h5 className="fw-bold m-0 ps-2" style={{ fontFamily: 'sans-serif', fontSize: '21px', color: '#E6E8EA' }}>
             <span style={{ color: '#FCD535' }}>NNM</span> Terms of Service
           </h5>
-          <p className="m-0 ps-2" style={{ fontSize: '11px', marginTop: '4px', fontWeight: '300', color: '#848E9C' }}>Last Updated: November 2025</p>
+          <p className="m-0 ps-2" style={{ fontSize: '11px', marginTop: '4px', fontWeight: '300', color: '#848E9C' }}>Last Updated: January 2026</p>
         </div>
 
         <div className="legal-scroll p-4" style={{ 
@@ -144,7 +144,32 @@ export default function LegalModal() {
             </ul>
             <p className="mb-3">NNM reserves the right to restrict access to wallets suspected of prohibited activities.</p>
 
-            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>9. GOVERNING LAW & ARBITRATION</p>
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>9. INITIAL MARKET TESTING & OPERATIONAL WALLETS</p>
+            <p className="mb-3">
+              The platform may operate an Initial Market Testing Phase for up to ninety (90) days from the official launch date. During this period, the platform may use authorized Operational Wallets, including Admin Wallets, to test technical functions, provide initial liquidity, and evaluate trading indicators.
+            </p>
+            <p className="mb-3">
+              Names minted or listed through Operational Wallets are fully owned by those wallets, with transactions conducted at nominal values (covering only network/gas fees). Any trades conducted by Admin Wallets are pre-launch tests and do not constitute market manipulation, nor are they included in official market volumes.
+            </p>
+            <p className="mb-3">
+              The platform provides no warranty or guarantee regarding price, volume, liquidity, or trading outcomes during this phase. Users acknowledge that all trading activity in the Testing Phase is operational, educational, and experimental.
+            </p>
+            <p className="mb-3">
+              After the 90-day period, Operational Wallets cease experimental activity, and the marketplace operates fully as user-driven, dependent only on independent user transactions. By accessing the platform, users agree that they have read, understood, and accepted that Operational and Admin Wallet activities are not intended to mislead or manipulate the market.
+            </p>
+
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>10. CONVICTION RANK & POINTS SYSTEM</p>
+            <p className="mb-3">
+              The Conviction Rank and points system (WNNM → NNM Points) is an internal, symbolic reward system. Points are not currency, securities, or investments, and carry no monetary value outside the platform.
+            </p>
+            <p className="mb-3">
+              Users earn points through platform actions (purchases, registration, support), and points are redeemable only within the platform per its rules. The platform retains full control over points, conversion rules, and system operation, and may modify, suspend, or terminate it at any time.
+            </p>
+            <p className="mb-3">
+              The platform assumes no liability for financial interpretation, external use, or perceived value. Participation is voluntary and symbolic, intended for engagement, reputation, and internal privileges only. Points earned do not grant any claim, right, or entitlement to future tokens, coins, or tradable assets.
+            </p>
+
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>11. GOVERNING LAW & ARBITRATION</p>
             <p className="mb-3">
               All disputes shall be resolved by binding individual arbitration. Class-actions are waived. Governed by the laws of <strong style={{ fontWeight: '500', color: '#E6E8EA' }}>Singapore</strong>.
             </p>
@@ -153,7 +178,7 @@ export default function LegalModal() {
 
             <h6 className="fw-bold mt-3 mb-2" style={{ fontSize: '13px', fontWeight: '600', color: '#E6E8EA' }}>II. PRIVACY POLICY</h6>
 
-            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>10. MAXIMUM PRIVACY / DATA POLICY</p>
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>12. MAXIMUM PRIVACY / DATA POLICY</p>
             <p className="mb-1">NNM uses a Zero-PII philosophy. We do not collect names, emails, or IP addresses.</p>
             <ul className="legal-ul">
               <li>No accounts or registrations required.</li>
@@ -166,7 +191,15 @@ export default function LegalModal() {
 
             <h6 className="fw-bold mt-3 mb-2" style={{ fontSize: '13px', fontWeight: '600', color: '#E6E8EA' }}>III. INTELLECTUAL PROPERTY</h6>
 
-            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>11. TAKEDOWN MECHANISM</p>
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>13. NGX NFT INDEX OWNERSHIP & DISCLAIMER</p>
+            <p className="mb-3">
+              The NGX NFT Index and its sub-indices (Sentiment, Market Cap, Volume) are owned exclusively by the platform and constitute the platform’s intellectual property. The indices are analytical and educational tools only, not investment advice, trading signals, or financial recommendations.
+            </p>
+            <p className="mb-3">
+              Users acknowledge that all data and methodology belong solely to the platform, and any reproduction, copying, or use without authorization is prohibited. The platform assumes no liability for any financial decisions, trades, or outcomes resulting from the use of the indices. Access to the indices does not confer ownership, license, or rights to the methodology or data to users.
+            </p>
+
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>14. TAKEDOWN MECHANISM</p>
             <p className="mb-1">NNM respects IP rights. Upon valid notice (DMCA), we may:</p>
             <ul className="legal-ul">
               <li>Delist the NFT from the UI.</li>
