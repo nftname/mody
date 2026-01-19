@@ -209,6 +209,7 @@ function Home() {
             const volumeMap: any = {};
             const salesCountMap: any = {};
             const offersCountMap: any = {};
+            const latestListTimeMap: any = {};
             
             const now = Date.now();
             let timeLimit = 0;
@@ -228,6 +229,12 @@ function Home() {
                         if (now - actTime <= timeLimit) {
                             volumeMap[tid] = (volumeMap[tid] || 0) + price;
                             salesCountMap[tid] = (salesCountMap[tid] || 0) + 1;
+                        }
+                    }
+
+                    if (act.activity_type === 'List') {
+                        if (!latestListTimeMap[tid] || actTime > latestListTimeMap[tid]) {
+                            latestListTimeMap[tid] = actTime;
                         }
                     }
                 });
@@ -253,6 +260,7 @@ function Home() {
                     const offersCount = offersCountMap[tid] || 0;
                     
                     const trendingScore = salesCount + offersCount;
+                    const listedAt = latestListTimeMap[tid] || 0;
 
                     return {
                         id: tid,
@@ -262,7 +270,8 @@ function Home() {
                         pricePol: pricePol, 
                         volume: volumeVal, 
                         trendingScore: trendingScore,
-                        change: 0 
+                        change: 0,
+                        listedAt
                     };
                 } catch (e) { return null; }
             }));
@@ -299,9 +308,11 @@ function Home() {
       return [...processedData].sort((a, b) => b.volume - a.volume).slice(0, 3);
   }, [processedData]);
 
-  const newListingsItems = useMemo(() => {
-      return [...processedData].sort((a, b) => b.id - a.id).slice(0, 3);
-  }, [processedData]);
+    const newListingsItems = useMemo(() => {
+            return [...processedData]
+                .sort((a, b) => (b.listedAt || 0) - (a.listedAt || 0))
+                .slice(0, 3);
+    }, [processedData]);
   
   const desktopLeftData = processedData.slice(0, 5);
   const desktopRightData = processedData.slice(5, 10);
