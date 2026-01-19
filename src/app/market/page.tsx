@@ -266,22 +266,25 @@ function MarketPage() {
                 allActivities.forEach((act: any) => {
                     const tid = Number(act.token_id);
                     const price = Number(act.price) || 0;
-                    // Parse date strictly
-                    const actTime = new Date(act.created_at).getTime(); 
-                    
-                    if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
+                    const actTime = new Date(act.created_at).getTime();
+                
+                    // Init stats with lastActive tracking
+                    if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
 
-                    // 1. Capture Last Sale Price (Regardless of time filter, we always want the LATEST price)
-                    // We iterate desc (newest first), so the first 'Sale' or 'Mint' we hit is the latest.
-                    if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
-                            statsMap[tid].lastSale = price;
+                    // TRACK LATEST ACTIVITY FOR FILTERING
+                    if (actTime > statsMap[tid].lastActive) {
+                        statsMap[tid].lastActive = actTime;
                     }
 
-                    // 2. Calculate Volume (STRICTLY based on Time Filter)
+                    // 1. Capture Last Sale (Always latest known price)
+                    if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
+                         statsMap[tid].lastSale = price; 
+                    }
+
+                    // 2. Calculate Volume (Strictly within Time Limit)
                     if (act.activity_type === 'Sale' || act.activity_type === 'Mint') {
-                        const timeDiff = now - actTime;
-                        // Check if activity is within the selected Time Window
-                        if (timeDiff >= 0 && timeDiff <= timeLimit) {
+                        const age = now - actTime;
+                        if (age >= 0 && age <= timeLimit) {
                             statsMap[tid].volume += price;
                             statsMap[tid].sales += 1;
                         }
@@ -326,6 +329,7 @@ function MarketPage() {
                         lastSale: stats.lastSale,
                         volume: stats.volume,
                         listedTime: stats.listedTime,
+                        lastActive: stats.lastActive,
                         trendingScore: trendingScore,
                         offersCount: offersCount,
                         convictionScore: conviction,
@@ -345,22 +349,29 @@ function MarketPage() {
 
   const finalData = useMemo(() => {
       let processedData = [...realListings];
-      
-      if (activeFilter === 'Top') {
-          processedData.sort((a, b) => b.volume - a.volume);
-      } else if (activeFilter === 'Trending') {
-          processedData.sort((a, b) => b.trendingScore - a.trendingScore);
-      } else if (activeFilter === 'Most Offers') { 
-          processedData.sort((a, b) => b.offersCount - a.offersCount);
-      } else if (activeFilter === 'Watchlist') {
-          processedData = processedData.filter(item => favoriteIds.has(item.id));
-      } else if (activeFilter === 'Conviction') {
-          // New Sort Logic for Conviction
-          processedData.sort((a, b) => b.convictionScore - a.convictionScore);
-      } else {
-          processedData.sort((a, b) => a.id - b.id); 
+
+      // 1. REAL TIME FILTERING (Hide inactive assets)
+      if (timeFilter !== 'All') {
+          let limit = Infinity;
+          const now = Date.now();
+          if (timeFilter === '1H') limit = 3600 * 1000;
+          else if (timeFilter === '6H') limit = 3600 * 6 * 1000;
+          else if (timeFilter === '24H') limit = 3600 * 24 * 1000;
+          else if (timeFilter === '7D') limit = 3600 * 24 * 7 * 1000;
+
+          processedData = processedData.filter(item => {
+              const timeDiff = now - (item.lastActive || 0); 
+              return timeDiff <= limit;
+          });
       }
       
+      if (activeFilter === 'Top') { processedData.sort((a, b) => b.volume - a.volume); }
+      else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
+      else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
+      else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
+      else if (activeFilter === 'Conviction') { processedData.sort((a, b) => b.convictionScore - a.convictionScore); }
+      else { processedData.sort((a, b) => a.id - b.id); }
+
       if (sortConfig) {
           processedData.sort((a: any, b: any) => {
               const valA = a[sortConfig.key];
@@ -371,7 +382,7 @@ function MarketPage() {
           });
       }
       return processedData;
-  }, [activeFilter, favoriteIds, sortConfig, realListings]);
+  }, [activeFilter, favoriteIds, sortConfig, realListings, timeFilter]);
 
   const totalPages = Math.ceil(finalData.length / ITEMS_PER_PAGE);
   const currentTableData = finalData.slice(
@@ -479,26 +490,25 @@ function MarketPage() {
                   <table className="table align-middle mb-0" style={{ minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0' }}>
                       <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#1E1E1E' }}>
                           <tr style={{ borderBottom: '1px solid #333' }}>
-                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', width: '50px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #333', width: '60px', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0 4px 10px', borderBottom: '1px solid #333', width: 'auto', maxWidth: '100px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #333', width: '20%', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 0', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '12%' }}>
-                                  <div className="d-flex align-items-center justify-content-start">Price <SortArrows active={sortConfig?.key === 'pricePol'} direction={sortConfig?.direction} /></div>
+                              <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 0', borderBottom: '1px solid #333', textAlign: 'left', width: '15%', cursor: 'pointer' }}>
+                                  <div className="d-flex align-items-center">Price <SortArrows active={sortConfig?.key === 'pricePol'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', width: '15%' }}>Last Sale</th>
-                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'left', whiteSpace: 'nowrap', cursor: 'pointer', width: '15%' }}>
-                                  <div className="d-flex align-items-center justify-content-start">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
+                              {/* Shifting Right via Padding (10%) */}
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 40px', borderBottom: '1px solid #333', textAlign: 'left', width: '18%' }}>Last Sale</th>
+                              {/* Shifting Right via Padding (20%) */}
+                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 60px', borderBottom: '1px solid #333', textAlign: 'left', width: '20%', cursor: 'pointer' }}>
+                                  <div className="d-flex align-items-center">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
-                              
-                              {/* Conviction Column (Replaces Listed) */}
-                              <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 40px 4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #333', textAlign: 'right', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-end">Conviction <SortArrows active={sortConfig?.key === 'convictionScore'} direction={sortConfig?.direction} /></div>
                               </th>
-
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', width: '120px', whiteSpace: 'nowrap' }}>Action</th>
+                              <th style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #333', textAlign: 'right', width: '100px' }}>Action</th>
                           </tr>
                       </thead>
                       <tbody>
@@ -506,62 +516,51 @@ function MarketPage() {
                               const dynamicRank = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
                               return (
                                 <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
-                                    <td style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    <td style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center gap-3">
-                                            <i className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} style={{ fontSize: '12.5px', transform: 'scale(0.9)' }} onClick={(e) => handleToggleFavorite(e, item.id)}></i>
+                                            <i className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} style={{ fontSize: '12px' }} onClick={(e) => handleToggleFavorite(e, item.id)}></i>
                                             <span style={getRankStyle(dynamicRank) as any}>{dynamicRank}</span>
                                         </div>
                                     </td>
-                                    <td style={{ padding: '12px 0 12px 5px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    <td style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <Link href={`/asset/${item.id}`} className="d-flex align-items-center gap-2 text-decoration-none group">
                                             <CoinIcon name={item.name} tier={item.tier} />
-                                            <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '13.5px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
+                                            <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
                                         </Link>
                                     </td>
-                                    <td className="text-start" style={{ padding: '12px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                        <div className="d-flex align-items-center justify-content-start gap-2">
-                                            <span className="text-white" style={{ fontSize: '14px', fontWeight: '400', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
-                                        </div>
+                                    <td className="text-start" style={{ padding: '14px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <span className="text-white fw-bold" style={{ fontSize: '14px', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
                                     </td>
-                                    <td className="text-start" style={{ padding: '12px 10px 12px 50px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                        <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>{item.lastSale ? formatPrice(item.lastSale) : '---'}</span>
+                                    {/* Match Last Sale Header Padding (40px) */}
+                                    <td className="text-start" style={{ padding: '14px 10px 14px 40px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '400', color: '#B0B0B0' }}>{item.lastSale ? formatPrice(item.lastSale) : '---'}</span>
                                     </td>
-                                    <td className="text-start" style={{ padding: '12px 10px 12px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    {/* Match Volume Header Padding (60px) + Fixed Arrow Position */}
+                                    <td className="text-start" style={{ padding: '14px 10px 14px 60px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center justify-content-start gap-2">
-                                            {/* Main Volume Price */}
                                             <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
                                                 {formatVolumeUSD(item.volume)}
                                             </span>
-                                            
-                                            {/* Percentage/Arrow Indicator - Now on the RIGHT, Larger Size */}
                                             {item.volume > 0 && (
-                                                <span className="d-flex align-items-center" style={{ fontSize: '11.5px', fontWeight: '700', color: '#0ecb81', paddingLeft: '4px' }}>
-                                                    <i className="bi bi-caret-up-fill" style={{ fontSize: '10px', marginRight: '1px' }}></i>
-                                                    <span>+</span>
+                                                <span className="d-flex align-items-center" style={{ fontSize: '13px', fontWeight: 'bold', color: '#0ecb81' }}>
+                                                    +<i className="bi bi-caret-up-fill" style={{ fontSize: '13px', marginLeft: '2px' }}></i>
                                                 </span>
                                             )}
                                         </div>
                                     </td>
-                                    
-                                    {/* Conviction Cell (Replaces Listed) */}
-                                    <td className="text-end" style={{ padding: '12px 40px 12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                        <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>
+                                    <td className="text-end" style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
                                             {item.convictionScore > 0 ? (
                                                 <>
                                                     {dynamicRank <= 3 && <i className="bi bi-fire text-warning me-1"></i>}
                                                     {item.convictionScore}
                                                 </>
-                                            ) : (
-                                                <span className="text-muted">---</span>
-                                            )}
+                                            ) : ( <span className="text-muted" style={{fontSize: '12px'}}>0</span> )}
                                         </span>
                                     </td>
-
-                                    <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    <td className="text-end" style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex justify-content-end">
-                                            <Link href={`/asset/${item.id}`} className="text-decoration-none">
-                                                <ActionButton />
-                                            </Link>
+                                            <Link href={`/asset/${item.id}`} className="text-decoration-none"><ActionButton /></Link>
                                         </div>
                                     </td>
                                 </tr>
