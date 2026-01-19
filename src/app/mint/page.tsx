@@ -123,6 +123,7 @@ const MintContent = () => {
     setIsMinting(false);
     setTimer(60);
     setStatus(null);
+    setSearchTerm('');
     setErrorMessage('');
   };
 
@@ -233,18 +234,21 @@ const MintContent = () => {
                 tierName="IMMORTAL" tierIndex={0} nameToMint={searchTerm} isAdmin={isAdmin} 
                 onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
                 onProcessing={() => { setModalType('process'); setShowModal(true); }}
+                isMinting={isMinting} setIsMinting={setIsMinting}
             />
             <LuxuryIngot 
                 label="ELITE" price="$10" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
                 tierName="ELITE" tierIndex={1} nameToMint={searchTerm} isAdmin={isAdmin} 
                 onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
                 onProcessing={() => { setModalType('process'); setShowModal(true); }}
+                isMinting={isMinting} setIsMinting={setIsMinting}
             />
             <LuxuryIngot 
                 label="FOUNDERS" price="$5" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
                 tierName="FOUNDER" tierIndex={2} nameToMint={searchTerm} isAdmin={isAdmin} 
                 onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
                 onProcessing={() => { setModalType('process'); setShowModal(true); }}
+                isMinting={isMinting} setIsMinting={setIsMinting}
             />
         </div>
       </div>
@@ -367,12 +371,11 @@ const MintContent = () => {
   );
 }
 
-const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex, nameToMint, isAdmin, onSuccess, onError, onProcessing }: any) => {
+const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex, nameToMint, isAdmin, onSuccess, onError, onProcessing, isMinting, setIsMinting }: any) => {
     
     const { address, isConnected } = useAccount(); 
     const { writeContractAsync } = useWriteContract();
     const publicClient = usePublicClient();
-    const [isMinting, setIsMinting] = useState(false);
     
     // --- NEW: NNM REWARD SYSTEM HOOK (ADDED SURGICALLY) ---
     const notifyRewardSystem = async (userWallet: any) => {
@@ -466,34 +469,33 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
               });
             }
 
-            // Wait for transaction confirmation
+            // 1. Wait for transaction confirmation
             const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
-            // Record to Supabase Activity after success
-            // Find Token ID from Transfer event (Topic 0: Transfer signature, Topic 3: TokenId)
-            const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
-            
-            if (transferLog && transferLog.topics[3]) {
-                const mintedId = parseInt(transferLog.topics[3], 16);
-                
-                await supabase.from('activities').insert([
-                    {
-                        token_id: mintedId,
-                        activity_type: 'Mint',
-                        from_address: '0x0000000000000000000000000000000000000000',
-                        to_address: address, 
-                        price: price.replace('$',''),
-                        created_at: new Date().toISOString()
-                    }
-                ]);
-            }
-            
-            // --- NEW: TRIGGER NNM REWARD (SURGICAL INSERTION) ---
-            if (address) {
-                await notifyRewardSystem(address);
-            }
-
+            // 2. TRIGGER SUCCESS UI IMMEDIATELY
             onSuccess();
+            setIsMinting(false);
+
+            // 3. Run background tasks (DO NOT await them, let them run in background)
+            if (receipt.status === 'success') {
+                // Record to Supabase
+                const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
+                if (transferLog && transferLog.topics[3]) {
+                    const mintedId = parseInt(transferLog.topics[3], 16);
+                    supabase.from('activities').insert([
+                        {
+                            token_id: mintedId,
+                            activity_type: 'Mint',
+                            from_address: '0x0000000000000000000000000000000000000000',
+                            to_address: address, 
+                            price: price.replace('$',''),
+                            created_at: new Date().toISOString()
+                        }
+                    ]);
+                }
+                // Notify Reward System
+                if (address) notifyRewardSystem(address);
+            }
         } catch (err) {
             onError(err);
         } finally {
