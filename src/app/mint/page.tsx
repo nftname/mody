@@ -70,7 +70,7 @@ const MintContent = () => {
 
   const checkAvailability = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!searchTerm || searchTerm.length < 2) return;
+    if (!searchTerm || searchTerm.length < 1) return;
     
     const cleanName = searchTerm.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
     if (cleanName !== searchTerm) setSearchTerm(cleanName);
