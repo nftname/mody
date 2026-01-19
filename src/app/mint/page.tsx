@@ -102,6 +102,9 @@ const MintContent = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
+    setIsSearching(false);
+    // CRITICAL: Reset any pending minting states
+    setStatus(null);
   };
 
   // --- SURGICAL UPDATE: REPLACED OLD handleError WITH SMART DIPLOMAT ---
@@ -209,16 +212,19 @@ const MintContent = () => {
                 label="IMMORTAL" price="$15" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
                 tierName="IMMORTAL" tierIndex={0} nameToMint={searchTerm} isAdmin={isAdmin} 
                 onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
+                onProcessing={() => { setModalType('process'); setShowModal(true); }}
             />
             <LuxuryIngot 
                 label="ELITE" price="$10" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
                 tierName="ELITE" tierIndex={1} nameToMint={searchTerm} isAdmin={isAdmin} 
                 onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
+                onProcessing={() => { setModalType('process'); setShowModal(true); }}
             />
             <LuxuryIngot 
                 label="FOUNDERS" price="$5" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
                 tierName="FOUNDER" tierIndex={2} nameToMint={searchTerm} isAdmin={isAdmin} 
                 onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
+                onProcessing={() => { setModalType('process'); setShowModal(true); }}
             />
         </div>
       </div>
@@ -237,6 +243,17 @@ const MintContent = () => {
                         <button className="btn w-100 fw-bold py-3" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000', fontSize: '16px', borderRadius: '8px' }}>View Your New Asset <i className="bi bi-arrow-right ms-2"></i></button>
                      </Link>
                      <div className="mt-3"><button onClick={handleCloseModal} className="btn btn-link text-secondary text-decoration-none" style={{fontSize: '12px'}}>Mint Another</button></div>
+                   </div>
+                )}
+
+                {modalType === 'process' && (
+                   <div className="fade-in">
+                     <div className="mb-4">
+                        <div className="spinner-border" style={{ color: '#FCD535', width: '3rem', height: '3rem' }} role="status"></div>
+                     </div>
+                     <h4 className="text-white fw-bold mb-2">Processing Transaction</h4>
+                     <p className="text-secondary mb-4">Please confirm the action in your wallet and wait for network confirmation.</p>
+                     <button onClick={handleCloseModal} className="btn btn-link text-muted text-decoration-none" style={{fontSize: '13px'}}>Cancel & Reset</button>
                    </div>
                 )}
 
@@ -329,7 +346,7 @@ const MintContent = () => {
   );
 }
 
-const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex, nameToMint, isAdmin, onSuccess, onError }: any) => {
+const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex, nameToMint, isAdmin, onSuccess, onError, onProcessing }: any) => {
     
     const { address, isConnected } = useAccount(); 
     const { writeContractAsync } = useWriteContract();
@@ -351,8 +368,10 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
     };
 
     const handleMintClick = async () => {
-        if (!nameToMint || !publicClient) return;
+        if (!nameToMint || !isAvailable || !publicClient) return; // Guard logic
         setIsMinting(true);
+        // Trigger the parent's modal to show 'process' state
+        onProcessing();
         
         try {
             let selectedImage = TIER_IMAGES.FOUNDER; 
@@ -487,12 +506,14 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                 ) : (
                     <button
                         onClick={handleMintClick}
-                        disabled={isMinting}
+                        // Only enable if name is available AND not currently minting
+                        disabled={isMinting || !isAvailable || !nameToMint}
                         className="btn-ingot"
                         style={{
                             width: '100%',
                             height: '50px',
-                            cursor: 'pointer'
+                            cursor: (isMinting || !isAvailable) ? 'not-allowed' : 'pointer',
+                            opacity: (!isAvailable || !nameToMint) ? 0.5 : 1 // Dim if not ready
                         }}
                     >
                        {isMinting ? <div className="spinner-border spinner-border-sm text-dark" role="status"></div> : label}
