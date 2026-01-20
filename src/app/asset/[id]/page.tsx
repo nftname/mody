@@ -83,7 +83,21 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => 
     if (!isOpen) return null;
     let icon = <div className="spinner-border" style={{ color: GOLD_SOLID }} role="status"></div>;
     let iconColor = GOLD_SOLID;
-    if (type === 'success') { icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '40px', color: '#FCD535', filter: 'drop-shadow(0 0 10px rgba(252, 213, 53, 0.4))' }}></i>; iconColor = '#FCD535'; }
+    
+    if (type === 'success') {
+        icon = (
+            <div style={{ 
+                width: '80px', height: '80px', borderRadius: '50%', 
+                background: 'transparent',
+                border: '1px solid #FCD535',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto',
+                boxShadow: '0 0 15px rgba(252, 213, 53, 0.1)'
+            }}>
+                <i className="bi bi-check-lg" style={{ fontSize: '40px', color: '#FCD535' }}></i>
+            </div>
+        );
+        iconColor = 'transparent'; 
+    }
     else if (type === 'error') { icon = <i className="bi bi-exclamation-triangle" style={{ fontSize: '40px', color: '#FCD535' }}></i>; iconColor = '#FCD535'; }
     else if (type === 'swap') { icon = <i className="bi bi-wallet2" style={{ fontSize: '40px', color: GOLD_SOLID }}></i>; }
     return (

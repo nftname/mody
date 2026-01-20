@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [claimStep, setClaimStep] = useState<'audit' | 'confirm' | 'processing' | 'success' | 'error'>('audit');
   const [auditDetails, setAuditDetails] = useState({ totalEarned: 0, totalPaid: 0, claimable: 0 });
   const [claimTx, setClaimTx] = useState('');
+  const [isTransferring, setIsTransferring] = useState(false);
   
   const [viewModeState, setViewModeState] = useState(0); 
   const viewModes = ['grid', 'large', 'list'];
@@ -115,6 +116,17 @@ export default function DashboardPage() {
           notation: "compact",
           maximumFractionDigits: 1
       }).format(num);
+  };
+
+  // Helper: Static fee/currency mapping for activity values
+  const getActivityValue = (type: string, price: any) => {
+      const value = parseFloat(price || '0');
+      if (type === 'List') return { label: '- 0.01', currency: 'POL' };
+      if (type === 'Mint') return { label: `-${formatCompactNumber(value / 0.54)}`, currency: 'POL' };
+      if (type === 'Sale') return { label: `+${formatCompactNumber(value)}`, currency: 'POL' };
+      if (type === 'Offer') return { label: formatCompactNumber(value), currency: 'WPOL' };
+      if (type === 'Payout') return { label: `+${formatCompactNumber(value)}`, currency: 'POL' };
+      return { label: formatCompactNumber(value), currency: 'POL' };
   };
 
   // --- Favorites Logic ---
@@ -462,23 +474,34 @@ export default function DashboardPage() {
 
   const confirmClaim = async () => {
       if (auditDetails.claimable <= 0) return;
-      setClaimStep('processing'); // Show "Processing..."
+      
+      setClaimStep('processing');
+      
       try {
-          const res = await fetch('/api/nnm/claim', {
+          // 1. Set Persistence Flag immediately
+          localStorage.setItem(`nnm_claim_pending_${address}`, 'true');
+          
+          // 2. Fire Request
+          const request = fetch('/api/nnm/claim', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({ userWallet: address, amountNNM: auditDetails.claimable })
           });
+
+          // 3. Auto-close Modal (1.5s)
+          setTimeout(() => {
+              setShowClaimModal(false);
+              setIsTransferring(true); // Update UI
+          }, 1500);
+
+          // 4. Background Wait
+          const res = await request;
           const data = await res.json();
           
           if (data.success) {
-              setClaimTx(data.txHash);
-              setClaimStep('success'); // Show Success Screen
-              fetchConvictionData();   // Refresh Balance
-          } else {
-              setClaimStep('error');
+              await fetchConvictionData(); // This will eventually set balance to 0, which triggers the Effect to clear the flag
           }
-      } catch (e) { setClaimStep('error'); }
+      } catch (e) { console.error(e); }
   };
 
   useEffect(() => { 
@@ -494,6 +517,17 @@ export default function DashboardPage() {
       if (activeSection === 'Activity') fetchActivity();
       if (activeSection === 'Conviction') fetchConvictionData();
   }, [activeSection, offerType, offerSort, myAssets]);
+
+  // Effect: Check persistence on load
+  useEffect(() => {
+      const isPending = localStorage.getItem(`nnm_claim_pending_${address}`);
+      if (isPending && walletBalances.nnm > 0) {
+          setIsTransferring(true);
+      } else if (walletBalances.nnm === 0) {
+          localStorage.removeItem(`nnm_claim_pending_${address}`);
+          setIsTransferring(false);
+      }
+  }, [address, walletBalances.nnm]);
  // --- ADMIN CONFIG ---
   // استبدل هذا العنوان بعنوان محفظة الأدمن الحقيقية (بأحرف صغيرة lowercase)
   const ADMIN_WALLET = "0x5f2f670df4Db14ddB4Bc1E3eCe86CA645fb01BE6".toLowerCase();
@@ -839,9 +873,15 @@ export default function DashboardPage() {
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '11px' }}>
                                             <span>{activity.type}</span>
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>
-                                            {activity.price && !isNaN(parseFloat(activity.price)) ? formatCompactNumber(parseFloat(activity.price)) : '-'}
-                                        </td>
+                                        {(() => {
+                                            const val = getActivityValue(activity.type, activity.price);
+                                            return (
+                                                <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>
+                                                    <span style={{ color: '#E0E0E0' }}>{val.label}</span>
+                                                    <span style={{ fontSize: '10px', color: '#8a939b', marginLeft: '4px' }}>{val.currency}</span>
+                                                </td>
+                                            );
+                                        })()}
                                         <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>
                                             {activity.from === '0x0000000000000000000000000000000000000000' ? 'NullAddress' : (
                                                 <a href={`https://polygonscan.com/address/${activity.from}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>
@@ -890,18 +930,18 @@ export default function DashboardPage() {
                     
                     <button 
                         onClick={handleSmartClaim}
-                        disabled={walletBalances.nnm <= 0}
+                        disabled={walletBalances.nnm <= 0 || isTransferring}
                         className="btn fw-bold px-4 py-2"
                         style={{ 
-                            background: walletBalances.nnm > 0 ? 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)' : '#2d2d2d', 
-                            color: walletBalances.nnm > 0 ? '#000' : '#666', 
+                            background: walletBalances.nnm > 0 && !isTransferring ? 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)' : '#2d2d2d', 
+                            color: walletBalances.nnm > 0 && !isTransferring ? '#000' : '#666', 
                             border: 'none',
                             borderRadius: '8px',
                             fontSize: '14px',
-                            opacity: walletBalances.nnm > 0 ? 1 : 0.7
+                            opacity: walletBalances.nnm > 0 && !isTransferring ? 1 : 0.7
                         }}
                     >
-                        {walletBalances.nnm > 0 ? 'Claim Rewards' : 'No Claimable Balance'}
+                        {isTransferring ? 'Transfer in Progress' : (walletBalances.nnm > 0 ? 'Claim Rewards' : 'No Claimable Balance')}
                     </button>
                 </div>
 
