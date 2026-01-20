@@ -478,28 +478,25 @@ export default function DashboardPage() {
       setClaimStep('processing');
       
       try {
-          // 1. Set Persistence Flag immediately
           localStorage.setItem(`nnm_claim_pending_${address}`, 'true');
           
-          // 2. Fire Request
           const request = fetch('/api/nnm/claim', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({ userWallet: address, amountNNM: auditDetails.claimable })
           });
 
-          // 3. Auto-close Modal (1.5s)
+          // Auto-close Modal after 2 seconds
           setTimeout(() => {
               setShowClaimModal(false);
-              setIsTransferring(true); // Update UI
-          }, 1500);
+              setIsTransferring(true); 
+          }, 2000);
 
-          // 4. Background Wait
           const res = await request;
           const data = await res.json();
           
           if (data.success) {
-              await fetchConvictionData(); // This will eventually set balance to 0, which triggers the Effect to clear the flag
+              await fetchConvictionData();
           }
       } catch (e) { console.error(e); }
   };
@@ -518,16 +515,23 @@ export default function DashboardPage() {
       if (activeSection === 'Conviction') fetchConvictionData();
   }, [activeSection, offerType, offerSort, myAssets]);
 
-  // Effect: Check persistence on load
+  // Effect: Check persistence on load (Robust against race conditions)
   useEffect(() => {
+      // CRITICAL: Do not reset flags while data is still loading/fetching
+      if (loading) return;
+
       const isPending = localStorage.getItem(`nnm_claim_pending_${address}`);
+      
+      // Logic: Flag exists AND Balance > 0 => Keep showing "In Progress"
       if (isPending && walletBalances.nnm > 0) {
           setIsTransferring(true);
-      } else if (walletBalances.nnm === 0) {
+      } 
+      // Logic: If balance hits 0 (confirmed by DB) => Transaction Done => Clear flag
+      else if (!loading && walletBalances.nnm === 0) {
           localStorage.removeItem(`nnm_claim_pending_${address}`);
           setIsTransferring(false);
       }
-  }, [address, walletBalances.nnm]);
+  }, [address, walletBalances.nnm, loading]);
  // --- ADMIN CONFIG ---
   // استبدل هذا العنوان بعنوان محفظة الأدمن الحقيقية (بأحرف صغيرة lowercase)
   const ADMIN_WALLET = "0x5f2f670df4Db14ddB4Bc1E3eCe86CA645fb01BE6".toLowerCase();
@@ -878,7 +882,6 @@ export default function DashboardPage() {
                                             return (
                                                 <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>
                                                     <span style={{ color: '#E0E0E0' }}>{val.label}</span>
-                                                    <span style={{ fontSize: '10px', color: '#8a939b', marginLeft: '4px' }}>{val.currency}</span>
                                                 </td>
                                             );
                                         })()}
@@ -1011,8 +1014,8 @@ export default function DashboardPage() {
                     {claimStep === 'processing' && (
                         <div className="py-4">
                             <div className="spinner-border text-warning mb-3" role="status"></div>
-                            <h5 className="text-white">Processing Payout...</h5>
-                            <p className="text-secondary small">Sending POL to your wallet.</p>
+                            <h5 className="text-white">Transfer Initiated</h5>
+                            <p className="text-secondary small">Funds will arrive shortly.</p>
                         </div>
                     )}
                     
