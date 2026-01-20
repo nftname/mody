@@ -154,6 +154,10 @@ function AssetPage() {
     
     const [modal, setModal] = useState({ isOpen: false, type: 'loading', title: '', message: '' });
 
+    const [convictionCount, setConvictionCount] = useState(0);
+    const [hasConvicted, setHasConvicted] = useState(false);
+    const [isConvictionPending, setIsConvictionPending] = useState(false);
+
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
     const inputRef = useRef<HTMLInputElement>(null);
@@ -219,10 +223,64 @@ function AssetPage() {
         try {
             const { data, error } = await supabase.from('favorites').select('token_id').eq('wallet_address', address);
             if (error) throw error;
-            // ✅ Surgical Fix 1: Added (item: any)
             if (data) setFavoriteIds(new Set(data.map((item: any) => item.token_id)));
         } catch (e) { console.error("Error fetching favorites", e); }
     };
+
+    // --- CONVICTION LOGIC START ---
+    useEffect(() => {
+        const fetchConvictionData = async () => {
+            if (!tokenId) return;
+            const { count } = await supabase.from('conviction_votes').select('*', { count: 'exact', head: true }).eq('token_id', tokenId);
+            setConvictionCount(count || 0);
+            
+            if (address) {
+                const { data } = await supabase.from('conviction_votes').select('id').match({ token_id: tokenId, supporter_address: address }).maybeSingle();
+                if (data) setHasConvicted(true);
+            }
+        };
+        fetchConvictionData();
+    }, [tokenId, address]);
+
+    const handleGiveConviction = async () => {
+        if (!address || hasConvicted || isOwner) return;
+        
+        setIsConvictionPending(true);
+        try {
+            setConvictionCount(prev => prev + 1);
+            setHasConvicted(true);
+
+            await supabase.from('conviction_votes').insert({
+                token_id: tokenId,
+                supporter_address: address,
+                created_at: new Date().toISOString()
+            });
+
+            await supabase.from('nnm_conviction_ledger').insert({
+                supporter_wallet: address,
+                wnnm_spent: 1,
+                created_at: new Date().toISOString()
+            });
+
+            const { data: ownerWallet } = await supabase.from('nnm_wallets').select('nnm_balance').eq('wallet_address', asset.owner).single();
+            const currentBalance = ownerWallet ? parseFloat(ownerWallet.nnm_balance) : 0;
+            
+            await supabase.from('nnm_wallets').upsert({
+                wallet_address: asset.owner,
+                nnm_balance: currentBalance + 1,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'wallet_address' });
+
+            showModal('success', 'Conviction Recorded', 'You supported this name. 1 WNNM deducted, owner received 1 NNM.');
+        } catch (error) {
+            console.error("Conviction Error", error);
+            setConvictionCount(prev => prev - 1);
+            setHasConvicted(false);
+        } finally {
+            setIsConvictionPending(false);
+        }
+    };
+    // --- CONVICTION LOGIC END ---
 
     const handleToggleFavorite = async (e: React.MouseEvent, targetTokenId: string) => {
         e.preventDefault();
@@ -570,7 +628,7 @@ function AssetPage() {
 
                         <div className="mb-3">
                             <div className="d-flex" style={{ borderBottom: 'none' }}>
-                                {['Details', 'Orders', 'Activity'].map(tab => (
+                                {['Details', 'Conviction', 'Orders', 'Activity'].map(tab => (
                                     <button key={tab} onClick={() => setActiveTab(tab)} className="btn mx-3 py-2 fw-bold position-relative p-0" style={{ color: activeTab === tab ? '#fff' : TEXT_MUTED, background: 'transparent', border: 'none', fontSize: '15px' }}>
                                         {tab}
                                         {activeTab === tab && <div style={{ position: 'absolute', bottom: '-1px', left: 0, width: '100%', height: '3px', backgroundColor: '#fff', borderRadius: '2px 2px 0 0' }}></div>}
@@ -666,6 +724,45 @@ function AssetPage() {
                                                 )}
                                             </div>
                                         </Accordion>
+                                    </div>
+                                )}
+
+                                {activeTab === 'Conviction' && (
+                                    <div className="p-4 fade-in">
+                                        <div className="d-flex align-items-center justify-content-between p-3" style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: `1px solid ${BORDER_COLOR}` }}>
+                                            
+                                            <div className="d-flex flex-column gap-1">
+                                                <span className="fw-bold text-white" style={{ fontSize: '18px', letterSpacing: '0.5px' }}>{asset.name}</span>
+                                                <span style={{ color: TEXT_MUTED, fontSize: '13px', fontFamily: 'monospace' }}>
+                                                    MINTED: {asset.mintDate ? new Date(asset.mintDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : '---'}
+                                                </span>
+                                            </div>
+
+                                            <div className="d-flex flex-column align-items-center gap-2">
+                                                <div className="d-flex align-items-center gap-2" style={{ color: '#FCD535', fontSize: '20px', fontWeight: 'bold', textShadow: '0 0 10px rgba(252, 213, 53, 0.3)' }}>
+                                                    <i className="bi bi-fire"></i>
+                                                    <span>{formatCompactNumber(convictionCount)}</span>
+                                                </div>
+
+                                                {hasConvicted ? (
+                                                    <button disabled className="btn d-flex align-items-center gap-2" style={{ background: 'rgba(14, 203, 129, 0.1)', border: '1px solid #0ecb81', color: '#0ecb81', borderRadius: '8px', padding: '8px 20px', fontWeight: 'bold', fontSize: '14px', cursor: 'default' }}>
+                                                        Convicted <i className="bi bi-check-circle-fill"></i>
+                                                    </button>
+                                                ) : isOwner ? (
+                                                    <button disabled className="btn" style={{ background: 'transparent', border: `1px solid ${BORDER_COLOR}`, color: TEXT_MUTED, borderRadius: '8px', padding: '8px 20px', fontSize: '14px' }}>
+                                                        Owner (Cannot Vote)
+                                                    </button>
+                                                ) : (
+                                                    <button onClick={handleGiveConviction} disabled={isConvictionPending} className="btn fw-bold" style={{ ...OUTLINE_BTN_STYLE, borderRadius: '8px', padding: '8px 24px', fontSize: '14px', boxShadow: '0 4px 15px rgba(252, 213, 53, 0.1)' }}>
+                                                        {isConvictionPending ? <span className="spinner-border spinner-border-sm"></span> : 'Give Conviction'}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="mt-3 text-center" style={{ fontSize: '12px', color: '#666' }}>
+                                            Supporting this name costs 1 WNNM and grants 1 NNM to the owner.
+                                        </div>
                                     </div>
                                 )}
 
