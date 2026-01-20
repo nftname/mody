@@ -733,9 +733,10 @@ function AssetPage() {
                                             
                                             <div className="d-flex flex-column gap-1">
                                                 <span className="fw-bold text-white" style={{ fontSize: '18px', letterSpacing: '0.5px' }}>{asset.name}</span>
-                                                <span style={{ color: TEXT_MUTED, fontSize: '13px', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
-                                                    MINTED: {asset.mintDate ? new Date(asset.mintDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : '---'}
-                                                </span>
+                                                <div style={{ color: TEXT_MUTED, fontSize: '13px', fontFamily: 'monospace' }}>
+                                                    <div>MINTED:</div>
+                                                    <div>{asset.mintDate ? new Date(asset.mintDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : '---'}</div>
+                                                </div>
                                             </div>
 
                                             <div className="d-flex flex-column align-items-center gap-2">
