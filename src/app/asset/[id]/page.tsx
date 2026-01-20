@@ -733,7 +733,7 @@ function AssetPage() {
                                             
                                             <div className="d-flex flex-column gap-1">
                                                 <span className="fw-bold text-white" style={{ fontSize: '18px', letterSpacing: '0.5px' }}>{asset.name}</span>
-                                                <span style={{ color: TEXT_MUTED, fontSize: '13px', fontFamily: 'monospace' }}>
+                                                <span style={{ color: TEXT_MUTED, fontSize: '13px', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                                                     MINTED: {asset.mintDate ? new Date(asset.mintDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : '---'}
                                                 </span>
                                             </div>
@@ -818,7 +818,7 @@ function AssetPage() {
                                             <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0', fontSize: '11px' }}>
                                                 <thead><tr>
                                                     <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '12%' }}>Event</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '18%' }}>W/POL</th>
+                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '18%' }}>$</th>
                                                     <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>From</th>
                                                     <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>To</th>
                                                     <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '10%', textAlign: 'right' }}>Date</th>
