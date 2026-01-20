@@ -409,59 +409,33 @@ export default function DashboardPage() {
       if (!address) return;
       setLoading(true);
       try {
-          // 1. Fetch Raw Data
-          const { data: allActivities } = await supabase
-            .from('activities')
-            .select('*')
-            .or(`to_address.ilike.${address},from_address.ilike.${address}`)
-            .order('created_at', { ascending: false });
+          // 1. Fetch Real-Time Balance (Source of Truth)
+          const { data: wallet } = await supabase
+              .from('nnm_wallets')
+              .select('wnnm_balance, nnm_balance')
+              .eq('wallet_address', address)
+              .single();
 
-          const { data: spendings } = await supabase.from('nnm_conviction_ledger').select('*').ilike('supporter_wallet', address);
+          // 2. Update State directly
+          setWalletBalances({ 
+              wnnm: wallet?.wnnm_balance || 0, 
+              nnm: wallet ? parseFloat(wallet.nnm_balance) : 0 
+          });
+
+          // 3. Fetch History (Only for display in the table, NOT for calculation)
+          const { data: history } = await supabase
+              .from('nnm_conviction_ledger')
+              .select('*')
+              .eq('supporter_wallet', address)
+              .order('created_at', { ascending: false });
           
-          // 2. Fetch NNM Balance (Cash) from DB directly (since it's managed by claims)
-          const { data: walletDb } = await supabase.from('nnm_wallets').select('nnm_balance').eq('wallet_address', address).single();
-          const currentNNM = walletDb ? parseFloat(walletDb.nnm_balance) : 0;
+          const logs = history?.map((h: any) => ({
+              type: 'Support Given', amount: -h.wnnm_spent, currency: 'WNNM', date: h.created_at
+          })) || [];
+          
+          setConvictionLogs(logs);
 
-          // 3. Local Calculation (The Calculator)
-          let earnedWNNM = 0;
-          let history: any[] = [];
-
-          // A) Process Mints (+3) & Sales (+1)
-          allActivities?.forEach((act: any) => {
-              // Mint Logic
-              if (act.activity_type === 'Mint' && act.to_address.toLowerCase() === address.toLowerCase()) {
-                  earnedWNNM += 3;
-                  history.push({ type: 'Mint Reward', amount: 3, currency: 'WNNM', date: act.created_at });
-              }
-              // Sale Logic (Buyer Reward)
-              else if (act.activity_type === 'Sale' && act.to_address.toLowerCase() === address.toLowerCase()) {
-                  earnedWNNM += 1;
-                  history.push({ type: 'Market Reward', amount: 1, currency: 'WNNM', date: act.created_at });
-              }
-          });
-
-          // B) Subtract Spending
-          let spentWNNM = 0;
-          spendings?.forEach((sp: any) => {
-              spentWNNM += sp.wnnm_spent;
-              history.push({ type: 'Support Given', amount: -sp.wnnm_spent, currency: 'WNNM', date: sp.created_at });
-          });
-
-          // C) Final Result
-          const finalWNNM = earnedWNNM - spentWNNM;
-
-          // 4. Update UI Immediately
-          setWalletBalances({ wnnm: finalWNNM, nnm: currentNNM });
-          setConvictionLogs(history.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-
-          // 5. Sync to Database (Persistence)
-          await supabase.from('nnm_wallets').upsert({ 
-              wallet_address: address.toLowerCase(), 
-              wnnm_balance: finalWNNM, 
-              updated_at: new Date().toISOString() 
-          }, { onConflict: 'wallet_address' });
-
-      } catch (e) { console.error("Conviction Calc Error", e); } 
+      } catch (e) { console.error(e); } 
       finally { setLoading(false); }
   };
 

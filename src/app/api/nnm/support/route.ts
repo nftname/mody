@@ -19,74 +19,46 @@ const CONTRACT_ABI = parseAbi([
   "function ownerOf(uint256 tokenId) view returns (address)"
 ]);
 
-// إصلاح 2: تحديد نوع الـ request
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { supporterWallet, assetId, assetOwner } = body;
 
-    if (!supporterWallet || !assetId) {
+    if (!supporterWallet || !assetId || !assetOwner) {
       return NextResponse.json({ success: false, message: 'Missing data' }, { status: 400 });
     }
 
-    let realOwner = assetOwner;
-    try {
-        const ownerResult = await publicClient.readContract({
-            address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-            abi: CONTRACT_ABI,
-            functionName: 'ownerOf',
-            args: [BigInt(assetId)]
-        });
-        realOwner = ownerResult.toString().toLowerCase();
-    } catch (e) {
-        console.warn("Could not verify on-chain owner, using provided owner.");
+    if (supporterWallet.toLowerCase() === assetOwner.toLowerCase()) {
+      return NextResponse.json({ success: false, message: 'Cannot support your own asset.' }, { status: 403 });
     }
 
-    if (realOwner && realOwner.toLowerCase() === supporterWallet.toLowerCase()) {
-        return NextResponse.json({ 
-            success: false, 
-            message: '⛔ You cannot support your own asset. Integrity First.' 
-        }, { status: 403 });
+    // Check Balance
+    const { data: supporterData } = await supabase.from('nnm_wallets').select('*').eq('wallet_address', supporterWallet).single();
+    if (!supporterData || supporterData.wnnm_balance < 1) {
+      return NextResponse.json({ success: false, message: 'Insufficient WNNM balance.' }, { status: 400 });
     }
 
-    const { data: walletData, error: walletError } = await supabase
-      .from('nnm_wallets')
-      .select('wnnm_balance, nnm_balance')
-      .eq('wallet_address', supporterWallet)
-      .single();
+    // 1. Process Supporter (Deduct WNNM, Add NNM)
+    await supabase.from('nnm_wallets').update({
+      wnnm_balance: supporterData.wnnm_balance - 1,
+      nnm_balance: parseFloat(supporterData.nnm_balance) + 1,
+      updated_at: new Date().toISOString()
+    }).eq('wallet_address', supporterWallet);
 
-    if (walletError || !walletData || walletData.wnnm_balance < 1) {
-      return NextResponse.json({ 
-          success: false, 
-          message: '⚠️ Insufficient WNNM balance. Mint or Buy assets to earn voting power.' 
-      }, { status: 400 });
-    }
+    // 2. Process Asset Owner (Add NNM Reward)
+    const { data: ownerData } = await supabase.from('nnm_wallets').select('nnm_balance').eq('wallet_address', assetOwner).single();
+    const currentOwnerBalance = ownerData ? parseFloat(ownerData.nnm_balance) : 0;
+    await supabase.from('nnm_wallets').upsert({
+      wallet_address: assetOwner,
+      nnm_balance: currentOwnerBalance + 1,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'wallet_address' });
 
-    const newWNNM = walletData.wnnm_balance - 1;
-    const newNNM = parseFloat(walletData.nnm_balance) + 1;
+    // 3. Record Vote & Ledger
+    await supabase.from('conviction_votes').insert({ token_id: assetId.toString(), supporter_address: supporterWallet, created_at: new Date().toISOString() });
+    await supabase.from('nnm_conviction_ledger').insert({ supporter_wallet: supporterWallet, wnnm_spent: 1, created_at: new Date().toISOString() });
 
-    const { error: updateError } = await supabase
-      .from('nnm_wallets')
-      .update({ 
-          wnnm_balance: newWNNM, 
-          nnm_balance: newNNM,
-          updated_at: new Date().toISOString()
-      })
-      .eq('wallet_address', supporterWallet);
-
-    if (updateError) throw updateError;
-
-    await supabase.from('conviction_votes').insert({
-        token_id: assetId.toString(),
-        supporter_address: supporterWallet,
-        amount: 1
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: '🔥 Conviction Registered! +1 NNM added to your withdrawable balance.',
-      newBalance: { wnnm: newWNNM, nnm: newNNM }
-    });
+    return NextResponse.json({ success: true });
 
   } catch (err) {
     console.error('Support Error:', err);

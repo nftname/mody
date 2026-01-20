@@ -43,8 +43,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Insufficient NNM balance in records' }, { status: 400 });
     }
 
-    // حساب القيمة المالية (1 NNM = 0.10$) وتحويلها لعملة POL
-    const FIXED_RATE = 0.10; 
+    // حساب القيمة المالية (1 NNM = 0.05$) وتحويلها لعملة POL
+    const FIXED_RATE = 0.05; // 1 NNM = $0.05 
     const totalUsdValue = amountNNM * FIXED_RATE;
 
     // جلب سعر POL الحالي

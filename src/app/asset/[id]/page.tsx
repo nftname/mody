@@ -251,38 +251,23 @@ function AssetPage() {
 
     const handleGiveConviction = async () => {
         if (!address || hasConvicted || isOwner) return;
-        
         setIsConvictionPending(true);
         try {
+            const res = await fetch('/api/nnm/support', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ supporterWallet: address, assetId: tokenId, assetOwner: asset.owner })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message);
+
+            // Optimistic Update
             setConvictionCount(prev => prev + 1);
             setHasConvicted(true);
-
-            await supabase.from('conviction_votes').insert({
-                token_id: tokenId,
-                supporter_address: address,
-                created_at: new Date().toISOString()
-            });
-
-            await supabase.from('nnm_conviction_ledger').insert({
-                supporter_wallet: address,
-                wnnm_spent: 1,
-                created_at: new Date().toISOString()
-            });
-
-            const { data: ownerWallet } = await supabase.from('nnm_wallets').select('nnm_balance').eq('wallet_address', asset.owner).single();
-            const currentBalance = ownerWallet ? parseFloat(ownerWallet.nnm_balance) : 0;
-            
-            await supabase.from('nnm_wallets').upsert({
-                wallet_address: asset.owner,
-                nnm_balance: currentBalance + 1,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'wallet_address' });
-
-            showModal('success', 'Conviction Recorded', 'You supported this name. 1 WNNM deducted, owner received 1 NNM.');
-        } catch (error) {
-            console.error("Conviction Error", error);
-            setConvictionCount(prev => prev - 1);
-            setHasConvicted(false);
+            showModal('success', 'Conviction Given', '1 WNNM converted to NNM. Owner rewarded.');
+        } catch (error: any) {
+            console.error(error);
+            showModal('error', 'Failed', error.message || 'Error processing conviction.');
         } finally {
             setIsConvictionPending(false);
         }
