@@ -462,7 +462,7 @@ export default function DashboardPage() {
 
   const confirmClaim = async () => {
       if (auditDetails.claimable <= 0) return;
-      setClaimStep('processing');
+      setClaimStep('processing'); // Show "Processing..."
       try {
           const res = await fetch('/api/nnm/claim', {
               method: 'POST',
@@ -470,10 +470,11 @@ export default function DashboardPage() {
               body: JSON.stringify({ userWallet: address, amountNNM: auditDetails.claimable })
           });
           const data = await res.json();
+          
           if (data.success) {
               setClaimTx(data.txHash);
-              setClaimStep('success');
-              fetchConvictionData(); 
+              setClaimStep('success'); // Show Success Screen
+              fetchConvictionData();   // Refresh Balance
           } else {
               setClaimStep('error');
           }
@@ -964,6 +965,28 @@ export default function DashboardPage() {
                              <h4 className="text-white mt-2">Audit Passed</h4>
                              <div className="my-4 text-white fw-bold fs-4">Claimable: <span style={{color:'#FCD535'}}>{auditDetails.claimable} NNM</span></div>
                              <button onClick={confirmClaim} className="btn w-100 fw-bold py-3" style={{ background: 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)', border: 'none', color: '#000' }}>Confirm</button>
+                        </div>
+                    )}
+                    
+                    {claimStep === 'processing' && (
+                        <div className="py-4">
+                            <div className="spinner-border text-warning mb-3" role="status"></div>
+                            <h5 className="text-white">Processing Payout...</h5>
+                            <p className="text-secondary small">Sending POL to your wallet.</p>
+                        </div>
+                    )}
+                    
+                    {claimStep === 'success' && (
+                        <div className="py-4">
+                             <i className="bi bi-check-circle-fill text-warning fs-1 mb-3"></i>
+                             <h4 className="text-white">Transfer Successful!</h4>
+                             <p className="text-secondary small mb-3">Funds sent to your wallet.</p>
+                             {claimTx && (
+                                 <a href={`https://polygonscan.com/tx/${claimTx}`} target="_blank" className="btn btn-sm btn-outline-warning mb-3">
+                                     View on PolygonScan <i className="bi bi-box-arrow-up-right"></i>
+                                 </a>
+                             )}
+                             <button onClick={() => setShowClaimModal(false)} className="btn w-100 fw-bold" style={{ background: '#FCD535', border: 'none', color: '#000' }}>Close</button>
                         </div>
                     )}
                     {/* Add success/error states as needed */}

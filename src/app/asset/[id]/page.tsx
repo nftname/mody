@@ -83,7 +83,7 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => 
     if (!isOpen) return null;
     let icon = <div className="spinner-border" style={{ color: GOLD_SOLID }} role="status"></div>;
     let iconColor = GOLD_SOLID;
-    if (type === 'success') { icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '40px', color: '#28a745' }}></i>; iconColor = '#28a745'; }
+    if (type === 'success') { icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '40px', color: '#FCD535', filter: 'drop-shadow(0 0 10px rgba(252, 213, 53, 0.4))' }}></i>; iconColor = '#FCD535'; }
     else if (type === 'error') { icon = <i className="bi bi-exclamation-triangle" style={{ fontSize: '40px', color: '#FCD535' }}></i>; iconColor = '#FCD535'; }
     else if (type === 'swap') { icon = <i className="bi bi-wallet2" style={{ fontSize: '40px', color: GOLD_SOLID }}></i>; }
     return (
@@ -274,7 +274,7 @@ function AssetPage() {
             // Success: Optimistic UI Update
             setConvictionCount(prev => prev + 1);
             setHasConvicted(true);
-            showModal('success', 'Conviction Given', '1 WNNM converted to 1 NNM. Owner rewarded.');
+            showModal('success', 'Conviction Registered', 'Your support has been recorded on-chain.');
 
         } catch (error: any) {
             console.error("Conviction Error", error);
