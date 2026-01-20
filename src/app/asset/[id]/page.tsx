@@ -251,23 +251,40 @@ function AssetPage() {
 
     const handleGiveConviction = async () => {
         if (!address || hasConvicted || isOwner) return;
+        
         setIsConvictionPending(true);
         try {
-            const res = await fetch('/api/nnm/support', {
+            // CALL THE API (The Logic Engine)
+            const response = await fetch('/api/nnm/support', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ supporterWallet: address, assetId: tokenId, assetOwner: asset.owner })
+                body: JSON.stringify({
+                    supporterWallet: address,
+                    assetId: tokenId,
+                    assetOwner: asset.owner
+                })
             });
-            const data = await res.json();
-            if (!res.ok || !data.success) throw new Error(data.message);
 
-            // Optimistic Update
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Transaction failed');
+            }
+
+            // Success: Optimistic UI Update
             setConvictionCount(prev => prev + 1);
             setHasConvicted(true);
-            showModal('success', 'Conviction Given', '1 WNNM converted to NNM. Owner rewarded.');
+            showModal('success', 'Conviction Given', '1 WNNM converted to 1 NNM. Owner rewarded.');
+
         } catch (error: any) {
-            console.error(error);
-            showModal('error', 'Failed', error.message || 'Error processing conviction.');
+            console.error("Conviction Error", error);
+            // Use Gold Warning Modal instead of Red Error
+            setModal({ 
+                isOpen: true, 
+                type: 'error', 
+                title: 'Action Failed', 
+                message: error.message || 'Could not process conviction.' 
+            });
         } finally {
             setIsConvictionPending(false);
         }
@@ -836,7 +853,7 @@ function AssetPage() {
                                                             <td className="align-middle" style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>
                                                                 {act.to ? (act.to === 'Market' ? 'Market' : <Link href={`/profile/${act.to}`} style={{color: GOLD_SOLID, textDecoration: 'none'}}>{act.to.slice(0,6)}</Link>) : '-'}
                                                             </td>
-                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: TEXT_MUTED, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>{formatShortTime(act.date)}</td>
+                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: TEXT_MUTED, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>{new Date(act.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                                                         </tr>
                                                     ))}
                                                     {activityList.length === 0 && <tr><td colSpan={5} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>No recent activity</td></tr>}

@@ -411,9 +411,9 @@ export default function DashboardPage() {
       try {
           // 1. Fetch History (Mints, Sales, Votes) to CALCULATE Balance
           // Use separate queries for accuracy
-          const { data: mints } = await supabase.from('activities').select('*').match({ to_address: address, activity_type: 'Mint' });
-          const { data: sales } = await supabase.from('activities').select('*').match({ to_address: address, activity_type: 'Sale' });
-          const { data: votes } = await supabase.from('conviction_votes').select('*').ilike('supporter_address', address);
+          const { data: mints } = await supabase.from('activities').select('*').match({ to_address: address.toLowerCase(), activity_type: 'Mint' });
+          const { data: sales } = await supabase.from('activities').select('*').match({ to_address: address.toLowerCase(), activity_type: 'Sale' });
+          const { data: votes } = await supabase.from('conviction_votes').select('*').ilike('supporter_address', address.toLowerCase());
           
           // 2. Fetch NNM (Cash) Balance directly from wallet (handled by API)
           const { data: wallet } = await supabase.from('nnm_wallets').select('nnm_balance').eq('wallet_address', address).single();
@@ -922,7 +922,7 @@ export default function DashboardPage() {
                                             {log.amount > 0 ? '+' : ''}{log.amount}
                                         </td>
                                         <td style={{ padding: '15px', textAlign: 'right', color: '#8a939b' }}>
-                                            {new Date(log.date).toLocaleDateString()}
+                                            {new Date(log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                         </td>
                                     </tr>
                                 ))
