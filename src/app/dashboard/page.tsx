@@ -467,8 +467,11 @@ export default function DashboardPage() {
   const handleSmartClaim = async () => {
       setShowClaimModal(true);
       setClaimStep('audit');
+      
+      // Simulate auditing delay, then move to confirm step
       setTimeout(() => {
           setAuditDetails({ totalEarned: 0, totalPaid: 0, claimable: walletBalances.nnm });
+          setClaimStep('confirm');
       }, 1500);
   };
 
@@ -497,6 +500,7 @@ export default function DashboardPage() {
           
           if (data.success) {
               await fetchConvictionData();
+              await fetchActivity();
           }
       } catch (e) { console.error(e); }
   };
@@ -881,6 +885,7 @@ export default function DashboardPage() {
                                             const val = getActivityValue(activity.type, activity.price);
                                             return (
                                                 <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>
+                                                    {/* Display Number ONLY - Off-White Color (#E0E0E0) - No Suffix */}
                                                     <span style={{ color: '#E0E0E0' }}>{val.label}</span>
                                                 </td>
                                             );
