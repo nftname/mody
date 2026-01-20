@@ -35,16 +35,16 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('Items');
 
-  // --- Conviction & Audit States ---
-  const [convictionLogs, setConvictionLogs] = useState<any[]>([]);
-  const [walletBalances, setWalletBalances] = useState({ wnnm: 0, nnm: 0 });
-  const [showClaimModal, setShowClaimModal] = useState(false);
-  const [claimStep, setClaimStep] = useState<'audit' | 'confirm' | 'processing' | 'success' | 'error'>('audit');
-  const [auditDetails, setAuditDetails] = useState({ totalEarned: 0, totalPaid: 0, claimable: 0 });
-  const [claimTx, setClaimTx] = useState('');
-  const [isTransferring, setIsTransferring] = useState(false);
-  
-  const [viewModeState, setViewModeState] = useState(0); 
+    // --- Conviction & Audit States ---
+    const [convictionLogs, setConvictionLogs] = useState<any[]>([]);
+    const [walletBalances, setWalletBalances] = useState({ wnnm: 0, nnm: 0 });
+    const [showClaimModal, setShowClaimModal] = useState(false);
+    const [claimStep, setClaimStep] = useState<'audit' | 'confirm' | 'processing' | 'success' | 'error'>('audit');
+    const [auditDetails, setAuditDetails] = useState({ totalEarned: 0, totalPaid: 0, claimable: 0 });
+    const [claimTx, setClaimTx] = useState('');
+    const [isTransferring, setIsTransferring] = useState(false);
+    const [triggerClaimExecution, setTriggerClaimExecution] = useState(false);
+    const [viewModeState, setViewModeState] = useState(0); 
   const viewModes = ['grid', 'large', 'list'];
   const currentViewMode = viewModes[viewModeState];
   const [isCopied, setIsCopied] = useState(false);
@@ -478,39 +478,16 @@ export default function DashboardPage() {
   const confirmClaim = async () => {
       if (auditDetails.claimable <= 0) return;
       
-      // --- OPTIMISTIC UI: Act as if it succeeded immediately ---
-      setShowClaimModal(false); // 1. Close Modal
-      const amountToClaim = auditDetails.claimable;
-      
-      // 2. Visually Zero out the balance & Hide Button
+      // 1. Optimistic UI: Close Modal and Update Balance Instantly
+      setShowClaimModal(false);
       setWalletBalances(prev => ({ ...prev, nnm: 0 })); 
       setIsTransferring(true);
       
-      // 3. Set Persistence Flag
+      // 2. Set Persistence Flag
       localStorage.setItem(`nnm_claim_pending_${address}`, 'true');
-
-      // --- BACKGROUND: Fire & Forget ---
-      try {
-          const request = fetch('/api/nnm/claim', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ userWallet: address, amountNNM: amountToClaim })
-          });
-          
-          const res = await request;
-          const data = await res.json();
-          
-          if (data.success) {
-              await fetchActivity(); // Only refresh activity on success
-          } else {
-              // Only on REAL failure: Remove flag so button reappears on refresh
-              console.error("Transfer failed:", data.error);
-              localStorage.removeItem(`nnm_claim_pending_${address}`);
-          }
-      } catch (e) { 
-          console.error("Connection error", e);
-          localStorage.removeItem(`nnm_claim_pending_${address}`);
-      }
+      
+      // 3. Trigger the Root-Level Effect
+      setTriggerClaimExecution(true);
   };
 
   useEffect(() => { 
@@ -526,6 +503,40 @@ export default function DashboardPage() {
       if (activeSection === 'Activity') fetchActivity();
       if (activeSection === 'Conviction') fetchConvictionData();
   }, [activeSection, offerType, offerSort, myAssets]);
+
+  // Persistent Background Effect for Claim Execution
+  useEffect(() => {
+      if (!triggerClaimExecution || !address) return;
+
+      const executePayout = async () => {
+          try {
+              const res = await fetch('/api/nnm/claim', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                      userWallet: address, 
+                      amountNNM: auditDetails.claimable 
+                  }),
+                  keepalive: true // Essential for background persistence
+              });
+
+              const data = await res.json();
+              if (data.success) {
+                  await fetchActivity();
+              } else {
+                  // If confirmed failure, rollback the pending state
+                  localStorage.removeItem(`nnm_claim_pending_${address}`);
+                  setIsTransferring(false);
+              }
+          } catch (e) {
+              console.error("Background Payout Error:", e);
+          } finally {
+              setTriggerClaimExecution(false);
+          }
+      };
+
+      executePayout();
+  }, [triggerClaimExecution, address, auditDetails.claimable]);
 
   // Effect: Check persistence on load (Robust against race conditions)
   useEffect(() => {
