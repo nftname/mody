@@ -153,8 +153,8 @@ function MarketPage() {
   ];
 
   // Default filter: 'Conviction'
-  const [activeFilter, setActiveFilter] = useState('Conviction');
-  const [timeFilter, setTimeFilter] = useState('24H');
+    const [activeFilter, setActiveFilter] = useState('Conviction');
+    const [timeFilter, setTimeFilter] = useState('All');
   const [currencyFilter, setCurrencyFilter] = useState('All'); 
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); 
   
