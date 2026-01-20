@@ -40,6 +40,13 @@ const GLASS_BTN_STYLE = {
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
 };
 
+const SOFT_GOLD_BTN_STYLE = {
+    background: 'rgba(240, 196, 32, 0.1)',
+    border: `1px solid ${GOLD_SOLID}`,
+    color: GOLD_SOLID,
+    fontWeight: 'bold' as const
+};
+
 const OFFER_DURATION = 30 * 24 * 60 * 60; 
 const POL_TO_USD_RATE = 0.54; 
 
@@ -515,6 +522,15 @@ function AssetPage() {
             setIsPending(false); 
         } 
     };
+
+    const resetUI = () => {
+        setIsListingMode(false);
+        setIsOfferMode(false);
+        setIsPending(false);
+        setOfferStep(listing ? 'select' : 'input');
+        setOfferPrice('');
+        setSellPrice('');
+    };
     
     // Cancel Listing Function
     const handleCancelListing = async () => {
@@ -862,7 +878,7 @@ function AssetPage() {
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${GOLD_SOLID}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
                         {/* Close Button: Triggers Hard Reset */}
-                        <button onClick={closeListingModal} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
+                        <button onClick={resetUI} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
                         
                         <h4 className="fw-bold mb-4 text-center" style={{ color: TEXT_PRIMARY }}>List for Sale</h4>
 
@@ -910,7 +926,7 @@ function AssetPage() {
 
                         <div className="d-flex flex-column gap-2">
                             {!isApproved ? (
-                                <button onClick={handleApproveNft} disabled={isPending} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>
+                                <button onClick={handleApproveNft} disabled={isPending} className="btn w-100 py-3 fw-bold" style={{ ...SOFT_GOLD_BTN_STYLE, borderRadius: '12px' }}>
                                     {isPending ? (
                                         <span className="d-flex align-items-center justify-content-center gap-2">
                                             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -919,7 +935,7 @@ function AssetPage() {
                                     ) : '1. Approve NFT'}
                                 </button>
                             ) : (
-                                <button onClick={handleList} disabled={isPending || !sellPrice || parseFloat(sellPrice) <= 0 || exchangeRates.pol <= 0} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>
+                                <button onClick={handleList} disabled={isPending || !sellPrice || parseFloat(sellPrice) <= 0 || exchangeRates.pol <= 0} className="btn w-100 py-3 fw-bold" style={{ ...SOFT_GOLD_BTN_STYLE, borderRadius: '12px' }}>
                                     {isPending ? (
                                         <span className="d-flex align-items-center justify-content-center gap-2">
                                             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -929,7 +945,7 @@ function AssetPage() {
                                 </button>
                             )}
                             {/* Cancel Button: Triggers Hard Reset */}
-                            <button onClick={closeListingModal} className="btn btn-link text-secondary text-decoration-none" style={{ fontSize: '14px' }}>Cancel</button>
+                            <button onClick={resetUI} className="btn btn-link text-secondary text-decoration-none" style={{ fontSize: '14px' }}>Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -938,12 +954,12 @@ function AssetPage() {
             {isOfferMode && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${GOLD_SOLID}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
-                        <button onClick={() => setIsOfferMode(false)} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
+                        <button onClick={resetUI} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
                         <h4 className="fw-bold mb-4 text-center" style={{ color: TEXT_PRIMARY }}>{offerStep === 'select' ? 'Select Option' : 'Make an offer'}</h4>
 
                         {offerStep === 'select' && (
                             <div className="d-flex flex-column gap-3">
-                                <button onClick={handleBuy} disabled={isPending} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>
+                                <button onClick={handleBuy} disabled={isPending} className="btn w-100 py-3 fw-bold" style={{ ...SOFT_GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>
                                     Buy for {formatCompactNumber(parseFloat(listing.price))} POL
                                 </button>
                                 <button onClick={() => setOfferStep('input')} className="btn w-100 py-3 fw-bold" style={{ ...OUTLINE_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>
@@ -974,9 +990,9 @@ function AssetPage() {
                                 </div>
                                 <div className="d-flex gap-2">
                                     {wpolAllowance < parseFloat(offerPrice || '0') ? (
-                                        <button onClick={handleApprove} disabled={isPending || !hasEnoughBalance || !offerPrice} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>{isPending ? 'Approving...' : 'Approve WPOL'}</button>
+                                        <button onClick={handleApprove} disabled={isPending || !hasEnoughBalance || !offerPrice} className="btn w-100 py-3 fw-bold" style={{ ...SOFT_GOLD_BTN_STYLE, borderRadius: '12px' }}>{isPending ? 'Approving...' : 'Approve WPOL'}</button>
                                     ) : (
-                                        <button onClick={handleSubmitOffer} disabled={isPending || !hasEnoughBalance || !offerPrice} className="btn w-100 py-3 fw-bold" style={{ ...GOLD_BTN_STYLE, borderRadius: '12px' }}>{isPending ? 'Signing...' : 'Submit Offer'}</button>
+                                        <button onClick={handleSubmitOffer} disabled={isPending || !hasEnoughBalance || !offerPrice} className="btn w-100 py-3 fw-bold" style={{ ...SOFT_GOLD_BTN_STYLE, borderRadius: '12px' }}>{isPending ? 'Signing...' : 'Submit Offer'}</button>
                                     )}
                                 </div>
                             </>
