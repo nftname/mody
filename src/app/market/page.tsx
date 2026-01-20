@@ -102,6 +102,8 @@ const SortArrows = ({ active, direction, onClick }: any) => (
     </div>
 );
 
+const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
+
 const formatTimeAgo = (timestamp: number) => {
     if (!timestamp || timestamp === 0) return '...'; 
     const now = Date.now();
@@ -505,8 +507,8 @@ function MarketPage() {
                               <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 60px', borderBottom: '1px solid #333', textAlign: 'left', width: '20%', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #333', textAlign: 'right', cursor: 'pointer' }}>
-                                  <div className="d-flex align-items-center justify-content-end">Conviction <SortArrows active={sortConfig?.key === 'convictionScore'} direction={sortConfig?.direction} /></div>
+                              <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 20px', borderBottom: '1px solid #333', textAlign: 'left', cursor: 'pointer' }}>
+                                  <div className="d-flex align-items-center justify-content-start">Conviction <SortArrows active={sortConfig?.key === 'convictionScore'} direction={sortConfig?.direction} /></div>
                               </th>
                               <th style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #333', textAlign: 'right', width: '100px' }}>Action</th>
                           </tr>
@@ -548,12 +550,12 @@ function MarketPage() {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="text-end" style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    <td className="text-start" style={{ padding: '14px 10px 14px 20px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
                                             {item.convictionScore > 0 ? (
                                                 <>
                                                     {dynamicRank <= 3 && <i className="bi bi-fire text-warning me-1"></i>}
-                                                    {item.convictionScore}
+                                                    {formatCompactNumber(item.convictionScore)}
                                                 </>
                                             ) : ( <span className="text-muted" style={{fontSize: '12px'}}>0</span> )}
                                         </span>
