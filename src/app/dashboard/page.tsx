@@ -409,31 +409,37 @@ export default function DashboardPage() {
       if (!address) return;
       setLoading(true);
       try {
-          // 1. Fetch Real-Time Balance (Source of Truth)
-          const { data: wallet } = await supabase
-              .from('nnm_wallets')
-              .select('wnnm_balance, nnm_balance')
-              .eq('wallet_address', address)
-              .single();
+          // 1. Fetch History (Mints, Sales, Votes) to CALCULATE Balance
+          // Use separate queries for accuracy
+          const { data: mints } = await supabase.from('activities').select('*').match({ to_address: address, activity_type: 'Mint' });
+          const { data: sales } = await supabase.from('activities').select('*').match({ to_address: address, activity_type: 'Sale' });
+          const { data: votes } = await supabase.from('conviction_votes').select('*').ilike('supporter_address', address);
+          
+          // 2. Fetch NNM (Cash) Balance directly from wallet (handled by API)
+          const { data: wallet } = await supabase.from('nnm_wallets').select('nnm_balance').eq('wallet_address', address).single();
 
-          // 2. Update State directly
+          // 3. Calculate WNNM (The "Earned" Points)
+          const earnedFromMints = (mints?.length || 0) * 3; // +3 per Mint
+          const earnedFromSales = (sales?.length || 0) * 1; // +1 per Buy
+          const spentOnVotes = votes?.length || 0;          // -1 per Vote
+          
+          const calculatedWNNM = (earnedFromMints + earnedFromSales) - spentOnVotes;
+          const currentNNM = wallet ? parseFloat(wallet.nnm_balance) : 0;
+
+          // 4. Update State
           setWalletBalances({ 
-              wnnm: wallet?.wnnm_balance || 0, 
-              nnm: wallet ? parseFloat(wallet.nnm_balance) : 0 
+              wnnm: calculatedWNNM > 0 ? calculatedWNNM : 0, 
+              nnm: currentNNM 
           });
 
-          // 3. Fetch History (Only for display in the table, NOT for calculation)
-          const { data: history } = await supabase
-              .from('nnm_conviction_ledger')
-              .select('*')
-              .eq('supporter_wallet', address)
-              .order('created_at', { ascending: false });
+          // 5. Set Logs for Table
+          const historyLogs = [
+              ...(mints?.map((m: any) => ({ type: 'Mint Reward', amount: 3, currency: 'WNNM', date: m.created_at })) || []),
+              ...(sales?.map((s: any) => ({ type: 'Market Reward', amount: 1, currency: 'WNNM', date: s.created_at })) || []),
+              ...(votes?.map((v: any) => ({ type: 'Support Given', amount: -1, currency: 'WNNM', date: v.created_at })) || [])
+          ].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           
-          const logs = history?.map((h: any) => ({
-              type: 'Support Given', amount: -h.wnnm_spent, currency: 'WNNM', date: h.created_at
-          })) || [];
-          
-          setConvictionLogs(logs);
+          setConvictionLogs(historyLogs);
 
       } catch (e) { console.error(e); } 
       finally { setLoading(false); }

@@ -84,7 +84,7 @@ const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => 
     let icon = <div className="spinner-border" style={{ color: GOLD_SOLID }} role="status"></div>;
     let iconColor = GOLD_SOLID;
     if (type === 'success') { icon = <i className="bi bi-check-circle-fill" style={{ fontSize: '40px', color: '#28a745' }}></i>; iconColor = '#28a745'; }
-    else if (type === 'error') { icon = <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '40px', color: '#dc3545' }}></i>; iconColor = '#dc3545'; }
+    else if (type === 'error') { icon = <i className="bi bi-exclamation-triangle" style={{ fontSize: '40px', color: '#FCD535' }}></i>; iconColor = '#FCD535'; }
     else if (type === 'swap') { icon = <i className="bi bi-wallet2" style={{ fontSize: '40px', color: GOLD_SOLID }}></i>; }
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
