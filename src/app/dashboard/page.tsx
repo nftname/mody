@@ -478,31 +478,39 @@ export default function DashboardPage() {
   const confirmClaim = async () => {
       if (auditDetails.claimable <= 0) return;
       
-      setClaimStep('processing');
+      // --- OPTIMISTIC UI: Act as if it succeeded immediately ---
+      setShowClaimModal(false); // 1. Close Modal
+      const amountToClaim = auditDetails.claimable;
       
+      // 2. Visually Zero out the balance & Hide Button
+      setWalletBalances(prev => ({ ...prev, nnm: 0 })); 
+      setIsTransferring(true);
+      
+      // 3. Set Persistence Flag
+      localStorage.setItem(`nnm_claim_pending_${address}`, 'true');
+
+      // --- BACKGROUND: Fire & Forget ---
       try {
-          localStorage.setItem(`nnm_claim_pending_${address}`, 'true');
-          
           const request = fetch('/api/nnm/claim', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ userWallet: address, amountNNM: auditDetails.claimable })
+              body: JSON.stringify({ userWallet: address, amountNNM: amountToClaim })
           });
-
-          // Auto-close Modal after 2 seconds
-          setTimeout(() => {
-              setShowClaimModal(false);
-              setIsTransferring(true); 
-          }, 2000);
-
+          
           const res = await request;
           const data = await res.json();
           
           if (data.success) {
-              await fetchConvictionData();
-              await fetchActivity();
+              await fetchActivity(); // Only refresh activity on success
+          } else {
+              // Only on REAL failure: Remove flag so button reappears on refresh
+              console.error("Transfer failed:", data.error);
+              localStorage.removeItem(`nnm_claim_pending_${address}`);
           }
-      } catch (e) { console.error(e); }
+      } catch (e) { 
+          console.error("Connection error", e);
+          localStorage.removeItem(`nnm_claim_pending_${address}`);
+      }
   };
 
   useEffect(() => { 
