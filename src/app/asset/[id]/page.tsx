@@ -955,14 +955,14 @@ function AssetPage() {
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${GOLD_SOLID}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
                         <button onClick={resetUI} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
-                        <h4 className="fw-bold mb-4 text-center" style={{ color: TEXT_PRIMARY }}>{offerStep === 'select' ? 'Select Option' : 'Make an offer'}</h4>
+                        <h4 className="fw-bold mb-4 text-center" style={{ color: '#FFFFFF', fontStyle: 'italic', fontWeight: '500', fontSize: '18px' }}>{offerStep === 'select' ? 'What would you like to do?' : 'Make an offer'}</h4>
 
                         {offerStep === 'select' && (
                             <div className="d-flex flex-column gap-3">
-                                <button onClick={handleBuy} disabled={isPending} className="btn w-100 py-3 fw-bold" style={{ ...SOFT_GOLD_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>
+                                <button onClick={handleBuy} disabled={isPending} className="btn w-100 py-2 fw-bold" style={{ ...OUTLINE_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>
                                     Buy for {formatCompactNumber(parseFloat(listing.price))} POL
                                 </button>
-                                <button onClick={() => setOfferStep('input')} className="btn w-100 py-3 fw-bold" style={{ ...OUTLINE_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>
+                                <button onClick={() => setOfferStep('input')} className="btn w-100 py-2 fw-bold" style={{ ...OUTLINE_BTN_STYLE, borderRadius: '12px', fontSize: '16px' }}>
                                     Make a different offer
                                 </button>
                             </div>
