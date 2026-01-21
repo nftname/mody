@@ -81,7 +81,7 @@ export default function NGXWhitepaperPage() {
             margin-bottom: 6px;
         }
 
-        /* 2. WIDGET BOX STYLE (The Container) */
+        /* 2. DESKTOP WIDGET STYLE (Untouched - Perfect as is) */
         .widget-box-style {
             padding: 12px;
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -91,52 +91,57 @@ export default function NGXWhitepaperPage() {
             display: flex;
             justify-content: center;
             align-items: center;
-            /* Fit Content is key for Desktop to match Sentiment size */
-            width: fit-content; 
+            width: fit-content; /* Keeps it tight on desktop */
         }
 
-        /* --- DESKTOP LAYOUT (Fixing the Small Widget Issue) --- */
         @media (min-width: 992px) {
             .widget-float-container {
                 float: right;
                 margin-left: 30px;
                 margin-bottom: 15px;
                 margin-top: 5px;
-                /* Allow container to shrink to widget size */
                 width: auto; 
                 clear: right;
                 z-index: 10;
                 position: relative;
             }
-            
-            /* No scaling needed on desktop, just fit */
             .widget-scaler {
-                width: 310px; /* Force strict width to match widget native width */
+                width: 310px; /* Force strict width for desktop consistency */
             }
         }
 
-        /* --- MOBILE LAYOUT (The "Flower" Effect - Scale UP) --- */
+        /* 3. MOBILE WIDGET STYLE (The Major Fix) */
         @media (max-width: 991px) {
+            
+            /* The Container: 70% of Screen Width */
             .widget-float-container {
                 float: none;
-                width: 100%;
-                margin: 40px auto; /* Increased margin for the zoomed widget */
+                width: 70% !important; /* EXACTLY 70% as requested */
+                margin: 40px auto;     /* Centered vertically and horizontally */
                 display: flex;
                 justify-content: center;
-                overflow: visible; /* Allow zoom to spill if needed */
+                /* Allow the zoomed widget to be visible even if it overlaps padding slightly */
+                overflow: visible; 
             }
             
+            /* The Box */
             .widget-box-style {
-                width: auto; /* Let it wrap the scaled content */
+                width: 100%; /* Fill the 70% container */
                 background: rgba(0, 0, 0, 0.3);
-                padding: 15px;
+                padding: 10px 0; /* Minimal padding to let widget take space */
+                min-height: 120px; /* Ensure height for the scaled item */
+                overflow: hidden;
             }
 
-            /* THE MAGIC: Force Scale UP by 30% */
+            /* THE SCALER: Force Expansion */
+            /* The mobile widget is naturally ~112px. The container is ~70% (approx 270px).
+               To make it fill 90% of the container, we need to scale it up by roughly 2.2x */
             .widget-scaler {
-                width: 310px; /* Base width of the component */
-                transform: scale(1.3); /* 30% bigger */
+                transform: scale(2.2); /* Massive zoom to fill the container */
                 transform-origin: center center;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
         }
 
@@ -182,7 +187,6 @@ export default function NGXWhitepaperPage() {
             <section className="section-tight">
                 <div className="widget-float-container">
                     <div className="widget-box-style">
-                        {/* widget-scaler class controls the size/zoom */}
                         <div className="widget-scaler">
                             <NGXWidget theme="dark" title="NGX NFTs" />
                         </div>
