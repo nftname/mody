@@ -1,9 +1,7 @@
-
 'use client';
 import Link from 'next/link';
 
 // --- IMPORTS FOR WIDGETS ---
-// تأكد أن مسارات الاستيراد تطابق مكان حفظك للملفات
 import NGXWidget from '@/components/NGXWidget';
 import NGXCapWidget from '@/components/NGXCapWidget';
 import NGXVolumeWidget from '@/components/NGXVolumeWidget';
@@ -61,12 +59,12 @@ export default function NGXWhitepaperPage() {
           font-family: "Inter", "Segoe UI", sans-serif;
           font-size: 15px;
           color: #B0B0B0;
-          line-height: 1.45; /* Tightened line height as requested */
-          margin-bottom: 12px;
+          line-height: 1.5; 
+          margin-bottom: 8px; /* Reduced paragraph spacing */
         }
         .ngx-page ul {
             padding-left: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .ngx-page h1,
         .ngx-page h2,
@@ -75,40 +73,49 @@ export default function NGXWhitepaperPage() {
           color: #E0E0E0 !important;
         }
         
-        /* Mobile Handling */
-        @media (max-width: 991px) {
-            .ngx-page .row {
-                flex-direction: column;
-            }
-            .ngx-page .col-lg-7,
-            .ngx-page .col-lg-5 {
-                width: 100%;
-                text-align: left !important;
-            }
-            /* On mobile, widget comes AFTER text */
-            .ngx-page .col-lg-5 {
-                order: 2;
-                margin-top: 20px;
-            }
-            .ngx-page .col-lg-7 {
-                order: 1;
-            }
-            .widget-wrapper {
-                margin-bottom: 40px;
-                display: flex;
-                justify-content: center; /* Center widget on mobile */
+        /* WIDGET FLOATING STYLE (DESKTOP) */
+        @media (min-width: 992px) {
+            .widget-float-container {
+                float: right;
+                margin-left: 30px;
+                margin-bottom: 15px;
+                margin-top: 5px;
+                width: 330px; /* Slightly wider than widget to contain border/padding */
+                clear: right;
+                z-index: 10;
+                position: relative;
             }
         }
-        
-        /* Desktop Widget Alignment */
-        @media (min-width: 992px) {
-            .widget-wrapper {
+
+        /* WIDGET STACKING STYLE (MOBILE) */
+        @media (max-width: 991px) {
+            .widget-float-container {
+                float: none;
+                width: 100%;
+                margin: 20px auto;
                 display: flex;
-                justify-content: flex-end; /* Right align on desktop */
-                align-items: center;
-                height: 100%;
-                padding-left: 20px;
+                justify-content: center;
             }
+        }
+
+        /* THE LIGHT BOX AROUND WIDGET */
+        .widget-box-style {
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08); /* Subtle border */
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.15); /* Very slight dark background */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Reduced Vertical Spacing for Sections */
+        .section-tight {
+            margin-bottom: 50px; /* Reduced by ~20% from typical 60-80px */
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .section-tight:last-of-type {
+            border-bottom: none;
+            margin-bottom: 40px;
         }
 
         /* Ticker Animations */
@@ -123,16 +130,16 @@ export default function NGXWhitepaperPage() {
           <div className="col-12 col-lg-11">
 
             {/* --- MAIN HEADER --- */}
-            <header className="mb-5 pb-4 border-bottom border-secondary border-opacity-25 text-start">
-              <h1 className="fw-bold text-white mb-3" style={{ fontSize: '2.2rem', letterSpacing: '-1px', lineHeight: '1.2' }}>
+            <header className="mb-4 pb-3 border-bottom border-secondary border-opacity-25 text-start">
+              <h1 className="fw-bold text-white mb-2" style={{ fontSize: '2.2rem', letterSpacing: '-1px', lineHeight: '1.2' }}>
                 NGX NFT Index <span style={{ color: GOLD_MEDIUM }}>Framework</span>
               </h1>
-              <h2 className="text-white mb-4" style={{ fontSize: '1.2rem', fontWeight: '400', letterSpacing: '0.5px' }}>
+              <h2 className="text-white mb-3" style={{ fontSize: '1.2rem', fontWeight: '400', letterSpacing: '0.5px' }}>
                 Institutional Whitepaper
               </h2>
               
-              <div style={{ maxWidth: '850px', color: '#B0B0B0' }}>
-                <p className="fw-bold text-white mb-3">Introduction: NGX NFT Index</p>
+              <div style={{ maxWidth: '100%', color: '#B0B0B0' }}>
+                <p className="fw-bold text-white mb-2">Introduction: NGX NFT Index</p>
                 <p>
                   The <strong className="text-white">NGX NFT Index</strong> represents a comprehensive framework designed to provide a structural lens on the global NFT market. Developed as a neutral analytical benchmark, this framework aggregates the entirety of NFT market activity across the four primary sectors: <strong className="text-white">Land, Gaming, Art, and Digital Names (e.g., ENS-like domains, NNM Registry)</strong>. Its purpose is to establish a reference architecture for market participants, researchers, and competing platforms, reflecting both historical evolution and current structural dynamics of the NFT ecosystem.
                 </p>
@@ -143,107 +150,106 @@ export default function NGXWhitepaperPage() {
             </header>
 
             {/* --- SECTION 1: SENTIMENT INDEX --- */}
-            <section className="mb-5 pb-4 border-bottom border-secondary border-opacity-10">
-                <div className="row align-items-center">
-                    {/* Left: Text */}
-                    <div className="col-lg-7 text-start">
-                        <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.5rem' }}>
-                            <span style={{ color: GOLD_MEDIUM }}>1.</span> NGX NFT Sentiment Index
-                        </h2>
-                        
-                        <p>
-                           The <strong className="text-white">Sentiment Index</strong> captures the collective behavioral signals observed across all four NFT sectors, measuring structural patterns of buying and selling activity. It aggregates indicators of market enthusiasm, caution, and directional pressure without attributing individual sentiment to any specific participant or platform.
-                        </p>
-
-                        <p className="fw-bold text-white mt-3 mb-2">Key Highlights:</p>
-                        <ul>
-                            <li>Measures aggregated signals of market confidence and caution across the NFT ecosystem.</li>
-                            <li>Tracks periods of elevated transactional intensity versus subdued market engagement.</li>
-                            <li>Provides a reference for structural shifts and emerging trends in market behavior.</li>
-                            <li>Designed for analytical benchmarking, not predictive or investment purposes.</li>
-                        </ul>
-
-                        <p>
-                            By documenting historical sentiment fluctuations, the index establishes <strong className="text-white">temporal precedence</strong>, reinforcing the intellectual ownership of the NGX NFT analytical methodology.
-                        </p>
+            <section className="section-tight">
+                {/* FLOAT CONTAINER: 
+                   On Desktop: Floats right, text wraps around it.
+                   On Mobile: Stacks normally.
+                */}
+                <div className="widget-float-container">
+                    <div className="widget-box-style">
+                        <NGXWidget theme="dark" title="NGX NFTs" />
                     </div>
+                </div>
 
-                    {/* Right: Widget */}
-                    <div className="col-lg-5">
-                        <div className="widget-wrapper">
-                            <NGXWidget theme="dark" title="NGX NFTs" />
-                        </div>
-                    </div>
+                {/* TEXT CONTENT - Wraps around the widget */}
+                <div className="text-start">
+                    <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.5rem' }}>
+                        <span style={{ color: GOLD_MEDIUM }}>1.</span> NGX NFT Sentiment Index
+                    </h2>
+                    
+                    <p>
+                        The <strong className="text-white">Sentiment Index</strong> captures the collective behavioral signals observed across all four NFT sectors, measuring structural patterns of buying and selling activity. It aggregates indicators of market enthusiasm, caution, and directional pressure without attributing individual sentiment to any specific participant or platform.
+                    </p>
+
+                    <p className="fw-bold text-white mt-3 mb-2">Key Highlights:</p>
+                    <ul>
+                        <li>Measures aggregated signals of market confidence and caution across the NFT ecosystem.</li>
+                        <li>Tracks periods of elevated transactional intensity versus subdued market engagement.</li>
+                        <li>Provides a reference for structural shifts and emerging trends in market behavior.</li>
+                        <li>Designed for analytical benchmarking, not predictive or investment purposes.</li>
+                    </ul>
+
+                    <p>
+                        By documenting historical sentiment fluctuations, the index establishes <strong className="text-white">temporal precedence</strong>, reinforcing the intellectual ownership of the NGX NFT analytical methodology.
+                    </p>
+                    {/* Clearing floats to ensure section height captures everything if text is short */}
+                    <div style={{ clear: 'both' }}></div>
                 </div>
             </section>
 
             {/* --- SECTION 2: MARKET CAPITALIZATION INDEX --- */}
-            <section className="mb-5 pb-4 border-bottom border-secondary border-opacity-10">
-                <div className="row align-items-center">
-                    {/* Left: Text */}
-                    <div className="col-lg-7 text-start">
-                        <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.5rem' }}>
-                             <span style={{ color: GOLD_MEDIUM }}>2.</span> NGX NFT Market Capitalization Index
-                        </h2>
-                        
-                        <p>
-                           The <strong className="text-white">Market Cap Index</strong> evaluates the aggregate capital deployed across all NFT sectors, providing a holistic perspective of liquidity flows and market scale. It integrates the totalized market value of digital assets without disclosing proprietary weighting or computational mechanisms.
-                        </p>
-
-                        <p className="fw-bold text-white mt-3 mb-2">Key Highlights:</p>
-                        <ul>
-                            <li>Aggregates valuation metrics across Land, Gaming, Art, and Digital Names sectors.</li>
-                            <li>Reflects systemic market expansion and contraction trends.</li>
-                            <li>Functions as a structural reference, illustrating sectoral balance and capital distribution.</li>
-                            <li>Supports comparative analyses without serving as an investment recommendation.</li>
-                        </ul>
-                        
-                        <p>
-                           This index emphasizes the <strong className="text-white">foundational structure of the NFT economy</strong>, documenting historical data points to assert <strong className="text-white">methodological priority</strong> while remaining fully neutral and legally unencumbered.
-                        </p>
+            <section className="section-tight">
+                
+                <div className="widget-float-container">
+                    <div className="widget-box-style">
+                         <NGXCapWidget theme="dark" title="NGX Cap NFTs" />
                     </div>
+                </div>
 
-                    {/* Right: Widget */}
-                    <div className="col-lg-5">
-                        <div className="widget-wrapper">
-                            <NGXCapWidget theme="dark" title="NGX Cap NFTs" />
-                        </div>
-                    </div>
+                <div className="text-start">
+                    <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.5rem' }}>
+                            <span style={{ color: GOLD_MEDIUM }}>2.</span> NGX NFT Market Capitalization Index
+                    </h2>
+                    
+                    <p>
+                        The <strong className="text-white">Market Cap Index</strong> evaluates the aggregate capital deployed across all NFT sectors, providing a holistic perspective of liquidity flows and market scale. It integrates the totalized market value of digital assets without disclosing proprietary weighting or computational mechanisms.
+                    </p>
+
+                    <p className="fw-bold text-white mt-3 mb-2">Key Highlights:</p>
+                    <ul>
+                        <li>Aggregates valuation metrics across Land, Gaming, Art, and Digital Names sectors.</li>
+                        <li>Reflects systemic market expansion and contraction trends.</li>
+                        <li>Functions as a structural reference, illustrating sectoral balance and capital distribution.</li>
+                        <li>Supports comparative analyses without serving as an investment recommendation.</li>
+                    </ul>
+                    
+                    <p>
+                        This index emphasizes the <strong className="text-white">foundational structure of the NFT economy</strong>, documenting historical data points to assert <strong className="text-white">methodological priority</strong> while remaining fully neutral and legally unencumbered.
+                    </p>
+                    <div style={{ clear: 'both' }}></div>
                 </div>
             </section>
 
             {/* --- SECTION 3: VOLUME INDEX --- */}
-            <section className="mb-5 pb-4 border-bottom border-secondary border-opacity-10">
-                <div className="row align-items-center">
-                    {/* Left: Text */}
-                    <div className="col-lg-7 text-start">
-                        <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.5rem' }}>
-                             <span style={{ color: GOLD_MEDIUM }}>3.</span> NGX NFT Volume Index
-                        </h2>
-                        
-                        <p>
-                           The <strong className="text-white">Volume Index</strong> captures the transactional activity within the NFT ecosystem across all four sectors, providing a real-time lens on operational liquidity and engagement levels. It consolidates activity volumes while maintaining confidentiality of proprietary data computations.
-                        </p>
-
-                        <p className="fw-bold text-white mt-3 mb-2">Key Highlights:</p>
-                        <ul>
-                            <li>Measures comprehensive market activity across Land, Gaming, Art, and Digital Names.</li>
-                            <li>Highlights periods of heightened transactional throughput and relative sector performance.</li>
-                            <li>Offers an institutional-grade reference framework for comparative research and market observation.</li>
-                            <li>Operates strictly as a benchmark, with zero liability for investment outcomes.</li>
-                        </ul>
-
-                        <p>
-                           By structuring volume data as an independent index, this component reinforces the NGX NFT Index <strong className="text-white">as a benchmark standard</strong> while safeguarding the integrity of intellectual property and historical precedence.
-                        </p>
+            <section className="section-tight">
+                
+                <div className="widget-float-container">
+                    <div className="widget-box-style">
+                        <NGXVolumeWidget theme="dark" title="NGX Volume" />
                     </div>
+                </div>
 
-                    {/* Right: Widget */}
-                    <div className="col-lg-5">
-                        <div className="widget-wrapper">
-                            <NGXVolumeWidget theme="dark" title="NGX Volume" />
-                        </div>
-                    </div>
+                <div className="text-start">
+                    <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.5rem' }}>
+                            <span style={{ color: GOLD_MEDIUM }}>3.</span> NGX NFT Volume Index
+                    </h2>
+                    
+                    <p>
+                        The <strong className="text-white">Volume Index</strong> captures the transactional activity within the NFT ecosystem across all four sectors, providing a real-time lens on operational liquidity and engagement levels. It consolidates activity volumes while maintaining confidentiality of proprietary data computations.
+                    </p>
+
+                    <p className="fw-bold text-white mt-3 mb-2">Key Highlights:</p>
+                    <ul>
+                        <li>Measures comprehensive market activity across Land, Gaming, Art, and Digital Names.</li>
+                        <li>Highlights periods of heightened transactional throughput and relative sector performance.</li>
+                        <li>Offers an institutional-grade reference framework for comparative research and market observation.</li>
+                        <li>Operates strictly as a benchmark, with zero liability for investment outcomes.</li>
+                    </ul>
+
+                    <p>
+                        By structuring volume data as an independent index, this component reinforces the NGX NFT Index <strong className="text-white">as a benchmark standard</strong> while safeguarding the integrity of intellectual property and historical precedence.
+                    </p>
+                    <div style={{ clear: 'both' }}></div>
                 </div>
             </section>
 
@@ -262,7 +268,7 @@ export default function NGXWhitepaperPage() {
                             The framework and its components document the historical development and structural design of NFT market indices, establishing precedence and <strong className="text-white">institutional credibility</strong> without claiming operational authority or proprietary market control. Use of this framework does not imply endorsement, sponsorship, or affiliation with any market participant, platform, or regulatory body.
                         </p>
 
-                        <hr className="my-5 border-secondary border-opacity-25" />
+                        <hr className="my-4 border-secondary border-opacity-25" />
 
                         <h3 className="fw-bold text-white mb-3" style={{ fontSize: '1.3rem' }}>
                             Conclusion
