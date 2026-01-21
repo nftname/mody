@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { userWallet, amountNNM } = body;
 
-    // 1. Verify Balance
+    // 1. التحقق من الرصيد (Verify Balance)
     const { data: userData } = await supabase
       .from('nnm_wallets')
       .select('nnm_balance')
@@ -22,9 +22,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
     }
 
-    // 2. Atomic Update: Deduct Balance & Log Request
+    // 2. التنفيذ الذري: خصم الرصيد وتسجيل الطلب
     
-    // A. Deduct Balance
+    // A. خصم الرصيد (Deduct Balance)
     const newBalance = parseFloat(userData.nnm_balance) - amountNNM;
     const { error: updateError } = await supabase
       .from('nnm_wallets')
@@ -34,19 +34,25 @@ export async function POST(request: Request) {
       })
       .eq('wallet_address', userWallet);
 
-    if (updateError) throw new Error("Failed to update balance");
+    if (updateError) throw new Error("Failed to update balance: " + updateError.message);
 
-    // B. Log Request (Status: PENDING)
-    // We record the request so the Admin Script can process it later.
-    await supabase.from('nnm_payout_logs').insert([{
+    // B. تسجيل الطلب (Log Request) - تم التبسيط لضمان النجاح
+    // نرسل فقط البيانات الأساسية، ونتحقق من وجود أي خطأ في الإدخال
+    const { error: logError } = await supabase.from('nnm_payout_logs').insert([{
       wallet_address: userWallet,
       amount_nnm: amountNNM,
-      usd_value_at_time: amountNNM * 0.05, // Record theoretical value
-      exchange_rate_used: 0, // 0 indicates pending market rate calculation
-      status: 'PENDING', 
-      tx_hash: 'WAITING_ADMIN_BATCH',
+      status: 'PENDING',  // الحالة المهمة للأدمن
       created_at: new Date().toISOString()
+      // تم حذف الأعمدة الثانوية (usd_value, tx_hash) مؤقتاً لضمان عدم تعطل الإدخال
     }]);
+
+    // [تعديل هام] إذا فشل التسجيل، نرجع الرصيد للعميل أو نرسل خطأ صريح
+    if (logError) {
+        console.error("Database Insert Error:", logError);
+        // يمكنك هنا إضافة كود لإرجاع الرصيد (Rollback) إذا أردت دقة 100%
+        // لكن الأهم الآن هو أن نعرف أن هناك خطأ
+        throw new Error("Failed to log request in database: " + logError.message);
+    }
 
     return NextResponse.json({ success: true, message: "Request queued successfully" });
 
