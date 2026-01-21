@@ -32,6 +32,17 @@ interface Payout {
   created_at: string;
 }
 
+// [NEW] NNM Log Type
+interface NNMLog {
+  id: number;
+  wallet_address: string;
+  amount_nnm: number;
+  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REJECTED';
+  error_reason?: string;
+  created_at: string;
+  tx_hash?: string;
+}
+
 interface BannedWallet {
   id: number;
   wallet_address: string;
@@ -71,10 +82,20 @@ export default function AdminPage() {
 
   // Management
   const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [nnmLogs, setNnmLogs] = useState<NNMLog[]>([]); // [NEW] Logs State
   const [bannedWallets, setBannedWallets] = useState<BannedWallet[]>([]);
   const [banInput, setBanInput] = useState('');
 
-  // --- Filter States ---
+  // --- [NEW] NNM Payout Controls States ---
+  const [showTimeSelector, setShowTimeSelector] = useState(false);
+  const [payoutInterval, setPayoutInterval] = useState(24);
+  const [isPayoutActive, setIsPayoutActive] = useState(true);
+  
+  // --- [NEW] Smart Log Table States ---
+  const [showLogs, setShowLogs] = useState(false); // Accordion Toggle
+  const [logFilter, setLogFilter] = useState('ALL'); // Filters
+
+  // --- Filter States (General) ---
   const [filterType, setFilterType] = useState('ALL'); 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -113,11 +134,15 @@ export default function AdminPage() {
       const { data: act } = await supabase.from('activities').select('*').order('created_at', { ascending: false });
       if (act) setActivities(act as Activity[]);
 
-      // 3. Payouts
+      // 3. Payouts (Old System)
       const { data: pay } = await supabase.from('affiliate_payouts').select('*').order('created_at', { ascending: false });
       if (pay) setPayouts(pay as Payout[]);
 
-      // 4. Bans
+      // 4. [NEW] NNM Logs
+      const { data: logs } = await supabase.from('nnm_payout_logs').select('*').order('created_at', { ascending: false });
+      if (logs) setNnmLogs(logs as NNMLog[]);
+
+      // 5. Bans
       const { data: bans } = await supabase.from('banned_wallets').select('*');
       if (bans) setBannedWallets(bans as BannedWallet[]);
       
@@ -161,6 +186,26 @@ export default function AdminPage() {
     }
     return data;
   }, [activities, activeFilter]);
+
+  // [NEW] NNM Log Filtering
+  const filteredLogs = useMemo(() => {
+      let data = nnmLogs;
+      const now = new Date();
+      if (logFilter === 'TODAY') {
+          data = data.filter(l => new Date(l.created_at).toDateString() === now.toDateString());
+      } else if (logFilter === '7D') {
+          const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          data = data.filter(l => new Date(l.created_at) >= sevenDaysAgo);
+      }
+      return data;
+  }, [nnmLogs, logFilter]);
+
+  const logStats = useMemo(() => {
+      return {
+          failed: nnmLogs.filter(l => l.status === 'FAILED').length,
+          pending: nnmLogs.filter(l => l.status === 'PENDING').length
+      };
+  }, [nnmLogs]);
 
   // --- Real Stats Calculation ---
   const stats = useMemo(() => {
@@ -265,6 +310,46 @@ export default function AdminPage() {
       fetchSupabaseData();
   };
 
+  // --- [NEW] NNM Actions ---
+  const handleExecuteNNM = () => {
+      alert("Preparing Batch Payout...");
+      // Future: Call /api/admin/execute-payouts
+  };
+
+  const handleStopNNM = () => {
+      setIsPayoutActive(false);
+      alert("NNM Payout Stopped");
+  };
+
+  const selectTimeInterval = (hours: number) => {
+      setPayoutInterval(hours);
+      setShowTimeSelector(false);
+  };
+
+  // [NEW] Log Actions
+  const handleRetryAll = async () => {
+      if (!confirm("Retry ALL failed transactions?")) return;
+      const { error } = await supabase.from('nnm_payout_logs').update({ status: 'PENDING', error_reason: null }).eq('status', 'FAILED');
+      if (error) alert(error.message); else { alert("Queued for retry"); fetchSupabaseData(); }
+  };
+
+  const handleRetryLog = async (id: number) => {
+      await supabase.from('nnm_payout_logs').update({ status: 'PENDING', error_reason: null }).eq('id', id);
+      fetchSupabaseData();
+  };
+
+  const handleRejectLog = async (id: number) => {
+      if(!confirm("Reject forever?")) return;
+      await supabase.from('nnm_payout_logs').update({ status: 'REJECTED' }).eq('id', id);
+      fetchSupabaseData();
+  };
+
+  const handleClearFailed = async () => {
+      if(!confirm("Clear rejected logs?")) return;
+      await supabase.from('nnm_payout_logs').delete().eq('status', 'REJECTED');
+      fetchSupabaseData();
+  };
+
   // --- UI RENDER ---
   if (loading) return <div className="loading">Auth...</div>;
   if (!isAdmin) return <div className="denied">DENIED</div>;
@@ -286,8 +371,91 @@ export default function AdminPage() {
             </div>
         </div>
 
+        {/* --- [NEW] NNM PAYOUT CONTROL CENTER --- */}
+        <div className="panel nnm-section">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+                <div className="panel-label" style={{marginBottom:0, color:'#000'}}>NNM PAYOUT ENGINE</div>
+                <div className="interval-badge">{payoutInterval}H Interval</div>
+            </div>
+            
+            <div className="payout-controls">
+                <button onClick={handleExecuteNNM} className="payout-btn green"><span>صرف</span><i className="bi bi-play-fill"></i></button>
+                <button onClick={handleStopNNM} className="payout-btn red"><span>إيقاف</span><i className="bi bi-stop-fill"></i></button>
+                <button onClick={() => setShowTimeSelector(!showTimeSelector)} className="payout-btn blue"><span>توقيت</span><i className="bi bi-clock"></i></button>
+            </div>
+
+            {/* Time Selector */}
+            {showTimeSelector && (
+                <div className="time-grid mt-2">
+                    {Array.from({ length: 24 }, (_, i) => i + 1).map((hour) => (
+                        <button key={hour} onClick={() => selectTimeInterval(hour)} className={`time-cell ${payoutInterval === hour ? 'active' : ''}`}>{hour}H</button>
+                    ))}
+                </div>
+            )}
+
+            {/* Logs Trigger */}
+            <div className="logs-trigger" onClick={() => setShowLogs(!showLogs)}>
+                <div className="status-summary">
+                    {logStats.failed > 0 && <span className="badge-status failed">🔴 {logStats.failed} FAILED</span>}
+                    {logStats.pending > 0 && <span className="badge-status pending">🟡 {logStats.pending} PENDING</span>}
+                    {logStats.failed === 0 && logStats.pending === 0 && <span className="badge-status clean">🟢 System Clean</span>}
+                </div>
+                <i className={`bi bi-chevron-${showLogs ? 'up' : 'down'}`}></i>
+            </div>
+
+            {/* Collapsible Log Table */}
+            {showLogs && (
+                <div className="smart-logs-container fade-in">
+                    <div className="logs-toolbar">
+                        <div className="filters">
+                            <button onClick={() => setLogFilter('TODAY')} className={logFilter === 'TODAY' ? 'active' : ''}>Today</button>
+                            <button onClick={() => setLogFilter('7D')} className={logFilter === '7D' ? 'active' : ''}>7D</button>
+                            <button onClick={() => setLogFilter('ALL')} className={logFilter === 'ALL' ? 'active' : ''}>All</button>
+                        </div>
+                        <div className="actions">
+                            {logStats.failed > 0 && (
+                                <button onClick={handleRetryAll} className="retry-all-btn"><i className="bi bi-arrow-repeat"></i> Retry All</button>
+                            )}
+                            <button onClick={handleClearFailed} className="clear-btn" title="Clear Rejected"><i className="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+
+                    <div className="logs-table-wrapper">
+                        <table className="logs-table">
+                            <thead>
+                                <tr><th>Time</th><th>Wallet</th><th>NNM</th><th>Status</th><th>Action</th></tr>
+                            </thead>
+                            <tbody>
+                                {filteredLogs.length === 0 ? (
+                                    <tr><td colSpan={5} style={{textAlign:'center', padding:'20px', color:'#666'}}>No logs found.</td></tr>
+                                ) : (
+                                    filteredLogs.map((log) => (
+                                        <tr key={log.id} className={`row-${log.status.toLowerCase()}`}>
+                                            <td style={{fontSize:'10px', color:'#888'}}>{new Date(log.created_at).toLocaleTimeString()}</td>
+                                            <td className="mono" style={{color:'#fff'}}>{log.wallet_address.substring(0,4)}...</td>
+                                            <td style={{fontWeight:'bold', color:'#FCD535'}}>{log.amount_nnm}</td>
+                                            <td><span className={`status-pill ${log.status.toLowerCase()}`}>{log.status}</span></td>
+                                            <td>
+                                                {log.status === 'FAILED' ? (
+                                                    <div className="btn-group">
+                                                        <button onClick={() => handleRetryLog(log.id)} className="icon-btn retry"><i className="bi bi-arrow-clockwise"></i></button>
+                                                        <button onClick={() => handleRejectLog(log.id)} className="icon-btn reject"><i className="bi bi-x-lg"></i></button>
+                                                    </div>
+                                                ) : log.error_reason ? <span className="error-msg">{log.error_reason}</span> : '-'}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+        </div>
+        {/* -------------------------------------- */}
+
         {/* SITE CONTROL */}
-        <div className="control-panel">
+        <div className="control-panel mt-20">
             <div className="status-toggle">
                 <button onClick={() => handleSiteStatus(false)} className={`status-btn open ${!maintenanceMode ? 'active' : ''}`}>OPEN</button>
                 <button onClick={() => handleSiteStatus(true)} className={`status-btn close ${maintenanceMode ? 'active' : ''}`}>CLOSE</button>
@@ -298,7 +466,7 @@ export default function AdminPage() {
             </div>
         </div>
 
-        {/* NEW FILTER SYSTEM */}
+        {/* FILTER SYSTEM */}
         <div className="filter-system">
             <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="filter-select">
                 <option value="ALL">All Time</option>
@@ -320,7 +488,7 @@ export default function AdminPage() {
             </button>
         </div>
 
-        {/* REVENUE STATS (3 Columns Mobile) */}
+        {/* REVENUE STATS */}
         <div className="compact-grid">
             <div className="compact-card">
                 <span className="c-val green">${stats.totalRevenue.toLocaleString()}</span>
@@ -336,7 +504,7 @@ export default function AdminPage() {
             </div>
         </div>
 
-        {/* MINT COUNTS (3 Columns Mobile - Real Data) */}
+        {/* MINT COUNTS */}
         <div className="compact-grid mt-2">
             <div className="compact-card">
                 <span className="c-val white">{stats.immortal}</span>
@@ -352,7 +520,7 @@ export default function AdminPage() {
             </div>
         </div>
 
-        {/* PRICING (3 Columns Mobile) */}
+        {/* PRICING */}
         <div className="panel mt-20">
             <div className="panel-label">Set Mint Prices ($)</div>
             <div className="inputs-row">
@@ -391,7 +559,7 @@ export default function AdminPage() {
             </div>
 
             <div className="table-container">
-                <div className="panel-label">Payouts</div>
+                <div className="panel-label">Payouts (Legacy)</div>
                 <table>
                     <thead><tr><th>Wallet</th><th>$</th><th>Act</th></tr></thead>
                     <tbody>
@@ -407,7 +575,7 @@ export default function AdminPage() {
             </div>
         </div>
 
-        {/* CSS STYLES (Fixed Mobile Grid) */}
+        {/* CSS STYLES */}
         <style jsx>{`
             .admin-container { background: #121212; color: #eee; min-height: 100vh; padding: 15px; font-family: sans-serif; padding-top: 80px; }
             .badge-pro { background: #FCD535; color: #000; padding: 1px 4px; font-size: 9px; border-radius: 3px; }
@@ -421,45 +589,76 @@ export default function AdminPage() {
             .treasury-box .val { font-size: 13px; color: #FCD535; font-weight: bold; }
             .withdraw-btn { background: #333; color: #fff; border: 1px solid #555; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
 
-            /* Control */
-            .control-panel { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-            .status-toggle { display: flex; }
-            .status-btn { border: none; padding: 8px 15px; font-weight: bold; font-size: 11px; cursor: pointer; opacity: 0.4; color: #fff; background: #333; flex: 1; }
-            .status-btn.open.active { background: #00e676; color: #000; opacity: 1; }
-            .status-btn.close.active { background: #ff1744; color: #fff; opacity: 1; }
-            .announcement-box { flex: 1; display: flex; gap: 5px; min-width: 200px; }
-            .announcement-box input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; font-size: 12px; }
-            .announcement-box button { background: #333; color: #fff; border: none; padding: 0 10px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+            /* NNM Section Styles */
+            .nnm-section { border: 1px solid #FCD535; background: #FCD535 !important; border-radius: 8px; overflow: hidden; padding: 0 !important; margin-bottom: 20px; }
+            .nnm-section .panel-label { padding: 10px 15px; font-weight: bold; background: #FCD535; color: #000; }
+            .interval-badge { margin-right: 15px; font-size: 11px; font-weight: bold; color: #000; background: rgba(255,255,255,0.3); padding: 2px 6px; border-radius: 4px; }
+            
+            .payout-controls { display: flex; gap: 1px; background: #000; padding-bottom: 1px; }
+            .payout-btn { flex: 1; border: none; padding: 15px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; color: #fff; }
+            .payout-btn.green { background: #1b5e20; } .payout-btn.green:hover { background: #2e7d32; }
+            .payout-btn.red { background: #b71c1c; } .payout-btn.red:hover { background: #c62828; }
+            .payout-btn.blue { background: #0d47a1; } .payout-btn.blue:hover { background: #1565c0; }
 
-            /* Filter System */
-            .filter-system { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; background: #1a1a1a; padding: 10px; border-radius: 6px; }
-            .filter-select { background: #111; color: #fff; border: 1px solid #333; padding: 5px; border-radius: 4px; font-size: 11px; }
-            .date-group { display: flex; align-items: center; gap: 5px; }
-            .date-input { background: #111; color: #fff; border: 1px solid #333; padding: 4px; border-radius: 4px; font-size: 11px; width: 85px; }
-            .search-btn { background: #FCD535; color: #000; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; margin-left: auto; }
+            /* Time Grid */
+            .time-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; background: #000; padding: 10px; }
+            .time-cell { background: #222; border: 1px solid #333; color: #888; padding: 8px 0; font-size: 12px; cursor: pointer; text-align: center; }
+            .time-cell.active { background: #FCD535; color: #000; font-weight: bold; }
 
-            /* Compact Grid (FORCE 3-COLS Mobile) */
+            /* Logs Trigger */
+            .logs-trigger { background: #222; padding: 8px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #333; transition: 0.2s; }
+            .logs-trigger:hover { background: #2a2a2a; }
+            .status-summary { display: flex; gap: 10px; }
+            .badge-status { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+            .badge-status.failed { background: rgba(255, 23, 68, 0.2); color: #ff1744; border: 1px solid #ff1744; }
+            .badge-status.pending { background: rgba(255, 214, 0, 0.2); color: #ffd600; border: 1px solid #ffd600; }
+            .badge-status.clean { color: #00e676; }
+
+            /* Logs Container */
+            .smart-logs-container { background: #111; border-top: 1px solid #333; max-height: 400px; overflow-y: auto; }
+            .logs-toolbar { display: flex; justify-content: space-between; padding: 10px; background: #161616; border-bottom: 1px solid #222; position: sticky; top: 0; z-index: 5; }
+            .filters button { background: transparent; border: 1px solid #444; color: #888; padding: 4px 10px; border-radius: 20px; font-size: 10px; margin-right: 5px; cursor: pointer; }
+            .filters button.active { background: #FCD535; color: #000; border-color: #FCD535; }
+            
+            .retry-all-btn { background: #e65100; color: #fff; border: none; padding: 4px 12px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+            .clear-btn { background: transparent; border: none; color: #666; cursor: pointer; } .clear-btn:hover { color: #d32f2f; }
+
+            /* Logs Table */
+            .logs-table-wrapper { padding: 0; }
+            .logs-table { width: 100%; font-size: 11px; border-collapse: collapse; }
+            .logs-table th { text-align: left; padding: 8px 10px; color: #666; background: #1a1a1a; font-weight: normal; border-bottom: 1px solid #333; }
+            .logs-table td { padding: 8px 10px; border-bottom: 1px solid #222; vertical-align: middle; }
+            
+            /* Status Pills */
+            .status-pill { padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
+            .status-pill.pending { background: rgba(255, 214, 0, 0.1); color: #ffd600; }
+            .status-pill.completed { background: rgba(0, 230, 118, 0.1); color: #00e676; }
+            .status-pill.failed { background: rgba(255, 23, 68, 0.1); color: #ff1744; }
+            .status-pill.rejected { background: #333; color: #888; }
+            
+            /* Error Cell Actions */
+            .error-cell { display: flex; flex-direction: column; gap: 4px; }
+            .error-msg { color: #ff1744; font-size: 10px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .btn-group { display: flex; gap: 5px; }
+            .icon-btn { border: none; width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+            .icon-btn.retry { background: #333; color: #ffd600; }
+            .icon-btn.reject { background: #333; color: #ff1744; }
+
+            /* General */
             .compact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
             .compact-card { background: #1E1E1E; padding: 10px 5px; border-radius: 4px; border: 1px solid #333; text-align: center; }
             .c-val { display: block; font-size: 14px; font-weight: bold; color: #fff; }
             .c-label { display: block; font-size: 9px; color: #888; margin-top: 3px; text-transform: uppercase; }
             .green { color: #00e676; } .gold { color: #FCD535; } .white { color: #fff; }
-            .mt-2 { margin-top: 5px; } .mt-20 { margin-top: 20px; }
-
-            /* Panels */
+            .mt-20 { margin-top: 20px; } .mt-2 { margin-top: 2px; }
             .panel { background: #1E1E1E; padding: 10px; border-radius: 4px; border: 1px solid #333; }
             .panel-label { font-size: 10px; color: #aaa; margin-bottom: 8px; text-transform: uppercase; }
-            
-            /* Inputs Row (FORCE 3-COLS Mobile) */
             .inputs-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 8px; }
             .inputs-row input { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; font-size: 12px; text-align: center; }
             .action-btn { width: 100%; background: #FCD535; color: #000; border: none; padding: 8px; font-weight: bold; font-size: 11px; border-radius: 4px; }
-
             .ban-row { display: flex; gap: 5px; }
             .ban-row input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; font-size: 12px; }
             .btn-red { background: #d32f2f; color: #fff; border: none; padding: 0 15px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-
-            /* Tables */
             .tables-section { display: grid; gap: 15px; margin-top: 20px; }
             .table-container { background: #1E1E1E; padding: 10px; border-radius: 4px; border: 1px solid #333; }
             table { width: 100%; font-size: 11px; border-collapse: collapse; }
@@ -477,4 +676,3 @@ export default function AdminPage() {
     </div>
   );
 }
-

@@ -43,7 +43,6 @@ export default function DashboardPage() {
     const [auditDetails, setAuditDetails] = useState({ totalEarned: 0, totalPaid: 0, claimable: 0 });
     const [claimTx, setClaimTx] = useState('');
     const [isTransferring, setIsTransferring] = useState(false);
-    const [triggerClaimExecution, setTriggerClaimExecution] = useState(false);
     const [viewModeState, setViewModeState] = useState(0); 
   const viewModes = ['grid', 'large', 'list'];
   const currentViewMode = viewModes[viewModeState];
@@ -476,19 +475,40 @@ export default function DashboardPage() {
   };
 
   const confirmClaim = async () => {
-      if (auditDetails.claimable <= 0) return;
-      
-      // 1. Optimistic UI: Close Modal and Update Balance Instantly
-      setShowClaimModal(false);
-      setWalletBalances(prev => ({ ...prev, nnm: 0 })); 
-      setIsTransferring(true);
-      
-      // 2. Set Persistence Flag
-      localStorage.setItem(`nnm_claim_pending_${address}`, 'true');
-      
-      // 3. Trigger the Root-Level Effect
-      setTriggerClaimExecution(true);
-  };
+        if (auditDetails.claimable <= 0) return;
+        
+        // 1. Optimistic UI (Instant Feedback)
+        setShowClaimModal(false);
+        const amountToClaim = auditDetails.claimable;
+        
+        // Zero out visually immediately
+        setWalletBalances(prev => ({ ...prev, nnm: 0 })); 
+        setIsTransferring(true); 
+        
+        try {
+            // 2. Direct API Call
+            const res = await fetch('/api/nnm/claim', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ userWallet: address, amountNNM: amountToClaim })
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                await fetchActivity();
+                setIsTransferring(false); 
+            } else {
+                console.error("Request Failed:", data.error);
+                setWalletBalances(prev => ({ ...prev, nnm: amountToClaim })); // Rollback
+                setIsTransferring(false);
+            }
+        } catch (e) { 
+            console.error("Connection Error", e);
+            setWalletBalances(prev => ({ ...prev, nnm: amountToClaim })); 
+            setIsTransferring(false);
+        }
+    };
 
   useEffect(() => { 
       if (isConnected) {
@@ -503,40 +523,6 @@ export default function DashboardPage() {
       if (activeSection === 'Activity') fetchActivity();
       if (activeSection === 'Conviction') fetchConvictionData();
   }, [activeSection, offerType, offerSort, myAssets]);
-
-  // Persistent Background Effect for Claim Execution
-  useEffect(() => {
-      if (!triggerClaimExecution || !address) return;
-
-      const executePayout = async () => {
-          try {
-              const res = await fetch('/api/nnm/claim', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ 
-                      userWallet: address, 
-                      amountNNM: auditDetails.claimable 
-                  }),
-                  keepalive: true // Essential for background persistence
-              });
-
-              const data = await res.json();
-              if (data.success) {
-                  await fetchActivity();
-              } else {
-                  // If confirmed failure, rollback the pending state
-                  localStorage.removeItem(`nnm_claim_pending_${address}`);
-                  setIsTransferring(false);
-              }
-          } catch (e) {
-              console.error("Background Payout Error:", e);
-          } finally {
-              setTriggerClaimExecution(false);
-          }
-      };
-
-      executePayout();
-  }, [triggerClaimExecution, address, auditDetails.claimable]);
 
   // Effect: Check persistence on load (Robust against race conditions)
   useEffect(() => {
@@ -752,7 +738,7 @@ export default function DashboardPage() {
                             <tbody>{sortedListedAssets.map((asset) => (
                                 <tr key={asset.id} className="align-middle listing-row">
                                     <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>{asset.name}</td>
-                                    <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{asset.price}</td>
+                                    <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{formatCompactNumber(parseFloat(asset.price))}</td>
                                     <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>Active</td>
                                     <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}><Link href={`/asset/${asset.id}`}><i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i></Link></td>
                                 </tr>
