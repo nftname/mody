@@ -315,8 +315,8 @@ export default function AdminPage() {
       if (!confirm("⚠️ CAUTION: Are you sure you want to execute the NNM Batch Payout?\nThis will send funds to all wallets marked as PENDING.")) return;
       
       // Simple security prompt to prevent accidental clicks
-      const userPrompt = prompt("To confirm, type: EXECUTE");
-      if (userPrompt !== 'EXECUTE') return alert("Operation Cancelled.");
+      const userPrompt = prompt("To confirm, type: 123");
+      if (userPrompt !== '123') return alert("Operation Cancelled.");
 
       alert("Processing in background... Please wait.");
 
