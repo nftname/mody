@@ -4,11 +4,11 @@ import { createWalletClient, http, parseEther, fallback, publicActions } from 'v
 import { privateKeyToAccount } from 'viem/accounts';
 import { polygon } from 'viem/chains';
 
-// إعداد شبكة بوليجون (عدة خطوط لضمان عدم الانقطاع)
+// نستخدم RPC قوي وسريع لتجنب مشاكل الاتصال
 const transport = fallback([
+  http("https://polygon-bor-rpc.publicnode.com"),
   http("https://polygon-rpc.com"),
-  http("https://rpc-mainnet.maticvigil.com"),
-  http("https://polygon-bor-rpc.publicnode.com")
+  http("https://1rpc.io/matic")
 ]);
 
 const supabase = createClient(
@@ -18,11 +18,15 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    // 1. إعداد المحفظة الساخنة (Hot Wallet)
-    const pk = process.env.NNM_HOT_WALLET_PRIVATE_KEY;
-    if (!pk) throw new Error("Server Error: Missing Hot Wallet Key");
+    console.log("🚀 Starting Payout Process...");
 
-    const account = privateKeyToAccount(pk.startsWith('0x') ? pk as `0x${string}` : `0x${pk}` as `0x${string}`);
+    // 1. إعداد المحفظة الساخنة
+    const pk = process.env.NNM_HOT_WALLET_PRIVATE_KEY;
+    if (!pk) throw new Error("Missing Private Key in Env");
+
+    // تنظيف المفتاح من أي مسافات زائدة
+    const cleanPk = pk.trim().startsWith('0x') ? pk.trim() : `0x${pk.trim()}`;
+    const account = privateKeyToAccount(cleanPk as `0x${string}`);
     
     const walletClient = createWalletClient({
       account,
@@ -30,79 +34,82 @@ export async function POST(request: Request) {
       transport: transport
     }).extend(publicActions);
 
-    // 2. جلب الطلبات المعلقة (PENDING)
+    console.log(`✅ Wallet Ready: ${account.address}`);
+
+    // 2. جلب الطلبات المعلقة
     const { data: pendingRequests, error: fetchError } = await supabase
       .from('nnm_payout_logs')
       .select('*')
       .eq('status', 'PENDING')
-      .limit(50);
+      .limit(10); // نبدأ بـ 10 طلبات فقط للتجربة
 
-    if (fetchError) throw new Error(`Database Error: ${fetchError.message}`);
+    if (fetchError) throw new Error(`DB Error: ${fetchError.message}`);
     if (!pendingRequests || pendingRequests.length === 0) {
-      return NextResponse.json({ success: true, message: "No pending payouts found." });
+      return NextResponse.json({ success: true, message: "No pending payouts" });
     }
 
-    // 3. جلب سعر POL الحالي (Live Price)
-    // هذا هو أهم جزء لضمان دقة الـ 5 سنت
-    let currentPolPrice = 0.40; // سعر افتراضي للأمان
-    try {
-        const priceRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=MATICUSDT', { signal: AbortSignal.timeout(5000) });
-        const priceData = await priceRes.json();
-        currentPolPrice = parseFloat(priceData.price);
-        console.log(`Current POL Price: $${currentPolPrice}`);
-    } catch (e) {
-        console.warn("Price Fetch Failed, using fallback.");
-    }
+    console.log(`found ${pendingRequests.length} pending requests`);
+
+    // 3. تحديد السعر (تثبيت السعر يدوياً لتجاوز مشاكل الـ API)
+    // سنجبر السعر على 0.40 دولار لكل POL مؤقتاً لضمان عمل الكود
+    const FIXED_POL_PRICE = 0.40; 
+    console.log(`ℹ️ Using Fixed POL Price: $${FIXED_POL_PRICE}`);
 
     const results = [];
 
-    // 4. حلقة الدفع (The Payout Loop)
+    // 4. حلقة التنفيذ
     for (const req of pendingRequests) {
       try {
-        // المعادلة الذهبية:
-        // المبلغ المراد تحويله (POL) = القيمة الدولارية المثبتة / سعر العملة الحالي
-        // إذا كان usd_value_at_time فارغاً، نحسبه احتياطياً (NNM * 0.05)
-        const targetUsdValue = req.usd_value_at_time || (req.amount_nnm * 0.05);
-        
-        // حساب كمية البول بدقة
-        const polAmountToSend = targetUsdValue / currentPolPrice;
-        
-        // التحويل لوحدة Wei
-        // toFixed(18) تمنع الكسور الطويلة جداً التي ترفضها الشبكة
-        const valueInWei = parseEther(polAmountToSend.toFixed(18));
+        console.log(`Processing ID: ${req.id} for Wallet: ${req.wallet_address}`);
 
-        console.log(`Processing ID ${req.id}: Sending ${polAmountToSend} POL ($${targetUsdValue}) to ${req.wallet_address}`);
+        // حساب القيمة المستحقة
+        // إذا كان الجدول يحتوي على قيمة دولارية نستخدمها، وإلا نحسبها (الرصيد * 0.05)
+        const targetUsd = req.usd_value_at_time && req.usd_value_at_time > 0 
+                          ? parseFloat(req.usd_value_at_time) 
+                          : (parseFloat(req.amount_nnm) * 0.05);
 
-        // تنفيذ التحويل على البلوكشين
+        // المعادلة: الدولار / السعر = كمية POL
+        const polAmount = targetUsd / FIXED_POL_PRICE;
+        
+        // تحويل لرقم نصوصي آمن (بحد أقصى 18 خانة عشرية)
+        const valString = polAmount.toFixed(18);
+        const valueInWei = parseEther(valString);
+
+        console.log(`💰 Sending ${valString} POL ($${targetUsd})`);
+
+        // تنفيذ التحويل
         const hash = await walletClient.sendTransaction({
           to: req.wallet_address as `0x${string}`,
           value: valueInWei,
           chain: polygon
         });
 
-        // تحديث حالة الطلب في قاعدة البيانات
-        await supabase
+        console.log(`✅ Sent! Hash: ${hash}`);
+
+        // تحديث قاعدة البيانات فوراً
+        const { error: updateError } = await supabase
           .from('nnm_payout_logs')
           .update({ 
-            status: 'PAID', // تم الدفع
+            status: 'PAID', 
             tx_hash: hash,
-            exchange_rate_used: currentPolPrice, // نسجل السعر الذي تم التحويل به للمراجعة
-            updated_at: new Date().toISOString()
+            exchange_rate_used: FIXED_POL_PRICE,
+            processed_at: new Date().toISOString()
           })
           .eq('id', req.id);
 
-        results.push({ id: req.id, status: 'SUCCESS', hash, polSent: polAmountToSend });
+        if(updateError) console.error("Update DB Failed:", updateError);
+
+        results.push({ id: req.id, status: 'SUCCESS', hash });
 
       } catch (txError: any) {
-        console.error(`Payout Failed for ID ${req.id}:`, txError);
+        console.error(`❌ Failed ID ${req.id}:`, txError);
         
-        // تسجيل الفشل ولكن لا نحذف الطلب، يبقى PENDING أو FAILED للمحاولة لاحقاً
+        // تسجيل الفشل في الجدول لنعرف السبب
         await supabase
           .from('nnm_payout_logs')
           .update({ 
             status: 'FAILED', 
-            error_reason: txError.message || 'Tx Failed',
-            updated_at: new Date().toISOString()
+            error_reason: txError.message?.substring(0, 200) || 'Unknown Error'
           })
           .eq('id', req.id);
 
@@ -110,15 +117,10 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      processed: results.length, 
-      priceUsed: currentPolPrice,
-      details: results 
-    });
+    return NextResponse.json({ success: true, processed: results.length, details: results });
 
   } catch (err: any) {
-    console.error('Critical Expert Error:', err);
+    console.error('🔥 Critical Script Error:', err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
