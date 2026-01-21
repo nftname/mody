@@ -9,21 +9,21 @@ import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 // --- CONSTANTS ---
 const GOLD_BASE = '#F0C420';
 const GOLD_LIGHT = '#FFD700';
-const GOLD_MEDIUM = '#FDB931'; 
+const GOLD_MEDIUM = '#FDB931';
 const GOLD_DARK = '#B8860B';
 
 // --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
-const trustedBrands = [ 
+const trustedBrands = [
     { name: "POLYGON", icon: "bi-link-45deg", isCustom: false },
     { name: "BNB CHAIN", icon: "bi-diamond-fill", isCustom: false },
     { name: "ETHEREUM", icon: "bi-currency-ethereum", isCustom: false },
     { name: "SOLANA", icon: "bi-lightning-charge-fill", isCustom: false },
-    { name: "METAMASK", icon: FOX_PATH, isCustom: true }, 
+    { name: "METAMASK", icon: FOX_PATH, isCustom: true },
     { name: "UNISWAP", icon: "bi-arrow-repeat", isCustom: false },
     { name: "CHAINLINK", icon: "bi-hexagon-fill", isCustom: false },
-    { name: "PINATA", icon: "bi-cloud-fill", isCustom: false }, 
+    { name: "PINATA", icon: "bi-cloud-fill", isCustom: false },
     { name: "IPFS", icon: "bi-box-seam-fill", isCustom: false },
     { name: "ARWEAVE", icon: "bi-database-fill-lock", isCustom: false },
     { name: "BUNDLR", icon: "bi-collection-fill", isCustom: false },
@@ -59,8 +59,8 @@ export default function NGXWhitepaperPage() {
           font-family: "Inter", "Segoe UI", sans-serif;
           font-size: 15px;
           color: #B0B0B0;
-          line-height: 1.5; 
-          margin-bottom: 8px; /* Reduced paragraph spacing */
+          line-height: 1.5;
+          margin-bottom: 8px;
         }
         .ngx-page ul {
             padding-left: 20px;
@@ -80,36 +80,47 @@ export default function NGXWhitepaperPage() {
                 margin-left: 30px;
                 margin-bottom: 15px;
                 margin-top: 5px;
-                width: 330px; /* Slightly wider than widget to contain border/padding */
+                width: 330px;
                 clear: right;
                 z-index: 10;
                 position: relative;
             }
-        }
-
-        /* WIDGET STACKING STYLE (MOBILE) */
-        @media (max-width: 991px) {
-            .widget-float-container {
-                float: none;
-                width: 100%;
-                margin: 20px auto;
-                display: flex;
-                justify-content: center;
+            .widget-box-style {
+                padding: 10px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 12px;
+                background: rgba(0, 0, 0, 0.15);
+                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             }
         }
 
-        /* THE LIGHT BOX AROUND WIDGET */
-        .widget-box-style {
-            padding: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.08); /* Subtle border */
-            border-radius: 12px;
-            background: rgba(0, 0, 0, 0.15); /* Very slight dark background */
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        /* WIDGET STACKING STYLE (MOBILE) - MODIFIED FOR LARGER SIZE */
+        @media (max-width: 991px) {
+            .widget-float-container {
+                float: none;
+                width: 80%; /* Changed from 100% to 80% */
+                margin: 25px auto 35px auto; /* Increased top/bottom margin slightly */
+                display: flex;
+                justify-content: center;
+            }
+            .widget-box-style {
+                width: 100%; /* Ensure it fills the container */
+                padding: 12px; /* Slightly more padding */
+                border: 1px solid rgba(255, 255, 255, 0.1); /* Slightly more visible border */
+                border-radius: 14px;
+                background: rgba(0, 0, 0, 0.2);
+                box-shadow: 0 6px 25px rgba(0,0,0,0.25);
+            }
+            /* Important: Force widgets to take full width of their container on mobile */
+            .widget-box-style > div {
+                width: 100% !important;
+                max-width: none !important;
+            }
         }
 
         /* Reduced Vertical Spacing for Sections */
         .section-tight {
-            margin-bottom: 50px; /* Reduced by ~20% from typical 60-80px */
+            margin-bottom: 50px;
             padding-bottom: 30px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -119,9 +130,9 @@ export default function NGXWhitepaperPage() {
         }
 
         /* Ticker Animations */
-        .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
+        .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); }
         .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
-        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
       `}</style>
 
@@ -151,17 +162,13 @@ export default function NGXWhitepaperPage() {
 
             {/* --- SECTION 1: SENTIMENT INDEX --- */}
             <section className="section-tight">
-                {/* FLOAT CONTAINER: 
-                   On Desktop: Floats right, text wraps around it.
-                   On Mobile: Stacks normally.
-                */}
+                
                 <div className="widget-float-container">
                     <div className="widget-box-style">
                         <NGXWidget theme="dark" title="NGX NFTs" />
                     </div>
                 </div>
 
-                {/* TEXT CONTENT - Wraps around the widget */}
                 <div className="text-start">
                     <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.5rem' }}>
                         <span style={{ color: GOLD_MEDIUM }}>1.</span> NGX NFT Sentiment Index
@@ -182,7 +189,6 @@ export default function NGXWhitepaperPage() {
                     <p>
                         By documenting historical sentiment fluctuations, the index establishes <strong className="text-white">temporal precedence</strong>, reinforcing the intellectual ownership of the NGX NFT analytical methodology.
                     </p>
-                    {/* Clearing floats to ensure section height captures everything if text is short */}
                     <div style={{ clear: 'both' }}></div>
                 </div>
             </section>
