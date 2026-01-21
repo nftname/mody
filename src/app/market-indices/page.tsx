@@ -7,9 +7,8 @@ import NGXCapWidget from '@/components/NGXCapWidget';
 import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 
 // --- CONSTANTS ---
-const GOLD_BASE = '#F0C420';
-const GOLD_LIGHT = '#FFD700';
 const GOLD_MEDIUM = '#FDB931';
+const GOLD_LIGHT = '#FFD700';
 const GOLD_DARK = '#B8860B';
 
 // --- BRAND ICONS DATA ---
@@ -52,28 +51,55 @@ export default function NGXWhitepaperPage() {
   return (
     <main className="ngx-page" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column' }}>
       
-      {/* GLOBAL STYLES */}
+      {/* GLOBAL STYLES & OVERRIDES */}
       <style jsx global>{`
+        /* 1. TEXT COLOR & DIMMING */
         .ngx-page p,
-        .ngx-page li {
+        .ngx-page li,
+        .ngx-page .text-body {
           font-family: "Inter", "Segoe UI", sans-serif;
           font-size: 15px;
-          color: #B0B0B0;
-          line-height: 1.5;
+          /* Reduced brightness by ~20% as requested (was #B0B0B0, now #A0A0A0) */
+          color: #A0A0A0 !important; 
+          line-height: 1.6;
           margin-bottom: 8px;
         }
-        .ngx-page ul {
-            padding-left: 20px;
-            margin-bottom: 15px;
-        }
+
+        /* 2. HEADINGS OFF-WHITE */
         .ngx-page h1,
         .ngx-page h2,
         .ngx-page h3,
         .ngx-page .text-white {
+          /* Changed from pure white #FFF to Off-White #E0E0E0 */
           color: #E0E0E0 !important;
         }
-        
-        /* WIDGET FLOATING STYLE (DESKTOP) */
+
+        /* 3. BULLET POINTS FIX */
+        .ngx-page ul {
+            list-style-type: disc !important; /* Force dots */
+            padding-left: 20px !important;    /* Space for dots */
+            margin-bottom: 15px;
+        }
+        .ngx-page li {
+            display: list-item !important;    /* Ensure it behaves like a list item */
+            margin-bottom: 6px;
+        }
+
+        /* 4. WIDGET STYLING (The Box) */
+        .widget-box-style {
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.25); /* Slightly darker background for contrast */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            /* Important for centering the scaled content */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* --- DESKTOP LAYOUT --- */
         @media (min-width: 992px) {
             .widget-float-container {
                 float: right;
@@ -85,48 +111,32 @@ export default function NGXWhitepaperPage() {
                 z-index: 10;
                 position: relative;
             }
-            .widget-box-style {
-                padding: 10px;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 12px;
-                background: rgba(0, 0, 0, 0.15);
-                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            }
         }
 
-        /* WIDGET STACKING STYLE (MOBILE) - MODIFIED FOR LARGER SIZE */
+        /* --- MOBILE LAYOUT & SCALING (CRITICAL FIX) --- */
         @media (max-width: 991px) {
             .widget-float-container {
                 float: none;
-                width: 80%; /* Changed from 100% to 80% */
-                margin: 25px auto 35px auto; /* Increased top/bottom margin slightly */
+                width: 90%;          /* Outer container width */
+                margin: 30px auto;   /* Center horizontally */
                 display: flex;
                 justify-content: center;
             }
+            
             .widget-box-style {
-                width: 100%; /* Ensure it fills the container */
-                padding: 12px; /* Slightly more padding */
-                border: 1px solid rgba(255, 255, 255, 0.1); /* Slightly more visible border */
-                border-radius: 14px;
-                background: rgba(0, 0, 0, 0.2);
-                box-shadow: 0 6px 25px rgba(0,0,0,0.25);
+                width: 100%;         /* Fill the 90% container */
+                min-height: 140px;   /* Ensure height for scaled widget */
+                padding: 20px 0;     /* Vertical padding */
             }
-            /* Important: Force widgets to take full width of their container on mobile */
-            .widget-box-style > div {
-                width: 100% !important;
-                max-width: none !important;
-            }
-        }
 
-        /* Reduced Vertical Spacing for Sections */
-        .section-tight {
-            margin-bottom: 50px;
-            padding-bottom: 30px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .section-tight:last-of-type {
-            border-bottom: none;
-            margin-bottom: 40px;
+            /* SCALING MAGIC:
+               Since widgets are fixed ~310px, we use CSS transform to scale them up 
+               to fill the mobile box visually without breaking their internal layout.
+            */
+            .mobile-widget-scaler {
+                transform: scale(1.15); /* Scale up by 15-20% */
+                transform-origin: center center;
+            }
         }
 
         /* Ticker Animations */
@@ -134,6 +144,13 @@ export default function NGXWhitepaperPage() {
         .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
+        
+        .section-tight {
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .section-tight:last-of-type { border-bottom: none; }
       `}</style>
 
       <div className="container pt-5 flex-grow-1">
@@ -142,14 +159,14 @@ export default function NGXWhitepaperPage() {
 
             {/* --- MAIN HEADER --- */}
             <header className="mb-4 pb-3 border-bottom border-secondary border-opacity-25 text-start">
-              <h1 className="fw-bold text-white mb-2" style={{ fontSize: '2.2rem', letterSpacing: '-1px', lineHeight: '1.2' }}>
+              <h1 className="fw-bold mb-2" style={{ fontSize: '2.2rem', letterSpacing: '-1px', lineHeight: '1.2' }}>
                 NGX NFT Index <span style={{ color: GOLD_MEDIUM }}>Framework</span>
               </h1>
-              <h2 className="text-white mb-3" style={{ fontSize: '1.2rem', fontWeight: '400', letterSpacing: '0.5px' }}>
+              <h2 className="mb-3" style={{ fontSize: '1.2rem', fontWeight: '400', letterSpacing: '0.5px', color: '#E0E0E0' }}>
                 Institutional Whitepaper
               </h2>
               
-              <div style={{ maxWidth: '100%', color: '#B0B0B0' }}>
+              <div style={{ maxWidth: '100%' }}>
                 <p className="fw-bold text-white mb-2">Introduction: NGX NFT Index</p>
                 <p>
                   The <strong className="text-white">NGX NFT Index</strong> represents a comprehensive framework designed to provide a structural lens on the global NFT market. Developed as a neutral analytical benchmark, this framework aggregates the entirety of NFT market activity across the four primary sectors: <strong className="text-white">Land, Gaming, Art, and Digital Names (e.g., ENS-like domains, NNM Registry)</strong>. Its purpose is to establish a reference architecture for market participants, researchers, and competing platforms, reflecting both historical evolution and current structural dynamics of the NFT ecosystem.
@@ -162,15 +179,17 @@ export default function NGXWhitepaperPage() {
 
             {/* --- SECTION 1: SENTIMENT INDEX --- */}
             <section className="section-tight">
-                
                 <div className="widget-float-container">
                     <div className="widget-box-style">
-                        <NGXWidget theme="dark" title="NGX NFTs" />
+                        {/* Wrapper div for Mobile Scaling */}
+                        <div className="mobile-widget-scaler">
+                            <NGXWidget theme="dark" title="NGX NFTs" />
+                        </div>
                     </div>
                 </div>
 
                 <div className="text-start">
-                    <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.5rem' }}>
+                    <h2 className="fw-bold mb-3" style={{ fontSize: '1.5rem' }}>
                         <span style={{ color: GOLD_MEDIUM }}>1.</span> NGX NFT Sentiment Index
                     </h2>
                     
@@ -195,15 +214,16 @@ export default function NGXWhitepaperPage() {
 
             {/* --- SECTION 2: MARKET CAPITALIZATION INDEX --- */}
             <section className="section-tight">
-                
                 <div className="widget-float-container">
                     <div className="widget-box-style">
-                         <NGXCapWidget theme="dark" title="NGX Cap NFTs" />
+                        <div className="mobile-widget-scaler">
+                             <NGXCapWidget theme="dark" title="NGX Cap NFTs" />
+                        </div>
                     </div>
                 </div>
 
                 <div className="text-start">
-                    <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.5rem' }}>
+                    <h2 className="fw-bold mb-3" style={{ fontSize: '1.5rem' }}>
                             <span style={{ color: GOLD_MEDIUM }}>2.</span> NGX NFT Market Capitalization Index
                     </h2>
                     
@@ -228,15 +248,16 @@ export default function NGXWhitepaperPage() {
 
             {/* --- SECTION 3: VOLUME INDEX --- */}
             <section className="section-tight">
-                
                 <div className="widget-float-container">
                     <div className="widget-box-style">
-                        <NGXVolumeWidget theme="dark" title="NGX Volume" />
+                        <div className="mobile-widget-scaler">
+                            <NGXVolumeWidget theme="dark" title="NGX Volume" />
+                        </div>
                     </div>
                 </div>
 
                 <div className="text-start">
-                    <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.5rem' }}>
+                    <h2 className="fw-bold mb-3" style={{ fontSize: '1.5rem' }}>
                             <span style={{ color: GOLD_MEDIUM }}>3.</span> NGX NFT Volume Index
                     </h2>
                     
@@ -264,7 +285,7 @@ export default function NGXWhitepaperPage() {
                 <div className="row">
                     <div className="col-12 text-start">
                         
-                        <h3 className="fw-bold text-white mb-3" style={{ fontSize: '1.3rem' }}>
+                        <h3 className="fw-bold mb-3" style={{ fontSize: '1.3rem' }}>
                             Framework Positioning & Legal Notice
                         </h3>
                         <p>
@@ -276,7 +297,7 @@ export default function NGXWhitepaperPage() {
 
                         <hr className="my-4 border-secondary border-opacity-25" />
 
-                        <h3 className="fw-bold text-white mb-3" style={{ fontSize: '1.3rem' }}>
+                        <h3 className="fw-bold mb-3" style={{ fontSize: '1.3rem' }}>
                             Conclusion
                         </h3>
                         <p>
