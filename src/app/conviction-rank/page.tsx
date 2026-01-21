@@ -1,11 +1,17 @@
 'use client';
 import Link from 'next/link';
 
+// --- COLOR CONSTANTS ---
 const GOLD_BASE = '#F0C420';
 const GOLD_LIGHT = '#FFD700';
 const GOLD_MEDIUM = '#FDB931'; 
 const GOLD_DARK = '#B8860B';
 const TEXT_OFF_WHITE = '#E0E0E0';
+
+// --- BUTTON SPECIFIC CONSTANTS ---
+const GOLD_BTN_PRIMARY = '#D4AF37';
+const GOLD_BTN_HIGHLIGHT = '#E6C76A';
+const GOLD_BTN_SHADOW = '#B8962E';
 
 // --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
@@ -46,14 +52,85 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
 // --- MAIN PAGE COMPONENT ---
 export default function ConvictionRankPage() {
   return (
-    <main className="conviction-page" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px' }}>
+    <main className="conviction-page" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column' }}>
       
-      <div className="container pt-5">
+      {/* CSS STYLES & FONTS */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap');
+
+        /* Text Styles */
+        .conviction-page p,
+        .conviction-page .intro-text,
+        .conviction-page li,
+        .conviction-page small,
+        .conviction-page .small,
+        .conviction-page label {
+          font-family: "Inter", "Segoe UI", sans-serif;
+          font-size: 15px;
+          color: #B0B0B0;
+          line-height: 1.45;
+          margin-bottom: 10px; 
+        }
+        .conviction-page ul {
+          margin-bottom: 15px;
+        }
+        .conviction-page h1,
+        .conviction-page h2,
+        .conviction-page h3,
+        .conviction-page .text-white {
+          color: #E0E0E0 !important;
+        }
+
+        /* GOLD BUTTON STYLES (THE INGOT) */
+        .btn-ingot {
+            background: linear-gradient(180deg, ${GOLD_BTN_HIGHLIGHT} 0%, ${GOLD_BTN_PRIMARY} 40%, ${GOLD_BTN_SHADOW} 100%);
+            border: 1px solid ${GOLD_BTN_SHADOW};
+            color: #2b1d00 !important; 
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
+            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+            transition: filter 0.3s ease, transform 0.2s ease;
+            padding: 10px 30px; 
+            font-size: 0.8rem; 
+            white-space: nowrap; 
+            display: inline-block;
+        }
+        .btn-ingot:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+        }
+        
+        /* Layout Handling */
+        @media (max-width: 991px) {
+            .conviction-page header .row {
+                flex-direction: column;
+            }
+            .conviction-page header .col-lg-5,
+            .conviction-page header .col-lg-7 {
+                width: 100%;
+                text-align: left !important;
+            }
+            .conviction-page .rounded-4 {
+                margin-bottom: 20px;
+                max-width: 100% !important; 
+            }
+        }
+
+        /* Ticker Animations */
+        .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
+        .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
+        .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
+      `}</style>
+
+      <div className="container pt-5 flex-grow-1">
         <div className="row justify-content-center">
           
           <div className="col-12 col-lg-11"> 
 
-            {/* --- HEADER SECTION (Image Left / Text Right) --- */}
+            {/* --- HEADER SECTION --- */}
             <header className="mb-5 pb-4 border-bottom border-secondary border-opacity-25">
               <div className="row align-items-center">
                 
@@ -66,9 +143,6 @@ export default function ConvictionRankPage() {
                             border: '1px solid #333',
                             boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
                         }}>
-                        {/* تم إصلاح رابط الصورة هنا.
-                           في Next.js، الملفات داخل مجلد public يتم استدعاؤها من الجذر (/) مباشرة.
-                        */}
                         <img 
                             src="/conviction.jpg" 
                             alt="Conviction Rank" 
@@ -77,7 +151,7 @@ export default function ConvictionRankPage() {
                    </div>
                 </div>
 
-                {/* RIGHT COLUMN: MAIN TITLE & INTRO TEXT */}
+                {/* RIGHT COLUMN: TEXT */}
                 <div className="col-lg-7 ps-lg-5 order-1 order-lg-2 text-start d-flex flex-column justify-content-center">
                   <h1 className="fw-bold text-white mb-3" 
                       style={{ 
@@ -94,16 +168,11 @@ export default function ConvictionRankPage() {
                     <p className="intro-text">Prices rise. Prices fall. Charts fluctuate. Volumes spike.</p>
                     <p className="intro-text">But none of this answers the core question serious participants care about:</p>
                     
-                    {/* تم إصلاح هذا الجزء:
-                        إزالة المربع الأصفر.
-                        السؤال الآن مكتوب بخط عريض (fw-bold) ولون أبيض (text-white) وبحجم أكبر قليلاً فقط.
-                    */}
                     <p className="fw-bold text-white my-4" style={{ fontSize: '1.2rem' }}>
                         Which assets do people genuinely believe in?
                     </p>
 
                     <p className="intro-text">Not for a moment. Not based on hype. But with real conviction.</p>
-                    {/* النص الأخير بلون أبيض وعريض قليلاً لتمييزه */}
                     <p className="intro-text mt-3 fw-semibold text-white">This is exactly what Conviction Rank was built to measure.</p>
                   </div>
                 </div>
@@ -111,7 +180,7 @@ export default function ConvictionRankPage() {
               </div>
             </header>
 
-            {/* --- REST OF THE CONTENT --- */}
+            {/* --- CONTENT SECTIONS --- */}
             
             <section className="mb-4 ps-lg-3">
               <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
@@ -182,21 +251,30 @@ export default function ConvictionRankPage() {
               <p>Conviction Rank records who believed first. In digital markets, that history matters.</p>
             </section>
 
-            <section className="mb-4 ps-lg-3">
+            <section className="ps-lg-3">
               <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
                 A Market That Remembers
               </h2>
               <p>Most marketplaces forget intent. NNM records it.</p>
               <p>Conviction Rank ensures belief is visible. Trust leaves a footprint. Commitment has memory.</p>
               <p>This is how digital names evolve from collectibles into true assets. This is how markets mature. And this is how signal rises above noise.</p>
-              <p className="mt-3" style={{ fontSize: '1.1rem' }}>
-                Conviction is no longer silent.<br/>
-                <span style={{ color: GOLD_MEDIUM, fontWeight: 'bold' }}>It’s ranked.</span>
+              
+              {/* SINGLE LINE ENDING */}
+              <p className="mt-3 mb-0" style={{ fontSize: '1.1rem' }}>
+                Conviction is no longer silent. <span style={{ color: GOLD_MEDIUM, fontWeight: 'bold' }}>It’s ranked.</span>
               </p>
             </section>
 
-            {/* FOOTER */}
-            <footer className="ps-lg-3" style={{ borderTop: '1px solid #2E2E2E', paddingTop: '20px', marginTop: '40px', marginBottom: '60px' }}>
+            {/* --- GOLD BUTTON SECTION --- */}
+            {/* Logic: mt-5 (Space above ~48px) | mb-5 + pb-5 (Space below ~96px [Double]) */}
+            <div className="text-center mt-5 mb-5 pb-4">
+                <Link href="/mint" className="btn btn-ingot rounded-1 text-decoration-none">
+                    CLAIM YOUR NEXUS NAME
+                </Link>
+            </div>
+
+            {/* FOOTER TEXT */}
+            <footer className="ps-lg-3" style={{ borderTop: '1px solid #2E2E2E', paddingTop: '20px', marginTop: '20px', marginBottom: '40px' }}>
               <p style={{ fontSize: '11px', color: '#777', lineHeight: '1.5' }}>
                 NNM is a decentralized discovery and exchange platform. All content is provided for informational purposes only.
               </p>
@@ -205,56 +283,9 @@ export default function ConvictionRankPage() {
           </div>
         </div>
       </div>
-      
-      {/* --- STYLES --- */}
-      <style jsx global>{`
-        .conviction-page p,
-        .conviction-page .intro-text,
-        .conviction-page li,
-        .conviction-page small,
-        .conviction-page .small,
-        .conviction-page label {
-          font-family: "Inter", "Segoe UI", sans-serif;
-          font-size: 15px;
-          color: #B0B0B0;
-          line-height: 1.45; /* التأكيد على تقليل المسافات بين الأسطر */
-          margin-bottom: 10px; 
-        }
-        .conviction-page ul {
-          margin-bottom: 15px;
-        }
-        .conviction-page h1,
-        .conviction-page h2,
-        .conviction-page h3,
-        .conviction-page .text-white {
-          color: #E0E0E0 !important;
-        }
-        
-        /* Layout Handling */
-        @media (max-width: 991px) {
-            .conviction-page header .row {
-                flex-direction: column;
-            }
-            .conviction-page header .col-lg-5,
-            .conviction-page header .col-lg-7 {
-                width: 100%;
-                text-align: left !important;
-            }
-            .conviction-page .rounded-4 {
-                margin-bottom: 20px;
-                max-width: 100% !important; 
-            }
-        }
 
-        /* Ticker Animations */
-        .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
-        .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
-        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
-        .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
-      `}</style>
-
-      {/* --- BRAND TICKER --- */}
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '10px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+      {/* --- BRAND TICKER (Sticky Bottom) --- */}
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '20px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
