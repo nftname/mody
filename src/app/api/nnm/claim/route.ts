@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { userWallet, amountNNM } = body;
 
-    // 1. التحقق من الرصيد (Verify Balance)
+    // 1. التحقق من الرصيد
     const { data: userData } = await supabase
       .from('nnm_wallets')
       .select('nnm_balance')
@@ -22,9 +22,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
     }
 
-    // 2. التنفيذ الذري: خصم الرصيد وتسجيل الطلب
-    
-    // A. خصم الرصيد (Deduct Balance)
+    // 2. تطبيق قاعدة الـ 5 سنت (The 5-Cent Rule)
+    // نحسب القيمة الدولارية المستحقة ونخزنها
+    const usdValue = amountNNM * 0.05; 
+
+    // 3. خصم الرصيد من المحفظة
     const newBalance = parseFloat(userData.nnm_balance) - amountNNM;
     const { error: updateError } = await supabase
       .from('nnm_wallets')
@@ -36,25 +38,23 @@ export async function POST(request: Request) {
 
     if (updateError) throw new Error("Failed to update balance: " + updateError.message);
 
-    // B. تسجيل الطلب (Log Request) - تم التبسيط لضمان النجاح
-    // نرسل فقط البيانات الأساسية، ونتحقق من وجود أي خطأ في الإدخال
+    // 4. تسجيل الطلب مع القيمة الدولارية المثبتة
+    // نترك (exchange_rate) و (tx_hash) للكود الأخير ليملأها وقت الصرف
     const { error: logError } = await supabase.from('nnm_payout_logs').insert([{
       wallet_address: userWallet,
       amount_nnm: amountNNM,
-      status: 'PENDING',  // الحالة المهمة للأدمن
+      usd_value_at_time: usdValue, // هنا نثبت حق العميل بالدولار
+      status: 'PENDING',
       created_at: new Date().toISOString()
-      // تم حذف الأعمدة الثانوية (usd_value, tx_hash) مؤقتاً لضمان عدم تعطل الإدخال
     }]);
 
-    // [تعديل هام] إذا فشل التسجيل، نرجع الرصيد للعميل أو نرسل خطأ صريح
     if (logError) {
+        // حماية: إذا فشل التسجيل نرجع خطأ (يمكنك إضافة كود لإعادة الرصيد هنا مستقبلاً)
         console.error("Database Insert Error:", logError);
-        // يمكنك هنا إضافة كود لإرجاع الرصيد (Rollback) إذا أردت دقة 100%
-        // لكن الأهم الآن هو أن نعرف أن هناك خطأ
-        throw new Error("Failed to log request in database: " + logError.message);
+        throw new Error("Failed to log request: " + logError.message);
     }
 
-    return NextResponse.json({ success: true, message: "Request queued successfully" });
+    return NextResponse.json({ success: true, message: "Claim queued successfully" });
 
   } catch (err: any) {
     console.error('Claim Request Error:', err);
