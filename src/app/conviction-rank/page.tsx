@@ -61,15 +61,16 @@ export default function ConvictionRankPage() {
                 <div className="col-lg-5 mb-4 mb-lg-0 order-2 order-lg-1">
                    <div className="rounded-4 overflow-hidden position-relative mx-auto ms-lg-0" 
                         style={{ 
-                            /* Keeps the container square to match the 1024x1024 image */
                             aspectRatio: '1/1',
-                            maxWidth: '500px', // Prevents it from being too huge on desktop
+                            maxWidth: '500px',
                             border: '1px solid #333',
                             boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
                         }}>
-                        {/* THE IMAGE LINK IS HERE: /conviction.png */}
+                        {/* تم إصلاح رابط الصورة هنا.
+                           في Next.js، الملفات داخل مجلد public يتم استدعاؤها من الجذر (/) مباشرة.
+                        */}
                         <img 
-                            src="/conviction.png" 
+                            src="/conviction.jpg" 
                             alt="Conviction Rank" 
                             className="w-100 h-100 object-fit-cover" 
                         />
@@ -93,22 +94,24 @@ export default function ConvictionRankPage() {
                     <p className="intro-text">Prices rise. Prices fall. Charts fluctuate. Volumes spike.</p>
                     <p className="intro-text">But none of this answers the core question serious participants care about:</p>
                     
-                    {/* Highlighted Core Question */}
-                    <div className="my-3 ps-3 border-start border-2" style={{ borderColor: GOLD_MEDIUM }}>
-                        <p className="fw-semibold text-white mb-0" style={{ fontSize: '1.1rem' }}>
-                            Which assets do people genuinely believe in?
-                        </p>
-                    </div>
+                    {/* تم إصلاح هذا الجزء:
+                        إزالة المربع الأصفر.
+                        السؤال الآن مكتوب بخط عريض (fw-bold) ولون أبيض (text-white) وبحجم أكبر قليلاً فقط.
+                    */}
+                    <p className="fw-bold text-white my-4" style={{ fontSize: '1.2rem' }}>
+                        Which assets do people genuinely believe in?
+                    </p>
 
                     <p className="intro-text">Not for a moment. Not based on hype. But with real conviction.</p>
-                    <p className="intro-text mt-3 fw-bold text-white">This is exactly what Conviction Rank was built to measure.</p>
+                    {/* النص الأخير بلون أبيض وعريض قليلاً لتمييزه */}
+                    <p className="intro-text mt-3 fw-semibold text-white">This is exactly what Conviction Rank was built to measure.</p>
                   </div>
                 </div>
 
               </div>
             </header>
 
-            {/* --- REST OF THE CONTENT (Starts below the header) --- */}
+            {/* --- REST OF THE CONTENT --- */}
             
             <section className="mb-4 ps-lg-3">
               <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
@@ -214,7 +217,7 @@ export default function ConvictionRankPage() {
           font-family: "Inter", "Segoe UI", sans-serif;
           font-size: 15px;
           color: #B0B0B0;
-          line-height: 1.45; /* REDUCED LINE HEIGHT */
+          line-height: 1.45; /* التأكيد على تقليل المسافات بين الأسطر */
           margin-bottom: 10px; 
         }
         .conviction-page ul {
