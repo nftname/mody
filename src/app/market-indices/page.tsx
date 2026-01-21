@@ -110,7 +110,7 @@ export default function NGXWhitepaperPage() {
             }
         }
 
-        /* 3. MOBILE WIDGET STYLE (Adjusted Scale) */
+        /* 3. MOBILE WIDGET STYLE (Adjusted Height & Transparency) */
         @media (max-width: 991px) {
             
             .widget-float-container {
@@ -124,15 +124,17 @@ export default function NGXWhitepaperPage() {
             
             .widget-box-style {
                 width: 100%; 
-                background: rgba(0, 0, 0, 0.3);
+                /* Changed opacity from 0.3 to 0.15 so it blends more with background */
+                background: rgba(0, 0, 0, 0.15); 
                 padding: 10px 0; 
-                min-height: 120px; 
+                /* Increased height from 120px to 135px for better vertical centering */
+                min-height: 135px; 
                 overflow: hidden;
             }
 
-            /* THE SCALER: Reduced from 2.2 to 1.8 to fit inside the box */
+            /* THE SCALER: Scale 1.8 */
             .widget-scaler {
-                transform: scale(1.8); /* Reduced scale to fit nicely */
+                transform: scale(1.8); 
                 transform-origin: center center;
                 display: flex;
                 justify-content: center;
