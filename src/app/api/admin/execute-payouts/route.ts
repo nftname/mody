@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { createWalletClient, createPublicClient, http, parseEther, formatEther, fallback, parseAbi } from 'viem';
+import { createWalletClient, createPublicClient, http, parseEther, formatEther, fallback } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { polygon } from 'viem/chains';
 
-// 1. إعداد RPC سريع وموثوق
+// إعداد الاتصال بالبلوكشين
 const transport = fallback([
   http("https://polygon-bor-rpc.publicnode.com"),
   http("https://polygon-rpc.com"),
@@ -13,39 +13,44 @@ const transport = fallback([
 
 const publicClient = createPublicClient({ chain: polygon, transport });
 
-// 2. عقد Chainlink لجلب السعر (MATIC/USD Price Feed Address on Polygon)
-const CHAINLINK_PRICE_FEED = "0xAB594600376Ec9fD91F8E885dADF0CE036862dE0";
-const PRICE_FEED_ABI = parseAbi([
-  "function latestRoundData() view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)"
-]);
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// دالة مساعدة لجلب السعر الحقيقي من البلوكشين
-async function getLivePolPrice() {
+// --- دالة السعر الذكية (Smart Price Fetcher) ---
+async function getRealTimePolPrice() {
   try {
-    const data = await publicClient.readContract({
-      address: CHAINLINK_PRICE_FEED,
-      abi: PRICE_FEED_ABI,
-      functionName: 'latestRoundData'
-    });
-    
-    // Chainlink returns price with 8 decimals (e.g. 40000000 = $0.40)
-    const price = Number(data[1]) / 1e8;
-    console.log(`✅ Oracle Price: $${price}`);
-    return price;
-  } catch (e) {
-    console.error("Oracle Failed, using fallback:", e);
-    return 0.40; // سعر طوارئ فقط إذا فشل كل شيء
-  }
+    // محاولة 1: Binance (الأسرع)
+    const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=POLUSDT', { next: { revalidate: 0 } });
+    if (res.ok) {
+        const data = await res.json();
+        const price = parseFloat(data.price);
+        console.log(`✅ Price from Binance: $${price}`);
+        return price;
+    }
+  } catch (e) { console.warn("Binance Failed, trying CoinGecko..."); }
+
+  try {
+    // محاولة 2: CoinGecko (الاحتياطي)
+    // ملاحظة: CoinGecko قد يسمي العملة matic-network
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd', { next: { revalidate: 0 } });
+    if (res.ok) {
+        const data = await res.json();
+        const price = data['matic-network'].usd;
+        console.log(`✅ Price from CoinGecko: $${price}`);
+        return price;
+    }
+  } catch (e) { console.warn("CoinGecko Failed."); }
+
+  // سعر الطوارئ فقط إذا انقطع الإنترنت عن السيرفر تماماً
+  console.warn("⚠️ All APIs failed. Using fallback $0.40");
+  return 0.40; 
 }
 
 export async function POST(request: Request) {
   try {
-    console.log("🚀 Starting Oracle-Based Payout...");
+    console.log("🚀 Starting Real-Time Payout...");
 
     const pk = process.env.NNM_HOT_WALLET_PRIVATE_KEY;
     if (!pk) throw new Error("Missing Private Key");
@@ -60,7 +65,7 @@ export async function POST(request: Request) {
     });
 
     // 1. جلب السعر الحقيقي الآن
-    const currentPolPrice = await getLivePolPrice();
+    const currentPolPrice = await getRealTimePolPrice();
 
     // 2. جلب الطلبات المعلقة
     const { data: pendingRequests } = await supabase
@@ -78,12 +83,16 @@ export async function POST(request: Request) {
     // 3. حلقة التنفيذ
     for (const req of pendingRequests) {
       try {
-        // حساب القيمة
+        // المعادلة: المبلغ بالدولار (NNM * 0.05) / سعر العملة الحالي
+        // مثال: 0.15$ / 0.32$ = 0.468 POL
         const targetUsd = req.usd_value_at_time || (parseFloat(req.amount_nnm) * 0.05);
+        
         const polAmount = targetUsd / currentPolPrice;
+        
+        // تقريب آمن لـ 18 خانة عشرية
         const valueInWei = parseEther(polAmount.toFixed(18));
 
-        console.log(`💸 Processing ${req.wallet_address}: $${targetUsd} = ${polAmount.toFixed(4)} POL`);
+        console.log(`💸 Paying ${req.wallet_address}: $${targetUsd} USD = ${polAmount.toFixed(4)} POL (@ $${currentPolPrice})`);
 
         // إرسال المعاملة
         const hash = await walletClient.sendTransaction({
@@ -92,9 +101,7 @@ export async function POST(request: Request) {
           chain: polygon
         });
 
-        console.log(`⏳ Sent! Hash: ${hash} - Waiting for confirmation...`);
-
-        // انتظار التأكيد (لضمان النجاح)
+        // انتظار التأكيد
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
         if (receipt.status === 'success') {
@@ -107,7 +114,7 @@ export async function POST(request: Request) {
                 processed_at: new Date().toISOString()
               })
               .eq('id', req.id);
-             results.push({ id: req.id, status: 'SUCCESS', hash });
+             results.push({ id: req.id, status: 'SUCCESS', hash, sent: polAmount });
         } else {
             throw new Error("Transaction Reverted");
         }
@@ -122,7 +129,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, processed: results.length, oraclePrice: currentPolPrice, details: results });
+    return NextResponse.json({ success: true, processed: results.length, usedPrice: currentPolPrice, details: results });
 
   } catch (err: any) {
     console.error('Critical Error:', err);
