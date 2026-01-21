@@ -53,88 +53,89 @@ export default function NGXWhitepaperPage() {
       
       {/* GLOBAL STYLES & OVERRIDES */}
       <style jsx global>{`
-        /* 1. TEXT COLOR & DIMMING */
+        /* 1. TEXT STYLES */
         .ngx-page p,
         .ngx-page li,
         .ngx-page .text-body {
           font-family: "Inter", "Segoe UI", sans-serif;
           font-size: 15px;
-          /* Reduced brightness by ~20% as requested (was #B0B0B0, now #A0A0A0) */
           color: #A0A0A0 !important; 
           line-height: 1.6;
           margin-bottom: 8px;
         }
 
-        /* 2. HEADINGS OFF-WHITE */
         .ngx-page h1,
         .ngx-page h2,
         .ngx-page h3,
         .ngx-page .text-white {
-          /* Changed from pure white #FFF to Off-White #E0E0E0 */
           color: #E0E0E0 !important;
         }
 
-        /* 3. BULLET POINTS FIX */
         .ngx-page ul {
-            list-style-type: disc !important; /* Force dots */
-            padding-left: 20px !important;    /* Space for dots */
+            list-style-type: disc !important;
+            padding-left: 20px !important;
             margin-bottom: 15px;
         }
         .ngx-page li {
-            display: list-item !important;    /* Ensure it behaves like a list item */
+            display: list-item !important;
             margin-bottom: 6px;
         }
 
-        /* 4. WIDGET STYLING (The Box) */
+        /* 2. WIDGET BOX STYLE (The Container) */
         .widget-box-style {
-            padding: 10px;
+            padding: 12px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
-            background: rgba(0, 0, 0, 0.25); /* Slightly darker background for contrast */
+            background: rgba(0, 0, 0, 0.25);
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            /* Important for centering the scaled content */
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            /* Fit Content is key for Desktop to match Sentiment size */
+            width: fit-content; 
         }
 
-        /* --- DESKTOP LAYOUT --- */
+        /* --- DESKTOP LAYOUT (Fixing the Small Widget Issue) --- */
         @media (min-width: 992px) {
             .widget-float-container {
                 float: right;
                 margin-left: 30px;
                 margin-bottom: 15px;
                 margin-top: 5px;
-                width: 330px;
+                /* Allow container to shrink to widget size */
+                width: auto; 
                 clear: right;
                 z-index: 10;
                 position: relative;
             }
+            
+            /* No scaling needed on desktop, just fit */
+            .widget-scaler {
+                width: 310px; /* Force strict width to match widget native width */
+            }
         }
 
-        /* --- MOBILE LAYOUT & SCALING (CRITICAL FIX) --- */
+        /* --- MOBILE LAYOUT (The "Flower" Effect - Scale UP) --- */
         @media (max-width: 991px) {
             .widget-float-container {
                 float: none;
-                width: 90%;          /* Outer container width */
-                margin: 30px auto;   /* Center horizontally */
+                width: 100%;
+                margin: 40px auto; /* Increased margin for the zoomed widget */
                 display: flex;
                 justify-content: center;
+                overflow: visible; /* Allow zoom to spill if needed */
             }
             
             .widget-box-style {
-                width: 100%;         /* Fill the 90% container */
-                min-height: 140px;   /* Ensure height for scaled widget */
-                padding: 20px 0;     /* Vertical padding */
+                width: auto; /* Let it wrap the scaled content */
+                background: rgba(0, 0, 0, 0.3);
+                padding: 15px;
             }
 
-            /* SCALING MAGIC:
-               Since widgets are fixed ~310px, we use CSS transform to scale them up 
-               to fill the mobile box visually without breaking their internal layout.
-            */
-            .mobile-widget-scaler {
-                transform: scale(1.15); /* Scale up by 15-20% */
+            /* THE MAGIC: Force Scale UP by 30% */
+            .widget-scaler {
+                width: 310px; /* Base width of the component */
+                transform: scale(1.3); /* 30% bigger */
                 transform-origin: center center;
             }
         }
@@ -181,8 +182,8 @@ export default function NGXWhitepaperPage() {
             <section className="section-tight">
                 <div className="widget-float-container">
                     <div className="widget-box-style">
-                        {/* Wrapper div for Mobile Scaling */}
-                        <div className="mobile-widget-scaler">
+                        {/* widget-scaler class controls the size/zoom */}
+                        <div className="widget-scaler">
                             <NGXWidget theme="dark" title="NGX NFTs" />
                         </div>
                     </div>
@@ -216,7 +217,7 @@ export default function NGXWhitepaperPage() {
             <section className="section-tight">
                 <div className="widget-float-container">
                     <div className="widget-box-style">
-                        <div className="mobile-widget-scaler">
+                        <div className="widget-scaler">
                              <NGXCapWidget theme="dark" title="NGX Cap NFTs" />
                         </div>
                     </div>
@@ -250,7 +251,7 @@ export default function NGXWhitepaperPage() {
             <section className="section-tight">
                 <div className="widget-float-container">
                     <div className="widget-box-style">
-                        <div className="mobile-widget-scaler">
+                        <div className="widget-scaler">
                             <NGXVolumeWidget theme="dark" title="NGX Volume" />
                         </div>
                     </div>
