@@ -251,13 +251,27 @@ export default function HowItWorksPage() {
               </p>
               <p style={{ lineHeight: '1.6' }}>
                 Each asset is defined by scarcity, provenance, and permanence. Ownership is recorded transparently on the blockchain, allowing users to hold, trade, or transfer assets without intermediaries. 
-                {/* --- INSERTION START: Text color matches parent paragraph --- */}
                 <span className="ms-1">
                    For insights into asset structuring and tiered classification, refer to the <Link href="/ranking" className="text-decoration-none" style={{ color: GOLD_MEDIUM, borderBottom: `1px solid ${GOLD_MEDIUM}` }}>Ranking Registry</Link>.
                 </span>
-                {/* --- INSERTION END --- */}
               </p>
             </section>
+
+             {/* --- NEW SECTION: Conviction Rank --- */}
+            <section className="mb-5 ps-lg-3">
+              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+                Conviction Rank — Measuring Belief, Not Hype
+              </h2>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px' }}>
+                Most NFT marketplaces focus on price and volume. But Conviction Rank shows which digital names are truly backed by verified supporters. Each supporter signals real belief, creating a transparent layer of trust across the market. Conviction Rank explains why price moves before it moves and highlights assets with lasting confidence.
+              </p>
+              <p style={{ lineHeight: '1.6' }}>
+                  <Link href="/conviction-rank" className="text-decoration-none fw-bold" style={{ color: GOLD_BASE, borderBottom: `1px solid ${GOLD_BASE}` }}>
+                      Learn more about Conviction Rank →
+                  </Link>
+              </p>
+            </section>
+            {/* --- END NEW SECTION --- */}
 
             <section className="mb-5 ps-lg-3">
               <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
