@@ -310,10 +310,37 @@ export default function AdminPage() {
       fetchSupabaseData();
   };
 
-  // --- [NEW] NNM Actions ---
-  const handleExecuteNNM = () => {
-      alert("Preparing Batch Payout...");
-      // Future: Call /api/admin/execute-payouts
+  // --- New NNM Handlers (Updated Logic) ---
+  const handleExecuteNNM = async () => {
+      if (!confirm("⚠️ CAUTION: Are you sure you want to execute the NNM Batch Payout?\nThis will send funds to all wallets marked as PENDING.")) return;
+      
+      // Simple security prompt to prevent accidental clicks
+      const userPrompt = prompt("To confirm, type: EXECUTE");
+      if (userPrompt !== 'EXECUTE') return alert("Operation Cancelled.");
+
+      alert("Processing in background... Please wait.");
+
+      try {
+          // 1. Call the Expert Script
+          const res = await fetch('/api/admin/execute-payouts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+              alert(`✅ Success!\nProcessed: ${data.processed} transactions.`);
+              // 2. Refresh the table immediately to show new status
+              fetchSupabaseData(); 
+          } else {
+              alert(`❌ Error during execution:\n${data.error || 'Unknown Error'}`);
+          }
+
+      } catch (e: any) {
+          console.error(e);
+          alert("Failed to connect to the server.");
+      }
   };
 
   const handleStopNNM = () => {
