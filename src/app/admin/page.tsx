@@ -390,6 +390,25 @@ export default function AdminPage() {
                 <h1>ADMIN <span className="badge-pro">PRO</span></h1>
                 <div className="online-status"><span className="dot"></span> {visitorsCount} Active</div>
             </div>
+
+            {/* RESTORED: Site Control Buttons (Moved to Header) */}
+            <div className="header-controls">
+                <button 
+                    onClick={() => handleSiteStatus(false)} 
+                    className={`status-pill-btn ${!maintenanceMode ? 'live' : 'dim'}`}
+                    title="Open Site for Users"
+                >
+                    LIVE
+                </button>
+                <button 
+                    onClick={() => handleSiteStatus(true)} 
+                    className={`status-pill-btn ${maintenanceMode ? 'closed' : 'dim'}`}
+                    title="Close Site (Maintenance)"
+                >
+                    CLOSED
+                </button>
+            </div>
+
             <div className="treasury-box">
                 <span className="val">{parseFloat(contractBalance).toFixed(4)} POL</span>
                 <button onClick={handleWithdraw} className="withdraw-btn">
@@ -481,15 +500,11 @@ export default function AdminPage() {
         </div>
         {/* -------------------------------------- */}
 
-        {/* SITE CONTROL */}
+        {/* SITE CONTROL (Announcement Only - Buttons moved to Header) */}
         <div className="control-panel mt-20">
-            <div className="status-toggle">
-                <button onClick={() => handleSiteStatus(false)} className={`status-btn open ${!maintenanceMode ? 'active' : ''}`}>OPEN</button>
-                <button onClick={() => handleSiteStatus(true)} className={`status-btn close ${maintenanceMode ? 'active' : ''}`}>CLOSE</button>
-            </div>
-            <div className="announcement-box">
+            <div className="announcement-box w-100">
                 <input value={announcement} onChange={e => setAnnouncement(e.target.value)} placeholder="Alert Msg..." />
-                <button onClick={saveAnnouncement}>SAVE</button>
+                <button onClick={saveAnnouncement}>SAVE MSG</button>
             </div>
         </div>
 
@@ -615,6 +630,18 @@ export default function AdminPage() {
             .treasury-box { background: #1E1E1E; display: flex; align-items: center; gap: 10px; padding: 5px 10px; border-radius: 4px; border: 1px solid #333; }
             .treasury-box .val { font-size: 13px; color: #FCD535; font-weight: bold; }
             .withdraw-btn { background: #333; color: #fff; border: 1px solid #555; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
+
+            /* Header Controls Styles */
+            .header-controls { display: flex; gap: 5px; background: #000; padding: 3px; border-radius: 20px; border: 1px solid #333; margin: 0 15px; }
+            .status-pill-btn { border: none; padding: 4px 12px; border-radius: 15px; font-size: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #666; background: transparent; }
+            .status-pill-btn.live { background: #00e676; color: #000; box-shadow: 0 0 5px rgba(0,230,118,0.5); }
+            .status-pill-btn.closed { background: #ff1744; color: #fff; box-shadow: 0 0 5px rgba(255,23,68,0.5); }
+            .status-pill-btn.dim { opacity: 0.5; }
+            .status-pill-btn.dim:hover { opacity: 1; color: #fff; }
+            
+            /* Full width announcement box */
+            .announcement-box.w-100 { width: 100%; display: flex; gap: 5px; }
+            .announcement-box.w-100 input { flex-grow: 1; }
 
             /* NNM Section Styles */
             .nnm-section { border: 1px solid #FCD535; background: #FCD535 !important; border-radius: 8px; overflow: hidden; padding: 0 !important; margin-bottom: 20px; }
