@@ -498,13 +498,22 @@ export default function DashboardPage() {
             if (data.success) {
                 await fetchActivity();
                 setIsTransferring(false); 
+                // Optionally verify success step here if needed
             } else {
+                // [DEBUG] Show the exact error reason from the server
+                alert(`❌ Server Error: ${data.error}`); 
                 console.error("Request Failed:", data.error);
-                setWalletBalances(prev => ({ ...prev, nnm: amountToClaim })); // Rollback
+                
+                // Rollback UI
+                setWalletBalances(prev => ({ ...prev, nnm: amountToClaim })); 
                 setIsTransferring(false);
             }
-        } catch (e) { 
+        } catch (e: any) { 
+            // [DEBUG] Show connection error
+            alert(`❌ Connection Error: ${e.message}`);
             console.error("Connection Error", e);
+            
+            // Rollback UI
             setWalletBalances(prev => ({ ...prev, nnm: amountToClaim })); 
             setIsTransferring(false);
         }
