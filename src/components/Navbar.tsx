@@ -174,13 +174,13 @@ const Navbar = () => {
 
   const menuItems = ['Home', 'Market', 'NGX', 'Mint'];
 
-  // ✅ القائمة السفلية المحدثة حسب المتطلبات
+  // ✅ القائمة السفلية المحدثة - Blog في النهاية
   const bottomDrawerItems = [
     { label: 'News & Updates', href: '/news', icon: 'bi-newspaper' },
     { label: 'Market Indices', href: '/market-indices', icon: 'bi-graph-up-arrow' },
     { label: 'Affiliate Program', href: '/affiliate', icon: 'bi-briefcase' },
-    { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' },
-    { label: 'Rankings', href: '/ranking', icon: 'bi-trophy' }
+    { label: 'Rankings', href: '/ranking', icon: 'bi-trophy' },
+    { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' }
   ];
 
   const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
@@ -326,10 +326,10 @@ const Navbar = () => {
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsNNMConceptOpen(true)}
                         onMouseLeave={() => setIsNNMConceptOpen(false)}>
-                      <a className={`nav-link dropdown-toggle fw-medium shadow-none desktop-nav-link ${isNNMConceptOpen ? 'show' : ''}`} 
+                      <a className={`nav-link fw-medium shadow-none desktop-nav-link ${isNNMConceptOpen ? 'show' : ''}`} 
                         href="#" role="button" onClick={(e) => { e.preventDefault(); setIsNNMConceptOpen(!isNNMConceptOpen); }}
-                        style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
-                        NNM Concept <i className="bi bi-chevron-down" style={{ fontSize: '10px', marginLeft: '4px' }}></i>
+                        style={{ fontSize: '13px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        NNM Concept <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
                       </a>
                       
                       <ul className={`dropdown-menu shadow-lg ${isNNMConceptOpen ? 'show' : ''}`} 
@@ -370,10 +370,10 @@ const Navbar = () => {
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsInsightsOpen(true)}
                         onMouseLeave={() => setIsInsightsOpen(false)}>
-                      <a className={`nav-link dropdown-toggle fw-medium shadow-none desktop-nav-link ${isInsightsOpen ? 'show' : ''}`} 
+                      <a className={`nav-link fw-medium shadow-none desktop-nav-link ${isInsightsOpen ? 'show' : ''}`} 
                         href="#" role="button" onClick={(e) => { e.preventDefault(); setIsInsightsOpen(!isInsightsOpen); }}
-                        style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
-                        Insights <i className="bi bi-chevron-down" style={{ fontSize: '10px', marginLeft: '4px' }}></i>
+                        style={{ fontSize: '13px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        Insights <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
                       </a>
                       
                       <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
@@ -491,7 +491,7 @@ const Navbar = () => {
           <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
 
           <div className="drawer-content px-4 pt-4 pb-5 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
-              <div className="d-flex flex-column w-100 justify-content-start gap-2 mt-1">
+              <div className="d-flex flex-column w-100 justify-content-start gap-2" style={{ marginTop: '-8px' }}>
                   <div className="d-flex flex-column gap-2">
                     {menuItems.map((item) => (
                         <Link key={item} 
@@ -521,7 +521,7 @@ const Navbar = () => {
                     </Link>
                   </div>
 
-                  <hr className="m-0 my-2" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.03)', opacity: 1 }} />
+                  <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.03)', opacity: 1, marginTop: '6px', marginBottom: '6px' }} />
 
                   {/* ✅ هنا التعديل الذي طلبته: استخدام القائمة الجديدة بالأسماء والروابط الصحيحة */}
                   <div className="d-flex flex-column gap-2">
@@ -538,7 +538,7 @@ const Navbar = () => {
                   </div>
               </div>
 
-              <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-4 d-flex align-items-center w-100 mb-5">
+              <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-5">
                   <div className="d-flex justify-content-start align-items-center px-2" style={{ gap: '25px', paddingRight: '80px', width: '100%' }}>
                       <i className="bi bi-twitter-x" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       <i className="bi bi-facebook" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
