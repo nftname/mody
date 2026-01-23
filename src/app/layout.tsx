@@ -222,9 +222,52 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        {/* Viewport will be set dynamically via script below */}
       </head>
       <body className={inter.className}>
+        {/* Dynamic Viewport Controller - Must run before anything else */}
+        <Script 
+          id="dynamic-viewport"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                function setViewport() {
+                  var existingViewport = document.querySelector('meta[name="viewport"]');
+                  if (existingViewport) {
+                    existingViewport.remove();
+                  }
+                  
+                  var viewport = document.createElement('meta');
+                  viewport.name = 'viewport';
+                  
+                  // Check if device is desktop (screen width > 1024px)
+                  var isDesktop = window.innerWidth > 1024;
+                  
+                  if (isDesktop) {
+                    // Desktop: Fixed width viewport for zoom scaling behavior
+                    viewport.content = 'width=1440';
+                  } else {
+                    // Mobile: Standard responsive viewport
+                    viewport.content = 'width=device-width, initial-scale=1, maximum-scale=1';
+                  }
+                  
+                  document.head.appendChild(viewport);
+                }
+                
+                // Set viewport immediately
+                setViewport();
+                
+                // Update viewport on window resize (with debounce)
+                var resizeTimer;
+                window.addEventListener('resize', function() {
+                  clearTimeout(resizeTimer);
+                  resizeTimer = setTimeout(setViewport, 250);
+                });
+              })();
+            `
+          }}
+        />
         <Script 
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" 
           strategy="beforeInteractive" 
