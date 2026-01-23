@@ -326,11 +326,23 @@ const Navbar = () => {
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsNNMConceptOpen(true)}
                         onMouseLeave={() => setIsNNMConceptOpen(false)}>
-                      <a className={`nav-link fw-medium shadow-none desktop-nav-link ${isNNMConceptOpen ? 'show' : ''}`} 
-                        href="#" role="button" onClick={(e) => { e.preventDefault(); setIsNNMConceptOpen(!isNNMConceptOpen); }}
-                        style={{ fontSize: '13px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        NNM Concept <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
-                      </a>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Link 
+                          href="/nnm-concept"
+                          className={`nav-link fw-medium shadow-none desktop-nav-link`}
+                          style={{ fontSize: '13px', whiteSpace: 'nowrap', padding: '0.5rem 0' }}
+                        >
+                          NNM Concept
+                        </Link>
+                        <button 
+                          onClick={(e) => { e.preventDefault(); setIsNNMConceptOpen(!isNNMConceptOpen); }}
+                          className="btn p-0 border-0 bg-transparent"
+                          style={{ fontSize: '9px', color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          title="Toggle dropdown"
+                        >
+                          <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
+                        </button>
+                      </div>
                       
                       <ul className={`dropdown-menu shadow-lg ${isNNMConceptOpen ? 'show' : ''}`} 
                           style={{ 
@@ -370,11 +382,23 @@ const Navbar = () => {
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsInsightsOpen(true)}
                         onMouseLeave={() => setIsInsightsOpen(false)}>
-                      <a className={`nav-link fw-medium shadow-none desktop-nav-link ${isInsightsOpen ? 'show' : ''}`} 
-                        href="#" role="button" onClick={(e) => { e.preventDefault(); setIsInsightsOpen(!isInsightsOpen); }}
-                        style={{ fontSize: '13px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        Insights <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
-                      </a>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <a 
+                          href="/market-indices"
+                          className={`nav-link fw-medium shadow-none desktop-nav-link`}
+                          style={{ fontSize: '13px', whiteSpace: 'nowrap', padding: '0.5rem 0', textDecoration: 'none', color: 'inherit' }}
+                        >
+                          Insights
+                        </a>
+                        <button 
+                          onClick={(e) => { e.preventDefault(); setIsInsightsOpen(!isInsightsOpen); }}
+                          className="btn p-0 border-0 bg-transparent"
+                          style={{ fontSize: '9px', color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          title="Toggle dropdown"
+                        >
+                          <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
+                        </button>
+                      </div>
                       
                       <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
                           style={{ 
