@@ -315,6 +315,15 @@ export default function NGXPage() {
                 <p className="unified-text mb-3">The emergence of neutral market observatories, classification systems, and non-speculative indices will play a critical role in this evolution. They allow participants—creators, developers, institutions, and researchers—to understand the NFT ecosystem as a whole rather than through isolated data points.</p>
                 <p className="unified-text mb-3">In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.</p>
 
+                <div className="mb-4 ps-1">
+                  <p className="mb-0" style={{ fontSize: '13px', color: '#B0B0B0', fontFamily: '"Inter", sans-serif' }}>
+                    You can explore the concept of all these indices and how they were built here:
+                    <Link href="/market-indices" className="text-decoration-none fw-bold ms-1" style={{ color: '#FFB300' }}>
+                      Market Indices
+                    </Link>
+                  </p>
+                </div>
+
                 {/* --- LATEST NEWS SECTION --- */}
                 <div className="mt-5 pt-3 mb-4">
                      <div className="d-flex align-items-center mb-3 border-bottom border-secondary pb-2" style={{borderColor: 'rgba(255,255,255,0.1) !important'}}>

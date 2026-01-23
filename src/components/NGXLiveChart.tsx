@@ -43,7 +43,7 @@ export default function NGXLiveChart() {
   
   // الحالة (State)
   const [activeSector, setActiveSector] = useState(SECTORS[0]);
-  const [activeViewMode, setActiveViewMode] = useState(VIEW_MODES[0]); 
+  const [activeViewMode, setActiveViewMode] = useState(VIEW_MODES[1]); 
   
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
