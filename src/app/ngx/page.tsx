@@ -24,6 +24,44 @@ const GOLD_BASE = '#F0C420';
 const LIME_COLOR = '#C0D860'; // اللون الليموني
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
+// --- بيانات التوقعات المدمجة (2026-2030) لضمان السرعة الفورية ---
+const STATIC_FORECAST_DATA = [
+  { time: 1767312000, value: 10994.64 }, { time: 1767571200, value: 11271.18 }, { time: 1767830400, value: 11106.95 }, 
+  { time: 1768089600, value: 11056.55 }, { time: 1768348800, value: 11076.11 }, { time: 1768435200, value: 823.85 }, 
+  { time: 1768694400, value: 810.47 }, { time: 1768953600, value: 821.01 }, { time: 1769212800, value: 820.45 }, 
+  { time: 1769472000, value: 841.35 }, { time: 1769731200, value: 839.31 }, { time: 1769990400, value: 826.35 }, 
+  { time: 1770249600, value: 851.01 }, { time: 1770508800, value: 864.55 }, { time: 1770768000, value: 865.58 }, 
+  { time: 1771027200, value: 873.72 }, { time: 1771286400, value: 857.64 }, { time: 1771545600, value: 851.22 }, 
+  { time: 1771804800, value: 841.49 }, { time: 1772064000, value: 850.00 }, { time: 1772323200, value: 860.70 }, 
+  { time: 1772582400, value: 850.43 }, { time: 1772841600, value: 850.34 }, { time: 1773100800, value: 853.88 }, 
+  { time: 1773360000, value: 871.03 }, { time: 1773619200, value: 883.44 }, { time: 1773878400, value: 895.24 }, 
+  { time: 1774137600, value: 905.50 }, { time: 1774396800, value: 906.42 }, { time: 1774656000, value: 914.80 }, 
+  { time: 1774915200, value: 913.43 }, { time: 1775174400, value: 937.75 }, { time: 1775433600, value: 937.46 }, 
+  { time: 1775692800, value: 948.20 }, { time: 1775952000, value: 974.32 }, { time: 1776211200, value: 970.11 }, 
+  { time: 1776470400, value: 998.44 }, { time: 1776729600, value: 1003.99 }, { time: 1776988800, value: 1004.90 }, 
+  { time: 1777248000, value: 1028.82 }, { time: 1777507200, value: 1026.10 }, { time: 1777766400, value: 1033.03 }, 
+  { time: 1778025600, value: 1044.63 }, { time: 1778284800, value: 1067.04 }, { time: 1778544000, value: 1067.80 }, 
+  { time: 1778803200, value: 1084.66 }, { time: 1779062400, value: 1064.68 }, { time: 1779321600, value: 1086.79 }, 
+  { time: 1779580800, value: 1107.72 }, { time: 1779840000, value: 1118.39 }, { time: 1780099200, value: 1151.21 }, 
+  { time: 1780358400, value: 1161.22 }, { time: 1780617600, value: 1184.09 }, { time: 1780876800, value: 1177.94 }, 
+  { time: 1781136000, value: 1212.76 }, { time: 1781395200, value: 1227.96 }, { time: 1781654400, value: 1265.76 }, 
+  { time: 1781913600, value: 1257.11 }, { time: 1782172800, value: 1269.71 }, { time: 1782432000, value: 1265.04 }, 
+  { time: 1782691200, value: 1259.63 }, { time: 1782950400, value: 1291.83 }, { time: 1783209600, value: 1329.46 }, 
+  { time: 1783468800, value: 1369.35 }, { time: 1783728000, value: 1367.18 }, { time: 1783987200, value: 1394.40 }, 
+  { time: 1784246400, value: 1424.35 }, { time: 1784505600, value: 1405.39 }, { time: 1784764800, value: 1423.26 }, 
+  { time: 1785024000, value: 1414.59 }, { time: 1785283200, value: 1394.91 }, { time: 1785542400, value: 1384.99 }, 
+  { time: 1785801600, value: 1405.97 }, { time: 1786060800, value: 1399.59 }, { time: 1786320000, value: 1412.99 }, 
+  { time: 1786579200, value: 1409.32 }, { time: 1786838400, value: 1448.29 }, { time: 1787097600, value: 1455.81 }, 
+  { time: 1787356800, value: 1465.22 }, { time: 1787616000, value: 1480.37 }, { time: 1787875200, value: 1452.45 }, 
+  { time: 1788134400, value: 1483.34 }, { time: 1788393600, value: 1518.36 }, { time: 1788652800, value: 1541.15 }, 
+  { time: 1788912000, value: 1538.50 }, { time: 1789171200, value: 1550.59 }, { time: 1789430400, value: 1576.76 }, 
+  { time: 1789689600, value: 1581.98 }, { time: 1789948800, value: 1573.24 }, { time: 1790208000, value: 1563.29 }, 
+  { time: 1790467200, value: 1543.29 }, { time: 1790726400, value: 1515.32 }, { time: 1790985600, value: 1494.51 }, 
+  { time: 1791244800, value: 1476.15 }, { time: 1791504000, value: 1462.07 }, { time: 1791763200, value: 1491.19 }, 
+  { time: 1792022400, value: 1498.68 }, { time: 1792281600, value: 1540.16 }, { time: 1792540800, value: 1574.96 }, 
+  { time: 1792800000, value: 1565.50 }
+];
+
 // --- أيقونة الذهب ---
 const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: boolean }) => {
     if (isCustomSVG) {
@@ -167,9 +205,7 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         @media (max-width: 768px) {
             .embed-card { padding: 6px 4px; border: 1px solid rgba(255,255,255,0.05); min-height: 100px; }
             
-            /* --- التعديل الجراحي: زيادة الحجم بنسبة 50% --- */
             .full-bar-scale { 
-                /* تم تغيير القيمة من 0.42 إلى 0.63 لزيادة الحجم */
                 transform: scale(0.63); 
                 width: auto; 
                 margin: 0 auto;
@@ -282,9 +318,14 @@ export default function NGXPage() {
 
       <div className="container-fluid py-4 px-3 px-md-4" style={{ paddingBottom: '0' }}> 
         
-        {/* LIVE CHART */}
+        {/* LIVE CHART with HARDCODED DATA PASSED AS PROP */}
         <div className="content-container mb-4">
-             <NGXLiveChart />
+             {/* تنبيه هام جداً:
+                لكي تعمل هذه البيانات (initialData)
+                يجب عليك الدخول لملف components/NGXLiveChart.tsx
+                وإضافة استقبال الـ prop المسمى 'initialData' واستخدامه كقيمة افتراضية.
+             */}
+             <NGXLiveChart initialData={STATIC_FORECAST_DATA} />
         </div>
 
         {/* --- ARTICLE SECTION --- */}
@@ -315,8 +356,40 @@ export default function NGXPage() {
                 <p className="unified-text mb-3">The emergence of neutral market observatories, classification systems, and non-speculative indices will play a critical role in this evolution. They allow participants—creators, developers, institutions, and researchers—to understand the NFT ecosystem as a whole rather than through isolated data points.</p>
                 <p className="unified-text mb-3">In this sense, NFTs are no longer defined by individual tokens, but by the architecture they collectively form.</p>
 
+                {/* --- MARKET INDICES CTA (Added Section) --- */}
+                <div className="mt-5 mb-2">
+                    <div className="p-3 d-flex flex-column flex-md-row align-items-center justify-content-between gap-3" 
+                         style={{ 
+                             background: 'linear-gradient(90deg, rgba(255, 179, 0, 0.05) 0%, rgba(30, 30, 30, 0) 100%)', 
+                             borderLeft: `3px solid ${GOLD_COLOR}`,
+                             borderRadius: '0 6px 6px 0' 
+                         }}>
+                        <div>
+                            <h5 className="fw-bold mb-1 text-white" style={{ fontSize: '1rem' }}>
+                                <i className="bi bi-bar-chart-steps me-2" style={{ color: GOLD_COLOR }}></i>
+                                Understanding Market Structure
+                            </h5>
+                            <p className="mb-0 text-muted" style={{ fontSize: '0.85rem' }}>
+                                Learn more about the methodology, weighting, and classification behind these indices.
+                            </p>
+                        </div>
+                        <Link 
+                            href="/market-indices" 
+                            className="btn btn-sm btn-outline-warning text-uppercase fw-bold px-4"
+                            style={{ 
+                                fontSize: '0.75rem', 
+                                letterSpacing: '1px', 
+                                whiteSpace: 'nowrap',
+                                borderRadius: '20px'
+                            }}
+                        >
+                            View Index Methodology <i className="bi bi-arrow-right ms-1"></i>
+                        </Link>
+                    </div>
+                </div>
+
                 {/* --- LATEST NEWS SECTION --- */}
-                <div className="mt-5 pt-3 mb-4">
+                <div className="mt-4 pt-2 mb-4">
                      <div className="d-flex align-items-center mb-3 border-bottom border-secondary pb-2" style={{borderColor: 'rgba(255,255,255,0.1) !important'}}>
                          <div style={{ width: '6px', height: '6px', background: '#F6465D', borderRadius: '50%', marginRight: '10px' }}></div>
                          <h4 className="fw-bold mb-0 text-white text-uppercase" style={{ fontSize: '11.5px', letterSpacing: '1px' }}>Global Market Wire</h4>
