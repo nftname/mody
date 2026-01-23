@@ -12,6 +12,7 @@ const Navbar = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+  const [isNNMConceptOpen, setIsNNMConceptOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -41,6 +42,7 @@ const Navbar = () => {
     setDrawerTranslate(0);
     setIsMobileSearchOpen(false);
     setIsInsightsOpen(false);
+    setIsNNMConceptOpen(false);
   }, [pathname]);
 
   const toggleDrawer = () => {
@@ -61,6 +63,7 @@ const Navbar = () => {
     }
     closeDrawer(); 
     setIsInsightsOpen(false);
+    setIsNNMConceptOpen(false);
   };
 
   const handlePortfolioClick = (e: React.MouseEvent) => {
@@ -169,13 +172,14 @@ const Navbar = () => {
     'NNM Concept': 'bi-layers'
   };
 
-  const menuItems = ['Home', 'Market', 'NGX', 'Mint', 'NNM Concept'];
+  const menuItems = ['Home', 'Market', 'NGX', 'Mint'];
 
-  // ✅ القائمة السفلية الجديدة (تعديل الأسماء والروابط فقط)
+  // ✅ القائمة السفلية المحدثة حسب المتطلبات
   const bottomDrawerItems = [
     { label: 'News & Updates', href: '/news', icon: 'bi-newspaper' },
-    { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' },
+    { label: 'Market Indices', href: '/market-indices', icon: 'bi-graph-up-arrow' },
     { label: 'Affiliate Program', href: '/affiliate', icon: 'bi-briefcase' },
+    { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' },
     { label: 'Rankings', href: '/ranking', icon: 'bi-trophy' }
   ];
 
@@ -318,6 +322,50 @@ const Navbar = () => {
                         </li>
                     ))}
                     
+                    {/* NNM Concept Dropdown */}
+                    <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
+                        onMouseEnter={() => setIsNNMConceptOpen(true)}
+                        onMouseLeave={() => setIsNNMConceptOpen(false)}>
+                      <a className={`nav-link dropdown-toggle fw-medium shadow-none desktop-nav-link ${isNNMConceptOpen ? 'show' : ''}`} 
+                        href="#" role="button" onClick={(e) => { e.preventDefault(); setIsNNMConceptOpen(!isNNMConceptOpen); }}
+                        style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
+                        NNM Concept <i className="bi bi-chevron-down" style={{ fontSize: '10px', marginLeft: '4px' }}></i>
+                      </a>
+                      
+                      <ul className={`dropdown-menu shadow-lg ${isNNMConceptOpen ? 'show' : ''}`} 
+                          style={{ 
+                              position: 'absolute',
+                              top: '100%',
+                              left: '0',
+                              backgroundColor: dropdownColor, 
+                              border: `1px solid ${subtleBorder}`, 
+                              minWidth: '180px', 
+                              marginTop: '0px', 
+                              paddingTop: '8px', 
+                              paddingBottom: '8px',
+                              borderRadius: '8px'
+                          }}>
+                        {[
+                          { label: 'How it Works', href: '/how-it-works' },
+                          { label: 'Conviction Rank', href: '/conviction-rank' },
+                          { label: 'Registry Rank', href: '/ranking' }
+                        ].map((subItem, idx, arr) => (
+                            <li key={subItem.label}>
+                                <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href={subItem.href} 
+                                    style={{ 
+                                        fontSize: '13px', 
+                                        transition: '0.2s', 
+                                        color: '#E0E0E0',
+                                        borderBottom: idx !== arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
+                                    }} 
+                                >
+                                    {subItem.label}
+                                </Link>
+                            </li>
+                        ))}
+                      </ul>
+                    </li>
+                    
                     {/* Insights Dropdown */}
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsInsightsOpen(true)}
@@ -325,7 +373,7 @@ const Navbar = () => {
                       <a className={`nav-link dropdown-toggle fw-medium shadow-none desktop-nav-link ${isInsightsOpen ? 'show' : ''}`} 
                         href="#" role="button" onClick={(e) => { e.preventDefault(); setIsInsightsOpen(!isInsightsOpen); }}
                         style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
-                        Insights
+                        Insights <i className="bi bi-chevron-down" style={{ fontSize: '10px', marginLeft: '4px' }}></i>
                       </a>
                       
                       <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
@@ -341,9 +389,12 @@ const Navbar = () => {
                               paddingBottom: '8px',
                               borderRadius: '8px'
                           }}>
-                        {['How it Works', 'Contact'].map((subItem, idx, arr) => (
-                            <li key={subItem}>
-                                <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href={`/${subItem.toLowerCase().replace(/\s+/g, '-')}`} 
+                        {[
+                          { label: 'Market Indices', href: '/market-indices' },
+                          { label: 'Contact', href: '/contact' }
+                        ].map((subItem, idx, arr) => (
+                            <li key={subItem.label}>
+                                <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href={subItem.href} 
                                     style={{ 
                                         fontSize: '13px', 
                                         transition: '0.2s', 
@@ -351,7 +402,7 @@ const Navbar = () => {
                                         borderBottom: idx !== arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
                                     }} 
                                 >
-                                    {subItem}
+                                    {subItem.label}
                                 </Link>
                             </li>
                         ))}
@@ -440,7 +491,7 @@ const Navbar = () => {
           <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
 
           <div className="drawer-content px-4 pt-4 pb-5 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
-              <div className="d-flex flex-column w-100 justify-content-start gap-2 mt-2">
+              <div className="d-flex flex-column w-100 justify-content-start gap-2 mt-1">
                   <div className="d-flex flex-column gap-2">
                     {menuItems.map((item) => (
                         <Link key={item} 
@@ -452,9 +503,17 @@ const Navbar = () => {
                             {item}
                         </Link>
                     ))}
+                    <Link href="/nnm-concept" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                        <i className="bi bi-layers opacity-75" style={{ fontSize: '18px' }}></i>
+                        NNM Concept
+                    </Link>
                     <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
                         <i className="bi bi-info-circle opacity-75" style={{ fontSize: '18px' }}></i>
                         How it Works
+                    </Link>
+                    <Link href="/conviction-rank" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                        <i className="bi bi-trophy opacity-75" style={{ fontSize: '18px' }}></i>
+                        Conviction Rank
                     </Link>
                     <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
                         <i className="bi bi-chat-left-text opacity-75" style={{ fontSize: '18px' }}></i>
