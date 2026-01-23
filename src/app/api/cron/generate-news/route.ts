@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
-import fs from 'fs';
-import path from 'path';
 
+// إعدادات لضمان عمل السكريبت
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // السماح بدقيقة كاملة للتنفيذ
+export const maxDuration = 60; 
 
 // 1. إعدادات الاتصال
 const supabase = createClient(
@@ -28,7 +27,7 @@ const TOKENS = {
 
 // --- Helper Functions ---
 
-// دالة جلب البيانات مع نظام إعادة المحاولة
+// دالة جلب البيانات مع إعادة المحاولة
 async function fetchWithRetry(url: string, retries = 5, delay = 5000) {
     for (let i = 0; i < retries; i++) {
         try {
@@ -80,47 +79,56 @@ async function getNNMInternalVolume() {
     }
 }
 
-// --- [تعديل هام] دالة اختيار الصور الذكية (Loop 1-30 with Fallback) ---
-async function getSequentialImage() {
+// --- [تعديل 1: إصلاح مشكلة الصور] ---
+// تم استبدال دالة `fs` بدالة تعتمد على قاعدة البيانات
+// هذا يحل مشكلة ظهور A1.jpg دائماً لأن السيرفر لا يقرأ مجلد الصور المحلي
+async function getNextSequentialImage() {
     try {
-        // 1. معرفة عدد المقالات الكلي لتحديد "الدور"
-        const { count, error } = await supabase
+        // 1. جلب آخر مقال منشور لمعرفة الصورة التي استُخدمت
+        const { data, error } = await supabase
             .from('news_posts')
-            .select('*', { count: 'exact', head: true });
-        
-        // في حال حدوث خطأ في العد، نعود للماستر فوراً
-        if (error) {
-            console.error("Image count error, using Master.");
-            return 'A1.jpg';
+            .select('image_url')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        let nextNum = 1;
+
+        if (data && data.length > 0 && data[0].image_url) {
+            // استخراج الرقم من الرابط القديم (مثال: /news-assets/5.jpg)
+            const lastUrl = data[0].image_url;
+            const match = lastUrl.match(/\/(\d+)\.jpg$/);
+            
+            if (match && match[1]) {
+                const lastNum = parseInt(match[1], 10);
+                nextNum = lastNum + 1;
+            }
         }
 
-        const currentCount = count || 0;
-        
-        // 2. المعادلة الذكية: (العدد الكلي % 30) + 1
-        // هذا يضمن أن النتيجة دائماً بين 1 و 30 مهما زاد عدد المقالات
-        // مثال: المقال رقم 31 سيعطي النتيجة 1، المقال 32 يعطي 2، وهكذا
-        const nextImageNumber = (currentCount % 30) + 1;
-        
-        const expectedFileName = `${nextImageNumber}.jpg`;
-        const dirPath = path.join(process.cwd(), 'public', 'news-assets');
-        const fullPath = path.join(dirPath, expectedFileName);
+        // إعادة التدوير: إذا وصلنا 30 نرجع لـ 1
+        if (nextNum > 30) nextNum = 1;
 
-        // 3. التحقق من وجود الصورة فعلياً في المجلد
-        if (fs.existsSync(fullPath)) {
-            return expectedFileName; // الصورة موجودة، استخدمها
-        } else {
-            console.warn(`Image ${expectedFileName} not found in folder. Using Master A1.jpg.`);
-            return 'A1.jpg'; // الصورة مفقودة، استخدم الماستر
-        }
+        return `${nextNum}.jpg`;
 
     } catch (error) {
-        console.error("Filesystem error, using Master.", error);
-        return 'A1.jpg'; // خطأ غير متوقع، استخدم الماستر
+        console.error("Image Logic Error, defaulting to 1.jpg", error);
+        return '1.jpg'; 
     }
 }
 
 export async function GET() {
     try {
+        // --- [تعديل 2: نظام الـ 48 ساعة] ---
+        // التحقق مما إذا كان اليوم هو يوم الإرسال
+        const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+        
+        // إذا كان الرقم فردياً، نوقف السكريبت (يعمل فقط في الأيام الزوجية)
+        if (daysSinceEpoch % 2 !== 0) {
+            return NextResponse.json({ 
+                success: true, 
+                message: "Skipping today based on 48h schedule (Odd Day)." 
+            });
+        }
+
         // --- A. تجميع البيانات الحية ---
         
         const allIds = [
@@ -203,11 +211,11 @@ export async function GET() {
 
         const nnmInternal = await getNNMInternalVolume();
         
-        // استدعاء دالة الصور الجديدة
-        const selectedImageFilename = await getSequentialImage();
+        // استدعاء دالة الصور الجديدة (المعدلة)
+        const selectedImageFilename = await getNextSequentialImage();
 
 
-        // --- B. هندسة البرومبت SEO Professional ---
+        // --- B. هندسة البرومبت SEO Professional (كما هي من المصدر) ---
         
         const systemPrompt = `
         You are a senior crypto market analyst and SEO Strategist for "NNM News".
@@ -285,12 +293,19 @@ export async function GET() {
                 summary: result.summary,
                 content: result.content,
                 image_url: imagePath,
+                category: 'MARKET UPDATE', // تصنيف ثابت
                 created_at: new Date().toISOString(),
+                is_published: true
             });
 
         if (insertError) throw insertError;
 
-        return NextResponse.json({ success: true, article: result.title, image_used: selectedImageFilename });
+        return NextResponse.json({ 
+            success: true, 
+            article: result.title, 
+            image_used: selectedImageFilename,
+            frequency: "48h check passed"
+        });
 
     } catch (error: any) {
         console.error('News Generation Error:', error);
