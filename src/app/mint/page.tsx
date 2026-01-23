@@ -192,7 +192,7 @@ const MintContent = () => {
             <input 
               type="text" 
               className="form-control text-white text-center" 
-              placeholder="Enter name to check (e.g. VIVI)..."
+              placeholder="Enter name to check ..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={handleInputFocus} 
