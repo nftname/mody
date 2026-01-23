@@ -651,20 +651,6 @@ function MarketPage() {
 
       <style jsx global>{`
         .no-select { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-        
-        /* === DYNAMIC DESKTOP SCALER === */
-        #desktop-scaler {
-          transition: transform 0.2s ease;
-          width: 100%;
-        }
-        
-        @media (min-width: 1024px) {
-          #desktop-scaler {
-            transform-origin: top left;
-          }
-        }
-        /* === END DYNAMIC SCALER === */
-        
         .header-wrapper { background: #242424; border-bottom: 1px solid #2E2E2E; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
         .widget-item { flex: 0 0 310px; }
