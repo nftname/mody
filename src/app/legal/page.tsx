@@ -60,7 +60,7 @@ export default function LegalPage() {
                       lineHeight: '1.2',
                       color: TEXT_OFF_WHITE
                   }}>
-                Terms of <span style={{ color: BRAND_GOLD }}>Service</span>
+                NNM Terms of <span style={{ color: BRAND_GOLD }}>Service</span>
               </h1>
               <p style={{ color: '#888', fontSize: '13px', marginTop: '10px' }}>
                 Last Updated: January 2026
