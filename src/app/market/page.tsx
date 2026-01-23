@@ -428,63 +428,13 @@ function MarketPage() {
       return `${valUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
   };
 
-  // === SURGICAL DYNAMIC SCALING - EDGE-TO-EDGE FIT ===
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const applyZoomResilientScaling = () => {
-      const isDesktop = window.innerWidth > 1024;
-      const wrapper = document.getElementById('market-container-wrapper');
-      const mainContainer = document.querySelector('.market-page-wrapper') as HTMLElement;
-      
-      if (!wrapper) return;
-      
-      if (!isDesktop) {
-        wrapper.style.transform = 'none';
-        wrapper.style.width = '100%';
-        if (mainContainer) mainContainer.style.overflow = 'visible';
-        return;
-      }
-      
-      // Target width that ensures all buttons/filters are visible
-      const TARGET_WIDTH = 1600;
-      const scale = window.innerWidth / TARGET_WIDTH;
-      
-      // Apply scaling to fit edge-to-edge
-      wrapper.style.width = `${TARGET_WIDTH}px`;
-      wrapper.style.transform = `scale(${scale})`;
-      wrapper.style.transformOrigin = 'top left';
-      
-      // Prevent scrollbars on parent
-      if (mainContainer) {
-        mainContainer.style.overflow = 'hidden';
-      }
-    };
-    
-    // Use immediate execution + resize listener
-    applyZoomResilientScaling();
-    
-    let resizeTimer: NodeJS.Timeout;
-    const handleResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(applyZoomResilientScaling, 50);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
   return (
-    <main className="no-select market-page-wrapper" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', overflowX: 'hidden' }}>
+    <main className="no-select" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', overflowX: 'hidden' }}>
       
       <MarketTicker />
 
-      {/* Market Container Wrapper - Surgical Scaling */}
-      <div id="market-container-wrapper">
-        {/* HEADER */}
-        <div className="header-wrapper shadow-sm">
+      {/* HEADER */}
+      <div className="header-wrapper shadow-sm">
         <div className="container-fluid p-0"> 
             <div className="widgets-grid-container">
                 <div className="widget-item"> <NGXWidget theme="dark" /> </div>
@@ -505,8 +455,8 @@ function MarketPage() {
       </div>
 
       <section className="container mb-0 mt-4">
-          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary market-filters-wrapper" style={{ borderColor: '#222 !important', padding: '2px 0' }}>
-              <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start market-filters-left" style={{ paddingTop: '2px' }}>
+          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" style={{ borderColor: '#222 !important', padding: '2px 0' }}>
+              <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
                   <div onClick={() => setActiveFilter('Watchlist')} className={`cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : 'text-header-gray'}`} style={{ fontSize: '13.5px', fontWeight: 'bold', paddingBottom: '4px' }}>Watchlist</div>
                   
                   {/* Conviction Filter (Replaces All Assets) */}
@@ -518,7 +468,7 @@ function MarketPage() {
                       <div key={f} onClick={() => setActiveFilter(f)} className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>{f}</div>
                   ))}
               </div>
-              <div className="d-flex gap-3 align-items-center w-100 w-lg-auto overflow-auto no-scrollbar justify-content-start justify-content-lg-end market-filters-right" style={{ height: '32px', marginTop: '2px', marginBottom: '2px' }}>
+              <div className="d-flex gap-3 align-items-center w-100 w-lg-auto overflow-auto no-scrollbar justify-content-start justify-content-lg-end" style={{ height: '32px', marginTop: '2px', marginBottom: '2px' }}>
                    <div className="binance-filter-group d-flex align-items-center flex-shrink-0" style={{ height: '100%' }}>
                       {['All', 'ETH', 'POL'].map(c => (
                           <button key={c} onClick={() => setCurrencyFilter(c)} className={`btn btn-sm border-0 binance-filter-btn hover-gold-text ${currencyFilter === c ? 'active-currency' : 'text-header-gray'}`} style={{ fontSize: '13px', minWidth: '50px', fontWeight: '400', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{c}</button>
@@ -534,7 +484,7 @@ function MarketPage() {
       </section>
 
       <section className="container mt-5 pt-0">
-          <div className="table-responsive no-scrollbar market-table-container">
+          <div className="table-responsive no-scrollbar">
               {loading ? ( <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
               ) : activeFilter === 'Watchlist' && finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">Your watchlist is empty.</div>
               ) : finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">No items listed for sale yet.</div>
@@ -652,27 +602,9 @@ function MarketPage() {
               </div>
           </div>
       </div>
-      
-      {/* End Market Container Wrapper */}
-      </div>
 
       <style jsx global>{`
         .no-select { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-        
-        /* === SURGICAL DYNAMIC SCALING - EDGE-TO-EDGE FIT === */
-        #market-container-wrapper {
-          width: 100%;
-          transition: transform 0.15s ease-out;
-          transform-origin: top left;
-        }
-        
-        @media (min-width: 1024px) {
-          .market-page-wrapper {
-            overflow-x: hidden !important;
-          }
-        }
-        /* === END SURGICAL SCALING === */
-        
         .header-wrapper { background: #242424; border-bottom: 1px solid #2E2E2E; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
         .widget-item { flex: 0 0 310px; }
