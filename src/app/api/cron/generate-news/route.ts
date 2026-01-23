@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
+import fs from 'fs';
+import path from 'path';
 
 // إعدادات لضمان عمل السكريبت
 export const dynamic = 'force-dynamic';
@@ -27,7 +29,6 @@ const TOKENS = {
 
 // --- Helper Functions ---
 
-// دالة جلب البيانات مع إعادة المحاولة
 async function fetchWithRetry(url: string, retries = 5, delay = 5000) {
     for (let i = 0; i < retries; i++) {
         try {
@@ -44,7 +45,6 @@ async function fetchWithRetry(url: string, retries = 5, delay = 5000) {
     }
 }
 
-// حساب نسبة تغير فوليوم البورصة الداخلي
 async function getNNMInternalVolume() {
     try {
         const now = new Date();
@@ -79,13 +79,11 @@ async function getNNMInternalVolume() {
     }
 }
 
-// --- [تعديل 1: إصلاح مشكلة الصور] ---
-// تم استبدال دالة `fs` بدالة تعتمد على قاعدة البيانات
-// هذا يحل مشكلة ظهور A1.jpg دائماً لأن السيرفر لا يقرأ مجلد الصور المحلي
-async function getNextSequentialImage() {
+// --- [منطق الصور الذكي والمتسلسل] ---
+async function getSequentialImage() {
     try {
-        // 1. جلب آخر مقال منشور لمعرفة الصورة التي استُخدمت
-        const { data, error } = await supabase
+        // 1. معرفة آخر صورة تم استخدامها
+        const { data } = await supabase
             .from('news_posts')
             .select('image_url')
             .order('created_at', { ascending: false })
@@ -93,43 +91,52 @@ async function getNextSequentialImage() {
 
         let nextNum = 1;
 
+        // محاولة استخراج الرقم السابق
         if (data && data.length > 0 && data[0].image_url) {
-            // استخراج الرقم من الرابط القديم (مثال: /news-assets/5.jpg)
-            const lastUrl = data[0].image_url;
-            const match = lastUrl.match(/\/(\d+)\.jpg$/);
-            
+            const match = data[0].image_url.match(/\/(\d+)\.jpg$/);
             if (match && match[1]) {
-                const lastNum = parseInt(match[1], 10);
-                nextNum = lastNum + 1;
+                nextNum = parseInt(match[1], 10) + 1; // الرقم التالي
             }
         }
 
-        // إعادة التدوير: إذا وصلنا 30 نرجع لـ 1
-        if (nextNum > 30) nextNum = 1;
+        // 2. التحقق: هل صورة الرقم التالي موجودة فعلاً؟
+        const expectedFileName = `${nextNum}.jpg`;
+        const dirPath = path.join(process.cwd(), 'public', 'news-assets');
+        const fullPath = path.join(dirPath, expectedFileName);
 
-        return `${nextNum}.jpg`;
+        if (fs.existsSync(fullPath)) {
+            // الصورة موجودة -> استخدمها (نستمر للأمام)
+            console.log(`✅ Sequence continues: Using ${expectedFileName}`);
+            return expectedFileName;
+        } else {
+            // الصورة غير موجودة (وصلنا للنهاية) -> نعود للبداية (1.jpg)
+            console.warn(`🔄 End of sequence (Image ${nextNum} not found). Resetting to 1.jpg`);
+            return '1.jpg';
+        }
 
     } catch (error) {
-        console.error("Image Logic Error, defaulting to 1.jpg", error);
-        return '1.jpg'; 
+        console.error("FileSystem check failed, defaulting to 1.jpg", error);
+        return '1.jpg';
     }
 }
 
 export async function GET() {
     try {
-        // --- [تعديل 2: نظام الـ 48 ساعة] ---
-        // التحقق مما إذا كان اليوم هو يوم الإرسال
-        const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+        // --- [الجدول الزمني: الاثنين، الأربعاء، الجمعة] ---
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri
         
-        // إذا كان الرقم فردياً، نوقف السكريبت (يعمل فقط في الأيام الزوجية)
-        if (daysSinceEpoch % 2 !== 0) {
+        // أيام العمل المسموحة (Mon=1, Wed=3, Fri=5)
+        const allowedDays = [1, 3, 5];
+
+        if (!allowedDays.includes(dayOfWeek)) {
             return NextResponse.json({ 
                 success: true, 
-                message: "Skipping today based on 48h schedule (Odd Day)." 
+                message: "Skipping today. Schedule is Mon, Wed, Fri only." 
             });
         }
 
-        // --- A. تجميع البيانات الحية ---
+        // --- A. تجميع البيانات ---
         
         const allIds = [
             ...TOKENS.nam, ...TOKENS.art, ...TOKENS.gam, ...TOKENS.utl, ...TOKENS.market
@@ -211,11 +218,11 @@ export async function GET() {
 
         const nnmInternal = await getNNMInternalVolume();
         
-        // استدعاء دالة الصور الجديدة (المعدلة)
-        const selectedImageFilename = await getNextSequentialImage();
+        // --- استدعاء دالة الصور المتسلسلة ---
+        const selectedImageFilename = await getSequentialImage();
 
 
-        // --- B. هندسة البرومبت SEO Professional (كما هي من المصدر) ---
+        // --- B. هندسة البرومبت SEO Professional ---
         
         const systemPrompt = `
         You are a senior crypto market analyst and SEO Strategist for "NNM News".
@@ -293,7 +300,7 @@ export async function GET() {
                 summary: result.summary,
                 content: result.content,
                 image_url: imagePath,
-                category: 'MARKET UPDATE', // تصنيف ثابت
+                category: 'MARKET UPDATE',
                 created_at: new Date().toISOString(),
                 is_published: true
             });
@@ -304,7 +311,7 @@ export async function GET() {
             success: true, 
             article: result.title, 
             image_used: selectedImageFilename,
-            frequency: "48h check passed"
+            frequency: "Mon-Wed-Fri Mode Active"
         });
 
     } catch (error: any) {
