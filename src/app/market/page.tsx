@@ -428,45 +428,52 @@ function MarketPage() {
       return `${valUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
   };
 
-  // === DYNAMIC SCALING FOR DESKTOP ZOOM/DPI ===
+  // === SURGICAL DYNAMIC SCALING - EDGE-TO-EDGE FIT ===
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    const applyDesktopScaling = () => {
+    const applyZoomResilientScaling = () => {
       const isDesktop = window.innerWidth > 1024;
-      const scaler = document.getElementById('desktop-scaler');
+      const wrapper = document.getElementById('market-container-wrapper');
+      const mainContainer = document.querySelector('.market-page-wrapper') as HTMLElement;
       
-      if (!scaler || !isDesktop) {
-        if (scaler) {
-          scaler.style.transform = 'none';
-          scaler.style.width = '100%';
-        }
+      if (!wrapper) return;
+      
+      if (!isDesktop) {
+        wrapper.style.transform = 'none';
+        wrapper.style.width = '100%';
+        if (mainContainer) mainContainer.style.overflow = 'visible';
         return;
       }
       
-      const BASE_DESIGN_WIDTH = 1500;
-      const scale = window.innerWidth / BASE_DESIGN_WIDTH;
+      // Target width that ensures all buttons/filters are visible
+      const TARGET_WIDTH = 1600;
+      const scale = window.innerWidth / TARGET_WIDTH;
       
-      if (scale < 1) {
-        scaler.style.width = `${BASE_DESIGN_WIDTH}px`;
-        scaler.style.transform = `scale(${scale})`;
-        scaler.style.transformOrigin = 'top left';
-      } else {
-        scaler.style.width = '100%';
-        scaler.style.transform = 'none';
+      // Apply scaling to fit edge-to-edge
+      wrapper.style.width = `${TARGET_WIDTH}px`;
+      wrapper.style.transform = `scale(${scale})`;
+      wrapper.style.transformOrigin = 'top left';
+      
+      // Prevent scrollbars on parent
+      if (mainContainer) {
+        mainContainer.style.overflow = 'hidden';
       }
     };
     
-    applyDesktopScaling();
+    // Use immediate execution + resize listener
+    applyZoomResilientScaling();
     
     let resizeTimer: NodeJS.Timeout;
     const handleResize = () => {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(applyDesktopScaling, 100);
+      resizeTimer = setTimeout(applyZoomResilientScaling, 50);
     };
     
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   return (
@@ -474,8 +481,8 @@ function MarketPage() {
       
       <MarketTicker />
 
-      {/* Desktop Scaler Wrapper */}
-      <div id="desktop-scaler">
+      {/* Market Container Wrapper - Surgical Scaling */}
+      <div id="market-container-wrapper">
         {/* HEADER */}
         <div className="header-wrapper shadow-sm">
         <div className="container-fluid p-0"> 
@@ -646,11 +653,26 @@ function MarketPage() {
           </div>
       </div>
       
-      {/* End Desktop Scaler */}
+      {/* End Market Container Wrapper */}
       </div>
 
       <style jsx global>{`
         .no-select { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        
+        /* === SURGICAL DYNAMIC SCALING - EDGE-TO-EDGE FIT === */
+        #market-container-wrapper {
+          width: 100%;
+          transition: transform 0.15s ease-out;
+          transform-origin: top left;
+        }
+        
+        @media (min-width: 1024px) {
+          .market-page-wrapper {
+            overflow-x: hidden !important;
+          }
+        }
+        /* === END SURGICAL SCALING === */
+        
         .header-wrapper { background: #242424; border-bottom: 1px solid #2E2E2E; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
         .widget-item { flex: 0 0 310px; }
