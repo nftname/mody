@@ -428,13 +428,56 @@ function MarketPage() {
       return `${valUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
   };
 
+  // === DYNAMIC SCALING FOR DESKTOP ZOOM/DPI ===
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const applyDesktopScaling = () => {
+      const isDesktop = window.innerWidth > 1024;
+      const scaler = document.getElementById('desktop-scaler');
+      
+      if (!scaler || !isDesktop) {
+        if (scaler) {
+          scaler.style.transform = 'none';
+          scaler.style.width = '100%';
+        }
+        return;
+      }
+      
+      const BASE_DESIGN_WIDTH = 1500;
+      const scale = window.innerWidth / BASE_DESIGN_WIDTH;
+      
+      if (scale < 1) {
+        scaler.style.width = `${BASE_DESIGN_WIDTH}px`;
+        scaler.style.transform = `scale(${scale})`;
+        scaler.style.transformOrigin = 'top left';
+      } else {
+        scaler.style.width = '100%';
+        scaler.style.transform = 'none';
+      }
+    };
+    
+    applyDesktopScaling();
+    
+    let resizeTimer: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(applyDesktopScaling, 100);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <main className="no-select market-page-wrapper" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', overflowX: 'hidden' }}>
       
       <MarketTicker />
 
-      {/* HEADER */}
-      <div className="header-wrapper shadow-sm">
+      {/* Desktop Scaler Wrapper */}
+      <div id="desktop-scaler">
+        {/* HEADER */}
+        <div className="header-wrapper shadow-sm">
         <div className="container-fluid p-0"> 
             <div className="widgets-grid-container">
                 <div className="widget-item"> <NGXWidget theme="dark" /> </div>
@@ -602,9 +645,26 @@ function MarketPage() {
               </div>
           </div>
       </div>
+      
+      {/* End Desktop Scaler */}
+      </div>
 
       <style jsx global>{`
         .no-select { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        
+        /* === DYNAMIC DESKTOP SCALER === */
+        #desktop-scaler {
+          transition: transform 0.2s ease;
+          width: 100%;
+        }
+        
+        @media (min-width: 1024px) {
+          #desktop-scaler {
+            transform-origin: top left;
+          }
+        }
+        /* === END DYNAMIC SCALER === */
+        
         .header-wrapper { background: #242424; border-bottom: 1px solid #2E2E2E; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
         .widget-item { flex: 0 0 310px; }
