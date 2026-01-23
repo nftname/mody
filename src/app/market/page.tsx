@@ -454,7 +454,8 @@ function MarketPage() {
         </div>
       </div>
 
-      <section className="container mb-0 mt-4">
+      {/* REPLACED 'container' with 'market-content-wrapper' for matching desktop width */}
+      <section className="market-content-wrapper mb-0 mt-4">
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" style={{ borderColor: '#222 !important', padding: '2px 0' }}>
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
                   <div onClick={() => setActiveFilter('Watchlist')} className={`cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : 'text-header-gray'}`} style={{ fontSize: '13.5px', fontWeight: 'bold', paddingBottom: '4px' }}>Watchlist</div>
@@ -483,7 +484,8 @@ function MarketPage() {
           </div>
       </section>
 
-      <section className="container mt-5 pt-0">
+      {/* REPLACED 'container' with 'market-content-wrapper' for matching desktop width */}
+      <section className="market-content-wrapper mt-5 pt-0">
           <div className="table-responsive no-scrollbar">
               {loading ? ( <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
               ) : activeFilter === 'Watchlist' && finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">Your watchlist is empty.</div>
@@ -607,6 +609,10 @@ function MarketPage() {
         .no-select { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
         .header-wrapper { background: #242424; border-bottom: 1px solid #2E2E2E; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
+        
+        /* New Wrapper Class for matching desktop width */
+        .market-content-wrapper { max-width: 1050px; margin: 0 auto; padding: 0 15px; }
+
         .widget-item { flex: 0 0 310px; }
         .main-title { font-size: 1.53rem; color: #E0E0E0; letter-spacing: -1px; }
         .main-desc { font-size: 15px; color: #B0B0B0; max-width: 650px; }
@@ -614,6 +620,8 @@ function MarketPage() {
         @media (max-width: 768px) {
             .header-wrapper { padding: 2px 0 !important; }
             .widgets-grid-container { display: flex !important; flex-wrap: nowrap !important; justify-content: space-between !important; gap: 2px !important; padding: 0 4px !important; max-width: 100% !important; overflow-x: hidden; }
+            /* Ensure wrapper is full width on mobile just in case */
+            .market-content-wrapper { max-width: 100% !important; }
             .widget-item { flex: 1 1 auto !important; min-width: 0 !important; max-width: 33% !important; }
             .desktop-only-text { display: none !important; }
         }
