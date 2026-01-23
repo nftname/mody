@@ -605,59 +605,6 @@ function MarketPage() {
 
       <style jsx global>{`
         .no-select { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-        
-        /* ===== DESKTOP ZOOM FIX - SURGICAL PRECISION ===== */
-        @media (min-width: 1024px) {
-          .market-page-wrapper {
-            min-width: 1440px !important;
-            width: 100% !important;
-            overflow-x: auto !important;
-          }
-          
-          .market-filters-wrapper {
-            flex-wrap: nowrap !important;
-            min-width: 1400px !important;
-          }
-          
-          .market-filters-left,
-          .market-filters-right {
-            flex-wrap: nowrap !important;
-            white-space: nowrap !important;
-          }
-          
-          .market-table-container {
-            min-width: 1400px !important;
-            overflow-x: auto !important;
-          }
-          
-          .market-table-container table {
-            min-width: 1400px !important;
-            table-layout: fixed !important;
-          }
-          
-          .market-table-container thead,
-          .market-table-container tbody,
-          .market-table-container tr {
-            display: table !important;
-            width: 100% !important;
-            table-layout: fixed !important;
-          }
-          
-          .market-table-container th,
-          .market-table-container td {
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-          }
-          
-          /* Prevent Bootstrap responsiveness on desktop */
-          .container {
-            max-width: 1400px !important;
-            min-width: 1400px !important;
-          }
-        }
-        /* ===== END DESKTOP ZOOM FIX ===== */
-        
         .header-wrapper { background: #242424; border-bottom: 1px solid #2E2E2E; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
         .widget-item { flex: 0 0 310px; }
