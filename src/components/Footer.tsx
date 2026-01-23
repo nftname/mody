@@ -47,8 +47,8 @@ const Footer = () => {
                     <ul className="list-unstyled d-flex flex-column gap-2">
                         <li><Link href="/market" className="footer-link-item">Market</Link></li>
                         <li><Link href="/ngx" className="footer-link-item">Analysis (NGX)</Link></li>
-                        <li><Link href="/mint" className="footer-link-item">Minting</Link></li>
-                        <li><Link href="/ranking" className="footer-link-item">Rankings</Link></li>
+                        <li><Link href="/conviction-rank" className="footer-link-item">Conviction Rank</Link></li>
+                        <li><Link href="/ranking" className="footer-link-item">Registry Rank</Link></li>
                     </ul>
                 </div>
 
@@ -57,9 +57,9 @@ const Footer = () => {
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Resources</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
                         <li><Link href="/news" className="footer-link-item">News & Updates</Link></li>
+                        <li><Link href="/market-indices" className="footer-link-item">Market Indices</Link></li>
+                        <li><Link href="/how-it-works" className="footer-link-item">How it Works</Link></li>
                         <li><Link href="/blog" className="footer-link-item">Blog</Link></li>
-                        <li><Link href="/nnm-concept" className="footer-link-item">NNM Concept</Link></li>
-                        <li><Link href="/contact" className="footer-link-item">Help Center</Link></li>
                     </ul>
                 </div>
 
@@ -67,7 +67,7 @@ const Footer = () => {
                 <div className="col-6 col-md-3">
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Company</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
-                        <li><Link href="/about" className="footer-link-item">About Us</Link></li>
+                        <li><Link href="/nnm-concept" className="footer-link-item">NNM Concept</Link></li>
                         <li><Link href="/affiliate" className="footer-link-item">Affiliate Program</Link></li>
                         <li><Link href="/legal" className="footer-link-item">Legal & Terms</Link></li>
                         <li><Link href="/contact" className="footer-link-item">Contact</Link></li>
