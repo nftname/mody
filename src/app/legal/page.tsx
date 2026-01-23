@@ -1,13 +1,12 @@
 'use client';
 import Link from 'next/link';
 
-// ألوان الهوية الموحدة
+// ألوان الهوية الموحدة - تم ضبطها لراحة العين
 const BRAND_GOLD = '#FCD535'; 
-const GOLD_DARK = '#B3882A';
-const TEXT_OFF_WHITE = '#E0E0E0';
-const TEXT_MUTED = '#B0B0B0';
+const TEXT_OFF_WHITE = '#E0E0E0'; // أوف وايت للعناوين (مريح للعين)
+const TEXT_MUTED = '#B0B0B0';     // رمادي للنصوص (تقليل التباين)
 
-// --- BRAND ICONS DATA (للحفاظ على جمالية الفوتر) ---
+// --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
 const trustedBrands = [ 
@@ -54,7 +53,7 @@ export default function LegalPage() {
 
             {/* HEADER */}
             <header className="mb-5 border-bottom border-secondary border-opacity-25 pb-4">
-              <h1 className="fw-bold text-white mb-2" 
+              <h1 className="fw-bold mb-2" 
                   style={{ 
                       fontSize: '2.2rem', 
                       letterSpacing: '-1px', 
@@ -63,15 +62,15 @@ export default function LegalPage() {
                   }}>
                 Terms of <span style={{ color: BRAND_GOLD }}>Service</span>
               </h1>
-              <p style={{ color: '#777', fontSize: '14px', marginTop: '10px' }}>
-                Last Updated: November 2025
+              <p style={{ color: '#888', fontSize: '13px', marginTop: '10px' }}>
+                Last Updated: January 2026
               </p>
             </header>
 
             {/* INTRO */}
             <section className="mb-5">
                 <div className="p-4 rounded-3" style={{ backgroundColor: '#242424', border: '1px solid #2E2E2E' }}>
-                    <p className="mb-0 fw-medium" style={{ color: TEXT_OFF_WHITE, lineHeight: '1.7' }}>
+                    <p className="mb-0 fw-medium" style={{ color: TEXT_OFF_WHITE, lineHeight: '1.7', fontSize: '15px' }}>
                         <strong style={{ color: BRAND_GOLD }}>IMPORTANT NOTICE:</strong> By accessing, browsing, connecting a wallet to, minting through, listing on, interacting with, or otherwise using the NFT Name Market (NNM) interface (the &quot;Site&quot;) and protocol, you acknowledge that you have read, understood, and fully agree to be legally bound by this User Agreement (&quot;Agreement&quot;). If you do not agree to any portion of these Terms, you must immediately discontinue all access to the Site and Protocol.
                     </p>
                 </div>
@@ -81,6 +80,7 @@ export default function LegalPage() {
             <section className="mb-5">
                 <h2 className="section-title mb-4">I. TERMS OF SERVICE & LIABILITY</h2>
                 
+                {/* 1 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">1. ELIGIBILITY & AGE REQUIREMENTS</h3>
                     <p className="term-text">
@@ -88,6 +88,7 @@ export default function LegalPage() {
                     </p>
                 </div>
 
+                {/* 2 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">2. PROTOCOL NATURE — INTERFACE-ONLY</h3>
                     <p className="term-text">NNM is strictly a <strong>visual interface layer</strong>. It is not an exchange, escrow, broker, custodian, wallet provider, financial institution, or regulated marketplace.</p>
@@ -98,16 +99,21 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
+                {/* 3 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">3. JURISDICTION-NEUTRAL OPERATION</h3>
                     <p className="term-text">
-                        NNM operates as a decentralized, jurisdiction-agnostic protocol interface. The Site is not operated, managed, hosted, administered, or controlled from within any specific country or legal jurisdiction. Access to the Site is global and passive in nature.
+                        NNM operates as a decentralized, jurisdiction-agnostic protocol interface. The Site is not operated, managed, hosted, administered, or controlled from within any specific country or legal jurisdiction.
                     </p>
                     <p className="term-text mt-2">
-                        Any access or use of the Site occurs solely at the initiative of the user, who is fully responsible for ensuring compliance with the laws applicable in their own jurisdiction.
+                        Access to the Site is global and passive in nature. NNM does not target, solicit, conduct, or carry on business activities within any particular jurisdiction, nor does it maintain a physical presence, establishment, or permanent operations in any country.
+                    </p>
+                    <p className="term-text mt-2">
+                        Any access or use of the Site occurs solely at the initiative of the user, who is fully responsible for ensuring compliance with the laws applicable in their own jurisdiction. NNM assumes no responsibility for jurisdiction-specific regulatory obligations arising from user access.
                     </p>
                 </div>
 
+                {/* 4 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">4. NO FINANCIAL, LEGAL, OR TAX ADVICE</h3>
                     <p className="term-text">
@@ -115,6 +121,7 @@ export default function LegalPage() {
                     </p>
                 </div>
 
+                {/* 5 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">5. LIMITATION OF LIABILITY — &quot;AS IS&quot;</h3>
                     <p className="term-text">
@@ -122,6 +129,7 @@ export default function LegalPage() {
                     </p>
                 </div>
 
+                {/* 6 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">6. USER RESPONSIBILITY & INDEMNIFICATION</h3>
                     <p className="term-text">You accept full responsibility for any content you mint. NNM does not review or verify legality of user content.</p>
@@ -131,22 +139,63 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
+                {/* 7 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">7. ASSET CLASSIFICATION</h3>
                     <p className="term-text">NFTs are classified as <strong>&quot;Visual Identity Assets&quot;</strong>.</p>
                     <ul className="term-list">
                         <li><strong>No Commercial Rights:</strong> Minting does NOT grant trademark rights outside the blockchain.</li>
                         <li><strong>No Exclusivity:</strong> NNM does not guarantee global exclusivity or enforceability.</li>
+                        <li><strong>Tax Responsibility:</strong> You are solely responsible for all taxes.</li>
                     </ul>
                 </div>
 
+                {/* 8 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">8. PROHIBITED ACTIVITIES</h3>
-                    <p className="term-text">You agree not to use NNM for illegal purposes, including money laundering, terrorist financing, sanctions violations, market manipulation (wash trading), or bot activity.</p>
+                    <p className="term-text">You agree not to use NNM for illegal purposes, including:</p>
+                    <ul className="term-list">
+                        <li>Money laundering, terrorist financing, or sanctions violations.</li>
+                        <li>Market manipulation (wash trading) or bot activity.</li>
+                        <li>Any activity intended to defraud or deceive.</li>
+                    </ul>
+                    <p className="term-text mt-2">NNM reserves the right to restrict access to wallets suspected of prohibited activities.</p>
                 </div>
 
+                {/* 9 - NEW */}
                 <div className="term-block mb-4">
-                    <h3 className="term-heading">9. GOVERNING LAW</h3>
+                    <h3 className="term-heading">9. INITIAL MARKET TESTING & OPERATIONAL WALLETS</h3>
+                    <p className="term-text">
+                        The platform may operate an Initial Market Testing Phase for up to ninety (90) days from the official launch date. During this period, the platform may use authorized Operational Wallets, including Admin Wallets, to test technical functions, provide initial liquidity, and evaluate trading indicators.
+                    </p>
+                    <p className="term-text mt-2">
+                        Names minted or listed through Operational Wallets are fully owned by those wallets, with transactions conducted at nominal values (covering only network/gas fees). Any trades conducted by Admin Wallets are pre-launch tests and do not constitute market manipulation, nor are they included in official market volumes.
+                    </p>
+                    <p className="term-text mt-2">
+                        The platform provides no warranty or guarantee regarding price, volume, liquidity, or trading outcomes during this phase. Users acknowledge that all trading activity in the Testing Phase is operational, educational, and experimental.
+                    </p>
+                    <p className="term-text mt-2">
+                        After the 90-day period, Operational Wallets cease experimental activity, and the marketplace operates fully as user-driven, dependent only on independent user transactions. By accessing the platform, users agree that they have read, understood, and accepted that Operational and Admin Wallet activities are not intended to mislead or manipulate the market.
+                    </p>
+                </div>
+
+                {/* 10 - NEW */}
+                <div className="term-block mb-4">
+                    <h3 className="term-heading">10. CONVICTION RANK & POINTS SYSTEM</h3>
+                    <p className="term-text">
+                        The Conviction Rank and points system (WNNM → NNM Points) is an internal, symbolic reward system. Points are not currency, securities, or investments, and carry no monetary value outside the platform.
+                    </p>
+                    <p className="term-text mt-2">
+                        Users earn points through platform actions (purchases, registration, support), and points are redeemable only within the platform per its rules. The platform retains full control over points, conversion rules, and system operation, and may modify, suspend, or terminate it at any time.
+                    </p>
+                    <p className="term-text mt-2">
+                        The platform assumes no liability for financial interpretation, external use, or perceived value. Participation is voluntary and symbolic, intended for engagement, reputation, and internal privileges only. Points earned do not grant any claim, right, or entitlement to future tokens, coins, or tradable assets.
+                    </p>
+                </div>
+
+                {/* 11 */}
+                <div className="term-block mb-4">
+                    <h3 className="term-heading">11. GOVERNING LAW & ARBITRATION</h3>
                     <p className="term-text">
                         All disputes shall be resolved by binding individual arbitration. Class-actions are waived. Governed by the laws of <strong>Singapore</strong>.
                     </p>
@@ -156,31 +205,50 @@ export default function LegalPage() {
             {/* SECTION II */}
             <section className="mb-5">
                 <h2 className="section-title mb-4">II. PRIVACY POLICY</h2>
+                
+                {/* 12 */}
                 <div className="term-block mb-4">
-                    <h3 className="term-heading">10. MAXIMUM PRIVACY / DATA POLICY</h3>
+                    <h3 className="term-heading">12. MAXIMUM PRIVACY / DATA POLICY</h3>
                     <p className="term-text">NNM uses a Zero-PII philosophy. We do not collect names, emails, or IP addresses.</p>
                     <ul className="term-list">
                         <li>No accounts or registrations required.</li>
                         <li>No analytics tracking for identification.</li>
                         <li>We only read public on-chain data.</li>
                     </ul>
+                    <p className="term-text mt-2">Note that blockchain transactions are inherently public.</p>
                 </div>
             </section>
 
             {/* SECTION III */}
             <section className="mb-5">
                 <h2 className="section-title mb-4">III. INTELLECTUAL PROPERTY</h2>
+                
+                {/* 13 - NEW */}
                 <div className="term-block mb-4">
-                    <h3 className="term-heading">11. TAKEDOWN MECHANISM</h3>
+                    <h3 className="term-heading">13. NGX NFT INDEX OWNERSHIP & DISCLAIMER</h3>
                     <p className="term-text">
-                        NNM respects IP rights. Upon valid notice (DMCA), we may delist the NFT from the UI and hide metadata. This affects the UI only; the on-chain token remains immutable.
+                        The NGX NFT Index and its sub-indices (Sentiment, Market Cap, Volume) are owned exclusively by the platform and constitute the platform’s intellectual property. The indices are analytical and educational tools only, not investment advice, trading signals, or financial recommendations.
                     </p>
+                    <p className="term-text mt-2">
+                        Users acknowledge that all data and methodology belong solely to the platform, and any reproduction, copying, or use without authorization is prohibited. The platform assumes no liability for any financial decisions, trades, or outcomes resulting from the use of the indices. Access to the indices does not confer ownership, license, or rights to the methodology or data to users.
+                    </p>
+                </div>
+
+                {/* 14 */}
+                <div className="term-block mb-4">
+                    <h3 className="term-heading">14. TAKEDOWN MECHANISM</h3>
+                    <p className="term-text">NNM respects IP rights. Upon valid notice (DMCA), we may:</p>
+                    <ul className="term-list">
+                        <li>Delist the NFT from the UI.</li>
+                        <li>Hide metadata and search visibility.</li>
+                    </ul>
+                    <p className="term-text mt-2">This affects UI only; the on-chain token remains immutable.</p>
                 </div>
             </section>
 
             <footer className="mt-5 pt-4 border-top border-secondary border-opacity-25 mb-5">
-              <p style={{ fontSize: '13px', color: '#666', fontStyle: 'italic' }}>
-                NNM reserves the right to modify these terms at any time. Continued use of the platform constitutes acceptance of updated terms.
+              <p style={{ fontSize: '13px', color: '#687080', fontStyle: 'italic' }}>
+                <strong style={{ color: TEXT_OFF_WHITE }}>MODIFICATIONS:</strong> NNM may update these terms. Continued use constitutes acceptance.
               </p>
             </footer>
 
@@ -199,7 +267,7 @@ export default function LegalPage() {
         }
         .legal-page .term-heading {
             color: ${TEXT_OFF_WHITE};
-            font-size: 1.1rem;
+            font-size: 1.15rem; /* حجم متوسط */
             font-weight: 600;
             margin-bottom: 10px;
         }
@@ -207,22 +275,24 @@ export default function LegalPage() {
             color: ${TEXT_MUTED};
             font-size: 15px;
             line-height: 1.6;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .legal-page .term-text strong {
-            color: #E0E0E0;
+            color: ${TEXT_OFF_WHITE}; /* إبراز الكلمات المهمة بلون أوف وايت بدلاً من الأبيض الناصع */
+            font-weight: 600;
         }
         .legal-page .term-list {
             list-style-type: none;
             padding-left: 15px;
-            margin-top: 10px;
+            margin-top: 8px;
         }
         .legal-page .term-list li {
             position: relative;
-            padding-left: 15px;
-            margin-bottom: 8px;
+            padding-left: 18px;
+            margin-bottom: 6px;
             color: ${TEXT_MUTED};
             font-size: 15px;
+            line-height: 1.5;
         }
         .legal-page .term-list li::before {
             content: "•";
