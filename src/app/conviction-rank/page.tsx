@@ -234,12 +234,13 @@ export default function ConvictionRankPage() {
                 WNNM Credits: Reputation, Not Speculation
               </h2>
               <p>Conviction within NNM accumulates <strong style={{ color: GOLD_MEDIUM }}>WNNM Credits</strong>.</p>
-              <p>These are <strong className="text-white">not tokens</strong>, they are <strong className="text-white">not tradable</strong>, and they are <strong className="text-white">not financial instruments</strong>.</p>
-              <p>WNNM Credits represent reputation and engagement. Whenever you mint a new name on the platform or purchase a name from the Marketplace, you earn WNNM Credits.</p>
-              <p>These credits are stored in your wallet and can be used to support the names you believe deserve recognition.</p>
-              <p>Each WNNM Credit spent converts immediately into NNM Credits, which you can claim and withdraw to your wallet.</p>
-              <p>You may support any name only once, and you cannot support names you own—ensuring that your support reflects genuine community conviction.</p>
-              <p>WNNM Credits unlock visibility advantages, platform privileges, and influence within Conviction Rank, rewarding engagement, not speculation.</p>
+              <p>These credits are not tokens, are not tradable, and do not represent financial instruments.</p>
+              <p>WNNM Credits reflect participation and engagement within the ecosystem.</p>
+              <p>When a WNNM Credit is used to support a digital name, it is permanently converted into NNM Reputation Score and recorded as historical on-chain conviction.</p>
+              <p>This reputation score is non-transferable, non-redeemable, and exists solely as a cumulative record of contribution and belief.</p>
+              <p>NNM Reputation does not grant economic rights or guarantees.</p>
+              <p>However, as the ecosystem evolves, recorded reputation may be considered as a qualifying signal for future platform initiatives, access tiers, or early participation opportunities, subject to independent rules defined at that time.</p>
+              <p>This system rewards long-term conviction, not short-term speculation.</p>
             </section>
 
             <section className="mb-4 ps-lg-3">
