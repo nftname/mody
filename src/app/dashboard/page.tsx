@@ -37,6 +37,7 @@ export default function DashboardPage() {
 
     // --- Conviction & Audit States ---
     const [convictionLogs, setConvictionLogs] = useState<any[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
     const [walletBalances, setWalletBalances] = useState({ wnnm: 0, nnm: 0 });
     const [showClaimModal, setShowClaimModal] = useState(false);
     const [claimStep, setClaimStep] = useState<'audit' | 'confirm' | 'processing' | 'success' | 'error'>('audit');
@@ -933,7 +934,7 @@ export default function DashboardPage() {
         {/* --- 6. CONVICTION --- */}
         {activeSection === 'Conviction' && (
             <div className="mt-4 pb-5 fade-in">
-                {/* Header: Balances & Claim */}
+                {/* Header: Balances */}
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 p-4 rounded-4" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d' }}>
                     <div className="d-flex gap-5">
                         <div className="d-flex flex-column">
@@ -949,57 +950,93 @@ export default function DashboardPage() {
                             </span>
                         </div>
                     </div>
-                    
-                    <button 
-                        onClick={handleSmartClaim}
-                        disabled={walletBalances.nnm <= 0 || isTransferring}
-                        className="btn fw-bold px-4 py-2"
-                        style={{ 
-                            background: walletBalances.nnm > 0 && !isTransferring ? 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)' : '#2d2d2d', 
-                            color: walletBalances.nnm > 0 && !isTransferring ? '#000' : '#666', 
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            opacity: walletBalances.nnm > 0 && !isTransferring ? 1 : 0.7
-                        }}
-                    >
-                        {isTransferring ? 'Transfer in Progress' : (walletBalances.nnm > 0 ? 'Claim Rewards' : 'No Claimable Balance')}
-                    </button>
                 </div>
 
-                {/* Data Table */}
-                <div className="table-responsive rounded-3" style={{ border: '1px solid #2d2d2d' }}>
-                    <table className="table mb-0" style={{ backgroundColor: '#161b22', color: '#fff', fontSize: '13px' }}>
-                        <thead style={{ backgroundColor: '#1E1E1E' }}>
-                            <tr>
-                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Type</th>
-                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Currency</th>
-                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Amount</th>
-                                <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px', textAlign: 'right' }}>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan={4} className="text-center py-5"><div className="spinner-border text-secondary spinner-border-sm"></div></td></tr>
-                            ) : convictionLogs.length === 0 ? (
-                                <tr><td colSpan={4} className="text-center py-5 text-secondary">No conviction history found.</td></tr>
-                            ) : (
-                                convictionLogs.map((log, idx) => (
-                                    <tr key={idx} className="align-middle" style={{ borderBottom: '1px solid #2d2d2d' }}>
-                                        <td style={{ padding: '15px', color: '#fff' }}>{log.type}</td>
-                                        <td style={{ padding: '15px', color: '#8a939b' }}>{log.currency}</td>
-                                        <td style={{ padding: '15px', fontWeight: 'bold', color: log.amount > 0 ? '#0ecb81' : '#f6465d' }}>
-                                            {log.amount > 0 ? '+' : ''}{log.amount}
-                                        </td>
-                                        <td style={{ padding: '15px', textAlign: 'right', color: '#8a939b' }}>
-                                            {new Date(log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                        </td>
-                                    </tr>
-                                ))
+                {/* Data Table with Pagination */}
+                {(() => {
+                    const indexOfLastLog = currentPage * 10;
+                    const indexOfFirstLog = indexOfLastLog - 10;
+                    const currentLogs = convictionLogs.slice(indexOfFirstLog, indexOfLastLog);
+                    const totalPages = Math.ceil(convictionLogs.length / 10);
+
+                    return (
+                        <>
+                            <div className="table-responsive rounded-3" style={{ border: '1px solid #2d2d2d' }}>
+                                <table className="table mb-0" style={{ backgroundColor: '#161b22', color: '#fff', fontSize: '13px' }}>
+                                    <thead style={{ backgroundColor: '#1E1E1E' }}>
+                                        <tr>
+                                            <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Type</th>
+                                            <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Currency</th>
+                                            <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Amount</th>
+                                            <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px', textAlign: 'right' }}>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {loading ? (
+                                            <tr><td colSpan={4} className="text-center py-5"><div className="spinner-border text-secondary spinner-border-sm"></div></td></tr>
+                                        ) : convictionLogs.length === 0 ? (
+                                            <tr><td colSpan={4} className="text-center py-5 text-secondary">No conviction history found.</td></tr>
+                                        ) : (
+                                            currentLogs.map((log, idx) => (
+                                                <tr key={idx} className="align-middle" style={{ borderBottom: '1px solid #2d2d2d' }}>
+                                                    <td style={{ padding: '15px', color: '#fff' }}>{log.type}</td>
+                                                    <td style={{ padding: '15px', color: '#8a939b' }}>{log.currency}</td>
+                                                    <td style={{ padding: '15px', fontWeight: 'bold', color: log.amount > 0 ? '#0ecb81' : '#f6465d' }}>
+                                                        {log.amount > 0 ? '+' : ''}{log.amount}
+                                                    </td>
+                                                    <td style={{ padding: '15px', textAlign: 'right', color: '#8a939b' }}>
+                                                        {new Date(log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Pagination Controls */}
+                            {convictionLogs.length > 0 && (
+                                <div className="d-flex justify-content-between align-items-center mt-4 px-2" style={{ gap: '10px' }}>
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                        className="btn btn-sm"
+                                        style={{
+                                            border: '1px solid #2d2d2d',
+                                            backgroundColor: currentPage === 1 ? '#0d0d0d' : '#161b22',
+                                            color: currentPage === 1 ? '#666' : '#fff',
+                                            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                                            borderRadius: '6px',
+                                            padding: '8px 16px',
+                                            fontSize: '13px'
+                                        }}
+                                    >
+                                        Previous
+                                    </button>
+                                    <span style={{ color: '#fff', fontSize: '13px', minWidth: '150px', textAlign: 'center' }}>
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                        className="btn btn-sm"
+                                        style={{
+                                            border: '1px solid #2d2d2d',
+                                            backgroundColor: currentPage === totalPages ? '#0d0d0d' : '#161b22',
+                                            color: currentPage === totalPages ? '#666' : '#fff',
+                                            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                                            borderRadius: '6px',
+                                            padding: '8px 16px',
+                                            fontSize: '13px'
+                                        }}
+                                    >
+                                        Next
+                                    </button>
+                                </div>
                             )}
-                        </tbody>
-                    </table>
-                </div>
+                        </>
+                    );
+                })()}
             </div>
         )}
 
