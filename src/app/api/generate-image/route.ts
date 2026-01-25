@@ -31,8 +31,7 @@ export async function POST(req: Request) {
       fontBase64 = fs.readFileSync(fontPath).toString('base64');
     }
 
-    // 4. تصميم طبقة الـ SVG (التعديل الجراحي هنا لضمان ظهور الخط)
-    // قمنا بنقل الـ Font-Face داخل وسوم <defs> ليتعرف عليها محرك Sharp فوراً
+    // 4. تصميم طبقة الـ SVG (التعديل الجراحي لضبط الحجم والموقع وحل مشكلة المربعات)
     const svgText = `
       <svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -46,14 +45,15 @@ export async function POST(req: Request) {
         <style>
           .name-style { 
             fill: #FCD535; 
-            font-size: 80px; 
+            font-size: 120px; /* التعديل: تكبير الخط ليتناسب مع التصميم */
             font-family: 'NFTFont', sans-serif; 
             font-weight: bold; 
             text-anchor: middle; 
             filter: drop-shadow(4px 4px 3px rgba(0, 0, 0, 0.6));
           }
         </style>
-        <text x="512" y="420" class="name-style">${name.toUpperCase()}</text>
+        /* التعديل: رفع النص إلى y="320" ليتوسط المسافة الرخامية السوداء */
+        <text x="512" y="320" class="name-style">${name.toUpperCase()}</text>
       </svg>
     `;
 
