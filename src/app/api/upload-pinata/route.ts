@@ -4,31 +4,28 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    // 1. استلام البيانات من الواجهة الأمامية
     const { imageBase64, name } = await req.json();
 
     if (!imageBase64 || !name) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
-    // 2. تحويل الصورة من Base64 إلى ملف جاهز للرفع
+    // 1. Prepare Image
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64Data, 'base64');
     const blob = new Blob([buffer], { type: 'image/svg+xml' });
 
-    // 3. تجهيز البيانات لـ Pinata
+    // 2. Prepare Form Data
     const formData = new FormData();
-    formData.append('file', blob, `${name}.svg`); // اسم الملف في بيناتا
+    formData.append('file', blob, `${name}.svg`);
 
-    // إضافة ميتا داتا لتنظيم الملفات في حسابك
     const pinataMetadata = JSON.stringify({ name: `NNM-Registry-${name}` });
     formData.append('pinataMetadata', pinataMetadata);
 
     const pinataOptions = JSON.stringify({ cidVersion: 1 });
     formData.append('pinataOptions', pinataOptions);
 
-    // 4. عملية الرفع الفعلية (تتصل بسيرفرات بيناتا)
-    // لاحظ: نستخدم process.env.PINATA_JWT للأمان
+    // 3. Upload to Pinata
     const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
       headers: {
@@ -43,12 +40,10 @@ export async function POST(req: Request) {
       throw new Error(json.error?.details || 'Pinata upload failed');
     }
 
-    // 5. بناء الرابط النهائي
-    // نستخدم الرابط الخاص بك من ملف البيئة، وإذا لم يوجد نستخدم العام كاحتياط
-    const gateway = process.env.NEXT_PUBLIC_GATEWAY_URL || 'https://gateway.pinata.cloud';
-    const finalUrl = `${gateway}/ipfs/${json.IpfsHash}`;
+    // 🔥 التعديل الحاسم هنا: استخدام البوابة العامة المضمونة 🔥
+    // Public Gateway ensures OpenSea & MetaMask can read the image without 403 errors
+    const finalUrl = `https://gateway.pinata.cloud/ipfs/${json.IpfsHash}`;
 
-    // إرجاع الرابط للصفحة
     return NextResponse.json({ 
       ipfsHash: json.IpfsHash,
       gatewayUrl: finalUrl 
