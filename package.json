@@ -26,6 +26,7 @@
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
     "recharts": "^2.15.4",
+    "sharp": "^0.34.5",
     "swiper": "^11.0.0",
     "viem": "^2.44.4",
     "wagmi": "^2.9.8"
