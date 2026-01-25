@@ -9,12 +9,12 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { CONTRACT_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
-// --- BUTTON CONSTANTS (FROM ROYAL CONCEPT) ---
+// --- BUTTON CONSTANTS ---
 const GOLD_BTN_PRIMARY = '#D4AF37';
 const GOLD_BTN_HIGHLIGHT = '#E6C76A';
 const GOLD_BTN_SHADOW = '#B8962E';
 
-// ABI for the NFT Registry Contract (Minting Logic - Updated for Registry 10)
+// ABI
 const CONTRACT_ABI = parseAbi([
   "function owner() view returns (address)",
   "function registeredNames(bytes32) view returns (bool)",
@@ -23,24 +23,24 @@ const CONTRACT_ABI = parseAbi([
   "function reserveName(string _name, uint8 _tier, string _tokenURI)"
 ]);
 
-// (تم الإبقاء على الروابط القديمة كما طلبت لعدم تغيير هيكل الكود)
+// هذه الصور القديمة تركتها لك كمرجع كما طلبت، لكننا لن نستخدمها في الرفع الجديد
 const TIER_IMAGES = {
     IMMORTAL: "https://gateway.pinata.cloud/ipfs/bafkreib7mz6rnwk3ig7ft6ne5iuajlywkttv4zvjp5bbk7ssd5kaykjbsm", 
     ELITE: "https://gateway.pinata.cloud/ipfs/bafkreiazhoyzkbenhbvjlltd6izwonwz3xikljtrrksual5ttzs4nyzbuu",    
     FOUNDER: "https://gateway.pinata.cloud/ipfs/bafkreiagc35ykldllvd2knqcnei2ctmkps66byvjinlr7hmkgkdx5mhxqi"   
 };
 
-const LONG_DESCRIPTION = `GEN-0 Genesis — NNM Protocol Record
+const LONG_DESCRIPTION = `GEN-0 Genesis — NNM Protocol Registry
 
 A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.
 
 It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol — a permanent, time-anchored digital inscription preserved on the blockchain.`;
 
-// --- 🔥 الإضافة الوحيدة: كود رسم الصورة الجديدة (مكان الصورة القديمة) 🔥 ---
+// --- 🔥 ART GENERATOR FUNCTION (Client Side) 🔥 ---
+// هذه الدالة تولد كود الصورة فقط (نص)، ولا ترفعه. الرفع يتم عبر الـ API
 const generateSmartSVG = (nameText: string): string => {
-    // preserveAspectRatio="xMidYMid meet" -> هذا الأمر يحل مشكلة ظهور الصورة بشكل خاطئ في أوبن سي
-    const svgString = `
-    <svg width="500" height="500" viewBox="0 0 500 500" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    return `
+    <svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <radialGradient id="deepVoid" cx="50%" cy="50%" r="90%">
                 <stop offset="0%" style="stop-color:#0a1128;stop-opacity:1" />
@@ -80,9 +80,6 @@ const generateSmartSVG = (nameText: string): string => {
         <rect x="15" y="15" width="470" height="470" fill="none" stroke="#00f2ff" stroke-width="1" rx="8" ry="8" opacity="0.5" filter="url(#electricGlow)"/>
         <rect x="20" y="20" width="460" height="460" fill="none" stroke="url(#luxuryMetal)" stroke-width="0.5" rx="6" ry="6" opacity="0.4"/>
     </svg>`;
-    
-    // تحويل الكود لـ Base64 ليفهمه البلوكشين (بديل رابط IPFS)
-    return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
 };
 
 const MintContent = () => {
@@ -94,15 +91,17 @@ const MintContent = () => {
   const [status, setStatus] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  // New State for Nice Title
   const [errorTitle, setErrorTitle] = useState(''); 
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'process' | 'error' | 'success'>('process');
+  
+  // حالة جديدة لعرض مراحل الرفع (جاري توليد الصورة.. جاري الرفع..)
+  const [processStep, setProcessStep] = useState(''); 
+  
   const [mounted, setMounted] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
   const [timer, setTimer] = useState(60);
 
-  // Read owner from the new contract
   const { data: ownerAddress } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
@@ -175,9 +174,9 @@ const MintContent = () => {
     setStatus(null);
     setSearchTerm('');
     setErrorMessage('');
+    setProcessStep('');
   };
 
-  // --- SURGICAL UPDATE: REPLACED OLD handleError WITH SMART DIPLOMAT ---
   const handleError = (err: any) => {
       console.error(err);
       
@@ -185,15 +184,17 @@ const MintContent = () => {
       let niceTitle = "Action Update";
       let niceMessage = "The process was interrupted. Please check your connection and try again.";
 
-      // 1. User Rejected
       if (errStr.includes("User rejected") || errStr.includes("User denied")) {
           niceTitle = "Action Cancelled";
           niceMessage = "You cancelled the transaction. No funds were deducted.";
       } 
-      // 2. Insufficient Funds
-      else if (errStr.includes("Insufficient funds") || errStr.includes("exceeds balance") || errStr.includes("low balance")) {
+      else if (errStr.includes("Insufficient funds") || errStr.includes("exceeds balance")) {
           niceTitle = "Insufficient Balance";
-          niceMessage = "Your wallet balance is lower than the required amount (Price + Gas). Please top up POL and try again.";
+          niceMessage = "Your wallet balance is lower than the required amount. Please top up POL.";
+      }
+      else if (errStr.includes("Upload Failed")) {
+          niceTitle = "Storage Error";
+          niceMessage = "Could not upload the artwork to IPFS. Please try again.";
       }
 
       setErrorTitle(niceTitle);
@@ -278,26 +279,25 @@ const MintContent = () => {
       <div className="container mt-0">
         <h5 className="text-white text-center mb-4 select-asset-title" style={{ letterSpacing: '2px', fontSize: '11px', textTransform: 'uppercase', color: '#888' }}>Select Asset Class</h5>
         <div className="row justify-content-center g-2 mobile-clean-stack"> 
-            {/* SURGICAL UPDATE: Prices Updated to $15, $10, $5 */}
             <LuxuryIngot 
                 label="IMMORTAL" price="$15" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
                 tierName="IMMORTAL" tierIndex={0} nameToMint={searchTerm} isAdmin={isAdmin} 
                 onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
-                onProcessing={() => { setModalType('process'); setShowModal(true); }}
+                onProcessing={(step: string) => { setModalType('process'); setProcessStep(step); setShowModal(true); }}
                 isMinting={isMinting} setIsMinting={setIsMinting}
             />
             <LuxuryIngot 
                 label="ELITE" price="$10" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
                 tierName="ELITE" tierIndex={1} nameToMint={searchTerm} isAdmin={isAdmin} 
                 onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
-                onProcessing={() => { setModalType('process'); setShowModal(true); }}
+                onProcessing={(step: string) => { setModalType('process'); setProcessStep(step); setShowModal(true); }}
                 isMinting={isMinting} setIsMinting={setIsMinting}
             />
             <LuxuryIngot 
                 label="FOUNDERS" price="$5" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
                 tierName="FOUNDER" tierIndex={2} nameToMint={searchTerm} isAdmin={isAdmin} 
                 onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
-                onProcessing={() => { setModalType('process'); setShowModal(true); }}
+                onProcessing={(step: string) => { setModalType('process'); setProcessStep(step); setShowModal(true); }}
                 isMinting={isMinting} setIsMinting={setIsMinting}
             />
         </div>
@@ -327,12 +327,12 @@ const MintContent = () => {
                         <div className="position-absolute top-50 start-50 translate-middle text-white fw-bold" style={{ fontSize: '14px' }}>{timer}</div>
                      </div>
                      <h4 className="text-white fw-bold mb-2">Processing...</h4>
-                     <p className="text-secondary mb-4" style={{ fontSize: '13px' }}>Confirm in your wallet. This window will reset in {timer}s to prevent UI hanging.</p>
+                     <p className="text-white mb-2" style={{ fontSize: '14px', fontWeight: 'bold' }}>{processStep || 'Initializing...'}</p>
+                     <p className="text-secondary mb-4" style={{ fontSize: '13px' }}>Confirm in your wallet. This window will reset in {timer}s.</p>
                      <button onClick={handleCloseModal} className="btn btn-link text-muted text-decoration-none" style={{fontSize: '12px'}}>Cancel & Reset UI</button>
                    </div>
                 )}
 
-                {/* SURGICAL UPDATE: Replaced Red Style with Gold/Diplomatic Style */}
                 {modalType === 'error' && (
                     <div className="fade-in">
                         <i className="bi bi-info-circle-fill mb-3" style={{ fontSize: '3rem', color: '#E6C76A' }}></i>
@@ -346,52 +346,35 @@ const MintContent = () => {
       )}
 
       <style jsx global>{`
-        /* استيراد خط Cinzel الفاخر للزر */
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
-
         .force-ltr { direction: ltr !important; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .form-control::placeholder { color: #444; font-weight: 300; }
         .form-control:focus { background-color: #0d1117 !important; color: #fff !important; border-color: #FCD535 !important; }
         
-        /* NEW ROYAL INGOT BUTTON STYLE */
         .btn-ingot {
-            /* الخلفية: تدرج لوني عمودي يعطي إيحاء المعدن */
             background: linear-gradient(180deg, ${GOLD_BTN_HIGHLIGHT} 0%, ${GOLD_BTN_PRIMARY} 40%, ${GOLD_BTN_SHADOW} 100%);
-            
-            /* الحدود: لون ظل لتعزيز الحواف */
             border: 1px solid ${GOLD_BTN_SHADOW};
-            
-            /* النص: لون بني غامق جداً (شبه محروق) ليعطي تباين الحفر */
             color: #2b1d00;
-            
-            /* الخط: Cinzel (خط سيريف كلاسيكي روماني) */
             font-family: 'Cinzel', serif;
             font-weight: 700;
-            letter-spacing: 1px; /* تباعد الحروف للحفر */
+            letter-spacing: 1px;
             font-size: 1rem;
-            
-            /* الظلال: ظل ناعم للزر + توهج ذهبي خفيف */
             box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
-            
-            /* ظل النص: أبيض خفيف أسفل النص يعطي إيحاء الحفر (Engraved Effect) */
             text-shadow: 0 1px 0 rgba(255,255,255,0.4);
-            
-            /* الحركة والتفاعل */
             transition: filter 0.3s ease, transform 0.2s ease;
-            
             white-space: nowrap;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 4px; /* حواف ناعمة قليلاً */
+            border-radius: 4px;
         }
 
         .btn-ingot:hover {
-            filter: brightness(1.08); /* تفتيح بسيط عند المرور */
-            transform: translateY(-1px); /* رفع الزر قليلاً */
-            color: #1a1100; /* تغميق النص قليلاً */
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+            color: #1a1100;
         }
 
         .btn-ingot:disabled {
@@ -402,14 +385,12 @@ const MintContent = () => {
 
         .hero-container { padding-top: 20px; padding-bottom: 0px; }
         .select-asset-title { margin-bottom: 2rem !important; }
-
         .custom-connect-btn { width: 100%; }
 
         @media (max-width: 768px) {
             .mobile-clean-stack { direction: ltr !important; display: flex !important; flex-direction: column !important; gap: 20px !important; width: 100% !important; padding: 0 20px !important; }
             .ingot-wrapper { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; }
             .luxury-btn-container { width: 140px !important; flex: 0 0 auto !important; }
-            /* تم تحديث عرض الزر ليكون 100% من الحاوية الخاصة به */
             .btn-ingot { width: 100% !important; height: 45px !important; font-size: 0.85rem; }
             .price-top-container { display: none !important; }
             .mobile-price-display { display: flex !important; flex-direction: column !important; align-items: flex-end !important; text-align: right !important; flex: 1 !important; }
@@ -427,7 +408,6 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
     const { writeContractAsync } = useWriteContract();
     const publicClient = usePublicClient();
     
-    // --- NEW: NNM REWARD SYSTEM HOOK (ADDED SURGICALLY) ---
     const notifyRewardSystem = async (userWallet: any) => {
         try {
             await fetch('/api/nnm/mint-hook', {
@@ -442,38 +422,61 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
     };
 
     const handleMintClick = async () => {
-        if (!nameToMint || !isAvailable || !publicClient) return; // Guard logic
+        if (!nameToMint || !isAvailable || !publicClient) return;
         setIsMinting(true);
-        // Trigger the parent's modal to show 'process' state
-        onProcessing();
+        // نعرض للمستخدم أننا نقوم بالتحضير
+        onProcessing("Generating & Uploading Artwork...");
         
         try {
-            // 🔥 هنا يتم اختيار الصورة (تم تبديل المنطق لاستخدام المولد الذكي) 🔥
-            // بدلاً من أخذ صورة ثابتة من TIER_IMAGES، نقوم بتوليد صورة جديدة
-            const stampedImageSVG = generateSmartSVG(nameToMint);
+            // --- 1. توليد الصورة والرفع إلى Pinata ---
+            // نولد الكود
+            const svgRaw = generateSmartSVG(nameToMint);
+            // نحوله لـ Base64 لكي نرسله للـ API
+            const base64SVG = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgRaw)))}`;
+            
+            // نرسله للـ API الخلفي الذي أنشأناه
+            const uploadRes = await fetch('/api/upload-pinata', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: base64SVG, name: nameToMint })
+            });
+            
+            const uploadData = await uploadRes.json();
+            
+            if (!uploadRes.ok) {
+                throw new Error(uploadData.error || "Failed to upload to Pinata");
+            }
+            
+            // هذا هو الرابط السحري الذي سيحل المشكلة (ipfs://...)
+            // نستخدم الهاش الذي عاد من بيناتا
+            const ipfsImageLink = `ipfs://${uploadData.ipfsHash}`; 
 
+            // --- 2. تجهيز الميتا داتا ---
+            onProcessing("Preparing Blockchain Transaction...");
+            
             const date = new Date();
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 
             const metadataObject = {
               name: nameToMint,
               description: LONG_DESCRIPTION,
-              image: stampedImageSVG, // تم وضع الصورة الجديدة هنا
+              image: ipfsImageLink, // استخدام رابط IPFS بدلاً من الكود الطويل
               attributes: [
                 { trait_type: "Asset Type", value: "Digital Name" },
                 { trait_type: "Generation", value: "Gen-0" },
                 { trait_type: "Tier", value: tierName },
-                { trait_type: "Platform", value: "NNM Registry" },
-                { trait_type: "Collection", value: "Genesis - 001" },
+                { trait_type: "Registry", value: "NNM Protocol" },
                 { trait_type: "Mint Date", value: dynamicDate }
               ]
             };
 
             const jsonString = JSON.stringify(metadataObject);
-            // Use browser-safe base64 encoding
             const tokenURI = `data:application/json;base64,${btoa(unescape(encodeURIComponent(jsonString)))}`;
 
+            // --- 3. التعامل مع البلوكشين (نفس الكود القديم) ---
+            onProcessing("Please confirm in your wallet...");
+            
             let hash;
 
             if (isAdmin) {
@@ -484,12 +487,9 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                 args: [nameToMint, tierIndex, tokenURI],
               });
             } else {
-              // --- SURGICAL UPDATE: PUBLIC MINT LOGIC (THE FIX) ---
-              // A. Define Price (15, 10, 5)
               const usdVal = tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5;
               const usdAmountWei = BigInt(usdVal) * BigInt(10**18);
               
-              // B. Get Real Cost from Contract
               const costInMatic = await publicClient.readContract({
                  address: CONTRACT_ADDRESS as `0x${string}`,
                  abi: CONTRACT_ABI,
@@ -497,11 +497,8 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                  args: [usdAmountWei]
               });
               
-              // C. Add Buffer
               const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
 
-              // D. [CRITICAL FIX] PRE-FLIGHT BALANCE CHECK
-              // لا تفتح المحفظة إذا لم يكن هناك رصيد!
               if (address) {
                   const balance = await publicClient.getBalance({ address });
                   if (balance < valueToSend) {
@@ -509,7 +506,6 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                   }
               }
               
-              // E. Execute Transaction (Wallet only opens if passed check D)
               hash = await writeContractAsync({
                 address: CONTRACT_ADDRESS as `0x${string}`,
                 abi: CONTRACT_ABI,
@@ -519,16 +515,13 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
               });
             }
 
-            // 1. Wait for transaction confirmation
+            onProcessing("Waiting for confirmation...");
             const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
-            // 2. TRIGGER SUCCESS UI IMMEDIATELY
             onSuccess();
             setIsMinting(false);
 
-            // 3. Run background tasks (DO NOT await them, let them run in background)
             if (receipt.status === 'success') {
-                // Record to Supabase
                 const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
                 if (transferLog && transferLog.topics[3]) {
                     const mintedId = parseInt(transferLog.topics[3], 16);
@@ -543,7 +536,6 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                         }
                     ]);
                 }
-                // Notify Reward System
                 if (address) notifyRewardSystem(address);
             }
         } catch (err) {
@@ -555,7 +547,7 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
 
     return (
         <div className="col-12 col-md-4 d-flex flex-column align-items-center ingot-wrapper">
-            <div className="mb-2 d-flex justify-content-center align-items-baseline gap-2 price-top-container"><span className="text-white fw-bold" style={{ fontSize: '16px', fontFamily: 'sans-serif' }}>{price}</span></div>
+            <div className="mb-2 d-flex justify-content-center align-items-baseline gap-2 price-top-container"><span className="text-white fw-bold">{price}</span></div>
             <div className="luxury-btn-container" style={{ width: '100%' }}>
                 
                 {!isConnected ? (
@@ -579,14 +571,13 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                 ) : (
                     <button
                         onClick={handleMintClick}
-                        // Only enable if name is available AND not currently minting
                         disabled={isMinting || !isAvailable || !nameToMint}
                         className="btn-ingot"
                         style={{
                             width: '100%',
                             height: '50px',
                             cursor: (isMinting || !isAvailable) ? 'not-allowed' : 'pointer',
-                            opacity: (!isAvailable || !nameToMint) ? 0.5 : 1 // Dim if not ready
+                            opacity: (!isAvailable || !nameToMint) ? 0.5 : 1
                         }}
                     >
                        {isMinting ? <div className="spinner-border spinner-border-sm text-dark" role="status"></div> : label}
