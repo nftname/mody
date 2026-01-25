@@ -21,14 +21,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Image not found` }, { status: 404 });
     }
 
-    // 1. قراءة الخط وتحويله لـ Base64
+    // 1. قراءة الخط وتحويله لـ Base64 (أبقيناه كما هو للحفاظ على منطقك)
     let fontBase64 = '';
     if (fs.existsSync(fontPath)) {
       fontBase64 = fs.readFileSync(fontPath).toString('base64');
     }
 
-    // 2. تصميم الـ SVG: فقط الاسم، حجم 80، موقع متوسط
-    // لاحظ أننا وضعنا الاسم في جملة واحدة فقط ولا يوجد أي نصوص أخرى
+    // 2. تصميم الـ SVG: التعديل الجراحي هنا فقط في الـ font-family و الإحداثيات
     const svgText = `
       <svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -41,12 +40,13 @@ export async function POST(req: Request) {
         </defs>
         <text 
           x="512" 
-          y="400" 
+          y="512" 
           fill="#FCD535" 
-          font-family="'NFTFont', sans-serif" 
+          font-family="sans-serif" 
           font-size="80" 
           font-weight="bold" 
           text-anchor="middle"
+          dominant-baseline="middle"
           filter="drop-shadow(3px 3px 2px rgba(0,0,0,0.5))"
         >
           ${name.toUpperCase()}
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       </svg>
     `;
 
-    // 3. المعالجة باستخدام Sharp
+    // 3. المعالجة باستخدام Sharp (نفس منطقك تماماً)
     const originalBuffer = fs.readFileSync(filePath);
     const finalImageBuffer = await sharp(originalBuffer)
       .composite([{ input: Buffer.from(svgText), top: 0, left: 0 }])
