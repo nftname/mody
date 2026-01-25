@@ -1,0 +1,977 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>NNM Registry | Master Inventory</title>
+        <style>
+            :root { --bg: #0f172a; --card: #1e293b; --text: #e2e8f0; --accent: #0ea5e9; --border: #334155; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 40px; }
+            .container { max-width: 1400px; margin: 0 auto; }
+            
+            .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid var(--border); padding-bottom: 20px; }
+            h1 { color: var(--accent); margin: 0; font-size: 2.5rem; letter-spacing: 2px; }
+            p { color: #94a3b8; margin-top: 10px; }
+
+            table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
+            
+            th { background: #1e293b; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; padding: 20px; text-align: left; border-bottom: 1px solid var(--border); }
+            td { padding: 20px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+            tr:last-child td { border-bottom: none; }
+            tr:hover { background: #2d3748; transition: 0.2s; }
+
+            .wallet-addr { font-family: 'Consolas', monospace; color: #fbbf24; font-size: 1.1rem; letter-spacing: 0.5px; display: block; margin-bottom: 6px; }
+            .count-badge { background: #334155; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+            
+            .assets-col { font-size: 1rem; line-height: 2.2; }
+            .separator { color: #475569; margin: 0 8px; }
+
+            /* تصميم التيرات */
+            .tier-0 { background: rgba(244, 63, 94, 0.1); color: #f43f5e; border: 1px solid #f43f5e; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; vertical-align: middle; margin-left: 4px; }
+            .tier-1 { background: rgba(167, 139, 250, 0.1); color: #a78bfa; border: 1px solid #a78bfa; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; vertical-align: middle; margin-left: 4px; }
+            .tier-2 { background: rgba(45, 212, 191, 0.1); color: #2dd4bf; border: 1px solid #2dd4bf; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; vertical-align: middle; margin-left: 4px; }
+
+            .index { color: #475569; font-weight: bold; font-size: 1.2rem; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🏛️ NNM MASTER INVENTORY</h1>
+                <p>Live Snapshot of All Holdings</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th width="50">#</th>
+                        <th width="300">Wallet Details</th>
+                        <th>Owned Digital Assets</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr>
+            <td><div class="index">#1</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x5E5F64168311A9db9c7f162dD3B179039FAC051B</span>
+                <span class="count-badge">8 Names</span>
+            </td>
+            <td class="assets-col">SEX <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> XXX <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> GAY <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LESBIAN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> TRANS <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> PORN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ADULT <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> HOT <span class="tier-0">IMMORTAL</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#2</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x2e174aaD41685493cbA77424944BF6249AFCdF67</span>
+                <span class="count-badge">7 Names</span>
+            </td>
+            <td class="assets-col">DUBAI <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> TEST1 <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FLOOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DUBAI1 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WWW <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> US <span class="tier-2">FOUNDER</span> <span class="separator">|</span> USB <span class="tier-0">IMMORTAL</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#3</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x8fedcDeE93Ba65b2eBBBDD57AF1D2D1A5a65471d</span>
+                <span class="count-badge">7 Names</span>
+            </td>
+            <td class="assets-col">SAUDI <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> PILOT <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SWEEP <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SAUDI1 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> COM <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> HE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> URL <span class="tier-0">IMMORTAL</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#4</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xBF04CB5410e2BF7d8BB536b925994B0cf19df7C3</span>
+                <span class="count-badge">5 Names</span>
+            </td>
+            <td class="assets-col">QATAR <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> DEMO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> QATAR1 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ORG <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SHE <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#5</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x6594b1AA502Ae0a03f5BF64C2c96Ca68ca00A71f</span>
+                <span class="count-badge">4 Names</span>
+            </td>
+            <td class="assets-col">USA <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> USA1 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> EDU <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> IT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#6</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x970256D7b3BdbD468BB01e29C1e166Da0FD3fED9</span>
+                <span class="count-badge">5 Names</span>
+            </td>
+            <td class="assets-col">CHINA <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> CHINA1 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> INFO <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> IO <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> MY <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#7</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xb9E0cd314C7e592ab84AdE836657FBa988555199</span>
+                <span class="count-badge">5 Names</span>
+            </td>
+            <td class="assets-col">UK <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> UK1 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> BIZ <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> HTTP <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> OUR <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#8</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xC1450651F27F77B2aB4B6a076dF00d4Fe9C91520</span>
+                <span class="count-badge">4 Names</span>
+            </td>
+            <td class="assets-col">VISA1 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> XYZ <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> HTML <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ALL <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#9</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x006720C1f883D78501f0FBA91dfb18bae25BB740</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">SHOP1 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> CSS <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NOW <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#10</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x52C3eB676eBf5110499cAA2eC3eeEf69F287acA7</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">PAY <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SQL <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SOON <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#11</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x265DCC5D958FBf6abA576C63BfDB874808e0EB0f</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">CAIRO1 <span class="tier-1">ELITE</span> <span class="separator">|</span> SSL <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> EVER <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#12</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x0fCA1F0fCB523702EC3ac3bF8ec5562bec54941F</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">RIYADH1 <span class="tier-1">ELITE</span> <span class="separator">|</span> VPN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NEXT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#13</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x6e4bf5baA2511DA2EB344CA3c9856c5E57577929</span>
+                <span class="count-badge">4 Names</span>
+            </td>
+            <td class="assets-col">TOKEN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KUWAIT1 <span class="tier-1">ELITE</span> <span class="separator">|</span> DNS <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LAST <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#14</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x71Db43328A9e8bB4e0C00999cdbD8beEb1Dc516a</span>
+                <span class="count-badge">4 Names</span>
+            </td>
+            <td class="assets-col">VISA <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> OMAN1 <span class="tier-1">ELITE</span> <span class="separator">|</span> SDK <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LEFT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#15</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x67a893012aA3291Dd5677D838f43c0eb467C31D5</span>
+                <span class="count-badge">0 Names</span>
+            </td>
+            <td class="assets-col">Names</td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#16</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xc5Ffd514bBC7ca778CBEB96a2C362Af6aD54F2E8</span>
+                <span class="count-badge">4 Names</span>
+            </td>
+            <td class="assets-col">SHOP <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> PARIS1 <span class="tier-1">ELITE</span> <span class="separator">|</span> PDF <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> TRUE <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#17</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x584219E502ed6C39123f5AA1B7D10F13005Ca4A5</span>
+                <span class="count-badge">4 Names</span>
+            </td>
+            <td class="assets-col">CAIRO <span class="tier-1">ELITE</span> <span class="separator">|</span> LONDON1 <span class="tier-1">ELITE</span> <span class="separator">|</span> JPG <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> PURE <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#18</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xCc7012deC1aE38e35d47dB091eCaf792DaE8e3b6</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">RIYADH <span class="tier-1">ELITE</span> <span class="separator">|</span> GAMMA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ROME1 <span class="tier-1">ELITE</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#19</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x347D5D5E4049aD7546e112d8d0d5A8ADaC08c04B</span>
+                <span class="count-badge">6 Names</span>
+            </td>
+            <td class="assets-col">KUWAIT <span class="tier-1">ELITE</span> <span class="separator">|</span> BERLIN1 <span class="tier-1">ELITE</span> <span class="separator">|</span> PNG <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SVG <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WILD <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CALM <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#20</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xA2cF3875da6B62EBa4BADE50e24A919C65908629</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">OMAN <span class="tier-1">ELITE</span> <span class="separator">|</span> DATA1 <span class="tier-1">ELITE</span> <span class="separator">|</span> GOOD <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#21</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xeac14B4d6132400C11cC1167a8913b4107139013</span>
+                <span class="count-badge">4 Names</span>
+            </td>
+            <td class="assets-col">TOKYO <span class="tier-1">ELITE</span> <span class="separator">|</span> API1 <span class="tier-1">ELITE</span> <span class="separator">|</span> WIFI <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> EDIT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#22</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x01eC54F733bcE85331683ee8B603cEca21C63D93</span>
+                <span class="count-badge">4 Names</span>
+            </td>
+            <td class="assets-col">PARIS <span class="tier-1">ELITE</span> <span class="separator">|</span> FUN1 <span class="tier-1">ELITE</span> <span class="separator">|</span> IOT <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SAVE <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#23</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x408c2D4BF3a3Ce4C68447De97a38298256083c24</span>
+                <span class="count-badge">4 Names</span>
+            </td>
+            <td class="assets-col">LONDON <span class="tier-1">ELITE</span> <span class="separator">|</span> SEA1 <span class="tier-1">ELITE</span> <span class="separator">|</span> SYNC <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LOAD <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#24</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x9104C19cBD885f8149A046D2378015c1549c45a6</span>
+                <span class="count-badge">4 Names</span>
+            </td>
+            <td class="assets-col">ROME <span class="tier-1">ELITE</span> <span class="separator">|</span> 2021 <span class="tier-1">ELITE</span> <span class="separator">|</span> BUY <span class="tier-1">ELITE</span> <span class="separator">|</span> ROBOT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#25</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x6d1a950863eF54c4992f16EF060A1Dbbc4051F24</span>
+                <span class="count-badge">4 Names</span>
+            </td>
+            <td class="assets-col">BERLIN <span class="tier-1">ELITE</span> <span class="separator">|</span> 3031 <span class="tier-1">ELITE</span> <span class="separator">|</span> SELL <span class="tier-1">ELITE</span> <span class="separator">|</span> LASER <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#26</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xb8336bE5eb96b069b11203E296798abF7B9446c3</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">DEGEN1 <span class="tier-2">FOUNDER</span> <span class="separator">|</span> BID <span class="tier-1">ELITE</span> <span class="separator">|</span> AUTO <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#27</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x5EAebb6dD08EEBa4Ba594dc7E4404B88ABAEC68e</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">DATA <span class="tier-1">ELITE</span> <span class="separator">|</span> SMART <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CYAN <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#28</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xfE87799388F194f1474Cae31124d244A363d7F74</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">DEAL <span class="tier-1">ELITE</span> <span class="separator">|</span> LIME <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#29</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x789b6e54d1b5BBD693FFc18b8607e37E52e113aa</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">COST <span class="tier-1">ELITE</span> <span class="separator">|</span> AQUA <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#30</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xeEfC23ae15537c420789d704426D30811Fd91989</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">API <span class="tier-1">ELITE</span> <span class="separator">|</span> TAX <span class="tier-1">ELITE</span> <span class="separator">|</span> PINK <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#31</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x59D82040C534BEEbe0DC39aad22ccffee9FCD390</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">FEE <span class="tier-1">ELITE</span> <span class="separator">|</span> FUD <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#32</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xf3C9Ea36D619fCB9D31E5C335AFc3DdDfa2E7fE1</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">LOAN <span class="tier-1">ELITE</span> <span class="separator">|</span> FOMO <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#33</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xD7C9A6dbbc67C54Ad1402c9F9790CC8Ccc924124</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">DEBT <span class="tier-1">ELITE</span> <span class="separator">|</span> REKT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#34</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x27a6f4c190e6C7851e148038d5CaE1Ac4fb65858</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">CART <span class="tier-1">ELITE</span> <span class="separator">|</span> PFP <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#35</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x076B789462CA06a441409A20554e32D4a145f060</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">MALL <span class="tier-1">ELITE</span> <span class="separator">|</span> JPEG <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#36</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x21b0Cd45cf7F205dF724b55d01640aa3759Bdfe8</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">FUN <span class="tier-1">ELITE</span> <span class="separator">|</span> PVP <span class="tier-1">ELITE</span> <span class="separator">|</span> HOST <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#37</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xc2F2E4DB60Fce5F5F891c36AFF75E6339b7AeF02</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">PVE <span class="tier-1">ELITE</span> <span class="separator">|</span> GRID <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#38</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x87B60899Dc40dfA62B68832F49E67c89dDF3A731</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">XP <span class="tier-1">ELITE</span> <span class="separator">|</span> SCAN <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#39</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x2Eb90c74D9B3Ad83bF02465c754cAcD9ed6A9db3</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">LVL <span class="tier-1">ELITE</span> <span class="separator">|</span> PASS <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#40</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x047f97C60aFf7F5717B7D6DDe2ce403e5BfEBa3a</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">SEA <span class="tier-1">ELITE</span> <span class="separator">|</span> HP <span class="tier-1">ELITE</span> <span class="separator">|</span> ID <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#41</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x5e6F8C83099291243917E73507a0a092767857fd</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">MP <span class="tier-1">ELITE</span> <span class="separator">|</span> IP <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#42</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xe788919cF8507C4BcB101A35887103CEBDd1A7c6</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">GG <span class="tier-1">ELITE</span> <span class="separator">|</span> CPU <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#43</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x6642e1a4413AEe1b80A98efEFfb128F2dCEC4594</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">GM <span class="tier-1">ELITE</span> <span class="separator">|</span> RAM <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#44</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xC2033bc54b33B832618A32A3B82Be32a45bD1c28</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">GN <span class="tier-1">ELITE</span> <span class="separator">|</span> GPU <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#45</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x6E1422e7B89F3C1417FDA0389148bB8caEf4fF9c</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">CLAN <span class="tier-1">ELITE</span> <span class="separator">|</span> HUB <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#46</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xe46aF519c8682A24acd1b1A2FdBb89399086b294</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">GUILD <span class="tier-1">ELITE</span> <span class="separator">|</span> LAB <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#47</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x38a3Dc713b7d2213b317F98D247824371cDCE71a</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">NOOB <span class="tier-1">ELITE</span> <span class="separator">|</span> BIT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#48</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xD8e333Ee3e1B15b178ce41156c809a11704cdD96</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">202 <span class="tier-1">ELITE</span> <span class="separator">|</span> ME <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KIT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#49</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xa7af446827E8D18946EB141fF9B1F1D63b5932Ac</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">303 <span class="tier-1">ELITE</span> <span class="separator">|</span> YOU <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MIX <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#50</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x00BD933a0C3fc03Dd7c101358a32ffE3031fC574</span>
+                <span class="count-badge">2 Names</span>
+            </td>
+            <td class="assets-col">DEGEN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> WE <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#51</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xce327c4bb98ec289169ae73163834ee5212fe694</span>
+                <span class="count-badge">33 Names</span>
+            </td>
+            <td class="assets-col">NNMPROTOCOL <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NNMREGISTRY <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NNMMARKET <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NNMTOKEN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NNMDAO <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NNMAPP <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NNMWORLD <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NNMVERSE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NNMGENESIS <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NNMZERO <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NNMONE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> IMMORTAL <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ELITE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> FOUNDER <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFT <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTS <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTART <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTGAME <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTGAMES <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTVIDEO <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTPICTURE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTPHOTO <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 77 <span class="tier-1">ELITE</span> <span class="separator">|</span> VORTEX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> 99 <span class="tier-1">ELITE</span> <span class="separator">|</span> RULER <span class="tier-1">ELITE</span> <span class="separator">|</span> TAURIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CODEX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ROOTX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ADMINX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FLY <span class="tier-2">FOUNDER</span> <span class="separator">|</span> RUN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VEGA <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#52</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x729079997c879b1a96b1108c4f8424cf3fec49bb</span>
+                <span class="count-badge">21 Names</span>
+            </td>
+            <td class="assets-col">NFTWORLD <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTLAND <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTMINT <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 101 <span class="tier-1">ELITE</span> <span class="separator">|</span> 222 <span class="tier-1">ELITE</span> <span class="separator">|</span> 333 <span class="tier-1">ELITE</span> <span class="separator">|</span> CALIPH <span class="tier-1">ELITE</span> <span class="separator">|</span> SHEIKH <span class="tier-1">ELITE</span> <span class="separator">|</span> EMIR <span class="tier-1">ELITE</span> <span class="separator">|</span> POWERX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MAGICX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ELITEX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> WALK <span class="tier-2">FOUNDER</span> <span class="separator">|</span> EAT <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ART <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ORION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ATLAS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LYRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> WEYRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> XALION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> YMIRON <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#53</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x6d23f857ea93b6b204a72475ac1dc1c44d0c294d</span>
+                <span class="count-badge">21 Names</span>
+            </td>
+            <td class="assets-col">NFTCLUB <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTMARKET <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTTRADER <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 444 <span class="tier-1">ELITE</span> <span class="separator">|</span> 555 <span class="tier-1">ELITE</span> <span class="separator">|</span> 666 <span class="tier-1">ELITE</span> <span class="separator">|</span> PHARAOH <span class="tier-1">ELITE</span> <span class="separator">|</span> TSAR <span class="tier-1">ELITE</span> <span class="separator">|</span> KAISER <span class="tier-1">ELITE</span> <span class="separator">|</span> WORLDX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MATRIXX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CYBERX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SING <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FASTX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> HARD <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DRACO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NOVA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> COSMA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZENITH <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ARDENT <span class="tier-2">FOUNDER</span> <span class="separator">|</span> BRAVIX <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#54</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xc5371abfd103fe6585f166f2b9db2395ebcb7790</span>
+                <span class="count-badge">21 Names</span>
+            </td>
+            <td class="assets-col">NFTASSET <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WEB3NAME <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WEB3ID <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 2024 <span class="tier-1">ELITE</span> <span class="separator">|</span> 77777 <span class="tier-1">ELITE</span> <span class="separator">|</span> 88888 <span class="tier-1">ELITE</span> <span class="separator">|</span> SHOGUN <span class="tier-1">ELITE</span> <span class="separator">|</span> CHIEF <span class="tier-1">ELITE</span> <span class="separator">|</span> MASTER <span class="tier-1">ELITE</span> <span class="separator">|</span> PIXELX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CHAINX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> BLOCKX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SOFT <span class="tier-2">FOUNDER</span> <span class="separator">|</span> HIGH <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LOW <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ASTRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> HELIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NEXUS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CALYON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DORSAL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ECHELON <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#55</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xe5a4fb83735da8018f481fff393b95e03bcf1058</span>
+                <span class="count-badge">20 Names</span>
+            </td>
+            <td class="assets-col">ONCHAIN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> DIGITALID <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 99999 <span class="tier-1">ELITE</span> <span class="separator">|</span> PRO <span class="tier-1">ELITE</span> <span class="separator">|</span> ACE <span class="tier-1">ELITE</span> <span class="separator">|</span> HERO <span class="tier-1">ELITE</span> <span class="separator">|</span> IDOL <span class="tier-1">ELITE</span> <span class="separator">|</span> STAR <span class="tier-1">ELITE</span> <span class="separator">|</span> NODEX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> HASHX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> APP <span class="tier-2">FOUNDER</span> <span class="separator">|</span> EAST <span class="tier-2">FOUNDER</span> <span class="separator">|</span> WEST <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SOUTH <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FLUX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> IONIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LUXOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FULGUR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> GRAVIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> HORIZON <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#56</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xc577a6e8e3857fe6a5621a887a52e1d0bf9c5be2</span>
+                <span class="count-badge">20 Names</span>
+            </td>
+            <td class="assets-col">00 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 000 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> MAX <span class="tier-1">ELITE</span> <span class="separator">|</span> TOP <span class="tier-1">ELITE</span> <span class="separator">|</span> BEST <span class="tier-1">ELITE</span> <span class="separator">|</span> ICON <span class="tier-1">ELITE</span> <span class="separator">|</span> SHARK <span class="tier-1">ELITE</span> <span class="separator">|</span> WOLF <span class="tier-1">ELITE</span> <span class="separator">|</span> PATCH <span class="tier-2">FOUNDER</span> <span class="separator">|</span> BUG <span class="tier-2">FOUNDER</span> <span class="separator">|</span> UNIT <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ROSE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LOTUS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> TREE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CAIROX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MEMRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> THALOS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> INFINIT <span class="tier-2">FOUNDER</span> <span class="separator">|</span> JAXOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KRYPTON <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#57</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x1b1bd7033bfd20da88c7baee4d3a7df58f13c7df</span>
+                <span class="count-badge">18 Names</span>
+            </td>
+            <td class="assets-col">NEO <span class="tier-1">ELITE</span> <span class="separator">|</span> ONE <span class="tier-1">ELITE</span> <span class="separator">|</span> RICH <span class="tier-1">ELITE</span> <span class="separator">|</span> TIGER <span class="tier-1">ELITE</span> <span class="separator">|</span> EAGLE <span class="tier-1">ELITE</span> <span class="separator">|</span> FALCON <span class="tier-1">ELITE</span> <span class="separator">|</span> ZONE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AREA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> TOWN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SEED <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ROCK <span class="tier-2">FOUNDER</span> <span class="separator">|</span> IRON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MYRON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ILIOS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KRONOS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LEVAR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MAGNUS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NEBULA <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#58</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x2789f88cc9174066d8277db48ff115499272dd05</span>
+                <span class="count-badge">21 Names</span>
+            </td>
+            <td class="assets-col">10 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 11 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 100 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SILVER <span class="tier-1">ELITE</span> <span class="separator">|</span> RUBY <span class="tier-1">ELITE</span> <span class="separator">|</span> EMERALD <span class="tier-1">ELITE</span> <span class="separator">|</span> SKY <span class="tier-1">ELITE</span> <span class="separator">|</span> FIRE <span class="tier-1">ELITE</span> <span class="separator">|</span> WATER <span class="tier-1">ELITE</span> <span class="separator">|</span> ROAD <span class="tier-2">FOUNDER</span> <span class="separator">|</span> GATE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ROOM <span class="tier-2">FOUNDER</span> <span class="separator">|</span> STEEL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ATOM <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CELL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AURON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SOLARA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZELOS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OBELIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> PULSAR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> QUASAR <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#59</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x3378b139db554c107c449bff9735bdde2ed21b4a</span>
+                <span class="count-badge">18 Names</span>
+            </td>
+            <td class="assets-col">111 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 888 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 999 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> CASH <span class="tier-1">ELITE</span> <span class="separator">|</span> FUND <span class="tier-1">ELITE</span> <span class="separator">|</span> YIELD <span class="tier-1">ELITE</span> <span class="separator">|</span> MIND <span class="tier-1">ELITE</span> <span class="separator">|</span> HEART <span class="tier-1">ELITE</span> <span class="separator">|</span> GHOST <span class="tier-1">ELITE</span> <span class="separator">|</span> CAR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DNA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NANO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NYXIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> EONIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CAELUM <span class="tier-2">FOUNDER</span> <span class="separator">|</span> RAVION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SENTRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> TEMPUS <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#60</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x35eee1af095c1428a5b0e38beb6050ac364e9fbb</span>
+                <span class="count-badge">16 Names</span>
+            </td>
+            <td class="assets-col">1111 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 7777 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 8888 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> BANK <span class="tier-1">ELITE</span> <span class="separator">|</span> THRONE <span class="tier-1">ELITE</span> <span class="separator">|</span> SHADOW <span class="tier-1">ELITE</span> <span class="separator">|</span> FREE <span class="tier-1">ELITE</span> <span class="separator">|</span> DROP <span class="tier-1">ELITE</span> <span class="separator">|</span> GEAR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> TOOL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> BOX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AXIOM <span class="tier-2">FOUNDER</span> <span class="separator">|</span> QUANTA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> UNISON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VALYX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> WARP <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#61</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x3ad1065a73502b6e902f2a3539c199a1342dd648</span>
+                <span class="count-badge">14 Names</span>
+            </td>
+            <td class="assets-col">9999 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 1234 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 1337 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SWAP <span class="tier-1">ELITE</span> <span class="separator">|</span> BOT <span class="tier-1">ELITE</span> <span class="separator">|</span> DEV <span class="tier-1">ELITE</span> <span class="separator">|</span> TAG <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MAP <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FLAG <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZENON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ARDOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VIREX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> XENIAL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZORION <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#62</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x142b3e4d160adb30aa6442a38d4cad42ee8640c0</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">4321 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 80084 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> GEN0 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> USER <span class="tier-1">ELITE</span> <span class="separator">|</span> LOGIN <span class="tier-1">ELITE</span> <span class="separator">|</span> FORCE <span class="tier-1">ELITE</span> <span class="separator">|</span> LOGO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NAME <span class="tier-2">FOUNDER</span> <span class="separator">|</span> WORD <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OPHIR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CYREX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LUMOS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AVERIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> BARYON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CELSOR <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#63</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x9b897d8d7d425b261ec7d165377529146edf61ab</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">DAO <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> GENESIS <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ALPHA <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ENERGY <span class="tier-1">ELITE</span> <span class="separator">|</span> MANA <span class="tier-1">ELITE</span> <span class="separator">|</span> NINJA <span class="tier-1">ELITE</span> <span class="separator">|</span> TEXT <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FILE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LINK <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NOEMA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> XENON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> PRAXIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DYNAR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> EXALT <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FISSION <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#64</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x337457703d0ab739044222638c8b74b57d679db8</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">OMEGA <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> PRIME <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> GOD <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SAMURAI <span class="tier-1">ELITE</span> <span class="separator">|</span> VIKING <span class="tier-1">ELITE</span> <span class="separator">|</span> KNIGHT <span class="tier-1">ELITE</span> <span class="separator">|</span> PAGE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SITE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NET <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AURAL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> THYRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NERIO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> GLADIUS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> HELVAR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> IONEX <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#65</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xb0b9a8ab9786d3631c90e877864b68b827c46033</span>
+                <span class="count-badge">14 Names</span>
+            </td>
+            <td class="assets-col">DEUS <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ZEUS <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ODIN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WIZARD <span class="tier-1">ELITE</span> <span class="separator">|</span> WARRIOR <span class="tier-1">ELITE</span> <span class="separator">|</span> RARE <span class="tier-1">ELITE</span> <span class="separator">|</span> SMARTX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> BRAVE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> COSMO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ELARA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ALTIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> JASPER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KRONIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LEPTON <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#66</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x2baa54d621a05672a057d26151fe43e355c93ccd</span>
+                <span class="count-badge">14 Names</span>
+            </td>
+            <td class="assets-col">THOR <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> RA <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> KING <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> EPIC <span class="tier-1">ELITE</span> <span class="separator">|</span> NOBLE <span class="tier-1">ELITE</span> <span class="separator">|</span> WISE <span class="tier-1">ELITE</span> <span class="separator">|</span> BOLD <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KIND <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SAFE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NERON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SOLIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KAIRO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NEXION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OPTIX <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#67</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xe47df263dfe930627c56bc98fc95c3953afbd579</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">QUEEN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LORD <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> BOSS <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> GRAND <span class="tier-1">ELITE</span> <span class="separator">|</span> GENIUS <span class="tier-1">ELITE</span> <span class="separator">|</span> SKILL <span class="tier-1">ELITE</span> <span class="separator">|</span> RISK <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FEAR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> JOY <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VANTA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AERIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> TALON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> PARADOX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> QUANTIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> REXOR <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#68</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xc6262cb35940f0c3a6597daab533507676d1dd7d</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">CEO <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> VIP <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> OG <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SPACE <span class="tier-1">ELITE</span> <span class="separator">|</span> MARS <span class="tier-1">ELITE</span> <span class="separator">|</span> SOLAR <span class="tier-1">ELITE</span> <span class="separator">|</span> PAIN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZEN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> TAO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> PHAROS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ODYSS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ARGON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SPECTRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> TESSER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> UPLIFT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#69</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x3d795f13ed36f714d8752743e79592cddd9c358e</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">GOAT <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SATOSHI <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NAKAMOTO <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LUNAR <span class="tier-1">ELITE</span> <span class="separator">|</span> ORBIT <span class="tier-1">ELITE</span> <span class="separator">|</span> EARTH <span class="tier-1">ELITE</span> <span class="separator">|</span> CHI <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OM <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ETERNA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> HELIO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CETUS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VIREO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VANGUARD <span class="tier-2">FOUNDER</span> <span class="separator">|</span> WARDEN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> XTRACT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#70</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xca4fcb602caa745a428c22b49ea9e34d9f6b4c8e</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">VITALIK <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> MONEY <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> GOLD <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NATURE <span class="tier-1">ELITE</span> <span class="separator">|</span> CLOUD <span class="tier-1">ELITE</span> <span class="separator">|</span> RED <span class="tier-1">ELITE</span> <span class="separator">|</span> NEXOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VEYRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SOLITH <span class="tier-2">FOUNDER</span> <span class="separator">|</span> STRIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> PYXIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LYNX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> YONDER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZILLION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> APEXOR <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#71</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x3706527fcade035aa40aa3bd8108f238735d43ad</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">DIAMOND <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WEALTH <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ASSET <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> BLUE <span class="tier-1">ELITE</span> <span class="separator">|</span> BLACK <span class="tier-1">ELITE</span> <span class="separator">|</span> WHITE <span class="tier-1">ELITE</span> <span class="separator">|</span> AUREON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CRYPTE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LUMINA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ARCOS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AEGON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CALYX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> BASTION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CORSAIR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DRAKON <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#72</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x69b836bda3866c5387f2fccb225b8eb8c5d0e466</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">VALUE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ROYAL <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> CROWN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NEON <span class="tier-1">ELITE</span> <span class="separator">|</span> 10X <span class="tier-1">ELITE</span> <span class="separator">|</span> 100X <span class="tier-1">ELITE</span> <span class="separator">|</span> ZEPHYRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OBLIVION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ARCTIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NODUS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> EREXA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> THREX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> EMINENT <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FRONTIER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> GOLIATH <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#73</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x5b4f523e9e0ea9ca909e31cb10b0dfd47e3cbe2c</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">EMPIRE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> MONARCH <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LEGEND <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ROI <span class="tier-1">ELITE</span> <span class="separator">|</span> DYOR <span class="tier-1">ELITE</span> <span class="separator">|</span> PUMP <span class="tier-1">ELITE</span> <span class="separator">|</span> VALKOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MYTHOS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DRAVON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ICARO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ELYON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ASTRAX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> HYPERION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ISOMER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> JUGGER <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#74</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x991cc3fbbc910ec1f948f2725f7dfa43be4c1422</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">TITAN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WHALE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> BULL <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> DUMP <span class="tier-1">ELITE</span> <span class="separator">|</span> STAKE <span class="tier-1">ELITE</span> <span class="separator">|</span> POOL <span class="tier-1">ELITE</span> <span class="separator">|</span> CELEST <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OMNIRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> PYRRHA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VOXEN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LORIC <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZYROS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KEYSTONE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LATTICE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MOMENTUM <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#75</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x1b582fd15143d49174244eead193b9294593c3e7</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">BEAR <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LION <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> DRAGON <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> AUDIT <span class="tier-1">ELITE</span> <span class="separator">|</span> BETA <span class="tier-1">ELITE</span> <span class="separator">|</span> CLUB <span class="tier-1">ELITE</span> <span class="separator">|</span> TITANIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> GRAVIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ONYXIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NERIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AURALIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> COSRIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NUCLEUS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OVERLORD <span class="tier-2">FOUNDER</span> <span class="separator">|</span> PIONEER <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#76</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x79b5adae0bd165438b9cf68a50a31e9f92a0805e</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">PHOENIX <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> MOON <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SUN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> TEAM <span class="tier-1">ELITE</span> <span class="separator">|</span> CORE <span class="tier-1">ELITE</span> <span class="separator">|</span> LAND <span class="tier-1">ELITE</span> <span class="separator">|</span> ASTRAL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AEGIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VALORIA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LYRON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SOLON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AXION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> QUANTUM <span class="tier-2">FOUNDER</span> <span class="separator">|</span> RAMPART <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SENTINEL <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#77</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x818ac32d45fb96a39eda0c65a378d3d39a15c90a</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">TIME <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LIFE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SOUL <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> CITY <span class="tier-1">ELITE</span> <span class="separator">|</span> HOME <span class="tier-1">ELITE</span> <span class="separator">|</span> HOUSE <span class="tier-1">ELITE</span> <span class="separator">|</span> NIVARA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LUCENT <span class="tier-2">FOUNDER</span> <span class="separator">|</span> THRYNN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> TIRAX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AVERON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> XYLO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> TRIUMPH <span class="tier-2">FOUNDER</span> <span class="separator">|</span> URANIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VERTEX <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#78</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x89290df5f12c865dae4288a8f453333286eecec4</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">SPIRIT <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LIGHT <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> DARK <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> JET <span class="tier-1">ELITE</span> <span class="separator">|</span> GAME <span class="tier-1">ELITE</span> <span class="separator">|</span> PLAY <span class="tier-1">ELITE</span> <span class="separator">|</span> IGNIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FENRIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> RIVORN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NEUMA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ORBIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> HELON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> WILDFIRE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> XEMPLAR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> YIELDEX <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#79</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x17fa2aab9c233915a4336e62458cfcb6e76bb728</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">VOID <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LUCK <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> FATE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LIVE <span class="tier-1">ELITE</span> <span class="separator">|</span> FAST <span class="tier-1">ELITE</span> <span class="separator">|</span> BIG <span class="tier-1">ELITE</span> <span class="separator">|</span> OPHIRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NEXIAL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OBSIDIA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CRYON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZENIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KLYRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZODIAC <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AERON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> BLAZIX <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#80</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x93fe7475bc10815993bb90e718536d3bb24a974e</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">HOPE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> DREAM <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WIN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> UP <span class="tier-1">ELITE</span> <span class="separator">|</span> NORTH <span class="tier-1">ELITE</span> <span class="separator">|</span> 12 <span class="tier-1">ELITE</span> <span class="separator">|</span> SAPHYRE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VEYLIN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CINDRAL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VALON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ERYX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NOXIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CENTAUR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DOMINION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ECLIPSE <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#81</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x442a1407f8d062a9c497e976413533b6076045c7</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">HODL <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WAGMI <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LFG <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 13 <span class="tier-1">ELITE</span> <span class="separator">|</span> 14 <span class="tier-1">ELITE</span> <span class="separator">|</span> 15 <span class="tier-1">ELITE</span> <span class="separator">|</span> AURION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NYTHERA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VIREON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> TERYN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AXIMO <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ULRIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FOUNDRY <span class="tier-2">FOUNDER</span> <span class="separator">|</span> GENESISX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> HARBRIX <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#82</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x1e36c65e7379601d827bf699c98144c3df29a1c4</span>
+                <span class="count-badge">15 Names</span>
+            </td>
+            <td class="assets-col">MINT <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> BURN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> KEY <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 16 <span class="tier-1">ELITE</span> <span class="separator">|</span> 17 <span class="tier-1">ELITE</span> <span class="separator">|</span> 18 <span class="tier-1">ELITE</span> <span class="separator">|</span> ZYTHER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> EPHORIA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KRYNN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CAELIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OMRIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KRYON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> INTREPID <span class="tier-2">FOUNDER</span> <span class="separator">|</span> JAVELIN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KINETIC <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#83</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x23476a649ef0cf58681f3948ee8f78912803a752</span>
+                <span class="count-badge">14 Names</span>
+            </td>
+            <td class="assets-col">CODE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ROOT <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ADMIN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 19 <span class="tier-1">ELITE</span> <span class="separator">|</span> 20 <span class="tier-1">ELITE</span> <span class="separator">|</span> 21 <span class="tier-1">ELITE</span> <span class="separator">|</span> LUNARA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DIONIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> XYLER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ATHIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZYPHER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LEGION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MIRAGE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NOMICON <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#84</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x335a00355a4c15be6bfc8b22c070334994e01643</span>
+                <span class="count-badge">14 Names</span>
+            </td>
+            <td class="assets-col">POWER <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> MAGIC <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 22 <span class="tier-1">ELITE</span> <span class="separator">|</span> 23 <span class="tier-1">ELITE</span> <span class="separator">|</span> 24 <span class="tier-1">ELITE</span> <span class="separator">|</span> ORRYN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZEPHIR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ORIONIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VIREL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ASTOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> THORIN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OBSIDIAN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> PARAGON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> REGULUS <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#85</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x875d1455ed4bd789a8533ffbc67407764bbae7ab</span>
+                <span class="count-badge">14 Names</span>
+            </td>
+            <td class="assets-col">DIVINE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WORLD <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 25 <span class="tier-1">ELITE</span> <span class="separator">|</span> 26 <span class="tier-1">ELITE</span> <span class="separator">|</span> 27 <span class="tier-1">ELITE</span> <span class="separator">|</span> LYTHER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VEYRIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AETHER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> XERION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AURONIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LUNEX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SCION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> TERMINUS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> UTOPIA <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#86</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xe0c06a55ecb5814909ac63073df6d946aadc0706</span>
+                <span class="count-badge">13 Names</span>
+            </td>
+            <td class="assets-col">MATRIX <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SYSTEM <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> CYBER <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 28 <span class="tier-1">ELITE</span> <span class="separator">|</span> 29 <span class="tier-1">ELITE</span> <span class="separator">|</span> 30 <span class="tier-1">ELITE</span> <span class="separator">|</span> NOCTIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CYRAN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NOCTRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VANTOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VENERIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> WATCHTOWER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> XENITH <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#87</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x9aebdadb2fc142cb8ce03b411e6a2d87dabbfaba</span>
+                <span class="count-badge">12 Names</span>
+            </td>
+            <td class="assets-col">PIXEL <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> CHAIN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> BLOCK <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 7778 <span class="tier-1">ELITE</span> <span class="separator">|</span> 8889 <span class="tier-1">ELITE</span> <span class="separator">|</span> 9998 <span class="tier-1">ELITE</span> <span class="separator">|</span> ELIOS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ARGEN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SILEX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> YPSILON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZEPHYR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AXIOMIX <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#88</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xab008668aef7bc7b60e7939c4515aa1c9120195b</span>
+                <span class="count-badge">12 Names</span>
+            </td>
+            <td class="assets-col">NODE <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> HASH <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 2025 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> VERSE <span class="tier-1">ELITE</span> <span class="separator">|</span> PRIMEX <span class="tier-1">ELITE</span> <span class="separator">|</span> METAX <span class="tier-1">ELITE</span> <span class="separator">|</span> AXERIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NERION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZYREX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> BULWARK <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CITADEL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DIRECTIVE <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#89</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x0744acc2db653c1427d65de391e0dedf648a4a72</span>
+                <span class="count-badge">12 Names</span>
+            </td>
+            <td class="assets-col">2026 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 2027 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 2028 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> RICHX <span class="tier-1">ELITE</span> <span class="separator">|</span> ROYALX <span class="tier-1">ELITE</span> <span class="separator">|</span> VALUEX <span class="tier-1">ELITE</span> <span class="separator">|</span> CALDOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VEYON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OPHIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ENDEAVOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FORTRESS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> GRANIT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#90</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xdb88ed62f7a04084cef702c597f1edd33e9fc5c8</span>
+                <span class="count-badge">12 Names</span>
+            </td>
+            <td class="assets-col">2029 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 2030 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 2040 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> LEGENDX <span class="tier-1">ELITE</span> <span class="separator">|</span> HEROX <span class="tier-1">ELITE</span> <span class="separator">|</span> TITANX <span class="tier-1">ELITE</span> <span class="separator">|</span> LUXEN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> THALOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ERYON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> HELM <span class="tier-2">FOUNDER</span> <span class="separator">|</span> IRONCLAD <span class="tier-2">FOUNDER</span> <span class="separator">|</span> JUNCTION <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#91</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xe21900615556950244da975ded06f4073001a866</span>
+                <span class="count-badge">9 Names</span>
+            </td>
+            <td class="assets-col">2050 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> MOONX <span class="tier-1">ELITE</span> <span class="separator">|</span> SUNX <span class="tier-1">ELITE</span> <span class="separator">|</span> LIFEX <span class="tier-1">ELITE</span> <span class="separator">|</span> XANDOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ASTRIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KEPLERX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LUMINARY <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MAINFRAME <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#92</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x68eb3fef14112e3ae457972649f87b54ea824a0c</span>
+                <span class="count-badge">9 Names</span>
+            </td>
+            <td class="assets-col">SOULX <span class="tier-1">ELITE</span> <span class="separator">|</span> TIMEX <span class="tier-1">ELITE</span> <span class="separator">|</span> SPIRITX <span class="tier-1">ELITE</span> <span class="separator">|</span> KERON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NYLOS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AXELRA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> NIRVANA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OUTRIDER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> PILLAR <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#93</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xbe99b719a2c16be00483e6573fd0abb1c04e7f6e</span>
+                <span class="count-badge">9 Names</span>
+            </td>
+            <td class="assets-col">LIGHTX <span class="tier-1">ELITE</span> <span class="separator">|</span> DARKX <span class="tier-1">ELITE</span> <span class="separator">|</span> VOIDX <span class="tier-1">ELITE</span> <span class="separator">|</span> SOLIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CRYSA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZERION <span class="tier-2">FOUNDER</span> <span class="separator">|</span> REDLINE <span class="tier-2">FOUNDER</span> <span class="separator">|</span> STRONGHOLD <span class="tier-2">FOUNDER</span> <span class="separator">|</span> THRESHOLD <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#94</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x54edd42123dc7804aac5ef2be86c7b2d74e25efc</span>
+                <span class="count-badge">9 Names</span>
+            </td>
+            <td class="assets-col">HOPEX <span class="tier-1">ELITE</span> <span class="separator">|</span> DREAMX <span class="tier-1">ELITE</span> <span class="separator">|</span> WINX <span class="tier-1">ELITE</span> <span class="separator">|</span> HELIOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> AQUILA <span class="tier-2">FOUNDER</span> <span class="separator">|</span> BELLUM <span class="tier-2">FOUNDER</span> <span class="separator">|</span> UPTREND <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VOLCAN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> WAYPOINT <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#95</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x1169dc03e2d69f8f749f4770f5919d64e6f0802f</span>
+                <span class="count-badge">8 Names</span>
+            </td>
+            <td class="assets-col">MINTX <span class="tier-1">ELITE</span> <span class="separator">|</span> BURNX <span class="tier-1">ELITE</span> <span class="separator">|</span> CAELUS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> CYGNUS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DELPHI <span class="tier-2">FOUNDER</span> <span class="separator">|</span> XCALIBUR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> YIELDMAX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> ZENOVA <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#96</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xf3db9156afa8053814ef7bf27f185985b1052db1</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">EQUIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> FORNAX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> GALEX <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#97</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0xfc7198ace0844c5fda401977f87ef7a0af020b1b</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">HADRON <span class="tier-2">FOUNDER</span> <span class="separator">|</span> IMPERIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> JOVIAN <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#98</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x0ce02c5575e4b703bfb43eedde0ba686c937a446</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">KALYX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> LUNOR <span class="tier-2">FOUNDER</span> <span class="separator">|</span> MERIX <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#99</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x94f5cf6255e3d06cac32a413a2b66c6e1f31208c</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">NAUTIS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> OCTAN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> PARION <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#100</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x1f930faac287ab23d6cc3e1ce7d747f6a9c381d4</span>
+                <span class="count-badge">3 Names</span>
+            </td>
+            <td class="assets-col">QUORIN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> RADIAN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> STELLON <span class="tier-2">FOUNDER</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#101</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x5f2f670df4db14ddb4bc1e3ece86ca645fb01be6</span>
+                <span class="count-badge">32 Names</span>
+            </td>
+            <td class="assets-col">AI <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WEB3 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> CRYPTO <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SAM <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ETH <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> COIN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> DOG <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> CAT <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> ABC <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SOL <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> TECH <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> META <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WEB <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NFTMUSIC <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 777 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> 123 <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> NNM <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> SULTAN <span class="tier-1">ELITE</span> <span class="separator">|</span> MOHAMED <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WNNM <span class="tier-2">FOUNDER</span> <span class="separator">|</span> UMBRIX <span class="tier-2">FOUNDER</span> <span class="separator">|</span> KEPLER <span class="tier-2">FOUNDER</span> <span class="separator">|</span> SAGAN <span class="tier-2">FOUNDER</span> <span class="separator">|</span> 88 <span class="tier-1">ELITE</span> <span class="separator">|</span> ASSETS <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DIGITALNAME <span class="tier-2">FOUNDER</span> <span class="separator">|</span> DIGITAL <span class="tier-2">FOUNDER</span> <span class="separator">|</span> VIVI <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> GAS <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> OWN <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> KEEP <span class="tier-0">IMMORTAL</span> <span class="separator">|</span> WALLET <span class="tier-0">IMMORTAL</span></td>
+        </tr>
+    
+        <tr>
+            <td><div class="index">#102</div></td>
+            <td class="wallet-col">
+                <span class="wallet-addr">0x06f73ae8d3acd58383fa32202b0f0394eb7e0a2e</span>
+                <span class="count-badge">0 Names</span>
+            </td>
+            <td class="assets-col">BTC <span class="tier-0">IMMORTAL</span></td>
+        </tr>
+    
+                </tbody>
+            </table>
+        </div>
+    </body>
+    </html>
+    

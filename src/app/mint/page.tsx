@@ -35,6 +35,68 @@ A singular, unreplicable digital artifact. This digital name is recorded on-chai
 
 It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol — a permanent, time-anchored digital inscription preserved on the blockchain.`;
 
+// --- NEW FUNCTION: ELECTRONIC STAMPING (Writes Name on Image) ---
+const generateStampedImage = async (imageUrl: string, nameText: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous"; // Important for CORS to allow export
+        img.src = imageUrl;
+
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+
+            if (!ctx) {
+                resolve(imageUrl); // Fallback to original if canvas fails
+                return;
+            }
+
+            // 1. Draw Original Marble Image
+            ctx.drawImage(img, 0, 0);
+
+            // 2. Configure Text Style (Montserrat, Bold, Italic, Gold)
+            // Dynamic font size based on image width (approx 12% of width)
+            const fontSize = Math.floor(img.width * 0.12); 
+            ctx.font = `italic 900 ${fontSize}px 'Montserrat', sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            // 3. Add Shadow/Stroke for readability on Marble
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+            ctx.shadowBlur = 20;
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = '#000000';
+
+            // 4. Calculate Position (Top Center + Padding)
+            const centerX = canvas.width / 2;
+            const topPadding = 100; // 100px from top as requested
+
+            // 5. Draw The Text
+            ctx.strokeText(nameText, centerX, topPadding); // Outline
+            
+            ctx.shadowBlur = 0; // Reset shadow for fill
+            ctx.fillStyle = '#FCD535'; // Luxurious Gold Fill
+            ctx.fillText(nameText, centerX, topPadding); // Fill
+
+            // 6. Export as Base64 JPEG (Quality 0.85 for balance)
+            try {
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                resolve(dataUrl);
+            } catch (e) {
+                console.warn("Canvas export failed (likely CORS), using original.", e);
+                resolve(imageUrl);
+            }
+        };
+
+        img.onerror = () => {
+            console.warn("Image load failed, using original URL.");
+            resolve(imageUrl);
+        };
+    });
+};
+
 const MintContent = () => {
   const { address } = useAccount();
   const publicClient = usePublicClient();
@@ -298,6 +360,9 @@ const MintContent = () => {
       <style jsx global>{`
         /* استيراد خط Cinzel الفاخر للزر */
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
+        
+        /* NEW IMPORT: Montserrat for the image text (Bold & Italic) */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,900&display=swap');
 
         .force-ltr { direction: ltr !important; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
@@ -402,6 +467,11 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
             if (tierName === "IMMORTAL") selectedImage = TIER_IMAGES.IMMORTAL;
             if (tierName === "ELITE") selectedImage = TIER_IMAGES.ELITE;
 
+            // --- SURGICAL NEW STEP: DRAW THE NAME ON THE IMAGE ---
+            // This function creates the "Electronic Stamp" in real-time
+            const stampedImageBase64 = await generateStampedImage(selectedImage, nameToMint);
+            // ----------------------------------------------------
+
             const date = new Date();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
@@ -409,7 +479,7 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
             const metadataObject = {
               name: nameToMint,
               description: LONG_DESCRIPTION,
-              image: selectedImage,
+              image: stampedImageBase64, // <--- Using the new Stamped Image
               attributes: [
                 { trait_type: "Asset Type", value: "Digital Name" },
                 { trait_type: "Generation", value: "Gen-0" },
