@@ -2,6 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  // --- [تحديث البرو]: إعدادات المكتبات الخارجية لبيئة السيرفر ---
+  // هذا الجزء هو المفتاح لعمل مكتبة sharp وكتابة الأسماء على الصور في Vercel/Serverless
+  experimental: {
+    serverComponentsExternalPackages: ['sharp'],
+  },
+
   // 1. إعدادات الصور (للسماح بجلب الصور من بيناتا)
   images: {
     remotePatterns: [
@@ -10,19 +16,21 @@ const nextConfig = {
         hostname: 'gateway.pinata.cloud',
       },
     ],
-    // احتياطياً للدعم القديم
+    // احتياطياً للدعم القديم لضمان عدم تعطل عرض أي NFT
     domains: ['gateway.pinata.cloud'],
   },
 
-  // 2. إصلاحات الويب 3 (حافظنا عليها كما هي)
+  // 2. إصلاحات الويب 3 (المنطق الجوهري لربط المحافظ ومنع تعارض المكتبات)
   webpack: (config) => {
     // Ignore React Native Async Storage (Fixes the warning)
+    // هذا الجزء يمنع التحذيرات المزعجة عند بناء المشروع
     config.resolve.alias = {
       ...config.resolve.alias,
       '@react-native-async-storage/async-storage': false, 
     };
 
     // Ignore standard node modules for browser (Standard Web3 fix)
+    // إعدادات ضرورية لعمل مكتبات مثل viem و wagmi داخل المتصفح
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
@@ -34,7 +42,7 @@ const nextConfig = {
     return config;
   },
 
-  // 3. الحصن الرقمي (Security Headers)
+  // 3. الحصن الرقمي (Security Headers) - الأسطر التي تحمي موقعك من الهجمات
   async headers() {
     return [
       {

@@ -3,127 +3,120 @@ import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 
-// نمنع التخزين المؤقت لضمان توليد صورة جديدة فريدة لكل مستخدم
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
     const { name, tier } = await req.json();
 
-    // 1. التحقق من البيانات (المنطق الأصلي)
     if (!name || !tier) {
-      console.error("Missing name or tier in request");
-      return NextResponse.json({ error: 'Name and Tier are required' }, { status: 400 });
+      return NextResponse.json({ error: 'Name and Tier required' }, { status: 400 });
     }
 
-    // 2. تحديد مسارات الملفات (الصورة والخط)
-    const tierFilename = `${tier.toUpperCase()}.jpg`; 
-    const filePath = path.join(process.cwd(), 'public', 'images-mint', tierFilename);
-    const fontPath = path.join(process.cwd(), 'public', 'fonts', 'font.ttf');
+    // --- 1. إصلاح مسارات الملفات (Critical Fix) ---
+    // استخدام path.resolve أكثر دقة في بيئات السيرفر
+    const imageDirectory = path.resolve('./public/images-mint'); 
+    const fontDirectory = path.resolve('./public/fonts');
+    
+    const filePath = path.join(imageDirectory, `${tier.toUpperCase()}.jpg`);
+    const fontPath = path.join(fontDirectory, 'font.ttf');
 
-    // التأكد من وجود الصورة الأصلية
+    // التحقق من وجود الصورة
     if (!fs.existsSync(filePath)) {
-      console.error(`Base image not found: ${filePath}`);
-      return NextResponse.json({ error: `Base image for ${tier} not found` }, { status: 404 });
+      throw new Error(`Base image missing at: ${filePath}`);
     }
 
-    // 3. معالجة الخط (الحل الجذري لاختفاء النص)
-    let fontBase64 = '';
+    // --- 2. قراءة الخط بطريقة آمنة ---
+    let fontBase64;
     if (fs.existsSync(fontPath)) {
       fontBase64 = fs.readFileSync(fontPath).toString('base64');
+      console.log("Font loaded successfully from disk.");
     } else {
-      console.warn("Font file not found, falling back to system fonts.");
+      // هنا المشكلة: إذا لم يجد الخط، يجب أن نتوقف أو نستخدم خطاً بديلاً مضموناً
+      // كحل مؤقت، سنرمي خطأ لنعرف أن المشكلة هنا بدلاً من طباعة صورة فارغة
+      console.error(`Font NOT found at: ${fontPath}`);
+      // في حالة الإنتاج (Vercel)، يفضل وضع الخط في مجلد root أو استخدام رابط خارجي
+      throw new Error("System Font missing - Cannot render text.");
     }
 
-    // 4. تصميم طبقة الـ SVG (الإحداثيات الهندسية الدقيقة 1024x1024)
-    // وضعنا Y=420 ليكون النص فوق كلمة ELITE تماماً على الرخام
+    // --- 3. توليد الصورة (كما هو في كودك لكن مع تأكيد الخط) ---
     const svgText = `
       <svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
-        <style>
-          @font-face {
-            font-family: 'NFTFont';
-            ${fontBase64 ? `src: url(data:font/truetype;charset=utf-8;base64,${fontBase64});` : ''}
-          }
-          .name-style { 
-            fill: #FCD535; 
-            font-size: 80px; 
-            font-family: 'NFTFont', sans-serif; 
-            font-weight: bold; 
-            text-anchor: middle; 
-            filter: drop-shadow(4px 4px 3px rgba(0, 0, 0, 0.6));
-          }
-        </style>
-        <text x="512" y="420" class="name-style">${name.toUpperCase()}</text>
+        <defs>
+            <style>
+                @font-face {
+                    font-family: 'CustomNFTFont';
+                    src: url("data:font/ttf;charset=utf-8;base64,${fontBase64}");
+                }
+            </style>
+        </defs>
+        <text x="512" y="420" 
+              style="fill: #FCD535; font-size: 80px; font-family: 'CustomNFTFont', sans-serif; font-weight: bold; text-anchor: middle; filter: drop-shadow(4px 4px 3px rgba(0, 0, 0, 0.6));">
+              ${name.toUpperCase()}
+        </text>
       </svg>
     `;
 
-    // 5. المعالجة باستخدام Sharp (دمج الطبقات)
-    console.log(`Processing image for: ${name}...`);
     const originalBuffer = fs.readFileSync(filePath);
-    
     const finalImageBuffer = await sharp(originalBuffer)
-      .composite([
-        {
-          input: Buffer.from(svgText),
-          top: 0,
-          left: 0,
-        },
-      ])
-      .png() // نحولها لـ PNG لضمان بقاء النص حاداً وواضحاً
+      .composite([{ input: Buffer.from(svgText), top: 0, left: 0 }])
+      .png()
       .toBuffer();
 
-    // 6. تجهيز البيانات للرفع إلى Pinata (حل مشكلة TypeScript/Vercel)
-    const formData = new FormData();
-    
-    // تحويل الـ Buffer إلى Uint8Array لضمان قبول الـ Blob في بيئة Vercel
-    const blob = new Blob([new Uint8Array(finalImageBuffer)], { type: 'image/png' });
-    formData.append('file', blob, `NNM-${name}-${tier}.png`);
+    // --- 4. الرفع إلى Pinata (الصورة) ---
+    const formDataImage = new FormData();
+    const imageBlob = new Blob([new Uint8Array(finalImageBuffer)], { type: 'image/png' });
+    formDataImage.append('file', imageBlob, `NNM-${name}-${tier}.png`);
+    formDataImage.append('pinataMetadata', JSON.stringify({ name: `IMG-${name}` }));
+    formDataImage.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
 
-    // إضافة الميتاداتا (المنطق الكامل الذي طلبته)
-    const pinataMetadata = JSON.stringify({
-      name: `NNM Asset: ${name} (${tier})`,
-      keyvalues: {
-        tier: tier,
-        name: name,
-        generatedAt: new Date().toISOString()
-      }
-    });
-    formData.append('pinataMetadata', pinataMetadata);
-
-    const pinataOptions = JSON.stringify({ cidVersion: 1 });
-    formData.append('pinataOptions', pinataOptions);
-
-    // 7. الرفع الفعلي إلى Pinata
-    console.log('Uploading to Pinata IPFS...');
-    const uploadRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+    const uploadImageRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.PINATA_JWT}`,
-      },
-      body: formData,
+      headers: { Authorization: `Bearer ${process.env.PINATA_JWT}` },
+      body: formDataImage,
     });
 
-    if (!uploadRes.ok) {
-      const errorData = await uploadRes.json();
-      console.error('Pinata Upload Error:', errorData);
-      throw new Error(errorData.error?.details || 'Failed to upload to Pinata');
-    }
+    if (!uploadImageRes.ok) throw new Error('Failed to upload image to Pinata');
+    const imageData = await uploadImageRes.json();
+    const imageUrl = `https://gateway.pinata.cloud/ipfs/${imageData.IpfsHash}`;
 
-    const pinataData = await uploadRes.json();
-    console.log('Successfully minted image IPFS:', pinataData.IpfsHash);
+    // --- 5. الخطوة الجديدة (Pro Step): رفع الميتاداتا JSON هنا ---
+    // هذا يضمن أن الـ TokenURI جاهز وصحيح
+    const metadata = {
+        name: `NNM: ${name}`,
+        description: "Official NNM Protocol Record...", // الوصف الطويل هنا
+        image: imageUrl, // الرابط الذي تم توليده للتو
+        attributes: [
+            { trait_type: "Tier", value: tier },
+            { trait_type: "Name", value: name }
+        ]
+    };
 
-    // 8. إرسال النتيجة النهائية
+    const formDataMeta = new FormData();
+    const metaBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' });
+    formDataMeta.append('file', metaBlob, `META-${name}.json`);
+    formDataMeta.append('pinataMetadata', JSON.stringify({ name: `META-${name}` }));
+    formDataMeta.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
+
+    const uploadMetaRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${process.env.PINATA_JWT}` },
+        body: formDataMeta,
+    });
+
+    if (!uploadMetaRes.ok) throw new Error('Failed to upload metadata');
+    const metaDataResponse = await uploadMetaRes.json();
+    
+    // --- 6. النتيجة النهائية ---
+    // نعيد رابط الميتاداتا مباشرة ليستخدمه العقد الذكي
     return NextResponse.json({ 
       success: true,
-      ipfsHash: pinataData.IpfsHash,
-      gatewayUrl: `https://gateway.pinata.cloud/ipfs/${pinataData.IpfsHash}` 
+      tokenUri: `https://gateway.pinata.cloud/ipfs/${metaDataResponse.IpfsHash}`,
+      imageUrl: imageUrl 
     });
 
   } catch (error: any) {
-    console.error('Critical Generation Error:', error);
-    return NextResponse.json({ 
-      error: error.message || 'Internal Server Error',
-      details: "Check server logs for more information"
-    }, { status: 500 });
+    console.error('Generator Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
