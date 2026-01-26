@@ -27,8 +27,8 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         position: 'relative',
         overflow: 'hidden',
         backgroundColor: '#000',
-        // استخدام خط عريض وقوي للمستقبل
-        fontFamily: "'Arial Black', 'Impact', sans-serif", 
+        // نستخدم خطوط النظام النظيفة جداً للفخامة
+        fontFamily: "'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif", 
       }}
     >
       {/* طبقة الخلفية */}
@@ -58,31 +58,30 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           justifyContent: 'center', 
         }}
       >
-        {/* 1. الاسم الرئيسي (المستقبل المتوهج) */}
+        {/* 1. الاسم الرئيسي (كريستال أبيض فخم) */}
         <h1
           style={{
             margin: '0',
-            // حجم كبير لكن مضبوط
-            fontSize: '100px', 
-            // خط سميك جداً
-            fontWeight: '900', 
-            color: '#FFFFFF', // قلب الحرف أبيض
+            // حجم كبير وواضح
+            fontSize: '110px', 
+            // سميك ليعطي هيبة
+            fontWeight: '800', 
+            // مائل كما طلبت (لمسة الشياكة)
+            fontStyle: 'italic',
+            color: '#FFFFFF', 
             textTransform: 'uppercase',
-            // تباعد أحرف واسع جداً ليعطي طابع الديجيتال والفضاء
-            letterSpacing: '12px', 
+            // تباعد أحرف متوازن (ليس واسعاً جداً ولا ضيقاً)
+            letterSpacing: '2px', 
             lineHeight: '1',
             position: 'relative',
-            top: '-25px', // رفعناه قليلاً لترك مكان للأسطر تحته
+            top: '-20px', 
             
-            // سحر المستقبل: توهج ليزري سماوي قوي + ظل أسود للعمق
+            // السر هنا: ظل أسود عميق يرفع الكلمة عن الخلفية بدلاً من تشويشها بالضوء
             textShadow: `
-              0 0 10px rgba(0, 255, 255, 0.8),
-              0 0 30px rgba(0, 255, 255, 0.6),
-              0 0 60px rgba(0, 100, 255, 0.4),
-              4px 4px 0px rgba(0,0,0,0.5) 
+              0 2px 0 #ccc,
+              0 5px 10px rgba(0,0,0,0.6),
+              0 10px 20px rgba(0,0,0,0.5)
             `,
-            // إضافة حدود دقيقة للحرف لزيادة الحدة
-            WebkitTextStroke: '1px rgba(255,255,255,0.8)',
           }}
         >
           {name || ''}
@@ -93,25 +92,24 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           style={{
             margin: '15px 0 0 0',
             color: '#E0E0E0', 
-            fontSize: '30px',
+            fontSize: '28px',
             fontWeight: '500',
-            // نعود لخط مائل كلاسيكي هنا للتباين
             fontFamily: "'Times New Roman', serif", 
             fontStyle: 'italic',
-            letterSpacing: '5px',
+            letterSpacing: '6px', // تباعد واسع للفئة
             textTransform: 'uppercase',
-            textShadow: '0 2px 4px rgba(0,0,0,1)',
+            textShadow: '0 2px 4px rgba(0,0,0,0.9)',
           }}
         >
            {tier}
         </h2>
       </div>
 
-      {/* 3. السطر الثالث (الختم الرسمي - تم الرفع وتغيير اللون) */}
+      {/* 3. السطر الثالث (الختم الرسمي) */}
       <div
         style={{
           position: 'absolute',
-          // تم الرفع للأعلى (كان 14% والآن 28% ليكون عند مكان الماوس)
+          // الموقع المعدل (مكان الماوس)
           bottom: '26%', 
           left: '50%',
           transform: 'translateX(-50%)',
@@ -123,15 +121,13 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         <p
           style={{
             margin: 0,
-            // تم تغيير اللون للأبيض كما طلبت
             color: '#FFFFFF', 
             fontSize: '16px', 
             fontWeight: '600', 
             fontStyle: 'italic', 
             textTransform: 'uppercase',
             letterSpacing: '3px',
-            // توهج خفيف جداً للأبيض
-            textShadow: '0 0 8px rgba(255,255,255,0.5)',
+            textShadow: '0 1px 3px rgba(0,0,0,0.8)',
             fontFamily: "'Verdana', sans-serif", 
           }}
         >
