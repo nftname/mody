@@ -19,7 +19,7 @@ import { useAccount } from "wagmi";
 const inter = Inter({ subsets: ["latin"] });
 
 // Owner Wallet (Master Key)
-const OWNER_WALLET = "0x5f2f670df4Db14ddB4Bc1E3eCe86CA645fb01BE6".toLowerCase();
+const OWNER_WALLET = (process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS || "").toLowerCase();
 
 function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const { address, isConnected } = useAccount();

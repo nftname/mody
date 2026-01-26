@@ -3,11 +3,16 @@ import { polygon } from "viem/chains";
 export const NETWORK_CHAIN = polygon;
 export const CHAIN_ID = 137;
 
-export const NFT_COLLECTION_ADDRESS = "0x21072ed213100c7d0dbc473620a30bbb0c602830";
+// --- 1. ربط عقد الريجستري بملف البيئة (Dynamic Registry) ---
+// يقرأ العنوان من ملف .env.local ويحوله لحروف صغيرة لمنع مشاكل المطابقة
+export const NFT_COLLECTION_ADDRESS = (process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || "").toLowerCase();
 
+// هذا المتغير يعتمد على الذي قبله (لا تغيره)
 export const CONTRACT_ADDRESS = NFT_COLLECTION_ADDRESS;
 
-export const CONTRACT_NAME = "NNMRegistry10";
+// --- 2. تحديث اسم العقد (Update Name) ---
+// تم التحديث إلى النسخة 11
+export const CONTRACT_NAME = "NNMRegistry11";
 
-export const MARKETPLACE_ADDRESS = "0xa2e45cc2d97a1a166ada5d097536c3eee28f8d7f";
-
+// --- 3. ربط الماركت بليس بملف البيئة (Dynamic Marketplace) ---
+export const MARKETPLACE_ADDRESS = (process.env.NEXT_PUBLIC_MARKETPLACE_CONTRACT_ADDRESS || "").toLowerCase();

@@ -552,8 +552,7 @@ export default function DashboardPage() {
       }
   }, [address, walletBalances.nnm, loading]);
  // --- ADMIN CONFIG ---
-  // استبدل هذا العنوان بعنوان محفظة الأدمن الحقيقية (بأحرف صغيرة lowercase)
-  const ADMIN_WALLET = "0x5f2f670df4Db14ddB4Bc1E3eCe86CA645fb01BE6".toLowerCase();
+  const ADMIN_WALLET = (process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS || "").toLowerCase();
   const isAdmin = address ? address.toLowerCase() === ADMIN_WALLET : false;
 
   const copyToClipboard = () => {
