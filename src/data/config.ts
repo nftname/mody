@@ -3,16 +3,15 @@ import { polygon } from "viem/chains";
 export const NETWORK_CHAIN = polygon;
 export const CHAIN_ID = 137;
 
-// --- 1. ربط عقد الريجستري بملف البيئة (Dynamic Registry) ---
-// يقرأ العنوان من ملف .env.local ويحوله لحروف صغيرة لمنع مشاكل المطابقة
+// هذا الرابط مهم جداً لحل مشكلة Ankr 403 الموجودة في السجلات
+export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://polygon-rpc.com";
+
+// 1. عنوان الريجستري
 export const NFT_COLLECTION_ADDRESS = (process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || "").toLowerCase();
 
-// هذا المتغير يعتمد على الذي قبله (لا تغيره)
+// الحفاظ على التوافق
 export const CONTRACT_ADDRESS = NFT_COLLECTION_ADDRESS;
+export const CONTRACT_NAME = "NNMRegistry11"; 
 
-// --- 2. تحديث اسم العقد (Update Name) ---
-// تم التحديث إلى النسخة 11
-export const CONTRACT_NAME = "NNMRegistry11";
-
-// --- 3. ربط الماركت بليس بملف البيئة (Dynamic Marketplace) ---
+// 2. عنوان الماركت بليس
 export const MARKETPLACE_ADDRESS = (process.env.NEXT_PUBLIC_MARKETPLACE_CONTRACT_ADDRESS || "").toLowerCase();
