@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 
-// مصفوفة الصور (كما هي تماماً)
+// مصفوفة الصور (كما هي)
 const TIER_IMAGES: Record<string, string> = {
   IMMORTAL: '/images-mint/IMMORTAL.jpg',
   ELITE: '/images-mint/FOUNDER.jpg', 
@@ -27,8 +27,8 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         position: 'relative',
         overflow: 'hidden',
         backgroundColor: '#000',
-        // استخدام خط Montserrat أو Inter للفخامة
-        fontFamily: "'Montserrat', 'Inter', sans-serif", 
+        // استخدام خط عريض وقوي للمستقبل
+        fontFamily: "'Arial Black', 'Impact', sans-serif", 
       }}
     >
       {/* طبقة الخلفية */}
@@ -55,57 +55,64 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center', // توسيط عمودي للعناصر
+          justifyContent: 'center', 
         }}
       >
-        {/* 1. الاسم الرئيسي (البطل - نسخة الشياكة) */}
+        {/* 1. الاسم الرئيسي (المستقبل المتوهج) */}
         <h1
           style={{
             margin: '0',
-            // تم تقليل الحجم 20% (من 110 إلى 90)
-            fontSize: '90px', 
-            // تم تقليل العرض (من 800 إلى 700)
-            fontWeight: '700', 
-            color: '#FFFFFF',
+            // حجم كبير لكن مضبوط
+            fontSize: '100px', 
+            // خط سميك جداً
+            fontWeight: '900', 
+            color: '#FFFFFF', // قلب الحرف أبيض
             textTransform: 'uppercase',
-            letterSpacing: '6px', // زيادة المسافات للفخامة
+            // تباعد أحرف واسع جداً ليعطي طابع الديجيتال والفضاء
+            letterSpacing: '12px', 
             lineHeight: '1',
             position: 'relative',
-            top: '-15px', // رفع الاسم قليلاً لإعطاء مساحة للأسطر تحته
-            // بدلاً من التوهج القوي، نستخدم ظلاً "معدنياً" أنيقاً
+            top: '-25px', // رفعناه قليلاً لترك مكان للأسطر تحته
+            
+            // سحر المستقبل: توهج ليزري سماوي قوي + ظل أسود للعمق
             textShadow: `
-              0 2px 4px rgba(0,0,0,0.5), 
-              0 0 20px rgba(200, 200, 255, 0.3)
+              0 0 10px rgba(0, 255, 255, 0.8),
+              0 0 30px rgba(0, 255, 255, 0.6),
+              0 0 60px rgba(0, 100, 255, 0.4),
+              4px 4px 0px rgba(0,0,0,0.5) 
             `,
-            // فلتر لزيادة حدة النص
-            filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.4))',
+            // إضافة حدود دقيقة للحرف لزيادة الحدة
+            WebkitTextStroke: '1px rgba(255,255,255,0.8)',
           }}
         >
           {name || ''}
         </h1>
 
-        {/* 2. اسم الفئة (تحت الاسم مباشرة) */}
+        {/* 2. اسم الفئة */}
         <h2
           style={{
-            margin: '20px 0 0 0',
-            color: '#D0D0D0', // فضي هادئ
-            fontSize: '28px',
-            fontWeight: '400',
+            margin: '15px 0 0 0',
+            color: '#E0E0E0', 
+            fontSize: '30px',
+            fontWeight: '500',
+            // نعود لخط مائل كلاسيكي هنا للتباين
+            fontFamily: "'Times New Roman', serif", 
             fontStyle: 'italic',
-            letterSpacing: '4px',
+            letterSpacing: '5px',
             textTransform: 'uppercase',
-            opacity: 0.9,
+            textShadow: '0 2px 4px rgba(0,0,0,1)',
           }}
         >
            {tier}
         </h2>
       </div>
 
-      {/* 3. السطر الثالث (الختم الرسمي - في الأسفل) */}
+      {/* 3. السطر الثالث (الختم الرسمي - تم الرفع وتغيير اللون) */}
       <div
         style={{
           position: 'absolute',
-          bottom: '14%', // الموضع المقدر لمكان الماوس (أسفل الزجاج)
+          // تم الرفع للأعلى (كان 14% والآن 28% ليكون عند مكان الماوس)
+          bottom: '26%', 
           left: '50%',
           transform: 'translateX(-50%)',
           textAlign: 'center',
@@ -116,16 +123,16 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         <p
           style={{
             margin: 0,
-            // لون ذهبي "شامبانيا" هادئ يتماشى مع Sovereign Asset
-            color: '#D4AF37', 
-            fontSize: '18px', // حجم صغير ورسمي
-            fontWeight: '600', // خط ثقيل قليلاً
-            fontStyle: 'italic', // مائل كما طلبت
+            // تم تغيير اللون للأبيض كما طلبت
+            color: '#FFFFFF', 
+            fontSize: '16px', 
+            fontWeight: '600', 
+            fontStyle: 'italic', 
             textTransform: 'uppercase',
-            letterSpacing: '3px', // تباعد لسهولة القراءة والفخامة
-            // تأثير حفر خفيف
-            textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-            fontFamily: "'Cinzel', 'Times New Roman', serif", // خط كلاسيكي للختم
+            letterSpacing: '3px',
+            // توهج خفيف جداً للأبيض
+            textShadow: '0 0 8px rgba(255,255,255,0.5)',
+            fontFamily: "'Verdana', sans-serif", 
           }}
         >
           GEN-0 NNM Sovereign Asset
