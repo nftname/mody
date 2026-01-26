@@ -1,12 +1,15 @@
 import React, { forwardRef } from 'react';
 
-// Ensure filenames match exactly what is in public/images-mint/
+// --- تصحيح مسارات الصور (عكس الروابط لحل مشكلة التداخل) ---
 const TIER_IMAGES: Record<string, string> = {
   IMMORTAL: '/images-mint/IMMORTAL.jpg',
-  ELITE: '/images-mint/ELITE.jpg', 
-  // Map both keys to the same image to prevent errors
-  FOUNDER: '/images-mint/FOUNDER.jpg',
-  FOUNDERS: '/images-mint/FOUNDER.jpg' 
+  
+  // هنا قمت بالتبديل: مفتاح ELITE سيأخذ ملف FOUNDER (لأنك ذكرت أن ملف FOUNDER يحتوي على صورة النخبة)
+  ELITE: '/images-mint/FOUNDER.jpg', 
+  
+  // وهنا العكس: مفتاح FOUNDER سيأخذ ملف ELITE (لأن ملف ELITE يحتوي على صورة المؤسسون)
+  FOUNDER: '/images-mint/ELITE.jpg',
+  FOUNDERS: '/images-mint/ELITE.jpg' 
 };
 
 interface MintTemplateProps {

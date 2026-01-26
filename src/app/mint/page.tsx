@@ -225,13 +225,16 @@ const MintContent = () => {
           console.log("SUCCESS: Asset uploaded at", gatewayUrl);
 
           // STEP C: Prepare Metadata (Full Data Preserved)
+          // --- 1. Calculate Dynamic Date ---
           const date = new Date();
           const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+          // This ensures the date is always the current month and year (e.g., "January 2026")
           const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 
+          // --- 2. Update Metadata Object ---
           const metadataObject = {
             name: searchTerm,
-            description: LONG_DESCRIPTION, // الوصف الطويل كما هو
+            description: LONG_DESCRIPTION,
             image: gatewayUrl, 
             attributes: [
               { trait_type: "Asset Type", value: "Digital Name" },
@@ -239,6 +242,7 @@ const MintContent = () => {
               { trait_type: "Tier", value: tierName },
               { trait_type: "Platform", value: "NNM Registry" },
               { trait_type: "Collection", value: "Genesis - 001" },
+              // Use the dynamic variable here:
               { trait_type: "Mint Date", value: dynamicDate }
             ]
           };
