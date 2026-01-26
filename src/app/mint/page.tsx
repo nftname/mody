@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useAccount, useWriteContract, useReadContract, usePublicClient } from "wagmi";
 import { parseAbi, keccak256, stringToBytes } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { toBlob } from 'html-to-image'; // المكتبة المسؤولة عن التصوير
 import { CONTRACT_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
+import MintTemplate from '@/components/MintTemplate'; // استدعاء الاستوديو المخفي
 
-// --- BUTTON CONSTANTS (FROM ROYAL CONCEPT) ---
+// --- BUTTON CONSTANTS ---
 const GOLD_BTN_PRIMARY = '#D4AF37';
 const GOLD_BTN_HIGHLIGHT = '#E6C76A';
 const GOLD_BTN_SHADOW = '#B8962E';
@@ -23,13 +25,7 @@ const CONTRACT_ABI = parseAbi([
   "function reserveName(string _name, uint8 _tier, string _tokenURI)"
 ]);
 
-// هذه الروابط بقيت فقط للعرض الأولي (إن احتجت لها)، لكن المينت الحقيقي سيأتي من الـ API
-const TIER_IMAGES = {
-    IMMORTAL: "https://gateway.pinata.cloud/ipfs/bafkreib7mz6rnwk3ig7ft6ne5iuajlywkttv4zvjp5bbk7ssd5kaykjbsm", 
-    ELITE: "https://gateway.pinata.cloud/ipfs/bafkreiazhoyzkbenhbvjlltd6izwonwz3xikljtrrksual5ttzs4nyzbuu",    
-    FOUNDER: "https://gateway.pinata.cloud/ipfs/bafkreiagc35ykldllvd2knqcnei2ctmkps66byvjinlr7hmkgkdx5mhxqi"   
-};
-
+// الوصف الطويل (تم الحفاظ عليه كاملاً كما طلبت)
 const LONG_DESCRIPTION = `GEN-0 Genesis — NNM Protocol Record
 
 A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.
@@ -41,6 +37,10 @@ const MintContent = () => {
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
   
+  // --- Refs for Snapshot Logic (الكاميرا) ---
+  const templateRef = useRef<HTMLDivElement>(null);
+
+  // States
   const [searchTerm, setSearchTerm] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -48,11 +48,13 @@ const MintContent = () => {
   const [errorTitle, setErrorTitle] = useState(''); 
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'process' | 'error' | 'success'>('process');
-  // حالة جديدة لعرض تفاصيل العملية (توليد الصورة -> فتح المحفظة)
   const [processStep, setProcessStep] = useState(''); 
   const [mounted, setMounted] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
   const [timer, setTimer] = useState(60);
+
+  // حالة جديدة: تجهيز البيانات للقالب قبل التصوير
+  const [snapshotData, setSnapshotData] = useState({ name: '', tier: 'ELITE' });
 
   const { data: ownerAddress } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
@@ -66,6 +68,42 @@ const MintContent = () => {
     setMounted(true);
   }, []);
 
+  // --- دالة نظام المكافآت (تم نقلها للأعلى لاستخدامها في العملية الرئيسية) ---
+  const notifyRewardSystem = async (userWallet: any) => {
+    try {
+        await fetch('/api/nnm/mint-hook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wallet: userWallet }),
+        });
+        console.log('Reward point added!');
+    } catch (error) {
+        console.error('Failed to add reward', error);
+    }
+  };
+
+  // --- دالة التصوير (المحرك الجديد) ---
+  const generateSnapshot = async (name: string, tier: string): Promise<Blob | null> => {
+    // 1. وضع البيانات في القالب المخفي
+    setSnapshotData({ name, tier });
+    
+    // 2. إعطاء مهلة بسيطة جداً (100ms) لضمان أن الرياكت قام بتحديث النص داخل القالب
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    if (templateRef.current) {
+        try {
+            // 3. التقاط الصورة بجودة عالية وتحويلها لملف Blob
+            const blob = await toBlob(templateRef.current, { cacheBust: true, pixelRatio: 1 }); 
+            // pixelRatio: 1 لأننا ضبطنا القالب على حجم كبير أصلاً (1080px)
+            return blob;
+        } catch (err) {
+            console.error("Snapshot failed", err);
+            return null;
+        }
+    }
+    return null;
+  };
+
   const handleInputFocus = () => {
     setStatus(null);   
     setErrorMessage('');
@@ -73,13 +111,11 @@ const MintContent = () => {
 
   const checkAvailability = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
     if (!searchTerm || searchTerm.length < 2) {
         setStatus('too_short');
         setIsSearching(false);
         return;
     }
-    
     const cleanName = searchTerm.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
     if (cleanName !== searchTerm) setSearchTerm(cleanName);
 
@@ -88,7 +124,6 @@ const MintContent = () => {
 
     try {
         if (!publicClient) return;
-        
         const nameHash = keccak256(stringToBytes(cleanName));
         const isRegistered = await publicClient.readContract({
             address: CONTRACT_ADDRESS as `0x${string}`,
@@ -96,7 +131,6 @@ const MintContent = () => {
             functionName: 'registeredNames',
             args: [nameHash]
         });
-        
         if (isRegistered) setStatus('taken');
         else setStatus('available');
 
@@ -108,6 +142,7 @@ const MintContent = () => {
     }
   };
 
+  // Timer Logic
   useEffect(() => {
     let interval: any;
     if (showModal && modalType === 'process' && timer > 0) {
@@ -131,7 +166,6 @@ const MintContent = () => {
 
   const handleError = (err: any) => {
       console.error(err);
-      
       const errStr = err?.message || JSON.stringify(err);
       let niceTitle = "Action Update";
       let niceMessage = "The process was interrupted. Please check your connection and try again.";
@@ -151,36 +185,158 @@ const MintContent = () => {
       setShowModal(true);
   };
 
-  if (!mounted) return null;
+  // --- CORE MINT LOGIC (PRO VERSION - LINKED WITH NEW API) ---
+  const handleMintProcess = async (tierName: string, tierIndex: number, priceDisplay: string) => {
+      if (!searchTerm || !status || !publicClient) return;
+      
+      setIsMinting(true);
+      // تغيير الرسالة لتناسب العملية الجديدة
+      setProcessStep("Generative Engine: Creating high-res asset...");
+      setModalType('process');
+      setShowModal(true);
+
+      try {
+          // STEP A: Generate Snapshot (Client-Side)
+          // هنا يتم استدعاء القالب المخفي لتكوين الصورة
+          const imageBlob = await generateSnapshot(searchTerm, tierName);
+          
+          if (!imageBlob) throw new Error("Failed to generate asset snapshot locally.");
+
+          // STEP B: Upload to API (The Postman)
+          setProcessStep("Uploading: Securing asset on IPFS...");
+          
+          // تجهيز البيانات كـ FormData لأننا نرسل ملفاً حقيقياً وليس مجرد نص
+          const formData = new FormData();
+          formData.append('file', imageBlob, `NNM-${searchTerm}.png`);
+          formData.append('name', searchTerm);
+          formData.append('tier', tierName);
+
+          const apiResponse = await fetch('/api/generate-image', { 
+              method: 'POST',
+              body: formData // إرسال الفورم داتا
+          });
+
+          if (!apiResponse.ok) {
+              const errorData = await apiResponse.json();
+              throw new Error(errorData.error || "Upload Failed");
+          }
+
+          const { gatewayUrl } = await apiResponse.json();
+          console.log("SUCCESS: Asset uploaded at", gatewayUrl);
+
+          // STEP C: Prepare Metadata (Full Data Preserved)
+          const date = new Date();
+          const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+          const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+
+          const metadataObject = {
+            name: searchTerm,
+            description: LONG_DESCRIPTION, // الوصف الطويل كما هو
+            image: gatewayUrl, 
+            attributes: [
+              { trait_type: "Asset Type", value: "Digital Name" },
+              { trait_type: "Generation", value: "Gen-0" },
+              { trait_type: "Tier", value: tierName },
+              { trait_type: "Platform", value: "NNM Registry" },
+              { trait_type: "Collection", value: "Genesis - 001" },
+              { trait_type: "Mint Date", value: dynamicDate }
+            ]
+          };
+
+          const jsonString = JSON.stringify(metadataObject);
+          const tokenURI = `data:application/json;base64,${btoa(unescape(encodeURIComponent(jsonString)))}`;
+
+          // STEP D: Blockchain Transaction
+          setProcessStep("Wallet: Please sign the transaction...");
+
+          let hash;
+          if (isAdmin) {
+            hash = await writeContractAsync({
+              address: CONTRACT_ADDRESS as `0x${string}`,
+              abi: CONTRACT_ABI,
+              functionName: 'reserveName',
+              args: [searchTerm, tierIndex, tokenURI],
+            });
+          } else {
+            // الحسابات المالية كما هي
+            const usdVal = tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5;
+            const usdAmountWei = BigInt(usdVal) * BigInt(10**18);
+            const costInMatic = await publicClient.readContract({
+               address: CONTRACT_ADDRESS as `0x${string}`,
+               abi: CONTRACT_ABI,
+               functionName: 'getMaticCost',
+               args: [usdAmountWei]
+            });
+            const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
+
+            if (address) {
+                const balance = await publicClient.getBalance({ address });
+                if (balance < valueToSend) throw new Error("Insufficient funds (Pre-flight check): Low POL balance.");
+            }
+            
+            hash = await writeContractAsync({
+              address: CONTRACT_ADDRESS as `0x${string}`,
+              abi: CONTRACT_ABI,
+              functionName: 'mintPublic',
+              args: [searchTerm, tierIndex, tokenURI],
+              value: valueToSend, 
+            });
+          }
+
+          const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+          // STEP E: Finalize & Logging
+          if (receipt.status === 'success') {
+             // Supabase Logging
+             const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
+             if (transferLog && transferLog.topics[3]) {
+                 const mintedId = parseInt(transferLog.topics[3], 16);
+                 supabase.from('activities').insert([{
+                     token_id: mintedId,
+                     activity_type: 'Mint',
+                     from_address: '0x0000000000000000000000000000000000000000',
+                     to_address: address, 
+                     price: priceDisplay.replace('$',''),
+                     created_at: new Date().toISOString()
+                 }]);
+             }
+             if (address) notifyRewardSystem(address);
+          }
+
+          setModalType('success');
+          setShowModal(true);
+
+      } catch (err) {
+          handleError(err);
+      } finally {
+          setIsMinting(false);
+      }
+  };
 
   const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
+
+  if (!mounted) return null;
 
   return (
     <main dir="ltr" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
       
-      <div className="container hero-container text-center">
-        <h1
-          className="text-white fw-bold mb-2"
-          style={{
-            fontSize: '32px',
-            fontFamily: 'serif',
-            letterSpacing: '1px',
-            color: '#E0E0E0'
-          }}
-        >
-          Claim Your Nexus <span style={{ background: 'linear-gradient(180deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Digital Name</span> Assets
+      {/* === الاستوديو الخفي ===
+         هذا المكون موجود في الصفحة ولكن تم إخراجه من الشاشة
+         وظيفته: يتم وضع الاسم فيه، ثم تأخذ المكتبة صورة له وترسلها 
+      */}
+      <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
+        <MintTemplate 
+            ref={templateRef} 
+            name={snapshotData.name} 
+            tier={snapshotData.tier} 
+        />
+      </div>
 
+      <div className="container hero-container text-center">
+        <h1 className="text-white fw-bold mb-2" style={{ fontSize: '32px', fontFamily: 'serif', letterSpacing: '1px', color: '#E0E0E0' }}>
+          Claim Your Nexus <span style={{ background: 'linear-gradient(180deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Digital Name</span> Assets
         </h1>
-        <p
-          className="mx-auto"
-          style={{
-            maxWidth: '600px',
-            fontFamily: '"Inter", "Segoe UI", sans-serif',
-            fontSize: '15px',
-            lineHeight: '1.6',
-            color: '#B0B0B0'
-          }}
-        >
+        <p className="mx-auto" style={{ maxWidth: '600px', fontFamily: '"Inter", "Segoe UI", sans-serif', fontSize: '15px', lineHeight: '1.6', color: '#B0B0B0' }}>
           Mint your visual Nexus Name asset on the Polygon network. First-come, first-served. Immutable. Global. Yours forever.
         </p>
       </div>
@@ -195,23 +351,9 @@ const MintContent = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={handleInputFocus} 
-              style={{ 
-                backgroundColor: '#161b22', 
-                border: status === 'available' ? '1px solid #0ecb81' : (status === 'taken' ? '1px solid #f6465d' : '1px solid rgba(252, 213, 53, 0.6)'), 
-                borderRadius: '50px', 
-                height: '52px', 
-                fontSize: '20px', 
-                fontWeight: '300', 
-                boxShadow: '0 0 30px rgba(0,0,0,0.5)',
-                color: '#fff',
-                caretColor: '#FCD535'
-              }}
+              style={{ backgroundColor: '#161b22', border: status === 'available' ? '1px solid #0ecb81' : (status === 'taken' ? '1px solid #f6465d' : '1px solid rgba(252, 213, 53, 0.6)'), borderRadius: '50px', height: '52px', fontSize: '20px', fontWeight: '300', boxShadow: '0 0 30px rgba(0,0,0,0.5)', color: '#fff', caretColor: '#FCD535' }}
             />
-            <button 
-                type="submit"
-                className="btn position-absolute top-50 start-0 translate-middle-y ms-1 rounded-circle d-flex align-items-center justify-content-center"
-                style={{ width: '42px', height: '42px', background: GOLD_GRADIENT, border: 'none', transition: 'all 0.3s', right: '5px' }}
-            >
+            <button type="submit" className="btn position-absolute top-50 start-0 translate-middle-y ms-1 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '42px', height: '42px', background: GOLD_GRADIENT, border: 'none', transition: 'all 0.3s', right: '5px' }}>
                 {isSearching ? <div className="spinner-border text-dark" style={{ width: '18px', height: '18px' }} role="status"></div> : <i className="bi bi-search text-dark" style={{ fontSize: '20px' }}></i>}
             </button>
           </form>
@@ -227,26 +369,26 @@ const MintContent = () => {
       <div className="container mt-0">
         <h5 className="text-white text-center mb-4 select-asset-title" style={{ letterSpacing: '2px', fontSize: '11px', textTransform: 'uppercase', color: '#888' }}>Select Asset Class</h5>
         <div className="row justify-content-center g-2 mobile-clean-stack"> 
+            {/* تم تحديث الأزرار لتمرر الأمر للمكون الرئيسي 
+               بدلاً من التعامل الداخلي
+            */}
             <LuxuryIngot 
-                label="IMMORTAL" price="$15" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
-                tierName="IMMORTAL" tierIndex={0} nameToMint={searchTerm} isAdmin={isAdmin} 
-                onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
-                onProcessing={(msg: string) => { setProcessStep(msg); setModalType('process'); setShowModal(true); }}
-                isMinting={isMinting} setIsMinting={setIsMinting}
+                label="IMMORTAL" price="$15" 
+                isAvailable={status === 'available'} 
+                onMint={() => handleMintProcess("IMMORTAL", 0, "$15")} 
+                isMinting={isMinting} 
             />
             <LuxuryIngot 
-                label="ELITE" price="$10" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
-                tierName="ELITE" tierIndex={1} nameToMint={searchTerm} isAdmin={isAdmin} 
-                onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
-                onProcessing={(msg: string) => { setProcessStep(msg); setModalType('process'); setShowModal(true); }}
-                isMinting={isMinting} setIsMinting={setIsMinting}
+                label="ELITE" price="$10" 
+                isAvailable={status === 'available'} 
+                onMint={() => handleMintProcess("ELITE", 1, "$10")} 
+                isMinting={isMinting} 
             />
             <LuxuryIngot 
-                label="FOUNDERS" price="$5" gradient={GOLD_GRADIENT} isAvailable={status === 'available'} 
-                tierName="FOUNDER" tierIndex={2} nameToMint={searchTerm} isAdmin={isAdmin} 
-                onSuccess={() => { setModalType('success'); setShowModal(true); }} onError={handleError}
-                onProcessing={(msg: string) => { setProcessStep(msg); setModalType('process'); setShowModal(true); }}
-                isMinting={isMinting} setIsMinting={setIsMinting}
+                label="FOUNDERS" price="$5" 
+                isAvailable={status === 'available'} 
+                onMint={() => handleMintProcess("FOUNDER", 2, "$5")} 
+                isMinting={isMinting} 
             />
         </div>
       </div>
@@ -275,7 +417,6 @@ const MintContent = () => {
                         <div className="position-absolute top-50 start-50 translate-middle text-white fw-bold" style={{ fontSize: '14px' }}>{timer}</div>
                      </div>
                      <h4 className="text-white fw-bold mb-2">Processing...</h4>
-                     {/* هنا التعديل: إظهار نص الخطوة الحالية */}
                      <p className="text-warning mb-2 fw-bold" style={{ fontSize: '14px' }}>{processStep}</p>
                      <p className="text-secondary mb-4" style={{ fontSize: '13px' }}>Do not close this window. Auto-reset in {timer}s.</p>
                      <button onClick={handleCloseModal} className="btn btn-link text-muted text-decoration-none" style={{fontSize: '12px'}}>Cancel & Reset UI</button>
@@ -341,144 +482,12 @@ const MintContent = () => {
   );
 }
 
-const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex, nameToMint, isAdmin, onSuccess, onError, onProcessing, isMinting, setIsMinting }: any) => {
+// --- Luxury Ingot Component (Simplified) ---
+// تم تخفيف هذا المكون ليصبح مجرد "زر عرض" ويستلم الأمر من الأب
+const LuxuryIngot = ({ label, price, isAvailable, onMint, isMinting }: any) => {
     
-    const { address, isConnected } = useAccount(); 
-    const { writeContractAsync } = useWriteContract();
-    const publicClient = usePublicClient();
+    const { isConnected } = useAccount(); 
     
-    // --- NNM REWARD SYSTEM HOOK ---
-    const notifyRewardSystem = async (userWallet: any) => {
-        try {
-            await fetch('/api/nnm/mint-hook', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ wallet: userWallet }),
-            });
-            console.log('Reward point added!');
-        } catch (error) {
-            console.error('Failed to add reward', error);
-        }
-    };
-
-    const handleMintClick = async () => {
-        if (!nameToMint || !isAvailable || !publicClient) return;
-        
-        setIsMinting(true);
-        // 1. أبلغ المستخدم أننا نقوم بالعملية الذكية الآن
-        onProcessing("Generative AI: Forging Image...");
-        
-        try {
-            // --- STEP A: GENERATE IMAGE ON SERVER (THE PRO FIX) ---
-            // هنا نذهب للـ API وننتظر الصورة الجديدة
-            const apiResponse = await fetch('/api/generate-image', { // تأكد أن المسار مطابق لاسم ملفك
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: nameToMint, tier: tierName })
-            });
-
-            if (!apiResponse.ok) {
-                const errorData = await apiResponse.json();
-                throw new Error(errorData.error || "Image Generation Failed");
-            }
-
-            const { gatewayUrl } = await apiResponse.json();
-            console.log("SUCCESS: Image forged at", gatewayUrl);
-
-            // --- STEP B: PREPARE METADATA (FULL, AS REQUESTED) ---
-            const date = new Date();
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-
-            const metadataObject = {
-              name: nameToMint,
-              description: LONG_DESCRIPTION, // الوصف الكامل كما هو
-              image: gatewayUrl, // 🔥 الرابط الجديد المكتوب عليه 🔥
-              attributes: [
-                { trait_type: "Asset Type", value: "Digital Name" },
-                { trait_type: "Generation", value: "Gen-0" },
-                { trait_type: "Tier", value: tierName },
-                { trait_type: "Platform", value: "NNM Registry" },
-                { trait_type: "Collection", value: "Genesis - 001" },
-                { trait_type: "Mint Date", value: dynamicDate }
-              ]
-            };
-
-            const jsonString = JSON.stringify(metadataObject);
-            const tokenURI = `data:application/json;base64,${btoa(unescape(encodeURIComponent(jsonString)))}`;
-
-            // --- STEP C: MINTING (Opening Wallet) ---
-            onProcessing("Wallet: Waiting for signature...");
-
-            let hash;
-
-            if (isAdmin) {
-              hash = await writeContractAsync({
-                address: CONTRACT_ADDRESS as `0x${string}`,
-                abi: CONTRACT_ABI,
-                functionName: 'reserveName',
-                args: [nameToMint, tierIndex, tokenURI],
-              });
-            } else {
-              // --- PUBLIC MINT LOGIC ---
-              const usdVal = tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5;
-              const usdAmountWei = BigInt(usdVal) * BigInt(10**18);
-              
-              const costInMatic = await publicClient.readContract({
-                 address: CONTRACT_ADDRESS as `0x${string}`,
-                 abi: CONTRACT_ABI,
-                 functionName: 'getMaticCost',
-                 args: [usdAmountWei]
-              });
-              
-              const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
-
-              if (address) {
-                  const balance = await publicClient.getBalance({ address });
-                  if (balance < valueToSend) {
-                      throw new Error("Insufficient funds (Pre-flight check): Low POL balance.");
-                  }
-              }
-              
-              hash = await writeContractAsync({
-                address: CONTRACT_ADDRESS as `0x${string}`,
-                abi: CONTRACT_ABI,
-                functionName: 'mintPublic',
-                args: [nameToMint, tierIndex, tokenURI],
-                value: valueToSend, 
-              });
-            }
-
-            const receipt = await publicClient.waitForTransactionReceipt({ hash });
-
-            // --- STEP D: SUCCESS ---
-            onSuccess();
-            setIsMinting(false);
-
-            if (receipt.status === 'success') {
-                const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
-                if (transferLog && transferLog.topics[3]) {
-                    const mintedId = parseInt(transferLog.topics[3], 16);
-                    supabase.from('activities').insert([
-                        {
-                            token_id: mintedId,
-                            activity_type: 'Mint',
-                            from_address: '0x0000000000000000000000000000000000000000',
-                            to_address: address, 
-                            price: price.replace('$',''),
-                            created_at: new Date().toISOString()
-                        }
-                    ]);
-                }
-                if (address) notifyRewardSystem(address);
-            }
-        } catch (err) {
-            onError(err);
-        } finally {
-            setIsMinting(false);
-        }
-    };
-
     return (
         <div className="col-12 col-md-4 d-flex flex-column align-items-center ingot-wrapper">
             <div className="mb-2 d-flex justify-content-center align-items-baseline gap-2 price-top-container"><span className="text-white fw-bold" style={{ fontSize: '16px', fontFamily: 'sans-serif' }}>{price}</span></div>
@@ -504,14 +513,14 @@ const LuxuryIngot = ({ label, price, gradient, isAvailable, tierName, tierIndex,
                     </div>
                 ) : (
                     <button
-                        onClick={handleMintClick}
-                        disabled={isMinting || !isAvailable || !nameToMint}
+                        onClick={onMint} // يستدعي الدالة القادمة من الأب
+                        disabled={isMinting || !isAvailable}
                         className="btn-ingot"
                         style={{
                             width: '100%',
                             height: '50px',
                             cursor: (isMinting || !isAvailable) ? 'not-allowed' : 'pointer',
-                            opacity: (!isAvailable || !nameToMint) ? 0.5 : 1
+                            opacity: (!isAvailable) ? 0.5 : 1
                         }}
                     >
                        {isMinting ? <div className="spinner-border spinner-border-sm text-dark" role="status"></div> : label}

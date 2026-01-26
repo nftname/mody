@@ -1,112 +1,74 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import sharp from 'sharp';
 
+// نستخدم هذا التوجيه لضمان عدم تخزين النسخ المؤقتة، نريد معالجة فورية لكل طلب
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const { name, tier } = await req.json();
-
-    // 1. التحقق من البيانات (نفس منطقك الأصلي تماماً)
-    if (!name || !tier) {
-      console.error("Missing name or tier in request");
-      return NextResponse.json({ error: 'Name and Tier are required' }, { status: 400 });
-    }
-
-    // 2. تحديد مسارات الملفات (استخدام path.resolve لضمان الدقة في السيرفر)
-    const tierFilename = `${tier.toUpperCase()}.jpg`; 
-    const filePath = path.resolve(process.cwd(), 'public', 'images-mint', tierFilename);
-    const fontPath = path.resolve(process.cwd(), 'public', 'fonts', 'font.ttf');
-
-    if (!fs.existsSync(filePath)) {
-      console.error(`Base image not found: ${filePath}`);
-      return NextResponse.json({ error: `Base image for ${tier} not found` }, { status: 404 });
-    }
-
-    // 3. معالجة الخط (تحويله لـ Base64 لضمان الحقن المباشر)
-    let fontBase64 = '';
-    if (fs.existsSync(fontPath)) {
-      fontBase64 = fs.readFileSync(fontPath).toString('base64');
-    }
-
-    // 4. تصميم طبقة الـ SVG (التعديل الجراحي لضبط الحجم والموقع وحل مشكلة المربعات)
-    const svgText = `
-      <svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <style>
-            @font-face {
-              font-family: 'NFTFont';
-              src: url(data:application/font-truetype;charset=utf-8;base64,${fontBase64});
-            }
-          </style>
-        </defs>
-        <style>
-          .name-style { 
-            fill: #FCD535; 
-            font-size: 120px; /* التعديل: تكبير الخط ليتناسب مع التصميم */
-            font-family: 'NFTFont', sans-serif; 
-            font-weight: bold; 
-            text-anchor: middle; 
-            filter: drop-shadow(4px 4px 3px rgba(0, 0, 0, 0.6));
-          }
-        </style>
-        /* التعديل: رفع النص إلى y="320" ليتوسط المسافة الرخامية السوداء */
-        <text x="512" y="320" class="name-style">${name.toUpperCase()}</text>
-      </svg>
-    `;
-
-    // 5. المعالجة باستخدام Sharp (نفس منطقك الأصلي)
-    console.log(`Processing image for: ${name}...`);
-    const originalBuffer = fs.readFileSync(filePath);
+    // 1. استلام البيانات من الطلب القادم من الصفحة
+    const formData = await req.formData();
     
-    const finalImageBuffer = await sharp(originalBuffer)
-      .composite([
-        {
-          input: Buffer.from(svgText),
-          top: 0,
-          left: 0,
-        },
-      ])
-      .png() 
-      .toBuffer();
+    const file = formData.get('file') as File;
+    const name = formData.get('name') as string;
+    const tier = formData.get('tier') as string;
 
-    // 6. تجهيز البيانات للرفع إلى Pinata (نفس منطقك الأصلي تماماً)
-    const formData = new FormData();
-    const blob = new Blob([new Uint8Array(finalImageBuffer)], { type: 'image/png' });
-    formData.append('file', blob, `NNM-${name}-${tier}.png`);
+    // 2. التحقق الأمني: هل البيانات كاملة؟
+    if (!file || !name || !tier) {
+      console.error("Missing Data: File, Name, or Tier is missing.");
+      return NextResponse.json(
+        { error: 'Missing required data (file, name, or tier)' }, 
+        { status: 400 }
+      );
+    }
 
+    console.log(`[API] Received snapshot for Name: ${name}, Tier: ${tier}`);
+
+    // 3. تجهيز البيانات للإرسال إلى Pinata (بدقة عالية كما طلبت)
+    const pinataFormData = new FormData();
+    
+    // إرفاق ملف الصورة المستلم
+    pinataFormData.append('file', file);
+
+    // إعداد الميتاداتا الخاصة بـ Pinata (لترتيب الملفات في حسابك)
+    // نستخدم نفس المنطق الموجود في ملفك القديم لضمان عدم ضياع التنسيق
     const pinataMetadata = JSON.stringify({
-      name: `NNM Asset: ${name} (${tier})`,
+      name: `NNM Asset: ${name} (${tier})`, // اسم الملف كما سيظهر في لوحة تحكم بيناتا
       keyvalues: {
         tier: tier,
         name: name,
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
+        source: "Client-Snapshot-Engine", // تمييز أن هذا الملف جاء من النظام الجديد
+        project: "NNM-Gen0"
       }
     });
-    formData.append('pinataMetadata', pinataMetadata);
+    pinataFormData.append('pinataMetadata', pinataMetadata);
 
+    // إعداد خيارات بيناتا (CID Version 1)
     const pinataOptions = JSON.stringify({ cidVersion: 1 });
-    formData.append('pinataOptions', pinataOptions);
+    pinataFormData.append('pinataOptions', pinataOptions);
 
-    // 7. الرفع الفعلي (نفس منطقك الأصلي)
-    console.log('Uploading to Pinata IPFS...');
+    // 4. تنفيذ عملية الرفع (الاتصال بسيرفرات بيناتا)
+    console.log('[API] Uploading to Pinata IPFS...');
+    
     const uploadRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.PINATA_JWT}`,
+        Authorization: `Bearer ${process.env.PINATA_JWT}`, // المفتاح السري
       },
-      body: formData,
+      body: pinataFormData,
     });
 
+    // 5. التحقق من استجابة بيناتا
     if (!uploadRes.ok) {
       const errorData = await uploadRes.json();
+      console.error('[API] Pinata Upload Error:', errorData);
       throw new Error(errorData.error?.details || 'Failed to upload to Pinata');
     }
 
     const pinataData = await uploadRes.json();
+    console.log('[API] Upload Success. Hash:', pinataData.IpfsHash);
 
+    // 6. الرد النهائي للعميل بالرابط الجديد
     return NextResponse.json({ 
       success: true,
       ipfsHash: pinataData.IpfsHash,
@@ -114,8 +76,8 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error('Critical Generation Error:', error);
+    // صيد أي خطأ غير متوقع وطباعته بوضوح
+    console.error('[API] Critical Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
