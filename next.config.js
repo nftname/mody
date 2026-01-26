@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // We rely on Vercel for building, so we ignore strict checks to ensure success
+  // Ignore checks to allow Vercel build to succeed
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -20,4 +20,4 @@ const nextConfig = {
   poweredByHeader: false,
 };
 
-module.exports = nextConfig;
+export default nextConfig;
