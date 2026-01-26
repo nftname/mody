@@ -1,11 +1,8 @@
 import React, { forwardRef } from 'react';
 
-// --- مصفوفة الصور (نفس الكود القديم السليم الذي يعمل معك) ---
-// *ملاحظة:* تأكد من أنك قمت بوضع الصورة الجديدة (العريضة) في هذه الملفات الثلاثة
+// مصفوفة الصور (كما هي تماماً)
 const TIER_IMAGES: Record<string, string> = {
   IMMORTAL: '/images-mint/IMMORTAL.jpg',
-  
-  // حافظت على التبديل كما طلبت لأنه الكود "السليم" لديك
   ELITE: '/images-mint/FOUNDER.jpg', 
   FOUNDER: '/images-mint/ELITE.jpg',
   FOUNDERS: '/images-mint/ELITE.jpg' 
@@ -24,84 +21,115 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
     <div
       ref={ref}
       style={{
-        // 1. الأبعاد الصحيحة (Landscape) بيكسل بيكسل حسب الصورة الأصلية
+        // الأبعاد بالعرض (Landscape)
         width: '1280px',
-        height: '832px', 
+        height: '832px',
         position: 'relative',
         overflow: 'hidden',
         backgroundColor: '#000',
-        fontFamily: "'Inter', 'Segoe UI', sans-serif", // خط عصري ونظيف
+        // استخدام خط Montserrat أو Inter للفخامة
+        fontFamily: "'Montserrat', 'Inter', sans-serif", 
       }}
     >
-      {/* طبقة الصورة الخلفية */}
+      {/* طبقة الخلفية */}
       <img
         src={imageSrc}
         alt={tier}
-        // خاصية الأمان لمنع الكراش (هام جداً)
         crossOrigin="anonymous"
         style={{
           width: '100%',
           height: '100%',
-          objectFit: 'cover', // يضمن تغطية المساحة بالكامل
+          objectFit: 'cover',
         }}
       />
 
-      {/* منطقة الكتابة (المسرح) */}
+      {/* منطقة المحتوى (المسرح) */}
       <div
         style={{
           position: 'absolute',
-          // التمركز الدقيق في منتصف الصورة العريضة
-          top: '50%', 
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '90%', // مساحة واسعة للكتابة
-          textAlign: 'center',
+          top: '0',
+          left: '0',
+          width: '100%',
+          height: '100%',
           zIndex: 10,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'center', // توسيط عمودي للعناصر
         }}
       >
-        {/* السطر الأول: الاسم (البطل) */}
+        {/* 1. الاسم الرئيسي (البطل - نسخة الشياكة) */}
         <h1
           style={{
-            margin: 0,
-            padding: 0,
-            color: '#FFFFFF', 
-            // تكبير الخط لأن الصورة أصبحت عريضة وواسعة
-            fontSize: '110px', 
-            fontWeight: '800', 
+            margin: '0',
+            // تم تقليل الحجم 20% (من 110 إلى 90)
+            fontSize: '90px', 
+            // تم تقليل العرض (من 800 إلى 700)
+            fontWeight: '700', 
+            color: '#FFFFFF',
             textTransform: 'uppercase',
-            letterSpacing: '5px',
+            letterSpacing: '6px', // زيادة المسافات للفخامة
             lineHeight: '1',
-            // توهج هادئ وأنيق (Classy Glow) وليس مشعاً بقوة
+            position: 'relative',
+            top: '-15px', // رفع الاسم قليلاً لإعطاء مساحة للأسطر تحته
+            // بدلاً من التوهج القوي، نستخدم ظلاً "معدنياً" أنيقاً
             textShadow: `
-              0 0 15px rgba(255, 255, 255, 0.6),
-              0 0 30px rgba(0, 255, 255, 0.4)
+              0 2px 4px rgba(0,0,0,0.5), 
+              0 0 20px rgba(200, 200, 255, 0.3)
             `,
+            // فلتر لزيادة حدة النص
+            filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.4))',
           }}
         >
           {name || ''}
         </h1>
 
-        {/* السطر الثاني: الفئة فقط (بدون Edition) */}
+        {/* 2. اسم الفئة (تحت الاسم مباشرة) */}
         <h2
           style={{
-            margin: 0,
-            marginTop: '25px', // مسافة بسيطة تحت الاسم
+            margin: '20px 0 0 0',
             color: '#D0D0D0', // فضي هادئ
-            fontSize: '32px', // حجم متناسق
+            fontSize: '28px',
             fontWeight: '400',
-            fontStyle: 'italic', // خط مائل
-            letterSpacing: '3px',
-            textShadow: '0 2px 4px rgba(0,0,0,0.8)', // ظل للقراءة
-            textTransform: 'uppercase', // جعل الفئة حروف كبيرة لتتناسق مع التصميم
+            fontStyle: 'italic',
+            letterSpacing: '4px',
+            textTransform: 'uppercase',
+            opacity: 0.9,
           }}
         >
-           {/* عرض اسم الفئة كما هو (IMMORTAL, ELITE...) */}
            {tier}
         </h2>
+      </div>
+
+      {/* 3. السطر الثالث (الختم الرسمي - في الأسفل) */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '14%', // الموضع المقدر لمكان الماوس (أسفل الزجاج)
+          left: '50%',
+          transform: 'translateX(-50%)',
+          textAlign: 'center',
+          width: '100%',
+          zIndex: 10,
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            // لون ذهبي "شامبانيا" هادئ يتماشى مع Sovereign Asset
+            color: '#D4AF37', 
+            fontSize: '18px', // حجم صغير ورسمي
+            fontWeight: '600', // خط ثقيل قليلاً
+            fontStyle: 'italic', // مائل كما طلبت
+            textTransform: 'uppercase',
+            letterSpacing: '3px', // تباعد لسهولة القراءة والفخامة
+            // تأثير حفر خفيف
+            textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+            fontFamily: "'Cinzel', 'Times New Roman', serif", // خط كلاسيكي للختم
+          }}
+        >
+          GEN-0 NNM Sovereign Asset
+        </p>
       </div>
     </div>
   );
