@@ -27,7 +27,6 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         position: 'relative',
         overflow: 'hidden',
         backgroundColor: '#000',
-        // نستخدم خطوط النظام النظيفة جداً للفخامة
         fontFamily: "'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif", 
       }}
     >
@@ -58,25 +57,25 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           justifyContent: 'center', 
         }}
       >
-        {/* 1. الاسم الرئيسي (كريستال أبيض فخم) */}
+        {/* 1. الاسم الرئيسي (كريستال أوف-وايت فخم) */}
         <h1
           style={{
             margin: '0',
-            // حجم كبير وواضح
-            fontSize: '110px', 
+            // تم التخفيض بنسبة 20% بالضبط (110 - 22 = 88)
+            fontSize: '88px', 
             // سميك ليعطي هيبة
             fontWeight: '800', 
-            // مائل كما طلبت (لمسة الشياكة)
+            // مائل (لمسة الشياكة)
             fontStyle: 'italic',
-            color: '#FFFFFF', 
+            // لون أوف-وايت (لؤلؤي) لتقليل حدة الأبيض
+            color: '#F2F2F2', 
             textTransform: 'uppercase',
-            // تباعد أحرف متوازن (ليس واسعاً جداً ولا ضيقاً)
             letterSpacing: '2px', 
             lineHeight: '1',
             position: 'relative',
             top: '-20px', 
             
-            // السر هنا: ظل أسود عميق يرفع الكلمة عن الخلفية بدلاً من تشويشها بالضوء
+            // الظل الأسود العميق (Depth)
             textShadow: `
               0 2px 0 #ccc,
               0 5px 10px rgba(0,0,0,0.6),
@@ -96,7 +95,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
             fontWeight: '500',
             fontFamily: "'Times New Roman', serif", 
             fontStyle: 'italic',
-            letterSpacing: '6px', // تباعد واسع للفئة
+            letterSpacing: '6px', 
             textTransform: 'uppercase',
             textShadow: '0 2px 4px rgba(0,0,0,0.9)',
           }}
@@ -109,7 +108,6 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
       <div
         style={{
           position: 'absolute',
-          // الموقع المعدل (مكان الماوس)
           bottom: '26%', 
           left: '50%',
           transform: 'translateX(-50%)',
