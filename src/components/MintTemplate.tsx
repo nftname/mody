@@ -1,7 +1,17 @@
 import React, { forwardRef } from 'react';
 
-// تأكد أن الصورة الجديدة وضعتها في المجلد العام بهذا الاسم بالضبط
-const FRAME_IMAGE = '/images-mint/mint.PNG';
+// --- مصفوفة الصور القديمة (كما هي 100% بدون تعديل) ---
+// *ملاحظة:* تأكد من أنك قمت باستبدال محتوى هذه الصور في جهازك بالصورة الزجاجية الجديدة
+const TIER_IMAGES: Record<string, string> = {
+  IMMORTAL: '/images-mint/IMMORTAL.jpg',
+  
+  // التبديل القديم الذي كان يعمل (حافظنا عليه)
+  ELITE: '/images-mint/FOUNDER.jpg', 
+  
+  // التبديل القديم الذي كان يعمل (حافظنا عليه)
+  FOUNDER: '/images-mint/ELITE.jpg',
+  FOUNDERS: '/images-mint/ELITE.jpg' 
+};
 
 interface MintTemplateProps {
   name: string;
@@ -9,14 +19,13 @@ interface MintTemplateProps {
 }
 
 const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier }, ref) => {
-  
-  // تنسيق الاسم (حروف كبيرة دائماً)
-  const displayName = name ? name.toUpperCase() : '';
-  
-  // تنسيق الفئة: الحرف الأول كبير والباقي صغير + كلمة Edition
-  // مثال: IMMORTAL -> Immortal Edition
+  const upperTier = tier ? tier.toUpperCase() : 'ELITE';
+  const imageSrc = TIER_IMAGES[upperTier] || TIER_IMAGES.ELITE;
+
+  // دالة لتنسيق اسم الفئة في السطر الثاني (مثال: IMMORTAL -> Immortal Edition)
   const formatTier = (t: string) => {
     if (!t) return 'Nexus Edition';
+    // الحرف الأول كبير والباقي صغير
     return `${t.charAt(0).toUpperCase() + t.slice(1).toLowerCase()} Edition`;
   };
 
@@ -24,39 +33,37 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
     <div
       ref={ref}
       style={{
-        // الأبعاد الدقيقة كما طلبت
+        // 1. الأبعاد الجديدة (بيكسل بيكسل حسب الصورة الزجاجية)
         width: '832px',
         height: '1280px',
         position: 'relative',
         overflow: 'hidden',
-        backgroundColor: '#000', 
-        fontFamily: "'Inter', 'Segoe UI', sans-serif",
+        backgroundColor: '#000', // خلفية سوداء للأمان
+        fontFamily: "'Inter', 'Segoe UI', sans-serif", // تغيير الخط ليناسب الديجيتال
       }}
     >
-      {/* 1. الخلفية الموحدة (الزجاج والكريستال) */}
+      {/* طبقة الصورة */}
       <img
-        src={FRAME_IMAGE}
-        alt="NNM Future Glass"
+        src={imageSrc}
+        alt={tier}
+        // إضافة خاصية الأمان لمنع مشاكل التحميل
+        crossOrigin="anonymous"
         style={{
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          zIndex: 1,
         }}
       />
 
-      {/* 2. حاوية النصوص (في قلب الصندوق الزجاجي) */}
+      {/* طبقة النصوص (المسرح الجديد) */}
       <div
         style={{
           position: 'absolute',
-          // الإحداثيات الدقيقة للتوسط
-          top: '48%', // أعلى قليلاً من المنتصف الهندسي لتعويض منظور الأرضية
+          // 2. التمركز الجديد: في قلب الصندوق الزجاجي
+          top: '48%', 
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '80%', // عرض آمن لعدم ملامسة حواف الزجاج
+          width: '85%', // مساحة عرض كافية لعدم ملامسة الحواف
           textAlign: 'center',
           zIndex: 10,
           display: 'flex',
@@ -65,43 +72,39 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           justifyContent: 'center',
         }}
       >
-        {/* أ. الاسم (البطل المتوهج) */}
+        {/* السطر الأول: الاسم (البطل المتوهج) */}
         <h1
           style={{
             margin: 0,
             padding: 0,
-            color: '#FFFFFF', // أبيض أساسي
-            fontSize: '80px', // حجم ضخم (تم ضبطه ليناسب عرض 832)
+            color: '#FFFFFF', // أبيض ناصع
+            fontSize: '85px', // حجم ضخم ومناسب للعرض الجديد
             fontWeight: '800', // سميك
             textTransform: 'uppercase',
-            letterSpacing: '3px', // تباعد للأحرف يزيد الفخامة
-            lineHeight: '1.2',
-            // خلطة التوهج (أبيض -> سماوي -> أزرق عميق)
+            letterSpacing: '4px',
+            lineHeight: '1.1',
+            // تأثير التوهج المستقبلي (Cyan Glow)
             textShadow: `
-              0 0 5px #FFFFFF,
-              0 0 20px #00FFFF,
-              0 0 40px #00FFFF,
-              0 0 80px #0088FF
+              0 0 10px rgba(255,255,255,0.9),
+              0 0 30px rgba(0, 255, 255, 0.7),
+              0 0 60px rgba(0, 255, 255, 0.4)
             `,
           }}
         >
-          {displayName}
+          {name || ''}
         </h1>
 
-        {/* ب. الفئة (التوقيع الرفيع) */}
+        {/* السطر الثاني: الفئة (التوقيع الفضي) */}
         <h2
           style={{
             margin: 0,
-            marginTop: '20px', // المسافة بين الاسم والفئة
-            color: '#E0E0E0', // رمادي فاتح جداً (فضي)
-            fontSize: '32px', // حجم متوسط
-            fontWeight: '300', // خط رفيع
+            marginTop: '30px', // مسافة تحت الاسم
+            color: '#CCCCCC', // فضي معدني
+            fontSize: '32px', // حجم أصغر
+            fontWeight: '400',
             fontStyle: 'italic', // مائل (ستايل التوقيع)
-            fontFamily: "'Playfair Display', serif", // يفضل خط سيريف للتوقيع إن وجد، أو اتركه للخط الافتراضي
             letterSpacing: '2px',
-            opacity: 0.9,
-            // توهج خفيف جداً لضمان القراءة
-            textShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
+            textShadow: '0 2px 5px rgba(0,0,0,0.8)', // ظل أسود للقراءة
           }}
         >
            — {formatTier(tier)} —
