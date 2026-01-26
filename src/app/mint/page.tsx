@@ -369,24 +369,32 @@ const MintContent = () => {
       <div className="container mt-0">
         <h5 className="text-white text-center mb-4 select-asset-title" style={{ letterSpacing: '2px', fontSize: '11px', textTransform: 'uppercase', color: '#888' }}>Select Asset Class</h5>
         <div className="row justify-content-center g-2 mobile-clean-stack"> 
-            {/* تم تحديث الأزرار لتمرر الأمر للمكون الرئيسي 
-               بدلاً من التعامل الداخلي
-            */}
+            {/* 1. IMMORTAL Button */}
             <LuxuryIngot 
-                label="IMMORTAL" price="$15" 
+                label="IMMORTAL" 
+                price="$15" 
                 isAvailable={status === 'available'} 
+                // Correctly passing "IMMORTAL"
                 onMint={() => handleMintProcess("IMMORTAL", 0, "$15")} 
                 isMinting={isMinting} 
             />
+
+            {/* 2. ELITE Button */}
             <LuxuryIngot 
-                label="ELITE" price="$10" 
+                label="ELITE" 
+                price="$10" 
                 isAvailable={status === 'available'} 
+                // Correctly passing "ELITE"
                 onMint={() => handleMintProcess("ELITE", 1, "$10")} 
                 isMinting={isMinting} 
             />
+
+            {/* 3. FOUNDERS Button */}
             <LuxuryIngot 
-                label="FOUNDERS" price="$5" 
+                label="FOUNDERS" 
+                price="$5" 
                 isAvailable={status === 'available'} 
+                // CRITICAL FIX: Pass "FOUNDER" (singular) to match the image key and image filename
                 onMint={() => handleMintProcess("FOUNDER", 2, "$5")} 
                 isMinting={isMinting} 
             />

@@ -1,11 +1,12 @@
-
 import React, { forwardRef } from 'react';
 
-// تأكد أن الصور موجودة في مجلد public/images-mint بنفس هذه الأسماء
+// Ensure filenames match exactly what is in public/images-mint/
 const TIER_IMAGES: Record<string, string> = {
   IMMORTAL: '/images-mint/IMMORTAL.jpg',
-  ELITE: '/images-mint/ELITE.jpg',
-  FOUNDER: '/images-mint/FOUNDER.jpg' // أو FOUNDERS.jpg حسب اسم الملف لديك
+  ELITE: '/images-mint/ELITE.jpg', 
+  // Map both keys to the same image to prevent errors
+  FOUNDER: '/images-mint/FOUNDER.jpg',
+  FOUNDERS: '/images-mint/FOUNDER.jpg' 
 };
 
 interface MintTemplateProps {
@@ -14,20 +15,20 @@ interface MintTemplateProps {
 }
 
 const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier }, ref) => {
-  const imageSrc = TIER_IMAGES[tier] || TIER_IMAGES.ELITE;
+  const upperTier = tier ? tier.toUpperCase() : 'ELITE';
+  const imageSrc = TIER_IMAGES[upperTier] || TIER_IMAGES.ELITE;
 
   return (
     <div
       ref={ref}
       style={{
-        width: '1080px', // دقة عالية ثابتة
+        width: '1080px',
         height: '1080px',
         position: 'relative',
         overflow: 'hidden',
         backgroundColor: '#000',
       }}
     >
-      {/* صورة الخلفية */}
       <img
         src={imageSrc}
         alt={tier}
@@ -38,11 +39,10 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         }}
       />
 
-      {/* طبقة الاسم */}
       <div
         style={{
           position: 'absolute',
-          top: '35%', // عدل هذه النسبة لرفع أو خفض الاسم
+          top: '35%', 
           left: '50%',
           transform: 'translate(-50%, -50%)',
           width: '90%',
@@ -52,13 +52,13 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
       >
         <h1
           style={{
-            fontFamily: "'Cinzel', serif", // أو اسم الخط الخاص بك في الموقع
-            fontSize: '130px', // حجم خط كبير وواضح
+            fontFamily: "'Cinzel', serif",
+            fontSize: '130px',
             fontWeight: 'bold',
-            color: '#FCD535', // اللون الذهبي
+            color: '#FCD535',
             textTransform: 'uppercase',
             margin: 0,
-            textShadow: '4px 4px 10px rgba(0,0,0,0.8)', // ظل قوي للوضوح
+            textShadow: '4px 4px 10px rgba(0,0,0,0.8)',
             letterSpacing: '5px',
           }}
         >
