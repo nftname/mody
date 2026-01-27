@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 
-// مصفوفة الصور (كما هي تماماً)
+// مصفوفة الصور الأصلية للمشروع
 const TIER_IMAGES: Record<string, string> = {
   IMMORTAL: '/images-mint/IMMORTAL.jpg',
   ELITE: '/images-mint/FOUNDER.jpg',
@@ -21,7 +21,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
     <div
       ref={ref}
       style={{
-        // الأبعاد الضخمة للمشروع (2042x1792)
+        // الأبعاد الكلية للمسرح (2042x1792)
         width: '2042px',
         height: '1792px',
         position: 'relative',
@@ -30,7 +30,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         fontFamily: "'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif",
       }}
     >
-      {/* طبقة الخلفية الأصلية */}
+      {/* طبقة الخلفية الفاخرة */}
       <img
         src={imageSrc}
         alt={tier}
@@ -54,26 +54,28 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           display: 'block',
         }}
       >
-        {/* 1. الاسم الرئيسي - الإعدادات السابقة كما هي (مرتفع 200px، أبيض، ظلال كثيفة) */}
+        {/* 1. الاسم الرئيسي - حجم متزن (154px) لضمان المساحات الجانبية */}
         <h1
           style={{
             margin: '0',
             position: 'absolute',
+            
+            // الموقع المرتفع مع الإزاحة لليمين (50px)
             top: 'calc(50% - 30px)',
             left: 'calc(50% + 50px)',
             transform: 'translate(-50%, -50%)',
             width: '100%',
             textAlign: 'center',
 
-            fontSize: '192px',
+            fontSize: '154px', // الحجم الجديد لضمان التوازن وعدم ملاصقة الأطراف
             fontWeight: '800',
             fontStyle: 'italic',
+            color: '#FFFFFF',
             textTransform: 'uppercase',
             letterSpacing: '4px',
             lineHeight: '1',
 
-            color: '#FFFFFF',
-
+            // ظلال مكثفة لتعميق هالة الطفو
             textShadow: `
               0px 10px 20px rgba(0,0,0,0.8), 
               0px 40px 80px rgba(0,0,0,0.9),
@@ -84,12 +86,12 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           {name || ''}
         </h1>
 
-        {/* 2. السطر السفلي (الفئة + العبارة) - التعديلات الجديدة */}
+        {/* 2. السطر السفلي الموحد - حجم 53px وموقع مرتفع (420px) */}
         <div
           style={{
             position: 'absolute',
-            // تعديل جراحي 1: الرفع 100px إضافية (أصبح 400px من الأسفل)
-            bottom: '400px', 
+            // الرفع الإضافي 20 بكسل عن الموضع السابق
+            bottom: '420px', 
             left: '50%',
             transform: 'translateX(-50%)',
 
@@ -102,40 +104,36 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
             textAlign: 'center',
           }}
         >
-          {/* الفئة (Tier) */}
+          {/* الفئة (Tier) - خط Times New Roman */}
           <h2
             style={{
               margin: '0',
               color: '#E0E0E0',
-              // تعديل جراحي 2: زيادة الحجم 20% (أصبح 68px)
-              fontSize: '68px', 
+              fontSize: '53px', // الحجم الموحد الجديد
               fontWeight: '600',
               fontFamily: "'Times New Roman', serif",
               fontStyle: 'italic',
               letterSpacing: '6px',
               textTransform: 'uppercase',
-              // تعديل جراحي 3: ظلال كثيفة لمقاومة إضاءة الطاولة
-              textShadow: '0px 5px 10px rgba(0,0,0,1), 0px 10px 25px rgba(0,0,0,0.8)',
+              textShadow: '0px 5px 15px rgba(0,0,0,1), 0px 10px 30px rgba(0,0,0,0.9)',
               whiteSpace: 'nowrap',
             }}
           >
              {tier}
           </h2>
 
-          {/* العبارة السفلية */}
+          {/* العبارة السفلية السيادية - خط Verdana */}
           <p
             style={{
               margin: 0,
               color: '#FFFFFF',
-              // تعديل جراحي 2: زيادة الحجم 20% (أصبح 68px)
-              fontSize: '68px', 
+              fontSize: '53px', // الحجم الموحد الجديد
               fontWeight: '600',
               fontFamily: "'Verdana', sans-serif",
               fontStyle: 'italic',
               textTransform: 'uppercase',
               letterSpacing: '4px',
-              // تعديل جراحي 3: ظلال كثيفة لمقاومة إضاءة الطاولة
-              textShadow: '0px 5px 10px rgba(0,0,0,1), 0px 10px 25px rgba(0,0,0,0.8)',
+              textShadow: '0px 5px 15px rgba(0,0,0,1), 0px 10px 30px rgba(0,0,0,0.9)',
               whiteSpace: 'nowrap',
             }}
           >
