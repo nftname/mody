@@ -21,7 +21,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
     <div
       ref={ref}
       style={{
-        // الأبعاد الضخمة (2042x1792)
+        // الأبعاد الضخمة للمشروع (2042x1792)
         width: '2042px',
         height: '1792px',
         position: 'relative',
@@ -30,7 +30,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         fontFamily: "'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif",
       }}
     >
-      {/* طبقة الخلفية */}
+      {/* طبقة الخلفية الأصلية */}
       <img
         src={imageSrc}
         alt={tier}
@@ -54,59 +54,60 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           display: 'block',
         }}
       >
-        {/* 1. الاسم الرئيسي - العودة للأبيض وزيادة الظلال والخفض للأسفل */}
+        {/* 1. الاسم الرئيسي - أبيض ناصع، مرتفع 200 بكسل، وظلال مكثفة */}
         <h1
           style={{
             margin: '0',
             position: 'absolute',
             
-            // تعديل جراحي 1: خفض الاسم 100 بكسل إضافية (من +70 إلى +170)
-            top: 'calc(50% + 170px)',
+            // تعديل جراحي: رفع الاسم 200 بكسل عن الموضع السابق
+            top: 'calc(50% - 30px)',
             
+            // الحفاظ على الإزاحة اليمينية (50px)
             left: 'calc(50% + 50px)',
             transform: 'translate(-50%, -50%)',
             width: '100%',
             textAlign: 'center',
 
-            fontSize: '192px',
+            fontSize: '192px', // الحجم الضخم (يوازي 200 بكسل ارتفاع تقريباً)
             fontWeight: '800',
             fontStyle: 'italic',
             textTransform: 'uppercase',
             letterSpacing: '4px',
             lineHeight: '1',
 
-            // تعديل جراحي 2: العودة للون الأبيض الناصع
-            color: '#FFFFFF',
+            color: '#FFFFFF', // أبيض ناصع
 
-            // تعديل جراحي 3: زيادة كثافة الظلال لتعميق هالة الطفو
+            // ظلال ثلاثية لتعميق هالة البروز
             textShadow: `
-              0px 10px 20px rgba(0,0,0,0.8),   // ظل قريب للملمس
-              0px 30px 60px rgba(0,0,0,0.9),   // ظل متوسط للعمق
-              0px 60px 120px rgba(0,0,0,1)     // هالة سوداء كثيفة جداً في الخلفية
+              0px 10px 20px rgba(0,0,0,0.8), 
+              0px 40px 80px rgba(0,0,0,0.9),
+              0px 80px 150px rgba(0,0,0,1)
             `,
           }}
         >
           {name || ''}
         </h1>
 
-        {/* 2. السطر السفلي الموحد (الفئة + العبارة) - في المنتصف */}
+        {/* 2. السطر السفلي (الفئة + العبارة) - مرفوع 200 بكسل في المنتصف */}
         <div
           style={{
             position: 'absolute',
-            bottom: '100px',
+            // تعديل جراحي: رفع السطر السفلي من 100px إلى 300px
+            bottom: '300px', 
             left: '50%',
             transform: 'translateX(-50%)',
 
             display: 'flex',
             alignItems: 'baseline',
             justifyContent: 'center',
-            gap: '60px',
+            gap: '60px', // المسافة الفاصلة
 
             width: '100%',
             textAlign: 'center',
           }}
         >
-          {/* الفئة (Tier) */}
+          {/* الفئة (Tier) - مشروع NNM */}
           <h2
             style={{
               margin: '0',
@@ -124,7 +125,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
              {tier}
           </h2>
 
-          {/* العبارة السفلية */}
+          {/* العبارة السفلية السيادية */}
           <p
             style={{
               margin: 0,
