@@ -3,9 +3,9 @@ import React, { forwardRef } from 'react';
 // مصفوفة الصور (كما هي تماماً)
 const TIER_IMAGES: Record<string, string> = {
   IMMORTAL: '/images-mint/IMMORTAL.jpg',
-  ELITE: '/images-mint/FOUNDER.jpg', 
+  ELITE: '/images-mint/FOUNDER.jpg',
   FOUNDER: '/images-mint/ELITE.jpg',
-  FOUNDERS: '/images-mint/ELITE.jpg' 
+  FOUNDERS: '/images-mint/ELITE.jpg'
 };
 
 interface MintTemplateProps {
@@ -27,7 +27,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         position: 'relative',
         overflow: 'hidden',
         backgroundColor: '#000',
-        fontFamily: "'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif", 
+        fontFamily: "'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif",
       }}
     >
       {/* طبقة الخلفية */}
@@ -51,38 +51,49 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           width: '100%',
           height: '100%',
           zIndex: 10,
-          display: 'block', 
+          display: 'block',
         }}
       >
-        {/* 1. الاسم الرئيسي - مع تعديل الإزاحة والارتفاع الجديد */}
+        {/* 1. الاسم الرئيسي - التعديل الجراحي للذهب */}
         <h1
           style={{
             margin: '0',
             position: 'absolute',
-            
-            // تعديل جراحي: خفض الاسم 100 بكسل إضافية (من -30 إلى +70)
+            // الإحداثيات كما استقررنا عليها (منخفضة ومزاحة لليمين)
             top: 'calc(50% + 70px)',
-            
-            // تعديل جراحي: إزاحة لليمين بمقدار 50 بكسل عن السنتر
             left: 'calc(50% + 50px)',
-            
             transform: 'translate(-50%, -50%)',
-            width: '100%', 
-            textAlign: 'center', 
-            
-            fontSize: '192px', 
-            fontWeight: '800', 
+            width: '100%',
+            textAlign: 'center',
+
+            fontSize: '192px',
+            fontWeight: '800',
             fontStyle: 'italic',
-            color: '#F2F2F2', 
             textTransform: 'uppercase',
             letterSpacing: '4px',
             lineHeight: '1',
-            
+
+            // --- بداية حقن كود الذهب الجراحي ---
+
+            // 1. جعل لون النص الأساسي شفافاً ليظهر التدرج خلفه
+            color: 'transparent',
+
+            // 2. إنشاء التدرج الذهبي المعدني (مستخلص من الصورة الأصلية)
+            // يبدأ ببرونز داكن، يمر بذهب غني، ثم لمعة بيضاء ساطعة في الوسط، ويعود للداكن
+            backgroundImage: 'linear-gradient(135deg, #8A6E2F 0%, #D4AF37 25%, #FFFACD 50%, #D4AF37 75%, #5A3F11 100%)',
+
+            // 3. قص الخلفية المتدرجة لتظهر فقط داخل حدود النص
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+
+            // 4. تعديل الظلال لتناسب الذهب (إزالة الحافة البيضاء وإضافة عمق داكن "يطفو" فوق الطاولة)
             textShadow: `
-              0 2px 0 #ccc,
-              0 5px 15px rgba(0,0,0,0.6),
-              0 10px 30px rgba(0,0,0,0.5)
+              0px 10px 20px rgba(0,0,0,0.7),   // ظل متوسط النعومة للعمق
+              0px 30px 60px rgba(0,0,0,0.9)    // ظل واسع جداً وداكن ليعطي إحساس الطفو فوق السطح المظلم
             `,
+
+            // --- نهاية حقن كود الذهب الجراحي ---
           }}
         >
           {name || ''}
@@ -92,15 +103,15 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         <div
           style={{
             position: 'absolute',
-            bottom: '100px', 
+            bottom: '100px',
             left: '50%',
             transform: 'translateX(-50%)',
-            
-            display: 'flex', 
-            alignItems: 'baseline', 
+
+            display: 'flex',
+            alignItems: 'baseline',
             justifyContent: 'center',
-            gap: '60px', 
-            
+            gap: '60px',
+
             width: '100%',
             textAlign: 'center',
           }}
@@ -109,12 +120,12 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           <h2
             style={{
               margin: '0',
-              color: '#E0E0E0', 
-              fontSize: '56px', 
+              color: '#E0E0E0',
+              fontSize: '56px',
               fontWeight: '600',
-              fontFamily: "'Times New Roman', serif", 
+              fontFamily: "'Times New Roman', serif",
               fontStyle: 'italic',
-              letterSpacing: '6px', 
+              letterSpacing: '6px',
               textTransform: 'uppercase',
               textShadow: '0 2px 4px rgba(0,0,0,0.9)',
               whiteSpace: 'nowrap',
@@ -127,11 +138,11 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           <p
             style={{
               margin: 0,
-              color: '#FFFFFF', 
-              fontSize: '56px', 
-              fontWeight: '600', 
-              fontFamily: "'Verdana', sans-serif", 
-              fontStyle: 'italic', 
+              color: '#FFFFFF',
+              fontSize: '56px',
+              fontWeight: '600',
+              fontFamily: "'Verdana', sans-serif",
+              fontStyle: 'italic',
               textTransform: 'uppercase',
               letterSpacing: '4px',
               textShadow: '0 2px 4px rgba(0,0,0,0.9)',
