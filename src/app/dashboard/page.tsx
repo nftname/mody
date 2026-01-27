@@ -328,23 +328,32 @@ export default function DashboardPage() {
       if (!address || !publicClient) return;
       setLoading(true);
       try {
-          // استعلام موسع: جلب جميع عمليات Mint المرتبطة بالعنوان (مع .ilike لتجنب مشاكل الحروف)
+          console.log('🔍 [CREATED] Fetching minted assets for:', address);
+          
+          // استعلام موسع: البحث في جميع عمليات Mint
+          // المنطق: المستخدم هو المنفذ (from) أو المستلم (to)
           const { data, error } = await supabase
             .from('activities')
-            .select('token_id, created_at')
+            .select('token_id, created_at, from_address, to_address')
             .eq('activity_type', 'Mint')
-            .or(`from_address.ilike.${address},to_address.ilike.${address}`)
+            .or(`from_address.eq.${address},to_address.eq.${address}`)
             .order('created_at', { ascending: false });
 
-          if (error) throw error;
+          console.log('📊 [CREATED] Supabase response:', { data, error, count: data?.length });
+
+          if (error) {
+              console.error('❌ [CREATED] Supabase Error:', error);
+              throw error;
+          }
           
           if (!data || data.length === 0) {
+              console.warn('⚠️ [CREATED] No mint activities found');
               setCreatedAssets([]);
               setLoading(false);
               return;
           }
 
-          // بناء خريطة التواريخ
+          // بناء خريطة التواريخ (استخدام أحدث تاريخ لكل token)
           const dateMap: Record<string, string> = {};
           data.forEach((item: any) => { 
               if (!dateMap[item.token_id] || new Date(item.created_at) > new Date(dateMap[item.token_id])) {
@@ -354,7 +363,9 @@ export default function DashboardPage() {
 
           // استخراج token IDs فريدة
           const tokenIds = [...new Set(data.map((item: any) => item.token_id))];
-          const batches = chunk(tokenIds, 5); // مجموعات من 5 (مطابقة لـ Items)
+          console.log('🎯 [CREATED] Unique Token IDs:', tokenIds.length, tokenIds);
+
+          const batches = chunk(tokenIds, 5);
           const loadedCreated: any[] = [];
 
           for (const batch of batches) {
@@ -371,7 +382,7 @@ export default function DashboardPage() {
                       const metaRes = await fetch(resolveIPFS(tokenURI));
                       const meta = metaRes.ok ? await metaRes.json() : {};
 
-                      // جلب حالة الـ Listing (مطابقة لـ Items)
+                      // جلب حالة الـ Listing
                       let isListed = false;
                       let listingPrice = '0';
                       try {
@@ -385,7 +396,7 @@ export default function DashboardPage() {
                               isListed = true;
                               listingPrice = formatEther(listingData[1]);
                           }
-                      } catch (e) { console.warn(e); }
+                      } catch (e) { }
 
                       return {
                           id: tokenId.toString(),
@@ -398,16 +409,18 @@ export default function DashboardPage() {
                           mintTimestamp: new Date(dateMap[tokenId]).getTime()
                       };
                   } catch (error) { 
-                      console.warn(`Failed to fetch token ${tokenId}:`, error);
+                      console.warn(`⚠️ [CREATED] Failed to fetch token ${tokenId}:`, error);
                       return null; 
                   }
               }));
               
               loadedCreated.push(...(batchResults.filter(Boolean) as any[]));
-              setCreatedAssets([...loadedCreated]); // تحديث فوري للواجهة
+              setCreatedAssets([...loadedCreated]);
           }
+          
+          console.log('✅ [CREATED] Loaded assets:', loadedCreated.length, loadedCreated);
       } catch (e) { 
-          console.error("Created Fetch Error:", e); 
+          console.error('❌ [CREATED] Fatal Error:', e); 
       } finally { setLoading(false); }
   };
 
@@ -919,9 +932,27 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="pb-5">
-                    {loading && createdAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : (
+                    {loading && createdAssets.length === 0 ? (
+                        <div className="text-center py-5">
+                            <div className="spinner-border text-secondary" role="status"></div>
+                        </div>
+                    ) : createdAssets.length === 0 ? (
+                        <div className="text-center py-5 text-secondary">
+                            <i className="bi bi-inbox" style={{ fontSize: '48px', display: 'block', marginBottom: '16px', opacity: 0.3 }}></i>
+                            <div style={{ fontSize: '15px' }}>No minted assets found</div>
+                            <div style={{ fontSize: '12px', marginTop: '8px' }}>Assets you've minted will appear here</div>
+                        </div>
+                    ) : (
                         <div className="row g-3">
-                            {sortedCreatedAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
+                            {sortedCreatedAssets.map((asset) => (
+                                <AssetRenderer 
+                                    key={asset.id} 
+                                    item={asset} 
+                                    mode={currentViewMode} 
+                                    isFavorite={favoriteIds.has(asset.id)} 
+                                    onToggleFavorite={handleToggleFavorite} 
+                                />
+                            ))}
                         </div>
                     )}
                 </div>
