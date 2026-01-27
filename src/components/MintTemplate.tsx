@@ -67,7 +67,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
             width: '100%',
             textAlign: 'center',
 
-            fontSize: '154px', // الحجم الجديد لضمان التوازن وعدم ملاصقة الأطراف
+            fontSize: '187px', // الحجم الجديد لضمان التوازن وعدم ملاصقة الأطراف
             fontWeight: '800',
             fontStyle: 'italic',
             color: '#FFFFFF',
@@ -109,7 +109,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
             style={{
               margin: '0',
               color: '#E0E0E0',
-              fontSize: '53px', // الحجم الموحد الجديد
+              fontSize: '60px', // الحجم الموحد الجديد
               fontWeight: '600',
               fontFamily: "'Times New Roman', serif",
               fontStyle: 'italic',
@@ -127,7 +127,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
             style={{
               margin: 0,
               color: '#FFFFFF',
-              fontSize: '53px', // الحجم الموحد الجديد
+              fontSize: '60px', // الحجم الموحد الجديد
               fontWeight: '600',
               fontFamily: "'Verdana', sans-serif",
               fontStyle: 'italic',
