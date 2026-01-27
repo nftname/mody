@@ -54,13 +54,15 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           display: 'block',
         }}
       >
-        {/* 1. الاسم الرئيسي - التعديل الجراحي للذهب */}
+        {/* 1. الاسم الرئيسي - العودة للأبيض وزيادة الظلال والخفض للأسفل */}
         <h1
           style={{
             margin: '0',
             position: 'absolute',
-            // الإحداثيات كما استقررنا عليها (منخفضة ومزاحة لليمين)
-            top: 'calc(50% + 70px)',
+            
+            // تعديل جراحي 1: خفض الاسم 100 بكسل إضافية (من +70 إلى +170)
+            top: 'calc(50% + 170px)',
+            
             left: 'calc(50% + 50px)',
             transform: 'translate(-50%, -50%)',
             width: '100%',
@@ -73,27 +75,15 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
             letterSpacing: '4px',
             lineHeight: '1',
 
-            // --- بداية حقن كود الذهب الجراحي ---
+            // تعديل جراحي 2: العودة للون الأبيض الناصع
+            color: '#FFFFFF',
 
-            // 1. جعل لون النص الأساسي شفافاً ليظهر التدرج خلفه
-            color: 'transparent',
-
-            // 2. إنشاء التدرج الذهبي المعدني (مستخلص من الصورة الأصلية)
-            // يبدأ ببرونز داكن، يمر بذهب غني، ثم لمعة بيضاء ساطعة في الوسط، ويعود للداكن
-            backgroundImage: 'linear-gradient(135deg, #8A6E2F 0%, #D4AF37 25%, #FFFACD 50%, #D4AF37 75%, #5A3F11 100%)',
-
-            // 3. قص الخلفية المتدرجة لتظهر فقط داخل حدود النص
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-
-            // 4. تعديل الظلال لتناسب الذهب (إزالة الحافة البيضاء وإضافة عمق داكن "يطفو" فوق الطاولة)
+            // تعديل جراحي 3: زيادة كثافة الظلال لتعميق هالة الطفو
             textShadow: `
-              0px 10px 20px rgba(0,0,0,0.7),   // ظل متوسط النعومة للعمق
-              0px 30px 60px rgba(0,0,0,0.9)    // ظل واسع جداً وداكن ليعطي إحساس الطفو فوق السطح المظلم
+              0px 10px 20px rgba(0,0,0,0.8),   // ظل قريب للملمس
+              0px 30px 60px rgba(0,0,0,0.9),   // ظل متوسط للعمق
+              0px 60px 120px rgba(0,0,0,1)     // هالة سوداء كثيفة جداً في الخلفية
             `,
-
-            // --- نهاية حقن كود الذهب الجراحي ---
           }}
         >
           {name || ''}
