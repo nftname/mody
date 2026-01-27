@@ -185,16 +185,24 @@ export default function DashboardPage() {
       const count = Number(balanceBigInt);
       if (!count) { setMyAssets([]); setLoading(false); return; }
 
-      const tokenIds = await Promise.all(
-        Array.from({ length: count }, (_, i) => 
-            publicClient.readContract({
-                address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-                abi: CONTRACT_ABI,
-                functionName: 'tokenOfOwnerByIndex',
-                args: [address, BigInt(i)]
-            })
-        )
-      );
+      // جلب جميع tokenIds دون استثناء
+      const tokenIdPromises = [];
+      for (let i = 0; i < count; i++) {
+        tokenIdPromises.push(
+          publicClient.readContract({
+            address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+            abi: CONTRACT_ABI,
+            functionName: 'tokenOfOwnerByIndex',
+            args: [address, BigInt(i)]
+          }).catch((err) => {
+            console.warn(`Failed to fetch tokenId at index ${i}:`, err);
+            return null;
+          })
+        );
+      }
+      
+      const tokenIdsRaw = await Promise.all(tokenIdPromises);
+      const tokenIds = tokenIdsRaw.filter(id => id !== null);
 
       const batches = chunk(tokenIds, 5);
       const loaded: any[] = [];
@@ -320,11 +328,12 @@ export default function DashboardPage() {
       if (!address || !publicClient) return;
       setLoading(true);
       try {
+          // البحث عن جميع عمليات Mint حيث المستخدم هو المنفذ (from_address أو to_address)
           const { data, error } = await supabase
             .from('activities')
             .select('token_id, created_at')
-            .ilike('to_address', address) 
-            .eq('activity_type', 'Mint');
+            .eq('activity_type', 'Mint')
+            .or(`from_address.ilike.${address},to_address.ilike.${address}`);
 
           if (error) throw error;
           
@@ -353,7 +362,8 @@ export default function DashboardPage() {
                           image: resolveIPFS(meta.image) || '',
                           tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
                           price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0',
-                          mintDate: dateMap[tokenId]
+                          mintDate: dateMap[tokenId],
+                          mintTimestamp: new Date(dateMap[tokenId]).getTime()
                       };
                   } catch { return null; }
               }));
@@ -579,7 +589,15 @@ export default function DashboardPage() {
 
   const listedAssets = myAssets.filter(asset => asset.isListed);
   const sortedListedAssets = sortOrder === 'newest' ? [...listedAssets].reverse() : listedAssets;
-  const sortedCreatedAssets = sortOrder === 'newest' ? [...createdAssets].reverse() : createdAssets;
+  
+  // ترتيب Created Assets بناءً على mintTimestamp
+  const sortedCreatedAssets = [...createdAssets].sort((a, b) => {
+    if (sortOrder === 'newest') {
+      return (b.mintTimestamp || 0) - (a.mintTimestamp || 0);
+    } else {
+      return (a.mintTimestamp || 0) - (b.mintTimestamp || 0);
+    }
+  });
 
   if (!isConnected) {
     return (
@@ -1114,7 +1132,10 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                         </div>
                         <div className="flex-grow-1">
                             <div className="text-white" style={{ fontSize: '14px', fontWeight: '600' }}>{item.name}</div>
-                            <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
+                            <div className="d-flex align-items-center gap-2">
+                                <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
+                                {item.tier && <span style={{ fontSize: '9px', color: '#FCD535', fontWeight: '600', letterSpacing: '0.5px' }}>• {item.tier.toUpperCase()}</span>}
+                            </div>
                         </div>
                         <div className="text-end pe-4">
                              <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
@@ -1143,6 +1164,7 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                           <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
                       </div>
                       <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
+                      {item.tier && <div className="mb-1" style={{ fontSize: '10px', color: '#FCD535', fontWeight: '600', letterSpacing: '0.5px' }}>{item.tier.toUpperCase()}</div>}
                       {item.mintDate && <div className="text-white mb-2" style={{ fontSize: '11px', color: '#888' }}>Minted: {formatDate(item.mintDate)}</div>}
                       <div className="mt-auto">
                            <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Last Sale</span>}</div>
