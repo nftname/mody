@@ -178,6 +178,7 @@ function AssetPage() {
     const [convictionCount, setConvictionCount] = useState(0);
     const [hasConvicted, setHasConvicted] = useState(false);
     const [isConvictionPending, setIsConvictionPending] = useState(false);
+    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -623,10 +624,10 @@ function AssetPage() {
                 <div className="row g-3 g-lg-5">
                     
                     <div className="col-lg-5">
-                        <div className="rounded-4 overflow-hidden position-relative mb-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1' }}>
+                        <div className="rounded-4 overflow-hidden position-relative mb-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1', cursor: 'zoom-in' }} onClick={() => setIsGalleryOpen(true)}>
                             {/* FAVORITE BUTTON (MAIN IMAGE) */}
                             <div className="d-flex align-items-center justify-content-end p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
-                                <button onClick={(e) => handleToggleFavorite(e, asset.id)} className="btn p-0 border-0">
+                                <button onClick={(e) => { e.stopPropagation(); handleToggleFavorite(e, asset.id); }} className="btn p-0 border-0">
                                     <i className={`bi ${isMainFav ? 'bi-heart-fill' : 'bi-heart'}`} style={{ fontSize: '24px', color: isMainFav ? '#FFFFFF' : '#FFFFFF', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}></i>
                                 </button>
                             </div>
@@ -680,7 +681,7 @@ function AssetPage() {
                                                 <div className="col-6 col-md-4"><TraitBox type="GENERATION" value="Gen-0" percent="100%" /></div>
                                                 <div className="col-6 col-md-4"><TraitBox type="MINT DATE" value={asset.mintDate || 'Unknown'} percent="100%" /></div>
                                                 <div className="col-6 col-md-4"><TraitBox type="PLATFORM" value="NNM Registry" percent="100%" /></div>
-                                                <div className="col-6 col-md-4"><TraitBox type="TIER" value={asset.tier} percent="21%" /></div>
+                                                <div className="col-6 col-md-4"><TraitBox type="TIER" value={asset.tier?.toUpperCase()} percent="21%" /></div>
                                             </div>
                                         </Accordion>
 
@@ -898,21 +899,21 @@ function AssetPage() {
                         
                         <h4 className="fw-bold mb-4 text-center" style={{ color: TEXT_PRIMARY }}>List for Sale</h4>
 
-                        <div className="mb-4 text-center">
-                            <div style={{ color: TEXT_MUTED, fontSize: '13px', marginBottom: '8px' }}>
+                        <div className="mb-3 text-center">
+                            <div style={{ color: TEXT_MUTED, fontSize: '12px', marginBottom: '6px' }}>
                                 Set your price in {isUsdMode ? 'USD' : 'POL'}
                             </div>
                             <div className="d-flex align-items-center justify-content-center border rounded-3 overflow-hidden p-2" style={{ borderColor: BORDER_COLOR, backgroundColor: BACKGROUND_DARK }}>
                                 <input 
                                     autoFocus
                                     type="number" 
-                                    className="form-control border-0 bg-transparent text-white p-0 text-end" 
-                                    style={{ fontSize: '24px', fontWeight: 'bold', width: '120px', boxShadow: 'none' }} 
+                                    className="form-control border-0 bg-transparent text-white p-0 text-end listing-price-input" 
+                                    style={{ fontSize: '18px', fontWeight: 'bold', width: '100px', boxShadow: 'none', outline: 'none' }} 
                                     placeholder="0" 
                                     value={sellPrice} 
                                     onChange={(e) => setSellPrice(e.target.value)} 
                                 />
-                                <span className="text-white fw-bold ps-2" style={{ fontSize: '20px' }}>{isUsdMode ? 'USD' : 'POL'}</span>
+                                <span className="text-white fw-bold ps-2" style={{ fontSize: '16px' }}>{isUsdMode ? 'USD' : 'POL'}</span>
                             </div>
                             
                             {/* Dynamic Green Dollar Toggle & Conversion Display */}
@@ -942,7 +943,7 @@ function AssetPage() {
 
                         <div className="d-flex flex-column gap-2">
                             {!isApproved ? (
-                                <button onClick={handleApproveNft} disabled={isPending} className="btn w-100 py-3 fw-bold" style={{ ...SOFT_GOLD_BTN_STYLE, borderRadius: '12px' }}>
+                                <button onClick={handleApproveNft} disabled={isPending} className="btn w-100 py-2 fw-bold" style={{ ...SOFT_GOLD_BTN_STYLE, borderRadius: '10px', fontSize: '14px' }}>
                                     {isPending ? (
                                         <span className="d-flex align-items-center justify-content-center gap-2">
                                             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -951,7 +952,7 @@ function AssetPage() {
                                     ) : '1. Approve NFT'}
                                 </button>
                             ) : (
-                                <button onClick={handleList} disabled={isPending || !sellPrice || parseFloat(sellPrice) <= 0 || exchangeRates.pol <= 0} className="btn w-100 py-3 fw-bold" style={{ ...SOFT_GOLD_BTN_STYLE, borderRadius: '12px' }}>
+                                <button onClick={handleList} disabled={isPending || !sellPrice || parseFloat(sellPrice) <= 0 || exchangeRates.pol <= 0} className="btn w-100 py-2 fw-bold" style={{ ...SOFT_GOLD_BTN_STYLE, borderRadius: '10px', fontSize: '14px' }}>
                                     {isPending ? (
                                         <span className="d-flex align-items-center justify-content-center gap-2">
                                             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -961,15 +962,74 @@ function AssetPage() {
                                 </button>
                             )}
                             {/* Cancel Button: Triggers Hard Reset */}
-                            <button onClick={resetUI} className="btn btn-link text-secondary text-decoration-none" style={{ fontSize: '14px' }}>Cancel</button>
+                            <button onClick={resetUI} className="btn btn-link text-secondary text-decoration-none" style={{ fontSize: '13px' }}>Cancel</button>
                         </div>
                     </div>
                 </div>
             )}
 
+            {/* GALLERY OVERLAY */}
+            {isGalleryOpen && (
+                <div 
+                    onClick={() => setIsGalleryOpen(false)} 
+                    style={{ 
+                        position: 'fixed', 
+                        top: 0, 
+                        left: 0, 
+                        width: '100%', 
+                        height: '100%', 
+                        backgroundColor: 'rgba(0,0,0,0.9)', 
+                        backdropFilter: 'blur(10px)', 
+                        zIndex: 10000, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        cursor: 'zoom-out'
+                    }}
+                >
+                    <button 
+                        onClick={() => setIsGalleryOpen(false)} 
+                        style={{ 
+                            position: 'absolute', 
+                            top: '20px', 
+                            right: '20px', 
+                            background: 'rgba(255,255,255,0.1)', 
+                            border: 'none', 
+                            color: '#fff', 
+                            fontSize: '24px', 
+                            width: '40px', 
+                            height: '40px', 
+                            borderRadius: '50%', 
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 10001,
+                            transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                    >
+                        <i className="bi bi-x-lg"></i>
+                    </button>
+                    <img 
+                        src={asset.image} 
+                        alt={asset.name} 
+                        style={{ 
+                            maxWidth: '70%', 
+                            maxHeight: '70%', 
+                            objectFit: 'contain',
+                            borderRadius: '12px',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
+                        }} 
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+            )}
+
             {isOfferMode && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${GOLD_SOLID}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
+                    <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${GOLD_SOLID}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', position: 'relative', color: TEXT_PRIMARY }}>
                         <button onClick={resetUI} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
                         <h4 className="fw-bold mb-4 text-center" style={{ color: '#FFFFFF', fontStyle: 'italic', fontWeight: '500', fontSize: '18px' }}>{offerStep === 'select' ? 'What would you like to do?' : 'Make an offer'}</h4>
 
@@ -1022,6 +1082,25 @@ function AssetPage() {
                 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
                 .fade-in { animation: fadeIn 0.3s; }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                
+                /* إخفاء أسهم input number */
+                input::-webkit-outer-spin-button,
+                input::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+                input[type=number] {
+                    -moz-appearance: textfield;
+                }
+                
+                /* إزالة outline والتركيز على حد ذهبي خفيف */
+                .listing-price-input:focus {
+                    outline: none !important;
+                    box-shadow: none !important;
+                }
+                .listing-price-input:focus + span {
+                    color: ${GOLD_SOLID};
+                }
             `}</style>
         </main>
     );
