@@ -21,7 +21,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
     <div
       ref={ref}
       style={{
-        // تعديل جراحي 1: الأبعاد الجديدة الضخمة (2042x1792)
+        // الأبعاد الضخمة (2042x1792)
         width: '2042px',
         height: '1792px',
         position: 'relative',
@@ -54,97 +54,95 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           display: 'block', 
         }}
       >
-        {/* 1. الاسم الرئيسي - في السنتر تماماً */}
+        {/* 1. الاسم الرئيسي - في المنتصف */}
         <h1
           style={{
             margin: '0',
             position: 'absolute',
-            
-            // تعديل جراحي 2: السنتر العمودي (48% ليكون في الوسط بصرياً مع مراعاة الفئة تحته)
-            top: '48%',
-            // السنتر الأفقي باستخدام الترحيل 50%
+            top: 'calc(50% - 30px)',
             left: '50%',
             transform: 'translate(-50%, -50%)',
+            width: '100%', 
+            textAlign: 'center', 
             
-            width: '100%', // لضمان التوسيط
-            
-            // تعديل جراحي 3: زيادة الحجم 20% (من 106px إلى 128px)
-            fontSize: '128px', 
-            
+            fontSize: '192px', 
             fontWeight: '800', 
             fontStyle: 'italic',
             color: '#F2F2F2', 
             textTransform: 'uppercase',
-            letterSpacing: '4px', // زيادة التباعد قليلاً للفخامة
+            letterSpacing: '4px',
             lineHeight: '1',
-            textAlign: 'center', // توسيط النص
             
             textShadow: `
               0 2px 0 #ccc,
-              0 5px 10px rgba(0,0,0,0.6),
-              0 10px 20px rgba(0,0,0,0.5)
+              0 5px 15px rgba(0,0,0,0.6),
+              0 10px 30px rgba(0,0,0,0.5)
             `,
           }}
         >
           {name || ''}
         </h1>
 
-        {/* 2. اسم الفئة - تحت الاسم بمسافة جيدة */}
-        <h2
+        {/* 2. السطر السفلي الموحد (الفئة + العبارة) */}
+        <div
           style={{
             position: 'absolute',
-            // تعديل جراحي 4: الموقع تحت الاسم (عند 58% من الارتفاع)
-            top: '58%', 
+            // تعديل جراحي 1: الرفع للأعلى 20 بيكسل (كان 80 أصبح 100)
+            bottom: '100px', 
+            
+            // تعديل جراحي 2: التوسيط في منتصف الشاشة
             left: '50%',
             transform: 'translateX(-50%)',
             
-            width: '100%',
-            margin: '0',
+            display: 'flex', 
+            alignItems: 'baseline', 
+            justifyContent: 'center',
             
-            color: '#E0E0E0', 
-            fontSize: '48px', // حجم متناسق مع الضخامة الجديدة
-            fontWeight: '500',
-            fontFamily: "'Times New Roman', serif", 
-            fontStyle: 'italic',
-            letterSpacing: '8px', 
-            textTransform: 'uppercase',
-            textAlign: 'center', // توسيط
-            textShadow: '0 2px 4px rgba(0,0,0,0.9)',
+            // تعديل جراحي 3: المسافة الفاصلة بين الكلمتين
+            gap: '60px', 
+            
+            width: '100%',
+            textAlign: 'center',
           }}
         >
-           {tier}
-        </h2>
-      </div>
+          {/* الفئة (Tier) - نوع خطها الخاص Times New Roman */}
+          <h2
+            style={{
+              margin: '0',
+              color: '#E0E0E0', 
+              // تعديل جراحي 4: توحيد الحجم (56px)
+              fontSize: '56px', 
+              fontWeight: '600',
+              fontFamily: "'Times New Roman', serif", 
+              fontStyle: 'italic',
+              letterSpacing: '6px', 
+              textTransform: 'uppercase',
+              textShadow: '0 2px 4px rgba(0,0,0,0.9)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+             {tier}
+          </h2>
 
-      {/* 3. السطر الثالث (الختم الرسمي) - أسفل المنتصف */}
-      <div
-        style={{
-          position: 'absolute',
-          // تعديل جراحي 5: أسفل الصورة في المنتصف
-          bottom: '80px', 
-          left: '50%',
-          transform: 'translateX(-50%)',
-          
-          width: '100%',
-          textAlign: 'center',
-          zIndex: 10,
-        }}
-      >
-        <p
-          style={{
-            margin: 0,
-            color: '#FFFFFF', 
-            fontSize: '36px', // تكبير طفيف ليناسب حجم الصورة العملاق
-            fontWeight: '600', 
-            fontStyle: 'italic', 
-            textTransform: 'uppercase',
-            letterSpacing: '4px',
-            textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-            fontFamily: "'Verdana', sans-serif", 
-          }}
-        >
-          GEN-0 NNM Sovereign Asset
-        </p>
+          {/* العبارة السفلية - نوع خطها الخاص Verdana */}
+          <p
+            style={{
+              margin: 0,
+              color: '#FFFFFF', 
+              // تعديل جراحي 4: توحيد الحجم (56px)
+              fontSize: '56px', 
+              fontWeight: '600', 
+              fontFamily: "'Verdana', sans-serif", // الحفاظ على نوع الخط المختلف
+              fontStyle: 'italic', 
+              textTransform: 'uppercase',
+              letterSpacing: '4px',
+              textShadow: '0 2px 4px rgba(0,0,0,0.9)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            GEN-0 NNM Sovereign Asset
+          </p>
+        </div>
       </div>
     </div>
   );
