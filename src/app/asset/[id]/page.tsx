@@ -600,7 +600,7 @@ function AssetPage() {
                 return <button onClick={handleCancelListing} disabled={isPending} className={btnClass} style={{ ...OUTLINE_BTN_STYLE, borderRadius: '12px', width: mobile ? '65%' : '100%', maxWidth: mobile ? '500px' : 'none', fontSize: '16px' }}>Cancel Listing</button>;
             }
             // If not listed, show "List for Sale" which triggers the Modal
-            return <button onClick={() => setIsListingMode(true)} className={btnClass} style={{ ...GOLD_BTN_STYLE, borderRadius: '12px', width: mobile ? '65%' : '100%', maxWidth: mobile ? '500px' : 'none', fontSize: '16px' }}>List for Sale</button>;
+            return <button onClick={() => setIsListingMode(true)} className={btnClass} style={{ ...GLASS_BTN_STYLE, borderRadius: '12px', width: mobile ? '65%' : '100%', maxWidth: mobile ? '500px' : 'none', fontSize: '16px' }}>List for Sale</button>;
         }
 
         return (
