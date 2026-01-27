@@ -21,9 +21,9 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
     <div
       ref={ref}
       style={{
-        // الأبعاد الثابتة للصورة المربعة
-        width: '1343px',
-        height: '1116px',
+        // تعديل جراحي 1: الأبعاد الجديدة الضخمة (2042x1792)
+        width: '2042px',
+        height: '1792px',
         position: 'relative',
         overflow: 'hidden',
         backgroundColor: '#000',
@@ -54,28 +54,30 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           display: 'block', 
         }}
       >
-        {/* 1. الاسم الرئيسي */}
+        {/* 1. الاسم الرئيسي - في السنتر تماماً */}
         <h1
           style={{
             margin: '0',
             position: 'absolute',
             
-            // تعديل جراحي 1: النزول بالاسم لأسفل (36%) ليظهر شعاع الليزر من فوقه
-            top: '36%',     
+            // تعديل جراحي 2: السنتر العمودي (48% ليكون في الوسط بصرياً مع مراعاة الفئة تحته)
+            top: '48%',
+            // السنتر الأفقي باستخدام الترحيل 50%
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
             
-            // تعديل جراحي 2: إزاحة لليمين (15%) ليلامس الحرف الأخير شعاع الليزر
-            right: '15%',   
+            width: '100%', // لضمان التوسيط
             
-            // تعديل جراحي 3: تكبير الخط بنسبة 20% (من 88px إلى 106px)
-            fontSize: '106px', 
+            // تعديل جراحي 3: زيادة الحجم 20% (من 106px إلى 128px)
+            fontSize: '128px', 
             
             fontWeight: '800', 
             fontStyle: 'italic',
             color: '#F2F2F2', 
             textTransform: 'uppercase',
-            letterSpacing: '2px', 
+            letterSpacing: '4px', // زيادة التباعد قليلاً للفخامة
             lineHeight: '1',
-            textAlign: 'right', // المحاذاة لليمين ضرورية ليتمدد الاسم باتجاه اليسار
+            textAlign: 'center', // توسيط النص
             
             textShadow: `
               0 2px 0 #ccc,
@@ -87,23 +89,26 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           {name || ''}
         </h1>
 
-        {/* 2. اسم الفئة */}
+        {/* 2. اسم الفئة - تحت الاسم بمسافة جيدة */}
         <h2
           style={{
             position: 'absolute',
-            bottom: '100px', 
-            // تعديل جراحي 4: إزاحة عن اليسار لتفادي القص (من 60px إلى 100px)
-            left: '100px',
+            // تعديل جراحي 4: الموقع تحت الاسم (عند 58% من الارتفاع)
+            top: '58%', 
+            left: '50%',
+            transform: 'translateX(-50%)',
             
+            width: '100%',
             margin: '0',
+            
             color: '#E0E0E0', 
-            fontSize: '42px',
+            fontSize: '48px', // حجم متناسق مع الضخامة الجديدة
             fontWeight: '500',
             fontFamily: "'Times New Roman', serif", 
             fontStyle: 'italic',
-            letterSpacing: '6px', 
+            letterSpacing: '8px', 
             textTransform: 'uppercase',
-            textAlign: 'left',
+            textAlign: 'center', // توسيط
             textShadow: '0 2px 4px rgba(0,0,0,0.9)',
           }}
         >
@@ -111,14 +116,17 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         </h2>
       </div>
 
-      {/* 3. السطر الثالث (الختم الرسمي) */}
+      {/* 3. السطر الثالث (الختم الرسمي) - أسفل المنتصف */}
       <div
         style={{
           position: 'absolute',
-          bottom: '40px', 
-          // تعديل جراحي 5: إزاحة عن اليسار لتطابق الفئة (100px)
-          left: '100px',
-          textAlign: 'left',
+          // تعديل جراحي 5: أسفل الصورة في المنتصف
+          bottom: '80px', 
+          left: '50%',
+          transform: 'translateX(-50%)',
+          
+          width: '100%',
+          textAlign: 'center',
           zIndex: 10,
         }}
       >
@@ -126,11 +134,11 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           style={{
             margin: 0,
             color: '#FFFFFF', 
-            fontSize: '32px', 
+            fontSize: '36px', // تكبير طفيف ليناسب حجم الصورة العملاق
             fontWeight: '600', 
             fontStyle: 'italic', 
             textTransform: 'uppercase',
-            letterSpacing: '3px',
+            letterSpacing: '4px',
             textShadow: '0 1px 3px rgba(0,0,0,0.8)',
             fontFamily: "'Verdana', sans-serif", 
           }}
