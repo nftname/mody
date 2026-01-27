@@ -54,13 +54,18 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           display: 'block', 
         }}
       >
-        {/* 1. الاسم الرئيسي - في المنتصف */}
+        {/* 1. الاسم الرئيسي - مع تعديل الإزاحة والارتفاع الجديد */}
         <h1
           style={{
             margin: '0',
             position: 'absolute',
-            top: 'calc(50% - 30px)',
-            left: '50%',
+            
+            // تعديل جراحي: خفض الاسم 100 بكسل إضافية (من -30 إلى +70)
+            top: 'calc(50% + 70px)',
+            
+            // تعديل جراحي: إزاحة لليمين بمقدار 50 بكسل عن السنتر
+            left: 'calc(50% + 50px)',
+            
             transform: 'translate(-50%, -50%)',
             width: '100%', 
             textAlign: 'center', 
@@ -83,34 +88,28 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           {name || ''}
         </h1>
 
-        {/* 2. السطر السفلي الموحد (الفئة + العبارة) */}
+        {/* 2. السطر السفلي الموحد (الفئة + العبارة) - في المنتصف */}
         <div
           style={{
             position: 'absolute',
-            // تعديل جراحي 1: الرفع للأعلى 20 بيكسل (كان 80 أصبح 100)
             bottom: '100px', 
-            
-            // تعديل جراحي 2: التوسيط في منتصف الشاشة
             left: '50%',
             transform: 'translateX(-50%)',
             
             display: 'flex', 
             alignItems: 'baseline', 
             justifyContent: 'center',
-            
-            // تعديل جراحي 3: المسافة الفاصلة بين الكلمتين
             gap: '60px', 
             
             width: '100%',
             textAlign: 'center',
           }}
         >
-          {/* الفئة (Tier) - نوع خطها الخاص Times New Roman */}
+          {/* الفئة (Tier) */}
           <h2
             style={{
               margin: '0',
               color: '#E0E0E0', 
-              // تعديل جراحي 4: توحيد الحجم (56px)
               fontSize: '56px', 
               fontWeight: '600',
               fontFamily: "'Times New Roman', serif", 
@@ -124,15 +123,14 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
              {tier}
           </h2>
 
-          {/* العبارة السفلية - نوع خطها الخاص Verdana */}
+          {/* العبارة السفلية */}
           <p
             style={{
               margin: 0,
               color: '#FFFFFF', 
-              // تعديل جراحي 4: توحيد الحجم (56px)
               fontSize: '56px', 
               fontWeight: '600', 
-              fontFamily: "'Verdana', sans-serif", // الحفاظ على نوع الخط المختلف
+              fontFamily: "'Verdana', sans-serif", 
               fontStyle: 'italic', 
               textTransform: 'uppercase',
               letterSpacing: '4px',
