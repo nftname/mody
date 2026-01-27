@@ -122,7 +122,7 @@ export default function DashboardPage() {
   const getActivityValue = (type: string, price: any) => {
       const value = parseFloat(price || '0');
       if (type === 'List') return { label: '- 0.01', currency: 'POL' };
-      if (type === 'Mint') return { label: `-${formatCompactNumber(value)}`, currency: 'POL' }; // عرض السعر كما هو
+      if (type === 'Mint') return { label: `-${formatCompactNumber(value / 0.54)}`, currency: 'POL' };
       if (type === 'Sale') return { label: `+${formatCompactNumber(value)}`, currency: 'POL' };
       if (type === 'Offer') return { label: formatCompactNumber(value), currency: 'WPOL' };
       if (type === 'Payout') return { label: `+${formatCompactNumber(value)}`, currency: 'POL' };
@@ -370,16 +370,12 @@ export default function DashboardPage() {
       if (!address) return;
       setLoading(true);
       try {
-          console.log('🔍 [ACTIVITY] Fetching activities for:', address);
-          
           // History
           const { data: activityData, error: actError } = await supabase
             .from('activities')
             .select('*')
             .or(`from_address.ilike.${address},to_address.ilike.${address}`)
             .order('created_at', { ascending: false });
-
-          console.log('📊 [ACTIVITY] Activities from DB:', activityData?.length, activityData);
 
           if (actError) throw actError;
 
@@ -389,8 +385,6 @@ export default function DashboardPage() {
              .select('*')
              .ilike('bidder_address', address)
              .order('created_at', { ascending: false });
-
-          console.log('📊 [ACTIVITY] Offers from DB:', offersData?.length);
 
           if (offError) throw offError;
 
@@ -415,19 +409,10 @@ export default function DashboardPage() {
           }));
 
           const merged = [...formattedActivities, ...formattedOffers].sort((a, b) => b.rawDate - a.rawDate);
-          
-          console.log('✅ [ACTIVITY] Total activities displayed:', merged.length);
-          console.log('🔍 [ACTIVITY] Breakdown:', {
-              Mint: merged.filter(a => a.type === 'Mint').length,
-              Sale: merged.filter(a => a.type === 'Sale').length,
-              List: merged.filter(a => a.type === 'List').length,
-              Offers: merged.filter(a => a.type === 'Offer').length
-          });
-          
           setActivityData(merged);
 
       } catch (e) { 
-          console.error('❌ [ACTIVITY] Error:', e); 
+          console.error("Activity Error", e); 
       } finally { setLoading(false); }
   };
 
