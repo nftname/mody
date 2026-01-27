@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 
-// مصفوفة الصور (كما هي)
+// مصفوفة الصور (كما هي تماماً)
 const TIER_IMAGES: Record<string, string> = {
   IMMORTAL: '/images-mint/IMMORTAL.jpg',
   ELITE: '/images-mint/FOUNDER.jpg', 
@@ -21,7 +21,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
     <div
       ref={ref}
       style={{
-        // الأبعاد بالعرض (Landscape)
+        // الأبعاد والخصائص كما هي
         width: '1280px',
         height: '832px',
         position: 'relative',
@@ -55,27 +55,27 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center', 
+          // تعديل جراحي 1: إضافة مساحة سفلية لرفع المحتوى للأعلى ليقابل شعاع الليزر
+          paddingBottom: '80px', 
+          // تعديل جراحي 2: إزاحة المحتوى بالكامل قليلاً لليمين ليتماشى مع مصدر الليزر
+          paddingLeft: '35px', 
         }}
       >
-        {/* 1. الاسم الرئيسي (كريستال أوف-وايت فخم) */}
+        {/* 1. الاسم الرئيسي */}
         <h1
           style={{
             margin: '0',
-            // تم التخفيض بنسبة 20% بالضبط (110 - 22 = 88)
-            fontSize: '88px', 
-            // سميك ليعطي هيبة
+            fontSize: '88px', // الحجم كما هو (مناسب لليزر)
             fontWeight: '800', 
-            // مائل (لمسة الشياكة)
             fontStyle: 'italic',
-            // لون أوف-وايت (لؤلؤي) لتقليل حدة الأبيض
             color: '#F2F2F2', 
             textTransform: 'uppercase',
             letterSpacing: '2px', 
             lineHeight: '1',
             position: 'relative',
-            top: '-20px', 
+            // تعديل جراحي 3: رفع الاسم للأعلى أكثر ليدخل فيه الليزر بنسبة 20%
+            top: '-30px', 
             
-            // الظل الأسود العميق (Depth)
             textShadow: `
               0 2px 0 #ccc,
               0 5px 10px rgba(0,0,0,0.6),
@@ -89,9 +89,11 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         {/* 2. اسم الفئة */}
         <h2
           style={{
-            margin: '15px 0 0 0',
+            // تعديل جراحي 4: زيادة المسافة بنسبة 100% (من 15px إلى 30px)
+            margin: '30px 0 0 0',
             color: '#E0E0E0', 
-            fontSize: '28px',
+            // تعديل جراحي 5: زيادة الحجم بنسبة 50% (من 28px إلى 42px)
+            fontSize: '42px',
             fontWeight: '500',
             fontFamily: "'Times New Roman', serif", 
             fontStyle: 'italic',
@@ -108,7 +110,8 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
       <div
         style={{
           position: 'absolute',
-          bottom: '26%', 
+          // تعديل جراحي 6: إنزاله للأسفل لزيادة البعد عن الفئة (من 26% إلى 15%)
+          bottom: '15%', 
           left: '50%',
           transform: 'translateX(-50%)',
           textAlign: 'center',
@@ -120,7 +123,8 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           style={{
             margin: 0,
             color: '#FFFFFF', 
-            fontSize: '16px', 
+            // تعديل جراحي 7: زيادة الحجم بنسبة 100% (من 16px إلى 32px)
+            fontSize: '32px', 
             fontWeight: '600', 
             fontStyle: 'italic', 
             textTransform: 'uppercase',
