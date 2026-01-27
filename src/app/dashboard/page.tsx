@@ -323,17 +323,18 @@ export default function DashboardPage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
-  // --- 3. CREATED ---
+  // --- 3. CREATED (Enhanced with Listings & Batching) ---
   const fetchCreated = async () => {
       if (!address || !publicClient) return;
       setLoading(true);
       try {
-          // البحث عن جميع عمليات Mint حيث المستخدم هو المنفذ (from_address أو to_address)
+          // استعلام موسع: جلب جميع عمليات Mint المرتبطة بالعنوان (مع .ilike لتجنب مشاكل الحروف)
           const { data, error } = await supabase
             .from('activities')
             .select('token_id, created_at')
             .eq('activity_type', 'Mint')
-            .or(`from_address.ilike.${address},to_address.ilike.${address}`);
+            .or(`from_address.ilike.${address},to_address.ilike.${address}`)
+            .order('created_at', { ascending: false });
 
           if (error) throw error;
           
@@ -343,32 +344,67 @@ export default function DashboardPage() {
               return;
           }
 
+          // بناء خريطة التواريخ
           const dateMap: Record<string, string> = {};
-          data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
+          data.forEach((item: any) => { 
+              if (!dateMap[item.token_id] || new Date(item.created_at) > new Date(dateMap[item.token_id])) {
+                  dateMap[item.token_id] = item.created_at;
+              }
+          });
 
+          // استخراج token IDs فريدة
           const tokenIds = [...new Set(data.map((item: any) => item.token_id))];
-          const batches = chunk(tokenIds, 4); 
+          const batches = chunk(tokenIds, 5); // مجموعات من 5 (مطابقة لـ Items)
           const loadedCreated: any[] = [];
 
           for (const batch of batches) {
               const batchResults = await Promise.all(batch.map(async (tokenId: any) => {
                   try {
-                      const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'tokenURI', args: [BigInt(tokenId)] });
+                      // جلب الميتاداتا
+                      const tokenURI = await publicClient.readContract({ 
+                          address: NFT_COLLECTION_ADDRESS as `0x${string}`, 
+                          abi: CONTRACT_ABI, 
+                          functionName: 'tokenURI', 
+                          args: [BigInt(tokenId)] 
+                      });
+
                       const metaRes = await fetch(resolveIPFS(tokenURI));
                       const meta = metaRes.ok ? await metaRes.json() : {};
+
+                      // جلب حالة الـ Listing (مطابقة لـ Items)
+                      let isListed = false;
+                      let listingPrice = '0';
+                      try {
+                          const listingData = await publicClient.readContract({
+                              address: MARKETPLACE_ADDRESS as `0x${string}`,
+                              abi: MARKETPLACE_ABI,
+                              functionName: 'listings',
+                              args: [BigInt(tokenId)]
+                          });
+                          if (listingData[2] === true) {
+                              isListed = true;
+                              listingPrice = formatEther(listingData[1]);
+                          }
+                      } catch (e) { console.warn(e); }
+
                       return {
                           id: tokenId.toString(),
                           name: meta.name || `NNM #${tokenId.toString()}`,
                           image: resolveIPFS(meta.image) || '',
                           tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
-                          price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0',
+                          price: isListed ? listingPrice : (meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'),
+                          isListed: isListed,
                           mintDate: dateMap[tokenId],
                           mintTimestamp: new Date(dateMap[tokenId]).getTime()
                       };
-                  } catch { return null; }
+                  } catch (error) { 
+                      console.warn(`Failed to fetch token ${tokenId}:`, error);
+                      return null; 
+                  }
               }));
+              
               loadedCreated.push(...(batchResults.filter(Boolean) as any[]));
-              setCreatedAssets([...loadedCreated]); 
+              setCreatedAssets([...loadedCreated]); // تحديث فوري للواجهة
           }
       } catch (e) { 
           console.error("Created Fetch Error:", e); 
