@@ -21,9 +21,9 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
     <div
       ref={ref}
       style={{
-        // الأبعاد والخصائص كما هي
-        width: '1280px',
-        height: '832px',
+        // تعديل جراحي 1: الأبعاد الجديدة للصورة المربعة
+        width: '1343px',
+        height: '1116px',
         position: 'relative',
         overflow: 'hidden',
         backgroundColor: '#000',
@@ -51,30 +51,27 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           width: '100%',
           height: '100%',
           zIndex: 10,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center', 
-          // تعديل جراحي 1: إضافة مساحة سفلية لرفع المحتوى للأعلى ليقابل شعاع الليزر
-          paddingBottom: '80px', 
-          // تعديل جراحي 2: إزاحة المحتوى بالكامل قليلاً لليمين ليتماشى مع مصدر الليزر
-          paddingLeft: '35px', 
+          // تعديل جراحي 2: إلغاء الفليكس المركزي للسماح بالتحكم الحر في الإحداثيات
+          display: 'block', 
         }}
       >
         {/* 1. الاسم الرئيسي */}
         <h1
           style={{
             margin: '0',
-            fontSize: '88px', // الحجم كما هو (مناسب لليزر)
+            // تعديل جراحي 3: ضبط المكان بدقة ليلامس شعاع الليزر من اليمين
+            position: 'absolute',
+            top: '28%',     // الارتفاع المناسب لتقاطع الشعاع (20% تداخل)
+            right: '25%',   // النقطة التي ينتهي عندها الاسم (عند رأس الليزر تماماً)
+            
+            fontSize: '88px', 
             fontWeight: '800', 
             fontStyle: 'italic',
             color: '#F2F2F2', 
             textTransform: 'uppercase',
             letterSpacing: '2px', 
             lineHeight: '1',
-            position: 'relative',
-            // تعديل جراحي 3: رفع الاسم للأعلى أكثر ليدخل فيه الليزر بنسبة 20%
-            top: '-30px', 
+            textAlign: 'right', // بداية الكتابة من اليمين لليسار (خارجاً من الليزر)
             
             textShadow: `
               0 2px 0 #ccc,
@@ -89,16 +86,20 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         {/* 2. اسم الفئة */}
         <h2
           style={{
-            // تعديل جراحي 4: زيادة المسافة بنسبة 100% (من 15px إلى 30px)
-            margin: '30px 0 0 0',
+            // تعديل جراحي 4: نقل الفئة إلى أقصى اليسار السفلي
+            position: 'absolute',
+            bottom: '100px', // فوق العبارة الأخيرة بمسافة
+            left: '60px',
+            
+            margin: '0',
             color: '#E0E0E0', 
-            // تعديل جراحي 5: زيادة الحجم بنسبة 50% (من 28px إلى 42px)
             fontSize: '42px',
             fontWeight: '500',
             fontFamily: "'Times New Roman', serif", 
             fontStyle: 'italic',
             letterSpacing: '6px', 
             textTransform: 'uppercase',
+            textAlign: 'left',
             textShadow: '0 2px 4px rgba(0,0,0,0.9)',
           }}
         >
@@ -109,13 +110,11 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
       {/* 3. السطر الثالث (الختم الرسمي) */}
       <div
         style={{
+          // تعديل جراحي 5: نقل العبارة إلى أقصى اليسار أسفل الفئة
           position: 'absolute',
-          // تعديل جراحي 6: إنزاله للأسفل لزيادة البعد عن الفئة (من 26% إلى 15%)
-          bottom: '15%', 
-          left: '50%',
-          transform: 'translateX(-50%)',
-          textAlign: 'center',
-          width: '100%',
+          bottom: '40px', 
+          left: '60px',
+          textAlign: 'left',
           zIndex: 10,
         }}
       >
@@ -123,7 +122,6 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           style={{
             margin: 0,
             color: '#FFFFFF', 
-            // تعديل جراحي 7: زيادة الحجم بنسبة 100% (من 16px إلى 32px)
             fontSize: '32px', 
             fontWeight: '600', 
             fontStyle: 'italic', 
