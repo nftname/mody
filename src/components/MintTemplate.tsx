@@ -21,7 +21,7 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
     <div
       ref={ref}
       style={{
-        // تعديل جراحي 1: الأبعاد الجديدة للصورة المربعة
+        // الأبعاد الثابتة للصورة المربعة
         width: '1343px',
         height: '1116px',
         position: 'relative',
@@ -51,7 +51,6 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
           width: '100%',
           height: '100%',
           zIndex: 10,
-          // تعديل جراحي 2: إلغاء الفليكس المركزي للسماح بالتحكم الحر في الإحداثيات
           display: 'block', 
         }}
       >
@@ -59,19 +58,24 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         <h1
           style={{
             margin: '0',
-            // تعديل جراحي 3: ضبط المكان بدقة ليلامس شعاع الليزر من اليمين
             position: 'absolute',
-            top: '28%',     // الارتفاع المناسب لتقاطع الشعاع (20% تداخل)
-            right: '25%',   // النقطة التي ينتهي عندها الاسم (عند رأس الليزر تماماً)
             
-            fontSize: '88px', 
+            // تعديل جراحي 1: النزول بالاسم لأسفل (36%) ليظهر شعاع الليزر من فوقه
+            top: '36%',     
+            
+            // تعديل جراحي 2: إزاحة لليمين (15%) ليلامس الحرف الأخير شعاع الليزر
+            right: '15%',   
+            
+            // تعديل جراحي 3: تكبير الخط بنسبة 20% (من 88px إلى 106px)
+            fontSize: '106px', 
+            
             fontWeight: '800', 
             fontStyle: 'italic',
             color: '#F2F2F2', 
             textTransform: 'uppercase',
             letterSpacing: '2px', 
             lineHeight: '1',
-            textAlign: 'right', // بداية الكتابة من اليمين لليسار (خارجاً من الليزر)
+            textAlign: 'right', // المحاذاة لليمين ضرورية ليتمدد الاسم باتجاه اليسار
             
             textShadow: `
               0 2px 0 #ccc,
@@ -86,10 +90,10 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
         {/* 2. اسم الفئة */}
         <h2
           style={{
-            // تعديل جراحي 4: نقل الفئة إلى أقصى اليسار السفلي
             position: 'absolute',
-            bottom: '100px', // فوق العبارة الأخيرة بمسافة
-            left: '60px',
+            bottom: '100px', 
+            // تعديل جراحي 4: إزاحة عن اليسار لتفادي القص (من 60px إلى 100px)
+            left: '100px',
             
             margin: '0',
             color: '#E0E0E0', 
@@ -110,10 +114,10 @@ const MintTemplate = forwardRef<HTMLDivElement, MintTemplateProps>(({ name, tier
       {/* 3. السطر الثالث (الختم الرسمي) */}
       <div
         style={{
-          // تعديل جراحي 5: نقل العبارة إلى أقصى اليسار أسفل الفئة
           position: 'absolute',
           bottom: '40px', 
-          left: '60px',
+          // تعديل جراحي 5: إزاحة عن اليسار لتطابق الفئة (100px)
+          left: '100px',
           textAlign: 'left',
           zIndex: 10,
         }}
