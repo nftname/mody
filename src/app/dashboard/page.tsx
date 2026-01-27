@@ -185,24 +185,16 @@ export default function DashboardPage() {
       const count = Number(balanceBigInt);
       if (!count) { setMyAssets([]); setLoading(false); return; }
 
-      // جلب جميع tokenIds دون استثناء
-      const tokenIdPromises = [];
-      for (let i = 0; i < count; i++) {
-        tokenIdPromises.push(
-          publicClient.readContract({
-            address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-            abi: CONTRACT_ABI,
-            functionName: 'tokenOfOwnerByIndex',
-            args: [address, BigInt(i)]
-          }).catch((err) => {
-            console.warn(`Failed to fetch tokenId at index ${i}:`, err);
-            return null;
-          })
-        );
-      }
-      
-      const tokenIdsRaw = await Promise.all(tokenIdPromises);
-      const tokenIds = tokenIdsRaw.filter(id => id !== null);
+      const tokenIds = await Promise.all(
+        Array.from({ length: count }, (_, i) => 
+            publicClient.readContract({
+                address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                abi: CONTRACT_ABI,
+                functionName: 'tokenOfOwnerByIndex',
+                args: [address, BigInt(i)]
+            })
+        )
+      );
 
       const batches = chunk(tokenIds, 5);
       const loaded: any[] = [];
@@ -323,104 +315,53 @@ export default function DashboardPage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
-  // --- 3. CREATED (Enhanced with Listings & Batching) ---
+  // --- 3. CREATED ---
   const fetchCreated = async () => {
       if (!address || !publicClient) return;
       setLoading(true);
       try {
-          console.log('🔍 [CREATED] Fetching minted assets for:', address);
-          
-          // استعلام موسع: البحث في جميع عمليات Mint
-          // المنطق: المستخدم هو المنفذ (from) أو المستلم (to)
           const { data, error } = await supabase
             .from('activities')
-            .select('token_id, created_at, from_address, to_address')
-            .eq('activity_type', 'Mint')
-            .or(`from_address.eq.${address},to_address.eq.${address}`)
-            .order('created_at', { ascending: false });
+            .select('token_id, created_at')
+            .ilike('to_address', address) 
+            .eq('activity_type', 'Mint');
 
-          console.log('📊 [CREATED] Supabase response:', { data, error, count: data?.length });
-
-          if (error) {
-              console.error('❌ [CREATED] Supabase Error:', error);
-              throw error;
-          }
+          if (error) throw error;
           
           if (!data || data.length === 0) {
-              console.warn('⚠️ [CREATED] No mint activities found');
               setCreatedAssets([]);
               setLoading(false);
               return;
           }
 
-          // بناء خريطة التواريخ (استخدام أحدث تاريخ لكل token)
           const dateMap: Record<string, string> = {};
-          data.forEach((item: any) => { 
-              if (!dateMap[item.token_id] || new Date(item.created_at) > new Date(dateMap[item.token_id])) {
-                  dateMap[item.token_id] = item.created_at;
-              }
-          });
+          data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
 
-          // استخراج token IDs فريدة
           const tokenIds = [...new Set(data.map((item: any) => item.token_id))];
-          console.log('🎯 [CREATED] Unique Token IDs:', tokenIds.length, tokenIds);
-
-          const batches = chunk(tokenIds, 5);
+          const batches = chunk(tokenIds, 4); 
           const loadedCreated: any[] = [];
 
           for (const batch of batches) {
               const batchResults = await Promise.all(batch.map(async (tokenId: any) => {
                   try {
-                      // جلب الميتاداتا
-                      const tokenURI = await publicClient.readContract({ 
-                          address: NFT_COLLECTION_ADDRESS as `0x${string}`, 
-                          abi: CONTRACT_ABI, 
-                          functionName: 'tokenURI', 
-                          args: [BigInt(tokenId)] 
-                      });
-
+                      const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'tokenURI', args: [BigInt(tokenId)] });
                       const metaRes = await fetch(resolveIPFS(tokenURI));
                       const meta = metaRes.ok ? await metaRes.json() : {};
-
-                      // جلب حالة الـ Listing
-                      let isListed = false;
-                      let listingPrice = '0';
-                      try {
-                          const listingData = await publicClient.readContract({
-                              address: MARKETPLACE_ADDRESS as `0x${string}`,
-                              abi: MARKETPLACE_ABI,
-                              functionName: 'listings',
-                              args: [BigInt(tokenId)]
-                          });
-                          if (listingData[2] === true) {
-                              isListed = true;
-                              listingPrice = formatEther(listingData[1]);
-                          }
-                      } catch (e) { }
-
                       return {
                           id: tokenId.toString(),
                           name: meta.name || `NNM #${tokenId.toString()}`,
                           image: resolveIPFS(meta.image) || '',
                           tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
-                          price: isListed ? listingPrice : (meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'),
-                          isListed: isListed,
-                          mintDate: dateMap[tokenId],
-                          mintTimestamp: new Date(dateMap[tokenId]).getTime()
+                          price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0',
+                          mintDate: dateMap[tokenId]
                       };
-                  } catch (error) { 
-                      console.warn(`⚠️ [CREATED] Failed to fetch token ${tokenId}:`, error);
-                      return null; 
-                  }
+                  } catch { return null; }
               }));
-              
               loadedCreated.push(...(batchResults.filter(Boolean) as any[]));
-              setCreatedAssets([...loadedCreated]);
+              setCreatedAssets([...loadedCreated]); 
           }
-          
-          console.log('✅ [CREATED] Loaded assets:', loadedCreated.length, loadedCreated);
       } catch (e) { 
-          console.error('❌ [CREATED] Fatal Error:', e); 
+          console.error("Created Fetch Error:", e); 
       } finally { setLoading(false); }
   };
 
@@ -638,15 +579,7 @@ export default function DashboardPage() {
 
   const listedAssets = myAssets.filter(asset => asset.isListed);
   const sortedListedAssets = sortOrder === 'newest' ? [...listedAssets].reverse() : listedAssets;
-  
-  // ترتيب Created Assets بناءً على mintTimestamp
-  const sortedCreatedAssets = [...createdAssets].sort((a, b) => {
-    if (sortOrder === 'newest') {
-      return (b.mintTimestamp || 0) - (a.mintTimestamp || 0);
-    } else {
-      return (a.mintTimestamp || 0) - (b.mintTimestamp || 0);
-    }
-  });
+  const sortedCreatedAssets = sortOrder === 'newest' ? [...createdAssets].reverse() : createdAssets;
 
   if (!isConnected) {
     return (
@@ -932,27 +865,9 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="pb-5">
-                    {loading && createdAssets.length === 0 ? (
-                        <div className="text-center py-5">
-                            <div className="spinner-border text-secondary" role="status"></div>
-                        </div>
-                    ) : createdAssets.length === 0 ? (
-                        <div className="text-center py-5 text-secondary">
-                            <i className="bi bi-inbox" style={{ fontSize: '48px', display: 'block', marginBottom: '16px', opacity: 0.3 }}></i>
-                            <div style={{ fontSize: '15px' }}>No minted assets found</div>
-                            <div style={{ fontSize: '12px', marginTop: '8px' }}>Assets you've minted will appear here</div>
-                        </div>
-                    ) : (
+                    {loading && createdAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : (
                         <div className="row g-3">
-                            {sortedCreatedAssets.map((asset) => (
-                                <AssetRenderer 
-                                    key={asset.id} 
-                                    item={asset} 
-                                    mode={currentViewMode} 
-                                    isFavorite={favoriteIds.has(asset.id)} 
-                                    onToggleFavorite={handleToggleFavorite} 
-                                />
-                            ))}
+                            {sortedCreatedAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
                         </div>
                     )}
                 </div>
@@ -1199,10 +1114,7 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                         </div>
                         <div className="flex-grow-1">
                             <div className="text-white" style={{ fontSize: '14px', fontWeight: '600' }}>{item.name}</div>
-                            <div className="d-flex align-items-center gap-2">
-                                <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
-                                {item.tier && <span style={{ fontSize: '9px', color: '#FCD535', fontWeight: '600', letterSpacing: '0.5px' }}>• {item.tier.toUpperCase()}</span>}
-                            </div>
+                            <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
                         </div>
                         <div className="text-end pe-4">
                              <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
@@ -1231,7 +1143,6 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                           <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
                       </div>
                       <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
-                      {item.tier && <div className="mb-1" style={{ fontSize: '10px', color: '#FCD535', fontWeight: '600', letterSpacing: '0.5px' }}>{item.tier.toUpperCase()}</div>}
                       {item.mintDate && <div className="text-white mb-2" style={{ fontSize: '11px', color: '#888' }}>Minted: {formatDate(item.mintDate)}</div>}
                       <div className="mt-auto">
                            <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Last Sale</span>}</div>
