@@ -112,9 +112,18 @@ export default function DashboardPage() {
   };
 
   const formatCompactNumber = (num: number) => {
+      // If number is very small but not zero (e.g. gas fees like 0.004), show precision
+      if (Math.abs(num) < 1 && Math.abs(num) > 0) {
+          return new Intl.NumberFormat('en-US', {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 4 
+          }).format(num);
+      }
+      
+      // For regular numbers, standard formatting
       return Intl.NumberFormat('en-US', {
           notation: "compact",
-          maximumFractionDigits: 1
+          maximumFractionDigits: 2 // Increased to 2 for better visibility
       }).format(num);
   };
 
