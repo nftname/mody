@@ -122,7 +122,7 @@ export default function DashboardPage() {
   const getActivityValue = (type: string, price: any) => {
       const value = parseFloat(price || '0');
       if (type === 'List') return { label: '- 0.01', currency: 'POL' };
-      if (type === 'Mint') return { label: `-${formatCompactNumber(value / 0.54)}`, currency: 'POL' };
+      if (type === 'Mint') return { label: `-${formatCompactNumber(value)}`, currency: 'POL' };
       if (type === 'Sale') return { label: `+${formatCompactNumber(value)}`, currency: 'POL' };
       if (type === 'Offer') return { label: formatCompactNumber(value), currency: 'WPOL' };
       if (type === 'Payout') return { label: `+${formatCompactNumber(value)}`, currency: 'POL' };

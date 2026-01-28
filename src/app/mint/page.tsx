@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useAccount, useWriteContract, useReadContract, usePublicClient } from "wagmi";
-import { parseAbi, keccak256, stringToBytes } from 'viem';
+import { parseAbi, keccak256, stringToBytes, formatEther } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { toBlob } from 'html-to-image'; // المكتبة المسؤولة عن التصوير
 import { CONTRACT_ADDRESS } from '@/data/config';
@@ -291,16 +291,36 @@ const MintContent = () => {
 
           // STEP E: Finalize & Logging
           if (receipt.status === 'success') {
-             // Supabase Logging
+             // حساب السعر الفعلي المدفوع بالـ POL
+             let actualPriceInPOL = 0;
+
+             if (isAdmin) {
+                 // الأدمن لا يدفع شيء (فقط Gas)
+                 actualPriceInPOL = 0;
+             } else {
+                 // المستخدمين العاديين: نحول القيمة المدفوعة من Wei إلى POL
+                 const usdVal = tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5;
+                 const usdAmountWei = BigInt(usdVal) * BigInt(10**18);
+                 const costInMatic = await publicClient.readContract({
+                    address: CONTRACT_ADDRESS as `0x${string}`,
+                    abi: CONTRACT_ABI,
+                    functionName: 'getMaticCost',
+                    args: [usdAmountWei]
+                 });
+                 const valueToSend = (costInMatic * BigInt(101)) / BigInt(100);
+                 actualPriceInPOL = parseFloat(formatEther(valueToSend));
+             }
+
+             // Supabase Logging - استخدام insert لضمان سجل جديد لكل معاملة
              const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
              if (transferLog && transferLog.topics[3]) {
                  const mintedId = parseInt(transferLog.topics[3], 16);
-                 supabase.from('activities').insert([{
+                 await supabase.from('activities').insert([{
                      token_id: mintedId,
                      activity_type: 'Mint',
                      from_address: '0x0000000000000000000000000000000000000000',
                      to_address: address, 
-                     price: priceDisplay.replace('$',''),
+                     price: actualPriceInPOL.toFixed(4),
                      created_at: new Date().toISOString()
                  }]);
              }
