@@ -30,7 +30,15 @@ export default function DashboardPage() {
   const [createdAssets, setCreatedAssets] = useState<any[]>([]);
   const [offersData, setOffersData] = useState<any[]>([]);
   const [activityData, setActivityData] = useState<any[]>([]);
-  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set()); 
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  
+  // --- Pagination States ---
+  const ITEMS_PER_PAGE = 20;
+  const [pageItems, setPageItems] = useState(1);
+  const [pageListings, setPageListings] = useState(1);
+  const [pageOffers, setPageOffers] = useState(1);
+  const [pageCreated, setPageCreated] = useState(1);
+  const [pageActivity, setPageActivity] = useState(1); 
   
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('Items');
@@ -330,14 +338,15 @@ export default function DashboardPage() {
 
   // --- 3. CREATED ---
   const fetchCreated = async () => {
-      if (!address || !publicClient) return;
+      if (!address) return; // Removed publicClient check to allow DB-only fetch if needed
       setLoading(true);
       try {
+          // 1. Get ALL Mint actions by this user (Robust Query)
           const { data, error } = await supabase
             .from('activities')
-            .select('token_id, created_at')
-            .ilike('to_address', address) 
-            .eq('activity_type', 'Mint');
+            .select('*') // Select all fields to have backup metadata
+            .eq('activity_type', 'Mint')
+            .or(`to_address.ilike.${address},from_address.ilike.${address}`); // Check BOTH sides
 
           if (error) throw error;
           
@@ -347,32 +356,50 @@ export default function DashboardPage() {
               return;
           }
 
-          const dateMap: Record<string, string> = {};
-          data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
+          // 2. Remove duplicates (in case of multiple logs for same ID)
+          const uniqueItems = Array.from(new Map(data.map((item: any) => [item.token_id, item])).values());
 
-          const tokenIds = [...new Set(data.map((item: any) => item.token_id))];
-          const batches = chunk(tokenIds, 4); 
-          const loadedCreated: any[] = [];
-
-          for (const batch of batches) {
-              const batchResults = await Promise.all(batch.map(async (tokenId: any) => {
-                  try {
-                      const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'tokenURI', args: [BigInt(tokenId)] });
+          // 3. Resolve Metadata (Try Blockchain -> Fallback to DB/Placeholder)
+          const loadedAssets = await Promise.all(uniqueItems.map(async (item: any) => {
+              try {
+                  // A. Try fetching live data from contract
+                  if (publicClient) {
+                      const tokenURI = await publicClient.readContract({ 
+                          address: NFT_COLLECTION_ADDRESS as `0x${string}`, 
+                          abi: CONTRACT_ABI, 
+                          functionName: 'tokenURI', 
+                          args: [BigInt(item.token_id)] 
+                      });
                       const metaRes = await fetch(resolveIPFS(tokenURI));
-                      const meta = metaRes.ok ? await metaRes.json() : {};
-                      return {
-                          id: tokenId.toString(),
-                          name: meta.name || `NNM #${tokenId.toString()}`,
-                          image: resolveIPFS(meta.image) || '',
-                          tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
-                          price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0',
-                          mintDate: dateMap[tokenId]
-                      };
-                  } catch { return null; }
-              }));
-              loadedCreated.push(...(batchResults.filter(Boolean) as any[]));
-              setCreatedAssets([...loadedCreated]); 
-          }
+                      if (metaRes.ok) {
+                          const meta = await metaRes.json();
+                          return {
+                              id: item.token_id.toString(),
+                              name: meta.name || `NNM #${item.token_id}`,
+                              image: resolveIPFS(meta.image) || '',
+                              tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
+                              price: item.price, // Use historical price from DB
+                              mintDate: item.created_at
+                          };
+                      }
+                  }
+                  throw new Error("Contract fetch failed");
+              } catch (e) {
+                  // B. Fallback: If contract read fails (e.g. old contract item), return basic DB info
+                  return {
+                      id: item.token_id.toString(),
+                      name: `NNM #${item.token_id}`, // Fallback name
+                      image: '', // Placeholder or specific fallback image
+                      tier: 'archived', // Indicate it's not on current contract
+                      price: item.price,
+                      mintDate: item.created_at
+                  };
+              }
+          }));
+
+          // 4. Update State
+          setCreatedAssets(loadedAssets);
+          
       } catch (e) { 
           console.error("Created Fetch Error:", e); 
       } finally { setLoading(false); }
@@ -440,9 +467,9 @@ export default function DashboardPage() {
           const { data: sales } = await supabase.from('activities').select('*').match({ activity_type: 'Sale' }).ilike('to_address', address);
           const { data: votes } = await supabase.from('conviction_votes').select('*').ilike('supporter_address', address);
 
-          // 2. Calculate Real Balance locally
-          const earned = ((mints?.length || 0) * 3) + ((sales?.length || 0) * 1);
-          const spent = votes?.length || 0;
+          // 2. Calculate Real Balance locally with NEW Multipliers
+          const earned = ((mints?.length || 0) * 300) + ((sales?.length || 0) * 100);
+          const spent = (votes?.length || 0) * 100; // Deduct 100 WNNM per vote
           let finalWNNM = earned - spent;
           if (finalWNNM < 0) finalWNNM = 0;
 
@@ -464,11 +491,11 @@ export default function DashboardPage() {
               nnm: wallet ? parseFloat(wallet.nnm_balance) : 0 
           });
 
-          // 5. Set Logs
+          // 5. Set Logs - Updated to reflect NEW multipliers
           const historyLogs = [
-              ...(mints?.map((m: any) => ({ type: 'Mint Reward', amount: 3, currency: 'WNNM', date: m.created_at })) || []),
-              ...(sales?.map((s: any) => ({ type: 'Market Reward', amount: 1, currency: 'WNNM', date: s.created_at })) || []),
-              ...(votes?.map((v: any) => ({ type: 'Support Given', amount: -1, currency: 'WNNM', date: v.created_at })) || [])
+              ...(mints?.map((m: any) => ({ type: 'Mint Reward', amount: 300, currency: 'WNNM', date: m.created_at })) || []),
+              ...(sales?.map((s: any) => ({ type: 'Market Reward', amount: 100, currency: 'WNNM', date: s.created_at })) || []),
+              ...(votes?.map((v: any) => ({ type: 'Support Given', amount: -100, currency: 'WNNM', date: v.created_at })) || [])
           ].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           
           setConvictionLogs(historyLogs);
@@ -593,6 +620,41 @@ export default function DashboardPage() {
   const listedAssets = myAssets.filter(asset => asset.isListed);
   const sortedListedAssets = sortOrder === 'newest' ? [...listedAssets].reverse() : listedAssets;
   const sortedCreatedAssets = sortOrder === 'newest' ? [...createdAssets].reverse() : createdAssets;
+
+  // --- Pagination Helper Component ---
+  const PaginationFooter = ({ currentPage, totalCount, onPageChange }: any) => {
+      const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+      if (totalPages <= 1) return null;
+
+      return (
+          <div className="d-flex justify-content-between align-items-center mt-4 px-2" style={{ gap: '10px' }}>
+              <button 
+                  onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="btn btn-sm"
+                  style={{ border: '1px solid #2d2d2d', backgroundColor: currentPage === 1 ? '#0d0d0d' : '#161b22', color: '#fff' }}
+              >
+                  <i className="bi bi-chevron-left"></i>
+              </button>
+              <span style={{ color: '#fff', fontSize: '13px' }}>Page {currentPage} of {totalPages}</span>
+              <button 
+                  onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="btn btn-sm"
+                  style={{ border: '1px solid #2d2d2d', backgroundColor: currentPage === totalPages ? '#0d0d0d' : '#161b22', color: '#fff' }}
+              >
+                  <i className="bi bi-chevron-right"></i>
+              </button>
+          </div>
+      );
+  };
+
+  // --- Apply Pagination Slicing ---
+  const paginatedItems = filteredAssets.slice((pageItems - 1) * ITEMS_PER_PAGE, pageItems * ITEMS_PER_PAGE);
+  const paginatedListings = sortedListedAssets.slice((pageListings - 1) * ITEMS_PER_PAGE, pageListings * ITEMS_PER_PAGE);
+  const paginatedOffers = offersData.slice((pageOffers - 1) * ITEMS_PER_PAGE, pageOffers * ITEMS_PER_PAGE);
+  const paginatedCreated = sortedCreatedAssets.slice((pageCreated - 1) * ITEMS_PER_PAGE, pageCreated * ITEMS_PER_PAGE);
+  const paginatedActivity = activityData.slice((pageActivity - 1) * ITEMS_PER_PAGE, pageActivity * ITEMS_PER_PAGE);
 
   if (!isConnected) {
     return (
@@ -732,10 +794,13 @@ export default function DashboardPage() {
                 </div>
                 <div className="pb-5">
                     {loading && myAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : (
-                        <div className="row g-3">
-                            {filteredAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
-                            {filteredAssets.length === 0 && !loading && <div className="col-12 text-center py-5 text-secondary">No items found</div>}
-                        </div>
+                        <>
+                            <div className="row g-3">
+                                {paginatedItems.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
+                                {filteredAssets.length === 0 && !loading && <div className="col-12 text-center py-5 text-secondary">No items found</div>}
+                            </div>
+                            <PaginationFooter currentPage={pageItems} totalCount={filteredAssets.length} onPageChange={setPageItems} />
+                        </>
                     )}
                 </div>
             </>
@@ -749,24 +814,27 @@ export default function DashboardPage() {
                         <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff' }}><thead><tr><th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%' }}>ASSET</th></tr></thead><tbody><tr><td style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>No active listings found</td></tr></tbody></table>
                     </div>
                 ) : (
-                    <div className="table-responsive">
-                        <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
-                            <thead><tr>
-                                <th onClick={() => setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest')} style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}>ASSET <i className={`bi ${sortOrder === 'newest' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'} ms-2`} style={{ fontSize: '11px' }}></i></th>
-                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>POL</th>
-                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Exp</th>
-                                <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th> 
-                            </tr></thead>
-                            <tbody>{sortedListedAssets.map((asset) => (
-                                <tr key={asset.id} className="align-middle listing-row">
-                                    <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>{asset.name}</td>
-                                    <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{formatCompactNumber(parseFloat(asset.price))}</td>
-                                    <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>Active</td>
-                                    <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}><Link href={`/asset/${asset.id}`}><i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i></Link></td>
-                                </tr>
-                            ))}</tbody>
-                        </table>
-                    </div>
+                    <>
+                        <div className="table-responsive">
+                            <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
+                                <thead><tr>
+                                    <th onClick={() => setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest')} style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}>ASSET <i className={`bi ${sortOrder === 'newest' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'} ms-2`} style={{ fontSize: '11px' }}></i></th>
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>POL</th>
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Exp</th>
+                                    <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th> 
+                                </tr></thead>
+                                <tbody>{paginatedListings.map((asset) => (
+                                    <tr key={asset.id} className="align-middle listing-row">
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>{asset.name}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{formatCompactNumber(parseFloat(asset.price))}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>Active</td>
+                                        <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}><Link href={`/asset/${asset.id}`}><i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i></Link></td>
+                                    </tr>
+                                ))}</tbody>
+                            </table>
+                        </div>
+                        <PaginationFooter currentPage={pageListings} totalCount={sortedListedAssets.length} onPageChange={setPageListings} />
+                    </>
                 )}
             </div>
         )}
@@ -805,7 +873,7 @@ export default function DashboardPage() {
                         </tr></thead>
                         <tbody>
                             {loading ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d' }}><div className="spinner-border text-secondary" role="status"></div></td></tr> : offersData.length === 0 ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>No offers found</td></tr> : (
-                                offersData.map((offer) => (
+                                paginatedOffers.map((offer) => (
                                     <tr key={offer.id} className="align-middle listing-row">
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>{offer.assetName}</td>
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{parseFloat(offer.formattedPrice).toFixed(2)}</td>
@@ -818,6 +886,7 @@ export default function DashboardPage() {
                         </tbody>
                     </table>
                 </div>
+                <PaginationFooter currentPage={pageOffers} totalCount={offersData.length} onPageChange={setPageOffers} />
             </div>
         )}
 
@@ -879,9 +948,12 @@ export default function DashboardPage() {
 
                 <div className="pb-5">
                     {loading && createdAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : (
-                        <div className="row g-3">
-                            {sortedCreatedAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
-                        </div>
+                        <>
+                            <div className="row g-3">
+                                {paginatedCreated.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
+                            </div>
+                            <PaginationFooter currentPage={pageCreated} totalCount={sortedCreatedAssets.length} onPageChange={setPageCreated} />
+                        </>
                     )}
                 </div>
             </>
@@ -903,7 +975,7 @@ export default function DashboardPage() {
                             {loading ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d' }}><div className="spinner-border text-secondary" role="status"></div></td></tr> : activityData.length === 0 ? (
                                 <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>No recent activity found</td></tr>
                             ) : (
-                                activityData.map((activity, index) => (
+                                paginatedActivity.map((activity, index) => (
                                     <tr key={index} className="align-middle listing-row" style={{ cursor: 'pointer' }} onClick={() => window.location.href = `/asset/${activity.tokenId}`}>
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '11px' }}>
                                             <span>{activity.type}</span>
@@ -940,6 +1012,7 @@ export default function DashboardPage() {
                         </tbody>
                     </table>
                 </div>
+                <PaginationFooter currentPage={pageActivity} totalCount={activityData.length} onPageChange={setPageActivity} />
             </div>
         )}
 

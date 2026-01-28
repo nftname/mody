@@ -269,7 +269,7 @@ function AssetPage() {
         
         setIsConvictionPending(true);
         try {
-            // CALL THE API (The Logic Engine)
+            // 1. CALL THE API (Handles WNNM Deduction & Validation)
             const response = await fetch('/api/nnm/support', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -286,14 +286,41 @@ function AssetPage() {
                 throw new Error(result.message || 'Transaction failed');
             }
 
-            // Success: Optimistic UI Update
+            // ---------------------------------------------------------
+            // 2. INJECTED REWARD LOGIC: Grant 100 NNM immediately
+            // ---------------------------------------------------------
+            const { data: walletData, error: fetchError } = await supabase
+                .from('nnm_wallets')
+                .select('nnm_balance')
+                .eq('wallet_address', address)
+                .single();
+
+            // Ignore 'PGRST116' (row not found), treat balance as 0
+            if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+
+            const currentNNM = walletData ? Number(walletData.nnm_balance) : 0;
+            const newNNM = currentNNM + 100;
+
+            const { error: rewardError } = await supabase
+                .from('nnm_wallets')
+                .upsert({
+                    wallet_address: address,
+                    nnm_balance: newNNM,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'wallet_address' });
+
+            if (rewardError) throw rewardError;
+            // ---------------------------------------------------------
+
+            // 3. Success: Optimistic UI Update
             setConvictionCount(prev => prev + 1);
             setHasConvicted(true);
-            showModal('success', 'Conviction Registered', 'Your support has been recorded on-chain.');
+            
+            // Updated Success Message
+            showModal('success', 'Conviction & Reward', 'You spent conviction and earned 100 NNM!');
 
         } catch (error: any) {
             console.error("Conviction Error", error);
-            // Use Gold Warning Modal instead of Red Error
             setModal({ 
                 isOpen: true, 
                 type: 'error', 
