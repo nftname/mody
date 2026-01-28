@@ -677,7 +677,7 @@ function AssetPage() {
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
                             >
-                                <i className="bi bi-box-arrow-up-right" style={{ fontSize: '12px' }}></i>
+                                <i className="bi bi-box-arrow-up-right" style={{ fontSize: '15px' }}></i>
                                 <span>OpenSea</span>
                             </a>
 
