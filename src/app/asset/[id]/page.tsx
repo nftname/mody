@@ -662,7 +662,7 @@ function AssetPage() {
                                 target="_blank" 
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()} 
-                                className="position-absolute top-0 start-0 m-3 text-decoration-none d-flex align-items-center gap-2 px-3 py-2"
+                                className="position-absolute top-0 start-0 m-3 text-decoration-none d-flex align-items-center gap-1 px-3 py-2"
                                 style={{ 
                                     zIndex: 10, 
                                     backgroundColor: 'rgba(255, 255, 255, 0.05)', 
@@ -677,14 +677,14 @@ function AssetPage() {
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
                             >
-                                <i className="bi bi-box-arrow-up-right" style={{ fontSize: '15px' }}></i>
                                 <span>OpenSea</span>
+                                <i className="bi bi-box-arrow-up-right" style={{ fontSize: '12px' }}></i>
                             </a>
 
                             {/* FAVORITE BUTTON (MAIN IMAGE) */}
                             <div className="d-flex align-items-center justify-content-end p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
                                 <button onClick={(e) => { e.stopPropagation(); handleToggleFavorite(e, asset.id); }} className="btn p-0 border-0">
-                                    <i className={`bi ${isMainFav ? 'bi-heart-fill' : 'bi-heart'}`} style={{ fontSize: '24px', color: isMainFav ? '#FFFFFF' : '#FFFFFF', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}></i>
+                                    <i className={`bi ${isMainFav ? 'bi-heart-fill' : 'bi-heart'}`} style={{ fontSize: '19px', color: isMainFav ? '#FFFFFF' : '#FFFFFF', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}></i>
                                 </button>
                             </div>
                             <img src={asset.image} alt={asset.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
