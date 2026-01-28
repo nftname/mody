@@ -112,18 +112,22 @@ export default function DashboardPage() {
   };
 
   const formatCompactNumber = (num: number) => {
-      // If number is very small but not zero (e.g. gas fees like 0.004), show precision
-      if (Math.abs(num) < 1 && Math.abs(num) > 0) {
+      const absNum = Math.abs(num);
+      
+      // CASE 1: Micro-transactions (Gas fees, etc.) -> Show exact precision
+      // If number is small (between 0 and 1), show up to 4 decimal places.
+      if (absNum > 0 && absNum < 1) {
           return new Intl.NumberFormat('en-US', {
               minimumFractionDigits: 0,
               maximumFractionDigits: 4 
           }).format(num);
       }
-      
-      // For regular numbers, standard formatting
+
+      // CASE 2: Standard/Large numbers -> Use compact notation (1K, 1M)
+      // Increased fraction digits to 2 to avoid rounding errors like 1.5K showing as 2K
       return Intl.NumberFormat('en-US', {
           notation: "compact",
-          maximumFractionDigits: 2 // Increased to 2 for better visibility
+          maximumFractionDigits: 2
       }).format(num);
   };
 
