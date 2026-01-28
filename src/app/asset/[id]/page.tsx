@@ -14,6 +14,10 @@ import { AreaChart, Area, CartesianGrid, Tooltip, ResponsiveContainer } from 're
 
 const WPOL_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; 
 
+// --- OPENSEA CONSTANTS ---
+const OPENSEA_BASE_URL = "https://opensea.io/assets/matic/";
+const CONTRACT_ADDR = "0x59E51F6FdA14c76742CE93Fe282C012B46940d4D";
+
 // --- THEME & STYLES ---
 const BACKGROUND_DARK = '#1E1E1E'; 
 const SURFACE_DARK = '#262626';    
@@ -652,6 +656,31 @@ function AssetPage() {
                     
                     <div className="col-lg-5">
                         <div className="rounded-4 overflow-hidden position-relative mb-3" style={{ border: `1px solid ${BORDER_COLOR}`, backgroundColor: SURFACE_DARK, aspectRatio: '1/1', cursor: 'zoom-in' }} onClick={() => setIsGalleryOpen(true)}>
+                            {/* OPENSEA SYMMETRICAL BUTTON (Asset Page) */}
+                            <a 
+                                href={`${OPENSEA_BASE_URL}${NFT_COLLECTION_ADDRESS}/${tokenId}`} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()} 
+                                className="position-absolute top-0 start-0 m-3 text-decoration-none d-flex align-items-center gap-2 px-3 py-2"
+                                style={{ 
+                                    zIndex: 10, 
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                                    backdropFilter: 'blur(2px)', 
+                                    borderRadius: '30px',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    color: '#fff',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    transition: 'background 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
+                            >
+                                <i className="bi bi-box-arrow-up-right" style={{ fontSize: '12px' }}></i>
+                                <span>OpenSea</span>
+                            </a>
+
                             {/* FAVORITE BUTTON (MAIN IMAGE) */}
                             <div className="d-flex align-items-center justify-content-end p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
                                 <button onClick={(e) => { e.stopPropagation(); handleToggleFavorite(e, asset.id); }} className="btn p-0 border-0">
