@@ -19,19 +19,26 @@ const InstallAppBanner = () => {
                          (window.navigator as any).standalone === true;
     if (isStandalone) return;
 
+    // Show banner after 2 seconds for testing
+    const timer = setTimeout(() => {
+      setShowBanner(true);
+    }, 2000);
+
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(promptEvent);
       setShowBanner(true);
+      clearTimeout(timer);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      clearTimeout(timer);
     };
-  }, [deferredPrompt]);
+  }, []);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -56,7 +63,7 @@ const InstallAppBanner = () => {
     localStorage.setItem('pwa-install-dismissed', 'true');
   };
 
-  if (!showBanner || !deferredPrompt) return null;
+  if (!showBanner) return null;
 
   return (
     <>
