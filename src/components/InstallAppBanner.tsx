@@ -19,6 +19,11 @@ const InstallAppBanner = () => {
                          (window.navigator as any).standalone === true;
     if (isStandalone) return;
 
+    // إظهار البانر بعد ثانيتين دائماً
+    const timer = setTimeout(() => {
+      setShowBanner(true);
+    }, 2000);
+
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
@@ -30,13 +35,20 @@ const InstallAppBanner = () => {
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      clearTimeout(timer);
     };
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      // إذا لم يكن التثبيت متاحاً، أخفي البانر مباشرة
+      setShowBanner(false);
+      localStorage.setItem('pwa-install-dismissed', 'true');
+      return;
+    }
 
     try {
+      // تشغيل نافذة التثبيت مباشرة
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       
@@ -48,6 +60,8 @@ const InstallAppBanner = () => {
       setDeferredPrompt(null);
     } catch (error) {
       console.error('Installation error:', error);
+      setShowBanner(false);
+      localStorage.setItem('pwa-install-dismissed', 'true');
     }
   };
 
