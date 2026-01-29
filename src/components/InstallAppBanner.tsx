@@ -41,17 +41,20 @@ const InstallAppBanner = () => {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
+    // إخفاء البانر فوراً
+    setShowBanner(false);
+    localStorage.setItem('pwa-install-dismissed', 'true');
+
+    if (!deferredPrompt) {
+      console.log('Install prompt not available');
+      return;
+    }
 
     try {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       
-      if (outcome === 'accepted') {
-        setShowBanner(false);
-        localStorage.setItem('pwa-install-dismissed', 'true');
-      }
-      
+      console.log('Install outcome:', outcome);
       setDeferredPrompt(null);
     } catch (error) {
       console.error('Installation error:', error);
@@ -71,14 +74,14 @@ const InstallAppBanner = () => {
         dir="ltr"
         style={{
           position: 'fixed',
-          bottom: 0,
+          top: 0,
           left: 0,
           right: 0,
           backgroundColor: '#1E1E1E',
-          borderTop: '1px solid rgba(255,255,255,0.1)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
           padding: '12px 16px',
           zIndex: 99999,
-          animation: 'slideUp 0.3s ease-out'
+          animation: 'slideDown 0.3s ease-out'
         }}
       >
         <div style={{ 
@@ -166,9 +169,9 @@ const InstallAppBanner = () => {
       </div>
 
       <style jsx global>{`
-        @keyframes slideUp {
+        @keyframes slideDown {
           from {
-            transform: translateY(100%);
+            transform: translateY(-100%);
             opacity: 0;
           }
           to {
