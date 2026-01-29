@@ -717,24 +717,24 @@ function AssetPage() {
             <span>TOKEN #{asset.id}</span>
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* RIGHT SIDE - Always Visible */}
         <div className="d-flex align-items-center">
             
-            {/* --- DESKTOP PRICE (Centered & Spaced 200px from right) --- */}
+            {/* --- DESKTOP PRICE (Centered & Spaced 200px from right) - ALWAYS SHOW --- */}
             <div className="d-none d-md-block text-center" style={{ marginRight: '200px', minWidth: '120px' }}>
                 <span className={`${GOLD_TEXT_CLASS} fw-bold`} style={{ fontSize: '16px', letterSpacing: '0.5px' }}>
                     {listing ? `${formatCompactNumber(parseFloat(listing.price))} POL` : '—'}
                 </span>
             </div>
 
-            {/* --- MOBILE PRICE & BUTTON (Inline, right edge) --- */}
+            {/* --- MOBILE PRICE & BUTTON (Inline, right edge) - ALWAYS SHOW --- */}
             <div className="d-flex d-md-none align-items-center justify-content-end gap-3">
                  {/* Mobile Price (Slightly inset) */}
                 <span className={`${GOLD_TEXT_CLASS} fw-bold`} style={{ fontSize: '14px' }}>
                     {listing ? `${formatCompactNumber(parseFloat(listing.price))} POL` : '—'}
                 </span>
                 
-                {/* Mobile Buy Button (Far right edge) */}
+                {/* Mobile Buy Button (Far right edge) - Show when listed and not owner */}
                 {listing && !isOwner && (
                     <button 
                         onClick={handleBuy} 
