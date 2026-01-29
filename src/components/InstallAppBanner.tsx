@@ -12,19 +12,24 @@ const InstallAppBanner = () => {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
-    if (dismissed === 'true') return;
-
+    // تحقق من التثبيت المسبق
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                          (window.navigator as any).standalone === true;
-    if (isStandalone) return;
+    if (isStandalone) {
+      console.log('App already installed');
+      return;
+    }
+
+    console.log('Setting up install banner...');
 
     // إظهار البانر بعد ثانيتين دائماً
     const timer = setTimeout(() => {
+      console.log('Showing banner...');
       setShowBanner(true);
     }, 2000);
 
     const handleBeforeInstall = (e: Event) => {
+      console.log('beforeinstallprompt event fired!');
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(promptEvent);
@@ -40,34 +45,35 @@ const InstallAppBanner = () => {
   }, []);
 
   const handleInstallClick = async () => {
+    console.log('Install button clicked!', { hasDeferredPrompt: !!deferredPrompt });
+    
     if (!deferredPrompt) {
-      // إذا لم يكن التثبيت متاحاً، أخفي البانر مباشرة
-      setShowBanner(false);
-      localStorage.setItem('pwa-install-dismissed', 'true');
+      console.log('No deferred prompt available');
+      alert('PWA Installation:\n\nChrome/Edge: Menu (⋮) → Install app\nSafari iOS: Share → Add to Home Screen\n\nOr visit on Chrome/Edge for automatic install.');
       return;
     }
 
     try {
-      // تشغيل نافذة التثبيت مباشرة
+      console.log('Triggering install prompt...');
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       
+      console.log('Install outcome:', outcome);
+      
       if (outcome === 'accepted') {
         setShowBanner(false);
-        localStorage.setItem('pwa-install-dismissed', 'true');
       }
       
       setDeferredPrompt(null);
     } catch (error) {
       console.error('Installation error:', error);
-      setShowBanner(false);
-      localStorage.setItem('pwa-install-dismissed', 'true');
+      alert('Installation failed. Please try installing manually from browser menu.');
     }
   };
 
   const handleDismiss = () => {
+    console.log('Banner dismissed');
     setShowBanner(false);
-    localStorage.setItem('pwa-install-dismissed', 'true');
   };
 
   if (!showBanner) return null;
