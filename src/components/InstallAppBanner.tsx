@@ -41,12 +41,9 @@ const InstallAppBanner = () => {
   }, []);
 
   const handleInstallClick = async () => {
-    // إخفاء البانر فوراً
-    setShowBanner(false);
-    localStorage.setItem('pwa-install-dismissed', 'true');
-
     if (!deferredPrompt) {
-      console.log('Install prompt not available');
+      // عرض تعليمات التثبيت اليدوي
+      alert('لتثبيت التطبيق:\n\nعلى Chrome/Edge:\n• اضغط على القائمة (⋮)\n• اختر "تثبيت التطبيق"\n\nعلى Safari (iPhone):\n• اضغط على زر المشاركة\n• اختر "إضافة إلى الشاشة الرئيسية"');
       return;
     }
 
@@ -55,9 +52,16 @@ const InstallAppBanner = () => {
       const { outcome } = await deferredPrompt.userChoice;
       
       console.log('Install outcome:', outcome);
+      
+      if (outcome === 'accepted') {
+        setShowBanner(false);
+        localStorage.setItem('pwa-install-dismissed', 'true');
+      }
+      
       setDeferredPrompt(null);
     } catch (error) {
       console.error('Installation error:', error);
+      alert('حدث خطأ في التثبيت. حاول تثبيت التطبيق يدوياً من قائمة المتصفح.');
     }
   };
 
