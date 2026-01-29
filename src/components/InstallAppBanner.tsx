@@ -19,39 +19,26 @@ const InstallAppBanner = () => {
                          (window.navigator as any).standalone === true;
     if (isStandalone) return;
 
-    // Show banner after 2 seconds for testing
-    const timer = setTimeout(() => {
-      setShowBanner(true);
-    }, 2000);
-
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(promptEvent);
       setShowBanner(true);
-      clearTimeout(timer);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      clearTimeout(timer);
     };
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      // عرض تعليمات التثبيت اليدوي
-      alert('لتثبيت التطبيق:\n\nعلى Chrome/Edge:\n• اضغط على القائمة (⋮)\n• اختر "تثبيت التطبيق"\n\nعلى Safari (iPhone):\n• اضغط على زر المشاركة\n• اختر "إضافة إلى الشاشة الرئيسية"');
-      return;
-    }
+    if (!deferredPrompt) return;
 
     try {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      
-      console.log('Install outcome:', outcome);
       
       if (outcome === 'accepted') {
         setShowBanner(false);
@@ -61,7 +48,6 @@ const InstallAppBanner = () => {
       setDeferredPrompt(null);
     } catch (error) {
       console.error('Installation error:', error);
-      alert('حدث خطأ في التثبيت. حاول تثبيت التطبيق يدوياً من قائمة المتصفح.');
     }
   };
 
