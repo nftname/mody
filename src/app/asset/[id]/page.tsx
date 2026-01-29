@@ -708,7 +708,7 @@ function AssetPage() {
         </span>
     </div>
     
-    {/* --- ROW 1: INFO + PRICE (Desktop) + PRICE & BTN (Mobile) --- */}
+    {/* --- ROW 1: INFO + PRICE/ACTION --- */}
     <div className="d-flex align-items-end justify-content-between mb-2">
         {/* Left: Token Info */}
         <div className="d-flex align-items-center gap-2 gap-md-4" style={{ color: TEXT_MUTED, fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>
@@ -717,21 +717,29 @@ function AssetPage() {
             <span>TOKEN #{asset.id}</span>
         </div>
 
-        {/* Right Section */}
-        {listing && (
-            <div className="d-flex align-items-center gap-2">
-                {/* Price Display */}
-                <span style={{ color: TEXT_MUTED, fontSize: '10px', fontWeight: '400' }} className="d-none d-md-block">Current Price:</span>
-                <span className={`${GOLD_TEXT_CLASS} fw-bold`} style={{ fontSize: '14px', letterSpacing: '0.5px' }}>
-                    {formatCompactNumber(parseFloat(listing.price))} POL
+        {/* RIGHT SIDE */}
+        <div className="d-flex align-items-center">
+            
+            {/* --- DESKTOP PRICE (Centered & Spaced 200px from right) --- */}
+            <div className="d-none d-md-block text-center" style={{ marginRight: '200px', minWidth: '120px' }}>
+                <span className={`${GOLD_TEXT_CLASS} fw-bold`} style={{ fontSize: '16px', letterSpacing: '0.5px' }}>
+                    {listing ? `${formatCompactNumber(parseFloat(listing.price))} POL` : '—'}
                 </span>
+            </div>
 
-                {/* MOBILE BUY BUTTON (Hidden on Desktop) */}
-                {!isOwner && (
+            {/* --- MOBILE PRICE & BUTTON (Inline, right edge) --- */}
+            <div className="d-flex d-md-none align-items-center justify-content-end gap-3">
+                 {/* Mobile Price (Slightly inset) */}
+                <span className={`${GOLD_TEXT_CLASS} fw-bold`} style={{ fontSize: '14px' }}>
+                    {listing ? `${formatCompactNumber(parseFloat(listing.price))} POL` : '—'}
+                </span>
+                
+                {/* Mobile Buy Button (Far right edge) */}
+                {listing && !isOwner && (
                     <button 
                         onClick={handleBuy} 
                         disabled={isPending}
-                        className="btn d-md-none d-flex align-items-center justify-content-center px-2 py-0 ms-2" 
+                        className="btn d-flex align-items-center justify-content-center px-3 py-0" 
                         style={{ 
                             background: 'rgba(255, 255, 255, 0.05)', 
                             border: `1px solid ${GOLD_SOLID}`, 
@@ -740,7 +748,7 @@ function AssetPage() {
                             borderRadius: '6px', 
                             fontSize: '11px',
                             fontWeight: 'bold',
-                            height: '24px',
+                            height: '26px',
                             whiteSpace: 'nowrap'
                         }}
                     >
@@ -748,7 +756,7 @@ function AssetPage() {
                     </button>
                 )}
             </div>
-        )}
+        </div>
     </div>
 </div>
 
@@ -776,27 +784,29 @@ function AssetPage() {
             ))}
         </div>
 
-        {/* DESKTOP BUY BUTTON (Hidden on Mobile) */}
+        {/* DESKTOP BUY BUTTON (Spaced 200px from right, centered under price) */}
         {listing && !isOwner && (
-            <button 
-                onClick={handleBuy} 
-                disabled={isPending}
-                className="btn d-none d-md-flex align-items-center justify-content-center px-3 py-1" 
-                style={{ 
-                    background: 'rgba(255, 255, 255, 0.05)', 
-                    border: `1px solid ${GOLD_SOLID}`, 
-                    color: GOLD_SOLID, 
-                    backdropFilter: 'blur(4px)', 
-                    borderRadius: '8px', 
-                    fontSize: '13px',
-                    fontWeight: 'bold',
-                    height: '32px',
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-                }}
-            >
-                {isPending ? <span className="spinner-border spinner-border-sm"></span> : 'Buy Now'}
-            </button>
+            <div className="d-none d-md-block" style={{ marginRight: '200px', minWidth: '120px' }}>
+                <button 
+                    onClick={handleBuy} 
+                    disabled={isPending}
+                    className="btn w-100 d-flex align-items-center justify-content-center px-3 py-1" 
+                    style={{ 
+                        background: 'rgba(255, 255, 255, 0.05)', 
+                        border: `1px solid ${GOLD_SOLID}`, 
+                        color: GOLD_SOLID, 
+                        backdropFilter: 'blur(4px)', 
+                        borderRadius: '8px', 
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        height: '36px',
+                        whiteSpace: 'nowrap',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                    }}
+                >
+                    {isPending ? <span className="spinner-border spinner-border-sm"></span> : 'Buy Now'}
+                </button>
+            </div>
         )}
     </div>
 </div>
