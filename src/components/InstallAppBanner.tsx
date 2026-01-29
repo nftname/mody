@@ -185,54 +185,65 @@ const InstallAppBanner = () => {
         zIndex: 10000,
         backgroundColor: '#1a1a1a',
         borderBottom: '1px solid rgba(252, 213, 53, 0.3)',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
-        backdropFilter: 'blur(10px)'
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(12px)',
+        minHeight: '80px',
+        display: 'flex',
+        alignItems: 'center'
       }}
     >
       <div 
-        className="container-fluid d-flex align-items-center justify-content-between py-2 px-3"
-        style={{ maxWidth: '1400px', margin: '0 auto' }}
+        className="container-fluid px-3"
+        style={{ 
+          maxWidth: '1400px', 
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px'
+        }}
       >
-        <div className="d-flex align-items-center gap-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
           <div 
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '8px',
+              width: '48px',
+              height: '48px',
+              borderRadius: '10px',
               background: '#000000',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(252, 213, 53, 0.3)'
+              boxShadow: '0 2px 8px rgba(252, 213, 53, 0.2)',
+              flexShrink: 0
             }}
           >
             <img 
               src="/icons/icon-192x192.png" 
               alt="NNM" 
-              style={{ width: '32px', height: '32px', borderRadius: '6px' }}
+              style={{ width: '36px', height: '36px', borderRadius: '8px' }}
             />
           </div>
           
-          <div className="d-flex flex-column text-start">
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <span 
-              className="fw-bold" 
+              className="fw-bold text-truncate" 
               style={{ 
                 color: '#FCD535', 
-                fontSize: '14px',
+                fontSize: '15px',
                 lineHeight: '1.2'
               }}
             >
               {t.title}
             </span>
             {isIOS && (
-              <span style={{ fontSize: '10px', color: '#888', marginTop: '2px' }}>
+              <span className="text-truncate" style={{ fontSize: '11px', color: '#aaa', marginTop: '2px' }}>
                 {t.iosInstructions}
               </span>
             )}
           </div>
         </div>
 
-        <div className="d-flex align-items-center gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
           {!isIOS && deferredPrompt && (
             <button
               onClick={handleInstall}
@@ -242,13 +253,12 @@ const InstallAppBanner = () => {
                 color: '#1a1200',
                 border: 'none',
                 borderRadius: '8px',
-                padding: '6px 16px',
-                fontSize: '13px',
-                boxShadow: '0 2px 8px rgba(252, 213, 53, 0.3)',
-                transition: 'transform 0.2s'
+                padding: '8px 16px',
+                fontSize: '14px',
+                fontWeight: '700',
+                boxShadow: '0 2px 10px rgba(252, 213, 53, 0.2)',
+                whiteSpace: 'nowrap'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
               {t.install}
             </button>
@@ -256,24 +266,30 @@ const InstallAppBanner = () => {
           
           <button
             onClick={handleClose}
-            className="btn border-0"
             style={{
-              background: 'transparent',
+              background: 'rgba(255,255,255,0.05)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               color: '#888',
-              fontSize: '20px',
-              padding: '4px 8px',
-              lineHeight: '1'
+              cursor: 'pointer'
             }}
             aria-label={t.close}
           >
-            <i className="bi bi-x"></i>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13 1L1 13M1 1L13 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
         </div>
       </div>
 
       <style jsx>{`
         .fade-in {
-          animation: slideDown 0.3s ease-out;
+          animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         @keyframes slideDown {
           from {
