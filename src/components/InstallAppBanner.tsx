@@ -14,7 +14,6 @@ const InstallAppBanner = () => {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Multi-language support based on browser language
   const getTranslations = () => {
     if (typeof window === 'undefined') return { title: 'Install NNM App', install: 'Install', close: 'Close', iosInstructions: 'Tap Share button and "Add to Home Screen"' };
     
@@ -101,7 +100,6 @@ const InstallAppBanner = () => {
       }
     };
 
-    // Try exact match first, then try language code only (e.g., 'en-US' -> 'en')
     const langCode = lang.split('-')[0];
     return translations[lang] || translations[langCode] || translations['en'];
   };
@@ -111,39 +109,24 @@ const InstallAppBanner = () => {
   useEffect(() => {
     setIsMounted(true);
     
-    console.log('🔍 [InstallBanner] Checking banner conditions...');
-    
-    // Check if already dismissed
     const dismissed = localStorage.getItem('nnm_install_banner_dismissed');
-    console.log('📦 [InstallBanner] Dismissed status:', dismissed);
-    
-    // FORCE SHOW FOR TESTING - Remove this after testing
-    // localStorage.removeItem('nnm_install_banner_dismissed');
     
     if (dismissed) {
-      console.log('⚠️ [InstallBanner] Banner was dismissed, not showing');
       return;
     }
 
-    // Detect iOS
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(ios);
-    console.log('📱 [InstallBanner] Is iOS:', ios);
 
-    // Check if already installed (standalone mode)
     const standalone = window.matchMedia('(display-mode: standalone)').matches || 
                       (window.navigator as any).standalone === true;
     setIsStandalone(standalone);
-    console.log('🖥️ [InstallBanner] Is Standalone:', standalone);
 
     if (standalone) {
-      console.log('✅ [InstallBanner] Already installed, not showing banner');
       return;
     }
 
-    // For non-iOS: Listen for PWA install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('🎯 [InstallBanner] beforeinstallprompt event fired!');
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowBanner(true);
@@ -151,9 +134,7 @@ const InstallAppBanner = () => {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // For iOS OR force show on all devices after 2 seconds
     const timer = setTimeout(() => {
-      console.log('⏰ [InstallBanner] Timer fired, showing banner');
       setShowBanner(true);
     }, 2000);
 
@@ -165,9 +146,7 @@ const InstallAppBanner = () => {
   }, []);
 
   const handleInstall = async () => {
-    console.log('🚀 [InstallBanner] Install button clicked');
     if (!deferredPrompt) {
-      console.log('⚠️ [InstallBanner] No deferred prompt available');
       return;
     }
 
@@ -175,36 +154,28 @@ const InstallAppBanner = () => {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       
-      if (outcome === 'accepted') {
-        console.log('✅ PWA installed');
-      }
-      
       setDeferredPrompt(null);
       setShowBanner(false);
       localStorage.setItem('nnm_install_banner_dismissed', 'true');
     } catch (error) {
-      console.error('Install error:', error);
+      console.error(error);
     }
   };
 
   const handleClose = () => {
-    console.log('❌ [InstallBanner] Banner closed by user');
     setShowBanner(false);
     localStorage.setItem('nnm_install_banner_dismissed', 'true');
   };
 
-  // Don't render on server-side
   if (!isMounted) return null;
   
   if (!showBanner || isStandalone) {
-    console.log('🚫 [InstallBanner] Not showing banner:', { showBanner, isStandalone });
     return null;
   }
 
-  console.log('✨ [InstallBanner] Rendering banner!');
-
   return (
     <div 
+      dir="ltr"
       className="fade-in" 
       style={{
         position: 'fixed',
@@ -222,14 +193,13 @@ const InstallAppBanner = () => {
         className="container-fluid d-flex align-items-center justify-content-between py-2 px-3"
         style={{ maxWidth: '1400px', margin: '0 auto' }}
       >
-        {/* App Icon + Text */}
         <div className="d-flex align-items-center gap-3">
           <div 
             style={{
               width: '40px',
               height: '40px',
               borderRadius: '8px',
-              background: 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)',
+              background: '#000000',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -243,7 +213,7 @@ const InstallAppBanner = () => {
             />
           </div>
           
-          <div className="d-flex flex-column">
+          <div className="d-flex flex-column text-start">
             <span 
               className="fw-bold" 
               style={{ 
@@ -262,7 +232,6 @@ const InstallAppBanner = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="d-flex align-items-center gap-2">
           {!isIOS && deferredPrompt && (
             <button
