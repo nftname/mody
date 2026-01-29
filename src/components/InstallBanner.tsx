@@ -75,8 +75,8 @@ export default function InstallBanner() {
 
         {/* Logo Placeholder (Replace /logo.png with your actual logo path if needed) */}
         <div className="w-8 h-8 relative rounded-md overflow-hidden border border-gray-700">
-           {/* Ensure you have a logo at /logo.png or change this path */}
-           <img src="/logo.png" alt="Logo" className="object-cover w-full h-full" onError={(e) => e.currentTarget.style.display = 'none'} />
+           {/* Using actual icon from /icons folder */}
+           <img src="/icons/icon-192x192.png" alt="Logo" className="object-cover w-full h-full" onError={(e) => e.currentTarget.style.display = 'none'} />
         </div>
 
         {/* Text */}
