@@ -697,8 +697,10 @@ function AssetPage() {
 
                     <div className="col-lg-7 pt-0">
                         <div className="mb-2">
+    {/* ASSET NAME */}
     <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-3`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
     
+    {/* OWNER INFO */}
     <div className="d-flex align-items-center justify-content-between mb-3">
         <span style={{ color: TEXT_PRIMARY, fontSize: '15px', fontWeight: '500' }}>NNM Sovereign Asset</span>
         <span style={{ color: TEXT_MUTED, fontSize: '13px' }}>
@@ -708,33 +710,33 @@ function AssetPage() {
         </span>
     </div>
     
-    {/* --- ROW 1: INFO + PRICE/ACTION --- */}
+    {/* --- ROW 1: INFO + PRICE (Desktop) + PRICE & BTN (Mobile) --- */}
     <div className="d-flex align-items-end justify-content-between mb-2">
-        {/* Left: Token Info */}
+        {/* LEFT: Token Info */}
         <div className="d-flex align-items-center gap-2 gap-md-4" style={{ color: TEXT_MUTED, fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>
             <span>ERC721</span>
             <span className="d-none d-sm-inline">POLYGON</span>
             <span>TOKEN #{asset.id}</span>
         </div>
 
-        {/* RIGHT SIDE - Always Visible */}
+        {/* RIGHT SIDE */}
         <div className="d-flex align-items-center">
             
-            {/* --- DESKTOP PRICE (Centered & Spaced 200px from right) - ALWAYS SHOW --- */}
-            <div className="d-none d-md-block text-center" style={{ marginRight: '200px', minWidth: '120px' }}>
-                <span className={`${GOLD_TEXT_CLASS} fw-bold`} style={{ fontSize: '16px', letterSpacing: '0.5px' }}>
+            {/* DESKTOP PRICE CONTAINER (Fixed Width 160px for perfect centering) */}
+            <div className="d-none d-lg-block text-center" style={{ width: '160px' }}>
+                <span className={`${GOLD_TEXT_CLASS} fw-bold`} style={{ fontSize: '16px', letterSpacing: '0.5px', display: 'block', width: '100%' }}>
                     {listing ? `${formatCompactNumber(parseFloat(listing.price))} POL` : '—'}
                 </span>
             </div>
 
-            {/* --- MOBILE PRICE & BUTTON (Inline, right edge) - ALWAYS SHOW --- */}
-            <div className="d-flex d-md-none align-items-center justify-content-end gap-3">
-                 {/* Mobile Price (Slightly inset) */}
+            {/* MOBILE CONTAINER (Price + Small Button) - Kept as is */}
+            <div className="d-flex d-lg-none align-items-center justify-content-end gap-3">
+                 {/* Mobile Price */}
                 <span className={`${GOLD_TEXT_CLASS} fw-bold`} style={{ fontSize: '14px' }}>
                     {listing ? `${formatCompactNumber(parseFloat(listing.price))} POL` : '—'}
                 </span>
                 
-                {/* Mobile Buy Button (Far right edge) - Show when listed and not owner */}
+                {/* Mobile Buy Button */}
                 {listing && !isOwner && (
                     <button 
                         onClick={handleBuy} 
@@ -748,7 +750,7 @@ function AssetPage() {
                             borderRadius: '6px', 
                             fontSize: '11px',
                             fontWeight: 'bold',
-                            height: '26px',
+                            height: '28px',
                             whiteSpace: 'nowrap'
                         }}
                     >
@@ -763,7 +765,7 @@ function AssetPage() {
 {/* --- ROW 2: TABS + DESKTOP BUTTON --- */}
 <div className="mb-3">
     <div className="d-flex align-items-center justify-content-between" style={{ borderBottom: 'none' }}>
-        {/* Tabs */}
+        {/* LEFT: Tabs */}
         <div className="d-flex">
             {['Details', 'Conviction', 'Offers', 'Activity'].map(tab => (
                 <button 
@@ -784,13 +786,13 @@ function AssetPage() {
             ))}
         </div>
 
-        {/* DESKTOP BUY BUTTON (Spaced 200px from right, centered under price) */}
-        {listing && !isOwner && (
-            <div className="d-none d-md-block" style={{ marginRight: '200px', minWidth: '120px' }}>
+        {/* DESKTOP BUY BUTTON CONTAINER (Fixed Width 160px - Matches Price Above) */}
+        <div className="d-none d-lg-block" style={{ width: '160px' }}>
+            {listing && !isOwner ? (
                 <button 
                     onClick={handleBuy} 
                     disabled={isPending}
-                    className="btn w-100 d-flex align-items-center justify-content-center px-3 py-1" 
+                    className="btn w-100 d-flex align-items-center justify-content-center px-0 py-1" 
                     style={{ 
                         background: 'rgba(255, 255, 255, 0.05)', 
                         border: `1px solid ${GOLD_SOLID}`, 
@@ -806,8 +808,11 @@ function AssetPage() {
                 >
                     {isPending ? <span className="spinner-border spinner-border-sm"></span> : 'Buy Now'}
                 </button>
-            </div>
-        )}
+            ) : (
+                /* Empty spacer */
+                <div style={{ height: '36px' }}></div>
+            )}
+        </div>
     </div>
 </div>
 

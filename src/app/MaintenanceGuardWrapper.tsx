@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LegalModal from "@/components/LegalModal";
-import AppInstallPrompt from "@/components/AppInstallPrompt";
+import InstallBanner from "@/components/InstallBanner";
 import { useAccount } from "wagmi";
 
 const OWNER_WALLET = (process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS || "").toLowerCase();
@@ -95,8 +95,8 @@ export default function MaintenanceGuardWrapper({ children }: { children: React.
 
   return (
     <div className="d-flex flex-column min-vh-100">
+      <InstallBanner />
       <Navbar />
-      <AppInstallPrompt />
       <LegalModal />
       <main className="flex-grow-1">{children}</main>
       <Footer />
