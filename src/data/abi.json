@@ -1,5 +1,5 @@
 {
-  "NNMRegistry1": [
+  "registry": [
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
@@ -1237,7 +1237,7 @@
 		"type": "function"
 	}
 ],
-  "NNMMarketplace1": [
+  "marketplace": [
 	{
 		"inputs": [
 			{
