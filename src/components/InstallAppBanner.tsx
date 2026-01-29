@@ -10,58 +10,59 @@ interface BeforeInstallPromptEvent extends Event {
 const InstallAppBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    // Check if running in standalone mode (already installed)
-    const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || 
-                                (window.navigator as any).standalone === true;
-    setIsStandalone(isInStandaloneMode);
-
-    // Detect iOS
-    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(iOS);
-
-    // Check if user has already dismissed the banner
+    // Check if already dismissed
     const dismissed = localStorage.getItem('pwa-install-dismissed');
-    
-    // Show banner for iOS users (can't auto-install, just instructions)
-    if (iOS && !isInStandaloneMode && !dismissed) {
-      setShowBanner(true);
-    }
+    if (dismissed === 'true') return;
 
-    // Listen for beforeinstallprompt event (Android/Desktop)
+    // Check if already installed
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                         (window.navigator as any).standalone === true;
+    if (isStandalone) return;
+
+    // Show banner immediately for testing (will be replaced by event)
+    const timer = setTimeout(() => {
+      if (!deferredPrompt) {
+        // Show banner even without prompt for iOS or unsupported browsers
+        setShowBanner(true);
+      }
+    }, 2000);
+
+    // Listen for install prompt
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(promptEvent);
-      
-      if (!dismissed && !iOS) {
-        setShowBanner(true);
-      }
+      setShowBanner(true);
+      clearTimeout(timer);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      clearTimeout(timer);
     };
-  }, []);
+  }, [deferredPrompt]);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      // For browsers that don't support prompt, just show instructions
+      alert('To install:\n\n• Chrome: Menu → Install App\n• Safari iOS: Share → Add to Home Screen\n• Edge: Menu → Apps → Install');
+      return;
+    }
 
     try {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       
       if (outcome === 'accepted') {
-        console.log('PWA installation accepted');
+        setShowBanner(false);
+        localStorage.setItem('pwa-install-dismissed', 'true');
       }
       
       setDeferredPrompt(null);
-      setShowBanner(false);
     } catch (error) {
       console.error('Installation error:', error);
     }
@@ -72,56 +73,53 @@ const InstallAppBanner = () => {
     localStorage.setItem('pwa-install-dismissed', 'true');
   };
 
-  // Don't show if already installed
-  if (isStandalone || !showBanner) return null;
+  if (!showBanner) return null;
 
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: '#1a1a1a',
-        borderTop: '1px solid #FCD535',
-        padding: '12px 16px',
-        zIndex: 9999,
-        boxShadow: '0 -2px 10px rgba(0,0,0,0.3)',
-        animation: 'slideUp 0.3s ease-out'
-      }}
-    >
-      <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* App Icon */}
-        <div 
-          style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #FCD535 0%, #B3882A 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}
-        >
-          <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#1a1200' }}>N</span>
-        </div>
-
-        {/* Content */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ color: '#fff', fontWeight: '600', fontSize: '14px', marginBottom: '2px' }}>
-            Install NNM App
+    <>
+      <div 
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: '#1a1a1a',
+          borderTop: '1px solid #FCD535',
+          padding: '12px 16px',
+          zIndex: 9999,
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.3)',
+          animation: 'slideUpBanner 0.3s ease-out'
+        }}
+      >
+        <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {/* App Icon */}
+          <div 
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #FCD535 0%, #B3882A 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#1a1200' }}>N</span>
           </div>
-          <div style={{ color: '#8a939b', fontSize: '12px' }}>
-            {isIOS 
-              ? 'Tap Share → Add to Home Screen' 
-              : 'Get quick access from your home screen'}
-          </div>
-        </div>
 
-        {/* Buttons */}
-        <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-          {!isIOS && deferredPrompt && (
+          {/* Content */}
+          <div style={{ flex: 1, minWidth: '150px' }}>
+            <div style={{ color: '#fff', fontWeight: '600', fontSize: '14px', marginBottom: '2px' }}>
+              Install NNM App
+            </div>
+            <div style={{ color: '#8a939b', fontSize: '12px' }}>
+              Quick access from your home screen
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
             <button
               onClick={handleInstallClick}
               style={{
@@ -138,27 +136,27 @@ const InstallAppBanner = () => {
             >
               Install
             </button>
-          )}
-          
-          <button
-            onClick={handleDismiss}
-            style={{
-              background: 'transparent',
-              color: '#8a939b',
-              border: '1px solid #333',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              cursor: 'pointer'
-            }}
-          >
-            ✕
-          </button>
+            
+            <button
+              onClick={handleDismiss}
+              style={{
+                background: 'transparent',
+                color: '#8a939b',
+                border: '1px solid #333',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                cursor: 'pointer'
+              }}
+            >
+              ✕
+            </button>
+          </div>
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes slideUp {
+      <style jsx global>{`
+        @keyframes slideUpBanner {
           from {
             transform: translateY(100%);
             opacity: 0;
@@ -169,7 +167,7 @@ const InstallAppBanner = () => {
           }
         }
       `}</style>
-    </div>
+    </>
   );
 };
 
