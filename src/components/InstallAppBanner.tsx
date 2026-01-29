@@ -14,90 +14,15 @@ const InstallAppBanner = () => {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
+  // الترجمات
   const getTranslations = () => {
-    if (typeof window === 'undefined') return { title: 'Install NNM App', install: 'Install', close: 'Close', iosInstructions: 'Tap Share button and "Add to Home Screen"' };
+    if (typeof window === 'undefined') return { title: 'Install NNM App', install: 'Install', iosInstructions: 'Tap Share & Add to Home' };
     
     const lang = navigator.language.toLowerCase();
-    
-    const translations: Record<string, { title: string; install: string; close: string; iosInstructions: string }> = {
-      'ar': { 
-        title: 'حمّل تطبيق NNM', 
-        install: 'تثبيت', 
-        close: 'إغلاق',
-        iosInstructions: 'انقر على زر المشاركة ثم "إضافة إلى الشاشة الرئيسية"'
-      },
-      'en': { 
-        title: 'Install NNM App', 
-        install: 'Install', 
-        close: 'Close',
-        iosInstructions: 'Tap Share button and "Add to Home Screen"'
-      },
-      'es': { 
-        title: 'Instalar App NNM', 
-        install: 'Instalar', 
-        close: 'Cerrar',
-        iosInstructions: 'Toca el botón Compartir y "Añadir a pantalla de inicio"'
-      },
-      'fr': { 
-        title: 'Installer l\'App NNM', 
-        install: 'Installer', 
-        close: 'Fermer',
-        iosInstructions: 'Appuyez sur Partager puis "Sur l\'écran d\'accueil"'
-      },
-      'de': { 
-        title: 'NNM App installieren', 
-        install: 'Installieren', 
-        close: 'Schließen',
-        iosInstructions: 'Teilen-Button und "Zum Home-Bildschirm" tippen'
-      },
-      'zh': { 
-        title: '安装 NNM 应用', 
-        install: '安装', 
-        close: '关闭',
-        iosInstructions: '点击分享按钮，然后选择"添加到主屏幕"'
-      },
-      'ja': { 
-        title: 'NNMアプリをインストール', 
-        install: 'インストール', 
-        close: '閉じる',
-        iosInstructions: '共有ボタンをタップし、「ホーム画面に追加」を選択'
-      },
-      'pt': { 
-        title: 'Instalar App NNM', 
-        install: 'Instalar', 
-        close: 'Fechar',
-        iosInstructions: 'Toque em Compartilhar e "Adicionar à Tela Inicial"'
-      },
-      'ru': { 
-        title: 'Установить NNM', 
-        install: 'Установить', 
-        close: 'Закрыть',
-        iosInstructions: 'Нажмите "Поделиться" и "На экран «Домой»"'
-      },
-      'hi': { 
-        title: 'NNM ऐप इंस्टॉल करें', 
-        install: 'इंस्टॉल करें', 
-        close: 'बंद करें',
-        iosInstructions: 'शेयर बटन दबाएं और "होम स्क्रीन पर जोड़ें" चुनें'
-      },
-      'ko': { 
-        title: 'NNM 앱 설치', 
-        install: '설치', 
-        close: '닫기',
-        iosInstructions: '공유 버튼을 누른 후 "홈 화면에 추가"를 선택하세요'
-      },
-      'it': { 
-        title: 'Installa App NNM', 
-        install: 'Installa', 
-        close: 'Chiudi',
-        iosInstructions: 'Tocca Condividi e "Aggiungi a Home"'
-      },
-      'tr': { 
-        title: 'NNM Uygulamasını Yükle', 
-        install: 'Yükle', 
-        close: 'Kapat',
-        iosInstructions: 'Paylaş düğmesine dokunun ve "Ana Ekrana Ekle"yi seçin'
-      }
+    const translations: Record<string, { title: string; install: string; iosInstructions: string }> = {
+      'ar': { title: 'تثبيت تطبيق NNM', install: 'تثبيت', iosInstructions: 'اضغط مشاركة ثم إضافة للشاشة الرئيسية' },
+      'en': { title: 'Install NNM App', install: 'Install', iosInstructions: 'Tap Share & Add to Home' },
+      // لغات أخرى يمكن إضافتها هنا
     };
 
     const langCode = lang.split('-')[0];
@@ -109,35 +34,29 @@ const InstallAppBanner = () => {
   useEffect(() => {
     setIsMounted(true);
     
-    const dismissed = localStorage.getItem('nnm_install_banner_dismissed');
-    
-    if (dismissed) {
-      return;
-    }
+    // التحقق من الإغلاق السابق
+    if (localStorage.getItem('nnm_install_banner_dismissed')) return;
 
+    // التحقق من iOS
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(ios);
 
-    const standalone = window.matchMedia('(display-mode: standalone)').matches || 
-                      (window.navigator as any).standalone === true;
+    // التحقق هل التطبيق مثبت بالفعل
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
     setIsStandalone(standalone);
+    if (standalone) return;
 
-    if (standalone) {
-      return;
-    }
-
+    // التقاط حدث التثبيت للأندرويد
     const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
+      e.preventDefault(); // منع شريط المتصفح الافتراضي
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowBanner(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    const timer = setTimeout(() => {
-      setShowBanner(true);
-    }, 2000);
-
+    // مؤقت لإظهار البنر (لضمان ظهوره حتى لو تأخر الحدث قليلاً)
+    const timer = setTimeout(() => setShowBanner(true), 2000);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -146,17 +65,14 @@ const InstallAppBanner = () => {
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) {
-      return;
-    }
-
+    if (!deferredPrompt) return;
     try {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      
-      setDeferredPrompt(null);
-      setShowBanner(false);
-      localStorage.setItem('nnm_install_banner_dismissed', 'true');
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setShowBanner(false);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -167,142 +83,170 @@ const InstallAppBanner = () => {
     localStorage.setItem('nnm_install_banner_dismissed', 'true');
   };
 
-  if (!isMounted) return null;
-  
-  if (!showBanner || isStandalone) {
-    return null;
-  }
+  if (!isMounted || !showBanner || isStandalone) return null;
 
   return (
-    <div 
-      dir="ltr"
-      className="fade-in" 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10000,
-        backgroundColor: '#1a1a1a',
-        borderBottom: '1px solid rgba(252, 213, 53, 0.3)',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6)',
-        backdropFilter: 'blur(12px)',
-        minHeight: '80px',
-        display: 'flex',
-        alignItems: 'center'
-      }}
-    >
+    <>
       <div 
-        className="container-fluid px-3"
-        style={{ 
-          maxWidth: '1400px', 
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px'
-        }}
+        dir="ltr" 
+        className="install-banner"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
-          <div 
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '10px',
-              background: '#000000',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(252, 213, 53, 0.2)',
-              flexShrink: 0
-            }}
-          >
-            <img 
-              src="/icons/icon-192x192.png" 
-              alt="NNM" 
-              style={{ width: '36px', height: '36px', borderRadius: '8px' }}
-            />
+        <div className="banner-content">
+          {/* القسم الأيسر: الأيقونة والنص */}
+          <div className="left-section">
+            <div className="icon-wrapper">
+              <img src="/icons/icon-192x192.png" alt="NNM" />
+            </div>
+            
+            <div className="text-wrapper">
+              <span className="app-title">{t.title}</span>
+              {isIOS && <span className="ios-hint">{t.iosInstructions}</span>}
+            </div>
           </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <span 
-              className="fw-bold text-truncate" 
-              style={{ 
-                color: '#FCD535', 
-                fontSize: '15px',
-                lineHeight: '1.2'
-              }}
-            >
-              {t.title}
-            </span>
-            {isIOS && (
-              <span className="text-truncate" style={{ fontSize: '11px', color: '#aaa', marginTop: '2px' }}>
-                {t.iosInstructions}
-              </span>
-            )}
-          </div>
-        </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-          {!isIOS && deferredPrompt && (
-            <button
-              onClick={handleInstall}
-              className="btn fw-bold"
-              style={{
-                background: 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)',
-                color: '#1a1200',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 16px',
-                fontSize: '14px',
-                fontWeight: '700',
-                boxShadow: '0 2px 10px rgba(252, 213, 53, 0.2)',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {t.install}
+          {/* القسم الأيمن: الزر والإغلاق */}
+          <div className="right-section">
+            {/* الزر يظهر فقط إذا لم يكن iOS وكان الحدث جاهزاً */}
+            {!isIOS && deferredPrompt && (
+              <button onClick={handleInstall} className="install-btn">
+                {t.install}
+              </button>
+            )}
+            
+            <button onClick={handleClose} className="close-btn" aria-label="Close">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 13L13 1M1 1L13 13" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
-          )}
-          
-          <button
-            onClick={handleClose}
-            style={{
-              background: 'rgba(255,255,255,0.05)',
-              border: 'none',
-              borderRadius: '50%',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#888',
-              cursor: 'pointer'
-            }}
-            aria-label={t.close}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M13 1L1 13M1 1L13 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
+          </div>
         </div>
       </div>
 
       <style jsx>{`
-        .fade-in {
-          animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        .install-banner {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 99999;
+          background-color: #121212; /* خلفية داكنة جداً */
+          border-bottom: 1px solid rgba(252, 213, 53, 0.2);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+          animation: slideDown 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
+
+        .banner-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 16px;
+          min-height: 70px; /* ارتفاع مضمون */
+          max-width: 1400px;
+          margin: 0 auto;
+          gap: 12px;
+        }
+
+        /* --- Left Section --- */
+        .left-section {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex: 1; /* يأخذ المساحة المتبقية */
+          min-width: 0; /* مهم جداً لمنع النص من دفع العناصر */
+        }
+
+        .icon-wrapper {
+          width: 44px;
+          height: 44px;
+          background: #000000;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0; /* ممنوع تصغير الأيقونة */
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .icon-wrapper img {
+          width: 34px;
+          height: 34px;
+          border-radius: 6px;
+          object-fit: cover;
+        }
+
+        .text-wrapper {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          overflow: hidden; /* لقص النص الطويل */
+        }
+
+        .app-title {
+          color: #FCD535;
+          font-weight: 700;
+          font-size: 14px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .ios-hint {
+          font-size: 10px;
+          color: #999;
+          margin-top: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        /* --- Right Section --- */
+        .right-section {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-shrink: 0; /* ممنوع تصغير هذا القسم نهائياً */
+        }
+
+        .install-btn {
+          background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%);
+          color: #000;
+          border: none;
+          border-radius: 6px;
+          padding: 0 16px;
+          height: 36px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          white-space: nowrap;
+          box-shadow: 0 2px 10px rgba(252, 213, 53, 0.2);
+          transition: transform 0.2s;
+        }
+        
+        .install-btn:active {
+          transform: scale(0.96);
+        }
+
+        .close-btn {
+          background: rgba(255,255,255,0.08);
+          border: none;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #888;
+          cursor: pointer;
+          flex-shrink: 0;
+        }
+
         @keyframes slideDown {
-          from {
-            transform: translateY(-100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
+          from { transform: translateY(-100%); }
+          to { transform: translateY(0); }
         }
       `}</style>
-    </div>
+    </>
   );
 };
 
