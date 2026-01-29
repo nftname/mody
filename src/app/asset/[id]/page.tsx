@@ -697,34 +697,109 @@ function AssetPage() {
 
                     <div className="col-lg-7 pt-0">
                         <div className="mb-2">
-                            <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-3`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
-                            
-                            <div className="d-flex align-items-center justify-content-between mb-3">
-                                <span style={{ color: TEXT_PRIMARY, fontSize: '15px', fontWeight: '500' }}>NNM Sovereign Asset</span>
-                                <span style={{ color: TEXT_MUTED, fontSize: '13px' }}>
-                                    Owned by <Link href={`/profile/${asset.owner}`} className="text-decoration-none" style={{ color: GOLD_SOLID }}>
-                                        {asset.owner.slice(0,6)}...{asset.owner.slice(-4)}
-                                    </Link>
-                                </span>
-                            </div>
-                            
-                            <div className="d-flex align-items-center gap-4 mb-2" style={{ color: TEXT_MUTED, fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>
-                                <span>ERC721</span>
-                                <span>POLYGON</span>
-                                <span>TOKEN #{asset.id}</span>
-                            </div>
-                        </div>
+    <h1 className={`${GOLD_TEXT_CLASS} fw-bold mb-3`} style={{ fontSize: '32px', letterSpacing: '0.5px' }}>{asset.name}</h1>
+    
+    <div className="d-flex align-items-center justify-content-between mb-3">
+        <span style={{ color: TEXT_PRIMARY, fontSize: '15px', fontWeight: '500' }}>NNM Sovereign Asset</span>
+        <span style={{ color: TEXT_MUTED, fontSize: '13px' }}>
+            Owned by <Link href={`/profile/${asset.owner}`} className="text-decoration-none" style={{ color: GOLD_SOLID }}>
+                {asset.owner.slice(0,6)}...{asset.owner.slice(-4)}
+            </Link>
+        </span>
+    </div>
+    
+    {/* --- ROW 1: INFO + PRICE (Desktop) + PRICE & BTN (Mobile) --- */}
+    <div className="d-flex align-items-end justify-content-between mb-2">
+        {/* Left: Token Info */}
+        <div className="d-flex align-items-center gap-2 gap-md-4" style={{ color: TEXT_MUTED, fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>
+            <span>ERC721</span>
+            <span className="d-none d-sm-inline">POLYGON</span>
+            <span>TOKEN #{asset.id}</span>
+        </div>
 
-                        <div className="mb-3">
-                            <div className="d-flex" style={{ borderBottom: 'none' }}>
-                                {['Details', 'Conviction', 'Orders', 'Activity'].map(tab => (
-                                    <button key={tab} onClick={() => setActiveTab(tab)} className="btn mx-3 py-2 fw-bold position-relative p-0" style={{ color: activeTab === tab ? '#fff' : TEXT_MUTED, background: 'transparent', border: 'none', fontSize: '15px' }}>
-                                        {tab}
-                                        {activeTab === tab && <div style={{ position: 'absolute', bottom: '-1px', left: 0, width: '100%', height: '3px', backgroundColor: '#fff', borderRadius: '2px 2px 0 0' }}></div>}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+        {/* Right Section */}
+        {listing && (
+            <div className="d-flex align-items-center gap-2">
+                {/* Price Display */}
+                <span style={{ color: TEXT_MUTED, fontSize: '10px', fontWeight: '400' }} className="d-none d-md-block">Current Price:</span>
+                <span className={`${GOLD_TEXT_CLASS} fw-bold`} style={{ fontSize: '14px', letterSpacing: '0.5px' }}>
+                    {formatCompactNumber(parseFloat(listing.price))} POL
+                </span>
+
+                {/* MOBILE BUY BUTTON (Hidden on Desktop) */}
+                {!isOwner && (
+                    <button 
+                        onClick={handleBuy} 
+                        disabled={isPending}
+                        className="btn d-md-none d-flex align-items-center justify-content-center px-2 py-0 ms-2" 
+                        style={{ 
+                            background: 'rgba(255, 255, 255, 0.05)', 
+                            border: `1px solid ${GOLD_SOLID}`, 
+                            color: GOLD_SOLID, 
+                            backdropFilter: 'blur(4px)', 
+                            borderRadius: '6px', 
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            height: '24px',
+                            whiteSpace: 'nowrap'
+                        }}
+                    >
+                        {isPending ? '...' : 'Buy'}
+                    </button>
+                )}
+            </div>
+        )}
+    </div>
+</div>
+
+{/* --- ROW 2: TABS + DESKTOP BUTTON --- */}
+<div className="mb-3">
+    <div className="d-flex align-items-center justify-content-between" style={{ borderBottom: 'none' }}>
+        {/* Tabs */}
+        <div className="d-flex">
+            {['Details', 'Conviction', 'Offers', 'Activity'].map(tab => (
+                <button 
+                    key={tab} 
+                    onClick={() => setActiveTab(tab)} 
+                    className="btn me-3 py-2 fw-bold position-relative p-0" 
+                    style={{ 
+                        color: activeTab === tab ? '#fff' : TEXT_MUTED, 
+                        background: 'transparent', 
+                        border: 'none', 
+                        fontSize: '15px',
+                        transition: 'color 0.2s'
+                    }}
+                >
+                    {tab}
+                    {activeTab === tab && <div style={{ position: 'absolute', bottom: '-4px', left: 0, width: '100%', height: '2px', backgroundColor: '#fff', borderRadius: '2px' }}></div>}
+                </button>
+            ))}
+        </div>
+
+        {/* DESKTOP BUY BUTTON (Hidden on Mobile) */}
+        {listing && !isOwner && (
+            <button 
+                onClick={handleBuy} 
+                disabled={isPending}
+                className="btn d-none d-md-flex align-items-center justify-content-center px-3 py-1" 
+                style={{ 
+                    background: 'rgba(255, 255, 255, 0.05)', 
+                    border: `1px solid ${GOLD_SOLID}`, 
+                    color: GOLD_SOLID, 
+                    backdropFilter: 'blur(4px)', 
+                    borderRadius: '8px', 
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    height: '32px',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                }}
+            >
+                {isPending ? <span className="spinner-border spinner-border-sm"></span> : 'Buy Now'}
+            </button>
+        )}
+    </div>
+</div>
 
                         <div className="pt-0 mt-0">
                             <div style={{ border: `1px solid ${BORDER_COLOR}`, borderRadius: '12px', overflow: 'hidden', backgroundColor: SURFACE_DARK }}>
