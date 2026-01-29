@@ -19,33 +19,22 @@ const InstallAppBanner = () => {
                          (window.navigator as any).standalone === true;
     if (isStandalone) return;
 
-    const timer = setTimeout(() => {
-      if (!deferredPrompt) {
-        setShowBanner(true);
-      }
-    }, 2000);
-
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(promptEvent);
       setShowBanner(true);
-      clearTimeout(timer);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      clearTimeout(timer);
     };
   }, [deferredPrompt]);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      alert('To install:\n\n• Chrome: Menu → Install App\n• Safari iOS: Share → Add to Home Screen\n• Edge: Menu → Apps → Install');
-      return;
-    }
+    if (!deferredPrompt) return;
 
     try {
       await deferredPrompt.prompt();
@@ -67,21 +56,22 @@ const InstallAppBanner = () => {
     localStorage.setItem('pwa-install-dismissed', 'true');
   };
 
-  if (!showBanner) return null;
+  if (!showBanner || !deferredPrompt) return null;
 
   return (
     <>
       <div 
+        dir="ltr"
         style={{
           position: 'fixed',
-          top: 0,
+          bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: '#000',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
-          padding: '10px 16px',
-          zIndex: 9999,
-          animation: 'slideDown 0.3s ease-out'
+          backgroundColor: '#1E1E1E',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          padding: '12px 16px',
+          zIndex: 99999,
+          animation: 'slideUp 0.3s ease-out'
         }}
       >
         <div style={{ 
@@ -98,8 +88,8 @@ const InstallAppBanner = () => {
               src="/icons/icon-64x64.png" 
               alt="NNM"
               style={{
-                width: '32px',
-                height: '32px',
+                width: '40px',
+                height: '40px',
                 flexShrink: 0
               }}
             />
@@ -107,6 +97,7 @@ const InstallAppBanner = () => {
             <span style={{ 
               color: '#fff', 
               fontSize: '14px',
+              fontWeight: '500',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis'
@@ -120,15 +111,25 @@ const InstallAppBanner = () => {
             <button
               onClick={handleInstallClick}
               style={{
-                backgroundColor: '#FCD535',
+                background: 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)',
                 color: '#000',
                 border: 'none',
-                padding: '6px 16px',
-                borderRadius: '4px',
-                fontSize: '13px',
-                fontWeight: '500',
+                padding: '8px 20px',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: '600',
                 cursor: 'pointer',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                boxShadow: '0 2px 8px rgba(253, 185, 49, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(253, 185, 49, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(253, 185, 49, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
               }}
             >
               Install
@@ -140,11 +141,15 @@ const InstallAppBanner = () => {
                 backgroundColor: 'transparent',
                 color: '#fff',
                 border: 'none',
-                padding: '6px 8px',
-                fontSize: '18px',
+                padding: '8px',
+                fontSize: '20px',
                 cursor: 'pointer',
-                lineHeight: 1
+                lineHeight: 1,
+                opacity: 0.7,
+                transition: 'opacity 0.2s ease'
               }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
               aria-label="Close"
             >
               ×
@@ -154,9 +159,9 @@ const InstallAppBanner = () => {
       </div>
 
       <style jsx global>{`
-        @keyframes slideDown {
+        @keyframes slideUp {
           from {
-            transform: translateY(-100%);
+            transform: translateY(100%);
             opacity: 0;
           }
           to {
