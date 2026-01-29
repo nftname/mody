@@ -94,19 +94,15 @@ const InstallAppBanner = () => {
         }}>
           {/* Logo + Text */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
-            <div 
+            <img 
+              src="/icons/icon-64x64.png" 
+              alt="NNM"
               style={{
                 width: '32px',
                 height: '32px',
-                backgroundColor: '#000',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 flexShrink: 0
               }}
-            >
-              <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#FCD535' }}>N</span>
-            </div>
+            />
             
             <span style={{ 
               color: '#fff', 
