@@ -12,9 +12,12 @@ const InstallAppBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Multi-language support based on browser language
   const getTranslations = () => {
+    if (typeof window === 'undefined') return { title: 'Install NNM App', install: 'Install', close: 'Close', iosInstructions: 'Tap Share button and "Add to Home Screen"' };
+    
     const lang = navigator.language.toLowerCase();
     
     const translations: Record<string, { title: string; install: string; close: string; iosInstructions: string }> = {
@@ -106,23 +109,41 @@ const InstallAppBanner = () => {
   const t = getTranslations();
 
   useEffect(() => {
+    setIsMounted(true);
+    
+    console.log('🔍 [InstallBanner] Checking banner conditions...');
+    
     // Check if already dismissed
     const dismissed = localStorage.getItem('nnm_install_banner_dismissed');
-    if (dismissed) return;
+    console.log('📦 [InstallBanner] Dismissed status:', dismissed);
+    
+    // FORCE SHOW FOR TESTING - Remove this after testing
+    // localStorage.removeItem('nnm_install_banner_dismissed');
+    
+    if (dismissed) {
+      console.log('⚠️ [InstallBanner] Banner was dismissed, not showing');
+      return;
+    }
 
     // Detect iOS
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(ios);
+    console.log('📱 [InstallBanner] Is iOS:', ios);
 
     // Check if already installed (standalone mode)
     const standalone = window.matchMedia('(display-mode: standalone)').matches || 
                       (window.navigator as any).standalone === true;
     setIsStandalone(standalone);
+    console.log('🖥️ [InstallBanner] Is Standalone:', standalone);
 
-    if (standalone) return; // Already installed, don't show
+    if (standalone) {
+      console.log('✅ [InstallBanner] Already installed, not showing banner');
+      return;
+    }
 
     // For non-iOS: Listen for PWA install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('🎯 [InstallBanner] beforeinstallprompt event fired!');
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowBanner(true);
@@ -130,18 +151,25 @@ const InstallAppBanner = () => {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // For iOS: Show banner after 3 seconds if not standalone
-    if (ios) {
-      setTimeout(() => setShowBanner(true), 3000);
-    }
+    // For iOS OR force show on all devices after 2 seconds
+    const timer = setTimeout(() => {
+      console.log('⏰ [InstallBanner] Timer fired, showing banner');
+      setShowBanner(true);
+    }, 2000);
+
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      clearTimeout(timer);
     };
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
+    console.log('🚀 [InstallBanner] Install button clicked');
+    if (!deferredPrompt) {
+      console.log('⚠️ [InstallBanner] No deferred prompt available');
+      return;
+    }
 
     try {
       await deferredPrompt.prompt();
@@ -160,11 +188,20 @@ const InstallAppBanner = () => {
   };
 
   const handleClose = () => {
+    console.log('❌ [InstallBanner] Banner closed by user');
     setShowBanner(false);
     localStorage.setItem('nnm_install_banner_dismissed', 'true');
   };
 
-  if (!showBanner || isStandalone) return null;
+  // Don't render on server-side
+  if (!isMounted) return null;
+  
+  if (!showBanner || isStandalone) {
+    console.log('🚫 [InstallBanner] Not showing banner:', { showBanner, isStandalone });
+    return null;
+  }
+
+  console.log('✨ [InstallBanner] Rendering banner!');
 
   return (
     <div 
