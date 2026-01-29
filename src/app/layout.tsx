@@ -4,7 +4,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import { Providers } from "@/app/providers";
 import MaintenanceGuardWrapper from "./MaintenanceGuardWrapper";
-import InstallAppBanner from "@/components/InstallAppBanner"; 
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -42,7 +41,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="beforeInteractive" />
         <Providers>
-            <InstallAppBanner />
             <MaintenanceGuardWrapper>
                 {children}
             </MaintenanceGuardWrapper>
