@@ -50,31 +50,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={inter.className}>
         <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="beforeInteractive" />
-        <Script id="register-sw" strategy="afterInteractive">
-          {`
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                  .then(function(registration) {
-                    console.log('✅ ServiceWorker registered successfully:', registration.scope);
-                    
-                    // تحديث تلقائي عند توفر نسخة جديدة
-                    registration.addEventListener('updatefound', function() {
-                      const newWorker = registration.installing;
-                      newWorker.addEventListener('statechange', function() {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                          console.log('🔄 New version available! Refresh to update.');
-                        }
-                      });
-                    });
-                  })
-                  .catch(function(err) {
-                    console.error('❌ ServiceWorker registration failed:', err);
-                  });
-              });
-            }
-          `}
-        </Script>
         <Providers>
             <MaintenanceGuardWrapper>
                 {children}
