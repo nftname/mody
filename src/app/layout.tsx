@@ -27,8 +27,9 @@ export const metadata = {
   },
   icons: {
     icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    apple: '/icons/apple-touch-icon.png',
   },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -37,26 +38,39 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="theme-color" content="#F0C420" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="NNM Market" />
       </head>
       <body className={inter.className}>
         <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="beforeInteractive" />
         <Script id="register-sw" strategy="afterInteractive">
           {`
             if ('serviceWorker' in navigator) {
-              window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(
-                  (registration) => {
-                    console.log('ServiceWorker registration successful');
-                  },
-                  (err) => {
-                    console.log('ServiceWorker registration failed: ', err);
-                  }
-                );
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                  .then(function(registration) {
+                    console.log('✅ ServiceWorker registered successfully:', registration.scope);
+                    
+                    // تحديث تلقائي عند توفر نسخة جديدة
+                    registration.addEventListener('updatefound', function() {
+                      const newWorker = registration.installing;
+                      newWorker.addEventListener('statechange', function() {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                          console.log('🔄 New version available! Refresh to update.');
+                        }
+                      });
+                    });
+                  })
+                  .catch(function(err) {
+                    console.error('❌ ServiceWorker registration failed:', err);
+                  });
               });
             }
           `}
