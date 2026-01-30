@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import { Providers } from "@/app/providers";
 import MaintenanceGuardWrapper from "./MaintenanceGuardWrapper";
+import PWAInstallBanner from "@/components/PWAInstallBanner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -56,7 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="beforeInteractive" />
         <Script id="pwa-register" strategy="afterInteractive">
           {`
-            // Register Service Worker
+            // Register Service Worker only
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/service-worker.js?v=2')
@@ -69,38 +70,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               });
             }
 
-            // PWA Install Handler
-            let deferredPrompt;
-            let installShown = false;
-            
-            window.addEventListener('beforeinstallprompt', (e) => {
-              console.log('✅ PWA Install available');
-              deferredPrompt = e;
-              installShown = false;
-            });
-
-            // Try to show install after user interaction
-            document.addEventListener('click', function showInstall() {
-              if (deferredPrompt && !installShown) {
-                installShown = true;
-                setTimeout(() => {
-                  if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                      console.log('Install:', choiceResult.outcome);
-                      deferredPrompt = null;
-                    });
-                  }
-                }, 2000);
-                document.removeEventListener('click', showInstall);
-              }
-            }, { once: false });
-
             window.addEventListener('appinstalled', () => {
               console.log('✅ PWA installed!');
             });
           `}
         </Script>
+        <PWAInstallBanner />
         <Providers>
             <MaintenanceGuardWrapper>
                 {children}
