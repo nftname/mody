@@ -59,9 +59,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             // Register Service Worker
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/service-worker.js')
+                navigator.serviceWorker.register('/service-worker.js?v=2')
                   .then(function(registration) {
-                    console.log('✅ PWA ServiceWorker registered:', registration.scope);
+                    console.log('✅ PWA ServiceWorker registered');
                   })
                   .catch(function(err) {
                     console.log('❌ PWA ServiceWorker failed:', err);
@@ -69,14 +69,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               });
             }
 
-            // Log when install prompt is available (but don't trigger it manually)
+            // PWA Install Handler
+            let deferredPrompt;
+            let installShown = false;
+            
             window.addEventListener('beforeinstallprompt', (e) => {
-              console.log('✅ Install banner will show automatically from browser');
-              // Don't prevent default - let browser show native banner
+              console.log('✅ PWA Install available');
+              deferredPrompt = e;
+              installShown = false;
             });
 
+            // Try to show install after user interaction
+            document.addEventListener('click', function showInstall() {
+              if (deferredPrompt && !installShown) {
+                installShown = true;
+                setTimeout(() => {
+                  if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                      console.log('Install:', choiceResult.outcome);
+                      deferredPrompt = null;
+                    });
+                  }
+                }, 2000);
+                document.removeEventListener('click', showInstall);
+              }
+            }, { once: false });
+
             window.addEventListener('appinstalled', () => {
-              console.log('✅ PWA installed successfully!');
+              console.log('✅ PWA installed!');
             });
           `}
         </Script>
