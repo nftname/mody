@@ -12,11 +12,11 @@
     </linearGradient>
 
     <filter id="innerEtch" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.8" />
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.6" />
     </filter>
   </defs>
 
-  <g filter="url(#innerEtch)">
+  <g filter="url(#innerEtch)" transform="translate(256, 256) scale(0.75) translate(-256, -256)">
       <path d="M256 20 L356 120 L256 220 L156 120 Z" fill="url(#blockGold)" />
       <path d="M156 120 L256 220 L256 240 L156 140 Z" fill="url(#blockSide)" />
       
