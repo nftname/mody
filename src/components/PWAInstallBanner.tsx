@@ -62,7 +62,7 @@ export default function PWAInstallBanner() {
         }
       `}</style>
       
-      <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 shadow-lg">
+      <div className="bg-[#1a1a1a] shadow-lg border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between flex-wrap">
             <div className="flex items-center flex-1">
@@ -82,7 +82,7 @@ export default function PWAInstallBanner() {
                 <p className="text-white font-semibold text-sm sm:text-base">
                   حمّل تطبيق NNM
                 </p>
-                <p className="text-yellow-100 text-xs sm:text-sm">
+                <p className="text-gray-400 text-xs sm:text-sm">
                   للوصول السريع والإشعارات
                 </p>
               </div>
@@ -92,13 +92,13 @@ export default function PWAInstallBanner() {
             <div className="flex items-center gap-2 mt-2 sm:mt-0">
               <button
                 onClick={handleInstall}
-                className="bg-white text-yellow-600 px-6 py-2 rounded-full font-bold text-sm hover:bg-yellow-50 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                className="bg-[#F0C420] text-black px-6 py-2 rounded-full font-bold text-sm hover:bg-yellow-500 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
               >
                 تثبيت
               </button>
               <button
                 onClick={handleClose}
-                className="text-white hover:text-yellow-100 p-2"
+                className="text-gray-400 hover:text-white p-2"
                 aria-label="Close"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
