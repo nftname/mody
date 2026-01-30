@@ -80,10 +80,10 @@ export default function PWAInstallBanner() {
               {/* Text */}
               <div className="ml-3 flex-1">
                 <p className="text-white font-semibold text-sm sm:text-base">
-                  حمّل تطبيق NNM
+                  Install NNM App
                 </p>
                 <p className="text-gray-400 text-xs sm:text-sm">
-                  للوصول السريع والإشعارات
+                  Quick access and notifications
                 </p>
               </div>
             </div>
@@ -94,7 +94,7 @@ export default function PWAInstallBanner() {
                 onClick={handleInstall}
                 className="bg-[#F0C420] text-black px-6 py-2 rounded-full font-bold text-sm hover:bg-yellow-500 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
               >
-                تثبيت
+                Install
               </button>
               <button
                 onClick={handleClose}
