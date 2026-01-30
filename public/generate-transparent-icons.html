@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Transparent PWA Icons</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        .preview { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; }
+        canvas { border: 1px solid #ccc; margin: 10px; background: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
+        button { padding: 10px 20px; margin: 5px; background: #F0C420; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #d4aa1a; }
+    </style>
+</head>
+<body>
+    <h1>🎨 Generate Transparent PWA Icons</h1>
+    <p>يتم إنشاء أيقونات شفافة مع تأثير زجاجي لـ PWA</p>
+    
+    <div class="preview">
+        <h3>192x192 Icon</h3>
+        <canvas id="canvas192" width="192" height="192"></canvas>
+        <button onclick="download('canvas192', 'icon-192x192-transparent.png')">⬇️ Download 192x192</button>
+    </div>
+    
+    <div class="preview">
+        <h3>512x512 Icon</h3>
+        <canvas id="canvas512" width="512" height="512"></canvas>
+        <button onclick="download('canvas512', 'icon-512x512-transparent.png')">⬇️ Download 512x512</button>
+    </div>
+
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const center = size / 2;
+            const diamondSize = size * 0.25;
+            const gap = size * 0.03;
+            
+            // Clear canvas (transparent)
+            ctx.clearRect(0, 0, size, size);
+            
+            // Optional: Frosted glass background (10% opacity)
+            const bgSize = size * 0.8;
+            const bgOffset = size * 0.1;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.save();
+            ctx.translate(center, center);
+            ctx.rotate(Math.PI / 4);
+            ctx.beginPath();
+            ctx.roundRect(-bgSize/2, -bgSize/2, bgSize, bgSize, size * 0.1);
+            ctx.fill();
+            ctx.restore();
+            
+            // Draw 4 gold diamonds (45° rotated squares)
+            // Positions relative to center
+            const positions = [
+                [-diamondSize - gap/2, -diamondSize - gap/2], // Top-left
+                [diamondSize + gap/2, -diamondSize - gap/2],  // Top-right
+                [-diamondSize - gap/2, diamondSize + gap/2],  // Bottom-left
+                [diamondSize + gap/2, diamondSize + gap/2]    // Bottom-right
+            ];
+            
+            positions.forEach(([offsetX, offsetY]) => {
+                ctx.save();
+                ctx.translate(center + offsetX, center + offsetY);
+                ctx.rotate(Math.PI / 4); // Rotate 45 degrees
+                
+                // Gold square with gradient
+                const gradient = ctx.createLinearGradient(-diamondSize/2, -diamondSize/2, diamondSize/2, diamondSize/2);
+                gradient.addColorStop(0, '#FFD700');
+                gradient.addColorStop(0.5, '#F0C420');
+                gradient.addColorStop(1, '#DAA520');
+                
+                ctx.fillStyle = gradient;
+                ctx.shadowColor = 'rgba(240, 196, 32, 0.4)';
+                ctx.shadowBlur = size * 0.02;
+                ctx.beginPath();
+                ctx.roundRect(-diamondSize/2, -diamondSize/2, diamondSize, diamondSize, size * 0.02);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                ctx.restore();
+            });
+        }
+        
+        // Draw icons
+        drawIcon(document.getElementById('canvas192'), 192);
+        drawIcon(document.getElementById('canvas512'), 512);
+        
+        function download(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
