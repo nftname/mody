@@ -50,6 +50,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={inter.className}>
         <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="beforeInteractive" />
+        <Script id="pwa-register" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js')
+                  .then(function(registration) {
+                    console.log('✅ PWA ServiceWorker registered');
+                  })
+                  .catch(function(err) {
+                    console.log('❌ PWA ServiceWorker registration failed:', err);
+                  });
+              });
+            }
+          `}
+        </Script>
         <Providers>
             <MaintenanceGuardWrapper>
                 {children}
