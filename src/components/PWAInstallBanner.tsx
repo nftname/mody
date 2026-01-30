@@ -83,7 +83,7 @@ export default function PWAInstallBanner() {
                   Install NNM App
                 </p>
                 <p className="text-gray-400 text-xs sm:text-sm">
-                  
+                  Digital Name Assets
                 </p>
               </div>
             </div>
