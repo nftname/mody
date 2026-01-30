@@ -69,29 +69,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               });
             }
 
-            // Handle Install Prompt
-            let deferredPrompt;
-            
+            // Log when install prompt is available (but don't trigger it manually)
             window.addEventListener('beforeinstallprompt', (e) => {
-              console.log('✅ Install prompt is ready!');
-              e.preventDefault();
-              deferredPrompt = e;
-              
-              // Show install prompt immediately
-              setTimeout(() => {
-                if (deferredPrompt) {
-                  deferredPrompt.prompt();
-                  deferredPrompt.userChoice.then((choiceResult) => {
-                    console.log('Install choice:', choiceResult.outcome);
-                    deferredPrompt = null;
-                  });
-                }
-              }, 3000); // Show after 3 seconds
+              console.log('✅ Install banner will show automatically from browser');
+              // Don't prevent default - let browser show native banner
             });
 
             window.addEventListener('appinstalled', () => {
               console.log('✅ PWA installed successfully!');
-              deferredPrompt = null;
             });
           `}
         </Script>
