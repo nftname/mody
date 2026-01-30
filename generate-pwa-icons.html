@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Transparent PNG Icons</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #333; color: white; }
+        .preview { margin: 20px 0; padding: 20px; background: #222; border-radius: 8px; }
+        canvas { border: 2px solid #555; margin: 10px; }
+        .bg-check { background: repeating-conic-gradient(#555 0% 25%, transparent 0% 50%) 50% / 20px 20px; }
+        button { padding: 12px 24px; margin: 5px; background: #F0C420; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: black; }
+        button:hover { background: #d4aa1a; }
+    </style>
+</head>
+<body>
+    <h1>🎨 Generate Transparent PNG Icons (Smaller Size)</h1>
+    <p>أيقونات شفافة 100% بحجم أصغر (60% مع padding 20%)</p>
+    
+    <div class="preview">
+        <h3>192x192 Icon</h3>
+        <canvas id="canvas192" width="192" height="192" class="bg-check"></canvas>
+        <button onclick="download('canvas192', 'icon-192x192.png')">⬇️ Download 192x192</button>
+    </div>
+    
+    <div class="preview">
+        <h3>512x512 Icon</h3>
+        <canvas id="canvas512" width="512" height="512" class="bg-check"></canvas>
+        <button onclick="download('canvas512', 'icon-512x512.png')">⬇️ Download 512x512</button>
+    </div>
+
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d', { alpha: true });
+            
+            // Clear canvas - completely transparent
+            ctx.clearRect(0, 0, size, size);
+            
+            // Scale factor for padding (60% size)
+            const scale = 0.6;
+            const center = size / 2;
+            
+            // Transform to center and scale
+            ctx.save();
+            ctx.translate(center, center);
+            ctx.scale(scale, scale);
+            ctx.translate(-center, -center);
+            
+            // Diamond size (100 pixels at 512 size)
+            const diamondSize = size * 0.195;
+            
+            // 4 diamond positions (cross formation)
+            // Top, Bottom, Left, Right
+            const positions = [
+                [center, center - diamondSize * 1.36],  // Top
+                [center, center + diamondSize * 1.36],  // Bottom
+                [center - diamondSize * 1.36, center],  // Left
+                [center + diamondSize * 1.36, center]   // Right
+            ];
+            
+            positions.forEach(([cx, cy]) => {
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(Math.PI / 4); // 45 degrees
+                
+                // Gold gradient
+                const gradient = ctx.createLinearGradient(-diamondSize, -diamondSize, diamondSize, diamondSize);
+                gradient.addColorStop(0, '#FFF5CC');
+                gradient.addColorStop(0.2, '#FCD535');
+                gradient.addColorStop(0.8, '#B3882A');
+                
+                ctx.fillStyle = gradient;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+                ctx.shadowBlur = size * 0.01;
+                ctx.shadowOffsetY = size * 0.006;
+                
+                // Draw diamond (square rotated 45°)
+                ctx.beginPath();
+                ctx.rect(-diamondSize/2, -diamondSize/2, diamondSize, diamondSize);
+                ctx.fill();
+                
+                // 3D side effect
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetY = 0;
+                const sideGradient = ctx.createLinearGradient(0, 0, diamondSize/2, diamondSize/2);
+                sideGradient.addColorStop(0, 'rgba(158, 124, 12, 0.4)');
+                sideGradient.addColorStop(1, 'rgba(92, 64, 4, 0.6)');
+                ctx.fillStyle = sideGradient;
+                ctx.beginPath();
+                ctx.moveTo(-diamondSize/2, diamondSize/2);
+                ctx.lineTo(diamondSize/2, diamondSize/2);
+                ctx.lineTo(0, 0);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.restore();
+            });
+            
+            // Center dot
+            ctx.fillStyle = '#0b0e11';
+            ctx.beginPath();
+            ctx.arc(center, center, size * 0.012, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        // Draw icons
+        drawIcon(document.getElementById('canvas192'), 192);
+        drawIcon(document.getElementById('canvas512'), 512);
+        
+        function download(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            canvas.toBlob(function(blob) {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                URL.revokeObjectURL(link.href);
+            }, 'image/png');
+        }
+    </script>
+</body>
+</html>
