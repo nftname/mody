@@ -34,8 +34,8 @@
             // Clear canvas - completely transparent
             ctx.clearRect(0, 0, size, size);
             
-            // Scale factor for padding (60% size)
-            const scale = 0.6;
+            // Scale factor for padding (40% size - smaller)
+            const scale = 0.5;
             const center = size / 2;
             
             // Transform to center and scale
@@ -47,13 +47,13 @@
             // Diamond size (100 pixels at 512 size)
             const diamondSize = size * 0.195;
             
-            // 4 diamond positions (cross formation)
+            // 4 diamond positions (cross formation) - closer together
             // Top, Bottom, Left, Right
             const positions = [
-                [center, center - diamondSize * 1.36],  // Top
-                [center, center + diamondSize * 1.36],  // Bottom
-                [center - diamondSize * 1.36, center],  // Left
-                [center + diamondSize * 1.36, center]   // Right
+                [center, center - diamondSize * 1.1],  // Top (closer)
+                [center, center + diamondSize * 1.1],  // Bottom (closer)
+                [center - diamondSize * 1.1, center],  // Left (closer)
+                [center + diamondSize * 1.1, center]   // Right (closer)
             ];
             
             positions.forEach(([cx, cy]) => {
