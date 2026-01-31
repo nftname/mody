@@ -118,34 +118,54 @@ export default function AdminScannerPage() {
                 if (!offersMap.has(tid) || o.price > offersMap.get(tid)) offersMap.set(tid, o.price);
             });
 
-            // 3. Database (NAMES - البحث الشامل)
+            // 3. Database (NAMES - البحث الشامل المحسّن)
             const namesMap = new Map();
             
-            // المحاولة أ: البحث في جدول Assets (الأساسي)
+            // محاولة 1: جدول assets
             const { data: assetsTable } = await supabase
-                .from('assets') // اسم الجدول المتوقع
-                .select('token_id, name'); 
+                .from('assets')
+                .select('token_id, name')
+                .not('name', 'is', null);
             
-            if (assetsTable) {
+            if (assetsTable && assetsTable.length > 0) {
                 assetsTable.forEach((a: any) => {
-                    if (a.name) namesMap.set(a.token_id.toString(), a.name);
+                    if (a.name && a.name.trim() !== '') {
+                        namesMap.set(a.token_id.toString(), a.name.trim());
+                    }
                 });
             }
 
-            // المحاولة ب: البحث في جدول Activities (الاحتياطي) وتعبئة الفراغات
+            // محاولة 2: جدول activities للأسماء المفقودة
             const { data: activitiesTable } = await supabase
                 .from('activities')
                 .select('token_id, token_name')
                 .not('token_name', 'is', null);
                 
-            if (activitiesTable) {
+            if (activitiesTable && activitiesTable.length > 0) {
                 activitiesTable.forEach((n: any) => {
-                    // نأخذ الاسم فقط إذا لم نجد اسماً سابقاً من جدول assets
-                    if (!namesMap.has(n.token_id.toString()) && n.token_name) {
-                        namesMap.set(n.token_id.toString(), n.token_name);
+                    const tid = n.token_id.toString();
+                    if (!namesMap.has(tid) && n.token_name && n.token_name.trim() !== '') {
+                        namesMap.set(tid, n.token_name.trim());
                     }
                 });
             }
+
+            // محاولة 3: جدول nft_metadata (إذا كان موجوداً)
+            const { data: metadataTable } = await supabase
+                .from('nft_metadata')
+                .select('token_id, name')
+                .not('name', 'is', null);
+                
+            if (metadataTable && metadataTable.length > 0) {
+                metadataTable.forEach((m: any) => {
+                    const tid = m.token_id.toString();
+                    if (!namesMap.has(tid) && m.name && m.name.trim() !== '') {
+                        namesMap.set(tid, m.name.trim());
+                    }
+                });
+            }
+
+            console.log(`✅ تم تحميل ${namesMap.size} اسم من قاعدة البيانات`);
 
             // 4. Build List
             const allIds = Array.from({ length: totalCount }, (_, i) => i);
@@ -177,26 +197,28 @@ export default function AdminScannerPage() {
                         } catch { currentOwner = 'burned'; }
                     }
 
-                    // هنا مربط الفرس: إذا وجدنا الاسم نعرضه، إذا لا نعرض "Unknown"
-                    // لن نكتب "Token #" إذا كان الاسم موجوداً
+                    // الحصول على الاسم الحقيقي من قاعدة البيانات
                     const realName = namesMap.get(tid);
-                    const displayName = realName ? realName : `Token #${tid}`;
-
+                    
                     return {
                         id: tid,
-                        name: displayName,
+                        name: realName || null, // نحفظ null إذا لم يكن هناك اسم
                         owner: currentOwner,
                         seller: sellerAddress,
                         isListed: !!listing,
                         price: listing ? listing.price : null,
                         highestOffer: highestOffer || 0,
-                        nameLength: realName ? realName.length : 0 // الطول بناء على الاسم الحقيقي فقط
+                        nameLength: realName ? realName.length : 0
                     };
                 }));
                 processedAssets = [...processedAssets, ...batchResults];
             }
             setAllAssets(processedAssets);
-        } catch (e) { console.error(e); } finally { setLoading(false); }
+        } catch (e) { 
+            console.error('❌ خطأ في جلب البيانات:', e); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     useEffect(() => { if (publicClient) fetchMarketData(); }, [publicClient]);
@@ -225,8 +247,13 @@ export default function AdminScannerPage() {
 
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
-            data = data.filter(item => item.name.toLowerCase().includes(q) || item.id.includes(q));
+            data = data.filter(item => {
+                const nameMatch = item.name ? item.name.toLowerCase().includes(q) : false;
+                const idMatch = item.id.includes(q);
+                return nameMatch || idMatch;
+            });
         }
+        
         if (lengthFilter !== 'All') {
             const len = parseInt(lengthFilter);
             if (lengthFilter === '4+') data = data.filter(item => item.nameLength >= 4);
@@ -276,7 +303,7 @@ export default function AdminScannerPage() {
             </div>
 
             <div className="d-flex flex-wrap gap-3 mb-4 align-items-center p-3 rounded" style={{ backgroundColor: '#111', border: '1px solid #333' }}>
-                <input type="text" placeholder="Search Name..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="form-control form-control-sm" style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff', maxWidth: '300px' }} />
+                <input type="text" placeholder="Search Name or ID..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="form-control form-control-sm" style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff', maxWidth: '300px' }} />
                 <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={sortMode} onChange={(e) => setSortMode(e.target.value)}><option value="highest_offer">Highest Offer</option><option value="newest">Newest</option><option value="price_high">Price High</option><option value="price_low">Price Low</option></select>
                 <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={lengthFilter} onChange={(e) => { setLengthFilter(e.target.value); setCurrentPage(1); }}><option value="All">Length: All</option><option value="1">1 Digit</option><option value="2">2 Digits</option><option value="3">3 Digits</option><option value="4+">4+</option></select>
             </div>
@@ -308,10 +335,16 @@ export default function AdminScannerPage() {
                                 return (
                                     <tr key={item.id}>
                                         <td className="ps-3 fw-bold text-white">
-                                            {/* الاسم + الرقم */}
-                                            {item.name} 
-                                            {/* الرقم يظهر فقط إذا كان الاسم لا يحتوي عليه */}
-                                            {!item.name.includes('#') && <span style={{ color: '#666', fontSize: '11px', marginLeft: '6px' }}>#{item.id}</span>}
+                                            {/* عرض الاسم الحقيقي فقط إذا كان موجوداً */}
+                                            {item.name ? (
+                                                <span style={{ color: '#FCD535', fontSize: '15px' }}>{item.name}</span>
+                                            ) : (
+                                                <span style={{ color: '#888', fontSize: '13px' }}>Token #{item.id}</span>
+                                            )}
+                                            {/* رقم التوكن بجانب الاسم بحجم صغير */}
+                                            {item.name && (
+                                                <span style={{ color: '#555', fontSize: '10px', marginLeft: '8px' }}>#{item.id}</span>
+                                            )}
                                         </td>
                                         <td>
                                             <div className="d-flex align-items-center">
