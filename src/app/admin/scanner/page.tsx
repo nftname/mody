@@ -3,14 +3,19 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useAccount, usePublicClient } from "wagmi";
-import { parseAbi, formatEther } from 'viem';
+import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
-// --- القائمة الذهبية المدمجة (الأدمن + 30 بوت) ---
-// تم وضعها هنا لضمان عمل النظام فوراً دون الاعتماد على ملفات السيرفر
+// --- HELPER FROM MARKET PAGE ---
+const resolveIPFS = (uri: string) => {
+    if (!uri) return '';
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
+};
+
+// --- HARDCODED BOTS & ADMIN ---
 const BOT_WALLETS = [
-    "0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e", // Admin Wallet
+    "0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e",
     "0xf3e2544af3e7ba1687d852e80e7cb6c850b797b6",
     "0x02f75874846d09c89f55cae371c5a8d6d3afd9ac",
     "0x266e228c9d9b540caa2e6994ce7c61e58b05d36b",
@@ -60,8 +65,7 @@ export default function AdminScannerPage() {
     const [loading, setLoading] = useState(true);
     const [allAssets, setAllAssets] = useState<any[]>([]);
     
-    // القائمة الثابتة هي الأساس
-    const [internalWallets] = useState<string[]>(BOT_WALLETS);
+    const [internalWallets, setInternalWallets] = useState<string[]>(BOT_WALLETS);
     
     const ITEMS_PER_PAGE = 20;
     const [currentPage, setCurrentPage] = useState(1);
@@ -69,12 +73,27 @@ export default function AdminScannerPage() {
     const [sortMode, setSortMode] = useState('highest_offer'); 
     const [lengthFilter, setLengthFilter] = useState('All'); 
 
+    // Sync from API (Optional Backup)
+    useEffect(() => {
+        const fetchWallets = async () => {
+            try {
+                const res = await fetch('/api/admin/get-wallets');
+                const data = await res.json();
+                if (data.wallets && data.wallets.length > 0) {
+                    const combined = [...new Set([...BOT_WALLETS, ...data.wallets.map((w: string) => w.toLowerCase().trim())])];
+                    setInternalWallets(combined);
+                }
+            } catch (e) { /* silent */ }
+        };
+        fetchWallets();
+    }, []);
+
     const fetchMarketData = async () => {
         if (!publicClient) return;
         if (allAssets.length === 0) setLoading(true); 
         
         try {
-            // 1. Blockchain Data
+            // 1. Get Total Supply
             const totalSupplyBig = await publicClient.readContract({
                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                 abi: REGISTRY_ABI,
@@ -82,6 +101,7 @@ export default function AdminScannerPage() {
             });
             const totalCount = Number(totalSupplyBig);
             
+            // 2. Get Listings
             const [listedIds, listedPrices, sellers] = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -96,7 +116,7 @@ export default function AdminScannerPage() {
                 });
             });
 
-            // 2. Database (Offers)
+            // 3. Get Offers (DB)
             const { data: offers } = await supabase.from('offers').select('token_id, price').eq('status', 'active');
             const offersMap = new Map();
             if (offers) offers.forEach((o: any) => {
@@ -104,41 +124,9 @@ export default function AdminScannerPage() {
                 if (!offersMap.has(tid) || o.price > offersMap.get(tid)) offersMap.set(tid, o.price);
             });
 
-            // 3. Database (Real Names Strategy)
-            const namesMap = new Map();
-            
-            // أ) جلب الأسماء من جدول الأصول الرئيسي (Assets Table)
-            // هذا الجدول عادة يحتوي على الأسماء النهائية
-            const { data: assetsData } = await supabase
-                .from('assets')
-                .select('token_id, name')
-                .not('name', 'is', null);
-
-            if (assetsData) {
-                assetsData.forEach((a: any) => {
-                    if (a.name) namesMap.set(a.token_id.toString(), a.name);
-                });
-            }
-
-            // ب) محاولة تعبئة الفراغات من جدول النشاطات (Activities)
-            const { data: activitiesData } = await supabase
-                .from('activities')
-                .select('token_id, token_name')
-                .not('token_name', 'is', null);
-
-            if (activitiesData) {
-                activitiesData.forEach((a: any) => {
-                    const tid = a.token_id.toString();
-                    // نأخذ الاسم فقط إذا لم نجد اسماً في جدول assets
-                    if (!namesMap.has(tid) && a.token_name) {
-                        namesMap.set(tid, a.token_name);
-                    }
-                });
-            }
-
-            // 4. Build List
+            // 4. Build List with IPFS FETCHING (Market Logic)
             const allIds = Array.from({ length: totalCount }, (_, i) => i);
-            const batchSize = 100; 
+            const batchSize = 50; // Reduce batch size slightly for heavy IPFS calls
             let processedAssets: any[] = [];
             
             for (let i = 0; i < allIds.length; i += batchSize) {
@@ -151,6 +139,7 @@ export default function AdminScannerPage() {
                     let currentOwner = '';
                     let sellerAddress = '';
 
+                    // Owner Logic
                     if (listing) {
                         sellerAddress = listing.seller;
                         currentOwner = listing.seller; 
@@ -166,19 +155,33 @@ export default function AdminScannerPage() {
                         } catch { currentOwner = 'burned'; }
                     }
 
-                    // منطق الاسم: إذا وجدنا الاسم في الداتا بيز نستخدمه، وإلا نستخدم الرقم
-                    const dbName = namesMap.get(tid);
-                    const displayName = dbName ? dbName : `Token #${tid}`;
+                    // --- NAME LOGIC (COPIED FROM MARKET PAGE) ---
+                    let realName = `Asset #${tid}`;
+                    try {
+                        const uri = await publicClient.readContract({ 
+                            address: NFT_COLLECTION_ADDRESS as `0x${string}`, 
+                            abi: erc721Abi, 
+                            functionName: 'tokenURI', 
+                            args: [BigInt(tid)] 
+                        });
+                        const metaRes = await fetch(resolveIPFS(uri));
+                        const meta = metaRes.ok ? await metaRes.json() : {};
+                        if (meta.name) {
+                            realName = meta.name;
+                        }
+                    } catch (err) {
+                        // Keep default name if fetch fails
+                    }
 
                     return {
                         id: tid,
-                        name: displayName,
+                        name: realName,
                         owner: currentOwner,
                         seller: sellerAddress,
                         isListed: !!listing,
                         price: listing ? listing.price : null,
                         highestOffer: highestOffer || 0,
-                        nameLength: dbName ? dbName.length : 0 // الطول يحسب فقط إذا كان اسماً حقيقياً
+                        nameLength: realName.includes('Asset #') ? 0 : realName.length 
                     };
                 }));
                 processedAssets = [...processedAssets, ...batchResults];
@@ -189,49 +192,42 @@ export default function AdminScannerPage() {
 
     useEffect(() => { if (publicClient) fetchMarketData(); }, [publicClient]);
     
-    // Auto Refresh Logic
+    // Refresh Interval
     useEffect(() => {
-        const interval = setInterval(() => { if (publicClient && !loading) fetchMarketData(); }, 15000);
+        const interval = setInterval(() => { if (publicClient && !loading) fetchMarketData(); }, 30000); // 30s to avoid rate limits
         return () => clearInterval(interval);
     }, [publicClient, loading]);
 
     // Filtering Logic
     const filteredData = useMemo(() => {
         let data = [...allAssets];
-        // استخدام القائمة الثابتة مباشرة
         const fullInternalTeam = [...internalWallets];
 
         if (viewMode === 'internal') {
-            // السوق الداخلي: المالك أو البائع من الفريق
             data = data.filter(item => 
                 fullInternalTeam.includes(item.owner) || 
                 (item.isListed && fullInternalTeam.includes(item.seller))
             );
         } else {
-            // السوق الخارجي: المالك والبائع ليسوا من الفريق
             data = data.filter(item => 
                 !fullInternalTeam.includes(item.owner) && 
                 !(item.isListed && fullInternalTeam.includes(item.seller))
             );
         }
 
-        // تنظيف الجدول: إظهار المعروض للبيع أو المطلوب فقط
         data = data.filter(item => item.isListed || item.highestOffer > 0);
 
-        // البحث
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             data = data.filter(item => item.name.toLowerCase().includes(q) || item.id.includes(q));
         }
         
-        // فلتر الطول
         if (lengthFilter !== 'All') {
             const len = parseInt(lengthFilter);
             if (lengthFilter === '4+') data = data.filter(item => item.nameLength >= 4);
             else data = data.filter(item => item.nameLength === len);
         }
         
-        // الترتيب
         if (sortMode === 'highest_offer') data.sort((a, b) => (Number(b.highestOffer) || 0) - (Number(a.highestOffer) || 0));
         else if (sortMode === 'newest') data.sort((a, b) => Number(b.id) - Number(a.id));
         else if (sortMode === 'price_high') data.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
@@ -259,7 +255,7 @@ export default function AdminScannerPage() {
             <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style={{ backgroundColor: '#1E1E1E', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <div className="d-flex align-items-center gap-3">
                     <h2 className="m-0 fw-bold" style={{ color: '#FCD535', fontSize: '20px' }}>
-                        <i className="bi bi-radar me-2"></i> MARKET MONITOR - SURGICAL PRO
+                        <i className="bi bi-radar me-2"></i> MARKET MONITOR - REAL NAMES
                     </h2>
                     {loading && <span className="spinner-border spinner-border-sm text-warning"></span>}
                 </div>
@@ -298,7 +294,7 @@ export default function AdminScannerPage() {
                     </thead>
                     <tbody>
                         {loading && allAssets.length === 0 ? (
-                            <tr><td colSpan={6} className="text-center py-5 text-warning">SCANNING MARKET...</td></tr>
+                            <tr><td colSpan={6} className="text-center py-5 text-warning">SCANNING METADATA...</td></tr>
                         ) : paginatedData.length === 0 ? (
                             <tr><td colSpan={6} className="text-center py-5 text-muted">NO ACTIVE ASSETS FOUND</td></tr>
                         ) : (
@@ -311,9 +307,7 @@ export default function AdminScannerPage() {
                                 return (
                                     <tr key={item.id}>
                                         <td className="ps-3 fw-bold text-white">
-                                            {/* عرض الاسم الحقيقي فقط، وإذا لم يوجد، نعرض التوكن كبديل */}
                                             {item.name} 
-                                            {!item.name.toLowerCase().includes('token') && <span style={{ color: '#666', fontSize: '11px', marginLeft: '6px' }}>#{item.id}</span>}
                                         </td>
                                         <td>
                                             <div className="d-flex align-items-center">
@@ -324,7 +318,6 @@ export default function AdminScannerPage() {
                                             </div>
                                         </td>
                                         <td>
-                                            {/* إصلاح لون HELD ليكون ظاهراً */}
                                             {item.isListed ? <span className="text-success fw-bold">LISTED</span> : <span style={{ color: '#ccc' }}>HELD</span>}
                                         </td>
                                         <td>{item.isListed ? `${item.price} POL` : '--'}</td>
@@ -340,7 +333,6 @@ export default function AdminScannerPage() {
                 </table>
             </div>
             
-            {/* Pagination */}
             {!loading && filteredData.length > 0 && (
                 <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary">
                     <div className="text-muted small">Page {currentPage} of {totalPages}</div>
