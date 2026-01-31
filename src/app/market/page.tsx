@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import MarketTicker from '@/components/MarketTicker';
@@ -136,6 +136,8 @@ const getPaginationRange = (current: number, total: number) => {
 
 function MarketPage() {
   const { address, isConnected } = useAccount(); 
+  const publicClient = usePublicClient();
+
   const trustedBrands = [ 
     { name: "POLYGON", icon: "bi-link-45deg", isCustom: false },
     { name: "BNB CHAIN", icon: "bi-diamond-fill", isCustom: false },
@@ -152,21 +154,25 @@ function MarketPage() {
     { name: "OPTIMISM", icon: "bi-graph-up-arrow", isCustom: false }
   ];
 
-  // Default filter: 'Conviction'
-    const [activeFilter, setActiveFilter] = useState('Conviction');
-    const [timeFilter, setTimeFilter] = useState('All');
+  // Filters State
+  const [activeFilter, setActiveFilter] = useState('Conviction');
+  const [timeFilter, setTimeFilter] = useState('All');
   const [currencyFilter, setCurrencyFilter] = useState('All'); 
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); 
   
-  const [realListings, setRealListings] = useState<any[]>([]);
+  // Data Logic State (The Split Strategy)
+  const [allRawItems, setAllRawItems] = useState<any[]>([]); // Lightweight IDs only
+  const [displayedItems, setDisplayedItems] = useState<any[]>([]); // Hydrated Items for current page
+  
   const [loading, setLoading] = useState(true);
+  const [hydrationLoading, setHydrationLoading] = useState(false);
   const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
 
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
-  const publicClient = usePublicClient();
 
+  // 1. Fetch Exchange Prices
   useEffect(() => {
       const fetchPrices = async () => {
           try {
@@ -189,7 +195,7 @@ function MarketPage() {
       return () => clearInterval(interval);
   }, []);
 
-  // --- FAVORITES LOGIC ---
+  // 2. Fetch Favorites
   useEffect(() => {
     if (isConnected && address) {
         const fetchFavorites = async () => {
@@ -216,196 +222,208 @@ function MarketPage() {
       } catch (err) { }
   };
 
-  useEffect(() => {
-    const fetchMarketData = async () => {
-        if (!publicClient) return;
-        try {
-            // 1. Fetch Listings from Smart Contract
+  // 3. Main Data Fetching (Split Phase 1: Raw Data)
+  // This function decides SOURCE based on Filter
+  const fetchRawData = useCallback(async () => {
+      if (!publicClient) return;
+      setLoading(true);
+      setCurrentPage(1); // Reset to page 1 on filter change
+
+      try {
+        let rawList: any[] = [];
+        
+        // --- PREPARE OFF-CHAIN STATS MAP (Volume, Offers, Votes) ---
+        // We always fetch this to enrich data, regardless of filter
+        const { data: allActivities } = await supabase.from('activities').select('*').order('created_at', { ascending: false }); 
+        const { data: offersData } = await supabase.from('offers').select('token_id').eq('status', 'active');
+        const { data: votesData } = await supabase.from('conviction_votes').select('token_id');
+
+        const statsMap: Record<number, any> = {};
+        const now = Date.now();
+
+        // Time Limit Logic
+        let timeLimit = Infinity;
+        if (timeFilter === '1H') timeLimit = 3600 * 1000;
+        else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
+        else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
+        else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
+
+        // Process Activities (Volume, Sales, Last Active)
+        if (allActivities) {
+            allActivities.forEach((act: any) => {
+                const tid = Number(act.token_id);
+                const price = Number(act.price) || 0;
+                const actTime = new Date(act.created_at).getTime();
+
+                if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, lastActive: 0, offers: 0, conviction: 0 };
+                
+                if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
+                
+                // Last Sale Logic
+                if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
+                    statsMap[tid].lastSale = price;
+                }
+
+                // Volume Logic (Time Filtered)
+                if (act.activity_type === 'Sale' || act.activity_type === 'Mint') {
+                    const age = now - actTime;
+                    if (age >= 0 && age <= timeLimit) {
+                        statsMap[tid].volume += price;
+                        statsMap[tid].sales += 1;
+                    }
+                }
+            });
+        }
+
+        // Process Offers
+        if (offersData) {
+            offersData.forEach((o: any) => {
+                const tid = Number(o.token_id);
+                if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, lastActive: 0, offers: 0, conviction: 0 };
+                statsMap[tid].offers += 1;
+            });
+        }
+
+        // Process Conviction
+        if (votesData) {
+            votesData.forEach((v: any) => {
+                const tid = Number(v.token_id);
+                if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, lastActive: 0, offers: 0, conviction: 0 };
+                statsMap[tid].conviction += 1;
+            });
+        }
+
+        // --- SOURCE DECISION TREE ---
+
+        if (activeFilter === 'Listings') {
+            // SOURCE: BLOCKCHAIN
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
                 functionName: 'getAllListings'
             });
             const [tokenIds, prices] = data;
-
-            if (tokenIds.length === 0) { setRealListings([]); setLoading(false); return; }
-
-            // 2. Fetch Data from Supabase (Activities, Offers, Votes)
-            const { data: allActivities } = await supabase
-                .from('activities')
-                .select('*')
-                .order('created_at', { ascending: false }); 
             
-            const { data: offersData } = await supabase
-                .from('offers')
-                .select('token_id')
-                .eq('status', 'active');
-
-            const { data: votesData } = await supabase
-                .from('conviction_votes')
-                .select('token_id');
-            
-            // Map Conviction Votes
-            const votesMap: Record<number, number> = {};
-            if (votesData) {
-                votesData.forEach((v: any) => {
-                   const t = Number(v.token_id);
-                   votesMap[t] = (votesMap[t] || 0) + 1;
-                });
-            }
-
-            const statsMap: Record<number, any> = {}; 
-            const now = Date.now();
-
-            // --- Time Filter Logic ---
-            let timeLimit = Infinity;
-            if (timeFilter === '1H') timeLimit = 3600 * 1000;
-            else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
-            else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
-            else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
-
-            if (allActivities) {
-                allActivities.forEach((act: any) => {
-                    const tid = Number(act.token_id);
-                    const price = Number(act.price) || 0;
-                    const actTime = new Date(act.created_at).getTime();
-                
-                    // Init stats with lastActive tracking
-                    if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
-
-                    // TRACK LATEST ACTIVITY FOR FILTERING
-                    if (actTime > statsMap[tid].lastActive) {
-                        statsMap[tid].lastActive = actTime;
-                    }
-
-                    // 1. Capture Last Sale (Always latest known price)
-                    if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
-                         statsMap[tid].lastSale = price; 
-                    }
-
-                    // 2. Calculate Volume (Strictly within Time Limit)
-                    if (act.activity_type === 'Sale' || act.activity_type === 'Mint') {
-                        const age = now - actTime;
-                        if (age >= 0 && age <= timeLimit) {
-                            statsMap[tid].volume += price;
-                            statsMap[tid].sales += 1;
-                        }
-                    }
-
-                    // 3. Track Listing Time
-                    if ((act.activity_type === 'List' || act.activity_type === 'Mint')) {
-                        if (actTime > statsMap[tid].listedTime) {
-                            statsMap[tid].listedTime = actTime;
-                        }
-                    }
-                });
-            }
-
-            const offersCountMap: any = {};
-            if (offersData) offersData.forEach((o: any) => {
-                const tid = Number(o.token_id);
-                offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
+            rawList = tokenIds.map((id, idx) => {
+                const tid = Number(id);
+                const stats = statsMap[tid] || { volume: 0, lastSale: 0, conviction: 0, offers: 0 };
+                return {
+                    id: tid,
+                    pricePol: parseFloat(formatEther(prices[idx])),
+                    ...stats
+                };
             });
 
-            // 3. Merge On-Chain & Off-Chain Data
-            const items = await Promise.all(tokenIds.map(async (id, index) => {
-                try {
-                    const tid = Number(id); 
-                    const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
-                    const metaRes = await fetch(resolveIPFS(uri));
-                    const meta = metaRes.ok ? await metaRes.json() : {};
-                    const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
-                    
-                    const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
-                    const offersCount = offersCountMap[tid] || 0;
-                    const conviction = votesMap[tid] || 0;
-                    
-                    // Trending Score Formula
-                    const trendingScore = stats.volume + (offersCount * 5); 
+        } else {
+            // SOURCE: SUPABASE (Volume / Top / Offers / Conviction / Watchlist)
+            // We use the statsMap keys as our source of truth
+            let allKnownIds = Object.keys(statsMap).map(Number);
+            
+            if (activeFilter === 'Watchlist') {
+                 const { data: favs } = await supabase.from('favorites').select('token_id').eq('wallet_address', address);
+                 const favSet = new Set(favs?.map((f:any) => Number(f.token_id)));
+                 allKnownIds = allKnownIds.filter(id => favSet.has(id));
+            }
 
-                    return {
-                        id: tid,
-                        name: meta.name || `Asset #${id}`,
-                        tier: tierAttr,
-                        pricePol: parseFloat(formatEther(prices[index])), 
-                        lastSale: stats.lastSale,
-                        volume: stats.volume,
-                        listedTime: stats.listedTime,
-                        lastActive: stats.lastActive,
-                        trendingScore: trendingScore,
-                        offersCount: offersCount,
-                        convictionScore: conviction,
-                        listed: 'Now', 
-                        change: 0,
-                        currencySymbol: 'POL'
-                    };
-                } catch (e) { return null; }
-            }));
+            rawList = allKnownIds.map(tid => {
+                const stats = statsMap[tid];
+                return {
+                    id: tid,
+                    pricePol: 0, // Not listed, so price is 0 (or could check chain if needed, but slow)
+                    ...stats
+                };
+            });
+            
+            // Filter out items with no activity if strictly checking volume/offers
+            if (timeFilter !== 'All') {
+                const limit = (timeFilter === '1H') ? 3600*1000 : (timeFilter === '6H') ? 21600*1000 : (timeFilter === '24H') ? 86400*1000 : 604800*1000;
+                rawList = rawList.filter(item => (now - item.lastActive) <= limit);
+            }
+        }
 
-            setRealListings(items.filter(i => i !== null));
-        } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
-    };
+        // --- CLIENT SIDE SORTING (On Lightweight Data) ---
+        if (activeFilter === 'Top') rawList.sort((a, b) => b.volume - a.volume);
+        else if (activeFilter === 'Trending') rawList.sort((a, b) => (b.volume + b.offers*5) - (a.volume + a.offers*5));
+        else if (activeFilter === 'Most Offers') rawList.sort((a, b) => b.offers - a.offers);
+        else if (activeFilter === 'Conviction') rawList.sort((a, b) => b.conviction - a.conviction);
+        else rawList.sort((a, b) => a.id - b.id); // Default
 
-    fetchMarketData();
-  }, [publicClient, timeFilter]); 
+        setAllRawItems(rawList);
 
-  const finalData = useMemo(() => {
-      let processedData = [...realListings];
+      } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
+  }, [publicClient, activeFilter, timeFilter, address]);
 
-      // 1. REAL TIME FILTERING (Hide inactive assets)
-      if (timeFilter !== 'All') {
-          let limit = Infinity;
-          const now = Date.now();
-          if (timeFilter === '1H') limit = 3600 * 1000;
-          else if (timeFilter === '6H') limit = 3600 * 6 * 1000;
-          else if (timeFilter === '24H') limit = 3600 * 24 * 1000;
-          else if (timeFilter === '7D') limit = 3600 * 24 * 7 * 1000;
+  // Trigger Fetch
+  useEffect(() => {
+      fetchRawData();
+  }, [fetchRawData]);
 
-          processedData = processedData.filter(item => {
-              const timeDiff = now - (item.lastActive || 0); 
-              return timeDiff <= limit;
-          });
+
+  // 4. Hydration Logic (Split Phase 2: Heavy Data for CURRENT PAGE ONLY)
+  // This solves the 12-page loading speed issue
+  const hydratePageItems = useCallback(async () => {
+      if (allRawItems.length === 0) {
+          setDisplayedItems([]);
+          return;
       }
-      
-      if (activeFilter === 'Top') { processedData.sort((a, b) => b.volume - a.volume); }
-      else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
-      else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
-      else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
-      else if (activeFilter === 'Conviction') { processedData.sort((a, b) => b.convictionScore - a.convictionScore); }
-      else { processedData.sort((a, b) => a.id - b.id); }
 
-      if (sortConfig) {
-          processedData.sort((a: any, b: any) => {
-              const valA = a[sortConfig.key];
-              const valB = b[sortConfig.key];
-              if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-              if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-              return 0;
-          });
-      }
-      return processedData;
-  }, [activeFilter, favoriteIds, sortConfig, realListings, timeFilter]);
+      setHydrationLoading(true);
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = startIndex + ITEMS_PER_PAGE;
+      const pageSlice = allRawItems.slice(startIndex, endIndex);
 
-  const totalPages = Math.ceil(finalData.length / ITEMS_PER_PAGE);
-  const currentTableData = finalData.slice(
-      (currentPage - 1) * ITEMS_PER_PAGE,
-      currentPage * ITEMS_PER_PAGE
-  );
+      const hydrated = await Promise.all(pageSlice.map(async (item) => {
+          try {
+              // Fetch Metadata for visible items only
+              const uri = await publicClient?.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [BigInt(item.id)] });
+              const metaRes = await fetch(resolveIPFS(uri as string));
+              const meta = metaRes.ok ? await metaRes.json() : {};
+              const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
+              
+              return {
+                  ...item,
+                  name: meta.name || `Asset #${item.id}`,
+                  tier: tierAttr,
+                  image: resolveIPFS(meta.image)
+              };
+          } catch (e) {
+              return { ...item, name: `Asset #${item.id}`, tier: 'founder' };
+          }
+      }));
 
+      setDisplayedItems(hydrated);
+      setHydrationLoading(false);
+  }, [allRawItems, currentPage, publicClient]);
+
+  // Trigger Hydration on Page/Data Change
+  useEffect(() => {
+      hydratePageItems();
+  }, [hydratePageItems]);
+
+
+  // Helper Functions for Sort/Page
+  const totalPages = Math.ceil(allRawItems.length / ITEMS_PER_PAGE);
   const paginationRange = getPaginationRange(currentPage, totalPages);
+
+  const goToPage = (page: number) => { if (page >= 1 && page <= totalPages) setCurrentPage(page); };
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'desc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') direction = 'asc';
     setSortConfig({ key, direction });
+    
+    // Sort raw items and re-hydrate
+    const sorted = [...allRawItems].sort((a: any, b: any) => {
+        if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
+        if (a[key] > b[key]) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+    setAllRawItems(sorted);
   };
 
-  const goToPage = (page: number) => { if (page >= 1 && page <= totalPages) setCurrentPage(page); };
-
   const formatPrice = (priceInPol: number) => {
-      if (!exchangeRates.pol || exchangeRates.pol === 0 || !exchangeRates.eth || exchangeRates.eth === 0) {
-          return `${priceInPol.toFixed(2)} POL`;
-      }
+      if (!priceInPol) return '---';
+      if (!exchangeRates.pol || exchangeRates.pol === 0) return `${priceInPol.toFixed(2)} POL`;
 
       if (currencyFilter === 'All') {
           const priceInUsd = priceInPol * exchangeRates.pol;
@@ -465,6 +483,8 @@ function MarketPage() {
                       Conviction <i className="bi bi-fire text-warning ms-1"></i>
                   </div>
 
+                  <div onClick={() => setActiveFilter('Listings')} className={`cursor-pointer filter-item fw-bold ${activeFilter === 'Listings' ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>Listings</div>
+
                   {['Trending', 'Top', 'Most Offers'].map(f => (
                       <div key={f} onClick={() => setActiveFilter(f)} className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>{f}</div>
                   ))}
@@ -487,9 +507,10 @@ function MarketPage() {
       {/* REPLACED 'container' with 'market-content-wrapper' for matching desktop width */}
       <section className="market-content-wrapper mt-5 pt-0">
           <div className="table-responsive no-scrollbar">
-              {loading ? ( <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
-              ) : activeFilter === 'Watchlist' && finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">Your watchlist is empty.</div>
-              ) : finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">No items listed for sale yet.</div>
+              {loading ? ( <div className="text-center py-5 text-secondary">Loading Indices...</div>
+              ) : hydrationLoading ? ( <div className="text-center py-5 text-secondary">Hydrating Page Data...</div>
+              ) : activeFilter === 'Watchlist' && displayedItems.length === 0 ? ( <div className="text-center py-5 text-secondary">Your watchlist is empty.</div>
+              ) : displayedItems.length === 0 ? ( <div className="text-center py-5 text-secondary">No items found for this filter.</div>
               ) : (
                   <table className="table align-middle mb-0" style={{ minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0' }}>
                       <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#1E1E1E' }}>
@@ -509,14 +530,14 @@ function MarketPage() {
                               <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 60px', borderBottom: '1px solid #333', textAlign: 'left', width: '20%', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 20px', borderBottom: '1px solid #333', textAlign: 'left', cursor: 'pointer' }}>
-                                  <div className="d-flex align-items-center justify-content-start">Conviction <SortArrows active={sortConfig?.key === 'convictionScore'} direction={sortConfig?.direction} /></div>
+                              <th onClick={() => handleSort('conviction')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 20px', borderBottom: '1px solid #333', textAlign: 'left', cursor: 'pointer' }}>
+                                  <div className="d-flex align-items-center justify-content-start">Conviction <SortArrows active={sortConfig?.key === 'conviction'} direction={sortConfig?.direction} /></div>
                               </th>
                               <th style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #333', textAlign: 'right', width: '100px' }}>Action</th>
                           </tr>
                       </thead>
                       <tbody>
-                          {currentTableData.map((item: any, index: number) => {
+                          {displayedItems.map((item: any, index: number) => {
                               const dynamicRank = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
                               return (
                                 <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
@@ -554,10 +575,10 @@ function MarketPage() {
                                     </td>
                                     <td className="text-start" style={{ padding: '14px 10px 14px 20px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
-                                            {item.convictionScore > 0 ? (
+                                            {item.conviction > 0 ? (
                                                 <>
                                                     {dynamicRank <= 3 && <i className="bi bi-fire text-warning me-1"></i>}
-                                                    {formatCompactNumber(item.convictionScore)}
+                                                    {formatCompactNumber(item.conviction)}
                                                 </>
                                             ) : ( <span className="text-muted" style={{fontSize: '12px'}}>0</span> )}
                                         </span>
