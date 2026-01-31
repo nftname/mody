@@ -13,8 +13,9 @@ const MARKET_ABI = parseAbi([
 ]);
 
 const REGISTRY_ABI = parseAbi([
-    "function tokenURI(uint256 tokenId) view returns (string)",
-    "function ownerOf(uint256 tokenId) view returns (address)"
+    "function totalSupply() view returns (uint256)", // المصدر الحقيقي للعدد الكلي
+    "function ownerOf(uint256 tokenId) view returns (address)",
+    "function tokenURI(uint256 tokenId) view returns (string)"
 ]);
 
 // --- STYLES ---
@@ -23,51 +24,63 @@ const SURFACE_DARK = '#1E1E1E';
 const BORDER_COLOR = 'rgba(255, 255, 255, 0.1)';
 
 export default function AdminScannerPage() {
-    const { address } = useAccount();
+    const { address } = useAccount(); // محفظة الأدمن المتصلة
     const publicClient = usePublicClient();
     
     // --- States ---
     const [viewMode, setViewMode] = useState<'internal' | 'external'>('internal');
     const [loading, setLoading] = useState(true);
+    const [progress, setProgress] = useState(0); // شريط تقدم التحميل
     const [allAssets, setAllAssets] = useState<any[]>([]);
-    const [internalWallets, setInternalWallets] = useState<string[]>([]); // القائمة المؤمنة
+    const [internalWallets, setInternalWallets] = useState<string[]>([]); 
     
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
     const [sortMode, setSortMode] = useState('newest'); 
     const [lengthFilter, setLengthFilter] = useState('All'); 
 
-    // --- 1. Fetch Wallets from Secure API ---
+    // --- 1. Load Bots (Internal Wallets) ---
     useEffect(() => {
         const fetchWallets = async () => {
             try {
                 const res = await fetch('/api/admin/get-wallets');
                 const data = await res.json();
                 if (data.wallets) {
-                    setInternalWallets(data.wallets);
-                    console.log("✅ Secure Bridge: Loaded", data.wallets.length, "wallets.");
+                    // نوحد كل الحروف لتكون lowercase للمقارنة الدقيقة
+                    const bots = data.wallets.map((w: string) => w.toLowerCase());
+                    setInternalWallets(bots);
                 }
-            } catch (e) {
-                console.error("Bridge Error:", e);
-            }
+            } catch (e) { console.error("Bridge Error:", e); }
         };
         fetchWallets();
     }, []);
 
-    // --- 2. Data Fetching Engine ---
+    // --- 2. THE ENGINE: Fetch Real Blockchain Data ---
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchMarketData = async () => {
             if (!publicClient) return;
-            // ننتظر تحميل المحافظ فقط إذا كنا في الوضع الداخلي، لكن لا بأس من التحميل العام
             setLoading(true);
+            setProgress(10);
+            
             try {
-                // A. Blockchain Listings (Real-time)
+                // A. جلب عدد الأصول الكلي الحقيقي من العقد (مثلاً 224)
+                const totalSupplyBig = await publicClient.readContract({
+                    address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                    abi: REGISTRY_ABI,
+                    functionName: 'totalSupply'
+                });
+                const totalCount = Number(totalSupplyBig);
+                console.log(`🔍 Scanner Found: ${totalCount} Total Assets on Chain.`);
+                setProgress(30);
+
+                // B. جلب جميع المعروض للبيع دفعة واحدة
                 const [listedIds, listedPrices, sellers] = await publicClient.readContract({
                     address: MARKETPLACE_ADDRESS as `0x${string}`,
                     abi: MARKET_ABI,
                     functionName: 'getAllListings'
                 });
 
+                // خريطة سريعة للبحث في المعروض
                 const listingsMap = new Map();
                 listedIds.forEach((id, i) => {
                     listingsMap.set(id.toString(), {
@@ -75,8 +88,9 @@ export default function AdminScannerPage() {
                         seller: sellers[i].toLowerCase()
                     });
                 });
+                setProgress(50);
 
-                // B. Supabase Offers (Real-time)
+                // C. جلب أعلى العروض من قاعدة البيانات
                 const { data: offers } = await supabase
                     .from('offers')
                     .select('token_id, price')
@@ -91,24 +105,29 @@ export default function AdminScannerPage() {
                         }
                     });
                 }
+                setProgress(60);
 
-                // C. Fetch Assets History (Minted Items)
-                const { data: mintedItems } = await supabase
-                    .from('activities')
-                    .select('token_id, created_at')
-                    .eq('activity_type', 'Mint');
-
-                let processedAssets: any[] = [];
+                // D. (Critical Step) بناء القائمة الكاملة
+                // سنقوم بجلب الملاك لكل الأصول. هذا قد يكون ثقيلاً قليلاً لكنه ضروري للدقة.
+                // لتسريع العملية، سنستخدم Promise.all على دفعات (Batches)
                 
-                if (mintedItems) {
-                    processedAssets = await Promise.all(mintedItems.map(async (item: any) => {
-                        const tid = item.token_id.toString();
+                const allIds = Array.from({ length: totalCount }, (_, i) => i); // [0, 1, 2, ... 223]
+                const batchSize = 50; // نعالج 50 أصل في المرة الواحدة
+                let processedAssets: any[] = [];
+
+                for (let i = 0; i < allIds.length; i += batchSize) {
+                    const batch = allIds.slice(i, i + batchSize);
+                    
+                    const batchResults = await Promise.all(batch.map(async (tokenId) => {
+                        const tid = tokenId.toString();
                         const listing = listingsMap.get(tid);
                         const highestOffer = offersMap.get(tid);
                         
+                        // تحديد المالك:
+                        // 1. إذا كان معروضاً للبيع، المالك هو البائع (Seller)
+                        // 2. إذا لم يكن، نسأل البلوكشين مباشرة (ownerOf)
                         let currentOwner = listing ? listing.seller : '';
                         
-                        // If not listed, fetch owner from chain (Critical for Internal View)
                         if (!currentOwner) {
                             try {
                                 currentOwner = (await publicClient.readContract({
@@ -122,37 +141,49 @@ export default function AdminScannerPage() {
 
                         return {
                             id: tid,
-                            name: `Asset #${tid}`, // يمكن تطويرها لجلب الاسم الحقيقي
+                            name: `Asset #${tid}`, 
                             owner: currentOwner,
                             isListed: !!listing,
                             price: listing ? listing.price : null,
                             highestOffer: highestOffer || 0,
-                            mintDate: item.created_at,
-                            nameLength: tid.length // افتراضياً طول الرقم، أو الاسم إذا توفر
+                            nameLength: tid.length 
                         };
                     }));
+                    
+                    processedAssets = [...processedAssets, ...batchResults];
+                    // تحديث شريط التقدم
+                    const currentProgress = 60 + Math.floor((i / totalCount) * 40);
+                    setProgress(currentProgress);
                 }
 
                 setAllAssets(processedAssets);
+                setProgress(100);
 
             } catch (e) {
-                console.error("Scanner Error:", e);
+                console.error("Scanner Full Error:", e);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchData();
-    }, [publicClient]); // Runs once on mount (and client ready)
+        fetchMarketData();
+    }, [publicClient]); // يعمل مرة واحدة عند فتح الصفحة
 
-    // --- FILTERING LOGIC ---
+    // --- 3. FILTERING LOGIC (The Brain) ---
     const filteredData = useMemo(() => {
         let data = [...allAssets];
+        const adminAddr = address ? address.toLowerCase() : '';
 
-        // 1. View Mode Filter
+        // تعريف الفريق الداخلي: البوتات + الأدمن
+        const fullInternalTeam = [...internalWallets, adminAddr];
+
+        // 1. View Mode Logic
         if (viewMode === 'internal') {
-            // هنا نستخدم القائمة القادمة من الـ API
-            data = data.filter(item => internalWallets.includes(item.owner));
+            // السوق الداخلي: نعرض فقط ما يملكه الفريق
+            data = data.filter(item => fullInternalTeam.includes(item.owner));
+        } else {
+            // السوق الخارجي: نعرض كل شيء ما عدا الفريق
+            data = data.filter(item => !fullInternalTeam.includes(item.owner));
         }
 
         // 2. Search
@@ -169,13 +200,15 @@ export default function AdminScannerPage() {
         }
 
         // 4. Sorting
-        if (sortMode === 'newest') data.sort((a, b) => new Date(b.mintDate).getTime() - new Date(a.mintDate).getTime());
-        if (sortMode === 'oldest') data.sort((a, b) => new Date(a.mintDate).getTime() - new Date(b.mintDate).getTime());
+        // بما أننا لا نملك تواريخ صك دقيقة من البلوكشين في هذا الوضع السريع، 
+        // سنرتب حسب الـ ID (الأحدث هو الرقم الأكبر)
+        if (sortMode === 'newest') data.sort((a, b) => Number(b.id) - Number(a.id));
+        if (sortMode === 'oldest') data.sort((a, b) => Number(a.id) - Number(b.id));
         if (sortMode === 'price_high') data.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
         if (sortMode === 'price_low') data.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
 
         return data;
-    }, [allAssets, viewMode, searchQuery, lengthFilter, sortMode, internalWallets]);
+    }, [allAssets, viewMode, searchQuery, lengthFilter, sortMode, internalWallets, address]);
 
     // --- KPI STATS ---
     const stats = useMemo(() => {
@@ -188,7 +221,7 @@ export default function AdminScannerPage() {
     return (
         <div style={{ backgroundColor: '#000', minHeight: '100vh', padding: '20px', fontFamily: 'monospace' }}>
             
-            {/* HEADER & CONTROLS */}
+            {/* TOP BAR */}
             <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${BORDER_COLOR}` }}>
                 <h2 className="m-0 fw-bold" style={{ color: GOLD_COLOR, fontSize: '20px' }}>
                     <i className="bi bi-radar me-2"></i> MARKET MONITOR
@@ -259,8 +292,8 @@ export default function AdminScannerPage() {
                 </div>
 
                 <select className="form-select form-select-sm w-auto" value={sortMode} onChange={(e) => setSortMode(e.target.value)} style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff' }}>
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
+                    <option value="newest">Newest IDs</option>
+                    <option value="oldest">Oldest IDs</option>
                     <option value="price_high">Price: High to Low</option>
                     <option value="price_low">Price: Low to High</option>
                 </select>
@@ -289,44 +322,62 @@ export default function AdminScannerPage() {
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan={6} className="text-center py-5"><span className="spinner-border spinner-border-sm text-warning me-2"></span> SCANNING...</td></tr>
+                            <tr>
+                                <td colSpan={6} className="text-center py-5">
+                                    <div className="mb-2">SCANNING BLOCKCHAIN... {progress}%</div>
+                                    <div className="progress" style={{ height: '4px', maxWidth: '300px', margin: '0 auto' }}>
+                                        <div className="progress-bar bg-warning" role="progressbar" style={{ width: `${progress}%` }}></div>
+                                    </div>
+                                </td>
+                            </tr>
                         ) : filteredData.length === 0 ? (
-                            <tr><td colSpan={6} className="text-center py-5 text-muted">NO DATA FOUND</td></tr>
+                            <tr><td colSpan={6} className="text-center py-5 text-muted">NO DATA FOUND IN THIS MARKET</td></tr>
                         ) : (
-                            filteredData.map((item) => (
-                                <tr key={item.id} style={{ verticalAlign: 'middle' }}>
-                                    <td className="ps-3 fw-bold">
-                                        <span style={{ color: GOLD_COLOR }}>#{item.id}</span>
-                                    </td>
-                                    <td>
-                                        <div className="d-flex align-items-center">
-                                            <span className="text-muted font-monospace me-2">{item.owner.slice(0, 6)}...{item.owner.slice(-4)}</span>
-                                            {internalWallets.includes(item.owner) && 
-                                                <span className="badge bg-warning text-dark" style={{ fontSize: '9px', padding: '4px 6px' }}>INTERNAL</span>
+                            filteredData.map((item) => {
+                                // التحقق: هل هو داخلي أم لا؟
+                                const adminAddr = address ? address.toLowerCase() : '';
+                                const isInternal = internalWallets.includes(item.owner) || item.owner === adminAddr;
+
+                                return (
+                                    <tr key={item.id} style={{ verticalAlign: 'middle' }}>
+                                        <td className="ps-3 fw-bold">
+                                            <span style={{ color: GOLD_COLOR }}>#{item.id}</span>
+                                        </td>
+                                        <td>
+                                            <div className="d-flex align-items-center">
+                                                <span className="text-muted font-monospace me-2">
+                                                    {item.owner === adminAddr ? 'YOU (ADMIN)' : `${item.owner.slice(0, 6)}...${item.owner.slice(-4)}`}
+                                                </span>
+                                                {isInternal && item.owner !== adminAddr &&
+                                                    <span className="badge bg-warning text-dark" style={{ fontSize: '9px', padding: '4px 6px' }}>BOT</span>
+                                                }
+                                                {!isInternal && 
+                                                    <span className="badge bg-info text-dark" style={{ fontSize: '9px', padding: '4px 6px' }}>USER</span>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {item.isListed ? 
+                                                <span className="badge bg-success" style={{ fontWeight: '500' }}>LISTED</span> : 
+                                                <span className="badge bg-secondary" style={{ fontWeight: '500', opacity: 0.5 }}>HELD</span>
                                             }
-                                        </div>
-                                    </td>
-                                    <td>
-                                        {item.isListed ? 
-                                            <span className="badge bg-success" style={{ fontWeight: '500' }}>LISTED</span> : 
-                                            <span className="badge bg-secondary" style={{ fontWeight: '500', opacity: 0.5 }}>HELD</span>
-                                        }
-                                    </td>
-                                    <td className="font-monospace">
-                                        {item.isListed ? <span className="text-white">{item.price} POL</span> : <span className="text-muted">--</span>}
-                                    </td>
-                                    <td className="font-monospace">
-                                        {item.highestOffer > 0 ? <span style={{ color: '#0ecb81' }}>{item.highestOffer} POL</span> : <span className="text-muted">--</span>}
-                                    </td>
-                                    <td className="text-end pe-3">
-                                        <Link href={`/asset/${item.id}`} target="_blank">
-                                            <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '10px', padding: '4px 10px' }}>
-                                                VIEW <i className="bi bi-box-arrow-up-right ms-1"></i>
-                                            </button>
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ))
+                                        </td>
+                                        <td className="font-monospace">
+                                            {item.isListed ? <span className="text-white">{item.price} POL</span> : <span className="text-muted">--</span>}
+                                        </td>
+                                        <td className="font-monospace">
+                                            {item.highestOffer > 0 ? <span style={{ color: '#0ecb81' }}>{item.highestOffer} POL</span> : <span className="text-muted">--</span>}
+                                        </td>
+                                        <td className="text-end pe-3">
+                                            <Link href={`/asset/${item.id}`} target="_blank">
+                                                <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '10px', padding: '4px 10px' }}>
+                                                    VIEW <i className="bi bi-box-arrow-up-right ms-1"></i>
+                                                </button>
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
