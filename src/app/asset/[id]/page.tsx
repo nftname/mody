@@ -483,6 +483,32 @@ function AssetPage() {
         if (isConnected && address) fetchFavorites();
     }, [fetchAllData, fetchMoreAssets, address, isConnected]);
     
+    // 🔥 Real-time Listener for New Offers
+    useEffect(() => {
+        if (!tokenId) return;
+        
+        const channel = supabase
+            .channel(`offers-${tokenId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'offers',
+                    filter: `token_id=eq.${tokenId}`
+                },
+                () => {
+                    // Re-fetch offers when any change occurs
+                    fetchAllData();
+                }
+            )
+            .subscribe();
+        
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [tokenId, fetchAllData]);
+    
     useEffect(() => { if (isOfferMode) refreshWpolData(); }, [isOfferMode, refreshWpolData]);
 
     const showModal = (type: string, title: string, message: string) => setModal({ isOpen: true, type, title, message });
@@ -946,7 +972,7 @@ function AssetPage() {
                                     </div>
                                 )}
 
-                                {activeTab === 'Orders' && (
+                                {activeTab === 'Offers' && (
                                     <div className="p-3">
                                         <div className="d-flex justify-content-between align-items-center mb-4">
                                             <div className="position-relative dropdown-container">
