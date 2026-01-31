@@ -7,13 +7,12 @@ import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
-// --- HELPER FROM MARKET PAGE ---
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
 };
 
-// --- HARDCODED BOTS & ADMIN ---
+// --- القائمة المدمجة ---
 const BOT_WALLETS = [
     "0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e",
     "0xf3e2544af3e7ba1687d852e80e7cb6c850b797b6",
@@ -64,7 +63,6 @@ export default function AdminScannerPage() {
     const [viewMode, setViewMode] = useState<'internal' | 'external'>('internal');
     const [loading, setLoading] = useState(true);
     const [allAssets, setAllAssets] = useState<any[]>([]);
-    
     const [internalWallets, setInternalWallets] = useState<string[]>(BOT_WALLETS);
     
     const ITEMS_PER_PAGE = 20;
@@ -73,7 +71,6 @@ export default function AdminScannerPage() {
     const [sortMode, setSortMode] = useState('highest_offer'); 
     const [lengthFilter, setLengthFilter] = useState('All'); 
 
-    // Sync from API (Optional Backup)
     useEffect(() => {
         const fetchWallets = async () => {
             try {
@@ -83,7 +80,7 @@ export default function AdminScannerPage() {
                     const combined = [...new Set([...BOT_WALLETS, ...data.wallets.map((w: string) => w.toLowerCase().trim())])];
                     setInternalWallets(combined);
                 }
-            } catch (e) { /* silent */ }
+            } catch (e) { }
         };
         fetchWallets();
     }, []);
@@ -93,7 +90,6 @@ export default function AdminScannerPage() {
         if (allAssets.length === 0) setLoading(true); 
         
         try {
-            // 1. Get Total Supply
             const totalSupplyBig = await publicClient.readContract({
                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                 abi: REGISTRY_ABI,
@@ -101,7 +97,6 @@ export default function AdminScannerPage() {
             });
             const totalCount = Number(totalSupplyBig);
             
-            // 2. Get Listings
             const [listedIds, listedPrices, sellers] = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -116,7 +111,6 @@ export default function AdminScannerPage() {
                 });
             });
 
-            // 3. Get Offers (DB)
             const { data: offers } = await supabase.from('offers').select('token_id, price').eq('status', 'active');
             const offersMap = new Map();
             if (offers) offers.forEach((o: any) => {
@@ -124,9 +118,8 @@ export default function AdminScannerPage() {
                 if (!offersMap.has(tid) || o.price > offersMap.get(tid)) offersMap.set(tid, o.price);
             });
 
-            // 4. Build List with IPFS FETCHING (Market Logic)
             const allIds = Array.from({ length: totalCount }, (_, i) => i);
-            const batchSize = 50; // Reduce batch size slightly for heavy IPFS calls
+            const batchSize = 50; 
             let processedAssets: any[] = [];
             
             for (let i = 0; i < allIds.length; i += batchSize) {
@@ -139,7 +132,6 @@ export default function AdminScannerPage() {
                     let currentOwner = '';
                     let sellerAddress = '';
 
-                    // Owner Logic
                     if (listing) {
                         sellerAddress = listing.seller;
                         currentOwner = listing.seller; 
@@ -155,7 +147,7 @@ export default function AdminScannerPage() {
                         } catch { currentOwner = 'burned'; }
                     }
 
-                    // --- NAME LOGIC (COPIED FROM MARKET PAGE) ---
+                    // --- IPFS NAME LOGIC ---
                     let realName = `Asset #${tid}`;
                     try {
                         const uri = await publicClient.readContract({ 
@@ -166,12 +158,8 @@ export default function AdminScannerPage() {
                         });
                         const metaRes = await fetch(resolveIPFS(uri));
                         const meta = metaRes.ok ? await metaRes.json() : {};
-                        if (meta.name) {
-                            realName = meta.name;
-                        }
-                    } catch (err) {
-                        // Keep default name if fetch fails
-                    }
+                        if (meta.name) realName = meta.name;
+                    } catch (err) { }
 
                     return {
                         id: tid,
@@ -192,17 +180,17 @@ export default function AdminScannerPage() {
 
     useEffect(() => { if (publicClient) fetchMarketData(); }, [publicClient]);
     
-    // Refresh Interval
     useEffect(() => {
-        const interval = setInterval(() => { if (publicClient && !loading) fetchMarketData(); }, 30000); // 30s to avoid rate limits
+        const interval = setInterval(() => { if (publicClient && !loading) fetchMarketData(); }, 30000);
         return () => clearInterval(interval);
     }, [publicClient, loading]);
 
-    // Filtering Logic
+    // --- المنطق المعدل للفلاتر والبحث ---
     const filteredData = useMemo(() => {
         let data = [...allAssets];
         const fullInternalTeam = [...internalWallets];
 
+        // 1. تصفية حسب السوق (داخلي / خارجي)
         if (viewMode === 'internal') {
             data = data.filter(item => 
                 fullInternalTeam.includes(item.owner) || 
@@ -215,13 +203,18 @@ export default function AdminScannerPage() {
             );
         }
 
-        data = data.filter(item => item.isListed || item.highestOffer > 0);
-
+        // 2. البحث (Search) - الآن هو الملك
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
+            // عند البحث، لا نخفي أي شيء. نبحث في كل ما هو موجود في القسم
             data = data.filter(item => item.name.toLowerCase().includes(q) || item.id.includes(q));
+        } else {
+            // 3. إذا لم يكن هناك بحث، نقوم بتنظيف الجدول وإخفاء الخامل (Held)
+            // هذا هو السطر الذي كان يسبب المشكلة سابقاً
+            data = data.filter(item => item.isListed || item.highestOffer > 0);
         }
         
+        // 4. باقي الفلاتر (الطول والترتيب)
         if (lengthFilter !== 'All') {
             const len = parseInt(lengthFilter);
             if (lengthFilter === '4+') data = data.filter(item => item.nameLength >= 4);
@@ -243,6 +236,7 @@ export default function AdminScannerPage() {
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
     const stats = useMemo(() => {
+        // حساب الإحصائيات يتم بناءً على الداتا المفلترة
         const listed = filteredData.filter(i => i.isListed).length;
         const withOffers = filteredData.filter(i => i.highestOffer > 0).length;
         const totalInView = filteredData.length;
@@ -255,7 +249,7 @@ export default function AdminScannerPage() {
             <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style={{ backgroundColor: '#1E1E1E', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <div className="d-flex align-items-center gap-3">
                     <h2 className="m-0 fw-bold" style={{ color: '#FCD535', fontSize: '20px' }}>
-                        <i className="bi bi-radar me-2"></i> MARKET MONITOR - REAL NAMES
+                        <i className="bi bi-radar me-2"></i> MARKET MONITOR - SEARCH FIXED
                     </h2>
                     {loading && <span className="spinner-border spinner-border-sm text-warning"></span>}
                 </div>
@@ -294,7 +288,7 @@ export default function AdminScannerPage() {
                     </thead>
                     <tbody>
                         {loading && allAssets.length === 0 ? (
-                            <tr><td colSpan={6} className="text-center py-5 text-warning">SCANNING METADATA...</td></tr>
+                            <tr><td colSpan={6} className="text-center py-5 text-warning">SCANNING MARKET...</td></tr>
                         ) : paginatedData.length === 0 ? (
                             <tr><td colSpan={6} className="text-center py-5 text-muted">NO ACTIVE ASSETS FOUND</td></tr>
                         ) : (
