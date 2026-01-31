@@ -7,12 +7,21 @@ import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
+// --- Helper Functions ---
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
 };
 
-// --- القائمة المدمجة ---
+// مكون سهم الترتيب
+const SortIcon = ({ active, direction }: { active: boolean, direction: string }) => (
+    <span className="d-flex flex-column ms-1" style={{ fontSize: '8px', lineHeight: '6px' }}>
+        <i className={`bi bi-caret-up-fill ${active && direction === 'asc' ? 'text-warning' : 'text-secondary'}`} style={{ opacity: active && direction === 'asc' ? 1 : 0.3 }}></i>
+        <i className={`bi bi-caret-down-fill ${active && direction === 'desc' ? 'text-warning' : 'text-secondary'}`} style={{ opacity: active && direction === 'desc' ? 1 : 0.3 }}></i>
+    </span>
+);
+
+// --- HARDCODED WALLETS ---
 const BOT_WALLETS = [
     "0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e",
     "0xf3e2544af3e7ba1687d852e80e7cb6c850b797b6",
@@ -60,17 +69,23 @@ export default function AdminScannerPage() {
     const { address } = useAccount();
     const publicClient = usePublicClient();
     
+    // States
     const [viewMode, setViewMode] = useState<'internal' | 'external'>('internal');
     const [loading, setLoading] = useState(true);
     const [allAssets, setAllAssets] = useState<any[]>([]);
     const [internalWallets, setInternalWallets] = useState<string[]>(BOT_WALLETS);
     
+    // Filters & Pagination
     const ITEMS_PER_PAGE = 20;
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortMode, setSortMode] = useState('highest_offer'); 
+    
+    // --- NEW FILTER & SORT LOGIC ---
+    const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'listed' | 'offers'
+    const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
     const [lengthFilter, setLengthFilter] = useState('All'); 
 
+    // Sync API (Backup)
     useEffect(() => {
         const fetchWallets = async () => {
             try {
@@ -147,7 +162,6 @@ export default function AdminScannerPage() {
                         } catch { currentOwner = 'burned'; }
                     }
 
-                    // --- IPFS NAME LOGIC ---
                     let realName = `Asset #${tid}`;
                     try {
                         const uri = await publicClient.readContract({ 
@@ -167,8 +181,8 @@ export default function AdminScannerPage() {
                         owner: currentOwner,
                         seller: sellerAddress,
                         isListed: !!listing,
-                        price: listing ? listing.price : null,
-                        highestOffer: highestOffer || 0,
+                        price: listing ? parseFloat(listing.price) : 0,
+                        highestOffer: highestOffer ? parseFloat(highestOffer) : 0,
                         nameLength: realName.includes('Asset #') ? 0 : realName.length 
                     };
                 }));
@@ -179,18 +193,26 @@ export default function AdminScannerPage() {
     };
 
     useEffect(() => { if (publicClient) fetchMarketData(); }, [publicClient]);
-    
     useEffect(() => {
         const interval = setInterval(() => { if (publicClient && !loading) fetchMarketData(); }, 30000);
         return () => clearInterval(interval);
     }, [publicClient, loading]);
 
-    // --- المنطق المعدل للفلاتر والبحث ---
+    // --- SORT HANDLER ---
+    const handleSort = (key: string) => {
+        let direction = 'desc';
+        if (sortConfig.key === key && sortConfig.direction === 'desc') {
+            direction = 'asc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    // --- FILTER & SORT LOGIC ---
     const filteredData = useMemo(() => {
         let data = [...allAssets];
         const fullInternalTeam = [...internalWallets];
 
-        // 1. تصفية حسب السوق (داخلي / خارجي)
+        // 1. Internal/External Split
         if (viewMode === 'internal') {
             data = data.filter(item => 
                 fullInternalTeam.includes(item.owner) || 
@@ -203,31 +225,45 @@ export default function AdminScannerPage() {
             );
         }
 
-        // 2. البحث (Search) - الآن هو الملك
+        // 2. Search
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
-            // عند البحث، لا نخفي أي شيء. نبحث في كل ما هو موجود في القسم
             data = data.filter(item => item.name.toLowerCase().includes(q) || item.id.includes(q));
-        } else {
-            // 3. إذا لم يكن هناك بحث، نقوم بتنظيف الجدول وإخفاء الخامل (Held)
-            // هذا هو السطر الذي كان يسبب المشكلة سابقاً
-            data = data.filter(item => item.isListed || item.highestOffer > 0);
         }
-        
-        // 4. باقي الفلاتر (الطول والترتيب)
+
+        // 3. Status Filter (The Fix for Hidden Assets)
+        if (filterStatus === 'listed') {
+            data = data.filter(item => item.isListed);
+        } else if (filterStatus === 'offers') {
+            data = data.filter(item => item.highestOffer > 0);
+        }
+        // If filterStatus === 'all', we do nothing! We show everything (Held, Listed, Offers).
+
+        // 4. Length Filter
         if (lengthFilter !== 'All') {
             const len = parseInt(lengthFilter);
             if (lengthFilter === '4+') data = data.filter(item => item.nameLength >= 4);
             else data = data.filter(item => item.nameLength === len);
         }
         
-        if (sortMode === 'highest_offer') data.sort((a, b) => (Number(b.highestOffer) || 0) - (Number(a.highestOffer) || 0));
-        else if (sortMode === 'newest') data.sort((a, b) => Number(b.id) - Number(a.id));
-        else if (sortMode === 'price_high') data.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
-        else if (sortMode === 'price_low') data.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+        // 5. Sorting
+        data.sort((a, b) => {
+            let valA = a[sortConfig.key];
+            let valB = b[sortConfig.key];
+            
+            // Handle string sorting (Name)
+            if (sortConfig.key === 'name') {
+                valA = valA.toLowerCase();
+                valB = valB.toLowerCase();
+            }
+
+            if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
 
         return data;
-    }, [allAssets, viewMode, searchQuery, lengthFilter, sortMode, internalWallets]);
+    }, [allAssets, viewMode, searchQuery, lengthFilter, filterStatus, sortConfig, internalWallets]);
 
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -236,7 +272,6 @@ export default function AdminScannerPage() {
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
     const stats = useMemo(() => {
-        // حساب الإحصائيات يتم بناءً على الداتا المفلترة
         const listed = filteredData.filter(i => i.isListed).length;
         const withOffers = filteredData.filter(i => i.highestOffer > 0).length;
         const totalInView = filteredData.length;
@@ -249,7 +284,7 @@ export default function AdminScannerPage() {
             <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style={{ backgroundColor: '#1E1E1E', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <div className="d-flex align-items-center gap-3">
                     <h2 className="m-0 fw-bold" style={{ color: '#FCD535', fontSize: '20px' }}>
-                        <i className="bi bi-radar me-2"></i> MARKET MONITOR - SEARCH FIXED
+                        <i className="bi bi-radar me-2"></i> MARKET MONITOR - CORRECT LOGIC
                     </h2>
                     {loading && <span className="spinner-border spinner-border-sm text-warning"></span>}
                 </div>
@@ -261,7 +296,7 @@ export default function AdminScannerPage() {
 
             {/* Stats */}
             <div className="row g-3 mb-4">
-                <div className="col-md-4"><div className="p-3 rounded text-center" style={{ backgroundColor: '#111', border: '1px solid #333' }}><div style={{ color: '#888', fontSize: '11px' }}>ACTIVE ASSETS</div><div style={{ color: '#FFF', fontSize: '24px', fontWeight: 'bold' }}>{stats.totalInView}</div></div></div>
+                <div className="col-md-4"><div className="p-3 rounded text-center" style={{ backgroundColor: '#111', border: '1px solid #333' }}><div style={{ color: '#888', fontSize: '11px' }}>TOTAL ASSETS</div><div style={{ color: '#FFF', fontSize: '24px', fontWeight: 'bold' }}>{stats.totalInView}</div></div></div>
                 <div className="col-md-4"><div className="p-3 rounded text-center" style={{ backgroundColor: '#111', border: '1px solid #333' }}><div style={{ color: '#FCD535', fontSize: '11px' }}>LISTED</div><div style={{ color: '#FFF', fontSize: '24px', fontWeight: 'bold' }}>{stats.listed}</div></div></div>
                 <div className="col-md-4"><div className="p-3 rounded text-center" style={{ backgroundColor: '#111', border: '1px solid #333' }}><div style={{ color: '#0ecb81', fontSize: '11px' }}>DEMAND</div><div style={{ color: '#FFF', fontSize: '24px', fontWeight: 'bold' }}>{stats.withOffers}</div></div></div>
             </div>
@@ -269,7 +304,14 @@ export default function AdminScannerPage() {
             {/* Filters */}
             <div className="d-flex flex-wrap gap-3 mb-4 align-items-center p-3 rounded" style={{ backgroundColor: '#111', border: '1px solid #333' }}>
                 <input type="text" placeholder="Search Name..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="form-control form-control-sm" style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff', maxWidth: '300px' }} />
-                <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={sortMode} onChange={(e) => setSortMode(e.target.value)}><option value="highest_offer">Highest Offer</option><option value="newest">Newest</option><option value="price_high">Price High</option><option value="price_low">Price Low</option></select>
+                
+                {/* NEW FILTER DROPDOWN */}
+                <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                    <option value="all">Status: All Assets</option>
+                    <option value="listed">Status: Listed Only</option>
+                    <option value="offers">Status: With Offers</option>
+                </select>
+
                 <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={lengthFilter} onChange={(e) => { setLengthFilter(e.target.value); setCurrentPage(1); }}><option value="All">Length: All</option><option value="1">1 Digit</option><option value="2">2 Digits</option><option value="3">3 Digits</option><option value="4+">4+</option></select>
             </div>
 
@@ -278,11 +320,17 @@ export default function AdminScannerPage() {
                 <table className="table table-dark table-hover mb-0" style={{ fontSize: '13px' }}>
                     <thead>
                         <tr style={{ color: '#888', borderBottom: '1px solid #333' }}>
-                            <th className="py-3 ps-3">NAME</th>
+                            <th className="py-3 ps-3 cursor-pointer" onClick={() => handleSort('name')}>
+                                <div className="d-flex align-items-center">NAME <SortIcon active={sortConfig.key === 'name'} direction={sortConfig.direction} /></div>
+                            </th>
                             <th className="py-3">WALLET</th>
                             <th className="py-3">STATUS</th>
-                            <th className="py-3">PRICE</th>
-                            <th className="py-3">TOP OFFER</th>
+                            <th className="py-3 cursor-pointer" onClick={() => handleSort('price')}>
+                                <div className="d-flex align-items-center">PRICE <SortIcon active={sortConfig.key === 'price'} direction={sortConfig.direction} /></div>
+                            </th>
+                            <th className="py-3 cursor-pointer" onClick={() => handleSort('highestOffer')}>
+                                <div className="d-flex align-items-center">TOP OFFER <SortIcon active={sortConfig.key === 'highestOffer'} direction={sortConfig.direction} /></div>
+                            </th>
                             <th className="py-3 text-end pe-3">ACTION</th>
                         </tr>
                     </thead>
@@ -290,7 +338,7 @@ export default function AdminScannerPage() {
                         {loading && allAssets.length === 0 ? (
                             <tr><td colSpan={6} className="text-center py-5 text-warning">SCANNING MARKET...</td></tr>
                         ) : paginatedData.length === 0 ? (
-                            <tr><td colSpan={6} className="text-center py-5 text-muted">NO ACTIVE ASSETS FOUND</td></tr>
+                            <tr><td colSpan={6} className="text-center py-5 text-muted">NO ASSETS FOUND</td></tr>
                         ) : (
                             paginatedData.map((item) => {
                                 const adminAddr = address ? address.toLowerCase().trim() : '';
@@ -312,7 +360,7 @@ export default function AdminScannerPage() {
                                             </div>
                                         </td>
                                         <td>
-                                            {item.isListed ? <span className="text-success fw-bold">LISTED</span> : <span style={{ color: '#ccc' }}>HELD</span>}
+                                            {item.isListed ? <span className="text-success fw-bold">LISTED</span> : <span style={{ color: '#666' }}>HELD</span>}
                                         </td>
                                         <td>{item.isListed ? `${item.price} POL` : '--'}</td>
                                         <td>{item.highestOffer > 0 ? <span style={{color: '#0ecb81'}}>{item.highestOffer} POL</span> : '--'}</td>
