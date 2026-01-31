@@ -7,9 +7,10 @@ import { parseAbi, formatEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
-// --- القائمة الذهبية: الأدمن + 30 بوت ---
+// --- القائمة الذهبية المدمجة (الأدمن + 30 بوت) ---
+// تم وضعها هنا لضمان عمل النظام فوراً دون الاعتماد على ملفات السيرفر
 const BOT_WALLETS = [
-    "0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e",
+    "0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e", // Admin Wallet
     "0xf3e2544af3e7ba1687d852e80e7cb6c850b797b6",
     "0x02f75874846d09c89f55cae371c5a8d6d3afd9ac",
     "0x266e228c9d9b540caa2e6994ce7c61e58b05d36b",
@@ -59,29 +60,14 @@ export default function AdminScannerPage() {
     const [loading, setLoading] = useState(true);
     const [allAssets, setAllAssets] = useState<any[]>([]);
     
-    // استخدام القائمة الثابتة فوراً
-    const [internalWallets, setInternalWallets] = useState<string[]>(BOT_WALLETS);
+    // القائمة الثابتة هي الأساس
+    const [internalWallets] = useState<string[]>(BOT_WALLETS);
     
     const ITEMS_PER_PAGE = 20;
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortMode, setSortMode] = useState('highest_offer'); 
     const [lengthFilter, setLengthFilter] = useState('All'); 
-
-    // محاولة جلب إضافية (اختياري)
-    useEffect(() => {
-        const fetchWallets = async () => {
-            try {
-                const res = await fetch('/api/admin/get-wallets');
-                const data = await res.json();
-                if (data.wallets && data.wallets.length > 0) {
-                    const combined = [...new Set([...BOT_WALLETS, ...data.wallets.map((w: string) => w.toLowerCase().trim())])];
-                    setInternalWallets(combined);
-                }
-            } catch (e) { /* Silent Fail */ }
-        };
-        fetchWallets();
-    }, []);
 
     const fetchMarketData = async () => {
         if (!publicClient) return;
@@ -118,31 +104,34 @@ export default function AdminScannerPage() {
                 if (!offersMap.has(tid) || o.price > offersMap.get(tid)) offersMap.set(tid, o.price);
             });
 
-            // 3. Database (NAMES - البحث الشامل)
+            // 3. Database (Real Names Strategy)
             const namesMap = new Map();
             
-            // المحاولة أ: البحث في جدول Assets (الأساسي)
-            const { data: assetsTable } = await supabase
-                .from('assets') // اسم الجدول المتوقع
-                .select('token_id, name'); 
-            
-            if (assetsTable) {
-                assetsTable.forEach((a: any) => {
+            // أ) جلب الأسماء من جدول الأصول الرئيسي (Assets Table)
+            // هذا الجدول عادة يحتوي على الأسماء النهائية
+            const { data: assetsData } = await supabase
+                .from('assets')
+                .select('token_id, name')
+                .not('name', 'is', null);
+
+            if (assetsData) {
+                assetsData.forEach((a: any) => {
                     if (a.name) namesMap.set(a.token_id.toString(), a.name);
                 });
             }
 
-            // المحاولة ب: البحث في جدول Activities (الاحتياطي) وتعبئة الفراغات
-            const { data: activitiesTable } = await supabase
+            // ب) محاولة تعبئة الفراغات من جدول النشاطات (Activities)
+            const { data: activitiesData } = await supabase
                 .from('activities')
                 .select('token_id, token_name')
                 .not('token_name', 'is', null);
-                
-            if (activitiesTable) {
-                activitiesTable.forEach((n: any) => {
-                    // نأخذ الاسم فقط إذا لم نجد اسماً سابقاً من جدول assets
-                    if (!namesMap.has(n.token_id.toString()) && n.token_name) {
-                        namesMap.set(n.token_id.toString(), n.token_name);
+
+            if (activitiesData) {
+                activitiesData.forEach((a: any) => {
+                    const tid = a.token_id.toString();
+                    // نأخذ الاسم فقط إذا لم نجد اسماً في جدول assets
+                    if (!namesMap.has(tid) && a.token_name) {
+                        namesMap.set(tid, a.token_name);
                     }
                 });
             }
@@ -177,10 +166,9 @@ export default function AdminScannerPage() {
                         } catch { currentOwner = 'burned'; }
                     }
 
-                    // هنا مربط الفرس: إذا وجدنا الاسم نعرضه، إذا لا نعرض "Unknown"
-                    // لن نكتب "Token #" إذا كان الاسم موجوداً
-                    const realName = namesMap.get(tid);
-                    const displayName = realName ? realName : `Token #${tid}`;
+                    // منطق الاسم: إذا وجدنا الاسم في الداتا بيز نستخدمه، وإلا نستخدم الرقم
+                    const dbName = namesMap.get(tid);
+                    const displayName = dbName ? dbName : `Token #${tid}`;
 
                     return {
                         id: tid,
@@ -190,7 +178,7 @@ export default function AdminScannerPage() {
                         isListed: !!listing,
                         price: listing ? listing.price : null,
                         highestOffer: highestOffer || 0,
-                        nameLength: realName ? realName.length : 0 // الطول بناء على الاسم الحقيقي فقط
+                        nameLength: dbName ? dbName.length : 0 // الطول يحسب فقط إذا كان اسماً حقيقياً
                     };
                 }));
                 processedAssets = [...processedAssets, ...batchResults];
@@ -200,39 +188,50 @@ export default function AdminScannerPage() {
     };
 
     useEffect(() => { if (publicClient) fetchMarketData(); }, [publicClient]);
+    
+    // Auto Refresh Logic
     useEffect(() => {
         const interval = setInterval(() => { if (publicClient && !loading) fetchMarketData(); }, 15000);
         return () => clearInterval(interval);
     }, [publicClient, loading]);
 
+    // Filtering Logic
     const filteredData = useMemo(() => {
         let data = [...allAssets];
+        // استخدام القائمة الثابتة مباشرة
         const fullInternalTeam = [...internalWallets];
 
         if (viewMode === 'internal') {
+            // السوق الداخلي: المالك أو البائع من الفريق
             data = data.filter(item => 
                 fullInternalTeam.includes(item.owner) || 
                 (item.isListed && fullInternalTeam.includes(item.seller))
             );
         } else {
+            // السوق الخارجي: المالك والبائع ليسوا من الفريق
             data = data.filter(item => 
                 !fullInternalTeam.includes(item.owner) && 
                 !(item.isListed && fullInternalTeam.includes(item.seller))
             );
         }
 
+        // تنظيف الجدول: إظهار المعروض للبيع أو المطلوب فقط
         data = data.filter(item => item.isListed || item.highestOffer > 0);
 
+        // البحث
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             data = data.filter(item => item.name.toLowerCase().includes(q) || item.id.includes(q));
         }
+        
+        // فلتر الطول
         if (lengthFilter !== 'All') {
             const len = parseInt(lengthFilter);
             if (lengthFilter === '4+') data = data.filter(item => item.nameLength >= 4);
             else data = data.filter(item => item.nameLength === len);
         }
         
+        // الترتيب
         if (sortMode === 'highest_offer') data.sort((a, b) => (Number(b.highestOffer) || 0) - (Number(a.highestOffer) || 0));
         else if (sortMode === 'newest') data.sort((a, b) => Number(b.id) - Number(a.id));
         else if (sortMode === 'price_high') data.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
@@ -256,10 +255,11 @@ export default function AdminScannerPage() {
 
     return (
         <div style={{ backgroundColor: '#000', minHeight: '100vh', padding: '20px', fontFamily: 'monospace' }}>
+            {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style={{ backgroundColor: '#1E1E1E', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <div className="d-flex align-items-center gap-3">
                     <h2 className="m-0 fw-bold" style={{ color: '#FCD535', fontSize: '20px' }}>
-                        <i className="bi bi-radar me-2"></i> MARKET MONITOR - PRO LIVE
+                        <i className="bi bi-radar me-2"></i> MARKET MONITOR - SURGICAL PRO
                     </h2>
                     {loading && <span className="spinner-border spinner-border-sm text-warning"></span>}
                 </div>
@@ -269,18 +269,21 @@ export default function AdminScannerPage() {
                 </div>
             </div>
 
+            {/* Stats */}
             <div className="row g-3 mb-4">
                 <div className="col-md-4"><div className="p-3 rounded text-center" style={{ backgroundColor: '#111', border: '1px solid #333' }}><div style={{ color: '#888', fontSize: '11px' }}>ACTIVE ASSETS</div><div style={{ color: '#FFF', fontSize: '24px', fontWeight: 'bold' }}>{stats.totalInView}</div></div></div>
                 <div className="col-md-4"><div className="p-3 rounded text-center" style={{ backgroundColor: '#111', border: '1px solid #333' }}><div style={{ color: '#FCD535', fontSize: '11px' }}>LISTED</div><div style={{ color: '#FFF', fontSize: '24px', fontWeight: 'bold' }}>{stats.listed}</div></div></div>
                 <div className="col-md-4"><div className="p-3 rounded text-center" style={{ backgroundColor: '#111', border: '1px solid #333' }}><div style={{ color: '#0ecb81', fontSize: '11px' }}>DEMAND</div><div style={{ color: '#FFF', fontSize: '24px', fontWeight: 'bold' }}>{stats.withOffers}</div></div></div>
             </div>
 
+            {/* Filters */}
             <div className="d-flex flex-wrap gap-3 mb-4 align-items-center p-3 rounded" style={{ backgroundColor: '#111', border: '1px solid #333' }}>
                 <input type="text" placeholder="Search Name..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="form-control form-control-sm" style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff', maxWidth: '300px' }} />
                 <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={sortMode} onChange={(e) => setSortMode(e.target.value)}><option value="highest_offer">Highest Offer</option><option value="newest">Newest</option><option value="price_high">Price High</option><option value="price_low">Price Low</option></select>
                 <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={lengthFilter} onChange={(e) => { setLengthFilter(e.target.value); setCurrentPage(1); }}><option value="All">Length: All</option><option value="1">1 Digit</option><option value="2">2 Digits</option><option value="3">3 Digits</option><option value="4+">4+</option></select>
             </div>
 
+            {/* Table */}
             <div className="table-responsive">
                 <table className="table table-dark table-hover mb-0" style={{ fontSize: '13px' }}>
                     <thead>
@@ -308,10 +311,9 @@ export default function AdminScannerPage() {
                                 return (
                                     <tr key={item.id}>
                                         <td className="ps-3 fw-bold text-white">
-                                            {/* الاسم + الرقم */}
+                                            {/* عرض الاسم الحقيقي فقط، وإذا لم يوجد، نعرض التوكن كبديل */}
                                             {item.name} 
-                                            {/* الرقم يظهر فقط إذا كان الاسم لا يحتوي عليه */}
-                                            {!item.name.includes('#') && <span style={{ color: '#666', fontSize: '11px', marginLeft: '6px' }}>#{item.id}</span>}
+                                            {!item.name.toLowerCase().includes('token') && <span style={{ color: '#666', fontSize: '11px', marginLeft: '6px' }}>#{item.id}</span>}
                                         </td>
                                         <td>
                                             <div className="d-flex align-items-center">
@@ -322,6 +324,7 @@ export default function AdminScannerPage() {
                                             </div>
                                         </td>
                                         <td>
+                                            {/* إصلاح لون HELD ليكون ظاهراً */}
                                             {item.isListed ? <span className="text-success fw-bold">LISTED</span> : <span style={{ color: '#ccc' }}>HELD</span>}
                                         </td>
                                         <td>{item.isListed ? `${item.price} POL` : '--'}</td>
@@ -337,6 +340,7 @@ export default function AdminScannerPage() {
                 </table>
             </div>
             
+            {/* Pagination */}
             {!loading && filteredData.length > 0 && (
                 <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary">
                     <div className="text-muted small">Page {currentPage} of {totalPages}</div>
