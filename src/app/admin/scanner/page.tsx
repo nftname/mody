@@ -13,9 +13,8 @@ const MARKET_ABI = parseAbi([
 ]);
 
 const REGISTRY_ABI = parseAbi([
-    "function totalSupply() view returns (uint256)", // المصدر الحقيقي للعدد الكلي
-    "function ownerOf(uint256 tokenId) view returns (address)",
-    "function tokenURI(uint256 tokenId) view returns (string)"
+    "function totalSupply() view returns (uint256)",
+    "function ownerOf(uint256 tokenId) view returns (address)"
 ]);
 
 // --- STYLES ---
@@ -24,15 +23,21 @@ const SURFACE_DARK = '#1E1E1E';
 const BORDER_COLOR = 'rgba(255, 255, 255, 0.1)';
 
 export default function AdminScannerPage() {
-    const { address } = useAccount(); // محفظة الأدمن المتصلة
+    const { address } = useAccount();
     const publicClient = usePublicClient();
     
     // --- States ---
     const [viewMode, setViewMode] = useState<'internal' | 'external'>('internal');
     const [loading, setLoading] = useState(true);
-    const [progress, setProgress] = useState(0); // شريط تقدم التحميل
+    const [progress, setProgress] = useState(0);
+    const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+    
     const [allAssets, setAllAssets] = useState<any[]>([]);
-    const [internalWallets, setInternalWallets] = useState<string[]>([]); 
+    const [internalWallets, setInternalWallets] = useState<string[]>([]);
+    
+    // Pagination
+    const ITEMS_PER_PAGE = 20;
+    const [currentPage, setCurrentPage] = useState(1);
     
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
@@ -46,7 +51,6 @@ export default function AdminScannerPage() {
                 const res = await fetch('/api/admin/get-wallets');
                 const data = await res.json();
                 if (data.wallets) {
-                    // نوحد كل الحروف لتكون lowercase للمقارنة الدقيقة
                     const bots = data.wallets.map((w: string) => w.toLowerCase());
                     setInternalWallets(bots);
                 }
@@ -55,153 +59,151 @@ export default function AdminScannerPage() {
         fetchWallets();
     }, []);
 
-    // --- 2. THE ENGINE: Fetch Real Blockchain Data ---
-    useEffect(() => {
-        const fetchMarketData = async () => {
-            if (!publicClient) return;
-            setLoading(true);
-            setProgress(10);
+    // --- 2. DATA ENGINE (Chain + DB) ---
+    const fetchMarketData = async () => {
+        if (!publicClient) return;
+        // Don't set full loading on refresh, just update
+        if (allAssets.length === 0) setLoading(true); 
+        
+        try {
+            // A. Blockchain Supply
+            const totalSupplyBig = await publicClient.readContract({
+                address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                abi: REGISTRY_ABI,
+                functionName: 'totalSupply'
+            });
+            const totalCount = Number(totalSupplyBig);
             
-            try {
-                // A. جلب عدد الأصول الكلي الحقيقي من العقد (مثلاً 224)
-                const totalSupplyBig = await publicClient.readContract({
-                    address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-                    abi: REGISTRY_ABI,
-                    functionName: 'totalSupply'
+            // B. Listings
+            const [listedIds, listedPrices, sellers] = await publicClient.readContract({
+                address: MARKETPLACE_ADDRESS as `0x${string}`,
+                abi: MARKET_ABI,
+                functionName: 'getAllListings'
+            });
+
+            const listingsMap = new Map();
+            listedIds.forEach((id, i) => {
+                listingsMap.set(id.toString(), {
+                    price: formatEther(listedPrices[i]),
+                    seller: sellers[i].toLowerCase()
                 });
-                const totalCount = Number(totalSupplyBig);
-                console.log(`🔍 Scanner Found: ${totalCount} Total Assets on Chain.`);
-                setProgress(30);
+            });
 
-                // B. جلب جميع المعروض للبيع دفعة واحدة
-                const [listedIds, listedPrices, sellers] = await publicClient.readContract({
-                    address: MARKETPLACE_ADDRESS as `0x${string}`,
-                    abi: MARKET_ABI,
-                    functionName: 'getAllListings'
+            // C. Offers
+            const { data: offers } = await supabase
+                .from('offers')
+                .select('token_id, price')
+                .eq('status', 'active');
+            
+            const offersMap = new Map();
+            if (offers) {
+                offers.forEach((o: any) => {
+                    const tid = o.token_id.toString();
+                    if (!offersMap.has(tid) || o.price > offersMap.get(tid)) {
+                        offersMap.set(tid, o.price);
+                    }
                 });
-
-                // خريطة سريعة للبحث في المعروض
-                const listingsMap = new Map();
-                listedIds.forEach((id, i) => {
-                    listingsMap.set(id.toString(), {
-                        price: formatEther(listedPrices[i]),
-                        seller: sellers[i].toLowerCase()
-                    });
-                });
-                setProgress(50);
-
-                // C. جلب أعلى العروض من قاعدة البيانات
-                const { data: offers } = await supabase
-                    .from('offers')
-                    .select('token_id, price')
-                    .eq('status', 'active');
-                
-                const offersMap = new Map();
-                if (offers) {
-                    offers.forEach((o: any) => {
-                        const tid = o.token_id.toString();
-                        if (!offersMap.has(tid) || o.price > offersMap.get(tid)) {
-                            offersMap.set(tid, o.price);
-                        }
-                    });
-                }
-                setProgress(60);
-
-                // D. (Critical Step) بناء القائمة الكاملة
-                // سنقوم بجلب الملاك لكل الأصول. هذا قد يكون ثقيلاً قليلاً لكنه ضروري للدقة.
-                // لتسريع العملية، سنستخدم Promise.all على دفعات (Batches)
-                
-                const allIds = Array.from({ length: totalCount }, (_, i) => i); // [0, 1, 2, ... 223]
-                const batchSize = 50; // نعالج 50 أصل في المرة الواحدة
-                let processedAssets: any[] = [];
-
-                for (let i = 0; i < allIds.length; i += batchSize) {
-                    const batch = allIds.slice(i, i + batchSize);
-                    
-                    const batchResults = await Promise.all(batch.map(async (tokenId) => {
-                        const tid = tokenId.toString();
-                        const listing = listingsMap.get(tid);
-                        const highestOffer = offersMap.get(tid);
-                        
-                        // تحديد المالك:
-                        // 1. إذا كان معروضاً للبيع، المالك هو البائع (Seller)
-                        // 2. إذا لم يكن، نسأل البلوكشين مباشرة (ownerOf)
-                        let currentOwner = listing ? listing.seller : '';
-                        
-                        if (!currentOwner) {
-                            try {
-                                currentOwner = (await publicClient.readContract({
-                                    address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-                                    abi: REGISTRY_ABI,
-                                    functionName: 'ownerOf',
-                                    args: [BigInt(tid)]
-                                })).toLowerCase();
-                            } catch (e) { currentOwner = 'burned'; }
-                        }
-
-                        return {
-                            id: tid,
-                            name: `Asset #${tid}`, 
-                            owner: currentOwner,
-                            isListed: !!listing,
-                            price: listing ? listing.price : null,
-                            highestOffer: highestOffer || 0,
-                            nameLength: tid.length 
-                        };
-                    }));
-                    
-                    processedAssets = [...processedAssets, ...batchResults];
-                    // تحديث شريط التقدم
-                    const currentProgress = 60 + Math.floor((i / totalCount) * 40);
-                    setProgress(currentProgress);
-                }
-
-                setAllAssets(processedAssets);
-                setProgress(100);
-
-            } catch (e) {
-                console.error("Scanner Full Error:", e);
-            } finally {
-                setLoading(false);
             }
-        };
 
-        fetchMarketData();
-    }, [publicClient]); // يعمل مرة واحدة عند فتح الصفحة
+            // D. Build Asset List (Batched)
+            const allIds = Array.from({ length: totalCount }, (_, i) => i);
+            const batchSize = 100; // Faster batching
+            let processedAssets: any[] = [];
+            
+            // For initial load, we show progress. For auto-refresh, we do it silently.
+            const isInitial = allAssets.length === 0;
 
-    // --- 3. FILTERING LOGIC (The Brain) ---
+            for (let i = 0; i < allIds.length; i += batchSize) {
+                const batch = allIds.slice(i, i + batchSize);
+                
+                const batchResults = await Promise.all(batch.map(async (tokenId) => {
+                    const tid = tokenId.toString();
+                    const listing = listingsMap.get(tid);
+                    const highestOffer = offersMap.get(tid);
+                    
+                    let currentOwner = listing ? listing.seller : '';
+                    
+                    // Optimization: If listing exists, we know owner. If not, fetch.
+                    if (!currentOwner) {
+                        try {
+                            currentOwner = (await publicClient.readContract({
+                                address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                                abi: REGISTRY_ABI,
+                                functionName: 'ownerOf',
+                                args: [BigInt(tid)]
+                            })).toLowerCase();
+                        } catch { currentOwner = 'burned'; }
+                    }
+
+                    return {
+                        id: tid,
+                        owner: currentOwner,
+                        isListed: !!listing,
+                        price: listing ? listing.price : null,
+                        highestOffer: highestOffer || 0,
+                        nameLength: tid.length 
+                    };
+                }));
+                
+                processedAssets = [...processedAssets, ...batchResults];
+                if (isInitial) setProgress(Math.floor((i / totalCount) * 100));
+            }
+
+            setAllAssets(processedAssets);
+            setLastUpdated(new Date());
+
+        } catch (e) {
+            console.error("Scanner Error:", e);
+        } finally {
+            setLoading(false);
+            setProgress(100);
+        }
+    };
+
+    // Initial Load
+    useEffect(() => {
+        if (publicClient) fetchMarketData();
+    }, [publicClient]);
+
+    // --- AUTO REFRESH (Every 15 Seconds) ---
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (publicClient && !loading) {
+                // Silent refresh
+                fetchMarketData(); 
+            }
+        }, 15000); // 15 seconds
+        return () => clearInterval(interval);
+    }, [publicClient, loading]);
+
+
+    // --- 3. FILTERING ---
     const filteredData = useMemo(() => {
         let data = [...allAssets];
         const adminAddr = address ? address.toLowerCase() : '';
-
-        // تعريف الفريق الداخلي: البوتات + الأدمن
         const fullInternalTeam = [...internalWallets, adminAddr];
 
-        // 1. View Mode Logic
+        // View Mode Filter (Strict Separation)
         if (viewMode === 'internal') {
-            // السوق الداخلي: نعرض فقط ما يملكه الفريق
             data = data.filter(item => fullInternalTeam.includes(item.owner));
         } else {
-            // السوق الخارجي: نعرض كل شيء ما عدا الفريق
             data = data.filter(item => !fullInternalTeam.includes(item.owner));
         }
 
-        // 2. Search
+        // Search
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             data = data.filter(item => item.id.includes(q) || item.owner.includes(q));
         }
 
-        // 3. Length Filter
+        // Length
         if (lengthFilter !== 'All') {
             const len = parseInt(lengthFilter);
             if (lengthFilter === '4+') data = data.filter(item => item.nameLength >= 4);
             else data = data.filter(item => item.nameLength === len);
         }
 
-        // 4. Sorting
-        // بما أننا لا نملك تواريخ صك دقيقة من البلوكشين في هذا الوضع السريع، 
-        // سنرتب حسب الـ ID (الأحدث هو الرقم الأكبر)
+        // Sorting
         if (sortMode === 'newest') data.sort((a, b) => Number(b.id) - Number(a.id));
         if (sortMode === 'oldest') data.sort((a, b) => Number(a.id) - Number(b.id));
         if (sortMode === 'price_high') data.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
@@ -210,7 +212,15 @@ export default function AdminScannerPage() {
         return data;
     }, [allAssets, viewMode, searchQuery, lengthFilter, sortMode, internalWallets, address]);
 
-    // --- KPI STATS ---
+    // Pagination Slicing
+    const paginatedData = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredData, currentPage]);
+
+    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+
+    // Stats
     const stats = useMemo(() => {
         const listed = filteredData.filter(i => i.isListed).length;
         const withOffers = filteredData.filter(i => i.highestOffer > 0).length;
@@ -223,31 +233,42 @@ export default function AdminScannerPage() {
             
             {/* TOP BAR */}
             <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${BORDER_COLOR}` }}>
-                <h2 className="m-0 fw-bold" style={{ color: GOLD_COLOR, fontSize: '20px' }}>
-                    <i className="bi bi-radar me-2"></i> MARKET MONITOR
-                </h2>
+                <div className="d-flex align-items-center gap-3">
+                    <h2 className="m-0 fw-bold" style={{ color: GOLD_COLOR, fontSize: '20px' }}>
+                        <i className="bi bi-radar me-2"></i> MARKET MONITOR
+                    </h2>
+                    <span className="text-muted small" style={{ fontSize: '11px' }}>
+                        <i className="bi bi-arrow-repeat me-1 spinner-grow-sm"></i>
+                        Updated: {lastUpdated.toLocaleTimeString()}
+                    </span>
+                </div>
                 
                 <div className="d-flex gap-2">
+                    {/* GLASS BUTTONS */}
                     <button 
-                        onClick={() => setViewMode('internal')}
-                        className={`btn btn-sm fw-bold ${viewMode === 'internal' ? 'active' : ''}`}
+                        onClick={() => { setViewMode('internal'); setCurrentPage(1); }}
+                        className="btn fw-bold transition-all"
                         style={{ 
-                            backgroundColor: viewMode === 'internal' ? GOLD_COLOR : 'transparent',
-                            color: viewMode === 'internal' ? '#000' : '#888',
-                            border: `1px solid ${GOLD_COLOR}`,
-                            minWidth: '140px'
+                            backgroundColor: viewMode === 'internal' ? '#000' : 'rgba(255, 255, 255, 0.05)',
+                            color: viewMode === 'internal' ? GOLD_COLOR : '#888',
+                            border: `1px solid ${viewMode === 'internal' ? GOLD_COLOR : 'rgba(255,255,255,0.1)'}`,
+                            minWidth: '160px',
+                            backdropFilter: 'blur(10px)',
+                            transition: 'all 0.3s ease'
                         }}
                     >
                         INTERNAL MARKET
                     </button>
                     <button 
-                        onClick={() => setViewMode('external')}
-                        className={`btn btn-sm fw-bold ${viewMode === 'external' ? 'active' : ''}`}
+                        onClick={() => { setViewMode('external'); setCurrentPage(1); }}
+                        className="btn fw-bold transition-all"
                         style={{ 
-                            backgroundColor: viewMode === 'external' ? GOLD_COLOR : 'transparent',
-                            color: viewMode === 'external' ? '#000' : '#888',
-                            border: `1px solid ${GOLD_COLOR}`,
-                            minWidth: '140px'
+                            backgroundColor: viewMode === 'external' ? '#000' : 'rgba(255, 255, 255, 0.05)',
+                            color: viewMode === 'external' ? GOLD_COLOR : '#888',
+                            border: `1px solid ${viewMode === 'external' ? GOLD_COLOR : 'rgba(255,255,255,0.1)'}`,
+                            minWidth: '160px',
+                            backdropFilter: 'blur(10px)',
+                            transition: 'all 0.3s ease'
                         }}
                     >
                         EXTERNAL MARKET
@@ -255,11 +276,11 @@ export default function AdminScannerPage() {
                 </div>
             </div>
 
-            {/* KPI CARDS */}
+            {/* KPI CARDS (Context Aware) */}
             <div className="row g-3 mb-4">
                 <div className="col-md-4">
                     <div className="p-3 rounded text-center" style={{ backgroundColor: '#111', border: '1px solid #333' }}>
-                        <div style={{ color: '#888', fontSize: '11px', letterSpacing: '1px' }}>TOTAL ASSETS</div>
+                        <div style={{ color: '#888', fontSize: '11px', letterSpacing: '1px' }}>TOTAL ASSETS (IN VIEW)</div>
                         <div style={{ color: '#FFF', fontSize: '24px', fontWeight: 'bold' }}>{stats.total}</div>
                     </div>
                 </div>
@@ -285,7 +306,7 @@ export default function AdminScannerPage() {
                         type="text" 
                         placeholder="Search ID, Wallet..." 
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                         className="form-control form-control-sm"
                         style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff', paddingLeft: '35px' }}
                     />
@@ -298,7 +319,7 @@ export default function AdminScannerPage() {
                     <option value="price_low">Price: Low to High</option>
                 </select>
 
-                <select className="form-select form-select-sm w-auto" value={lengthFilter} onChange={(e) => setLengthFilter(e.target.value)} style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff' }}>
+                <select className="form-select form-select-sm w-auto" value={lengthFilter} onChange={(e) => { setLengthFilter(e.target.value); setCurrentPage(1); }} style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff' }}>
                     <option value="All">Length: All</option>
                     <option value="1">1 Digit</option>
                     <option value="2">2 Digits</option>
@@ -321,20 +342,19 @@ export default function AdminScannerPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {loading ? (
+                        {loading && allAssets.length === 0 ? (
                             <tr>
                                 <td colSpan={6} className="text-center py-5">
                                     <div className="mb-2">SCANNING BLOCKCHAIN... {progress}%</div>
-                                    <div className="progress" style={{ height: '4px', maxWidth: '300px', margin: '0 auto' }}>
-                                        <div className="progress-bar bg-warning" role="progressbar" style={{ width: `${progress}%` }}></div>
+                                    <div className="progress" style={{ height: '2px', maxWidth: '300px', margin: '0 auto', backgroundColor: '#333' }}>
+                                        <div className="progress-bar" role="progressbar" style={{ width: `${progress}%`, backgroundColor: GOLD_COLOR }}></div>
                                     </div>
                                 </td>
                             </tr>
-                        ) : filteredData.length === 0 ? (
-                            <tr><td colSpan={6} className="text-center py-5 text-muted">NO DATA FOUND IN THIS MARKET</td></tr>
+                        ) : paginatedData.length === 0 ? (
+                            <tr><td colSpan={6} className="text-center py-5 text-muted">NO DATA FOUND IN THIS VIEW</td></tr>
                         ) : (
-                            filteredData.map((item) => {
-                                // التحقق: هل هو داخلي أم لا؟
+                            paginatedData.map((item) => {
                                 const adminAddr = address ? address.toLowerCase() : '';
                                 const isInternal = internalWallets.includes(item.owner) || item.owner === adminAddr;
 
@@ -351,8 +371,8 @@ export default function AdminScannerPage() {
                                                 {isInternal && item.owner !== adminAddr &&
                                                     <span className="badge bg-warning text-dark" style={{ fontSize: '9px', padding: '4px 6px' }}>BOT</span>
                                                 }
-                                                {!isInternal && 
-                                                    <span className="badge bg-info text-dark" style={{ fontSize: '9px', padding: '4px 6px' }}>USER</span>
+                                                {!isInternal && item.owner !== 'burned' &&
+                                                    <span className="badge bg-dark border border-secondary text-secondary" style={{ fontSize: '9px', padding: '4px 6px' }}>USER</span>
                                                 }
                                             </div>
                                         </td>
@@ -382,6 +402,33 @@ export default function AdminScannerPage() {
                     </tbody>
                 </table>
             </div>
+
+            {/* PAGINATION CONTROLS */}
+            {!loading && filteredData.length > 0 && (
+                <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary border-opacity-25">
+                    <div className="text-muted small">
+                        Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} of {filteredData.length} entries
+                    </div>
+                    <div className="d-flex gap-2">
+                        <button 
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="btn btn-sm btn-outline-secondary"
+                            style={{ fontSize: '12px' }}
+                        >
+                            <i className="bi bi-chevron-left me-1"></i> Previous
+                        </button>
+                        <button 
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="btn btn-sm btn-outline-secondary"
+                            style={{ fontSize: '12px' }}
+                        >
+                            Next <i className="bi bi-chevron-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
