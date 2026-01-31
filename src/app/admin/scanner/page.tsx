@@ -17,11 +17,6 @@ const REGISTRY_ABI = parseAbi([
     "function ownerOf(uint256 tokenId) view returns (address)"
 ]);
 
-// --- STYLES ---
-const GOLD_COLOR = '#FCD535';
-const SURFACE_DARK = '#1E1E1E';
-const BORDER_COLOR = 'rgba(255, 255, 255, 0.1)';
-
 export default function AdminScannerPage() {
     const { address } = useAccount();
     const publicClient = usePublicClient();
@@ -30,7 +25,7 @@ export default function AdminScannerPage() {
     const [viewMode, setViewMode] = useState<'internal' | 'external'>('internal');
     const [loading, setLoading] = useState(true);
     const [progress, setProgress] = useState(0);
-    const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+    const [debugMsg, setDebugMsg] = useState<string[]>([]); // New Debugger
     
     const [allAssets, setAllAssets] = useState<any[]>([]);
     const [internalWallets, setInternalWallets] = useState<string[]>([]);
@@ -44,28 +39,38 @@ export default function AdminScannerPage() {
     const [sortMode, setSortMode] = useState('newest'); 
     const [lengthFilter, setLengthFilter] = useState('All'); 
 
-    // --- 1. Load Bots (Internal Wallets) ---
+    // Helper to log debug messages
+    const log = (msg: string) => setDebugMsg(prev => [...prev.slice(-4), msg]);
+
+    // --- 1. Load Bots (Strict Lowercase) ---
     useEffect(() => {
         const fetchWallets = async () => {
             try {
                 const res = await fetch('/api/admin/get-wallets');
                 const data = await res.json();
                 if (data.wallets) {
-                    const bots = data.wallets.map((w: string) => w.toLowerCase());
+                    const bots = data.wallets.map((w: string) => w.toLowerCase().trim());
                     setInternalWallets(bots);
+                    log(`✅ Loaded ${bots.length} Bot Wallets from API.`);
+                } else {
+                    log(`⚠️ API returned no wallets.`);
                 }
-            } catch (e) { console.error("Bridge Error:", e); }
+            } catch (e: any) { 
+                console.error("Bridge Error:", e);
+                log(`❌ API Error: ${e.message}`);
+            }
         };
         fetchWallets();
     }, []);
 
-    // --- 2. DATA ENGINE (Chain + DB) ---
+    // --- 2. DATA ENGINE ---
     const fetchMarketData = async () => {
         if (!publicClient) return;
-        // Don't set full loading on refresh, just update
         if (allAssets.length === 0) setLoading(true); 
         
         try {
+            log(`🔄 Starting Blockchain Scan...`);
+
             // A. Blockchain Supply
             const totalSupplyBig = await publicClient.readContract({
                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
@@ -73,6 +78,7 @@ export default function AdminScannerPage() {
                 functionName: 'totalSupply'
             });
             const totalCount = Number(totalSupplyBig);
+            log(`⛓️ Total Supply on Chain: ${totalCount}`);
             
             // B. Listings
             const [listedIds, listedPrices, sellers] = await publicClient.readContract({
@@ -105,14 +111,11 @@ export default function AdminScannerPage() {
                 });
             }
 
-            // D. Build Asset List (Batched)
+            // D. Build Asset List (Batched & Forced Lowercase)
             const allIds = Array.from({ length: totalCount }, (_, i) => i);
-            const batchSize = 100; // Faster batching
+            const batchSize = 50; 
             let processedAssets: any[] = [];
             
-            // For initial load, we show progress. For auto-refresh, we do it silently.
-            const isInitial = allAssets.length === 0;
-
             for (let i = 0; i < allIds.length; i += batchSize) {
                 const batch = allIds.slice(i, i + batchSize);
                 
@@ -123,21 +126,21 @@ export default function AdminScannerPage() {
                     
                     let currentOwner = listing ? listing.seller : '';
                     
-                    // Optimization: If listing exists, we know owner. If not, fetch.
                     if (!currentOwner) {
                         try {
-                            currentOwner = (await publicClient.readContract({
+                            const ownerRaw = await publicClient.readContract({
                                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                                 abi: REGISTRY_ABI,
                                 functionName: 'ownerOf',
                                 args: [BigInt(tid)]
-                            })).toLowerCase();
+                            });
+                            currentOwner = ownerRaw.toLowerCase();
                         } catch { currentOwner = 'burned'; }
                     }
 
                     return {
                         id: tid,
-                        owner: currentOwner,
+                        owner: currentOwner, // Already lowercased
                         isListed: !!listing,
                         price: listing ? listing.price : null,
                         highestOffer: highestOffer || 0,
@@ -146,14 +149,15 @@ export default function AdminScannerPage() {
                 }));
                 
                 processedAssets = [...processedAssets, ...batchResults];
-                if (isInitial) setProgress(Math.floor((i / totalCount) * 100));
+                if (allAssets.length === 0) setProgress(Math.floor((i / totalCount) * 100));
             }
 
             setAllAssets(processedAssets);
-            setLastUpdated(new Date());
+            log(`✅ Scan Complete. Processed ${processedAssets.length} Assets.`);
 
-        } catch (e) {
+        } catch (e: any) {
             console.error("Scanner Error:", e);
+            log(`❌ Scan Error: ${e.message}`);
         } finally {
             setLoading(false);
             setProgress(100);
@@ -165,25 +169,22 @@ export default function AdminScannerPage() {
         if (publicClient) fetchMarketData();
     }, [publicClient]);
 
-    // --- AUTO REFRESH (Every 15 Seconds) ---
+    // Auto Refresh (15s)
     useEffect(() => {
         const interval = setInterval(() => {
-            if (publicClient && !loading) {
-                // Silent refresh
-                fetchMarketData(); 
-            }
-        }, 15000); // 15 seconds
+            if (publicClient && !loading) fetchMarketData(); 
+        }, 15000);
         return () => clearInterval(interval);
     }, [publicClient, loading]);
 
-
-    // --- 3. FILTERING ---
+    // --- 3. FILTERING LOGIC (DEBUGGED) ---
     const filteredData = useMemo(() => {
         let data = [...allAssets];
-        const adminAddr = address ? address.toLowerCase() : '';
+        const adminAddr = address ? address.toLowerCase().trim() : '';
+        
+        // Combine Lists
         const fullInternalTeam = [...internalWallets, adminAddr];
 
-        // View Mode Filter (Strict Separation)
         if (viewMode === 'internal') {
             data = data.filter(item => fullInternalTeam.includes(item.owner));
         } else {
@@ -212,7 +213,7 @@ export default function AdminScannerPage() {
         return data;
     }, [allAssets, viewMode, searchQuery, lengthFilter, sortMode, internalWallets, address]);
 
-    // Pagination Slicing
+    // Pagination
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         return filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
@@ -220,7 +221,6 @@ export default function AdminScannerPage() {
 
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
-    // Stats
     const stats = useMemo(() => {
         const listed = filteredData.filter(i => i.isListed).length;
         const withOffers = filteredData.filter(i => i.highestOffer > 0).length;
@@ -231,100 +231,101 @@ export default function AdminScannerPage() {
     return (
         <div style={{ backgroundColor: '#000', minHeight: '100vh', padding: '20px', fontFamily: 'monospace' }}>
             
+            {/* --- DEBUG PANEL (REMOVE AFTER FIXING) --- */}
+            <div className="alert alert-info mb-4" style={{ backgroundColor: 'rgba(0, 100, 255, 0.1)', border: '1px solid #0066ff', color: '#00ccff', fontSize: '12px' }}>
+                <strong>🛠️ PRO DEBUGGER:</strong>
+                <ul className="mb-0 mt-1 ps-3">
+                    {debugMsg.map((msg, i) => <li key={i}>{msg}</li>)}
+                    <li>Admin Address: {address || 'Not Connected'}</li>
+                    <li>Bots Loaded: {internalWallets.length}</li>
+                    <li>Current View: {viewMode.toUpperCase()}</li>
+                    <li>Assets Found in View: {filteredData.length}</li>
+                </ul>
+            </div>
+
             {/* TOP BAR */}
-            <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${BORDER_COLOR}` }}>
+            <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style={{ backgroundColor: '#1E1E1E', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <div className="d-flex align-items-center gap-3">
-                    <h2 className="m-0 fw-bold" style={{ color: GOLD_COLOR, fontSize: '20px' }}>
-                        <i className="bi bi-radar me-2"></i> MARKET MONITOR
+                    <h2 className="m-0 fw-bold" style={{ color: '#FCD535', fontSize: '20px' }}>
+                        <i className="bi bi-radar me-2"></i> MARKET MONITOR V4
                     </h2>
-                    <span className="text-muted small" style={{ fontSize: '11px' }}>
-                        <i className="bi bi-arrow-repeat me-1 spinner-grow-sm"></i>
-                        Updated: {lastUpdated.toLocaleTimeString()}
-                    </span>
+                    {loading && <span className="spinner-border spinner-border-sm text-warning"></span>}
                 </div>
                 
                 <div className="d-flex gap-2">
-                    {/* GLASS BUTTONS */}
                     <button 
                         onClick={() => { setViewMode('internal'); setCurrentPage(1); }}
-                        className="btn fw-bold transition-all"
+                        className="btn fw-bold"
                         style={{ 
-                            backgroundColor: viewMode === 'internal' ? '#000' : 'rgba(255, 255, 255, 0.05)',
-                            color: viewMode === 'internal' ? GOLD_COLOR : '#888',
-                            border: `1px solid ${viewMode === 'internal' ? GOLD_COLOR : 'rgba(255,255,255,0.1)'}`,
-                            minWidth: '160px',
-                            backdropFilter: 'blur(10px)',
-                            transition: 'all 0.3s ease'
+                            backgroundColor: viewMode === 'internal' ? '#FCD535' : 'transparent',
+                            color: viewMode === 'internal' ? '#000' : '#888',
+                            border: '1px solid #FCD535',
+                            minWidth: '150px'
                         }}
                     >
-                        INTERNAL MARKET
+                        INTERNAL (BOTS)
                     </button>
                     <button 
                         onClick={() => { setViewMode('external'); setCurrentPage(1); }}
-                        className="btn fw-bold transition-all"
+                        className="btn fw-bold"
                         style={{ 
-                            backgroundColor: viewMode === 'external' ? '#000' : 'rgba(255, 255, 255, 0.05)',
-                            color: viewMode === 'external' ? GOLD_COLOR : '#888',
-                            border: `1px solid ${viewMode === 'external' ? GOLD_COLOR : 'rgba(255,255,255,0.1)'}`,
-                            minWidth: '160px',
-                            backdropFilter: 'blur(10px)',
-                            transition: 'all 0.3s ease'
+                            backgroundColor: viewMode === 'external' ? '#FCD535' : 'transparent',
+                            color: viewMode === 'external' ? '#000' : '#888',
+                            border: '1px solid #FCD535',
+                            minWidth: '150px'
                         }}
                     >
-                        EXTERNAL MARKET
+                        EXTERNAL (USERS)
                     </button>
                 </div>
             </div>
 
-            {/* KPI CARDS (Context Aware) */}
+            {/* KPI CARDS */}
             <div className="row g-3 mb-4">
                 <div className="col-md-4">
                     <div className="p-3 rounded text-center" style={{ backgroundColor: '#111', border: '1px solid #333' }}>
-                        <div style={{ color: '#888', fontSize: '11px', letterSpacing: '1px' }}>TOTAL ASSETS (IN VIEW)</div>
+                        <div style={{ color: '#888', fontSize: '11px' }}>TOTAL ASSETS</div>
                         <div style={{ color: '#FFF', fontSize: '24px', fontWeight: 'bold' }}>{stats.total}</div>
                     </div>
                 </div>
                 <div className="col-md-4">
                     <div className="p-3 rounded text-center" style={{ backgroundColor: '#111', border: '1px solid #333' }}>
-                        <div style={{ color: GOLD_COLOR, fontSize: '11px', letterSpacing: '1px' }}>LISTED FOR SALE</div>
+                        <div style={{ color: '#FCD535', fontSize: '11px' }}>LISTED</div>
                         <div style={{ color: '#FFF', fontSize: '24px', fontWeight: 'bold' }}>{stats.listed}</div>
                     </div>
                 </div>
                 <div className="col-md-4">
                     <div className="p-3 rounded text-center" style={{ backgroundColor: '#111', border: '1px solid #333' }}>
-                        <div style={{ color: '#0ecb81', fontSize: '11px', letterSpacing: '1px' }}>ACTIVE DEMAND</div>
+                        <div style={{ color: '#0ecb81', fontSize: '11px' }}>DEMAND</div>
                         <div style={{ color: '#FFF', fontSize: '24px', fontWeight: 'bold' }}>{stats.withOffers}</div>
                     </div>
                 </div>
             </div>
 
-            {/* FILTERS */}
+            {/* FILTERS & SEARCH */}
             <div className="d-flex flex-wrap gap-3 mb-4 align-items-center p-3 rounded" style={{ backgroundColor: '#111', border: '1px solid #333' }}>
-                <div className="flex-grow-1 position-relative">
-                    <i className="bi bi-search position-absolute" style={{ left: '12px', top: '10px', color: '#666' }}></i>
-                    <input 
-                        type="text" 
-                        placeholder="Search ID, Wallet..." 
-                        value={searchQuery}
-                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                        className="form-control form-control-sm"
-                        style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff', paddingLeft: '35px' }}
-                    />
-                </div>
-
-                <select className="form-select form-select-sm w-auto" value={sortMode} onChange={(e) => setSortMode(e.target.value)} style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff' }}>
+                <input 
+                    type="text" 
+                    placeholder="Search..." 
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                    className="form-control form-control-sm"
+                    style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff', maxWidth: '300px' }}
+                />
+                
+                <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={sortMode} onChange={(e) => setSortMode(e.target.value)}>
                     <option value="newest">Newest IDs</option>
                     <option value="oldest">Oldest IDs</option>
-                    <option value="price_high">Price: High to Low</option>
-                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High</option>
+                    <option value="price_low">Price: Low</option>
                 </select>
 
-                <select className="form-select form-select-sm w-auto" value={lengthFilter} onChange={(e) => { setLengthFilter(e.target.value); setCurrentPage(1); }} style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff' }}>
-                    <option value="All">Length: All</option>
+                <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={lengthFilter} onChange={(e) => { setLengthFilter(e.target.value); setCurrentPage(1); }}>
+                    <option value="All">All Lengths</option>
                     <option value="1">1 Digit</option>
                     <option value="2">2 Digits</option>
                     <option value="3">3 Digits</option>
-                    <option value="4+">4+ Digits</option>
+                    <option value="4+">4+</option>
                 </select>
             </div>
 
@@ -334,7 +335,7 @@ export default function AdminScannerPage() {
                     <thead>
                         <tr style={{ color: '#888', borderBottom: '1px solid #333' }}>
                             <th className="py-3 ps-3">ASSET</th>
-                            <th className="py-3">WALLET / OWNER</th>
+                            <th className="py-3">OWNER</th>
                             <th className="py-3">STATUS</th>
                             <th className="py-3">PRICE</th>
                             <th className="py-3">TOP OFFER</th>
@@ -343,56 +344,33 @@ export default function AdminScannerPage() {
                     </thead>
                     <tbody>
                         {loading && allAssets.length === 0 ? (
-                            <tr>
-                                <td colSpan={6} className="text-center py-5">
-                                    <div className="mb-2">SCANNING BLOCKCHAIN... {progress}%</div>
-                                    <div className="progress" style={{ height: '2px', maxWidth: '300px', margin: '0 auto', backgroundColor: '#333' }}>
-                                        <div className="progress-bar" role="progressbar" style={{ width: `${progress}%`, backgroundColor: GOLD_COLOR }}></div>
-                                    </div>
-                                </td>
-                            </tr>
+                            <tr><td colSpan={6} className="text-center py-5 text-warning">SCANNING BLOCKCHAIN... {progress}%</td></tr>
                         ) : paginatedData.length === 0 ? (
-                            <tr><td colSpan={6} className="text-center py-5 text-muted">NO DATA FOUND IN THIS VIEW</td></tr>
+                            <tr><td colSpan={6} className="text-center py-5 text-muted">NO DATA FOUND</td></tr>
                         ) : (
                             paginatedData.map((item) => {
-                                const adminAddr = address ? address.toLowerCase() : '';
-                                const isInternal = internalWallets.includes(item.owner) || item.owner === adminAddr;
+                                const adminAddr = address ? address.toLowerCase().trim() : '';
+                                const isBot = internalWallets.includes(item.owner);
+                                const isAdmin = item.owner === adminAddr;
 
                                 return (
-                                    <tr key={item.id} style={{ verticalAlign: 'middle' }}>
-                                        <td className="ps-3 fw-bold">
-                                            <span style={{ color: GOLD_COLOR }}>#{item.id}</span>
-                                        </td>
+                                    <tr key={item.id}>
+                                        <td className="ps-3 fw-bold text-white">#{item.id}</td>
                                         <td>
                                             <div className="d-flex align-items-center">
                                                 <span className="text-muted font-monospace me-2">
-                                                    {item.owner === adminAddr ? 'YOU (ADMIN)' : `${item.owner.slice(0, 6)}...${item.owner.slice(-4)}`}
+                                                    {isAdmin ? 'YOU' : `${item.owner.slice(0, 4)}...${item.owner.slice(-4)}`}
                                                 </span>
-                                                {isInternal && item.owner !== adminAddr &&
-                                                    <span className="badge bg-warning text-dark" style={{ fontSize: '9px', padding: '4px 6px' }}>BOT</span>
-                                                }
-                                                {!isInternal && item.owner !== 'burned' &&
-                                                    <span className="badge bg-dark border border-secondary text-secondary" style={{ fontSize: '9px', padding: '4px 6px' }}>USER</span>
-                                                }
+                                                {isBot && <span className="badge bg-warning text-dark" style={{fontSize: '9px'}}>BOT</span>}
+                                                {!isBot && !isAdmin && <span className="badge bg-secondary" style={{fontSize: '9px'}}>USER</span>}
                                             </div>
                                         </td>
-                                        <td>
-                                            {item.isListed ? 
-                                                <span className="badge bg-success" style={{ fontWeight: '500' }}>LISTED</span> : 
-                                                <span className="badge bg-secondary" style={{ fontWeight: '500', opacity: 0.5 }}>HELD</span>
-                                            }
-                                        </td>
-                                        <td className="font-monospace">
-                                            {item.isListed ? <span className="text-white">{item.price} POL</span> : <span className="text-muted">--</span>}
-                                        </td>
-                                        <td className="font-monospace">
-                                            {item.highestOffer > 0 ? <span style={{ color: '#0ecb81' }}>{item.highestOffer} POL</span> : <span className="text-muted">--</span>}
-                                        </td>
+                                        <td>{item.isListed ? <span className="text-success">LISTED</span> : <span className="text-muted">HELD</span>}</td>
+                                        <td>{item.isListed ? `${item.price} POL` : '--'}</td>
+                                        <td>{item.highestOffer > 0 ? `${item.highestOffer} POL` : '--'}</td>
                                         <td className="text-end pe-3">
                                             <Link href={`/asset/${item.id}`} target="_blank">
-                                                <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '10px', padding: '4px 10px' }}>
-                                                    VIEW <i className="bi bi-box-arrow-up-right ms-1"></i>
-                                                </button>
+                                                <button className="btn btn-sm btn-outline-light" style={{ fontSize: '10px' }}>VIEW</button>
                                             </Link>
                                         </td>
                                     </tr>
@@ -403,29 +381,13 @@ export default function AdminScannerPage() {
                 </table>
             </div>
 
-            {/* PAGINATION CONTROLS */}
+            {/* PAGINATION */}
             {!loading && filteredData.length > 0 && (
-                <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary border-opacity-25">
-                    <div className="text-muted small">
-                        Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} of {filteredData.length} entries
-                    </div>
+                <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary">
+                    <div className="text-muted small">Page {currentPage} of {totalPages}</div>
                     <div className="d-flex gap-2">
-                        <button 
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
-                            className="btn btn-sm btn-outline-secondary"
-                            style={{ fontSize: '12px' }}
-                        >
-                            <i className="bi bi-chevron-left me-1"></i> Previous
-                        </button>
-                        <button 
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
-                            className="btn btn-sm btn-outline-secondary"
-                            style={{ fontSize: '12px' }}
-                        >
-                            Next <i className="bi bi-chevron-right ms-1"></i>
-                        </button>
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="btn btn-sm btn-outline-secondary">Previous</button>
+                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="btn btn-sm btn-outline-secondary">Next</button>
                     </div>
                 </div>
             )}
