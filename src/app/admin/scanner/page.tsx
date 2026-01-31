@@ -34,25 +34,25 @@ export default function AdminScannerPage() {
     
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortMode, setSortMode] = useState('highest_offer'); // Default: Highest Offer first
+    const [sortMode, setSortMode] = useState('highest_offer'); 
     const [lengthFilter, setLengthFilter] = useState('All'); 
 
-    // --- 1. Load Bots (API Engine) ---
+    // --- 1. Load Bots (API) ---
     useEffect(() => {
         const fetchWallets = async () => {
             try {
                 const res = await fetch('/api/admin/get-wallets');
                 const data = await res.json();
                 if (data.wallets) {
-                    // Normalize to lowercase for strict comparison
+                    // Force Lowercase for matching
                     setInternalWallets(data.wallets.map((w: string) => w.toLowerCase().trim()));
                 }
-            } catch (e) { console.error("API Fetch Error", e); }
+            } catch (e) { console.error("API Error", e); }
         };
         fetchWallets();
     }, []);
 
-    // --- 2. DATA ENGINE (The Brain) ---
+    // --- 2. DATA ENGINE ---
     const fetchMarketData = async () => {
         if (!publicClient) return;
         if (allAssets.length === 0) setLoading(true); 
@@ -77,7 +77,7 @@ export default function AdminScannerPage() {
             listedIds.forEach((id, i) => {
                 listingsMap.set(id.toString(), {
                     price: formatEther(listedPrices[i]),
-                    seller: sellers[i].toLowerCase()
+                    seller: sellers[i].toLowerCase() // Force Lowercase
                 });
             });
 
@@ -97,20 +97,22 @@ export default function AdminScannerPage() {
                 });
             }
 
-            // D. Fetch Real Names (from Mint Activities)
-            const { data: namesData } = await supabase
+            // D. Fetch REAL NAMES (Mint Data)
+            // سنجلب الأسماء من جدول النشاطات أو أي جدول تخزن فيه الأسماء
+            const { data: mintData } = await supabase
                 .from('activities')
-                .select('token_id, token_name') 
+                .select('token_id, token_name') // تأكد أن العمود token_name موجود، أو عدله لاسم العمود الصحيح في الداتا بيز
                 .eq('activity_type', 'Mint');
-                
+            
             const namesMap = new Map();
-            if (namesData) {
-                namesData.forEach((n: any) => {
-                    if (n.token_name) namesMap.set(n.token_id.toString(), n.token_name);
+            if (mintData) {
+                mintData.forEach((m: any) => {
+                    // حفظ الاسم مرتبطاً بالـ ID
+                    if (m.token_name) namesMap.set(m.token_id.toString(), m.token_name);
                 });
             }
 
-            // E. Build Comprehensive Asset List
+            // E. Build Asset List
             const allIds = Array.from({ length: totalCount }, (_, i) => i);
             const batchSize = 100; 
             let processedAssets: any[] = [];
@@ -126,12 +128,10 @@ export default function AdminScannerPage() {
                     let currentOwner = '';
                     let sellerAddress = '';
 
-                    // Logic: If listed, we know the seller.
                     if (listing) {
                         sellerAddress = listing.seller;
-                        currentOwner = listing.seller; // Visually, the seller is the owner we care about
+                        currentOwner = listing.seller; 
                     } else {
-                        // If not listed, fetch real owner from chain
                         try {
                             const ownerRaw = await publicClient.readContract({
                                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
@@ -143,18 +143,18 @@ export default function AdminScannerPage() {
                         } catch { currentOwner = 'burned'; }
                     }
 
-                    // Name Logic
-                    const realName = namesMap.get(tid) || `Asset #${tid}`; 
+                    // جلب الاسم الحقيقي، وإذا لم يوجد نكتب "Unknown" مؤقتاً
+                    const realName = namesMap.get(tid) || `Name #${tid}`; 
 
                     return {
                         id: tid,
-                        name: realName,
+                        name: realName, // الاسم الحقيقي
                         owner: currentOwner,
-                        seller: sellerAddress, // Important for Logic Check
+                        seller: sellerAddress,
                         isListed: !!listing,
                         price: listing ? listing.price : null,
                         highestOffer: highestOffer || 0,
-                        nameLength: realName.replace('Asset #', '').length 
+                        nameLength: realName.length 
                     };
                 }));
                 
@@ -170,12 +170,11 @@ export default function AdminScannerPage() {
         }
     };
 
-    // Initial Fetch
     useEffect(() => {
         if (publicClient) fetchMarketData();
     }, [publicClient]);
 
-    // Auto Refresh (Silent Background Update)
+    // Auto Refresh
     useEffect(() => {
         const interval = setInterval(() => {
             if (publicClient && !loading) fetchMarketData(); 
@@ -183,34 +182,32 @@ export default function AdminScannerPage() {
         return () => clearInterval(interval);
     }, [publicClient, loading]);
 
-    // --- 3. FILTERING LOGIC (STRICT PRO LOGIC) ---
+    // --- 3. FILTERING LOGIC (STRICT) ---
     const filteredData = useMemo(() => {
         let data = [...allAssets];
+        // FORCE LOWERCASE ADMIN
         const adminAddr = address ? address.toLowerCase().trim() : '';
         
-        // Define "Internal Team" = Admin + 30 Bots
+        // Internal Team = Admin + 30 Bots
         const fullInternalTeam = [...internalWallets];
         if (adminAddr) fullInternalTeam.push(adminAddr);
 
-        // 1. Market Separation Logic
+        // 1. Separation Logic
         if (viewMode === 'internal') {
-            // Show item IF (Owner is Internal) OR (Seller is Internal)
-            // This catches items listed by Admin even if contract holds them
+            // Show if Owner OR Seller is in the team
             data = data.filter(item => 
                 fullInternalTeam.includes(item.owner) || 
                 (item.isListed && fullInternalTeam.includes(item.seller))
             );
         } else {
-            // External Market: Strict Exclusion
-            // Hide if Owner is Internal OR Seller is Internal
+            // External: Show ONLY if Owner AND Seller are NOT in the team
             data = data.filter(item => 
                 !fullInternalTeam.includes(item.owner) && 
                 !(item.isListed && fullInternalTeam.includes(item.seller))
             );
         }
 
-        // 2. Hide Dormant Assets (Cleaner Table)
-        // Show ONLY if Listed OR Has Offer
+        // 2. Hide Dormant
         data = data.filter(item => item.isListed || item.highestOffer > 0);
 
         // 3. Search
@@ -219,7 +216,7 @@ export default function AdminScannerPage() {
             data = data.filter(item => item.name.toLowerCase().includes(q) || item.owner.includes(q));
         }
 
-        // 4. Length Filter
+        // 4. Length
         if (lengthFilter !== 'All') {
             const len = parseInt(lengthFilter);
             if (lengthFilter === '4+') data = data.filter(item => item.nameLength >= 4);
@@ -243,7 +240,7 @@ export default function AdminScannerPage() {
 
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
-    // Stats (Based on Active View)
+    // KPI Stats
     const stats = useMemo(() => {
         const listed = filteredData.filter(i => i.isListed).length;
         const withOffers = filteredData.filter(i => i.highestOffer > 0).length;
@@ -345,7 +342,7 @@ export default function AdminScannerPage() {
                 <table className="table table-dark table-hover mb-0" style={{ fontSize: '13px' }}>
                     <thead>
                         <tr style={{ color: '#888', borderBottom: '1px solid #333' }}>
-                            <th className="py-3 ps-3">NAME</th>
+                            <th className="py-3 ps-3">ASSET NAME</th>
                             <th className="py-3">WALLET</th>
                             <th className="py-3">STATUS</th>
                             <th className="py-3">PRICE</th>
@@ -360,24 +357,34 @@ export default function AdminScannerPage() {
                             <tr><td colSpan={6} className="text-center py-5 text-muted">NO ACTIVE ASSETS FOUND</td></tr>
                         ) : (
                             paginatedData.map((item) => {
+                                // Logic Checks
                                 const adminAddr = address ? address.toLowerCase().trim() : '';
                                 const isBot = internalWallets.includes(item.owner) || internalWallets.includes(item.seller);
                                 const isAdmin = item.owner === adminAddr || item.seller === adminAddr;
+                                const isInternal = isBot || isAdmin;
 
                                 return (
                                     <tr key={item.id}>
                                         <td className="ps-3 fw-bold text-white">
-                                            {item.name}
+                                            {/* الاسم الحقيقي + الاي دي */}
+                                            {item.name} <span style={{ color: '#666', fontSize: '11px', marginLeft: '6px' }}>#{item.id}</span>
                                         </td>
                                         <td>
                                             <div className="d-flex align-items-center">
-                                                {/* GOLD COLOR FOR WALLET ADDRESS */}
+                                                {/* لون ذهبي للمحفظة */}
                                                 <span className="font-monospace me-2" style={{ color: '#FCD535' }}>
                                                     {isAdmin ? 'YOU (ADMIN)' : `${item.owner.slice(0, 6)}...${item.owner.slice(-4)}`}
                                                 </span>
+                                                {isInternal && !isAdmin && <span className="badge bg-warning text-dark" style={{fontSize: '9px'}}>BOT</span>}
                                             </div>
                                         </td>
-                                        <td>{item.isListed ? <span className="text-success">LISTED</span> : <span className="text-muted">HELD</span>}</td>
+                                        <td>
+                                            {item.isListed ? 
+                                                <span className="text-success fw-bold">LISTED</span> : 
+                                                // لون أبيض واضح بدلاً من الأسود
+                                                <span style={{ color: '#ccc' }}>HELD</span>
+                                            }
+                                        </td>
                                         <td>{item.isListed ? `${item.price} POL` : '--'}</td>
                                         <td>{item.highestOffer > 0 ? <span style={{color: '#0ecb81'}}>{item.highestOffer} POL</span> : '--'}</td>
                                         <td className="text-end pe-3">
