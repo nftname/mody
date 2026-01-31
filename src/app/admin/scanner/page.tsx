@@ -7,6 +7,41 @@ import { parseAbi, formatEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
+// --- القائمة الثابتة: تشمل الأدمن + 30 بوت ---
+const BOT_WALLETS = [
+    "0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e", // Admin Wallet
+    "0xf3e2544af3e7ba1687d852e80e7cb6c850b797b6",
+    "0x02f75874846d09c89f55cae371c5a8d6d3afd9ac",
+    "0x266e228c9d9b540caa2e6994ce7c61e58b05d36b",
+    "0x21edfa31678bb6ea6059133cf1052e1c554eb296",
+    "0xa7801681fcd85499e20c619e9bd841e12e064247",
+    "0x48b2a4e0a13b7594216704875ea318a47e4ffacc",
+    "0x0184bf26e9c3bd07230928eb2e281a3dbc1e8e19",
+    "0x654f845afcddfa89d73e212b9a813b5f8aa90c7b",
+    "0xc2a893d3a7054638038cb013a14021c32ec3a70c",
+    "0xaebd218990de3f179954cd8a6ee1c33c8b039f20",
+    "0xec02f481c46b4fcbefdeab70abd7a7d4b2a07a33",
+    "0xc45023ebeeff0772c5fc55aded198ff1ce58074e",
+    "0x5503be70fd97d1bdb3b7110f14e9c997b365ecaf",
+    "0xc958c34ac43fef119f20326b4e9e15fcab3d3268",
+    "0x229ad709c5b103097007f744aed0343985e01769",
+    "0x9d8adcef02c563731f816eca00fe8ba860436065",
+    "0xead5b437a71e18697e233e7eaff2509221939b01",
+    "0x1a926dd0d6cfa9e997f3ab52a04813cd6b9f9661",
+    "0xe2487da5067546a08867f38470ac23a17b5441dd",
+    "0xdc2e1f271425817d1d1843ad68b413630f9dfcf3",
+    "0x21bd964ecf04aba35650172123bd42953b067a0c",
+    "0x8b6ce7465ecf52402206896f81a3504bd489e3bd",
+    "0xa65d4789429a52ae56b2e61efc9cd1e51278484b",
+    "0x78a39e9fea8d115d407a16c38d44276c104643c6",
+    "0xb73a60f55b43cc053fe080f8811159e525c5bf46",
+    "0x484dde32afba0497f01980f316f85bdfc004e57b",
+    "0xb7f6a0ac4af231b6ea0336931a9496aab96538ba",
+    "0x45b586643474abba7abb5faf3ae415f675b8a6e7",
+    "0x5c4a53e521cbb712686401bd38779ee30965c228",
+    "0x48370e9ec371344ac518be555eea1ed121c3f082"
+].map(w => w.toLowerCase().trim());
+
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
@@ -20,40 +55,37 @@ export default function AdminScannerPage() {
     const { address } = useAccount();
     const publicClient = usePublicClient();
     
-    // States
     const [viewMode, setViewMode] = useState<'internal' | 'external'>('internal');
     const [loading, setLoading] = useState(true);
     const [allAssets, setAllAssets] = useState<any[]>([]);
-    const [internalWallets, setInternalWallets] = useState<string[]>([]);
+    const [internalWallets, setInternalWallets] = useState<string[]>(BOT_WALLETS);
     
-    // Pagination & Filters
     const ITEMS_PER_PAGE = 20;
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortMode, setSortMode] = useState('highest_offer'); 
     const [lengthFilter, setLengthFilter] = useState('All'); 
 
-    // 1. Load Bots (Engine)
+    // محاولة جلب البوتات من API أيضاً (للاحتياط)
     useEffect(() => {
         const fetchWallets = async () => {
             try {
                 const res = await fetch('/api/admin/get-wallets');
                 const data = await res.json();
-                if (data.wallets) {
-                    setInternalWallets(data.wallets.map((w: string) => w.toLowerCase().trim()));
+                if (data.wallets && data.wallets.length > 0) {
+                    const combined = [...new Set([...BOT_WALLETS, ...data.wallets.map((w: string) => w.toLowerCase().trim())])];
+                    setInternalWallets(combined);
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Using Hardcoded List"); }
         };
         fetchWallets();
     }, []);
 
-    // 2. Data Fetching
     const fetchMarketData = async () => {
         if (!publicClient) return;
         if (allAssets.length === 0) setLoading(true); 
         
         try {
-            // A. Blockchain Data
             const totalSupplyBig = await publicClient.readContract({
                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                 abi: REGISTRY_ABI,
@@ -75,26 +107,20 @@ export default function AdminScannerPage() {
                 });
             });
 
-            // B. Database Data (Offers & Names)
             const { data: offers } = await supabase.from('offers').select('token_id, price').eq('status', 'active');
             const offersMap = new Map();
-            if (offers) {
-                offers.forEach((o: any) => {
-                    const tid = o.token_id.toString();
-                    if (!offersMap.has(tid) || o.price > offersMap.get(tid)) offersMap.set(tid, o.price);
-                });
-            }
+            if (offers) offers.forEach((o: any) => {
+                const tid = o.token_id.toString();
+                if (!offersMap.has(tid) || o.price > offersMap.get(tid)) offersMap.set(tid, o.price);
+            });
 
-            // Fetch Real Names
+            // جلب الأسماء
             const { data: namesData } = await supabase.from('activities').select('token_id, token_name').eq('activity_type', 'Mint'); 
             const namesMap = new Map();
-            if (namesData) {
-                namesData.forEach((n: any) => {
-                    if (n.token_name) namesMap.set(n.token_id.toString(), n.token_name);
-                });
-            }
+            if (namesData) namesData.forEach((n: any) => {
+                if (n.token_name) namesMap.set(n.token_id.toString(), n.token_name);
+            });
 
-            // C. Build List
             const allIds = Array.from({ length: totalCount }, (_, i) => i);
             const batchSize = 100; 
             let processedAssets: any[] = [];
@@ -124,7 +150,7 @@ export default function AdminScannerPage() {
                         } catch { currentOwner = 'burned'; }
                     }
 
-                    const realName = namesMap.get(tid) || `Asset`; 
+                    const realName = namesMap.get(tid) || `Name #${tid}`; 
 
                     return {
                         id: tid,
@@ -149,31 +175,25 @@ export default function AdminScannerPage() {
         return () => clearInterval(interval);
     }, [publicClient, loading]);
 
-    // 3. Filtering Logic (The Correct Logic)
     const filteredData = useMemo(() => {
         let data = [...allAssets];
-        const adminAddr = address ? address.toLowerCase().trim() : '';
+        // نستخدم المصفوفة الثابتة مباشرة لضمان عدم الاستثناء
         const fullInternalTeam = [...internalWallets];
-        if (adminAddr) fullInternalTeam.push(adminAddr);
 
         if (viewMode === 'internal') {
-            // Internal: Owner is Team OR Seller is Team
             data = data.filter(item => 
                 fullInternalTeam.includes(item.owner) || 
                 (item.isListed && fullInternalTeam.includes(item.seller))
             );
         } else {
-            // External: Owner NOT Team AND Seller NOT Team
             data = data.filter(item => 
                 !fullInternalTeam.includes(item.owner) && 
                 !(item.isListed && fullInternalTeam.includes(item.seller))
             );
         }
 
-        // Hide Held (Only Listed or Offers)
         data = data.filter(item => item.isListed || item.highestOffer > 0);
 
-        // Search & Sort
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             data = data.filter(item => item.name.toLowerCase().includes(q) || item.id.includes(q));
@@ -183,22 +203,21 @@ export default function AdminScannerPage() {
             if (lengthFilter === '4+') data = data.filter(item => item.nameLength >= 4);
             else data = data.filter(item => item.nameLength === len);
         }
+        
         if (sortMode === 'highest_offer') data.sort((a, b) => (Number(b.highestOffer) || 0) - (Number(a.highestOffer) || 0));
-        if (sortMode === 'newest') data.sort((a, b) => Number(b.id) - Number(a.id));
-        if (sortMode === 'price_high') data.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
-        if (sortMode === 'price_low') data.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+        else if (sortMode === 'newest') data.sort((a, b) => Number(b.id) - Number(a.id));
+        else if (sortMode === 'price_high') data.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+        else if (sortMode === 'price_low') data.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
 
         return data;
-    }, [allAssets, viewMode, searchQuery, lengthFilter, sortMode, internalWallets, address]);
+    }, [allAssets, viewMode, searchQuery, lengthFilter, sortMode, internalWallets]);
 
-    // Pagination
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         return filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
     }, [filteredData, currentPage]);
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
-    // Stats
     const stats = useMemo(() => {
         const listed = filteredData.filter(i => i.isListed).length;
         const withOffers = filteredData.filter(i => i.highestOffer > 0).length;
@@ -237,7 +256,7 @@ export default function AdminScannerPage() {
                 <table className="table table-dark table-hover mb-0" style={{ fontSize: '13px' }}>
                     <thead>
                         <tr style={{ color: '#888', borderBottom: '1px solid #333' }}>
-                            <th className="py-3 ps-3">ASSET NAME</th>
+                            <th className="py-3 ps-3">NAME</th>
                             <th className="py-3">WALLET</th>
                             <th className="py-3">STATUS</th>
                             <th className="py-3">PRICE</th>
@@ -271,7 +290,7 @@ export default function AdminScannerPage() {
                                             </div>
                                         </td>
                                         <td>
-                                            {item.isListed ? <span className="text-success fw-bold">LISTED</span> : <span style={{ color: '#888' }}>HELD</span>}
+                                            {item.isListed ? <span className="text-success fw-bold">LISTED</span> : <span style={{ color: '#ccc' }}>HELD</span>}
                                         </td>
                                         <td>{item.isListed ? `${item.price} POL` : '--'}</td>
                                         <td>{item.highestOffer > 0 ? <span style={{color: '#0ecb81'}}>{item.highestOffer} POL</span> : '--'}</td>
