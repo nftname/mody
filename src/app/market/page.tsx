@@ -219,7 +219,7 @@ function MarketPage() {
   const fetchMarketData = useCallback(async () => {
         if (!publicClient) return;
         setLoading(true);
-        setCurrentPage(1);
+        setCurrentPage(1); // Reset page on filter change
 
         try {
             // --- 1. GATHER SUPABASE DATA (Always needed for Volume/Conviction/Offers) ---
@@ -277,7 +277,7 @@ function MarketPage() {
                 });
             }
 
-            // --- 2. DETERMINE SOURCE IDs BASED ON FILTER ---
+            // --- 2. DETERMINE SOURCE IDs BASED ON FILTER (Surgical Fix) ---
             let targetIds: number[] = [];
             let listedPrices: Record<number, number> = {};
 
@@ -299,7 +299,7 @@ function MarketPage() {
                 // SOURCE: DATABASE (For Volume, Top, Trending, Offers, Conviction)
                 targetIds = Object.keys(statsMap).map(Number);
 
-                // Apply Watchlist Filter
+                // Apply Watchlist Filter if active
                 if (activeFilter === 'Watchlist') {
                      const { data: favs } = await supabase.from('favorites').select('token_id').eq('wallet_address', address);
                      const favSet = new Set(favs?.map((f:any) => Number(f.token_id)));
@@ -350,12 +350,12 @@ function MarketPage() {
             else if (activeFilter === 'Trending') validItems.sort((a, b) => b.trendingScore - a.trendingScore);
             else if (activeFilter === 'Most Offers') validItems.sort((a, b) => b.offersCount - a.offersCount);
             else if (activeFilter === 'Conviction') validItems.sort((a, b) => b.convictionScore - a.convictionScore);
-            else if (activeFilter === 'Listings') validItems.sort((a, b) => a.pricePol - b.pricePol); // Sort listings by price usually, or ID
+            else if (activeFilter === 'Listings') validItems.sort((a, b) => a.pricePol - b.pricePol); 
             else validItems.sort((a, b) => a.id - b.id);
 
             setRealListings(validItems);
         } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
-    }, [publicClient, activeFilter, timeFilter, address]); // Added dependencies to re-trigger on filter change
+    }, [publicClient, activeFilter, timeFilter, address]);
 
   useEffect(() => {
       fetchMarketData();
