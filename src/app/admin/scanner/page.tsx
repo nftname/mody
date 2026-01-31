@@ -7,9 +7,9 @@ import { parseAbi, formatEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
-// --- القائمة الذهبية: الأدمن + 30 بوت (تم دمجها لضمان الفلتر) ---
+// --- القائمة الذهبية: الأدمن + 30 بوت ---
 const BOT_WALLETS = [
-    "0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e", // Admin
+    "0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e",
     "0xf3e2544af3e7ba1687d852e80e7cb6c850b797b6",
     "0x02f75874846d09c89f55cae371c5a8d6d3afd9ac",
     "0x266e228c9d9b540caa2e6994ce7c61e58b05d36b",
@@ -59,7 +59,7 @@ export default function AdminScannerPage() {
     const [loading, setLoading] = useState(true);
     const [allAssets, setAllAssets] = useState<any[]>([]);
     
-    // استخدمنا القائمة الثابتة مباشرة لأنها أسرع وأضمن
+    // استخدام القائمة الثابتة فوراً
     const [internalWallets, setInternalWallets] = useState<string[]>(BOT_WALLETS);
     
     const ITEMS_PER_PAGE = 20;
@@ -68,7 +68,7 @@ export default function AdminScannerPage() {
     const [sortMode, setSortMode] = useState('highest_offer'); 
     const [lengthFilter, setLengthFilter] = useState('All'); 
 
-    // API Backup (اختياري)
+    // محاولة جلب إضافية (اختياري)
     useEffect(() => {
         const fetchWallets = async () => {
             try {
@@ -118,17 +118,30 @@ export default function AdminScannerPage() {
                 if (!offersMap.has(tid) || o.price > offersMap.get(tid)) offersMap.set(tid, o.price);
             });
 
-            // 3. Database (Names) - تم توسيع البحث ليشمل كل الأنشطة وليس Mint فقط
-            const { data: namesData } = await supabase
+            // 3. Database (NAMES - البحث الشامل)
+            const namesMap = new Map();
+            
+            // المحاولة أ: البحث في جدول Assets (الأساسي)
+            const { data: assetsTable } = await supabase
+                .from('assets') // اسم الجدول المتوقع
+                .select('token_id, name'); 
+            
+            if (assetsTable) {
+                assetsTable.forEach((a: any) => {
+                    if (a.name) namesMap.set(a.token_id.toString(), a.name);
+                });
+            }
+
+            // المحاولة ب: البحث في جدول Activities (الاحتياطي) وتعبئة الفراغات
+            const { data: activitiesTable } = await supabase
                 .from('activities')
                 .select('token_id, token_name')
-                .not('token_name', 'is', null); // جلب أي صف يحتوي على اسم
+                .not('token_name', 'is', null);
                 
-            const namesMap = new Map();
-            if (namesData) {
-                namesData.forEach((n: any) => {
-                    // إذا وجدنا اسماً، نحفظه. الترتيب التلقائي للداتا بيز سيضمن دقة مقبولة
-                    if (n.token_name && n.token_name !== '') {
+            if (activitiesTable) {
+                activitiesTable.forEach((n: any) => {
+                    // نأخذ الاسم فقط إذا لم نجد اسماً سابقاً من جدول assets
+                    if (!namesMap.has(n.token_id.toString()) && n.token_name) {
                         namesMap.set(n.token_id.toString(), n.token_name);
                     }
                 });
@@ -164,18 +177,20 @@ export default function AdminScannerPage() {
                         } catch { currentOwner = 'burned'; }
                     }
 
-                    // هنا نستخدم الاسم من الداتا بيز، وإذا لم يوجد نعرض التوكن ID
-                    const realName = namesMap.get(tid) || `Token #${tid}`; 
+                    // هنا مربط الفرس: إذا وجدنا الاسم نعرضه، إذا لا نعرض "Unknown"
+                    // لن نكتب "Token #" إذا كان الاسم موجوداً
+                    const realName = namesMap.get(tid);
+                    const displayName = realName ? realName : `Token #${tid}`;
 
                     return {
                         id: tid,
-                        name: realName,
+                        name: displayName,
                         owner: currentOwner,
                         seller: sellerAddress,
                         isListed: !!listing,
                         price: listing ? listing.price : null,
                         highestOffer: highestOffer || 0,
-                        nameLength: realName.includes('Token #') ? 0 : realName.length 
+                        nameLength: realName ? realName.length : 0 // الطول بناء على الاسم الحقيقي فقط
                     };
                 }));
                 processedAssets = [...processedAssets, ...batchResults];
@@ -206,7 +221,6 @@ export default function AdminScannerPage() {
             );
         }
 
-        // إخفاء الـ HELD (فقط المعروض أو المطلوب)
         data = data.filter(item => item.isListed || item.highestOffer > 0);
 
         if (searchQuery) {
@@ -294,7 +308,10 @@ export default function AdminScannerPage() {
                                 return (
                                     <tr key={item.id}>
                                         <td className="ps-3 fw-bold text-white">
-                                            {item.name} <span style={{ color: '#666', fontSize: '11px', marginLeft: '6px' }}>#{item.id}</span>
+                                            {/* الاسم + الرقم */}
+                                            {item.name} 
+                                            {/* الرقم يظهر فقط إذا كان الاسم لا يحتوي عليه */}
+                                            {!item.name.includes('#') && <span style={{ color: '#666', fontSize: '11px', marginLeft: '6px' }}>#{item.id}</span>}
                                         </td>
                                         <td>
                                             <div className="d-flex align-items-center">
