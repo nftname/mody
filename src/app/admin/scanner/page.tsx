@@ -24,7 +24,6 @@ export default function AdminScannerPage() {
     // --- States ---
     const [viewMode, setViewMode] = useState<'internal' | 'external'>('internal');
     const [loading, setLoading] = useState(true);
-    const [progress, setProgress] = useState(0);
     
     const [allAssets, setAllAssets] = useState<any[]>([]);
     const [internalWallets, setInternalWallets] = useState<string[]>([]);
@@ -35,28 +34,27 @@ export default function AdminScannerPage() {
     
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortMode, setSortMode] = useState('newest'); 
+    const [sortMode, setSortMode] = useState('highest_offer'); // Default: Highest Offer first
     const [lengthFilter, setLengthFilter] = useState('All'); 
 
-    // --- 1. Load Bots ---
+    // --- 1. Load Bots (API Engine) ---
     useEffect(() => {
         const fetchWallets = async () => {
             try {
                 const res = await fetch('/api/admin/get-wallets');
                 const data = await res.json();
                 if (data.wallets) {
-                    const bots = data.wallets.map((w: string) => w.toLowerCase().trim());
-                    setInternalWallets(bots);
+                    // Normalize to lowercase for strict comparison
+                    setInternalWallets(data.wallets.map((w: string) => w.toLowerCase().trim()));
                 }
-            } catch (e) { console.error("API Error", e); }
+            } catch (e) { console.error("API Fetch Error", e); }
         };
         fetchWallets();
     }, []);
 
-    // --- 2. DATA ENGINE ---
+    // --- 2. DATA ENGINE (The Brain) ---
     const fetchMarketData = async () => {
         if (!publicClient) return;
-        // Only show full loading on first mount
         if (allAssets.length === 0) setLoading(true); 
         
         try {
@@ -83,7 +81,7 @@ export default function AdminScannerPage() {
                 });
             });
 
-            // C. Offers
+            // C. Offers (Demand)
             const { data: offers } = await supabase
                 .from('offers')
                 .select('token_id, price')
@@ -99,9 +97,22 @@ export default function AdminScannerPage() {
                 });
             }
 
-            // D. Build Asset List
+            // D. Fetch Real Names (from Mint Activities)
+            const { data: namesData } = await supabase
+                .from('activities')
+                .select('token_id, token_name') 
+                .eq('activity_type', 'Mint');
+                
+            const namesMap = new Map();
+            if (namesData) {
+                namesData.forEach((n: any) => {
+                    if (n.token_name) namesMap.set(n.token_id.toString(), n.token_name);
+                });
+            }
+
+            // E. Build Comprehensive Asset List
             const allIds = Array.from({ length: totalCount }, (_, i) => i);
-            const batchSize = 50; 
+            const batchSize = 100; 
             let processedAssets: any[] = [];
             
             for (let i = 0; i < allIds.length; i += batchSize) {
@@ -112,10 +123,15 @@ export default function AdminScannerPage() {
                     const listing = listingsMap.get(tid);
                     const highestOffer = offersMap.get(tid);
                     
-                    let currentOwner = listing ? listing.seller : '';
-                    
-                    // Only fetch owner if needed (optimization)
-                    if (!currentOwner) {
+                    let currentOwner = '';
+                    let sellerAddress = '';
+
+                    // Logic: If listed, we know the seller.
+                    if (listing) {
+                        sellerAddress = listing.seller;
+                        currentOwner = listing.seller; // Visually, the seller is the owner we care about
+                    } else {
+                        // If not listed, fetch real owner from chain
                         try {
                             const ownerRaw = await publicClient.readContract({
                                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
@@ -127,18 +143,22 @@ export default function AdminScannerPage() {
                         } catch { currentOwner = 'burned'; }
                     }
 
+                    // Name Logic
+                    const realName = namesMap.get(tid) || `Asset #${tid}`; 
+
                     return {
                         id: tid,
-                        owner: currentOwner, 
+                        name: realName,
+                        owner: currentOwner,
+                        seller: sellerAddress, // Important for Logic Check
                         isListed: !!listing,
                         price: listing ? listing.price : null,
                         highestOffer: highestOffer || 0,
-                        nameLength: tid.length 
+                        nameLength: realName.replace('Asset #', '').length 
                     };
                 }));
                 
                 processedAssets = [...processedAssets, ...batchResults];
-                if (allAssets.length === 0) setProgress(Math.floor((i / totalCount) * 100));
             }
 
             setAllAssets(processedAssets);
@@ -147,16 +167,15 @@ export default function AdminScannerPage() {
             console.error("Scanner Error:", e);
         } finally {
             setLoading(false);
-            setProgress(100);
         }
     };
 
-    // Initial Load
+    // Initial Fetch
     useEffect(() => {
         if (publicClient) fetchMarketData();
     }, [publicClient]);
 
-    // Auto Refresh (Silent Update every 15s)
+    // Auto Refresh (Silent Background Update)
     useEffect(() => {
         const interval = setInterval(() => {
             if (publicClient && !loading) fetchMarketData(); 
@@ -164,27 +183,40 @@ export default function AdminScannerPage() {
         return () => clearInterval(interval);
     }, [publicClient, loading]);
 
-    // --- 3. FILTERING LOGIC ---
+    // --- 3. FILTERING LOGIC (STRICT PRO LOGIC) ---
     const filteredData = useMemo(() => {
         let data = [...allAssets];
         const adminAddr = address ? address.toLowerCase().trim() : '';
-        const fullInternalTeam = [...internalWallets, adminAddr];
+        
+        // Define "Internal Team" = Admin + 30 Bots
+        const fullInternalTeam = [...internalWallets];
+        if (adminAddr) fullInternalTeam.push(adminAddr);
 
-        // 1. Market Separation
+        // 1. Market Separation Logic
         if (viewMode === 'internal') {
-            data = data.filter(item => fullInternalTeam.includes(item.owner));
+            // Show item IF (Owner is Internal) OR (Seller is Internal)
+            // This catches items listed by Admin even if contract holds them
+            data = data.filter(item => 
+                fullInternalTeam.includes(item.owner) || 
+                (item.isListed && fullInternalTeam.includes(item.seller))
+            );
         } else {
-            data = data.filter(item => !fullInternalTeam.includes(item.owner));
+            // External Market: Strict Exclusion
+            // Hide if Owner is Internal OR Seller is Internal
+            data = data.filter(item => 
+                !fullInternalTeam.includes(item.owner) && 
+                !(item.isListed && fullInternalTeam.includes(item.seller))
+            );
         }
 
-        // 2. Hide Dormant Assets (Show ONLY Listed or Has Offer)
-        // This cleans up the table as requested
+        // 2. Hide Dormant Assets (Cleaner Table)
+        // Show ONLY if Listed OR Has Offer
         data = data.filter(item => item.isListed || item.highestOffer > 0);
 
         // 3. Search
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
-            data = data.filter(item => item.id.includes(q) || item.owner.includes(q));
+            data = data.filter(item => item.name.toLowerCase().includes(q) || item.owner.includes(q));
         }
 
         // 4. Length Filter
@@ -195,8 +227,8 @@ export default function AdminScannerPage() {
         }
 
         // 5. Sorting
+        if (sortMode === 'highest_offer') data.sort((a, b) => (Number(b.highestOffer) || 0) - (Number(a.highestOffer) || 0));
         if (sortMode === 'newest') data.sort((a, b) => Number(b.id) - Number(a.id));
-        if (sortMode === 'oldest') data.sort((a, b) => Number(a.id) - Number(b.id));
         if (sortMode === 'price_high') data.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
         if (sortMode === 'price_low') data.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
 
@@ -211,11 +243,11 @@ export default function AdminScannerPage() {
 
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
-    // KPI Stats (Based on FILTERED view)
+    // Stats (Based on Active View)
     const stats = useMemo(() => {
         const listed = filteredData.filter(i => i.isListed).length;
         const withOffers = filteredData.filter(i => i.highestOffer > 0).length;
-        const totalInView = filteredData.length; // Active assets only
+        const totalInView = filteredData.length;
         return { listed, withOffers, totalInView };
     }, [filteredData]);
 
@@ -242,7 +274,7 @@ export default function AdminScannerPage() {
                             minWidth: '150px'
                         }}
                     >
-                        INTERNAL (BOTS)
+                        INTERNAL MARKET
                     </button>
                     <button 
                         onClick={() => { setViewMode('external'); setCurrentPage(1); }}
@@ -254,7 +286,7 @@ export default function AdminScannerPage() {
                             minWidth: '150px'
                         }}
                     >
-                        EXTERNAL (USERS)
+                        EXTERNAL MARKET
                     </button>
                 </div>
             </div>
@@ -285,7 +317,7 @@ export default function AdminScannerPage() {
             <div className="d-flex flex-wrap gap-3 mb-4 align-items-center p-3 rounded" style={{ backgroundColor: '#111', border: '1px solid #333' }}>
                 <input 
                     type="text" 
-                    placeholder="Search ID..." 
+                    placeholder="Search Name..." 
                     value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                     className="form-control form-control-sm"
@@ -293,6 +325,7 @@ export default function AdminScannerPage() {
                 />
                 
                 <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={sortMode} onChange={(e) => setSortMode(e.target.value)}>
+                    <option value="highest_offer">Highest Offer</option>
                     <option value="newest">Newest</option>
                     <option value="price_high">Price High</option>
                     <option value="price_low">Price Low</option>
@@ -312,8 +345,8 @@ export default function AdminScannerPage() {
                 <table className="table table-dark table-hover mb-0" style={{ fontSize: '13px' }}>
                     <thead>
                         <tr style={{ color: '#888', borderBottom: '1px solid #333' }}>
-                            <th className="py-3 ps-3">ASSET</th>
-                            <th className="py-3">OWNER</th>
+                            <th className="py-3 ps-3">NAME</th>
+                            <th className="py-3">WALLET</th>
                             <th className="py-3">STATUS</th>
                             <th className="py-3">PRICE</th>
                             <th className="py-3">TOP OFFER</th>
@@ -322,30 +355,31 @@ export default function AdminScannerPage() {
                     </thead>
                     <tbody>
                         {loading && allAssets.length === 0 ? (
-                            <tr><td colSpan={6} className="text-center py-5 text-warning">SCANNING MARKET... {progress}%</td></tr>
+                            <tr><td colSpan={6} className="text-center py-5 text-warning">SCANNING MARKET...</td></tr>
                         ) : paginatedData.length === 0 ? (
                             <tr><td colSpan={6} className="text-center py-5 text-muted">NO ACTIVE ASSETS FOUND</td></tr>
                         ) : (
                             paginatedData.map((item) => {
                                 const adminAddr = address ? address.toLowerCase().trim() : '';
-                                const isBot = internalWallets.includes(item.owner);
-                                const isAdmin = item.owner === adminAddr;
+                                const isBot = internalWallets.includes(item.owner) || internalWallets.includes(item.seller);
+                                const isAdmin = item.owner === adminAddr || item.seller === adminAddr;
 
                                 return (
                                     <tr key={item.id}>
-                                        <td className="ps-3 fw-bold text-white">#{item.id}</td>
+                                        <td className="ps-3 fw-bold text-white">
+                                            {item.name}
+                                        </td>
                                         <td>
                                             <div className="d-flex align-items-center">
-                                                <span className="text-muted font-monospace me-2">
-                                                    {isAdmin ? 'YOU' : `${item.owner.slice(0, 4)}...${item.owner.slice(-4)}`}
+                                                {/* GOLD COLOR FOR WALLET ADDRESS */}
+                                                <span className="font-monospace me-2" style={{ color: '#FCD535' }}>
+                                                    {isAdmin ? 'YOU (ADMIN)' : `${item.owner.slice(0, 6)}...${item.owner.slice(-4)}`}
                                                 </span>
-                                                {isBot && <span className="badge bg-warning text-dark" style={{fontSize: '9px'}}>BOT</span>}
-                                                {!isBot && !isAdmin && <span className="badge bg-secondary" style={{fontSize: '9px'}}>USER</span>}
                                             </div>
                                         </td>
                                         <td>{item.isListed ? <span className="text-success">LISTED</span> : <span className="text-muted">HELD</span>}</td>
                                         <td>{item.isListed ? `${item.price} POL` : '--'}</td>
-                                        <td>{item.highestOffer > 0 ? `${item.highestOffer} POL` : '--'}</td>
+                                        <td>{item.highestOffer > 0 ? <span style={{color: '#0ecb81'}}>{item.highestOffer} POL</span> : '--'}</td>
                                         <td className="text-end pe-3">
                                             <Link href={`/asset/${item.id}`} target="_blank">
                                                 <button className="btn btn-sm btn-outline-light" style={{ fontSize: '10px' }}>VIEW</button>
