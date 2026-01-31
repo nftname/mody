@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import MarketTicker from '@/components/MarketTicker';
@@ -104,6 +104,23 @@ const SortArrows = ({ active, direction, onClick }: any) => (
 
 const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
 
+const formatTimeAgo = (timestamp: number) => {
+    if (!timestamp || timestamp === 0) return '...'; 
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (diff < 0) return 'Just now'; 
+    if (days > 365) return 'Recently'; 
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m`;
+    if (hours < 24) return `${hours}h`;
+    return `${days}d`;
+};
+
 const getPaginationRange = (current: number, total: number) => {
     if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
     const range = [];
@@ -135,8 +152,9 @@ function MarketPage() {
     { name: "OPTIMISM", icon: "bi-graph-up-arrow", isCustom: false }
   ];
 
-  const [activeFilter, setActiveFilter] = useState('Conviction');
-  const [timeFilter, setTimeFilter] = useState('All');
+  // Default filter: 'Conviction'
+    const [activeFilter, setActiveFilter] = useState('Conviction');
+    const [timeFilter, setTimeFilter] = useState('All');
   const [currencyFilter, setCurrencyFilter] = useState('All'); 
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); 
   
@@ -154,24 +172,33 @@ function MarketPage() {
           try {
               const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
               const data = await res.json();
+              
+              const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
+              const ethPrice = data['ethereum']?.usd || 0;
+
               setExchangeRates({
-                  pol: data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0, 
-                  eth: data['ethereum']?.usd || 0
+                  pol: polPrice, 
+                  eth: ethPrice
               });
-          } catch (e) { }
+          } catch (e) { 
+              console.error("Price API Error", e); 
+          }
       };
       fetchPrices();
       const interval = setInterval(fetchPrices, 30000); 
       return () => clearInterval(interval);
   }, []);
 
+  // --- FAVORITES LOGIC ---
   useEffect(() => {
     if (isConnected && address) {
         const fetchFavorites = async () => {
             try {
                 const { data } = await supabase.from('favorites').select('token_id').eq('wallet_address', address);
-                if (data) setFavoriteIds(new Set(data.map((i: any) => Number(i.token_id))));
-            } catch (e) { }
+                if (data) {
+                    setFavoriteIds(new Set(data.map((i: any) => Number(i.token_id))));
+                }
+            } catch (e) { console.error("Fav fetch error", e); }
         };
         fetchFavorites();
     }
@@ -189,170 +216,164 @@ function MarketPage() {
       } catch (err) { }
   };
 
-  const fetchMarketData = useCallback(async () => {
-      if (!publicClient) return;
-      setLoading(true);
-      setCurrentPage(1);
-
-      try {
-        // ----------------------------------------------------------------
-        // 1. ALWAYS FETCH LISTINGS FIRST (To create the Price Map)
-        // ----------------------------------------------------------------
-        let listedPrices: Record<number, number> = {};
-        
-        // We always fetch contract listings to know what is currently valid
-        const listingsData = await publicClient.readContract({
-            address: MARKETPLACE_ADDRESS as `0x${string}`,
-            abi: MARKET_ABI,
-            functionName: 'getAllListings'
-        });
-        const [listingIds, listingPrices] = listingsData;
-        
-        listingIds.forEach((id, i) => {
-            listedPrices[Number(id)] = parseFloat(formatEther(listingPrices[i]));
-        });
-
-        // ----------------------------------------------------------------
-        // 2. FETCH SUPABASE DATA (Activity, Offers, Votes)
-        // ----------------------------------------------------------------
-        const { data: allActivities } = await supabase.from('activities').select('*').order('created_at', { ascending: false }); 
-        const { data: offersData } = await supabase.from('offers').select('token_id').eq('status', 'active');
-        const { data: votesData } = await supabase.from('conviction_votes').select('token_id');
-
-        const statsMap: Record<number, any> = {}; 
-        const now = Date.now();
-        
-        let timeLimit = Infinity;
-        if (timeFilter === '1H') timeLimit = 3600 * 1000;
-        else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
-        else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
-        else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
-
-        // Process Activities
-        if (allActivities) {
-            allActivities.forEach((act: any) => {
-                const tid = Number(act.token_id);
-                const price = Number(act.price) || 0;
-                const actTime = new Date(act.created_at).getTime();
-
-                if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, lastActive: 0, offers: 0, conviction: 0 };
-                
-                if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
-                
-                if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
-                    statsMap[tid].lastSale = price;
-                }
-
-                if (act.activity_type === 'Sale' || act.activity_type === 'Mint') {
-                    const age = now - actTime;
-                    if (age >= 0 && age <= timeLimit) {
-                        statsMap[tid].volume += price;
-                        statsMap[tid].sales += 1;
-                    }
-                }
-            });
-        }
-
-        // Process Offers
-        if (offersData) {
-            offersData.forEach((o: any) => {
-                const tid = Number(o.token_id);
-                if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, lastActive: 0, offers: 0, conviction: 0 };
-                statsMap[tid].offers += 1;
-            });
-        }
-
-        // Process Votes
-        if (votesData) {
-            votesData.forEach((v: any) => {
-                const tid = Number(v.token_id);
-                if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, lastActive: 0, offers: 0, conviction: 0 };
-                statsMap[tid].conviction += 1;
-            });
-        }
-
-        // ----------------------------------------------------------------
-        // 3. SELECT TARGET IDS & MERGE WITH PRICE MAP
-        // ----------------------------------------------------------------
-        let targetIds: number[] = [];
-
-        if (activeFilter === 'Listings') {
-            // Use IDs from the Contract
-            targetIds = listingIds.map(t => Number(t));
-        } else {
-            // Use IDs from the Database (Activity + Offers + Votes)
-            targetIds = Object.keys(statsMap).map(Number);
-            
-            if (activeFilter === 'Watchlist') {
-                 const { data: favs } = await supabase.from('favorites').select('token_id').eq('wallet_address', address);
-                 const favSet = new Set(favs?.map((f:any) => Number(f.token_id)));
-                 targetIds = targetIds.filter(id => favSet.has(id));
-            }
-
-            // Time filter for non-listings
-            if (timeFilter !== 'All') {
-                const limit = (timeFilter === '1H') ? 3600*1000 : (timeFilter === '6H') ? 21600*1000 : (timeFilter === '24H') ? 86400*1000 : 604800*1000;
-                targetIds = targetIds.filter(id => (now - statsMap[id].lastActive) <= limit);
-            }
-        }
-
-        // ----------------------------------------------------------------
-        // 4. FETCH METADATA & BUILD FINAL OBJECTS
-        // ----------------------------------------------------------------
-        const items = await Promise.all(targetIds.map(async (id) => {
-            try {
-                const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [BigInt(id)] });
-                const metaRes = await fetch(resolveIPFS(uri));
-                const meta = metaRes.ok ? await metaRes.json() : {};
-                const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
-                
-                const stats = statsMap[id] || { volume: 0, sales: 0, lastSale: 0, offers: 0, conviction: 0 };
-                
-                // IMPORTANT: We use the PRICE from the 'listedPrices' map we fetched in Step 1
-                const currentPrice = listedPrices[id] || 0; 
-
-                const trendingScore = stats.volume + (stats.offers * 5); 
-
-                return {
-                    id: id,
-                    name: meta.name || `Asset #${id}`,
-                    tier: tierAttr,
-                    pricePol: currentPrice, // This now reflects the REAL listing price or 0
-                    lastSale: stats.lastSale,
-                    volume: stats.volume,
-                    trendingScore: trendingScore,
-                    offersCount: stats.offers,
-                    convictionScore: stats.conviction,
-                    listed: currentPrice > 0 ? 'Now' : 'No', 
-                    change: 0,
-                    currencySymbol: 'POL'
-                };
-            } catch (e) { return null; }
-        }));
-
-        const validItems = items.filter(i => i !== null);
-
-        // ----------------------------------------------------------------
-        // 5. SORTING
-        // ----------------------------------------------------------------
-        if (activeFilter === 'Top') validItems.sort((a: any, b: any) => b.volume - a.volume);
-        else if (activeFilter === 'Trending') validItems.sort((a: any, b: any) => b.trendingScore - a.trendingScore);
-        else if (activeFilter === 'Most Offers') validItems.sort((a: any, b: any) => b.offersCount - a.offersCount);
-        else if (activeFilter === 'Conviction') validItems.sort((a: any, b: any) => b.convictionScore - a.convictionScore);
-        else if (activeFilter === 'Listings') validItems.sort((a: any, b: any) => a.pricePol - b.pricePol);
-        else validItems.sort((a: any, b: any) => a.id - b.id);
-
-        setRealListings(validItems);
-
-      } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
-  }, [publicClient, activeFilter, timeFilter, address]);
-
   useEffect(() => {
-      fetchMarketData();
-  }, [fetchMarketData]);
+    const fetchMarketData = async () => {
+        if (!publicClient) return;
+        try {
+            // 1. Fetch Listings from Smart Contract
+            const data = await publicClient.readContract({
+                address: MARKETPLACE_ADDRESS as `0x${string}`,
+                abi: MARKET_ABI,
+                functionName: 'getAllListings'
+            });
+            const [tokenIds, prices] = data;
+
+            if (tokenIds.length === 0) { setRealListings([]); setLoading(false); return; }
+
+            // 2. Fetch Data from Supabase (Activities, Offers, Votes)
+            const { data: allActivities } = await supabase
+                .from('activities')
+                .select('*')
+                .order('created_at', { ascending: false }); 
+            
+            const { data: offersData } = await supabase
+                .from('offers')
+                .select('token_id')
+                .eq('status', 'active');
+
+            const { data: votesData } = await supabase
+                .from('conviction_votes')
+                .select('token_id');
+            
+            // Map Conviction Votes
+            const votesMap: Record<number, number> = {};
+            if (votesData) {
+                votesData.forEach((v: any) => {
+                   const t = Number(v.token_id);
+                   votesMap[t] = (votesMap[t] || 0) + 1;
+                });
+            }
+
+            const statsMap: Record<number, any> = {}; 
+            const now = Date.now();
+
+            // --- Time Filter Logic ---
+            let timeLimit = Infinity;
+            if (timeFilter === '1H') timeLimit = 3600 * 1000;
+            else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
+            else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
+            else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
+
+            if (allActivities) {
+                allActivities.forEach((act: any) => {
+                    const tid = Number(act.token_id);
+                    const price = Number(act.price) || 0;
+                    const actTime = new Date(act.created_at).getTime();
+                
+                    // Init stats with lastActive tracking
+                    if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
+
+                    // TRACK LATEST ACTIVITY FOR FILTERING
+                    if (actTime > statsMap[tid].lastActive) {
+                        statsMap[tid].lastActive = actTime;
+                    }
+
+                    // 1. Capture Last Sale (Always latest known price)
+                    if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
+                         statsMap[tid].lastSale = price; 
+                    }
+
+                    // 2. Calculate Volume (Strictly within Time Limit)
+                    if (act.activity_type === 'Sale' || act.activity_type === 'Mint') {
+                        const age = now - actTime;
+                        if (age >= 0 && age <= timeLimit) {
+                            statsMap[tid].volume += price;
+                            statsMap[tid].sales += 1;
+                        }
+                    }
+
+                    // 3. Track Listing Time
+                    if ((act.activity_type === 'List' || act.activity_type === 'Mint')) {
+                        if (actTime > statsMap[tid].listedTime) {
+                            statsMap[tid].listedTime = actTime;
+                        }
+                    }
+                });
+            }
+
+            const offersCountMap: any = {};
+            if (offersData) offersData.forEach((o: any) => {
+                const tid = Number(o.token_id);
+                offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
+            });
+
+            // 3. Merge On-Chain & Off-Chain Data
+            const items = await Promise.all(tokenIds.map(async (id, index) => {
+                try {
+                    const tid = Number(id); 
+                    const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
+                    const metaRes = await fetch(resolveIPFS(uri));
+                    const meta = metaRes.ok ? await metaRes.json() : {};
+                    const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
+                    
+                    const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
+                    const offersCount = offersCountMap[tid] || 0;
+                    const conviction = votesMap[tid] || 0;
+                    
+                    // Trending Score Formula
+                    const trendingScore = stats.volume + (offersCount * 5); 
+
+                    return {
+                        id: tid,
+                        name: meta.name || `Asset #${id}`,
+                        tier: tierAttr,
+                        pricePol: parseFloat(formatEther(prices[index])), 
+                        lastSale: stats.lastSale,
+                        volume: stats.volume,
+                        listedTime: stats.listedTime,
+                        lastActive: stats.lastActive,
+                        trendingScore: trendingScore,
+                        offersCount: offersCount,
+                        convictionScore: conviction,
+                        listed: 'Now', 
+                        change: 0,
+                        currencySymbol: 'POL'
+                    };
+                } catch (e) { return null; }
+            }));
+
+            setRealListings(items.filter(i => i !== null));
+        } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
+    };
+
+    fetchMarketData();
+  }, [publicClient, timeFilter]); 
 
   const finalData = useMemo(() => {
       let processedData = [...realListings];
+
+      // 1. REAL TIME FILTERING (Hide inactive assets)
+      if (timeFilter !== 'All') {
+          let limit = Infinity;
+          const now = Date.now();
+          if (timeFilter === '1H') limit = 3600 * 1000;
+          else if (timeFilter === '6H') limit = 3600 * 6 * 1000;
+          else if (timeFilter === '24H') limit = 3600 * 24 * 1000;
+          else if (timeFilter === '7D') limit = 3600 * 24 * 7 * 1000;
+
+          processedData = processedData.filter(item => {
+              const timeDiff = now - (item.lastActive || 0); 
+              return timeDiff <= limit;
+          });
+      }
+      
+      if (activeFilter === 'Top') { processedData.sort((a, b) => b.volume - a.volume); }
+      else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
+      else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
+      else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
+      else if (activeFilter === 'Conviction') { processedData.sort((a, b) => b.convictionScore - a.convictionScore); }
+      else { processedData.sort((a, b) => a.id - b.id); }
+
       if (sortConfig) {
           processedData.sort((a: any, b: any) => {
               const valA = a[sortConfig.key];
@@ -363,16 +384,15 @@ function MarketPage() {
           });
       }
       return processedData;
-  }, [sortConfig, realListings]);
+  }, [activeFilter, favoriteIds, sortConfig, realListings, timeFilter]);
 
   const totalPages = Math.ceil(finalData.length / ITEMS_PER_PAGE);
   const currentTableData = finalData.slice(
       (currentPage - 1) * ITEMS_PER_PAGE,
       currentPage * ITEMS_PER_PAGE
   );
-  const paginationRange = getPaginationRange(currentPage, totalPages);
 
-  const goToPage = (page: number) => { if (page >= 1 && page <= totalPages) setCurrentPage(page); };
+  const paginationRange = getPaginationRange(currentPage, totalPages);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'desc';
@@ -380,9 +400,12 @@ function MarketPage() {
     setSortConfig({ key, direction });
   };
 
+  const goToPage = (page: number) => { if (page >= 1 && page <= totalPages) setCurrentPage(page); };
+
   const formatPrice = (priceInPol: number) => {
-      if (!priceInPol || priceInPol === 0) return '---'; // Ensures no 0.00 POL
-      if (!exchangeRates.pol || exchangeRates.pol === 0) return `${priceInPol.toFixed(2)} POL`;
+      if (!exchangeRates.pol || exchangeRates.pol === 0 || !exchangeRates.eth || exchangeRates.eth === 0) {
+          return `${priceInPol.toFixed(2)} POL`;
+      }
 
       if (currencyFilter === 'All') {
           const priceInUsd = priceInPol * exchangeRates.pol;
@@ -391,8 +414,10 @@ function MarketPage() {
       else if (currencyFilter === 'ETH') {
           const priceInUsd = priceInPol * exchangeRates.pol;
           const valInEth = priceInUsd / exchangeRates.eth;
+          
           if (valInEth === 0) return '0 ETH';
-          return `${valInEth.toFixed(4)} ETH`; 
+          if (valInEth < 0.000001) return '< 0.000001 ETH';
+          return `${valInEth.toFixed(6)} ETH`; 
       }
       return `${priceInPol.toFixed(2)} POL`;
   };
@@ -429,11 +454,13 @@ function MarketPage() {
         </div>
       </div>
 
+      {/* REPLACED 'container' with 'market-content-wrapper' for matching desktop width */}
       <section className="market-content-wrapper mb-0 mt-4">
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" style={{ borderColor: '#222 !important', padding: '2px 0' }}>
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
                   <div onClick={() => setActiveFilter('Watchlist')} className={`cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : 'text-header-gray'}`} style={{ fontSize: '13.5px', fontWeight: 'bold', paddingBottom: '4px' }}>Watchlist</div>
                   
+                  {/* Conviction Filter (Replaces All Assets) */}
                   <div onClick={() => setActiveFilter('Conviction')} className={`cursor-pointer filter-item fw-bold ${activeFilter === 'Conviction' ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
                       Conviction <i className="bi bi-fire text-warning ms-1"></i>
                   </div>
@@ -441,7 +468,6 @@ function MarketPage() {
                   {['Trending', 'Top', 'Most Offers'].map(f => (
                       <div key={f} onClick={() => setActiveFilter(f)} className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>{f}</div>
                   ))}
-                  <div onClick={() => setActiveFilter('Listings')} className={`cursor-pointer filter-item fw-bold ${activeFilter === 'Listings' ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>Listings</div>
               </div>
               <div className="d-flex gap-3 align-items-center w-100 w-lg-auto overflow-auto no-scrollbar justify-content-start justify-content-lg-end" style={{ height: '32px', marginTop: '2px', marginBottom: '2px' }}>
                    <div className="binance-filter-group d-flex align-items-center flex-shrink-0" style={{ height: '100%' }}>
@@ -458,10 +484,12 @@ function MarketPage() {
           </div>
       </section>
 
+      {/* REPLACED 'container' with 'market-content-wrapper' for matching desktop width */}
       <section className="market-content-wrapper mt-5 pt-0">
           <div className="table-responsive no-scrollbar">
               {loading ? ( <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
-              ) : currentTableData.length === 0 ? ( <div className="text-center py-5 text-secondary">No items found for this filter.</div>
+              ) : activeFilter === 'Watchlist' && finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">Your watchlist is empty.</div>
+              ) : finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">No items listed for sale yet.</div>
               ) : (
                   <table className="table align-middle mb-0" style={{ minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0' }}>
                       <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#1E1E1E' }}>
@@ -475,7 +503,9 @@ function MarketPage() {
                               <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 0', borderBottom: '1px solid #333', textAlign: 'left', width: '15%', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Price <SortArrows active={sortConfig?.key === 'pricePol'} direction={sortConfig?.direction} /></div>
                               </th>
+                              {/* Shifting Right via Padding (10%) */}
                               <th style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 40px', borderBottom: '1px solid #333', textAlign: 'left', width: '18%' }}>Last Sale</th>
+                              {/* Shifting Right via Padding (20%) */}
                               <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 60px', borderBottom: '1px solid #333', textAlign: 'left', width: '20%', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
@@ -505,9 +535,11 @@ function MarketPage() {
                                     <td className="text-start" style={{ padding: '14px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white fw-bold" style={{ fontSize: '14px', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
                                     </td>
+                                    {/* Match Last Sale Header Padding (40px) */}
                                     <td className="text-start" style={{ padding: '14px 10px 14px 40px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '400', color: '#B0B0B0' }}>{item.lastSale ? formatPrice(item.lastSale) : '---'}</span>
                                     </td>
+                                    {/* Match Volume Header Padding (60px) + Fixed Arrow Position */}
                                     <td className="text-start" style={{ padding: '14px 10px 14px 60px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center justify-content-start gap-2">
                                             <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
