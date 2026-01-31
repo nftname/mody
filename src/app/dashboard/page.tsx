@@ -692,23 +692,46 @@ export default function DashboardPage() {
                     {isCopied ? <i className="bi bi-check-lg text-success"></i> : <i className="bi bi-copy"></i>}
                 </button>   {/* --- SECRET ADMIN BUTTON --- */}
                 {isAdmin && (
-                    <Link href="/admin" className="ms-3 text-decoration-none">
-                        <div 
-                            className="d-flex align-items-center justify-content-center" 
-                            style={{ 
-                                width: '24px', 
-                                height: '24px', 
-                                background: 'rgba(252, 213, 53, 0.1)', 
-                                border: '1px solid #FCD535', 
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                transition: '0.2s'
-                            }}
-                            title="Control Unit"
-                        >
-                            <i className="bi bi-shield-lock-fill" style={{ fontSize: '12px', color: '#FCD535' }}></i>
-                        </div>
-                    </Link>
+                    <div className="d-flex align-items-center gap-2 ms-3">
+                        {/* Existing Admin Control Button */}
+                        <Link href="/admin" className="text-decoration-none">
+                            <div 
+                                className="d-flex align-items-center justify-content-center" 
+                                style={{ 
+                                    width: '32px', 
+                                    height: '32px', 
+                                    background: 'rgba(252, 213, 53, 0.1)', 
+                                    border: '1px solid #FCD535', 
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    transition: '0.2s'
+                                }}
+                                title="Control Unit"
+                            >
+                                <i className="bi bi-shield-lock-fill" style={{ fontSize: '14px', color: '#FCD535' }}></i>
+                            </div>
+                        </Link>
+
+                        {/* NEW Market Monitor Button */}
+                        <Link href="/admin/scanner" className="text-decoration-none">
+                            <div 
+                                className="d-flex align-items-center justify-content-center" 
+                                style={{ 
+                                    width: '32px', 
+                                    height: '32px', 
+                                    background: 'linear-gradient(135deg, #004d40 0%, #002b36 100%)', 
+                                    border: '1px solid #004d40', 
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    transition: '0.2s',
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
+                                }}
+                                title="Market Monitor"
+                            >
+                                <i className="bi bi-activity" style={{ fontSize: '14px', color: '#4db6ac' }}></i>
+                            </div>
+                        </Link>
+                    </div>
                 )}
 
             </div>
