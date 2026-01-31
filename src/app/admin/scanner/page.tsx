@@ -48,7 +48,8 @@ const MARKET_ABI = parseAbi([
 
 const REGISTRY_ABI = parseAbi([
     "function totalSupply() view returns (uint256)",
-    "function ownerOf(uint256 tokenId) view returns (address)"
+    "function ownerOf(uint256 tokenId) view returns (address)",
+    "function tokenURI(uint256 tokenId) view returns (string)"
 ]);
 
 export default function AdminScannerPage() {
@@ -59,7 +60,6 @@ export default function AdminScannerPage() {
     const [loading, setLoading] = useState(true);
     const [allAssets, setAllAssets] = useState<any[]>([]);
     
-    // استخدام القائمة الثابتة فوراً
     const [internalWallets, setInternalWallets] = useState<string[]>(BOT_WALLETS);
     
     const ITEMS_PER_PAGE = 20;
@@ -68,7 +68,6 @@ export default function AdminScannerPage() {
     const [sortMode, setSortMode] = useState('highest_offer'); 
     const [lengthFilter, setLengthFilter] = useState('All'); 
 
-    // محاولة جلب إضافية (اختياري)
     useEffect(() => {
         const fetchWallets = async () => {
             try {
@@ -88,6 +87,8 @@ export default function AdminScannerPage() {
         if (allAssets.length === 0) setLoading(true); 
         
         try {
+            console.log('🔍 بدء جلب البيانات...');
+            
             // 1. Blockchain Data
             const totalSupplyBig = await publicClient.readContract({
                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
@@ -95,6 +96,7 @@ export default function AdminScannerPage() {
                 functionName: 'totalSupply'
             });
             const totalCount = Number(totalSupplyBig);
+            console.log(`📊 إجمالي الأصول: ${totalCount}`);
             
             const [listedIds, listedPrices, sellers] = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
@@ -111,38 +113,56 @@ export default function AdminScannerPage() {
             });
 
             // 2. Database (Offers)
-            const { data: offers } = await supabase.from('offers').select('token_id, price').eq('status', 'active');
+            const { data: offers } = await supabase
+                .from('offers')
+                .select('token_id, price')
+                .eq('status', 'active');
+            
             const offersMap = new Map();
-            if (offers) offers.forEach((o: any) => {
-                const tid = o.token_id.toString();
-                if (!offersMap.has(tid) || o.price > offersMap.get(tid)) offersMap.set(tid, o.price);
-            });
+            if (offers) {
+                offers.forEach((o: any) => {
+                    const tid = o.token_id.toString();
+                    if (!offersMap.has(tid) || o.price > offersMap.get(tid)) {
+                        offersMap.set(tid, o.price);
+                    }
+                });
+            }
 
-            // 3. Database (NAMES - البحث الشامل المحسّن)
+            // 3. جلب جميع الأسماء من قاعدة البيانات
+            console.log('📥 جلب الأسماء من قاعدة البيانات...');
             const namesMap = new Map();
             
-            // محاولة 1: جدول assets
-            const { data: assetsTable } = await supabase
+            // جدول assets
+            const { data: assetsData, error: assetsError } = await supabase
                 .from('assets')
-                .select('token_id, name')
-                .not('name', 'is', null);
+                .select('token_id, name');
             
-            if (assetsTable && assetsTable.length > 0) {
-                assetsTable.forEach((a: any) => {
+            if (assetsError) {
+                console.error('❌ خطأ في جدول assets:', assetsError);
+            }
+            
+            if (assetsData && assetsData.length > 0) {
+                console.log(`✅ تم العثور على ${assetsData.length} صف في جدول assets`);
+                assetsData.forEach((a: any) => {
                     if (a.name && a.name.trim() !== '') {
                         namesMap.set(a.token_id.toString(), a.name.trim());
                     }
                 });
             }
 
-            // محاولة 2: جدول activities للأسماء المفقودة
-            const { data: activitiesTable } = await supabase
+            // جدول activities كبديل
+            const { data: activitiesData, error: activitiesError } = await supabase
                 .from('activities')
                 .select('token_id, token_name')
                 .not('token_name', 'is', null);
+            
+            if (activitiesError) {
+                console.error('❌ خطأ في جدول activities:', activitiesError);
+            }
                 
-            if (activitiesTable && activitiesTable.length > 0) {
-                activitiesTable.forEach((n: any) => {
+            if (activitiesData && activitiesData.length > 0) {
+                console.log(`✅ تم العثور على ${activitiesData.length} صف في جدول activities`);
+                activitiesData.forEach((n: any) => {
                     const tid = n.token_id.toString();
                     if (!namesMap.has(tid) && n.token_name && n.token_name.trim() !== '') {
                         namesMap.set(tid, n.token_name.trim());
@@ -150,14 +170,14 @@ export default function AdminScannerPage() {
                 });
             }
 
-            // محاولة 3: جدول nft_metadata (إذا كان موجوداً)
-            const { data: metadataTable } = await supabase
+            // جدول nft_metadata كبديل ثالث
+            const { data: metadataData, error: metadataError } = await supabase
                 .from('nft_metadata')
-                .select('token_id, name')
-                .not('name', 'is', null);
+                .select('token_id, name');
                 
-            if (metadataTable && metadataTable.length > 0) {
-                metadataTable.forEach((m: any) => {
+            if (!metadataError && metadataData && metadataData.length > 0) {
+                console.log(`✅ تم العثور على ${metadataData.length} صف في جدول nft_metadata`);
+                metadataData.forEach((m: any) => {
                     const tid = m.token_id.toString();
                     if (!namesMap.has(tid) && m.name && m.name.trim() !== '') {
                         namesMap.set(tid, m.name.trim());
@@ -167,7 +187,7 @@ export default function AdminScannerPage() {
 
             console.log(`✅ تم تحميل ${namesMap.size} اسم من قاعدة البيانات`);
 
-            // 4. Build List
+            // 4. بناء القائمة
             const allIds = Array.from({ length: totalCount }, (_, i) => i);
             const batchSize = 100; 
             let processedAssets: any[] = [];
@@ -194,15 +214,18 @@ export default function AdminScannerPage() {
                                 args: [BigInt(tid)]
                             });
                             currentOwner = ownerRaw.toLowerCase();
-                        } catch { currentOwner = 'burned'; }
+                        } catch { 
+                            currentOwner = 'burned'; 
+                        }
                     }
 
-                    // الحصول على الاسم الحقيقي من قاعدة البيانات
+                    // الحصول على الاسم الحقيقي
                     const realName = namesMap.get(tid);
-                    
+
                     return {
                         id: tid,
-                        name: realName || null, // نحفظ null إذا لم يكن هناك اسم
+                        name: realName || `UNNAMED_${tid}`, // إذا لم يكن هناك اسم، نضع علامة مؤقتة
+                        hasRealName: !!realName, // flag للتحقق
                         owner: currentOwner,
                         seller: sellerAddress,
                         isListed: !!listing,
@@ -213,6 +236,10 @@ export default function AdminScannerPage() {
                 }));
                 processedAssets = [...processedAssets, ...batchResults];
             }
+            
+            console.log(`✅ تم معالجة ${processedAssets.length} أصل`);
+            console.log(`📝 أصول لها أسماء حقيقية: ${processedAssets.filter(a => a.hasRealName).length}`);
+            
             setAllAssets(processedAssets);
         } catch (e) { 
             console.error('❌ خطأ في جلب البيانات:', e); 
@@ -223,7 +250,9 @@ export default function AdminScannerPage() {
 
     useEffect(() => { if (publicClient) fetchMarketData(); }, [publicClient]);
     useEffect(() => {
-        const interval = setInterval(() => { if (publicClient && !loading) fetchMarketData(); }, 15000);
+        const interval = setInterval(() => { 
+            if (publicClient && !loading) fetchMarketData(); 
+        }, 30000); // كل 30 ثانية
         return () => clearInterval(interval);
     }, [publicClient, loading]);
 
@@ -248,7 +277,7 @@ export default function AdminScannerPage() {
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             data = data.filter(item => {
-                const nameMatch = item.name ? item.name.toLowerCase().includes(q) : false;
+                const nameMatch = item.hasRealName ? item.name.toLowerCase().includes(q) : false;
                 const idMatch = item.id.includes(q);
                 return nameMatch || idMatch;
             });
@@ -256,8 +285,11 @@ export default function AdminScannerPage() {
         
         if (lengthFilter !== 'All') {
             const len = parseInt(lengthFilter);
-            if (lengthFilter === '4+') data = data.filter(item => item.nameLength >= 4);
-            else data = data.filter(item => item.nameLength === len);
+            if (lengthFilter === '4+') {
+                data = data.filter(item => item.hasRealName && item.nameLength >= 4);
+            } else {
+                data = data.filter(item => item.hasRealName && item.nameLength === len);
+            }
         }
         
         if (sortMode === 'highest_offer') data.sort((a, b) => (Number(b.highestOffer) || 0) - (Number(a.highestOffer) || 0));
@@ -303,28 +335,28 @@ export default function AdminScannerPage() {
             </div>
 
             <div className="d-flex flex-wrap gap-3 mb-4 align-items-center p-3 rounded" style={{ backgroundColor: '#111', border: '1px solid #333' }}>
-                <input type="text" placeholder="Search Name or ID..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="form-control form-control-sm" style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff', maxWidth: '300px' }} />
-                <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={sortMode} onChange={(e) => setSortMode(e.target.value)}><option value="highest_offer">Highest Offer</option><option value="newest">Newest</option><option value="price_high">Price High</option><option value="price_low">Price Low</option></select>
-                <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={lengthFilter} onChange={(e) => { setLengthFilter(e.target.value); setCurrentPage(1); }}><option value="All">Length: All</option><option value="1">1 Digit</option><option value="2">2 Digits</option><option value="3">3 Digits</option><option value="4+">4+</option></select>
+                <input type="text" placeholder="ابحث عن اسم أو رقم..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="form-control form-control-sm" style={{ backgroundColor: '#000', border: '1px solid #444', color: '#fff', maxWidth: '300px' }} />
+                <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={sortMode} onChange={(e) => setSortMode(e.target.value)}><option value="highest_offer">أعلى عرض</option><option value="newest">الأحدث</option><option value="price_high">السعر (الأعلى)</option><option value="price_low">السعر (الأقل)</option></select>
+                <select className="form-select form-select-sm w-auto bg-black text-white border-secondary" value={lengthFilter} onChange={(e) => { setLengthFilter(e.target.value); setCurrentPage(1); }}><option value="All">الطول: الكل</option><option value="1">حرف واحد</option><option value="2">حرفان</option><option value="3">3 أحرف</option><option value="4+">4+ أحرف</option></select>
             </div>
 
             <div className="table-responsive">
                 <table className="table table-dark table-hover mb-0" style={{ fontSize: '13px' }}>
                     <thead>
                         <tr style={{ color: '#888', borderBottom: '1px solid #333' }}>
-                            <th className="py-3 ps-3">NAME</th>
-                            <th className="py-3">WALLET</th>
-                            <th className="py-3">STATUS</th>
-                            <th className="py-3">PRICE</th>
-                            <th className="py-3">TOP OFFER</th>
-                            <th className="py-3 text-end pe-3">ACTION</th>
+                            <th className="py-3 ps-3">الاسم</th>
+                            <th className="py-3">المحفظة</th>
+                            <th className="py-3">الحالة</th>
+                            <th className="py-3">السعر</th>
+                            <th className="py-3">أعلى عرض</th>
+                            <th className="py-3 text-end pe-3">الإجراء</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading && allAssets.length === 0 ? (
-                            <tr><td colSpan={6} className="text-center py-5 text-warning">SCANNING MARKET...</td></tr>
+                            <tr><td colSpan={6} className="text-center py-5 text-warning">جاري فحص السوق...</td></tr>
                         ) : paginatedData.length === 0 ? (
-                            <tr><td colSpan={6} className="text-center py-5 text-muted">NO ACTIVE ASSETS FOUND</td></tr>
+                            <tr><td colSpan={6} className="text-center py-5 text-muted">لم يتم العثور على أصول نشطة</td></tr>
                         ) : (
                             paginatedData.map((item) => {
                                 const adminAddr = address ? address.toLowerCase().trim() : '';
@@ -334,33 +366,39 @@ export default function AdminScannerPage() {
 
                                 return (
                                     <tr key={item.id}>
-                                        <td className="ps-3 fw-bold text-white">
-                                            {/* عرض الاسم الحقيقي فقط إذا كان موجوداً */}
-                                            {item.name ? (
-                                                <span style={{ color: '#FCD535', fontSize: '15px' }}>{item.name}</span>
+                                        <td className="ps-3 fw-bold">
+                                            {item.hasRealName ? (
+                                                <>
+                                                    <span style={{ color: '#FCD535', fontSize: '16px', fontWeight: 'bold' }}>
+                                                        {item.name}
+                                                    </span>
+                                                    <span style={{ color: '#555', fontSize: '10px', marginLeft: '8px' }}>
+                                                        #{item.id}
+                                                    </span>
+                                                </>
                                             ) : (
-                                                <span style={{ color: '#888', fontSize: '13px' }}>Token #{item.id}</span>
-                                            )}
-                                            {/* رقم التوكن بجانب الاسم بحجم صغير */}
-                                            {item.name && (
-                                                <span style={{ color: '#555', fontSize: '10px', marginLeft: '8px' }}>#{item.id}</span>
+                                                <span style={{ color: '#f44336', fontSize: '13px' }}>
+                                                    ⚠️ لا يوجد اسم مسجل (ID: {item.id})
+                                                </span>
                                             )}
                                         </td>
                                         <td>
                                             <div className="d-flex align-items-center">
-                                                <span className="font-monospace me-2" style={{ color: '#FCD535' }}>
-                                                    {isAdmin ? 'YOU (ADMIN)' : `${item.owner.slice(0, 6)}...${item.owner.slice(-4)}`}
+                                                <span className="font-monospace me-2" style={{ color: '#888' }}>
+                                                    {isAdmin ? 'أنت (ADMIN)' : `${item.owner.slice(0, 6)}...${item.owner.slice(-4)}`}
                                                 </span>
                                                 {isInternal && !isAdmin && <span className="badge bg-warning text-dark" style={{fontSize: '9px'}}>BOT</span>}
                                             </div>
                                         </td>
                                         <td>
-                                            {item.isListed ? <span className="text-success fw-bold">LISTED</span> : <span style={{ color: '#ccc' }}>HELD</span>}
+                                            {item.isListed ? <span className="text-success fw-bold">معروض</span> : <span style={{ color: '#ccc' }}>محفوظ</span>}
                                         </td>
                                         <td>{item.isListed ? `${item.price} POL` : '--'}</td>
                                         <td>{item.highestOffer > 0 ? <span style={{color: '#0ecb81'}}>{item.highestOffer} POL</span> : '--'}</td>
                                         <td className="text-end pe-3">
-                                            <Link href={`/asset/${item.id}`} target="_blank"><button className="btn btn-sm btn-outline-light" style={{ fontSize: '10px' }}>VIEW</button></Link>
+                                            <Link href={`/asset/${item.id}`} target="_blank">
+                                                <button className="btn btn-sm btn-outline-light" style={{ fontSize: '10px' }}>عرض</button>
+                                            </Link>
                                         </td>
                                     </tr>
                                 );
@@ -372,10 +410,10 @@ export default function AdminScannerPage() {
             
             {!loading && filteredData.length > 0 && (
                 <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary">
-                    <div className="text-muted small">Page {currentPage} of {totalPages}</div>
+                    <div className="text-muted small">الصفحة {currentPage} من {totalPages}</div>
                     <div className="d-flex gap-2">
-                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="btn btn-sm btn-outline-secondary">Previous</button>
-                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="btn btn-sm btn-outline-secondary">Next</button>
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="btn btn-sm btn-outline-secondary">السابق</button>
+                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="btn btn-sm btn-outline-secondary">التالي</button>
                     </div>
                 </div>
             )}
