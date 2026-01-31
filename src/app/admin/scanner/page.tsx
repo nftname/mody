@@ -7,9 +7,9 @@ import { parseAbi, formatEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 
-// --- القائمة الثابتة: تشمل الأدمن + 30 بوت ---
+// --- القائمة الذهبية: الأدمن + 30 بوت (تم دمجها لضمان الفلتر) ---
 const BOT_WALLETS = [
-    "0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e", // Admin Wallet
+    "0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e", // Admin
     "0xf3e2544af3e7ba1687d852e80e7cb6c850b797b6",
     "0x02f75874846d09c89f55cae371c5a8d6d3afd9ac",
     "0x266e228c9d9b540caa2e6994ce7c61e58b05d36b",
@@ -58,6 +58,8 @@ export default function AdminScannerPage() {
     const [viewMode, setViewMode] = useState<'internal' | 'external'>('internal');
     const [loading, setLoading] = useState(true);
     const [allAssets, setAllAssets] = useState<any[]>([]);
+    
+    // استخدمنا القائمة الثابتة مباشرة لأنها أسرع وأضمن
     const [internalWallets, setInternalWallets] = useState<string[]>(BOT_WALLETS);
     
     const ITEMS_PER_PAGE = 20;
@@ -66,7 +68,7 @@ export default function AdminScannerPage() {
     const [sortMode, setSortMode] = useState('highest_offer'); 
     const [lengthFilter, setLengthFilter] = useState('All'); 
 
-    // محاولة جلب البوتات من API أيضاً (للاحتياط)
+    // API Backup (اختياري)
     useEffect(() => {
         const fetchWallets = async () => {
             try {
@@ -76,7 +78,7 @@ export default function AdminScannerPage() {
                     const combined = [...new Set([...BOT_WALLETS, ...data.wallets.map((w: string) => w.toLowerCase().trim())])];
                     setInternalWallets(combined);
                 }
-            } catch (e) { console.error("Using Hardcoded List"); }
+            } catch (e) { /* Silent Fail */ }
         };
         fetchWallets();
     }, []);
@@ -86,6 +88,7 @@ export default function AdminScannerPage() {
         if (allAssets.length === 0) setLoading(true); 
         
         try {
+            // 1. Blockchain Data
             const totalSupplyBig = await publicClient.readContract({
                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                 abi: REGISTRY_ABI,
@@ -107,6 +110,7 @@ export default function AdminScannerPage() {
                 });
             });
 
+            // 2. Database (Offers)
             const { data: offers } = await supabase.from('offers').select('token_id, price').eq('status', 'active');
             const offersMap = new Map();
             if (offers) offers.forEach((o: any) => {
@@ -114,13 +118,23 @@ export default function AdminScannerPage() {
                 if (!offersMap.has(tid) || o.price > offersMap.get(tid)) offersMap.set(tid, o.price);
             });
 
-            // جلب الأسماء
-            const { data: namesData } = await supabase.from('activities').select('token_id, token_name').eq('activity_type', 'Mint'); 
+            // 3. Database (Names) - تم توسيع البحث ليشمل كل الأنشطة وليس Mint فقط
+            const { data: namesData } = await supabase
+                .from('activities')
+                .select('token_id, token_name')
+                .not('token_name', 'is', null); // جلب أي صف يحتوي على اسم
+                
             const namesMap = new Map();
-            if (namesData) namesData.forEach((n: any) => {
-                if (n.token_name) namesMap.set(n.token_id.toString(), n.token_name);
-            });
+            if (namesData) {
+                namesData.forEach((n: any) => {
+                    // إذا وجدنا اسماً، نحفظه. الترتيب التلقائي للداتا بيز سيضمن دقة مقبولة
+                    if (n.token_name && n.token_name !== '') {
+                        namesMap.set(n.token_id.toString(), n.token_name);
+                    }
+                });
+            }
 
+            // 4. Build List
             const allIds = Array.from({ length: totalCount }, (_, i) => i);
             const batchSize = 100; 
             let processedAssets: any[] = [];
@@ -150,7 +164,8 @@ export default function AdminScannerPage() {
                         } catch { currentOwner = 'burned'; }
                     }
 
-                    const realName = namesMap.get(tid) || `Name #${tid}`; 
+                    // هنا نستخدم الاسم من الداتا بيز، وإذا لم يوجد نعرض التوكن ID
+                    const realName = namesMap.get(tid) || `Token #${tid}`; 
 
                     return {
                         id: tid,
@@ -160,7 +175,7 @@ export default function AdminScannerPage() {
                         isListed: !!listing,
                         price: listing ? listing.price : null,
                         highestOffer: highestOffer || 0,
-                        nameLength: realName.length 
+                        nameLength: realName.includes('Token #') ? 0 : realName.length 
                     };
                 }));
                 processedAssets = [...processedAssets, ...batchResults];
@@ -177,7 +192,6 @@ export default function AdminScannerPage() {
 
     const filteredData = useMemo(() => {
         let data = [...allAssets];
-        // نستخدم المصفوفة الثابتة مباشرة لضمان عدم الاستثناء
         const fullInternalTeam = [...internalWallets];
 
         if (viewMode === 'internal') {
@@ -192,6 +206,7 @@ export default function AdminScannerPage() {
             );
         }
 
+        // إخفاء الـ HELD (فقط المعروض أو المطلوب)
         data = data.filter(item => item.isListed || item.highestOffer > 0);
 
         if (searchQuery) {
