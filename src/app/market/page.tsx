@@ -256,6 +256,9 @@ function MarketPage() {
                    votesMap[t] = (votesMap[t] || 0) + 1;
                 });
             }
+            
+            console.log("📊 Conviction Votes Map:", votesMap);
+            console.log("📊 Sample Contract IDs:", tokenIds.slice(0, 3).map(id => id.toString()));
 
             const statsMap: Record<number, any> = {}; 
             const now = Date.now();
