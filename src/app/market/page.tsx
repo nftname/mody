@@ -334,8 +334,8 @@ function MarketPage() {
                     const offersCount = offersCountMap[tid] || 0;
                     const conviction = votesMap[tid] || 0;
                     
-                    // Trending Score Formula: Activity Count (Sales * 20 + Offers * 5 + Conviction * 10)
-                    const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 10);
+                    // Trending Score Formula
+                    const trendingScore = stats.volume + (offersCount * 5);
                     
                     const pricePol = parseFloat(formatEther(prices[index]));
                     
@@ -393,7 +393,7 @@ function MarketPage() {
       else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
       else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
       else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
-      else if (activeFilter === 'Conviction') { processedData.sort((a, b) => (b.convictionScore || 0) - (a.convictionScore || 0)); }
+      else if (activeFilter === 'Conviction') { processedData.sort((a, b) => b.convictionScore - a.convictionScore); }
       else { processedData.sort((a, b) => a.id - b.id); }
 
       if (sortConfig) {
@@ -625,7 +625,7 @@ function MarketPage() {
                                         <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
                                             {item.convictionScore > 0 ? (
                                                 <>
-                                                    {item.convictionScore > 0 && <i className="bi bi-fire text-warning me-1"></i>}
+                                                    {dynamicRank <= 3 && <i className="bi bi-fire text-warning me-1"></i>}
                                                     {formatCompactNumber(item.convictionScore)}
                                                 </>
                                             ) : ( <span className="text-muted" style={{fontSize: '12px'}}>0</span> )}
