@@ -495,15 +495,15 @@ function MarketPage() {
       <section className="market-content-wrapper mb-0 mt-4">
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" style={{ borderColor: '#222 !important', padding: '2px 0' }}>
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
-                  <div onClick={() => setActiveFilter('Watchlist')} className={`cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : 'text-header-gray'}`} style={{ fontSize: '13.5px', fontWeight: 'bold', paddingBottom: '4px' }}>Watchlist</div>
+                  <div onClick={() => { setActiveFilter('Watchlist'); setSortConfig(null); setCurrentPage(1); }} className={`cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : 'text-header-gray'}`} style={{ fontSize: '13.5px', fontWeight: 'bold', paddingBottom: '4px' }}>Watchlist</div>
                   
                   {/* Conviction Filter (Replaces All Assets) */}
-                  <div onClick={() => setActiveFilter('Conviction')} className={`cursor-pointer filter-item fw-bold ${activeFilter === 'Conviction' ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
+                  <div onClick={() => { setActiveFilter('Conviction'); setSortConfig(null); setCurrentPage(1); }} className={`cursor-pointer filter-item fw-bold ${activeFilter === 'Conviction' ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
                       Conviction <i className="bi bi-fire text-warning ms-1"></i>
                   </div>
 
                   {['Trending', 'Top', 'Most Offers'].map(f => (
-                      <div key={f} onClick={() => setActiveFilter(f)} className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>{f}</div>
+                      <div key={f} onClick={() => { setActiveFilter(f); setSortConfig(null); setCurrentPage(1); }} className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>{f}</div>
                   ))}
               </div>
               <div className="d-flex gap-3 align-items-center w-100 w-lg-auto overflow-auto no-scrollbar justify-content-start justify-content-lg-end" style={{ height: '32px', marginTop: '2px', marginBottom: '2px' }}>
@@ -575,7 +575,7 @@ function MarketPage() {
                                             <span className="text-white fw-bold" style={{ fontSize: '14px', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
                                             {item.change !== 0 && (
                                                 <span className="d-flex align-items-center" style={{ fontSize: '12px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : item.change < 0 ? '#ea3943' : '#B0B0B0' }}>
-                                                    {item.change > 0 ? '+' : ''}{item.change.toFixed(2)}%
+                                                    {item.change > 0 ? '+' : ''}{item.change.toFixed(0)}%
                                                     <i className={`bi ${item.change > 0 ? 'bi-caret-up-fill' : item.change < 0 ? 'bi-caret-down-fill' : ''}`} style={{ fontSize: '10px', marginLeft: '2px' }}></i>
                                                 </span>
                                             )}
