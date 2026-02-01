@@ -574,7 +574,7 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
                     <span className="fw-normal text-white" style={{ fontSize: '10.5px' }}>{formatTablePrice(item.pricePol)}</span> 
                     {item.change !== 0 && (
                         <span className="d-flex align-items-center" style={{ fontSize: '9px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
-                            {item.change.toFixed(0)}% 
+                            {Math.abs(item.change).toFixed(0)}% 
                             <i className={`bi ${item.change > 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`} style={{ fontSize: '8px', marginLeft: '2px' }}></i>
                         </span>
                     )}
@@ -626,7 +626,7 @@ function DesktopTable({ data, formatTablePrice, formatTableVolume, getRankStyle 
                                         <span className="text-white fw-normal" style={{ fontSize: '11.5px' }}>{formatTablePrice(item.pricePol)}</span>
                                         {item.change !== 0 && (
                                             <span className="d-flex align-items-center" style={{ fontSize: '10.5px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
-                                                {item.change.toFixed(0)}%
+                                                {Math.abs(item.change).toFixed(0)}%
                                                 <i className={`bi ${item.change > 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`} style={{ fontSize: '9px', marginLeft: '2px' }}></i>
                                             </span>
                                         )}
