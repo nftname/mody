@@ -241,10 +241,12 @@ function MarketPage() {
                 .select('token_id')
                 .eq('status', 'active');
 
-            const { data: votesData } = await supabase
+            const { data: votesData, error: voteError } = await supabase
                 .from('conviction_votes')
                 .select('token_id');
             
+            if (voteError) console.error("Supabase Vote Error:", voteError);
+
             // USE STRING KEYS FOR SAFETY
             const votesMap: Record<string, number> = {};
             if (votesData) {
@@ -254,6 +256,8 @@ function MarketPage() {
                    votesMap[t] = (votesMap[t] || 0) + 1;
                 });
             }
+            
+            console.log("Conviction Votes Map:", votesMap); // Debug log
 
             const statsMap: Record<number, any> = {}; 
             const now = Date.now();
