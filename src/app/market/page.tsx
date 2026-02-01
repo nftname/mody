@@ -245,11 +245,12 @@ function MarketPage() {
                 .from('conviction_votes')
                 .select('token_id');
             
-            // Map Conviction Votes
-            const votesMap: Record<number, number> = {};
+            // USE STRING KEYS FOR SAFETY
+            const votesMap: Record<string, number> = {};
             if (votesData) {
                 votesData.forEach((v: any) => {
-                   const t = Number(v.token_id);
+                   // Trim and convert to string to match Contract IDs
+                   const t = String(v.token_id).trim();
                    votesMap[t] = (votesMap[t] || 0) + 1;
                 });
             }
@@ -324,7 +325,8 @@ function MarketPage() {
             // 3. Merge On-Chain & Off-Chain Data
             const items = await Promise.all(tokenIds.map(async (id, index) => {
                 try {
-                    const tid = Number(id); 
+                    const tid = Number(id); // Keep for sorting
+                    const idStr = id.toString(); // Use for Lookup
                     const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
                     const metaRes = await fetch(resolveIPFS(uri));
                     const meta = metaRes.ok ? await metaRes.json() : {};
@@ -332,8 +334,8 @@ function MarketPage() {
                     
                     const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
                     const offersCount = offersCountMap[tid] || 0;
-                    // Ensure conviction is a valid number
-                    const conviction = Number(votesMap[tid]) || 0;
+                    // ROBUST LOOKUP
+                    const conviction = votesMap[idStr] || 0;
                     
                     // NEW FORMULA: Weight Sales (High Impact), Offers (Medium), and Conviction (High Impact)
                     const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 10);
@@ -572,8 +574,8 @@ function MarketPage() {
                               <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 60px', borderBottom: '1px solid #333', textAlign: 'left', width: '20%', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 20px', borderBottom: '1px solid #333', textAlign: 'left', cursor: 'pointer' }}>
-                                  <div className="d-flex align-items-center justify-content-start">Conviction <SortArrows active={sortConfig?.key === 'convictionScore'} direction={sortConfig?.direction} /></div>
+                              <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                                  <div className="d-flex align-items-center justify-content-end">Conviction <SortArrows active={sortConfig?.key === 'convictionScore'} direction={sortConfig?.direction} /></div>
                               </th>
                               <th style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #333', textAlign: 'right', width: '100px' }}>Action</th>
                           </tr>
@@ -630,15 +632,15 @@ function MarketPage() {
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="text-start" style={{ padding: '14px 10px 14px 20px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                        <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
+                                    <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                        <span className="text-white" style={{ fontSize: '13px', fontWeight: '500', color: '#E0E0E0' }}>
                                             {item.convictionScore > 0 ? (
-                                                <div className="d-flex align-items-center gap-1">
+                                                <div className="d-flex align-items-center justify-content-end gap-1">
                                                     <i className="bi bi-fire text-warning"></i>
                                                     <span>{formatCompactNumber(item.convictionScore)}</span>
                                                 </div>
                                             ) : (
-                                                <span className="text-muted" style={{fontSize: '12px'}}>0</span>
+                                                <span style={{ color: '#fff', opacity: 0.3 }}>0</span>
                                             )}
                                         </span>
                                     </td>
