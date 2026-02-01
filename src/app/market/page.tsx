@@ -332,10 +332,11 @@ function MarketPage() {
                     
                     const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
                     const offersCount = offersCountMap[tid] || 0;
-                    const conviction = votesMap[tid] || 0;
+                    // Ensure conviction is a valid number
+                    const conviction = Number(votesMap[tid]) || 0;
                     
-                    // Trending Score Formula
-                    const trendingScore = stats.volume + (offersCount * 5);
+                    // NEW FORMULA: Weight Sales (High Impact), Offers (Medium), and Conviction (High Impact)
+                    const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 10);
                     
                     const pricePol = parseFloat(formatEther(prices[index]));
                     
@@ -393,7 +394,15 @@ function MarketPage() {
       else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
       else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
       else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
-      else if (activeFilter === 'Conviction') { processedData.sort((a, b) => b.convictionScore - a.convictionScore); }
+      else if (activeFilter === 'Conviction') {
+          processedData.sort((a, b) => {
+              // Primary: Highest Conviction Score -> Lowest
+              const scoreDiff = (Number(b.convictionScore) || 0) - (Number(a.convictionScore) || 0);
+              if (scoreDiff !== 0) return scoreDiff;
+              // Tie-breaker: Highest Volume
+              return (Number(b.volume) || 0) - (Number(a.volume) || 0);
+          });
+      }
       else { processedData.sort((a, b) => a.id - b.id); }
 
       if (sortConfig) {
@@ -624,11 +633,13 @@ function MarketPage() {
                                     <td className="text-start" style={{ padding: '14px 10px 14px 20px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
                                             {item.convictionScore > 0 ? (
-                                                <>
-                                                    {dynamicRank <= 3 && <i className="bi bi-fire text-warning me-1"></i>}
-                                                    {formatCompactNumber(item.convictionScore)}
-                                                </>
-                                            ) : ( <span className="text-muted" style={{fontSize: '12px'}}>0</span> )}
+                                                <div className="d-flex align-items-center gap-1">
+                                                    <i className="bi bi-fire text-warning"></i>
+                                                    <span>{formatCompactNumber(item.convictionScore)}</span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-muted" style={{fontSize: '12px'}}>0</span>
+                                            )}
                                         </span>
                                     </td>
                                     <td className="text-end" style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
