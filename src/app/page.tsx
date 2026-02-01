@@ -276,8 +276,8 @@ function Home() {
                     const offersCount = offersCountMap[tid] || 0;
                     const lastSale = lastSaleMap[tid] || 0;
                     
-                    // Trending Score: Activity Count (Sales * 10 + Offers * 5)
-                    const trendingScore = (salesCount * 10) + (offersCount * 5);
+                    // Trending Score: Activity Count (Sales * 20 + Offers * 5)
+                    const trendingScore = (salesCount * 20) + (offersCount * 5);
                     const listedAt = latestListTimeMap[tid] || 0;
 
                     // Calculate Change based on Last Sale
