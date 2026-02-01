@@ -549,9 +549,18 @@ function Home() {
 function MobileTableHeader() { 
     return ( 
         <div className="d-flex justify-content-between mb-3 border-bottom border-secondary pb-2" style={{ borderColor: '#333 !important', height: '40px', alignItems: 'flex-end' }}> 
-            <div style={{ flex: '0 0 40%' }}> <span style={{ fontSize: '11px', color: '#848E9C' }}>Name Asset</span> </div> 
-            <div style={{ flex: '0 0 30%', textAlign: 'left' }}> <span style={{ fontSize: '11px', color: '#848E9C' }}>Price</span> </div>
-            <div style={{ flex: '0 0 30%', textAlign: 'right' }}> <span style={{ fontSize: '11px', color: '#848E9C' }}>Volume</span> </div>
+            {/* 35% Width for Name */}
+            <div style={{ flex: '0 0 35%' }}> 
+                <span style={{ fontSize: '13.5px', color: '#848E9C' }}>Name Asset</span> 
+            </div> 
+            {/* 35% Width for Price (Fills gap) */}
+            <div style={{ flex: '0 0 35%', textAlign: 'left' }}> 
+                <span style={{ fontSize: '13.5px', color: '#848E9C' }}>Price</span> 
+            </div>
+            {/* 30% Width for Volume */}
+            <div style={{ flex: '0 0 30%', textAlign: 'right' }}> 
+                <span style={{ fontSize: '13.5px', color: '#848E9C' }}>Volume</span> 
+            </div> 
         </div> 
     ); 
 }
@@ -560,8 +569,8 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
     return ( 
         <Link href={`/asset/${item.id}`} className="text-decoration-none"> 
             <div className="d-flex align-items-center justify-content-between py-3 binance-row" style={{ borderBottom: '1px solid #222' }}> 
-                {/* 40% Name */}
-                <div className="d-flex align-items-center gap-2" style={{ flex: '0 0 40%', overflow: 'hidden' }}> 
+                {/* 35% Name */}
+                <div className="d-flex align-items-center gap-2" style={{ flex: '0 0 35%', overflow: 'hidden' }}> 
                     <div style={{ width: '15px', textAlign: 'center', flexShrink: 0 }}> 
                         {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '14px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light" style={{ fontSize: '10px' }}>{item.rank}</span> )} 
                     </div> 
@@ -569,20 +578,20 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
                     <span className="text-white fw-bold name-shake text-truncate" style={{ fontSize: '12px' }}>{item.name}</span> 
                 </div> 
                 
-                {/* 30% Price (No Plus Sign) */}
-                <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 30%' }}> 
-                    <span className="fw-normal text-white" style={{ fontSize: '10.5px' }}>{formatTablePrice(item.pricePol)}</span> 
+                {/* 35% Price (Larger Numbers) */}
+                <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 35%' }}> 
+                    <span className="fw-normal text-white" style={{ fontSize: '13px' }}>{formatTablePrice(item.pricePol)}</span> 
                     {item.change !== 0 && (
-                        <span className="d-flex align-items-center" style={{ fontSize: '9px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
+                        <span className="d-flex align-items-center" style={{ fontSize: '11px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
                             {Math.abs(item.change).toFixed(0)}% 
-                            <i className={`bi ${item.change > 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`} style={{ fontSize: '8px', marginLeft: '2px' }}></i>
+                            <i className={`bi ${item.change > 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`} style={{ fontSize: '9px', marginLeft: '2px' }}></i>
                         </span>
                     )}
                 </div> 
 
-                {/* 30% Volume (Right Aligned) */}
-                <div className="d-flex flex-column align-items-end" style={{ flex: '0 0 30%' }}> 
-                    <span className="text-white" style={{ fontSize: '10.5px', fontWeight: '400' }}>{formatTableVolume(item.volume)}</span> 
+                {/* 30% Volume (Right Aligned, Larger Numbers) */}
+                <div className="d-flex flex-column align-items-end" style={{ flex: '0 0 30%', textAlign: 'right' }}> 
+                    <span className="text-white" style={{ fontSize: '13px', fontWeight: '400' }}>{formatTableVolume(item.volume)}</span> 
                 </div> 
             </div> 
         </Link> 
