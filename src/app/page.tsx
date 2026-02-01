@@ -276,8 +276,8 @@ function Home() {
                     const offersCount = offersCountMap[tid] || 0;
                     const lastSale = lastSaleMap[tid] || 0;
                     
-                    // Trending Score: Volume + (Offers * 5)
-                    const trendingScore = volumeVal + (offersCount * 5);
+                    // Trending Score: Activity Count (Sales * 10 + Offers * 5)
+                    const trendingScore = (salesCount * 10) + (offersCount * 5);
                     const listedAt = latestListTimeMap[tid] || 0;
 
                     // Calculate Change based on Last Sale
@@ -549,16 +549,9 @@ function Home() {
 function MobileTableHeader() { 
     return ( 
         <div className="d-flex justify-content-between mb-3 border-bottom border-secondary pb-2" style={{ borderColor: '#333 !important', height: '40px', alignItems: 'flex-end' }}> 
-            <div style={{ flex: '0 0 auto', width: '45%' }}> 
-                <span style={{ fontSize: '13px', color: '#848E9C' }}>Name Asset</span> 
-            </div> 
-            <div style={{ flex: '0 0 auto', width: '25%', textAlign: 'left', paddingLeft: '5px' }}> 
-                <span style={{ fontSize: '13px', color: '#848E9C' }}>Price</span> 
-            </div>
-            {/* MODIFIED: Added paddingLeft 20px to shift Volume title away */}
-            <div style={{ flex: '0 0 auto', width: '30%', textAlign: 'left', paddingLeft: '20px' }}> 
-                <span style={{ fontSize: '13px', color: '#848E9C' }}>Volume</span> 
-            </div> 
+            <div style={{ flex: '0 0 40%' }}> <span style={{ fontSize: '11px', color: '#848E9C' }}>Name Asset</span> </div> 
+            <div style={{ flex: '0 0 30%', textAlign: 'left' }}> <span style={{ fontSize: '11px', color: '#848E9C' }}>Price</span> </div>
+            <div style={{ flex: '0 0 30%', textAlign: 'right' }}> <span style={{ fontSize: '11px', color: '#848E9C' }}>Volume</span> </div>
         </div> 
     ); 
 }
@@ -567,27 +560,29 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
     return ( 
         <Link href={`/asset/${item.id}`} className="text-decoration-none"> 
             <div className="d-flex align-items-center justify-content-between py-3 binance-row" style={{ borderBottom: '1px solid #222' }}> 
-                <div className="d-flex align-items-center gap-2" style={{ flex: '0 0 auto', width: '45%', overflow: 'hidden' }}> 
+                {/* 40% Name */}
+                <div className="d-flex align-items-center gap-2" style={{ flex: '0 0 40%', overflow: 'hidden' }}> 
                     <div style={{ width: '15px', textAlign: 'center', flexShrink: 0 }}> 
-                        {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '16px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light" style={{ fontSize: '12px' }}>{item.rank}</span> )} 
+                        {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '14px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light" style={{ fontSize: '10px' }}>{item.rank}</span> )} 
                     </div> 
                     <CoinIcon name={item.name} tier={item.tier} /> 
-                    <span className="text-white fw-bold name-shake text-truncate" style={{ fontSize: '14.5px' }}>{item.name}</span> 
+                    <span className="text-white fw-bold name-shake text-truncate" style={{ fontSize: '12px' }}>{item.name}</span> 
                 </div> 
                 
-                <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 auto', width: '25%', paddingLeft: '15px' }}> 
-                    <span className="fw-normal text-white" style={{ fontSize: '12.5px' }}>{formatTablePrice(item.pricePol)}</span>
+                {/* 30% Price (No Plus Sign) */}
+                <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 30%' }}> 
+                    <span className="fw-normal text-white" style={{ fontSize: '10.5px' }}>{formatTablePrice(item.pricePol)}</span> 
                     {item.change !== 0 && (
-                        <span className="d-flex align-items-center" style={{ fontSize: '10px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
-                            {item.change > 0 ? '+' : ''}{item.change.toFixed(0)}%
+                        <span className="d-flex align-items-center" style={{ fontSize: '9px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
+                            {item.change.toFixed(0)}% 
                             <i className={`bi ${item.change > 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`} style={{ fontSize: '8px', marginLeft: '2px' }}></i>
                         </span>
                     )}
                 </div> 
 
-                {/* MODIFIED: Added paddingLeft 20px to shift Volume data away from Price */}
-                <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 auto', width: '30%', paddingLeft: '20px' }}> 
-                    <span className="small text-white" style={{ fontSize: '11.5px', fontWeight: '400' }}>{formatTableVolume(item.volume)}</span> 
+                {/* 30% Volume (Right Aligned) */}
+                <div className="d-flex flex-column align-items-end" style={{ flex: '0 0 30%' }}> 
+                    <span className="text-white" style={{ fontSize: '10.5px', fontWeight: '400' }}>{formatTableVolume(item.volume)}</span> 
                 </div> 
             </div> 
         </Link> 
@@ -621,30 +616,30 @@ function DesktopTable({ data, formatTablePrice, formatTableVolume, getRankStyle 
                                 <Link href={`/asset/${item.id}`} className="text-decoration-none text-white">
                                     <div className="d-flex align-items-center gap-3">
                                         <CoinIcon name={item.name} tier={item.tier} />
-                                        <span className="fw-bold name-shake" style={{ fontSize: '15px' }}>{item.name}</span>
+                                        <span className="fw-bold name-shake" style={{ fontSize: '13.5px' }}>{item.name}</span>
                                     </div>
                                 </Link>
                             </td>
                             <td className="text-start" style={{ verticalAlign: 'middle', paddingLeft: '15px' }}>
                                 {isMounted ? (
                                     <div className="d-flex align-items-center gap-2">
-                                        <span className="text-white fw-normal" style={{ fontSize: '12.5px' }}>{formatTablePrice(item.pricePol)}</span>
+                                        <span className="text-white fw-normal" style={{ fontSize: '11.5px' }}>{formatTablePrice(item.pricePol)}</span>
                                         {item.change !== 0 && (
-                                            <span className="d-flex align-items-center" style={{ fontSize: '11px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
-                                                {item.change > 0 ? '+' : ''}{item.change.toFixed(0)}%
+                                            <span className="d-flex align-items-center" style={{ fontSize: '10.5px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
+                                                {item.change.toFixed(0)}%
                                                 <i className={`bi ${item.change > 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`} style={{ fontSize: '9px', marginLeft: '2px' }}></i>
                                             </span>
                                         )}
                                     </div>
                                 ) : (
-                                    <span className="text-secondary fw-normal" style={{ fontSize: '12.5px' }}>--</span>
+                                    <span className="text-secondary fw-normal" style={{ fontSize: '11.5px' }}>--</span>
                                 )}
                             </td>
                             <td className="text-start" style={{ verticalAlign: 'middle', paddingLeft: '40px' }}>
                                 {isMounted ? (
-                                    <span className="text-white fw-normal" style={{ fontSize: '11.5px' }}>{formatTableVolume(item.volume)}</span>
+                                    <span className="text-white fw-normal" style={{ fontSize: '11px' }}>{formatTableVolume(item.volume)}</span>
                                 ) : (
-                                    <span className="text-secondary fw-normal" style={{ fontSize: '11.5px' }}>--</span>
+                                    <span className="text-secondary fw-normal" style={{ fontSize: '11px' }}>--</span>
                                 )}
                             </td>
                         </tr>
