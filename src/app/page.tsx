@@ -549,15 +549,15 @@ function Home() {
 function MobileTableHeader() { 
     return ( 
         <div className="d-flex justify-content-between mb-3 border-bottom border-secondary pb-2" style={{ borderColor: '#333 !important', height: '40px', alignItems: 'flex-end' }}> 
-            {/* 40% Width for Name */}
-            <div style={{ flex: '0 0 40%' }}> 
+            {/* 45% Name */}
+            <div style={{ flex: '0 0 45%' }}> 
                 <span style={{ fontSize: '13.5px', color: '#848E9C' }}>Name Asset</span> 
             </div> 
-            {/* 40% Width for Price (Maximized Space) */}
-            <div style={{ flex: '0 0 40%', textAlign: 'left' }}> 
+            {/* 35% Price */}
+            <div style={{ flex: '0 0 35%', textAlign: 'left' }}> 
                 <span style={{ fontSize: '13.5px', color: '#848E9C' }}>Price</span> 
             </div>
-            {/* 20% Width for Volume (Compacted) */}
+            {/* 20% Volume */}
             <div style={{ flex: '0 0 20%', textAlign: 'right' }}> 
                 <span style={{ fontSize: '13.5px', color: '#848E9C' }}>Volume</span> 
             </div> 
@@ -569,8 +569,9 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
     return ( 
         <Link href={`/asset/${item.id}`} className="text-decoration-none"> 
             <div className="d-flex align-items-center justify-content-between py-3 binance-row" style={{ borderBottom: '1px solid #222' }}> 
-                {/* 40% Name */}
-                <div className="d-flex align-items-center gap-2" style={{ flex: '0 0 40%', overflow: 'hidden' }}> 
+                
+                {/* 45% Name */}
+                <div className="d-flex align-items-center gap-2" style={{ flex: '0 0 45%', overflow: 'hidden' }}> 
                     <div style={{ width: '15px', textAlign: 'center', flexShrink: 0 }}> 
                         {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '14px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light" style={{ fontSize: '10px' }}>{item.rank}</span> )} 
                     </div> 
@@ -578,8 +579,8 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
                     <span className="text-white fw-bold name-shake text-truncate" style={{ fontSize: '12px' }}>{item.name}</span> 
                 </div> 
                 
-                {/* 40% Price (Wide space for Price + Change) */}
-                <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 40%' }}> 
+                {/* 35% Price - CRITICAL: Removed flex-column, Added whitespace-nowrap */}
+                <div className="d-flex align-items-center gap-2" style={{ flex: '0 0 35%', whiteSpace: 'nowrap' }}> 
                     <span className="fw-normal text-white" style={{ fontSize: '13px' }}>{formatTablePrice(item.pricePol)}</span> 
                     {item.change !== 0 && (
                         <span className="d-flex align-items-center" style={{ fontSize: '11px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
@@ -589,7 +590,7 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
                     )}
                 </div> 
 
-                {/* 20% Volume (Right Aligned) */}
+                {/* 20% Volume */}
                 <div className="d-flex flex-column align-items-end" style={{ flex: '0 0 20%', textAlign: 'right' }}> 
                     <span className="text-white" style={{ fontSize: '13px', fontWeight: '400' }}>{formatTableVolume(item.volume)}</span> 
                 </div> 
