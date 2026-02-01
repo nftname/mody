@@ -247,18 +247,18 @@ function MarketPage() {
             
             if (voteError) console.error("Supabase Vote Error:", voteError);
 
-            // FORCE STRING KEYS to match Contract BigInts converted to Strings
+            // Force conversion to string to ensure matching works
             const votesMap: Record<string, number> = {};
-            if (votesData) {
+            if (votesData && votesData.length > 0) {
                 votesData.forEach((v: any) => {
-                   // "70" (DB) -> "70" (Map Key)
-                   const t = String(v.token_id).trim();
-                   votesMap[t] = (votesMap[t] || 0) + 1;
+                    // Handle potential nested objects or raw numbers
+                    const idStr = String(v.token_id).trim();
+                    votesMap[idStr] = (votesMap[idStr] || 0) + 1;
                 });
             }
             
             console.log("📊 Conviction Votes Map:", votesMap);
-            console.log("📊 Sample Contract IDs:", tokenIds.slice(0, 3).map(id => id.toString()));
+            console.log("📊 Total Votes Records:", votesData?.length || 0);
 
             const statsMap: Record<number, any> = {}; 
             const now = Date.now();
@@ -342,8 +342,13 @@ function MarketPage() {
                     // LOOKUP: Use the String Key
                     const conviction = votesMap[idStr] || 0;
                     
-                    // NEW FORMULA: Weight Sales (High Impact), Offers (Medium), and Conviction (High Impact)
-                    const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 10);
+                    // Debug: Log conviction for first few items
+                    if (index < 3) {
+                        console.log(`🔍 Token #${idStr}: conviction=${conviction}`);
+                    }
+                    
+                    // HIGH IMPACT FORMULA: Weight Sales (20), Offers (5), and Conviction (20)
+                    const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 20);
                     
                     const pricePol = parseFloat(formatEther(prices[index]));
                     

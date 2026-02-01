@@ -1,0 +1,80 @@
+[2026-02-01T18:47:59.256Z] --- STARTING NEW SESSION ---
+[2026-02-01T18:47:59.293Z] Performing startup liquidity sweep.
+[2026-02-01T18:48:02.985Z] Unwrapped 181.378 WPOL for Wallet #6
+[2026-02-01T18:48:07.475Z] Swept 181.3 POL from Wallet #6 to HotWallet
+[2026-02-01T18:48:13.067Z] Unwrapped 77.95800000000001 WPOL for Wallet #7
+[2026-02-01T18:48:18.705Z] Swept 264.7 POL from Wallet #7 to HotWallet
+[2026-02-01T18:48:25.547Z] Unwrapped 65.91 WPOL for Wallet #12
+[2026-02-01T18:48:29.144Z] Swept 65.9 POL from Wallet #12 to HotWallet
+[2026-02-01T18:49:10.241Z] Cycle Sale: #425 sold to #8 for 239.61
+[2026-02-01T18:49:33.941Z] In-session sweep: 239.59509014184857 POL from #6
+[2026-02-01T18:50:07.996Z] Cycle Sale: #415 sold to #19 for 237.31
+[2026-02-01T18:53:28.142Z] In-session sweep: 237.29498538519456 POL from #7
+[2026-02-01T18:54:11.200Z] Cycle Sale: #481 sold to #19 for 199.38
+[2026-02-01T18:54:51.518Z] In-session sweep: 199.36283263811416 POL from #23
+[2026-02-01T18:55:19.856Z] Cycle Sale: #637 sold to #21 for 73.86
+[2026-02-01T18:55:54.396Z] In-session sweep: 73.66643303105124 POL from #19
+[2026-02-01T18:56:31.636Z] Cycle Sale: #519 sold to #21 for 169.57
+[2026-02-01T18:57:01.480Z] In-session sweep: 169.555164382652 POL from #6
+[2026-02-01T18:57:36.999Z] Cycle Sale: #548 sold to #13 for 134.25
+[2026-02-01T18:58:08.508Z] In-session sweep: 134.24346421660917 POL from #26
+[2026-02-01T18:58:37.743Z] Cycle Sale: #614 sold to #10 for 90.1
+[2026-02-01T18:59:07.952Z] In-session sweep: 89.92598163196152 POL from #21
+[2026-02-01T18:59:38.262Z] Cycle Sale: #600 sold to #12 for 133.58
+[2026-02-01T19:00:08.103Z] In-session sweep: 133.5621973188004 POL from #29
+[2026-02-01T19:00:34.273Z] Cycle Sale: #607 sold to #13 for 101.2
+[2026-02-01T19:00:54.411Z] In-session sweep: 101.1876764983189 POL from #6
+[2026-02-01T19:01:34.601Z] Cycle Sale: #403 sold to #16 for 227.07
+[2026-02-01T19:02:04.257Z] In-session sweep: 227.05633632304944 POL from #6
+[2026-02-01T19:03:03.853Z] Cycle Sale: #540 sold to #24 for 129.81
+[2026-02-01T19:03:30.258Z] In-session sweep: 129.79505644010354 POL from #18
+[2026-02-01T19:03:59.524Z] Cycle Sale: #552 sold to #17 for 183.59
+[2026-02-01T19:04:26.130Z] In-session sweep: 183.57552576790022 POL from #6
+[2026-02-01T19:05:00.449Z] Cycle Sale: #663 sold to #30 for 104.03
+[2026-02-01T19:05:24.694Z] In-session sweep: 104.0116613339075 POL from #6
+[2026-02-01T19:05:59.889Z] Cycle Sale: #505 sold to #21 for 129.07
+[2026-02-01T19:06:28.062Z] In-session sweep: 129.05646830585584 POL from #7
+[2026-02-01T19:07:02.048Z] Cycle Sale: #563 sold to #28 for 134.21
+[2026-02-01T19:07:30.009Z] In-session sweep: 134.19408711624374 POL from #7
+[2026-02-01T19:08:04.489Z] Cycle Sale: #703 sold to #27 for 101.16
+[2026-02-01T19:08:32.782Z] In-session sweep: 101.1422403247288 POL from #6
+[2026-02-01T19:09:05.407Z] Cycle Sale: #587 sold to #30 for 140.75
+[2026-02-01T19:09:31.729Z] In-session sweep: 140.73625516412483 POL from #6
+[2026-02-01T19:10:06.294Z] Cycle Sale: #442 sold to #26 for 260.47
+[2026-02-01T19:10:34.545Z] In-session sweep: 260.4584702684596 POL from #6
+[2026-02-01T19:11:09.616Z] Cycle Sale: #394 sold to #11 for 219.6
+[2026-02-01T19:11:40.126Z] In-session sweep: 219.5898189238681 POL from #6
+[2026-02-01T19:12:16.146Z] Cycle Sale: #584 sold to #8 for 109.75
+[2026-02-01T19:12:42.153Z] In-session sweep: 109.74082168323915 POL from #6
+[2026-02-01T19:13:29.658Z] Cycle Sale: #425 sold to #7 for 303.46
+[2026-02-01T19:13:51.423Z] In-session sweep: 303.3422420189035 POL from #8
+[2026-02-01T19:14:10.566Z] --- STARTING NEW SESSION V19 (RELAY MODE) ---
+[2026-02-01T19:14:10.602Z] Initialization: Full sweep started.
+[2026-02-01T19:14:56.646Z] Cycle Sale: #655 sold to #29
+[2026-02-01T19:15:35.733Z] Cycle Sale: #417 sold to #28
+[2026-02-01T19:16:14.254Z] Cycle Sale: #598 sold to #13
+[2026-02-01T19:16:57.415Z] Cycle Sale: #664 sold to #24
+[2026-02-01T19:17:35.783Z] Cycle Sale: #640 sold to #19
+[2026-02-01T19:18:19.223Z] Cycle Sale: #649 sold to #26
+[2026-02-01T19:19:41.605Z] Cycle Sale: #490 sold to #10
+[2026-02-01T19:20:25.862Z] Cycle Sale: #721 sold to #8
+[2026-02-01T19:21:04.263Z] Cycle Sale: #603 sold to #12
+[2026-02-01T19:21:45.868Z] Cycle Sale: #408 sold to #7
+[2026-02-01T19:22:26.406Z] Cycle Sale: #430 sold to #13
+[2026-02-01T19:24:42.151Z] Cycle Sale: #493 sold to #17
+[2026-02-01T19:26:49.588Z] Cycle Sale: #678 sold to #10
+[2026-02-01T19:27:31.748Z] Cycle Sale: #573 sold to #27
+[2026-02-01T19:28:18.369Z] Cycle Sale: #440 sold to #20
+[2026-02-01T19:29:10.116Z] Cycle Sale: #676 sold to #30
+[2026-02-01T19:29:58.513Z] Cycle Sale: #424 sold to #16
+[2026-02-01T19:31:00.121Z] Cycle Sale: #504 sold to #18
+[2026-02-01T19:31:56.050Z] Cycle Sale: #486 sold to #11
+[2026-02-01T19:33:27.306Z] Cycle Sale: #684 sold to #18
+[2026-02-01T19:34:11.899Z] Cycle Sale: #630 sold to #15
+[2026-02-01T19:34:53.865Z] Cycle Sale: #610 sold to #27
+[2026-02-01T19:35:33.696Z] Cycle Sale: #701 sold to #14
+[2026-02-01T19:39:47.569Z] Cycle Sale: #469 sold to #30
+[2026-02-01T19:40:29.596Z] Cycle Sale: #576 sold to #19
+[2026-02-01T19:43:27.528Z] Cycle Sale: #693 sold to #23
+[2026-02-01T19:44:09.246Z] Cycle Sale: #613 sold to #25
+[2026-02-01T19:44:50.156Z] Cycle Sale: #461 sold to #7
