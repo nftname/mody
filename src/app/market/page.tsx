@@ -152,8 +152,8 @@ function MarketPage() {
     { name: "OPTIMISM", icon: "bi-graph-up-arrow", isCustom: false }
   ];
 
-  // Default filter: 'Conviction'
-    const [activeFilter, setActiveFilter] = useState('Conviction');
+  // Default filter: 'Trending'
+    const [activeFilter, setActiveFilter] = useState('Trending');
     const [timeFilter, setTimeFilter] = useState('All');
   const [currencyFilter, setCurrencyFilter] = useState('All'); 
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); 
@@ -335,13 +335,21 @@ function MarketPage() {
                     const conviction = votesMap[tid] || 0;
                     
                     // Trending Score Formula
-                    const trendingScore = stats.volume + (offersCount * 5); 
+                    const trendingScore = stats.volume + (offersCount * 5);
+                    
+                    const pricePol = parseFloat(formatEther(prices[index]));
+                    
+                    // Calculate Change based on Last Sale
+                    let change = 0;
+                    if (stats.lastSale > 0) {
+                        change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
+                    }
 
                     return {
                         id: tid,
                         name: meta.name || `Asset #${id}`,
                         tier: tierAttr,
-                        pricePol: parseFloat(formatEther(prices[index])), 
+                        pricePol: pricePol, 
                         lastSale: stats.lastSale,
                         volume: stats.volume,
                         listedTime: stats.listedTime,
@@ -350,7 +358,7 @@ function MarketPage() {
                         offersCount: offersCount,
                         convictionScore: conviction,
                         listed: 'Now', 
-                        change: 0,
+                        change: change,
                         currencySymbol: 'POL'
                     };
                 } catch (e) { return null; }
@@ -390,18 +398,25 @@ function MarketPage() {
 
       if (sortConfig) {
           processedData.sort((a: any, b: any) => {
-              const valA = a[sortConfig.key];
-              const valB = b[sortConfig.key];
-              
-              // Ensure numeric comparison for volume and numeric fields
-              if (sortConfig.key === 'volume' || sortConfig.key === 'pricePol' || sortConfig.key === 'lastSale' || sortConfig.key === 'trendingScore') {
-                  const numA = Number(valA) || 0;
-                  const numB = Number(valB) || 0;
-                  return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
+              // 1. Numeric Values (Price, Volume, LastSale, Trending, Conviction)
+              // Logic: Up Arrow ('asc') = Highest First (Descending logic)
+              if (['volume', 'pricePol', 'lastSale', 'trendingScore', 'convictionScore'].includes(sortConfig.key)) {
+                  const numA = Number(a[sortConfig.key]) || 0;
+                  const numB = Number(b[sortConfig.key]) || 0;
+                  return sortConfig.direction === 'asc' ? numB - numA : numA - numB;
               }
-              
-              if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-              if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+              // 2. Rank (mapped to ID)
+              // Logic: Up Arrow ('asc') = Start from 1 (Ascending logic)
+              if (sortConfig.key === 'rank') {
+                  return sortConfig.direction === 'asc' ? a.id - b.id : b.id - a.id;
+              }
+              // 3. Name
+              // Logic: Up Arrow ('asc') = A to Z
+              if (sortConfig.key === 'name') {
+                  if (a.name < b.name) return sortConfig.direction === 'asc' ? -1 : 1;
+                  if (a.name > b.name) return sortConfig.direction === 'asc' ? 1 : -1;
+                  return 0;
+              }
               return 0;
           });
       }
@@ -554,24 +569,28 @@ function MarketPage() {
                                             <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
                                         </Link>
                                     </td>
+                                    {/* Price Column with Change Indicator */}
                                     <td className="text-start" style={{ padding: '14px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                        <span className="text-white fw-bold" style={{ fontSize: '14px', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <span className="text-white fw-bold" style={{ fontSize: '14px', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
+                                            {item.change !== 0 && (
+                                                <span className="d-flex align-items-center" style={{ fontSize: '12px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : item.change < 0 ? '#ea3943' : '#B0B0B0' }}>
+                                                    {item.change > 0 ? '+' : ''}{item.change.toFixed(2)}%
+                                                    <i className={`bi ${item.change > 0 ? 'bi-caret-up-fill' : item.change < 0 ? 'bi-caret-down-fill' : ''}`} style={{ fontSize: '10px', marginLeft: '2px' }}></i>
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
-                                    {/* Match Last Sale Header Padding (40px) */}
+                                    {/* Last Sale Column (Keep as is) */}
                                     <td className="text-start" style={{ padding: '14px 10px 14px 40px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '400', color: '#B0B0B0' }}>{item.lastSale ? formatPrice(item.lastSale) : '---'}</span>
                                     </td>
-                                    {/* Match Volume Header Padding (60px) + Fixed Arrow Position */}
+                                    {/* Volume Column (Cleaned - No Arrows) */}
                                     <td className="text-start" style={{ padding: '14px 10px 14px 60px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center justify-content-start gap-2">
                                             <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
                                                 {formatVolumeUSD(item.volume)}
                                             </span>
-                                            {item.volume > 0 && (
-                                                <span className="d-flex align-items-center" style={{ fontSize: '13px', fontWeight: 'bold', color: '#0ecb81' }}>
-                                                    +<i className="bi bi-caret-up-fill" style={{ fontSize: '13px', marginLeft: '2px' }}></i>
-                                                </span>
-                                            )}
                                         </div>
                                     </td>
                                     <td className="text-start" style={{ padding: '14px 10px 14px 20px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
