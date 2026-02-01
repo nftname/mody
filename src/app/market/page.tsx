@@ -444,7 +444,13 @@ function MarketPage() {
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'desc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') direction = 'asc';
+    
+    // EXCEPTION: For 'rank', we want the first click to be 'asc' (1, 2, 3...)
+    if (key === 'rank') direction = 'asc';
+
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === direction) {
+        direction = direction === 'asc' ? 'desc' : 'asc';
+    }
     setSortConfig({ key, direction });
   };
 
