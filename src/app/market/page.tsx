@@ -571,13 +571,24 @@ function MarketPage() {
                       </thead>
                       <tbody>
                           {currentTableData.map((item: any, index: number) => {
-                              const dynamicRank = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
+                              // 1. Calculate Global Index
+                              const globalIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+                              const totalCount = finalData.length;
+
+                              // 2. Determine Dynamic Rank based on Sort Direction
+                              let dynamicRank = globalIndex + 1; // Default (ASC)
+
+                              if (sortConfig && sortConfig.key === 'rank' && sortConfig.direction === 'desc') {
+                                  dynamicRank = totalCount - globalIndex; // Flip for DESC
+                              }
+
                               return (
                                 <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
                                     <td style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center gap-3">
                                             <i className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} style={{ fontSize: '12px' }} onClick={(e) => handleToggleFavorite(e, item.id)}></i>
-                                            <span style={getRankStyle(dynamicRank) as any}>{dynamicRank}</span>
+                                            {/* 3. Apply Compact Formatting here */}
+                                            <span style={getRankStyle(dynamicRank) as any}>{formatCompactNumber(dynamicRank)}</span>
                                         </div>
                                     </td>
                                     <td style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
