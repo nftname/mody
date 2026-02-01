@@ -72,8 +72,8 @@ const formatShortTime = (date: string) => {
     if (diff < 60) return `${diff}s`; if (diff < 3600) return `${Math.floor(diff / 60)}m`; if (diff < 86400) return `${Math.floor(diff / 3600)}h`; return `${Math.floor(diff / 86400)}d`;
 };
 const formatDuration = (expirationTimestamp: number) => {
-    const now = Math.floor(Date.now() / 1000);
-    const seconds = expirationTimestamp - now;
+    const nowUtc = Math.floor(Date.now() / 1000);
+    const seconds = expirationTimestamp - nowUtc;
     if (seconds <= 0) return "Expired";
     const days = Math.floor(seconds / (3600 * 24));
     if (days > 0) return `${days}d`; 
@@ -81,6 +81,13 @@ const formatDuration = (expirationTimestamp: number) => {
     if (hours > 0) return `${hours}h`; 
     const minutes = Math.floor(seconds / 60);
     return `${minutes}m`;
+};
+
+const getOfferStatus = (status: string, expiration: number) => {
+    if (status === 'accepted') return { label: 'ACCEPTED', color: '#0ecb81', bg: 'rgba(14, 203, 129, 0.15)' };
+    const nowUtc = Math.floor(Date.now() / 1000);
+    if (expiration < nowUtc) return { label: 'EXPIRED', color: '#8a939b', bg: 'rgba(138, 147, 155, 0.15)' };
+    return { label: 'ACTIVE', color: '#FCD535', bg: 'rgba(252, 213, 53, 0.15)' };
 };
 
 const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => {
@@ -989,28 +996,48 @@ function AssetPage() {
                                         <div className="table-responsive">
                                             <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
                                                 <thead><tr>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>WPOL</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>From</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>To</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Exp</th>
-                                                    <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th>
+                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>WPOL</th>
+                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>From</th>
+                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>To</th>
+                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Status</th>
+                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Exp</th>
+                                                    <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '15%' }}></th>
                                                 </tr></thead>
                                                 <tbody>
                                                     {offersList.length === 0 ? (
-                                                        <tr><td colSpan={5} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>No active offers</td></tr>
+                                                        <tr><td colSpan={6} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>No active offers</td></tr>
                                                     ) : (
-                                                        offersList.map((offer) => (
-                                                            <tr key={offer.id}>
-                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600', fontSize: '13px' }}>{formatCompactNumber(offer.price)}</td>
-                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><Link href={`/profile/${offer.bidder_address}`} style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</Link></td>
-                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><Link href={`/profile/${asset.owner}`} style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{asset?.owner === address ? 'You' : (asset?.owner ? asset.owner.slice(0,6) : '-')}</Link></td>
-                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>{offer.timeLeft}</td>
-                                                                <td className="align-middle" style={{ backgroundColor: 'transparent', padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
-                                                                    {isOwner && !offer.isMyOffer && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
-                                                                    {offer.isMyOffer && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm fw-bold" style={{ fontSize: '11px', padding: '4px 12px', background: 'rgba(240, 196, 32, 0.1)', border: `1px solid ${GOLD_SOLID}`, color: GOLD_SOLID, backdropFilter: 'blur(4px)', borderRadius: '8px' }}>Cancel</button>}
-                                                                </td>
-                                                            </tr>
-                                                        ))
+                                                        offersList.map((offer) => {
+                                                            const offerStatus = getOfferStatus(offer.status, offer.expiration);
+                                                            const isAccepted = offer.status === 'accepted';
+                                                            const rowBg = isAccepted ? 'rgba(14, 203, 129, 0.08)' : 'transparent';
+                                                            return (
+                                                                <tr key={offer.id} style={{ backgroundColor: rowBg }}>
+                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600', fontSize: '13px' }}>{formatCompactNumber(offer.price)}</td>
+                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><Link href={`/profile/${offer.bidder_address}`} style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</Link></td>
+                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><Link href={`/profile/${asset.owner}`} style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{asset?.owner === address ? 'You' : (asset?.owner ? asset.owner.slice(0,6) : '-')}</Link></td>
+                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>
+                                                                        <span style={{ 
+                                                                            display: 'inline-block',
+                                                                            padding: '3px 8px',
+                                                                            borderRadius: '4px',
+                                                                            fontSize: '10px',
+                                                                            fontWeight: 'bold',
+                                                                            color: offerStatus.color,
+                                                                            backgroundColor: offerStatus.bg,
+                                                                            border: `1px solid ${offerStatus.color}`
+                                                                        }}>
+                                                                            {offerStatus.label}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>{offer.timeLeft}</td>
+                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
+                                                                        {isOwner && !offer.isMyOffer && offerStatus.label === 'ACTIVE' && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
+                                                                        {offer.isMyOffer && offerStatus.label === 'ACTIVE' && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm fw-bold" style={{ fontSize: '11px', padding: '4px 12px', background: 'rgba(240, 196, 32, 0.1)', border: `1px solid ${GOLD_SOLID}`, color: GOLD_SOLID, backdropFilter: 'blur(4px)', borderRadius: '8px' }}>Cancel</button>}
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })
                                                     )}
                                                 </tbody>
                                             </table>

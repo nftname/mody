@@ -268,7 +268,8 @@ function MarketPage() {
                 allActivities.forEach((act: any) => {
                     const tid = Number(act.token_id);
                     const price = Number(act.price) || 0;
-                    const actTime = new Date(act.created_at).getTime();
+                    // Parse date with UTC consideration
+                    const actTime = new Date(act.created_at + 'Z').getTime();
                 
                     // Init stats with lastActive tracking
                     if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
@@ -283,8 +284,8 @@ function MarketPage() {
                          statsMap[tid].lastSale = price; 
                     }
 
-                    // 2. Calculate Volume (Strictly within Time Limit)
-                    if (act.activity_type === 'Sale' || act.activity_type === 'Mint') {
+                    // 2. Calculate Volume (Strictly within Time Limit - Only for Sale activity type)
+                    if (act.activity_type === 'Sale') {
                         const age = now - actTime;
                         if (age >= 0 && age <= timeLimit) {
                             statsMap[tid].volume += price;
@@ -378,6 +379,14 @@ function MarketPage() {
           processedData.sort((a: any, b: any) => {
               const valA = a[sortConfig.key];
               const valB = b[sortConfig.key];
+              
+              // Ensure numeric comparison for volume and numeric fields
+              if (sortConfig.key === 'volume' || sortConfig.key === 'pricePol' || sortConfig.key === 'lastSale' || sortConfig.key === 'trendingScore') {
+                  const numA = Number(valA) || 0;
+                  const numB = Number(valB) || 0;
+                  return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
+              }
+              
               if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
               if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
               return 0;
