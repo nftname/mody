@@ -405,10 +405,21 @@ function MarketPage() {
                   const numB = Number(b[sortConfig.key]) || 0;
                   return sortConfig.direction === 'asc' ? numB - numA : numA - numB;
               }
-              // 2. Rank (mapped to ID)
-              // Logic: Up Arrow ('asc') = Start from 1 (Ascending logic)
+              // 2. Rank (Dynamic based on Active Filter)
+              // Logic: Up Arrow ('asc') = Rank 1, 2, 3... (Best items first)
               if (sortConfig.key === 'rank') {
-                  return sortConfig.direction === 'asc' ? a.id - b.id : b.id - a.id;
+                  // Direction 'asc' (Up Arrow) means we want Rank 1, 2, 3... (Best items first)
+                  // So we sort by the SCORE descending.
+                  const modifier = sortConfig.direction === 'asc' ? 1 : -1;
+
+                  // Sort based on the active section's metric
+                  if (activeFilter === 'Trending') return (b.trendingScore - a.trendingScore) * modifier;
+                  if (activeFilter === 'Top') return (b.volume - a.volume) * modifier;
+                  if (activeFilter === 'Most Offers') return (b.offersCount - a.offersCount) * modifier;
+                  if (activeFilter === 'Conviction') return (b.convictionScore - a.convictionScore) * modifier;
+                  
+                  // Fallback for 'All' or others: Sort by ID as a default rank
+                  return (a.id - b.id) * modifier; 
               }
               // 3. Name
               // Logic: Up Arrow ('asc') = A to Z
