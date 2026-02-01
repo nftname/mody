@@ -633,10 +633,11 @@ function MarketPage() {
                                         </div>
                                     </td>
                                     <td className="text-end" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                        <span className="text-white" style={{ fontSize: '13px', fontWeight: '500', color: '#E0E0E0' }}>
+                                        <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>
                                             {item.convictionScore > 0 ? (
                                                 <div className="d-flex align-items-center justify-content-end gap-1">
-                                                    <i className="bi bi-fire text-warning"></i>
+                                                    {/* Show Fire Icon only if Rank is top 3 */}
+                                                    {dynamicRank <= 3 && <i className="bi bi-fire text-warning"></i>}
                                                     <span>{formatCompactNumber(item.convictionScore)}</span>
                                                 </div>
                                             ) : (
