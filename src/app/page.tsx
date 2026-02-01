@@ -210,6 +210,7 @@ function Home() {
             const salesCountMap: any = {};
             const offersCountMap: any = {};
             const latestListTimeMap: any = {};
+            const lastSaleMap: any = {};
             
             const now = Date.now();
             let timeLimit = 0;
@@ -222,11 +223,26 @@ function Home() {
             if (allActivities) {
                 allActivities.forEach((act: any) => {
                     const tid = Number(act.token_id);
-                    const actTime = new Date(act.created_at).getTime();
+                    let actTime: number;
+                    try {
+                        const dateStr = act.created_at.includes('Z') ? act.created_at : act.created_at + 'Z';
+                        actTime = new Date(dateStr).getTime();
+                        if (isNaN(actTime)) {
+                            actTime = new Date(act.created_at).getTime();
+                        }
+                    } catch {
+                        actTime = new Date(act.created_at).getTime();
+                    }
                     const price = Number(act.price) || 0;
 
+                    // Track last sale price
+                    if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && !lastSaleMap[tid]) {
+                        lastSaleMap[tid] = price;
+                    }
+
                     if (act.activity_type === 'Sale') {
-                        if (now - actTime <= timeLimit) {
+                        const age = now - actTime;
+                        if (age >= 0 && age <= timeLimit) {
                             volumeMap[tid] = (volumeMap[tid] || 0) + price;
                             salesCountMap[tid] = (salesCountMap[tid] || 0) + 1;
                         }
@@ -258,9 +274,17 @@ function Home() {
                     const volumeVal = volumeMap[tid] || 0;
                     const salesCount = salesCountMap[tid] || 0;
                     const offersCount = offersCountMap[tid] || 0;
+                    const lastSale = lastSaleMap[tid] || 0;
                     
-                    const trendingScore = salesCount + offersCount;
+                    // Trending Score: Volume + (Offers * 5)
+                    const trendingScore = volumeVal + (offersCount * 5);
                     const listedAt = latestListTimeMap[tid] || 0;
+
+                    // Calculate Change based on Last Sale
+                    let change = 0;
+                    if (lastSale > 0) {
+                        change = ((pricePol - lastSale) / lastSale) * 100;
+                    }
 
                     return {
                         id: tid,
@@ -270,7 +294,7 @@ function Home() {
                         pricePol: pricePol, 
                         volume: volumeVal, 
                         trendingScore: trendingScore,
-                        change: 0,
+                        change: change,
                         listedAt
                     };
                 } catch (e) { return null; }
@@ -552,7 +576,13 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
                 </div> 
                 
                 <div className="d-flex flex-column align-items-start" style={{ flex: '0 0 auto', width: '25%', paddingLeft: '15px' }}> 
-                    <span className="fw-normal text-white" style={{ fontSize: '12.5px' }}>{formatTablePrice(item.pricePol)}</span> 
+                    <span className="fw-normal text-white" style={{ fontSize: '12.5px' }}>{formatTablePrice(item.pricePol)}</span>
+                    {item.change !== 0 && (
+                        <span className="d-flex align-items-center" style={{ fontSize: '10px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
+                            {item.change > 0 ? '+' : ''}{item.change.toFixed(0)}%
+                            <i className={`bi ${item.change > 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`} style={{ fontSize: '8px', marginLeft: '2px' }}></i>
+                        </span>
+                    )}
                 </div> 
 
                 {/* MODIFIED: Added paddingLeft 20px to shift Volume data away from Price */}
@@ -597,16 +627,24 @@ function DesktopTable({ data, formatTablePrice, formatTableVolume, getRankStyle 
                             </td>
                             <td className="text-start" style={{ verticalAlign: 'middle', paddingLeft: '15px' }}>
                                 {isMounted ? (
-                                    <span className="text-white fw-normal me-2" style={{ fontSize: '12.5px' }}>{formatTablePrice(item.pricePol)}</span>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <span className="text-white fw-normal" style={{ fontSize: '12.5px' }}>{formatTablePrice(item.pricePol)}</span>
+                                        {item.change !== 0 && (
+                                            <span className="d-flex align-items-center" style={{ fontSize: '11px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
+                                                {item.change > 0 ? '+' : ''}{item.change.toFixed(0)}%
+                                                <i className={`bi ${item.change > 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`} style={{ fontSize: '9px', marginLeft: '2px' }}></i>
+                                            </span>
+                                        )}
+                                    </div>
                                 ) : (
-                                    <span className="text-secondary fw-normal me-2" style={{ fontSize: '12.5px' }}>--</span>
+                                    <span className="text-secondary fw-normal" style={{ fontSize: '12.5px' }}>--</span>
                                 )}
                             </td>
                             <td className="text-start" style={{ verticalAlign: 'middle', paddingLeft: '40px' }}>
                                 {isMounted ? (
-                                    <span className="text-white fw-normal me-2" style={{ fontSize: '11.5px' }}>{formatTableVolume(item.volume)}</span>
+                                    <span className="text-white fw-normal" style={{ fontSize: '11.5px' }}>{formatTableVolume(item.volume)}</span>
                                 ) : (
-                                    <span className="text-secondary fw-normal me-2" style={{ fontSize: '11.5px' }}>--</span>
+                                    <span className="text-secondary fw-normal" style={{ fontSize: '11.5px' }}>--</span>
                                 )}
                             </td>
                         </tr>
