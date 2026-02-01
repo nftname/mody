@@ -334,8 +334,8 @@ function MarketPage() {
                     const offersCount = offersCountMap[tid] || 0;
                     const conviction = votesMap[tid] || 0;
                     
-                    // Trending Score Formula
-                    const trendingScore = stats.volume + (offersCount * 5);
+                    // Trending Score Formula: Activity Count (Sales * 20 + Offers * 5)
+                    const trendingScore = (stats.sales * 20) + (offersCount * 5);
                     
                     const pricePol = parseFloat(formatEther(prices[index]));
                     
