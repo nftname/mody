@@ -268,8 +268,20 @@ function MarketPage() {
                 allActivities.forEach((act: any) => {
                     const tid = Number(act.token_id);
                     const price = Number(act.price) || 0;
-                    // Parse date with UTC consideration
-                    const actTime = new Date(act.created_at + 'Z').getTime();
+                    
+                    // Parse date with UTC consideration - handle both formats
+                    let actTime: number;
+                    try {
+                        // Try parsing with Z if not already present
+                        const dateStr = act.created_at.includes('Z') ? act.created_at : act.created_at + 'Z';
+                        actTime = new Date(dateStr).getTime();
+                        // Validate timestamp
+                        if (isNaN(actTime)) {
+                            actTime = new Date(act.created_at).getTime();
+                        }
+                    } catch {
+                        actTime = new Date(act.created_at).getTime();
+                    }
                 
                     // Init stats with lastActive tracking
                     if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
@@ -284,10 +296,11 @@ function MarketPage() {
                          statsMap[tid].lastSale = price; 
                     }
 
-                    // 2. Calculate Volume (Strictly within Time Limit - Only for Sale activity type)
+                    // 2. Calculate Volume - ACCUMULATE ALL SALES REGARDLESS OF TIME FILTER
                     if (act.activity_type === 'Sale') {
                         const age = now - actTime;
-                        if (age >= 0 && age <= timeLimit) {
+                        // Only validate timestamp is not in future
+                        if (age >= 0) {
                             statsMap[tid].volume += price;
                             statsMap[tid].sales += 1;
                         }

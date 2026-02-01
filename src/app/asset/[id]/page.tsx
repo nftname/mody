@@ -83,7 +83,8 @@ const formatDuration = (expirationTimestamp: number) => {
     return `${minutes}m`;
 };
 
-const getOfferStatus = (status: string, expiration: number) => {
+const getOfferStatus = (status: string, expiration: number, isOutdated: boolean) => {
+    if (isOutdated) return { label: 'OUTDATED', color: '#8a939b', bg: 'rgba(138, 147, 155, 0.15)' };
     if (status === 'accepted') return { label: 'ACCEPTED', color: '#0ecb81', bg: 'rgba(14, 203, 129, 0.15)' };
     const nowUtc = Math.floor(Date.now() / 1000);
     if (expiration < nowUtc) return { label: 'EXPIRED', color: '#8a939b', bg: 'rgba(138, 147, 155, 0.15)' };
@@ -398,19 +399,57 @@ function AssetPage() {
                 setIsApproved(approvedStatus);
             }
             
+            // Fetch activities to check for last sale date
+            const { data: actData } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
+            
+            // Find the most recent 'Sale' activity timestamp
+            let lastSaleTimestamp: number | null = null;
+            if (actData) {
+                const lastSaleActivity = actData.find((act: any) => act.activity_type === 'Sale');
+                if (lastSaleActivity) {
+                    try {
+                        const dateStr = lastSaleActivity.created_at.includes('Z') ? lastSaleActivity.created_at : lastSaleActivity.created_at + 'Z';
+                        lastSaleTimestamp = new Date(dateStr).getTime();
+                        if (isNaN(lastSaleTimestamp)) {
+                            lastSaleTimestamp = new Date(lastSaleActivity.created_at).getTime();
+                        }
+                    } catch {
+                        lastSaleTimestamp = new Date(lastSaleActivity.created_at).getTime();
+                    }
+                }
+            }
+            
             const { data: offers } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled');
             if (offers) {
-                let enrichedOffers = offers.map((offer: any) => ({
-                    id: offer.id,
-                    bidder_address: offer.bidder_address,
-                    price: offer.price,
-                    expiration: offer.expiration,
-                    status: offer.status,
-                    signature: offer.signature, 
-                    isMyOffer: address && offer.bidder_address.toLowerCase() === address.toLowerCase(),
-                    created_at: offer.created_at,
-                    timeLeft: formatDuration(offer.expiration)
-                }));
+                let enrichedOffers = offers.map((offer: any) => {
+                    // Parse offer creation date
+                    let offerCreatedAt: number;
+                    try {
+                        const dateStr = offer.created_at.includes('Z') ? offer.created_at : offer.created_at + 'Z';
+                        offerCreatedAt = new Date(dateStr).getTime();
+                        if (isNaN(offerCreatedAt)) {
+                            offerCreatedAt = new Date(offer.created_at).getTime();
+                        }
+                    } catch {
+                        offerCreatedAt = new Date(offer.created_at).getTime();
+                    }
+                    
+                    // Check if offer is outdated (created before last sale)
+                    const isOutdated = lastSaleTimestamp !== null && offerCreatedAt < lastSaleTimestamp;
+                    
+                    return {
+                        id: offer.id,
+                        bidder_address: offer.bidder_address,
+                        price: offer.price,
+                        expiration: offer.expiration,
+                        status: offer.status,
+                        signature: offer.signature, 
+                        isMyOffer: address && offer.bidder_address.toLowerCase() === address.toLowerCase(),
+                        created_at: offer.created_at,
+                        timeLeft: formatDuration(offer.expiration),
+                        isOutdated: isOutdated
+                    };
+                });
                 // ✅ Surgical Fix 2: Added (a: any, b: any) to all sorts to prevent implicit any errors
                 if (offerSort === 'Newest') enrichedOffers.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 if (offerSort === 'High Price') enrichedOffers.sort((a: any, b: any) => b.price - a.price);
@@ -418,7 +457,6 @@ function AssetPage() {
                 setOffersList(enrichedOffers);
             }
 
-            const { data: actData } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
             const { data: offerActData } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled').order('created_at', { ascending: false });
 
             const formattedActs = (actData || []).map((item: any) => ({
@@ -1008,9 +1046,11 @@ function AssetPage() {
                                                         <tr><td colSpan={6} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>No active offers</td></tr>
                                                     ) : (
                                                         offersList.map((offer) => {
-                                                            const offerStatus = getOfferStatus(offer.status, offer.expiration);
+                                                            const offerStatus = getOfferStatus(offer.status, offer.expiration, offer.isOutdated);
                                                             const isAccepted = offer.status === 'accepted';
                                                             const rowBg = isAccepted ? 'rgba(14, 203, 129, 0.08)' : 'transparent';
+                                                            const canAccept = isOwner && !offer.isMyOffer && offerStatus.label === 'ACTIVE' && !offer.isOutdated;
+                                                            const canCancel = offer.isMyOffer && (offerStatus.label === 'ACTIVE' || offerStatus.label === 'OUTDATED');
                                                             return (
                                                                 <tr key={offer.id} style={{ backgroundColor: rowBg }}>
                                                                     <td className="align-middle" style={{ backgroundColor: rowBg, color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600', fontSize: '13px' }}>{formatCompactNumber(offer.price)}</td>
@@ -1032,8 +1072,8 @@ function AssetPage() {
                                                                     </td>
                                                                     <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>{offer.timeLeft}</td>
                                                                     <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
-                                                                        {isOwner && !offer.isMyOffer && offerStatus.label === 'ACTIVE' && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
-                                                                        {offer.isMyOffer && offerStatus.label === 'ACTIVE' && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm fw-bold" style={{ fontSize: '11px', padding: '4px 12px', background: 'rgba(240, 196, 32, 0.1)', border: `1px solid ${GOLD_SOLID}`, color: GOLD_SOLID, backdropFilter: 'blur(4px)', borderRadius: '8px' }}>Cancel</button>}
+                                                                        {canAccept && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
+                                                                        {canCancel && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm fw-bold" style={{ fontSize: '11px', padding: '4px 12px', background: 'rgba(240, 196, 32, 0.1)', border: `1px solid ${GOLD_SOLID}`, color: GOLD_SOLID, backdropFilter: 'blur(4px)', borderRadius: '8px' }}>Cancel</button>}
                                                                     </td>
                                                                 </tr>
                                                             );
