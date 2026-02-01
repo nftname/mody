@@ -247,17 +247,15 @@ function MarketPage() {
             
             if (voteError) console.error("Supabase Vote Error:", voteError);
 
-            // USE STRING KEYS FOR SAFETY
+            // FORCE STRING KEYS to match Contract BigInts converted to Strings
             const votesMap: Record<string, number> = {};
             if (votesData) {
                 votesData.forEach((v: any) => {
-                   // Trim and convert to string to match Contract IDs
+                   // "70" (DB) -> "70" (Map Key)
                    const t = String(v.token_id).trim();
                    votesMap[t] = (votesMap[t] || 0) + 1;
                 });
             }
-            
-            console.log("Conviction Votes Map:", votesMap); // Debug log
 
             const statsMap: Record<number, any> = {}; 
             const now = Date.now();
@@ -329,8 +327,8 @@ function MarketPage() {
             // 3. Merge On-Chain & Off-Chain Data
             const items = await Promise.all(tokenIds.map(async (id, index) => {
                 try {
-                    const tid = Number(id); // Keep for sorting
-                    const idStr = id.toString(); // Use for Lookup
+                    const tid = Number(id); 
+                    const idStr = id.toString(); // KEY FIX: Convert BigInt to String for lookup
                     const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
                     const metaRes = await fetch(resolveIPFS(uri));
                     const meta = metaRes.ok ? await metaRes.json() : {};
@@ -338,7 +336,7 @@ function MarketPage() {
                     
                     const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
                     const offersCount = offersCountMap[tid] || 0;
-                    // ROBUST LOOKUP
+                    // LOOKUP: Use the String Key
                     const conviction = votesMap[idStr] || 0;
                     
                     // NEW FORMULA: Weight Sales (High Impact), Offers (Medium), and Conviction (High Impact)
@@ -640,12 +638,12 @@ function MarketPage() {
                                         <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>
                                             {item.convictionScore > 0 ? (
                                                 <div className="d-flex align-items-center justify-content-end gap-1">
-                                                    {/* Show Fire Icon only if Rank is top 3 */}
+                                                    {/* Fire for Top 3 Ranks Only */}
                                                     {dynamicRank <= 3 && <i className="bi bi-fire text-warning"></i>}
                                                     <span>{formatCompactNumber(item.convictionScore)}</span>
                                                 </div>
                                             ) : (
-                                                <span style={{ color: '#fff', opacity: 0.3 }}>0</span>
+                                                <span style={{ color: '#fff', opacity: 0.2 }}>0</span>
                                             )}
                                         </span>
                                     </td>
