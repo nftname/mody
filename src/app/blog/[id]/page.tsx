@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import MarketTicker from '@/components/MarketTicker';
+import DOMPurify from 'isomorphic-dompurify';
 
 const BACKGROUND_MAIN = '#1E1E1E';
 const TEXT_OFF_WHITE = '#E0E0E0';
@@ -158,7 +159,14 @@ export default function BlogPost() {
                 )}
 
                 <article className="article-content text-start">
-                    <div dangerouslySetInnerHTML={{ __html: post.content }} />
+                    <div dangerouslySetInnerHTML={{ 
+                        __html: DOMPurify.sanitize(post.content, {
+                            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'blockquote', 'code', 'pre'],
+                            ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+                            ALLOW_DATA_ATTR: false,
+                            ADD_ATTR: ['target']
+                        })
+                    }} />
                 </article>
 
                 <div className="note-box text-start">

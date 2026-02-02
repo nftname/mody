@@ -20,7 +20,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Cannot support your own asset.' }, { status: 403 });
     }
 
-    // 2. التحقق من رصيد الداعم (WNNM)
+    // 2. 🔒 SERVER-SIDE DUPLICATE VOTE PREVENTION
+    // Check if this wallet already voted for this asset
+    const { data: existingVote } = await supabase
+      .from('conviction_votes')
+      .select('id')
+      .eq('token_id', assetId.toString())
+      .eq('supporter_address', supporterWallet)
+      .maybeSingle();
+
+    if (existingVote) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'You have already supported this asset.' 
+      }, { status: 400 });
+    }
+
+    // 3. التحقق من رصيد الداعم (WNNM)
     const { data: supporterData } = await supabase
       .from('nnm_wallets')
       .select('wnnm_balance, nnm_balance')
@@ -31,7 +47,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Insufficient WNNM balance.' }, { status: 400 });
     }
 
-    // 3. تنفيذ العملية (Atomic Execution):
+    // 4. تنفيذ العملية (Atomic Execution):
     
     // أ. الداعم: يخصم 100 WNNM ويضيف 100 NNM (استرداد قيمة الدعم)
     // ملاحظة: أنت طلبت سابقاً أن الدعم يضيف رصيداً للداعم أيضاً

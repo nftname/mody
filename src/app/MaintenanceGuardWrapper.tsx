@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LegalModal from "@/components/LegalModal";
 import { useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const OWNER_WALLET = (process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS || "").toLowerCase();
 
@@ -17,7 +18,6 @@ export default function MaintenanceGuardWrapper({ children }: { children: React.
   const [loading, setLoading] = useState(true);
   
   const pathname = usePathname();
-  const router = useRouter();
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -37,13 +37,12 @@ export default function MaintenanceGuardWrapper({ children }: { children: React.
     checkStatus();
   }, [pathname, isConnected, address]);
 
-  const isAdminRoute = pathname?.startsWith('/admin');
+  // ✅ Secure: Only owner wallet can bypass maintenance mode
   const isOwner = isConnected && address?.toLowerCase() === OWNER_WALLET;
-  const bypass = isAdminRoute || isOwner;
 
   if (loading) return <div style={{background:'#F9F9F7', height:'100vh'}} />;
 
-  if (isMaintenance && !bypass) {
+  if (isMaintenance && !isOwner) {
     return (
       <div className="maintenance-container">
         <div className="maintenance-card">
@@ -54,14 +53,21 @@ export default function MaintenanceGuardWrapper({ children }: { children: React.
             <h2 className="main-title">System Under Maintenance</h2>
             <p className="sub-text">{maintenanceMsg}</p>
             <p className="coming-soon">We will be back shortly.</p>
-            <div className="admin-access-area">
-                <button onClick={() => router.push('/admin')} className="admin-link">Admin Login</button>
+            <div className="wallet-connect-area">
+                <ConnectButton 
+                  showBalance={false}
+                  chainStatus="none"
+                  accountStatus={{
+                    smallScreen: 'avatar',
+                    largeScreen: 'full'
+                  }}
+                />
             </div>
         </div>
         <style jsx>{`
           .maintenance-container {
             height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;
-            background-color: #F9F9F7; position: fixed; top: 0; left: 0; z-index: 99999; font-family: 'Inter', sans-serif;
+            background-color: #F9F9F7; position: fixed; top: 0; left: 0; z-index: 9999; font-family: 'Inter', sans-serif;
           }
           .maintenance-card {
             background: #FFFFFF; width: 420px; max-width: 90%; padding: 45px 30px;
@@ -79,8 +85,12 @@ export default function MaintenanceGuardWrapper({ children }: { children: React.
           .main-title { font-size: 20px; color: #2D2D2D; margin-bottom: 12px; font-weight: 700; }
           .sub-text { font-size: 14px; color: #555555; line-height: 1.5; margin-bottom: 8px; }
           .coming-soon { font-size: 12px; color: #999999; margin-bottom: 25px; }
-          .admin-access-area { border-top: 1px solid #F5F5F5; padding-top: 15px; }
-          .admin-link { background: none; border: none; font-size: 10px; color: #CCC; cursor: pointer; text-transform: uppercase; }
+          .wallet-connect-area { 
+            border-top: 1px solid #F5F5F5; 
+            padding-top: 20px;
+            display: flex;
+            justify-content: center;
+          }
           @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
             70% { box-shadow: 0 0 0 5px rgba(34, 197, 94, 0); }
