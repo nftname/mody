@@ -205,12 +205,24 @@ function Home() {
 
             const { data: allActivities } = await supabase.from('activities').select('*');
             const { data: offersData } = await supabase.from('offers').select('token_id').eq('status', 'active');
+            
+            // 🔴 FETCH CONVICTION VOTES (matching Market page logic)
+            const { data: votesData } = await supabase.from('conviction_votes').select('token_id');
 
             const volumeMap: any = {};
             const salesCountMap: any = {};
             const offersCountMap: any = {};
             const latestListTimeMap: any = {};
             const lastSaleMap: any = {};
+            
+            // 🔴 VOTES MAP: Weight each vote as 100 points (matching Market page)
+            const votesMap: Record<string, number> = {};
+            if (votesData && votesData.length > 0) {
+                votesData.forEach((v: any) => {
+                    const idStr = String(v.token_id).trim();
+                    votesMap[idStr] = (votesMap[idStr] || 0) + 100;
+                });
+            }
             
             const now = Date.now();
             let timeLimit = 0;
@@ -276,8 +288,13 @@ function Home() {
                     const offersCount = offersCountMap[tid] || 0;
                     const lastSale = lastSaleMap[tid] || 0;
                     
-                    // Trending Score: Activity Count (Sales * 10 + Offers * 5)
-                    const trendingScore = (salesCount * 10) + (offersCount * 5);
+                    // 🔴 GET CONVICTION SCORE (matching Market page logic)
+                    const conviction = votesMap[id.toString()] || 0;
+                    
+                    // 🔴 UPDATED TRENDING FORMULA (matching Market page exactly)
+                    // Weight: Sales (20), Offers (5), Conviction (0.2)
+                    // Note: Conviction weight is 0.2 because each vote = 100 points (adjusted from original 20)
+                    const trendingScore = (salesCount * 20) + (offersCount * 5) + (conviction * 0.2);
                     const listedAt = latestListTimeMap[tid] || 0;
 
                     // Calculate Change based on Last Sale
