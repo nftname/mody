@@ -253,7 +253,7 @@ function MarketPage() {
                 votesData.forEach((v: any) => {
                     // Handle potential nested objects or raw numbers
                     const idStr = String(v.token_id).trim();
-                    votesMap[idStr] = (votesMap[idStr] || 0) + 1;
+                    votesMap[idStr] = (votesMap[idStr] || 0) + 100;
                 });
             }
             
