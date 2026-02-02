@@ -6,12 +6,11 @@ export async function GET() {
     try {
         // 1. تحديد المسار بدقة
         const filePath = path.join(process.cwd(), 'data', 'market_wallets_secret.json');
-        console.log("📂 API: Looking for wallets file at:", filePath);
 
-        // 2. التحقق من الوجود
+        // 2. التحقق من الوجود (Silent fail on production)
         if (!fs.existsSync(filePath)) {
-            console.error("❌ API: File not found!");
-            return NextResponse.json({ wallets: [], error: 'File not found' }, { status: 404 });
+            // Return empty array silently - this is expected on Vercel (secrets not in git)
+            return NextResponse.json({ wallets: [] }, { status: 200 });
         }
 
         // 3. قراءة الملف
@@ -45,13 +44,11 @@ export async function GET() {
                 return addr.toString().trim().toLowerCase(); // تنظيف وتوحيد
             });
 
-        console.log(`✅ API: Successfully extracted ${safeWallets.length} wallets.`);
-
         // 6. الإرسال
         return NextResponse.json({ wallets: safeWallets });
 
     } catch (error: any) {
-        console.error('🔥 API Critical Error:', error);
-        return NextResponse.json({ wallets: [], error: error.message }, { status: 500 });
+        // Silent error handling - return empty array on production
+        return NextResponse.json({ wallets: [] }, { status: 200 });
     }
 }
