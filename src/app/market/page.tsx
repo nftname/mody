@@ -347,8 +347,9 @@ function MarketPage() {
                         console.log(`🔍 Token #${idStr}: conviction=${conviction}`);
                     }
                     
-                    // HIGH IMPACT FORMULA: Weight Sales (20), Offers (5), and Conviction (20)
-                    const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 20);
+                    // HIGH IMPACT FORMULA: Weight Sales (20), Offers (5), and Conviction (0.2)
+                    // Note: Conviction is now 100× larger per vote, so weight adjusted from 20 to 0.2
+                    const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
                     
                     const pricePol = parseFloat(formatEther(prices[index]));
                     

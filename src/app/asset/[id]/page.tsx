@@ -325,7 +325,7 @@ function AssetPage() {
             // ---------------------------------------------------------
 
             // 3. Success: Optimistic UI Update
-            setConvictionCount(prev => prev + 1);
+            setConvictionCount(prev => prev + 100);
             setHasConvicted(true);
             
             // Updated Success Message
