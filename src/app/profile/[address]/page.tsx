@@ -569,7 +569,7 @@ export default function ProfilePage() {
         {activeSection === 'Offers' && (
             <div className="mt-4 pb-5">
                 <div className="text-center py-5 text-secondary" style={{ fontSize: '16px' }}>
-                   There are no offers here
+                   No offers found
 
                 </div>
             </div>
