@@ -1018,7 +1018,7 @@ function AssetPage() {
                                             <div className="d-flex flex-column align-items-center gap-2">
                                                 <div className="d-flex align-items-center gap-2" style={{ color: '#FCD535', fontSize: '20px', fontWeight: 'bold', textShadow: '0 0 10px rgba(252, 213, 53, 0.3)' }}>
                                                     <i className="bi bi-fire"></i>
-                                                    <span>{formatCompactNumber(convictionCount)}</span>
+                                                    <span>{formatCompactNumber(convictionCount * 100)}</span>
                                                 </div>
 
                                                 {hasConvicted ? (
