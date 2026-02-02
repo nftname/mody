@@ -27,27 +27,27 @@ export async function POST(request: Request) {
       .eq('wallet_address', supporterWallet)
       .single();
 
-    if (!supporterData || supporterData.wnnm_balance < 1) {
+    if (!supporterData || supporterData.wnnm_balance < 100) {
       return NextResponse.json({ success: false, message: 'Insufficient WNNM balance.' }, { status: 400 });
     }
 
     // 3. تنفيذ العملية (Atomic Execution):
     
-    // أ. الداعم: يخصم 1 WNNM ويضيف 1 NNM (استرداد قيمة الدعم)
+    // أ. الداعم: يخصم 100 WNNM ويضيف 100 NNM (استرداد قيمة الدعم)
     // ملاحظة: أنت طلبت سابقاً أن الدعم يضيف رصيداً للداعم أيضاً
     await supabase.from('nnm_wallets').update({
-      wnnm_balance: supporterData.wnnm_balance - 1,
-      nnm_balance: parseFloat(supporterData.nnm_balance) + 1, // +1 NNM للداعم
+      wnnm_balance: supporterData.wnnm_balance - 100,
+      nnm_balance: parseFloat(supporterData.nnm_balance) + 100, // +100 NNM للداعم
       updated_at: new Date().toISOString()
     }).eq('wallet_address', supporterWallet);
 
-    // ب. صاحب الأست (Asset Owner): يكسب 1 NNM مكافأة
+    // ب. صاحب الأست (Asset Owner): يكسب 100 NNM مكافأة
     const { data: ownerData } = await supabase.from('nnm_wallets').select('nnm_balance').eq('wallet_address', assetOwner).single();
     const currentOwnerBalance = ownerData ? parseFloat(ownerData.nnm_balance) : 0;
     
     await supabase.from('nnm_wallets').upsert({
       wallet_address: assetOwner,
-      nnm_balance: currentOwnerBalance + 1, // +1 NNM للمالك
+      nnm_balance: currentOwnerBalance + 100, // +100 NNM للمالك
       updated_at: new Date().toISOString()
     }, { onConflict: 'wallet_address' });
 
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     
     await supabase.from('nnm_conviction_ledger').insert({ 
       supporter_wallet: supporterWallet, 
-      wnnm_spent: 1, 
+      wnnm_spent: 100, 
       created_at: new Date().toISOString() 
     });
 

@@ -1012,7 +1012,7 @@ function AssetPage() {
                                         </div>
                                         
                                         <div className="mt-3 text-center" style={{ fontSize: '12px', color: '#666' }}>
-                                            Supporting this name costs 1 WNNM and grants 1 NNM to the owner.
+                                            Supporting this name costs 100 WNNM and grants 100 NNM to both you and the owner.
                                         </div>
                                     </div>
                                 )}
