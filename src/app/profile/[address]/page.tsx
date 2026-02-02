@@ -569,7 +569,8 @@ export default function ProfilePage() {
         {activeSection === 'Offers' && (
             <div className="mt-4 pb-5">
                 <div className="text-center py-5 text-secondary" style={{ fontSize: '16px' }}>
-                    لا يوجد بيان هنا
+                   There are no offers here
+
                 </div>
             </div>
         )}
