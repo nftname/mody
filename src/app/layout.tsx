@@ -55,12 +55,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={inter.className}>
         <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="beforeInteractive" />
+        <Script id="sw-unregister" strategy="afterInteractive">
+          {`
+            // Unregister old buggy Service Worker first
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                  registration.unregister();
+                  console.log('🗑️ Old ServiceWorker unregistered');
+                }
+              });
+            }
+          `}
+        </Script>
         <Script id="pwa-register" strategy="afterInteractive">
           {`
             // Register Service Worker only
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/service-worker.js?v=2')
+                navigator.serviceWorker.register('/service-worker.js?v=3')
                   .then(function(registration) {
                     console.log('✅ PWA ServiceWorker registered');
                   })
