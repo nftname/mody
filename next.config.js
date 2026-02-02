@@ -21,11 +21,15 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'cloudflare-ipfs.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'raw.githubusercontent.com',
       },
     ],
     // احتياطياً للدعم القديم لضمان عدم تعطل عرض أي NFT
-    domains: ['gateway.pinata.cloud', 'ipfs.io', 'raw.githubusercontent.com'],
+    domains: ['gateway.pinata.cloud', 'ipfs.io', 'cloudflare-ipfs.com', 'raw.githubusercontent.com'],
   },
 
   // 2. إصلاحات الويب 3 (المنطق الجوهري لربط المحافظ ومنع تعارض المكتبات)
