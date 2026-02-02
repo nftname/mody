@@ -323,31 +323,31 @@ function Home() {
 
     fetchRealData();
 
-    // 🔴 REALTIME LISTENER: Listen to conviction_votes and activities for trending updates
-    const channel = supabase
-      .channel('home-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'conviction_votes' },
-        () => {
-          console.log('🔥 Realtime [Home]: conviction_votes changed');
-          fetchRealData();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'activities' },
-        () => {
-          console.log('🔥 Realtime [Home]: activities changed');
-          fetchRealData();
-        }
-      )
-      .subscribe();
+    // 🔴 REALTIME LISTENER DISABLED: Causing performance issues due to high-frequency bot updates
+    // const channel = supabase
+    //   .channel('home-realtime')
+    //   .on(
+    //     'postgres_changes',
+    //     { event: '*', schema: 'public', table: 'conviction_votes' },
+    //     () => {
+    //       console.log('🔥 Realtime [Home]: conviction_votes changed');
+    //       fetchRealData();
+    //     }
+    //   )
+    //   .on(
+    //     'postgres_changes',
+    //     { event: '*', schema: 'public', table: 'activities' },
+    //     () => {
+    //       console.log('🔥 Realtime [Home]: activities changed');
+    //       fetchRealData();
+    //     }
+    //   )
+    //   .subscribe();
 
-    // Cleanup on unmount
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // // Cleanup on unmount
+    // return () => {
+    //   supabase.removeChannel(channel);
+    // };
   }, [publicClient, timeFilter]); 
 
   const processedData = useMemo(() => {

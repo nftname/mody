@@ -275,31 +275,31 @@ function AssetPage() {
         };
         fetchConvictionData();
 
-        // 🔴 REALTIME LISTENER: Listen to conviction votes for this specific asset
-        const channel = supabase
-          .channel(`asset-${tokenId}-realtime`)
-          .on(
-            'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'conviction_votes', filter: `token_id=eq.${tokenId}` },
-            (payload: any) => {
-              console.log('🔥 Realtime: New vote for asset', payload);
-              fetchConvictionData();
-              fetchAllData();
-            }
-          )
-          .on(
-            'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'activities', filter: `token_id=eq.${tokenId}` },
-            (payload: any) => {
-              console.log('🔥 Realtime: New activity for asset', payload);
-              fetchAllData();
-            }
-          )
-          .subscribe();
+        // 🔴 REALTIME LISTENER DISABLED: Causing performance issues due to high-frequency bot updates
+        // const channel = supabase
+        //   .channel(`asset-${tokenId}-realtime`)
+        //   .on(
+        //     'postgres_changes',
+        //     { event: 'INSERT', schema: 'public', table: 'conviction_votes', filter: `token_id=eq.${tokenId}` },
+        //     (payload: any) => {
+        //       console.log('🔥 Realtime: New vote for asset', payload);
+        //       fetchConvictionData();
+        //       fetchAllData();
+        //     }
+        //   )
+        //   .on(
+        //     'postgres_changes',
+        //     { event: 'INSERT', schema: 'public', table: 'activities', filter: `token_id=eq.${tokenId}` },
+        //     (payload: any) => {
+        //       console.log('🔥 Realtime: New activity for asset', payload);
+        //       fetchAllData();
+        //     }
+        //   )
+        //   .subscribe();
 
-        return () => {
-          supabase.removeChannel(channel);
-        };
+        // return () => {
+        //   supabase.removeChannel(channel);
+        // };
     }, [tokenId, address]);
 
     const handleGiveConviction = async () => {
@@ -554,31 +554,31 @@ function AssetPage() {
         if (isConnected && address) fetchFavorites();
     }, [fetchAllData, fetchMoreAssets, address, isConnected]);
     
-    // 🔥 Real-time Listener for New Offers
-    useEffect(() => {
-        if (!tokenId) return;
-        
-        const channel = supabase
-            .channel(`offers-${tokenId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'offers',
-                    filter: `token_id=eq.${tokenId}`
-                },
-                () => {
-                    // Re-fetch offers when any change occurs
-                    fetchAllData();
-                }
-            )
-            .subscribe();
-        
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [tokenId, fetchAllData]);
+    // 🔥 Real-time Listener DISABLED: Causing performance issues due to high-frequency bot updates
+    // useEffect(() => {
+    //     if (!tokenId) return;
+    //     
+    //     const channel = supabase
+    //         .channel(`offers-${tokenId}`)
+    //         .on(
+    //             'postgres_changes',
+    //             {
+    //                 event: '*',
+    //                 schema: 'public',
+    //                 table: 'offers',
+    //                 filter: `token_id=eq.${tokenId}`
+    //             },
+    //             () => {
+    //                 // Re-fetch offers when any change occurs
+    //                 fetchAllData();
+    //             }
+    //         )
+    //         .subscribe();
+    //     
+    //     return () => {
+    //         supabase.removeChannel(channel);
+    //     };
+    // }, [tokenId, fetchAllData]);
     
     useEffect(() => { if (isOfferMode) refreshWpolData(); }, [isOfferMode, refreshWpolData]);
 
