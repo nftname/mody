@@ -274,6 +274,32 @@ function AssetPage() {
             }
         };
         fetchConvictionData();
+
+        // 🔴 REALTIME LISTENER: Listen to conviction votes for this specific asset
+        const channel = supabase
+          .channel(`asset-${tokenId}-realtime`)
+          .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'conviction_votes', filter: `token_id=eq.${tokenId}` },
+            (payload: any) => {
+              console.log('🔥 Realtime: New vote for asset', payload);
+              fetchConvictionData();
+              fetchAllData();
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'activities', filter: `token_id=eq.${tokenId}` },
+            (payload: any) => {
+              console.log('🔥 Realtime: New activity for asset', payload);
+              fetchAllData();
+            }
+          )
+          .subscribe();
+
+        return () => {
+          supabase.removeChannel(channel);
+        };
     }, [tokenId, address]);
 
     const handleGiveConviction = async () => {

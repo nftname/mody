@@ -383,6 +383,40 @@ function MarketPage() {
     };
 
     fetchMarketData();
+
+    // 🔴 REALTIME LISTENER: Listen to all database changes
+    const channel = supabase
+      .channel('market-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'conviction_votes' },
+        () => {
+          console.log('🔥 Realtime: conviction_votes changed');
+          fetchMarketData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'activities' },
+        () => {
+          console.log('🔥 Realtime: activities changed');
+          fetchMarketData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'offers' },
+        () => {
+          console.log('🔥 Realtime: offers changed');
+          fetchMarketData();
+        }
+      )
+      .subscribe();
+
+    // Cleanup on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [publicClient, timeFilter]); 
 
   const finalData = useMemo(() => {
