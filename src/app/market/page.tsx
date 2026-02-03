@@ -330,56 +330,77 @@ function MarketPage() {
                 offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
             });
 
-            // 3. Merge On-Chain & Off-Chain Data
-            const items = await Promise.all(tokenIds.map(async (id, index) => {
-                try {
-                    const tid = Number(id); 
-                    const idStr = id.toString(); // KEY FIX: Convert BigInt to String for lookup
-                    const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
-                    const metaRes = await fetch(resolveIPFS(uri));
-                    const meta = metaRes.ok ? await metaRes.json() : {};
-                    const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
-                    
-                    const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
-                    const offersCount = offersCountMap[tid] || 0;
-                    // LOOKUP: Use the String Key
-                    const conviction = votesMap[idStr] || 0;
-                    
-                    // Debug: Log conviction for first few items
-                    if (index < 3) {
-                        console.log(`🔍 Token #${idStr}: conviction=${conviction}`);
-                    }
-                    
-                    // HIGH IMPACT FORMULA: Weight Sales (20), Offers (5), and Conviction (0.2)
-                    // Note: Conviction is now 100× larger per vote, so weight adjusted from 20 to 0.2
-                    const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
-                    
-                    const pricePol = parseFloat(formatEther(prices[index]));
-                    
-                    // Calculate Change based on Last Sale
-                    let change = 0;
-                    if (stats.lastSale > 0) {
-                        change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
-                    }
+             // 3. Merge On-Chain & Off-Chain Data (SMART BATCHING)
+            // This fixes the mobile crash AND speeds up the UI responsiveness
+            const items = [];
+            const BATCH_SIZE = 20; // Load 20 items at a time to keep CPU cool
 
-                    return {
-                        id: tid,
-                        name: meta.name || `Asset #${id}`,
-                        tier: tierAttr,
-                        pricePol: pricePol, 
-                        lastSale: stats.lastSale,
-                        volume: stats.volume,
-                        listedTime: stats.listedTime,
-                        lastActive: stats.lastActive,
-                        trendingScore: trendingScore,
-                        offersCount: offersCount,
-                        convictionScore: conviction,
-                        listed: 'Now', 
-                        change: change,
-                        currencySymbol: 'POL'
-                    };
-                } catch (e) { return null; }
-            }));
+            for (let i = 0; i < tokenIds.length; i += BATCH_SIZE) {
+                // Get a small slice of IDs
+                const batch = tokenIds.slice(i, i + BATCH_SIZE);
+                
+                // Fetch this small batch in parallel
+                const batchResults = await Promise.all(batch.map(async (id, batchIdx) => {
+                    const index = i + batchIdx; // Calculate correct global index
+                    try {
+                        const tid = Number(id); 
+                        const idStr = id.toString(); 
+                        
+                        // Optimized Contract Calls
+                        const uri = await publicClient.readContract({ 
+                            address: NFT_COLLECTION_ADDRESS as `0x${string}`, 
+                            abi: erc721Abi, 
+                            functionName: 'tokenURI', 
+                            args: [id] 
+                        });
+                        
+                        // Fetch Metadata
+                        const metaRes = await fetch(resolveIPFS(uri));
+                        const meta = metaRes.ok ? await metaRes.json() : {};
+                        const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
+                        
+                        // Get Stats
+                        const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
+                        const offersCount = offersCountMap[tid] || 0;
+                        const conviction = votesMap[idStr] || 0;
+                        
+                        // Calc Scores
+                        const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
+                        const pricePol = parseFloat(formatEther(prices[index]));
+                        
+                        let change = 0;
+                        if (stats.lastSale > 0) {
+                            change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
+                        }
+
+                        return {
+                            id: tid,
+                            name: meta.name || `Asset #${id}`,
+                            tier: tierAttr,
+                            pricePol: pricePol, 
+                            lastSale: stats.lastSale,
+                            volume: stats.volume,
+                            listedTime: stats.listedTime,
+                            lastActive: stats.lastActive,
+                            trendingScore: trendingScore,
+                            offersCount: offersCount,
+                            convictionScore: conviction,
+                            listed: 'Now', 
+                            change: change,
+                            currencySymbol: 'POL'
+                        };
+                    } catch (e) { return null; }
+                }));
+                
+                // Add valid items from this batch to our main list
+                items.push(...batchResults.filter(i => i !== null));
+                
+                // Optional: Short pause to let the UI breathe (0ms is usually enough to unblock main thread)
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+
+            // Finally set all data
+            setRealListings(items);
 
             setRealListings(items.filter(i => i !== null));
         } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
