@@ -158,233 +158,173 @@ const AssetCard = ({ item }: { item: any }) => {
   
 function Home() {
   
-  const [activeTab, setActiveTab] = useState<'trending' | 'top'>('trending');
-  const [timeFilter, setTimeFilter] = useState('24H');
-  const [currencyFilter, setCurrencyFilter] = useState('All');
-  
-  const [isMobileCurrencyOpen, setIsMobileCurrencyOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  
-  const [realListings, setRealListings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
-  
-  const publicClient = usePublicClient();
+    // --- MARKET LOGIC SYNC ---
+    const [activeTab, setActiveTab] = useState<'trending' | 'top'>('trending');
+    const [timeFilter, setTimeFilter] = useState('24H');
+    const [currencyFilter, setCurrencyFilter] = useState('All');
+    const [isMobileCurrencyOpen, setIsMobileCurrencyOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [realListings, setRealListings] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
+    const publicClient = usePublicClient();
 
-  useEffect(() => {
-      const fetchPrices = async () => {
-          try {
-              const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
-              const data = await res.json();
-              const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
-              const ethPrice = data['ethereum']?.usd || 0;
-              setExchangeRates({ pol: polPrice, eth: ethPrice });
-          } catch (e) { console.error(e); }
-      };
-      fetchPrices();
-      const interval = setInterval(fetchPrices, 30000);
-      return () => clearInterval(interval);
-  }, []);
+    // Fetch exchange rates (ETH, POL)
+    useEffect(() => {
+        const fetchPrices = async () => {
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
+                const data = await res.json();
+                const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
+                const ethPrice = data['ethereum']?.usd || 0;
+                setExchangeRates({ pol: polPrice, eth: ethPrice });
+            } catch (e) { console.error(e); }
+        };
+        fetchPrices();
+        const interval = setInterval(fetchPrices, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
-  useEffect(() => {
-    const fetchRealData = async () => {
-        if (!publicClient) return;
-        try {
-            const data = await publicClient.readContract({
-                address: MARKETPLACE_ADDRESS as `0x${string}`,
-                abi: MARKET_ABI,
-                functionName: 'getAllListings'
-            });
-            const [tokenIds, prices] = data;
-
-            if (tokenIds.length === 0) {
-                setRealListings([]);
-                setLoading(false);
-                return;
-            }
-
-            const { data: allActivities } = await supabase.from('activities').select('*');
-            const { data: offersData } = await supabase.from('offers').select('token_id').eq('status', 'active');
-            
-            // 🔴 FETCH CONVICTION VOTES (matching Market page logic)
-            const { data: votesData } = await supabase.from('conviction_votes').select('token_id');
-
-            const volumeMap: any = {};
-            const salesCountMap: any = {};
-            const offersCountMap: any = {};
-            const latestListTimeMap: any = {};
-            const lastSaleMap: any = {};
-            
-            // 🔴 VOTES MAP: Weight each vote as 100 points (matching Market page)
-            const votesMap: Record<string, number> = {};
-            if (votesData && votesData.length > 0) {
-                votesData.forEach((v: any) => {
-                    const idStr = String(v.token_id).trim();
-                    votesMap[idStr] = (votesMap[idStr] || 0) + 100;
+    // Fetch market data (listings, activities, offers, votes)
+    useEffect(() => {
+        const fetchMarketData = async () => {
+            if (!publicClient) return;
+            try {
+                // 1. Fetch Listings from Smart Contract
+                const data = await publicClient.readContract({
+                    address: MARKETPLACE_ADDRESS as `0x${string}`,
+                    abi: MARKET_ABI,
+                    functionName: 'getAllListings'
                 });
-            }
-            
-            const now = Date.now();
-            let timeLimit = 0;
-            if (timeFilter === '1H') timeLimit = 3600 * 1000;
-            else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
-            else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
-            else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
-            else timeLimit = 315360000000;
+                const [tokenIds, prices] = data;
+                if (tokenIds.length === 0) { setRealListings([]); setLoading(false); return; }
 
-            if (allActivities) {
-                allActivities.forEach((act: any) => {
-                    const tid = Number(act.token_id);
-                    let actTime: number;
+                // 2. Fetch Data from Supabase (Activities, Offers, Votes)
+                const { data: allActivities } = await supabase.from('activities').select('*').order('created_at', { ascending: false });
+                const { data: offersData } = await supabase.from('offers').select('token_id').eq('status', 'active');
+                const { data: votesData } = await supabase.from('conviction_votes').select('token_id');
+
+                // Votes Map: Each vote = 100 points
+                const votesMap: Record<string, number> = {};
+                if (votesData && votesData.length > 0) {
+                    votesData.forEach((v: any) => {
+                        const idStr = String(v.token_id).trim();
+                        votesMap[idStr] = (votesMap[idStr] || 0) + 100;
+                    });
+                }
+
+                // Stats Map: volume, lastSale, listedTime
+                const statsMap: Record<number, any> = {};
+                const now = Date.now();
+                let timeLimit = Infinity;
+                if (timeFilter === '1H') timeLimit = 3600 * 1000;
+                else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
+                else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
+                else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
+
+                if (allActivities) {
+                    allActivities.forEach((act: any) => {
+                        const tid = Number(act.token_id);
+                        const price = Number(act.price) || 0;
+                        let actTime: number;
+                        try {
+                            const dateStr = act.created_at.includes('Z') ? act.created_at : act.created_at + 'Z';
+                            actTime = new Date(dateStr).getTime();
+                            if (isNaN(actTime)) actTime = new Date(act.created_at).getTime();
+                        } catch { actTime = new Date(act.created_at).getTime(); }
+
+                        if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
+                        if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
+                        if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
+                            statsMap[tid].lastSale = price;
+                        }
+                        if (act.activity_type === 'Sale') {
+                            const age = now - actTime;
+                            if (age >= 0) {
+                                statsMap[tid].volume += price;
+                                statsMap[tid].sales += 1;
+                            }
+                        }
+                        if ((act.activity_type === 'List' || act.activity_type === 'Mint')) {
+                            if (actTime > statsMap[tid].listedTime) {
+                                statsMap[tid].listedTime = actTime;
+                            }
+                        }
+                    });
+                }
+
+                const offersCountMap: any = {};
+                if (offersData) offersData.forEach((o: any) => {
+                    const tid = Number(o.token_id);
+                    offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
+                });
+
+                // Merge On-Chain & Off-Chain Data
+                const items = await Promise.all(tokenIds.map(async (id, index) => {
                     try {
-                        const dateStr = act.created_at.includes('Z') ? act.created_at : act.created_at + 'Z';
-                        actTime = new Date(dateStr).getTime();
-                        if (isNaN(actTime)) {
-                            actTime = new Date(act.created_at).getTime();
+                        const tid = Number(id);
+                        const idStr = id.toString();
+                        const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
+                        const metaRes = await fetch(resolveIPFS(uri));
+                        const meta = metaRes.ok ? await metaRes.json() : {};
+                        const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
+                        const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
+                        const offersCount = offersCountMap[tid] || 0;
+                        const conviction = votesMap[idStr] || 0;
+                        const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
+                        const pricePol = parseFloat(formatEther(prices[index]));
+                        let change = 0;
+                        if (stats.lastSale > 0) {
+                            change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
                         }
-                    } catch {
-                        actTime = new Date(act.created_at).getTime();
-                    }
-                    const price = Number(act.price) || 0;
+                        return {
+                            id: tid,
+                            name: meta.name || `Asset #${id}`,
+                            tier: tierAttr,
+                            pricePol: pricePol,
+                            lastSale: stats.lastSale,
+                            volume: stats.volume,
+                            listedTime: stats.listedTime,
+                            lastActive: stats.lastActive,
+                            trendingScore: trendingScore,
+                            offersCount: offersCount,
+                            convictionScore: conviction,
+                            listed: 'Now',
+                            change: change,
+                            currencySymbol: 'POL'
+                        };
+                    } catch (e) { return null; }
+                }));
+                setRealListings(items.filter(i => i !== null));
+            } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
+        };
+        fetchMarketData();
+    }, [publicClient, timeFilter]);
 
-                    // Track last sale price
-                    if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && !lastSaleMap[tid]) {
-                        lastSaleMap[tid] = price;
-                    }
+    // --- DATA PROCESSING ---
+    const processedData = useMemo(() => {
+        let data = [...realListings];
+        if (activeTab === 'top') {
+            data.sort((a, b) => b.volume - a.volume);
+        } else {
+            data.sort((a, b) => b.trendingScore - a.trendingScore);
+        }
+        return data.map((item, index) => ({ ...item, rank: index + 1 }));
+    }, [realListings, activeTab]);
 
-                    if (act.activity_type === 'Sale') {
-                        const age = now - actTime;
-                        if (age >= 0 && age <= timeLimit) {
-                            volumeMap[tid] = (volumeMap[tid] || 0) + price;
-                            salesCountMap[tid] = (salesCountMap[tid] || 0) + 1;
-                        }
-                    }
-
-                    if (act.activity_type === 'List') {
-                        if (!latestListTimeMap[tid] || actTime > latestListTimeMap[tid]) {
-                            latestListTimeMap[tid] = actTime;
-                        }
-                    }
-                });
-            }
-
-            if (offersData) {
-                offersData.forEach((offer: any) => {
-                    offersCountMap[offer.token_id] = (offersCountMap[offer.token_id] || 0) + 1;
-                });
-            }
-
-            const items = await Promise.all(tokenIds.map(async (id, index) => {
-                try {
-                    const tid = Number(id);
-                    const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
-                    const metaRes = await fetch(resolveIPFS(uri));
-                    const meta = metaRes.ok ? await metaRes.json() : {};
-                    const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
-                    
-                    const pricePol = parseFloat(formatEther(prices[index]));
-                    const volumeVal = volumeMap[tid] || 0;
-                    const salesCount = salesCountMap[tid] || 0;
-                    const offersCount = offersCountMap[tid] || 0;
-                    const lastSale = lastSaleMap[tid] || 0;
-                    
-                    // 🔴 GET CONVICTION SCORE (matching Market page logic)
-                    const conviction = votesMap[id.toString()] || 0;
-                    
-                    // 🔴 UPDATED TRENDING FORMULA (matching Market page exactly)
-                    // Weight: Sales (20), Offers (5), Conviction (0.2)
-                    // Note: Conviction weight is 0.2 because each vote = 100 points (adjusted from original 20)
-                    const trendingScore = (salesCount * 20) + (offersCount * 5) + (conviction * 0.2);
-                    const listedAt = latestListTimeMap[tid] || 0;
-
-                    // Calculate Change based on Last Sale
-                    let change = 0;
-                    if (lastSale > 0) {
-                        change = ((pricePol - lastSale) / lastSale) * 100;
-                    }
-
-                    return {
-                        id: tid,
-                        rank: index + 1, 
-                        name: meta.name || `Asset #${id}`,
-                        tier: tierAttr,
-                        pricePol: pricePol, 
-                        volume: volumeVal, 
-                        trendingScore: trendingScore,
-                        change: change,
-                        listedAt
-                    };
-                } catch (e) { return null; }
-            }));
-
-            setRealListings(items.filter(i => i !== null));
-        } catch (error) { console.error("Home Fetch Error", error); } finally { setLoading(false); }
-    };
-
-    fetchRealData();
-
-    // 🔴 REALTIME LISTENER DISABLED: Causing performance issues due to high-frequency bot updates
-    // const channel = supabase
-    //   .channel('home-realtime')
-    //   .on(
-    //     'postgres_changes',
-    //     { event: '*', schema: 'public', table: 'conviction_votes' },
-    //     () => {
-    //       console.log('🔥 Realtime [Home]: conviction_votes changed');
-    //       fetchRealData();
-    //     }
-    //   )
-    //   .on(
-    //     'postgres_changes',
-    //     { event: '*', schema: 'public', table: 'activities' },
-    //     () => {
-    //       console.log('🔥 Realtime [Home]: activities changed');
-    //       fetchRealData();
-    //     }
-    //   )
-    //   .subscribe();
-
-    // // Cleanup on unmount
-    // return () => {
-    //   supabase.removeChannel(channel);
-    // };
-  }, [publicClient, timeFilter]); 
-
-  const processedData = useMemo(() => {
-      let data = [...realListings];
-      
-      data = data.map(item => {
-          const usdPrice = item.pricePol * (exchangeRates.pol || 0);
-          const usdVol = item.volume * (exchangeRates.pol || 0);
-          return {
-              ...item,
-              priceUsdDisplay: `$${usdPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
-              volumeUsdDisplay: `$${usdVol.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-          };
-      });
-
-      if (activeTab === 'top') {
-          data.sort((a, b) => b.volume - a.volume);
-      } else {
-          data.sort((a, b) => b.trendingScore - a.trendingScore);
-      }
-      return data.map((item, index) => ({ ...item, rank: index + 1 }));
-  }, [realListings, activeTab, exchangeRates]);
-
-  const featuredItems = useMemo(() => {
-      return [...processedData].sort((a, b) => b.volume - a.volume).slice(0, 3);
-  }, [processedData]);
-
-    const newListingsItems = useMemo(() => {
-            return [...processedData]
-                .sort((a, b) => (b.listedAt || 0) - (a.listedAt || 0))
-                .slice(0, 3);
+    // --- GALLERIES ---
+    const featuredItems = useMemo(() => {
+        return [...processedData].sort((a, b) => b.volume - a.volume).slice(0, 3);
     }, [processedData]);
-  
-  const desktopLeftData = processedData.slice(0, 5);
-  const desktopRightData = processedData.slice(5, 10);
-  const mobileSlideOne = processedData.slice(0, 5);
-  const mobileSlideTwo = processedData.slice(5, 10);
+    const newListingsItems = useMemo(() => {
+        return [...processedData].sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0)).slice(0, 3);
+    }, [processedData]);
+
+    // --- TABLE DATA ---
+    const desktopLeftData = processedData.slice(0, 5);
+    const desktopRightData = processedData.slice(5, 10);
+    const mobileSlideOne = processedData.slice(0, 5);
+    const mobileSlideTwo = processedData.slice(5, 10);
   
   const trustedBrands = [ 
     { name: "POLYGON", icon: "bi-link-45deg", isCustom: false },
@@ -704,3 +644,4 @@ function DesktopTable({ data, formatTablePrice, formatTableVolume, getRankStyle 
 }
 
 export default dynamicImport(() => Promise.resolve(Home), { ssr: false });
+
