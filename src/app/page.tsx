@@ -66,12 +66,11 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
-// --- ASSET CARD ---
-const AssetCard = ({ item }: { item: any }) => {
+// --- ASSET CARD (FIXED MINT YEAR) ---
+const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisplay: string, volumeDisplay: string }) => {
     return (
       <div className="asset-card-container hover-lift" style={{ cursor: 'pointer' }}>
           <Link href={`/asset/${item.id}`} className="text-decoration-none w-100">
-              
               <div className="position-relative w-100" style={{ 
                   height: '160px', 
                   borderRadius: '12px', 
@@ -86,9 +85,7 @@ const AssetCard = ({ item }: { item: any }) => {
                         fill 
                         style={{ objectFit: 'fill', objectPosition: 'center' }} 
                    />
-
                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.15)' }}></div>
-
                    <div style={{
                        position: 'absolute',
                        top: '50%',
@@ -113,7 +110,6 @@ const AssetCard = ({ item }: { item: any }) => {
                            {item.name}
                        </h3>
                    </div>
-
                    <div style={{
                        position: 'absolute',
                        bottom: '10px',
@@ -132,11 +128,11 @@ const AssetCard = ({ item }: { item: any }) => {
                            fontWeight: '600',
                            textShadow: '0 1px 3px rgba(0,0,0,1)'
                        }}>
-                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED 2025
+                           {/* ✅ FIXED: Dynamic Mint Year */}
+                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED {item.mintYear}
                        </p>
                    </div>
               </div>
-              
               <div className="w-100 d-flex justify-content-between align-items-end px-2">
                   <div className="text-start">
                       <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Name</div>
@@ -144,11 +140,11 @@ const AssetCard = ({ item }: { item: any }) => {
                   </div>
                   <div className="text-center">
                       <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Price</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.priceUsdDisplay}</h5>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{priceDisplay}</h5>
                   </div>
                   <div className="text-end">
                       <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Vol</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.volumeUsdDisplay}</h5>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{volumeDisplay}</h5>
                   </div>
               </div>
           </Link>
@@ -216,12 +212,7 @@ function Home() {
                 // Stats Map: volume, lastSale, listedTime
                 const statsMap: Record<number, any> = {};
                 const now = Date.now();
-                let timeLimit = Infinity;
-                if (timeFilter === '1H') timeLimit = 3600 * 1000;
-                else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
-                else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
-                else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
-
+                
                 if (allActivities) {
                     allActivities.forEach((act: any) => {
                         const tid = Number(act.token_id);
@@ -233,19 +224,32 @@ function Home() {
                             if (isNaN(actTime)) actTime = new Date(act.created_at).getTime();
                         } catch { actTime = new Date(act.created_at).getTime(); }
 
-                        if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
+                        // ✅ ADDED mintTime to tracker
+                        if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0, mintTime: 0 };
+                        
                         if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
+
+                        // ✅ 1. Capture Mint Time (Strictly from Mint activity)
+                        if (act.activity_type === 'Mint') {
+                            statsMap[tid].mintTime = actTime;
+                        }
+
+                        // 2. Capture Last Sale Price
                         if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
                             statsMap[tid].lastSale = price;
                         }
+
+                        // 3. Calculate Volume
                         if (act.activity_type === 'Sale') {
                             const age = now - actTime;
-                            if (age >= 0) {
-                                statsMap[tid].volume += price;
-                                statsMap[tid].sales += 1;
-                            }
+                            // Accumulate volume regardless of filter here (filtering happens later)
+                            statsMap[tid].volume += price;
+                            statsMap[tid].sales += 1;
                         }
-                        if ((act.activity_type === 'List' || act.activity_type === 'Mint')) {
+
+                        // ✅ 4. STRICT JUST LISTED LOGIC (Fixing the bug)
+                        // ONLY update listedTime if it is explicitly a 'List' event.
+                        if (act.activity_type === 'List') {
                             if (actTime > statsMap[tid].listedTime) {
                                 statsMap[tid].listedTime = actTime;
                             }
@@ -268,7 +272,7 @@ function Home() {
                         const metaRes = await fetch(resolveIPFS(uri));
                         const meta = metaRes.ok ? await metaRes.json() : {};
                         const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
-                        const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
+                        const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0, mintTime: 0 };
                         const offersCount = offersCountMap[tid] || 0;
                         const conviction = votesMap[idStr] || 0;
                         const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
@@ -277,6 +281,10 @@ function Home() {
                         if (stats.lastSale > 0) {
                             change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
                         }
+
+                        // ✅ Calculate Mint Year dynamically
+                        const mintYear = stats.mintTime > 0 ? new Date(stats.mintTime).getFullYear() : 2025;
+
                         return {
                             id: tid,
                             name: meta.name || `Asset #${id}`,
@@ -286,6 +294,7 @@ function Home() {
                             volume: stats.volume,
                             listedTime: stats.listedTime,
                             lastActive: stats.lastActive,
+                            mintYear: mintYear, // Pass it to item
                             trendingScore: trendingScore,
                             offersCount: offersCount,
                             convictionScore: conviction,
@@ -300,7 +309,6 @@ function Home() {
         };
         fetchMarketData();
     }, [publicClient, timeFilter]);
-
     // --- DATA PROCESSING WITH TIME FILTER ---
     const processedData = useMemo(() => {
         let data = [...realListings];
@@ -325,14 +333,17 @@ function Home() {
 
     // --- GALLERIES ---
     const featuredItems = useMemo(() => {
-        return [...processedData].sort((a, b) => b.volume - a.volume).slice(0, 3);
+        return [...processedData]
+            .sort((a, b) => b.volume - a.volume)
+            .slice(0, 3);
     }, [processedData]);
-    // Just Listed: Sort by listedTime DESC, top 3
+
+    // ✅ FIXED: Just Listed - Sort by PURE listedTime DESC
+    // Decoupled from processedData to ensure we get absolute latest listings
     const newListingsItems = useMemo(() => {
-        // LOGIC FIX: Use realListings (raw) and listedTime for true latest listings
         return [...realListings]
             .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
-            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0))
+            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0)) // Newest Listing First
             .slice(0, 3);
     }, [realListings]);
 
@@ -461,23 +472,55 @@ function Home() {
           <div className="mt-5 mb-5">
               <h3 className="text-white fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px' }}>Top Performers</h3>
               {loading ? <div className="text-secondary text-center">Loading Assets...</div> :
-              <div className="row g-4 d-none d-lg-flex">
-                  {featuredItems.map((item) => (<div key={item.id} className="col-lg-4 col-xl-4"><AssetCard item={item} /></div>))}
-              </div>}
-              {!loading && <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
-                  {featuredItems.map((item) => (<div key={item.id} className="mobile-card-item" style={{ minWidth: '85%', flex: '0 0 85%' }}><AssetCard item={item} /></div>))}
-              </div>}
+                            <div className="row g-4 d-none d-lg-flex">
+                                    {featuredItems.map((item) => (
+                                        <div key={item.id} className="col-lg-4 col-xl-4">
+                                            <AssetCard 
+                                                item={item} 
+                                                priceDisplay={formatTablePrice(item.pricePol)} 
+                                                volumeDisplay={formatTableVolume(item.volume)} 
+                                            />
+                                        </div>
+                                    ))}
+                            </div>}
+                            {!loading && <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
+                                    {featuredItems.map((item) => (
+                                        <div key={item.id} className="mobile-card-item" style={{ minWidth: '85%', flex: '0 0 85%' }}>
+                                            <AssetCard 
+                                                item={item} 
+                                                priceDisplay={formatTablePrice(item.pricePol)} 
+                                                volumeDisplay={formatTableVolume(item.volume)} 
+                                            />
+                                        </div>
+                                    ))}
+                            </div>}
           </div>
 
           <div style={{ marginTop: '5.25rem', marginBottom: '3rem' }}>
               <h3 className="text-white fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px' }}>Just Listed</h3>
               {loading ? <div className="text-secondary text-center">Loading Listings...</div> :
-              <div className="row g-4 d-none d-lg-flex">
-                  {newListingsItems.map((item) => (<div key={item.id} className="col-lg-4 col-xl-4"><AssetCard item={item} /></div>))}
-              </div>}
-              {!loading && <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
-                  {newListingsItems.map((item) => (<div key={item.id} className="mobile-card-item" style={{ minWidth: '85%', flex: '0 0 85%' }}><AssetCard item={item} /></div>))}
-              </div>}
+                            <div className="row g-4 d-none d-lg-flex">
+                                    {newListingsItems.map((item) => (
+                                        <div key={item.id} className="col-lg-4 col-xl-4">
+                                            <AssetCard 
+                                                item={item} 
+                                                priceDisplay={formatTablePrice(item.pricePol)} 
+                                                volumeDisplay={formatTableVolume(item.volume)} 
+                                            />
+                                        </div>
+                                    ))}
+                            </div>}
+                            {!loading && <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
+                                    {newListingsItems.map((item) => (
+                                        <div key={item.id} className="mobile-card-item" style={{ minWidth: '85%', flex: '0 0 85%' }}>
+                                            <AssetCard 
+                                                item={item} 
+                                                priceDisplay={formatTablePrice(item.pricePol)} 
+                                                volumeDisplay={formatTableVolume(item.volume)} 
+                                            />
+                                        </div>
+                                    ))}
+                            </div>}
           </div>
       </section>
 
@@ -660,4 +703,3 @@ function DesktopTable({ data, formatTablePrice, formatTableVolume, getRankStyle 
 }
 
 export default dynamicImport(() => Promise.resolve(Home), { ssr: false });
-
