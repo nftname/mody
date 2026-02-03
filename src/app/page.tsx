@@ -335,14 +335,11 @@ function Home() {
     }, [processedData]);
     // Just Listed: Sort by PURE listedTime DESC, top 3
     const newListingsItems = useMemo(() => {
-        // 1. Get raw realListings (bypass table filters)
         let items = [...realListings];
-        // 2. Strict Filter: Must have a valid LIST timestamp > 0
         items = items
             .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
-            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0)) // Newest Listing First
+            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0))
             .slice(0, 3);
-        // 3. No formatting here
         return items;
     }, [realListings]);
 
