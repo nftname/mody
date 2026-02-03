@@ -67,11 +67,10 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
 };
 
 // --- ASSET CARD ---
-const AssetCard = ({ item }: { item: any }) => {
+const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisplay: string, volumeDisplay: string }) => {
     return (
       <div className="asset-card-container hover-lift" style={{ cursor: 'pointer' }}>
           <Link href={`/asset/${item.id}`} className="text-decoration-none w-100">
-              
               <div className="position-relative w-100" style={{ 
                   height: '160px', 
                   borderRadius: '12px', 
@@ -86,9 +85,7 @@ const AssetCard = ({ item }: { item: any }) => {
                         fill 
                         style={{ objectFit: 'fill', objectPosition: 'center' }} 
                    />
-
                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.15)' }}></div>
-
                    <div style={{
                        position: 'absolute',
                        top: '50%',
@@ -113,7 +110,6 @@ const AssetCard = ({ item }: { item: any }) => {
                            {item.name}
                        </h3>
                    </div>
-
                    <div style={{
                        position: 'absolute',
                        bottom: '10px',
@@ -136,7 +132,6 @@ const AssetCard = ({ item }: { item: any }) => {
                        </p>
                    </div>
               </div>
-              
               <div className="w-100 d-flex justify-content-between align-items-end px-2">
                   <div className="text-start">
                       <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Name</div>
@@ -144,11 +139,11 @@ const AssetCard = ({ item }: { item: any }) => {
                   </div>
                   <div className="text-center">
                       <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Price</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.priceUsdDisplay}</h5>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{priceDisplay}</h5>
                   </div>
                   <div className="text-end">
                       <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Vol</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.volumeUsdDisplay}</h5>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{volumeDisplay}</h5>
                   </div>
               </div>
           </Link>
@@ -234,10 +229,15 @@ function Home() {
                         } catch { actTime = new Date(act.created_at).getTime(); }
 
                         if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
+                        // Track General Activity Time
                         if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
+
+                        // 1. Capture Last Sale Price
                         if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
                             statsMap[tid].lastSale = price;
                         }
+
+                        // 2. Calculate Volume (Accumulate all sales)
                         if (act.activity_type === 'Sale') {
                             const age = now - actTime;
                             if (age >= 0) {
@@ -245,7 +245,10 @@ function Home() {
                                 statsMap[tid].sales += 1;
                             }
                         }
-                        // Only track actual MARKET LISTINGS for the "Just Listed" section
+
+                        // 3. STRICT LISTING TIME LOGIC (THE FIX)
+                        // ONLY update 'listedTime' if the activity is explicitly 'List'.
+                        // DO NOT include 'Mint' here.
                         if (act.activity_type === 'List') {
                             if (actTime > statsMap[tid].listedTime) {
                                 statsMap[tid].listedTime = actTime;
@@ -326,40 +329,22 @@ function Home() {
 
     // --- GALLERIES ---
     const featuredItems = useMemo(() => {
-        // Inject priceUsdDisplay and volumeUsdDisplay for AssetCard
         return [...processedData]
             .sort((a, b) => b.volume - a.volume)
-            .slice(0, 3)
-            .map(item => {
-                const usdPrice = item.pricePol * (exchangeRates.pol || 0);
-                const usdVol = item.volume * (exchangeRates.pol || 0);
-                return {
-                    ...item,
-                    priceUsdDisplay: `$${usdPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
-                    volumeUsdDisplay: `$${usdVol.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-                };
-            });
-    }, [processedData, exchangeRates]);
-    // Just Listed: Sort by listedTime DESC, top 3
-    const newListingsItems = useMemo(() => {
-        // 1. Get raw data
-        let items = [...realListings];
-        // 2. Filter & Sort (Newest Listings First)
-        items = items
-            .filter(item => item.listedTime && item.listedTime > 0)
-            .sort((a, b) => b.listedTime - a.listedTime)
             .slice(0, 3);
-        // 3. INJECT DISPLAY FORMATTING (Critical Fix)
-        return items.map(item => {
-            const usdPrice = item.pricePol * (exchangeRates.pol || 0);
-            const usdVol = item.volume * (exchangeRates.pol || 0);
-            return {
-                ...item,
-                priceUsdDisplay: `$${usdPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
-                volumeUsdDisplay: `$${usdVol.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-            };
-        });
-    }, [realListings, exchangeRates]);
+    }, [processedData]);
+    // Just Listed: Sort by PURE listedTime DESC, top 3
+    const newListingsItems = useMemo(() => {
+        // 1. Get raw realListings (bypass table filters)
+        let items = [...realListings];
+        // 2. Strict Filter: Must have a valid LIST timestamp > 0
+        items = items
+            .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
+            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0)) // Newest Listing First
+            .slice(0, 3);
+        // 3. No formatting here
+        return items;
+    }, [realListings]);
 
     // --- TABLE DATA ---
     const desktopLeftData = processedData.slice(0, 5);
@@ -486,23 +471,55 @@ function Home() {
           <div className="mt-5 mb-5">
               <h3 className="text-white fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px' }}>Top Performers</h3>
               {loading ? <div className="text-secondary text-center">Loading Assets...</div> :
-              <div className="row g-4 d-none d-lg-flex">
-                  {featuredItems.map((item) => (<div key={item.id} className="col-lg-4 col-xl-4"><AssetCard item={item} /></div>))}
-              </div>}
-              {!loading && <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
-                  {featuredItems.map((item) => (<div key={item.id} className="mobile-card-item" style={{ minWidth: '85%', flex: '0 0 85%' }}><AssetCard item={item} /></div>))}
-              </div>}
+                            <div className="row g-4 d-none d-lg-flex">
+                                    {featuredItems.map((item) => (
+                                        <div key={item.id} className="col-lg-4 col-xl-4">
+                                            <AssetCard 
+                                                item={item} 
+                                                priceDisplay={formatTablePrice(item.pricePol)} 
+                                                volumeDisplay={formatTableVolume(item.volume)} 
+                                            />
+                                        </div>
+                                    ))}
+                            </div>}
+                            {!loading && <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
+                                    {featuredItems.map((item) => (
+                                        <div key={item.id} className="mobile-card-item" style={{ minWidth: '85%', flex: '0 0 85%' }}>
+                                            <AssetCard 
+                                                item={item} 
+                                                priceDisplay={formatTablePrice(item.pricePol)} 
+                                                volumeDisplay={formatTableVolume(item.volume)} 
+                                            />
+                                        </div>
+                                    ))}
+                            </div>}
           </div>
 
           <div style={{ marginTop: '5.25rem', marginBottom: '3rem' }}>
               <h3 className="text-white fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px' }}>Just Listed</h3>
               {loading ? <div className="text-secondary text-center">Loading Listings...</div> :
-              <div className="row g-4 d-none d-lg-flex">
-                  {newListingsItems.map((item) => (<div key={item.id} className="col-lg-4 col-xl-4"><AssetCard item={item} /></div>))}
-              </div>}
-              {!loading && <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
-                  {newListingsItems.map((item) => (<div key={item.id} className="mobile-card-item" style={{ minWidth: '85%', flex: '0 0 85%' }}><AssetCard item={item} /></div>))}
-              </div>}
+                            <div className="row g-4 d-none d-lg-flex">
+                                    {newListingsItems.map((item) => (
+                                        <div key={item.id} className="col-lg-4 col-xl-4">
+                                            <AssetCard 
+                                                item={item} 
+                                                priceDisplay={formatTablePrice(item.pricePol)} 
+                                                volumeDisplay={formatTableVolume(item.volume)} 
+                                            />
+                                        </div>
+                                    ))}
+                            </div>}
+                            {!loading && <div className="d-flex d-lg-none mobile-card-wrapper" style={{ gap: '15px', overflowX: 'auto', paddingBottom: '10px', paddingRight: '20px' }}>
+                                    {newListingsItems.map((item) => (
+                                        <div key={item.id} className="mobile-card-item" style={{ minWidth: '85%', flex: '0 0 85%' }}>
+                                            <AssetCard 
+                                                item={item} 
+                                                priceDisplay={formatTablePrice(item.pricePol)} 
+                                                volumeDisplay={formatTableVolume(item.volume)} 
+                                            />
+                                        </div>
+                                    ))}
+                            </div>}
           </div>
       </section>
 
