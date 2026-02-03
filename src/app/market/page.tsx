@@ -162,8 +162,10 @@ function MarketPage() {
   const [loading, setLoading] = useState(true);
   const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+    // --- SEARCH STATE ---
+    const [searchQuery, setSearchQuery] = useState('');
 
   const publicClient = usePublicClient();
 
@@ -436,6 +438,16 @@ function MarketPage() {
               return timeDiff <= limit;
           });
       }
+
+      // --- 2. SEARCH FILTER (Added) ---
+      if (searchQuery.trim()) {
+          const lowerQuery = searchQuery.toLowerCase();
+          processedData = processedData.filter(item => 
+              // Search by Name OR Token ID
+              item.name.toLowerCase().includes(lowerQuery) || 
+              item.id.toString().includes(lowerQuery)
+          );
+      }
       
       if (activeFilter === 'Top') { processedData.sort((a, b) => b.volume - a.volume); }
       else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
@@ -594,8 +606,35 @@ function MarketPage() {
           </div>
       </section>
 
+      {/* --- SEARCH BAR SECTION --- */}
+      <div className="market-content-wrapper mt-3 mb-2">
+        <div className="position-relative" style={{ maxWidth: '380px' }}>
+            <i className="bi bi-search position-absolute text-secondary" 
+               style={{ left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px' }}></i>
+            <input 
+                type="text" 
+                placeholder="Search Asset Name or Rank ID..." 
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
+                className="form-control border-0 text-white shadow-none"
+                style={{ 
+                    backgroundColor: '#131517',
+                    border: '1px solid #333', 
+                    borderRadius: '4px',
+                    padding: '8px 10px 8px 38px',
+                    fontSize: '13px',
+                    color: '#E0E0E0',
+                    height: '36px',
+                    transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#FCD535'}
+                onBlur={(e) => e.target.style.borderColor = '#333'}
+            />
+        </div>
+      </div>
+
       {/* REPLACED 'container' with 'market-content-wrapper' for matching desktop width */}
-      <section className="market-content-wrapper mt-5 pt-0">
+      <section className="market-content-wrapper mt-2 pt-0"> {/* Changed mt-5 to mt-2 for tighter layout */}
           <div className="table-responsive no-scrollbar">
               {loading ? ( <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
               ) : activeFilter === 'Watchlist' && finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">Your watchlist is empty.</div>
