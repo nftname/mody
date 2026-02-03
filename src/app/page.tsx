@@ -68,87 +68,62 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
 
 // --- ASSET CARD ---
 const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisplay: string, volumeDisplay: string }) => {
-    return (
-      <div className="asset-card-container hover-lift" style={{ cursor: 'pointer' }}>
-          <Link href={`/asset/${item.id}`} className="text-decoration-none w-100">
-              <div className="position-relative w-100" style={{ 
-                  height: '160px', 
-                  borderRadius: '12px', 
-                  overflow: 'hidden', 
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.6)', 
-                  marginBottom: '10px', 
-                  border: '1px solid rgba(255,255,255,0.1)'
-              }}>
-                   <Image 
-                        src="/cart.jpg" 
-                        alt={item.name} 
-                        fill 
-                        style={{ objectFit: 'fill', objectPosition: 'center' }} 
-                   />
-                   <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.15)' }}></div>
-                   <div style={{
-                       position: 'absolute',
-                       top: '50%',
-                       left: '50%',
-                       transform: 'translate(-50%, -45%)', 
-                       textAlign: 'center',
-                       width: '100%',
-                       zIndex: 10
-                   }}>
-                       <h3 style={{
-                           fontFamily: '"Playfair Display", serif',
-                           fontStyle: 'italic',
-                           fontWeight: '700',
-                           fontSize: '28px',
-                           background: 'linear-gradient(180deg, #e6cf8b 0%, #c49938 50%, #9e7b2a 100%)',
-                           WebkitBackgroundClip: 'text',
-                           WebkitTextFillColor: 'transparent',
-                           filter: 'drop-shadow(0px 2px 3px rgba(0,0,0,0.9))',
-                           margin: 0,
-                           letterSpacing: '1px'
-                       }}>
-                           {item.name}
-                       </h3>
-                   </div>
-                   <div style={{
-                       position: 'absolute',
-                       bottom: '10px',
-                       width: '100%',
-                       textAlign: 'center',
-                       zIndex: 10,
-                       padding: '0 10px'
-                   }}>
-                       <p style={{
-                           fontFamily: 'serif',
-                           fontSize: '9px',
-                           color: '#D4D4D4',
-                           letterSpacing: '1.5px',
-                           margin: 0,
-                           textTransform: 'uppercase',
-                           fontWeight: '600',
-                           textShadow: '0 1px 3px rgba(0,0,0,1)'
-                       }}>
-                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED {item.mintYear}
-                       </p>
-                   </div>
-              </div>
-              <div className="w-100 d-flex justify-content-between align-items-end px-2">
-                  <div className="text-start">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Name</div>
-                      <h5 className="fw-bold m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{item.name}</h5>
-                  </div>
-                  <div className="text-center">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Price</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{priceDisplay}</h5>
-                  </div>
-                  <div className="text-end">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px' }}>Vol</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#ffffff' }}>{volumeDisplay}</h5>
-                  </div>
-              </div>
-          </Link>
-      </div>
-    );
+        return (
+            <div className="asset-card-container hover-lift" style={{ cursor: 'pointer' }}>
+                <Link href={`/asset/${item.id}`} className="text-decoration-none w-100">
+                    <div className="position-relative w-100" style={{
+                        height: '160px',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        boxShadow: '0 8px 20px rgba(0,0,0,0.6)',
+                        marginBottom: '10px',
+                        border: '1px solid rgba(255,255,255,0.1)'
+                    }}>
+                        <Image
+                            src="/cart.jpg"
+                            alt={item.name}
+                            fill
+                            style={{ objectFit: 'fill', objectPosition: 'center' }}
+                        />
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.15)' }}></div>
+                        <div style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -45%)',
+                            textAlign: 'center',
+                            width: '100%',
+                            zIndex: 10
+                        }}>
+                            <h3 style={{
+                                fontFamily: '"Playfair Display", serif',
+                                fontStyle: 'italic',
+                                fontWeight: '700',
+                                fontSize: '28px',
+                                background: 'linear-gradient(180deg, #e6cf8b 0%, #c49938 50%, #9e7b2a 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                filter: 'drop-shadow(0px 2px 3px rgba(0,0,0,0.9))',
+                                margin: 0,
+                                letterSpacing: '1px'
+                            }}>
+                                {item.name}
+                            </h3>
+                            <div style={{
+                                fontFamily: 'serif',
+                                fontSize: '13px',
+                                color: '#fff',
+                                marginTop: '8px',
+                                fontWeight: 600,
+                                textShadow: '0 1px 3px rgba(0,0,0,1)'
+                            }}>
+                                #{item.id} <span style={{ opacity: 0.7, margin: '0 6px' }}>|</span> سنة الصك: <span style={{ color: '#c49938' }}>{item.mintYear || '----'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </Link>
+            </div>
+        );
 };
   
 function Home() {
@@ -339,11 +314,12 @@ function Home() {
             .sort((a, b) => b.volume - a.volume)
             .slice(0, 3);
     }, [processedData]);
-    // Just Listed: Sort by PURE listedTime DESC, top 3
+    // Just Listed: Only assets that are currently listed (have a valid listing in the market), sorted by latest listing
     const newListingsItems = useMemo(() => {
         let items = [...realListings];
+        // فقط الأصول التي لها listedTime حقيقي وموجودة فعليًا في السوق
         items = items
-            .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
+            .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0 && item.pricePol > 0)
             .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0))
             .slice(0, 3);
         return items;
