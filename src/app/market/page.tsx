@@ -323,78 +323,72 @@ function MarketPage() {
                 });
             }
 
-            const offersCountMap: any = {};
-            if (offersData) offersData.forEach((o: any) => {
-                const tid = Number(o.token_id);
-                offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
-            });
+              const finalData = useMemo(() => {
+                  let processedData = [...realListings];
 
-            // 3. Merge On-Chain & Off-Chain Data
-            const items = await Promise.all(tokenIds.map(async (id, index) => {
-                try {
-                    const tid = Number(id); 
-                    const idStr = id.toString(); // KEY FIX: Convert BigInt to String for lookup
-                    const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
-                    const metaRes = await fetch(resolveIPFS(uri));
-                    const meta = metaRes.ok ? await metaRes.json() : {};
-                    const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
-                    
-                    const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
-                    const offersCount = offersCountMap[tid] || 0;
-                    // LOOKUP: Use the String Key
-                    const conviction = votesMap[idStr] || 0;
-                    
-                    // Debug: Log conviction for first few items
-                    if (index < 3) {
-                        console.log(`🔍 Token #${idStr}: conviction=${conviction}`);
-                    }
-                    
-                    // HIGH IMPACT FORMULA: Weight Sales (20), Offers (5), and Conviction (0.2)
-                    // Note: Conviction is now 100× larger per vote, so weight adjusted from 20 to 0.2
-                    const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
-                    
-                    const pricePol = parseFloat(formatEther(prices[index]));
-                    
-                    // Calculate Change based on Last Sale
-                    let change = 0;
-                    if (stats.lastSale > 0) {
-                        change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
-                    }
+                  // 1. TIME FILTER
+                  if (timeFilter !== 'All') {
+                      let limit = Infinity;
+                      const now = Date.now();
+                      if (timeFilter === '1H') limit = 3600 * 1000;
+                      else if (timeFilter === '6H') limit = 3600 * 6 * 1000;
+                      else if (timeFilter === '24H') limit = 3600 * 24 * 1000;
+                      else if (timeFilter === '7D') limit = 3600 * 24 * 7 * 1000;
 
-                    return {
-                        id: tid,
-                        name: meta.name || `Asset #${id}`,
-                        tier: tierAttr,
-                        pricePol: pricePol, 
-                        lastSale: stats.lastSale,
-                        volume: stats.volume,
-                        listedTime: stats.listedTime,
-                        lastActive: stats.lastActive,
-                        trendingScore: trendingScore,
-                        offersCount: offersCount,
-                        convictionScore: conviction,
-                        listed: 'Now', 
-                        change: change,
-                        currencySymbol: 'POL'
-                    };
-                } catch (e) { return null; }
-            }));
+                      processedData = processedData.filter(item => {
+                          const timeDiff = now - (item.lastActive || 0); 
+                          return timeDiff <= limit;
+                      });
+                  }
 
-            setRealListings(items.filter(i => i !== null));
-        } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
-    };
+                  // 2. SEARCH FILTER (Dynamic)
+                  if (searchQuery.trim()) {
+                      const lowerQuery = searchQuery.toLowerCase();
+                      processedData = processedData.filter(item => 
+                          item.name.toLowerCase().includes(lowerQuery) || 
+                          item.id.toString().includes(lowerQuery)
+                      );
+                  }
+                  // 3. CATEGORY & SORTING
+                  if (activeFilter === 'Top') { processedData.sort((a, b) => b.volume - a.volume); }
+                  else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
+                  else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
+                  else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
+                  else if (activeFilter === 'Conviction') {
+                      processedData.sort((a, b) => {
+                          const scoreDiff = (Number(b.convictionScore) || 0) - (Number(a.convictionScore) || 0);
+                          if (scoreDiff !== 0) return scoreDiff;
+                          return (Number(b.volume) || 0) - (Number(a.volume) || 0);
+                      });
+                  }
+                  else { processedData.sort((a, b) => a.id - b.id); }
 
-    fetchMarketData();
-
-    // 🔴 REALTIME LISTENER DISABLED: Causing performance issues due to high-frequency bot updates
-    // const channel = supabase
-    //   .channel('market-realtime')
-    //   .on(
-    //     'postgres_changes',
-    //     { event: '*', schema: 'public', table: 'conviction_votes' },
-    //     () => {
-    //       console.log('🔥 Realtime: conviction_votes changed');
-    //       fetchMarketData();
+                  // 4. COLUMN SORTING
+                  if (sortConfig) {
+                      processedData.sort((a, b) => {
+                          if (["volume", "pricePol", "lastSale", "trendingScore", "convictionScore"].includes(sortConfig.key)) {
+                              const numA = Number(a[sortConfig.key]) || 0;
+                              const numB = Number(b[sortConfig.key]) || 0;
+                              return sortConfig.direction === "asc" ? numB - numA : numA - numB;
+                          }
+                          if (sortConfig.key === "rank") {
+                              const modifier = sortConfig.direction === "asc" ? 1 : -1;
+                              if (activeFilter === "Trending") return (b.trendingScore - a.trendingScore) * modifier;
+                              if (activeFilter === "Top") return (b.volume - a.volume) * modifier;
+                              if (activeFilter === "Most Offers") return (b.offersCount - a.offersCount) * modifier;
+                              if (activeFilter === "Conviction") return (b.convictionScore - a.convictionScore) * modifier;
+                              return (a.id - b.id) * modifier;
+                          }
+                          if (sortConfig.key === "name") {
+                              if (a.name < b.name) return sortConfig.direction === "asc" ? -1 : 1;
+                              if (a.name > b.name) return sortConfig.direction === "asc" ? 1 : -1;
+                              return 0;
+                          }
+                          return 0;
+                      });
+                  }
+                  return processedData;
+              }, [activeFilter, favoriteIds, sortConfig, realListings, timeFilter, searchQuery]);
     //     }
     //   )
     //   .on(
@@ -606,9 +600,10 @@ function MarketPage() {
           </div>
       </section>
 
+
       {/* --- SEARCH BAR SECTION --- */}
-      <div className="market-content-wrapper mt-3 mb-2">
-        <div className="position-relative" style={{ maxWidth: '380px' }}>
+      <div className="market-content-wrapper mt-3 mb-1">
+        <div className="position-relative" style={{ maxWidth: '340px' }}>
             <i className="bi bi-search position-absolute text-secondary" 
                style={{ left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px' }}></i>
             <input 
