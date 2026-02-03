@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NNM Sovereign Asset Manager</title>
+    <style>
+        body { background-color: #121212; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+        h1 { color: #FCD535; margin: 0; }
+        
+        /* Filters */
+        .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .price-btn { 
+            background: #1E1E1E; border: 1px solid #333; color: #888; 
+            padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: 0.2s;
+        }
+        .price-btn:hover { background: #333; color: #fff; }
+        .price-btn.active { background: #FCD535; color: #000; border-color: #FCD535; }
+
+        /* Grid */
+        .wallet-section { margin-bottom: 30px; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333; }
+        .wallet-title { color: #888; font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid #2a2a2a; padding-bottom: 5px; }
+        .assets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+        
+        .asset-card { 
+            background: #252525; border: 1px solid #333; padding: 10px; border-radius: 6px; 
+            cursor: pointer; position: relative; transition: 0.2s; 
+        }
+        .asset-card:hover { transform: translateY(-2px); border-color: #555; }
+        .asset-card.selected { border-color: #FCD535; background: #2a2a20; }
+        
+        .asset-name { font-weight: bold; font-size: 16px; color: #fff; }
+        .asset-id { font-size: 12px; color: #666; }
+        .asset-price-tag { 
+            position: absolute; top: 5px; right: 5px; font-size: 10px; 
+            background: #000; padding: 2px 6px; border-radius: 4px; color: #FCD535; display: none; 
+        }
+        .asset-card.priced .asset-price-tag { display: block; }
+
+        .controls { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; padding: 15px; border-radius: 10px; border: 1px solid #FCD535; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .btn-main { background: #FCD535; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        input[type="file"] { display: none; }
+        .upload-label { background: #333; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>👑 Sovereign Manager</h1>
+        <div>
+            <label for="fileInput" class="upload-label">📂 Load Inventory JSON</label>
+            <input type="file" id="fileInput" accept=".json">
+        </div>
+    </div>
+
+    <div class="filters" id="priceFilters">
+        </div>
+
+    <div id="content"></div>
+
+    <div class="controls" style="display:none;" id="saveControls">
+        <div style="margin-bottom:10px; color:#888;">Assigned: <span id="countAssigned" style="color:#fff">0</span> Assets</div>
+        <button class="btn-main" onclick="downloadPlan()">💾 Download Listing Plan</button>
+    </div>
+</div>
+
+<script>
+    const prices = [100000, 50000, 30000, 20000, 10000, 5000, 1000];
+    let currentPrice = null;
+    let inventory = [];
+    let plan = {}; // { tokenId: price }
+
+    // Init UI
+    const filterContainer = document.getElementById('priceFilters');
+    prices.forEach(p => {
+        const btn = document.createElement('div');
+        btn.className = 'price-btn';
+        btn.innerText = `$${p.toLocaleString()}`;
+        btn.onclick = () => setPriceMode(p, btn);
+        filterContainer.appendChild(btn);
+    });
+
+    function setPriceMode(price, btn) {
+        currentPrice = price;
+        document.querySelectorAll('.price-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    // Load File
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            inventory = JSON.parse(e.target.result);
+            renderWallets();
+            document.getElementById('saveControls').style.display = 'block';
+        };
+        reader.readAsText(file);
+    });
+
+    function renderWallets() {
+        const content = document.getElementById('content');
+        content.innerHTML = '';
+        
+        inventory.forEach(wallet => {
+            const section = document.createElement('div');
+            section.className = 'wallet-section';
+            section.innerHTML = `<div class="wallet-title">WALLET #${wallet.walletId} (${wallet.assets.length} items) - ${wallet.address}</div>`;
+            
+            const grid = document.createElement('div');
+            grid.className = 'assets-grid';
+            
+            wallet.assets.forEach(asset => {
+                const card = document.createElement('div');
+                card.className = 'asset-card';
+                card.id = `card-${asset.id}`;
+                card.onclick = () => toggleAsset(asset.id, card);
+                
+                card.innerHTML = `
+                    <div class="asset-name">${asset.name}</div>
+                    <div class="asset-id">#${asset.id}</div>
+                    <div class="asset-price-tag" id="tag-${asset.id}"></div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            section.appendChild(grid);
+            content.appendChild(section);
+        });
+    }
+
+    function toggleAsset(id, card) {
+        if (!currentPrice) { alert("Please select a price filter first!"); return; }
+        
+        // Toggle Logic
+        if (plan[id] === currentPrice) {
+            // Remove if clicked again with same price
+            delete plan[id];
+            card.classList.remove('selected', 'priced');
+            document.getElementById(`tag-${id}`).innerText = '';
+        } else {
+            // Assign new price
+            plan[id] = currentPrice;
+            card.classList.add('selected', 'priced');
+            document.getElementById(`tag-${id}`).innerText = `$${currentPrice.toLocaleString()}`;
+        }
+        updateCount();
+    }
+
+    function updateCount() {
+        document.getElementById('countAssigned').innerText = Object.keys(plan).length;
+    }
+
+    function downloadPlan() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(plan, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "listing_plan.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+</script>
+
+</body>
+</html>
