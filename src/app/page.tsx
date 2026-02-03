@@ -332,8 +332,8 @@ function Home() {
         // Use realListings (raw data) to ensure we get the absolute latest items
         // regardless of the current 'Top' or 'Trending' tab selection.
         return [...realListings]
-            .filter(item => item.listedAt > 0)
-            .sort((a, b) => b.listedAt - a.listedAt)
+            .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
+            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0))
             .slice(0, 3);
     }, [realListings]);
 
