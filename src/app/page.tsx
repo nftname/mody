@@ -128,7 +128,7 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                            fontWeight: '600',
                            textShadow: '0 1px 3px rgba(0,0,0,1)'
                        }}>
-                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED 2025
+                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED {item.mintYear}
                        </p>
                    </div>
               </div>
@@ -228,16 +228,21 @@ function Home() {
                             if (isNaN(actTime)) actTime = new Date(act.created_at).getTime();
                         } catch { actTime = new Date(act.created_at).getTime(); }
 
-                        if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
-                        // Track General Activity Time
+                        // Initialize stats including mintTime
+                        if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0, mintTime: 0 };
                         if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
 
-                        // 1. Capture Last Sale Price
+                        // 1. Capture Mint Time (For Dynamic Year Display)
+                        if (act.activity_type === 'Mint') {
+                            statsMap[tid].mintTime = actTime; 
+                        }
+
+                        // 2. Capture Last Sale
                         if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
                             statsMap[tid].lastSale = price;
                         }
 
-                        // 2. Calculate Volume (Accumulate all sales)
+                        // 3. Calculate Volume
                         if (act.activity_type === 'Sale') {
                             const age = now - actTime;
                             if (age >= 0) {
@@ -246,9 +251,8 @@ function Home() {
                             }
                         }
 
-                        // 3. STRICT LISTING TIME LOGIC (THE FIX)
-                        // ONLY update 'listedTime' if the activity is explicitly 'List'.
-                        // DO NOT include 'Mint' here.
+                        // 4. STRICT "JUST LISTED" LOGIC
+                        // ONLY update listedTime if it is explicitly a 'List' event.
                         if (act.activity_type === 'List') {
                             if (actTime > statsMap[tid].listedTime) {
                                 statsMap[tid].listedTime = actTime;
@@ -272,7 +276,8 @@ function Home() {
                         const metaRes = await fetch(resolveIPFS(uri));
                         const meta = metaRes.ok ? await metaRes.json() : {};
                         const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
-                        const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
+                        const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0, mintTime: 0 };
+                        const mintYear = stats.mintTime > 0 ? new Date(stats.mintTime).getFullYear() : '2025';
                         const offersCount = offersCountMap[tid] || 0;
                         const conviction = votesMap[idStr] || 0;
                         const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
@@ -295,7 +300,8 @@ function Home() {
                             convictionScore: conviction,
                             listed: 'Now',
                             change: change,
-                            currencySymbol: 'POL'
+                            currencySymbol: 'POL',
+                            mintYear: mintYear
                         };
                     } catch (e) { return null; }
                 }));
