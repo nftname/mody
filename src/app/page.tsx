@@ -301,24 +301,39 @@ function Home() {
         fetchMarketData();
     }, [publicClient, timeFilter]);
 
-    // --- DATA PROCESSING ---
+    // --- DATA PROCESSING WITH TIME FILTER ---
     const processedData = useMemo(() => {
         let data = [...realListings];
+        // 1. Apply Time Filter (by lastActive)
+        if (timeFilter !== 'All') {
+            let timeLimit = Infinity;
+            if (timeFilter === '1H') timeLimit = 3600 * 1000;
+            else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
+            else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
+            else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
+            const now = Date.now();
+            data = data.filter(item => (now - (item.lastActive || 0)) <= timeLimit);
+        }
+        // 2. Sort by tab
         if (activeTab === 'top') {
             data.sort((a, b) => b.volume - a.volume);
         } else {
             data.sort((a, b) => b.trendingScore - a.trendingScore);
         }
         return data.map((item, index) => ({ ...item, rank: index + 1 }));
-    }, [realListings, activeTab]);
+    }, [realListings, activeTab, timeFilter]);
 
     // --- GALLERIES ---
     const featuredItems = useMemo(() => {
         return [...processedData].sort((a, b) => b.volume - a.volume).slice(0, 3);
     }, [processedData]);
+    // Just Listed: Sort by listedTime DESC, top 3
     const newListingsItems = useMemo(() => {
-        return [...processedData].sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0)).slice(0, 3);
-    }, [processedData]);
+        return [...realListings]
+            .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
+            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0))
+            .slice(0, 3);
+    }, [realListings]);
 
     // --- TABLE DATA ---
     const desktopLeftData = processedData.slice(0, 5);
