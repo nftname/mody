@@ -108,10 +108,19 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // ضبط الارتفاعات
-  let previewHeight = '60px';
-  if (isChart) previewHeight = isMobile ? '120px' : '160px'; 
-  if (isFullBar) previewHeight = isMobile ? '90px' : '60px'; 
+  // --- ضبط الارتفاعات (التوحيد) ---
+  // الهدف: في الكمبيوتر، يجب أن يكون ارتفاع الشريط والرسم البياني متطابقاً (70px مثلاً)
+  let previewHeight = '70px'; // الارتفاع الموحد للكمبيوتر
+  
+  if (isMobile) {
+      if (isChart) previewHeight = '120px'; // للجوال نتركه كبيراً وواضحاً
+      else if (isFullBar) previewHeight = '90px';
+      else previewHeight = '60px'; // للعناصر الصغيرة
+  } else {
+      // للكمبيوتر: توحيد الارتفاع بين الشريط والرسم البياني
+      if (isFullBar || isChart) previewHeight = '70px';
+      else previewHeight = '60px';
+  }
 
   return (
     <div className="embed-card h-100 d-flex flex-column justify-content-between">
@@ -157,7 +166,8 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         .widget-scale-wrapper { transform-origin: center; display: flex; justify-content: center; width: 100%; }
         
         /* Desktop Defaults */
-        .full-bar-scale { transform: scale(0.5); width: auto; } 
+        /* تعديل الاسكيل للشريط لملء الفراغ بشكل أفضل في العمود الجديد */
+        .full-bar-scale { transform: scale(0.65); width: auto; } 
         .individual-scale { transform: scale(0.75); } 
         .chart-scale { width: 100%; height: 100%; } 
 
@@ -167,9 +177,7 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         @media (max-width: 768px) {
             .embed-card { padding: 6px 4px; border: 1px solid rgba(255,255,255,0.05); min-height: 100px; }
             
-            /* --- التعديل الجراحي: زيادة الحجم بنسبة 50% --- */
             .full-bar-scale { 
-                /* تم تغيير القيمة من 0.42 إلى 0.63 لزيادة الحجم */
                 transform: scale(0.63); 
                 width: auto; 
                 margin: 0 auto;
@@ -384,14 +392,9 @@ export default function NGXPage() {
                          <h4 className="fw-bold mb-0 text-white" style={{ fontSize: '14px', letterSpacing: '1px' }}>DEVELOPERS & MARKET DATA</h4>
                     </div>
                     
-                    <div className="row g-2 justify-content-center align-items-center">
-                        {/* التعديل الجراحي:
-                            1. تغيير col-12 إلى col-lg-8 للشريط لتقليل مساحته الجانبية.
-                            2. وضع الرسم البياني بجواره في col-lg-4 ليصبح أصغر (حوالي 50% من حجم الشاشة السابق).
-                            3. على الجوال (col-12) يبقيان تحت بعضهما.
-                        */}
+                    <div className="row g-2 justify-content-center align-items-stretch">
                         
-                        {/* 1. الشريط الكامل: الآن يأخذ ثلثي المساحة فقط على الكمبيوتر */}
+                        {/* 1. الشريط الكامل: يأخذ 8 أعمدة (الثلثين) لتقليل الهوامش */}
                         <div className="col-12 col-lg-8">
                              <EmbedCard 
                                 title="NGX Full Market Bar"
@@ -409,7 +412,7 @@ export default function NGXPage() {
                              />
                         </div>
 
-                        {/* 2. الرسم البياني: الآن بجوار الشريط في مساحة الثلث (تصغير تلقائي) */}
+                        {/* 2. الرسم البياني: يأخذ 4 أعمدة (الثلث) ويجاور الشريط بارتفاع متطابق */}
                         <div className="col-12 col-lg-4"> 
                              <EmbedCard 
                                 title="Live Chart Widget"
@@ -513,9 +516,7 @@ export default function NGXPage() {
         .news-thumbnail img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
         .news-card:hover .news-thumbnail img { transform: scale(1.05); }
 
-        /* --- CHART RESPONSIVE SIZE (REMOVED DESKTOP OVERRIDE) --- */
-        /* الآن نعتمد على Grid Layout لتحديد حجم الرسم البياني على الكمبيوتر */
-        /* Chart Mobile: 80% width - هذا فقط للجوال كما هو */
+        /* --- CHART RESPONSIVE SIZE --- */
         .chart-wrapper-responsive { width: 80%; }
 
         /* --- MOBILE ADJUSTMENTS --- */
