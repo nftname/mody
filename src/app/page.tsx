@@ -329,8 +329,7 @@ function Home() {
     }, [processedData]);
     // Just Listed: Sort by listedTime DESC, top 3
     const newListingsItems = useMemo(() => {
-        // Use realListings (raw data) to ensure we get the absolute latest items
-        // regardless of the current 'Top' or 'Trending' tab selection.
+        // LOGIC FIX: Use realListings (raw) and listedTime for true latest listings
         return [...realListings]
             .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
             .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0))
