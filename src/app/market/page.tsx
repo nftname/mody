@@ -153,11 +153,14 @@ function MarketPage() {
   ];
 
   // Default filter: 'Trending'
-    const [activeFilter, setActiveFilter] = useState('Trending');
-    const [timeFilter, setTimeFilter] = useState('All');
+  const [activeFilter, setActiveFilter] = useState('Trending');
+  const [timeFilter, setTimeFilter] = useState('All');
   const [currencyFilter, setCurrencyFilter] = useState('All'); 
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); 
   
+  // --- ADDED SEARCH STATE HERE ---
+  const [searchQuery, setSearchQuery] = useState('');
+
   const [realListings, setRealListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
@@ -384,45 +387,21 @@ function MarketPage() {
 
     fetchMarketData();
 
-    // 🔴 REALTIME LISTENER DISABLED: Causing performance issues due to high-frequency bot updates
-    // const channel = supabase
-    //   .channel('market-realtime')
-    //   .on(
-    //     'postgres_changes',
-    //     { event: '*', schema: 'public', table: 'conviction_votes' },
-    //     () => {
-    //       console.log('🔥 Realtime: conviction_votes changed');
-    //       fetchMarketData();
-    //     }
-    //   )
-    //   .on(
-    //     'postgres_changes',
-    //     { event: '*', schema: 'public', table: 'activities' },
-    //     () => {
-    //       console.log('🔥 Realtime: activities changed');
-    //       fetchMarketData();
-    //     }
-    //   )
-    //   .on(
-    //     'postgres_changes',
-    //     { event: '*', schema: 'public', table: 'offers' },
-    //     () => {
-    //       console.log('🔥 Realtime: offers changed');
-    //       fetchMarketData();
-    //     }
-    //   )
-    //   .subscribe();
-
-    // // Cleanup on unmount
-    // return () => {
-    //   supabase.removeChannel(channel);
-    // };
   }, [publicClient, timeFilter]); 
 
   const finalData = useMemo(() => {
       let processedData = [...realListings];
 
-      // 1. REAL TIME FILTERING (Hide inactive assets)
+      // --- 1. SEARCH FILTER (ADDED) ---
+      // This applies to ALL data before pagination or other filters
+      if (searchQuery) {
+          const query = searchQuery.toLowerCase();
+          processedData = processedData.filter(item => 
+              item.name && item.name.toLowerCase().includes(query)
+          );
+      }
+
+      // 2. REAL TIME FILTERING (Hide inactive assets)
       if (timeFilter !== 'All') {
           let limit = Infinity;
           const now = Date.now();
@@ -488,8 +467,7 @@ function MarketPage() {
           });
       }
       return processedData;
-  }, [activeFilter, favoriteIds, sortConfig, realListings, timeFilter]);
-
+  }, [activeFilter, favoriteIds, sortConfig, realListings, timeFilter, searchQuery]); // Added searchQuery dependency
   const totalPages = Math.ceil(finalData.length / ITEMS_PER_PAGE);
   const currentTableData = finalData.slice(
       (currentPage - 1) * ITEMS_PER_PAGE,
@@ -594,12 +572,41 @@ function MarketPage() {
           </div>
       </section>
 
+      {/* --- ADDED SEARCH BAR SECTION --- */}
+      <section className="market-content-wrapper mt-3 mb-2">
+        <div className="d-flex align-items-center position-relative" style={{ width: '100%', maxWidth: '380px' }}>
+            <i className="bi bi-search position-absolute text-secondary" style={{ left: '12px', fontSize: '14px', zIndex: 10 }}></i>
+            <input 
+                type="text" 
+                placeholder="Search..." 
+                value={searchQuery}
+                onChange={(e) => { 
+                    setSearchQuery(e.target.value); 
+                    setCurrentPage(1); // Reset pagination on type
+                }}
+                className="form-control"
+                style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)', // 5% Glass
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '4px',
+                    color: '#fff',
+                    paddingLeft: '35px',
+                    paddingTop: '8px',
+                    paddingBottom: '8px',
+                    fontSize: '14px',
+                    boxShadow: 'none',
+                    backdropFilter: 'blur(5px)'
+                }}
+            />
+        </div>
+      </section>
+
       {/* REPLACED 'container' with 'market-content-wrapper' for matching desktop width */}
-      <section className="market-content-wrapper mt-5 pt-0">
+      <section className="market-content-wrapper mt-2 pt-0">
           <div className="table-responsive no-scrollbar">
               {loading ? ( <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
               ) : activeFilter === 'Watchlist' && finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">Your watchlist is empty.</div>
-              ) : finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">No items listed for sale yet.</div>
+              ) : finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">No items found matching your search.</div>
               ) : (
                   <table className="table align-middle mb-0" style={{ minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0' }}>
                       <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#1E1E1E' }}>
@@ -775,6 +782,18 @@ function MarketPage() {
         .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
+        
+        /* Focus style for search input */
+        .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            color: white !important;
+            box-shadow: none !important;
+        }
+        .form-control::placeholder {
+            color: #848E9C;
+            opacity: 0.8;
+        }
       `}</style>
     </main>
   );
