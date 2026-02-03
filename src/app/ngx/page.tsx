@@ -384,9 +384,15 @@ export default function NGXPage() {
                          <h4 className="fw-bold mb-0 text-white" style={{ fontSize: '14px', letterSpacing: '1px' }}>DEVELOPERS & MARKET DATA</h4>
                     </div>
                     
-                    <div className="row g-2 justify-content-center">
-                        {/* 1. الشريط الكامل: حاوية ثابتة مع إلغاء الهوامش الداخلية قسراً */}
-                        <div className="col-12">
+                    <div className="row g-2 justify-content-center align-items-center">
+                        {/* التعديل الجراحي:
+                            1. تغيير col-12 إلى col-lg-8 للشريط لتقليل مساحته الجانبية.
+                            2. وضع الرسم البياني بجواره في col-lg-4 ليصبح أصغر (حوالي 50% من حجم الشاشة السابق).
+                            3. على الجوال (col-12) يبقيان تحت بعضهما.
+                        */}
+                        
+                        {/* 1. الشريط الكامل: الآن يأخذ ثلثي المساحة فقط على الكمبيوتر */}
+                        <div className="col-12 col-lg-8">
                              <EmbedCard 
                                 title="NGX Full Market Bar"
                                 isFullBar={true}
@@ -403,18 +409,14 @@ export default function NGXPage() {
                              />
                         </div>
 
-                        {/* 2. الرسم البياني: عرض 50% للكمبيوتر و 80% للجوال */}
-                        <div className="col-12 col-md-12"> 
-                            <div className="d-flex justify-content-center">
-                                 <div className="chart-wrapper-responsive"> 
-                                     <EmbedCard 
-                                        title="Live Chart Widget"
-                                        isChart={true}
-                                        component={<StaticMiniChart isMobile={false} />} 
-                                        embedId="ngx-chart-widget"
-                                     />
-                                 </div>
-                            </div>
+                        {/* 2. الرسم البياني: الآن بجوار الشريط في مساحة الثلث (تصغير تلقائي) */}
+                        <div className="col-12 col-lg-4"> 
+                             <EmbedCard 
+                                title="Live Chart Widget"
+                                isChart={true}
+                                component={<StaticMiniChart isMobile={false} />} 
+                                embedId="ngx-chart-widget"
+                             />
                         </div>
 
                         {/* 3. الكبسولات الثلاث المنفصلة */}
@@ -511,9 +513,10 @@ export default function NGXPage() {
         .news-thumbnail img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
         .news-card:hover .news-thumbnail img { transform: scale(1.05); }
 
-        /* --- CHART RESPONSIVE SIZE --- */
-        /* Desktop: 50% width */
-        .chart-wrapper-responsive { width: 50%; max-width: 500px; }
+        /* --- CHART RESPONSIVE SIZE (REMOVED DESKTOP OVERRIDE) --- */
+        /* الآن نعتمد على Grid Layout لتحديد حجم الرسم البياني على الكمبيوتر */
+        /* Chart Mobile: 80% width - هذا فقط للجوال كما هو */
+        .chart-wrapper-responsive { width: 80%; }
 
         /* --- MOBILE ADJUSTMENTS --- */
         @media (max-width: 768px) {
