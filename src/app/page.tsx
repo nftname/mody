@@ -66,7 +66,7 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
-// --- ASSET CARD (FIXED MINT YEAR) ---
+// --- ASSET CARD (UPDATED WITH DYNAMIC MINT YEAR) ---
 const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisplay: string, volumeDisplay: string }) => {
     return (
       <div className="asset-card-container hover-lift" style={{ cursor: 'pointer' }}>
@@ -128,8 +128,8 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                            fontWeight: '600',
                            textShadow: '0 1px 3px rgba(0,0,0,1)'
                        }}>
-                           {/* ✅ FIXED: Dynamic Mint Year */}
-                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED {item.mintYear}
+                           {/* ✅ FIX 1: DYNAMIC MINT YEAR */}
+                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED {item.mintYear || 2026}
                        </p>
                    </div>
               </div>
@@ -154,7 +154,6 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
   
 function Home() {
   
-    // --- MARKET LOGIC SYNC ---
     const [activeTab, setActiveTab] = useState<'trending' | 'top'>('trending');
     const [timeFilter, setTimeFilter] = useState('24H');
     const [currencyFilter, setCurrencyFilter] = useState('All');
@@ -165,7 +164,6 @@ function Home() {
     const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
     const publicClient = usePublicClient();
 
-    // Fetch exchange rates (ETH, POL)
     useEffect(() => {
         const fetchPrices = async () => {
             try {
@@ -181,12 +179,11 @@ function Home() {
         return () => clearInterval(interval);
     }, []);
 
-    // Fetch market data (listings, activities, offers, votes)
+    // --- DATA FETCHING & LOGIC (THE HEART) ---
     useEffect(() => {
         const fetchMarketData = async () => {
             if (!publicClient) return;
             try {
-                // 1. Fetch Listings from Smart Contract
                 const data = await publicClient.readContract({
                     address: MARKETPLACE_ADDRESS as `0x${string}`,
                     abi: MARKET_ABI,
@@ -195,12 +192,10 @@ function Home() {
                 const [tokenIds, prices] = data;
                 if (tokenIds.length === 0) { setRealListings([]); setLoading(false); return; }
 
-                // 2. Fetch Data from Supabase (Activities, Offers, Votes)
                 const { data: allActivities } = await supabase.from('activities').select('*').order('created_at', { ascending: false });
                 const { data: offersData } = await supabase.from('offers').select('token_id').eq('status', 'active');
                 const { data: votesData } = await supabase.from('conviction_votes').select('token_id');
 
-                // Votes Map: Each vote = 100 points
                 const votesMap: Record<string, number> = {};
                 if (votesData && votesData.length > 0) {
                     votesData.forEach((v: any) => {
@@ -209,7 +204,7 @@ function Home() {
                     });
                 }
 
-                // Stats Map: volume, lastSale, listedTime
+                // Stats Map
                 const statsMap: Record<number, any> = {};
                 const now = Date.now();
                 
@@ -224,31 +219,31 @@ function Home() {
                             if (isNaN(actTime)) actTime = new Date(act.created_at).getTime();
                         } catch { actTime = new Date(act.created_at).getTime(); }
 
-                        // ✅ ADDED mintTime to tracker
                         if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0, mintTime: 0 };
                         
+                        // General Activity
                         if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
 
-                        // ✅ 1. Capture Mint Time (Strictly from Mint activity)
+                        // ✅ FIX 1: Capture Mint Time STRICTLY (for "MINTED YYYY" label)
                         if (act.activity_type === 'Mint') {
                             statsMap[tid].mintTime = actTime;
                         }
 
-                        // 2. Capture Last Sale Price
+                        // Last Sale Price
                         if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
                             statsMap[tid].lastSale = price;
                         }
 
-                        // 3. Calculate Volume
+                        // Volume
                         if (act.activity_type === 'Sale') {
                             const age = now - actTime;
-                            // Accumulate volume regardless of filter here (filtering happens later)
                             statsMap[tid].volume += price;
                             statsMap[tid].sales += 1;
                         }
 
-                        // ✅ 4. STRICT JUST LISTED LOGIC (Fixing the bug)
-                        // ONLY update listedTime if it is explicitly a 'List' event.
+                        // ✅ FIX 2: STRICT LISTING LOGIC
+                        // Only update 'listedTime' if it's a LIST activity.
+                        // Removed any dependency on 'Mint' here.
                         if (act.activity_type === 'List') {
                             if (actTime > statsMap[tid].listedTime) {
                                 statsMap[tid].listedTime = actTime;
@@ -263,7 +258,6 @@ function Home() {
                     offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
                 });
 
-                // Merge On-Chain & Off-Chain Data
                 const items = await Promise.all(tokenIds.map(async (id, index) => {
                     try {
                         const tid = Number(id);
@@ -282,8 +276,8 @@ function Home() {
                             change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
                         }
 
-                        // ✅ Calculate Mint Year dynamically
-                        const mintYear = stats.mintTime > 0 ? new Date(stats.mintTime).getFullYear() : 2025;
+                        // ✅ Calculate Dynamic Mint Year
+                        const mintYear = stats.mintTime > 0 ? new Date(stats.mintTime).getFullYear() : 2026;
 
                         return {
                             id: tid,
@@ -292,13 +286,12 @@ function Home() {
                             pricePol: pricePol,
                             lastSale: stats.lastSale,
                             volume: stats.volume,
-                            listedTime: stats.listedTime,
+                            listedTime: stats.listedTime, // Clean List Time
                             lastActive: stats.lastActive,
-                            mintYear: mintYear, // Pass it to item
+                            mintYear: mintYear, // Passed to card
                             trendingScore: trendingScore,
                             offersCount: offersCount,
                             convictionScore: conviction,
-                            listed: 'Now',
                             change: change,
                             currencySymbol: 'POL'
                         };
@@ -309,10 +302,11 @@ function Home() {
         };
         fetchMarketData();
     }, [publicClient, timeFilter]);
-    // --- DATA PROCESSING WITH TIME FILTER ---
-    const processedData = useMemo(() => {
+    // --- TABLE DATA (FILTERED) ---
+    // هذا فقط للجدول، يتأثر بالفلترة الزمنية
+    const tableData = useMemo(() => {
         let data = [...realListings];
-        // 1. Apply Time Filter (by lastActive)
+        // Apply Time Filter ONLY for the table
         if (timeFilter !== 'All') {
             let timeLimit = Infinity;
             if (timeFilter === '1H') timeLimit = 3600 * 1000;
@@ -322,7 +316,7 @@ function Home() {
             const now = Date.now();
             data = data.filter(item => (now - (item.lastActive || 0)) <= timeLimit);
         }
-        // 2. Sort by tab
+        // Sort by tab
         if (activeTab === 'top') {
             data.sort((a, b) => b.volume - a.volume);
         } else {
@@ -331,27 +325,29 @@ function Home() {
         return data.map((item, index) => ({ ...item, rank: index + 1 }));
     }, [realListings, activeTab, timeFilter]);
 
-    // --- GALLERIES ---
+    // --- GALLERIES (UNCOUPLED FROM TIME FILTER) ---
+    
+    // ✅ FIX 3: Top Performers (Uses raw realListings, ignores Table Time Filter)
     const featuredItems = useMemo(() => {
-        return [...processedData]
+        return [...realListings] // Use Raw Data
             .sort((a, b) => b.volume - a.volume)
-            .slice(0, 3);
-    }, [processedData]);
-
-    // ✅ FIXED: Just Listed - Sort by PURE listedTime DESC
-    // Decoupled from processedData to ensure we get absolute latest listings
-    const newListingsItems = useMemo(() => {
-        return [...realListings]
-            .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
-            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0)) // Newest Listing First
             .slice(0, 3);
     }, [realListings]);
 
-    // --- TABLE DATA ---
-    const desktopLeftData = processedData.slice(0, 5);
-    const desktopRightData = processedData.slice(5, 10);
-    const mobileSlideOne = processedData.slice(0, 5);
-    const mobileSlideTwo = processedData.slice(5, 10);
+    // ✅ FIX 3: Just Listed (Uses raw realListings, ignores Table Time Filter)
+    // ✅ Uses PURE listedTime (No Mints mixed in)
+    const newListingsItems = useMemo(() => {
+        return [...realListings] // Use Raw Data
+            .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
+            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0)) // Newest First
+            .slice(0, 3);
+    }, [realListings]);
+
+    // Split Table Data
+    const desktopLeftData = tableData.slice(0, 5);
+    const desktopRightData = tableData.slice(5, 10);
+    const mobileSlideOne = tableData.slice(0, 5);
+    const mobileSlideTwo = tableData.slice(5, 10);
   
   const trustedBrands = [ 
     { name: "POLYGON", icon: "bi-link-45deg", isCustom: false },
@@ -396,7 +392,6 @@ function Home() {
   return (
     <main className="no-select" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', paddingBottom: '0px', fontFamily: '"Inter", "Segoe UI", sans-serif', overflowX: 'hidden' }}>
       
-      {/* Import Google Font for the Card */}
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
       `}</style>
