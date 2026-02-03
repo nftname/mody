@@ -85,7 +85,7 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. Hybrid Logic (Exact match to Home Page)
+  // 3. Hybrid Logic (Strict Just Listed)
   useEffect(() => {
     const fetchHomeLogicData = async () => {
         const now = Date.now();
@@ -104,10 +104,11 @@ export default function MarketTicker() {
             if (tokenIds.length === 0) return;
 
             // B. Get Activities from Supabase (Sale & List ONLY)
+            // ✅ IMPORTANT: Fetch 'List' activity to determine sorting
             const { data: activities } = await supabase
                 .from('activities')
                 .select('token_id, price, activity_type, created_at')
-                .in('activity_type', ['Sale', 'List']) // Fetch both types efficiently
+                .in('activity_type', ['Sale', 'List']) // Fetch only relevant types
                 .order('created_at', { ascending: false });
 
             const volumeMap: Record<number, number> = {};
@@ -120,7 +121,6 @@ export default function MarketTicker() {
             if (activities) {
                 activities.forEach((act: any) => {
                     const tid = Number(act.token_id);
-                    // Parse Time Safely
                     let actTime: number;
                     try {
                         const dateStr = act.created_at.includes('Z') ? act.created_at : act.created_at + 'Z';
@@ -137,8 +137,8 @@ export default function MarketTicker() {
                         else if (now - actTime <= 2 * oneDay) volYest += price;
                     }
 
-                    // --- Logic 2: Listing Time (List Only - NO MINT) ---
-                    // This is the "Just Listed" Fix
+                    // --- Logic 2: Listing Time (List ONLY - STRICT) ---
+                    // ✅ This separates 'List' from 'Mint'. Mints are ignored here.
                     if (act.activity_type === 'List') {
                         if (!latestListTimeMap[tid] || actTime > latestListTimeMap[tid]) {
                             latestListTimeMap[tid] = actTime;
@@ -147,10 +147,9 @@ export default function MarketTicker() {
                 });
             }
             
-            // Set NNM Vol Change
             setNnmVolChange(volYest === 0 ? (volToday > 0 ? 100 : 0) : ((volToday - volYest) / volYest) * 100);
 
-            // C. Helper to get Name from Chain
+            // C. Helper to get Name
             const getRealName = async (tokenId: bigint) => {
                 try {
                     const uri = await publicClient.readContract({
@@ -165,17 +164,17 @@ export default function MarketTicker() {
                 } catch { return `Asset #${tokenId}`; }
             };
 
-            // D. Prepare Base List from Contract IDs
+            // D. Prepare Base List
             const allItems = tokenIds.map(id => ({
               id: Number(id),
               volume: volumeMap[Number(id)] || 0,
-              listedAt: latestListTimeMap[Number(id)] || 0 // Will be 0 if no 'List' event found
+              listedAt: latestListTimeMap[Number(id)] || 0 // 0 if no List activity found
             }));
 
             // --- LIST 1: JUST LISTED (Strict Sort by listedAt) ---
             const sortedNew = [...allItems]
-              .filter(item => item.listedAt > 0) // Must have a list event
-              .sort((a, b) => b.listedAt - a.listedAt) // Newest first
+              .filter(item => item.listedAt > 0) // ✅ MUST have a 'List' event
+              .sort((a, b) => b.listedAt - a.listedAt) // ✅ Sort by Time Descending
               .slice(0, 3);
 
             const newItemsData = await Promise.all(sortedNew.map(async (item, i) => {
@@ -188,6 +187,9 @@ export default function MarketTicker() {
                 type: 'NEW' as const
               };
             }));
+            
+            // If we have less than 3 recent listings, we DO NOT fallback to random IDs.
+            // We just show what we have to maintain integrity.
             setNewItems(newItemsData);
 
             // --- LIST 2: TOP PERFORMERS (Sort by Volume) ---
