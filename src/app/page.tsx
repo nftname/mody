@@ -66,7 +66,7 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
     );
 };
 
-// --- ASSET CARD ---
+// --- ASSET CARD (FIXED MINT YEAR) ---
 const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisplay: string, volumeDisplay: string }) => {
     return (
       <div className="asset-card-container hover-lift" style={{ cursor: 'pointer' }}>
@@ -128,7 +128,8 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                            fontWeight: '600',
                            textShadow: '0 1px 3px rgba(0,0,0,1)'
                        }}>
-                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED 2025
+                           {/* ✅ FIXED: Dynamic Mint Year */}
+                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED {item.mintYear}
                        </p>
                    </div>
               </div>
@@ -211,12 +212,7 @@ function Home() {
                 // Stats Map: volume, lastSale, listedTime
                 const statsMap: Record<number, any> = {};
                 const now = Date.now();
-                let timeLimit = Infinity;
-                if (timeFilter === '1H') timeLimit = 3600 * 1000;
-                else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
-                else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
-                else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
-
+                
                 if (allActivities) {
                     allActivities.forEach((act: any) => {
                         const tid = Number(act.token_id);
@@ -228,27 +224,31 @@ function Home() {
                             if (isNaN(actTime)) actTime = new Date(act.created_at).getTime();
                         } catch { actTime = new Date(act.created_at).getTime(); }
 
-                        if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
-                        // Track General Activity Time
+                        // ✅ ADDED mintTime to tracker
+                        if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0, mintTime: 0 };
+                        
                         if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
 
-                        // 1. Capture Last Sale Price
+                        // ✅ 1. Capture Mint Time (Strictly from Mint activity)
+                        if (act.activity_type === 'Mint') {
+                            statsMap[tid].mintTime = actTime;
+                        }
+
+                        // 2. Capture Last Sale Price
                         if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
                             statsMap[tid].lastSale = price;
                         }
 
-                        // 2. Calculate Volume (Accumulate all sales)
+                        // 3. Calculate Volume
                         if (act.activity_type === 'Sale') {
                             const age = now - actTime;
-                            if (age >= 0) {
-                                statsMap[tid].volume += price;
-                                statsMap[tid].sales += 1;
-                            }
+                            // Accumulate volume regardless of filter here (filtering happens later)
+                            statsMap[tid].volume += price;
+                            statsMap[tid].sales += 1;
                         }
 
-                        // 3. STRICT LISTING TIME LOGIC (THE FIX)
-                        // ONLY update 'listedTime' if the activity is explicitly 'List'.
-                        // DO NOT include 'Mint' here.
+                        // ✅ 4. STRICT JUST LISTED LOGIC (Fixing the bug)
+                        // ONLY update listedTime if it is explicitly a 'List' event.
                         if (act.activity_type === 'List') {
                             if (actTime > statsMap[tid].listedTime) {
                                 statsMap[tid].listedTime = actTime;
@@ -272,7 +272,7 @@ function Home() {
                         const metaRes = await fetch(resolveIPFS(uri));
                         const meta = metaRes.ok ? await metaRes.json() : {};
                         const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
-                        const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
+                        const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0, mintTime: 0 };
                         const offersCount = offersCountMap[tid] || 0;
                         const conviction = votesMap[idStr] || 0;
                         const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
@@ -281,6 +281,10 @@ function Home() {
                         if (stats.lastSale > 0) {
                             change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
                         }
+
+                        // ✅ Calculate Mint Year dynamically
+                        const mintYear = stats.mintTime > 0 ? new Date(stats.mintTime).getFullYear() : 2025;
+
                         return {
                             id: tid,
                             name: meta.name || `Asset #${id}`,
@@ -290,6 +294,7 @@ function Home() {
                             volume: stats.volume,
                             listedTime: stats.listedTime,
                             lastActive: stats.lastActive,
+                            mintYear: mintYear, // Pass it to item
                             trendingScore: trendingScore,
                             offersCount: offersCount,
                             convictionScore: conviction,
@@ -304,7 +309,6 @@ function Home() {
         };
         fetchMarketData();
     }, [publicClient, timeFilter]);
-
     // --- DATA PROCESSING WITH TIME FILTER ---
     const processedData = useMemo(() => {
         let data = [...realListings];
@@ -333,14 +337,14 @@ function Home() {
             .sort((a, b) => b.volume - a.volume)
             .slice(0, 3);
     }, [processedData]);
-    // Just Listed: Sort by PURE listedTime DESC, top 3
+
+    // ✅ FIXED: Just Listed - Sort by PURE listedTime DESC
+    // Decoupled from processedData to ensure we get absolute latest listings
     const newListingsItems = useMemo(() => {
-        let items = [...realListings];
-        items = items
+        return [...realListings]
             .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
-            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0))
+            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0)) // Newest Listing First
             .slice(0, 3);
-        return items;
     }, [realListings]);
 
     // --- TABLE DATA ---
@@ -699,4 +703,3 @@ function DesktopTable({ data, formatTablePrice, formatTableVolume, getRankStyle 
 }
 
 export default dynamicImport(() => Promise.resolve(Home), { ssr: false });
-
