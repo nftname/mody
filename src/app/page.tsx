@@ -329,9 +329,11 @@ function Home() {
     }, [processedData]);
     // Just Listed: Sort by listedTime DESC, top 3
     const newListingsItems = useMemo(() => {
+        // Use realListings (raw data) to ensure we get the absolute latest items
+        // regardless of the current 'Top' or 'Trending' tab selection.
         return [...realListings]
-            .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
-            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0))
+            .filter(item => item.listedAt > 0)
+            .sort((a, b) => b.listedAt - a.listedAt)
             .slice(0, 3);
     }, [realListings]);
 
@@ -439,7 +441,7 @@ function Home() {
                   <div className="d-flex gap-3 align-items-center justify-content-start justify-content-lg-start">
                       <div className="d-none d-md-flex binance-filter-group align-items-center">{['All', 'ETH', 'POL'].map((c) => (<button key={c} onClick={() => setCurrencyFilter(c)} className={`btn btn-sm border-0 binance-filter-btn ${currencyFilter === c ? 'active-currency' : 'text-header-gray'}`} style={{ fontSize: '13px', minWidth: '50px', fontWeight: '400' }}>{c === 'ETH' && <i className="bi bi-currency-ethereum me-1"></i>}{c}</button>))}</div>
                       <div className="d-block d-md-none position-relative" ref={dropdownRef}><button onClick={() => setIsMobileCurrencyOpen(!isMobileCurrencyOpen)} className="btn btn-sm border-0 active-currency d-flex align-items-center justify-content-center gap-1" style={{ fontSize: '13px', borderRadius: '2px', height: '32px', width: '85px', fontWeight: '400', border: '1px solid #333' }}>{currencyFilter} <span style={{ fontSize: '10px', marginLeft: 'auto' }}>▼</span></button>{isMobileCurrencyOpen && (<div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '2px', backgroundColor: '#1E2329', border: '1px solid #333', borderRadius: '2px', zIndex: 1000, width: '85px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}><div onClick={() => handleMobileCurrencySelect('All')} className="px-2 py-2 text-white small cursor-pointer hover-bg-gray text-center">All</div><div onClick={() => handleMobileCurrencySelect('ETH')} className="px-2 py-2 text-white small cursor-pointer hover-bg-gray text-center">ETH</div><div onClick={() => handleMobileCurrencySelect('POL')} className="px-2 py-2 text-white small cursor-pointer hover-bg-gray text-center">POL</div></div>)}</div>
-                      <div className="binance-filter-group d-flex align-items-center">{['1H', '6H', '24H', '7D'].map((t) => (<button key={t} onClick={() => setTimeFilter(t)} className={`btn btn-sm border-0 binance-filter-btn ${timeFilter === t ? 'active-time' : 'text-header-gray'}`} style={{ fontSize: '13px', minWidth: '45px', fontWeight: '400' }}>{t}</button>))}</div>
+                      <div className="binance-filter-group d-flex align-items-center">{['1H', '6H', '24H', '7D', 'All'].map((t) => (<button key={t} onClick={() => setTimeFilter(t)} className={`btn btn-sm border-0 binance-filter-btn ${timeFilter === t ? 'active-time' : 'text-header-gray'}`} style={{ fontSize: '13px', minWidth: '45px', fontWeight: '400' }}>{t}</button>))}</div>
                   </div>
               </div>
           </div>
