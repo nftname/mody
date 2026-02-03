@@ -245,8 +245,7 @@ function Home() {
                                 statsMap[tid].sales += 1;
                             }
                         }
-                        // Only track actual MARKET LISTINGS for the "Just Listed" section
-                        if (act.activity_type === 'List') {
+                        if ((act.activity_type === 'List' || act.activity_type === 'Mint')) {
                             if (actTime > statsMap[tid].listedTime) {
                                 statsMap[tid].listedTime = actTime;
                             }
@@ -326,40 +325,16 @@ function Home() {
 
     // --- GALLERIES ---
     const featuredItems = useMemo(() => {
-        // Inject priceUsdDisplay and volumeUsdDisplay for AssetCard
-        return [...processedData]
-            .sort((a, b) => b.volume - a.volume)
-            .slice(0, 3)
-            .map(item => {
-                const usdPrice = item.pricePol * (exchangeRates.pol || 0);
-                const usdVol = item.volume * (exchangeRates.pol || 0);
-                return {
-                    ...item,
-                    priceUsdDisplay: `$${usdPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
-                    volumeUsdDisplay: `$${usdVol.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-                };
-            });
-    }, [processedData, exchangeRates]);
+        return [...processedData].sort((a, b) => b.volume - a.volume).slice(0, 3);
+    }, [processedData]);
     // Just Listed: Sort by listedTime DESC, top 3
     const newListingsItems = useMemo(() => {
-        // 1. Get raw data
-        let items = [...realListings];
-        // 2. Filter & Sort (Newest Listings First)
-        items = items
-            .filter(item => item.listedTime && item.listedTime > 0)
-            .sort((a, b) => b.listedTime - a.listedTime)
+        // LOGIC FIX: Use realListings (raw) and listedTime for true latest listings
+        return [...realListings]
+            .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
+            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0))
             .slice(0, 3);
-        // 3. INJECT DISPLAY FORMATTING (Critical Fix)
-        return items.map(item => {
-            const usdPrice = item.pricePol * (exchangeRates.pol || 0);
-            const usdVol = item.volume * (exchangeRates.pol || 0);
-            return {
-                ...item,
-                priceUsdDisplay: `$${usdPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
-                volumeUsdDisplay: `$${usdVol.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-            };
-        });
-    }, [realListings, exchangeRates]);
+    }, [realListings]);
 
     // --- TABLE DATA ---
     const desktopLeftData = processedData.slice(0, 5);
