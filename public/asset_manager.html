@@ -1,129 +1,226 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NNM Sovereign Asset Manager</title>
+    <title>NNM Sovereign Asset Manager V2</title>
     <style>
         body { background-color: #121212; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-        h1 { color: #FCD535; margin: 0; }
+        h1 { color: #FCD535; margin: 0; font-size: 24px; }
         
-        /* Filters */
-        .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .price-btn { 
-            background: #1E1E1E; border: 1px solid #333; color: #888; 
-            padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: 0.2s;
+        /* Filter Sections */
+        .filter-label { color: #888; font-size: 12px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        
+        .btn-filter { 
+            background: #1E1E1E; border: 1px solid #333; color: #aaa; 
+            padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: 600; transition: 0.2s; font-size: 13px;
         }
-        .price-btn:hover { background: #333; color: #fff; }
-        .price-btn.active { background: #FCD535; color: #000; border-color: #FCD535; }
+        .btn-filter:hover { background: #333; color: #fff; }
+        
+        /* Active States */
+        .btn-filter.price-active { background: #FCD535; color: #000; border-color: #FCD535; }
+        .btn-filter.len-active { background: #fff; color: #000; border-color: #fff; }
 
-        /* Grid */
-        .wallet-section { margin-bottom: 30px; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333; }
-        .wallet-title { color: #888; font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid #2a2a2a; padding-bottom: 5px; }
-        .assets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+        /* Wallet Section */
+        .wallet-section { margin-bottom: 30px; background: #181818; padding: 15px; border-radius: 8px; border: 1px solid #2a2a2a; }
+        .wallet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #2a2a2a; padding-bottom: 10px; }
+        .wallet-title { color: #888; font-size: 14px; font-family: monospace; }
+        
+        /* Assets Grid */
+        .assets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
         
         .asset-card { 
-            background: #252525; border: 1px solid #333; padding: 10px; border-radius: 6px; 
-            cursor: pointer; position: relative; transition: 0.2s; 
+            background: #222; border: 1px solid #333; padding: 12px; border-radius: 6px; 
+            cursor: pointer; position: relative; transition: 0.1s; display: flex; flex-direction: column; gap: 5px;
         }
-        .asset-card:hover { transform: translateY(-2px); border-color: #555; }
-        .asset-card.selected { border-color: #FCD535; background: #2a2a20; }
+        .asset-card:hover { transform: translateY(-2px); border-color: #555; background: #2a2a2a; }
         
-        .asset-name { font-weight: bold; font-size: 16px; color: #fff; }
-        .asset-id { font-size: 12px; color: #666; }
-        .asset-price-tag { 
-            position: absolute; top: 5px; right: 5px; font-size: 10px; 
-            background: #000; padding: 2px 6px; border-radius: 4px; color: #FCD535; display: none; 
+        /* Selection State */
+        .asset-card.selected { border: 1px solid #FCD535; background: rgba(252, 213, 53, 0.05); }
+        .asset-card.priced::after {
+            content: "✓"; position: absolute; top: 5px; right: 5px; color: #FCD535; font-weight: bold;
         }
-        .asset-card.priced .asset-price-tag { display: block; }
 
-        .controls { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; padding: 15px; border-radius: 10px; border: 1px solid #FCD535; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .btn-main { background: #FCD535; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        .asset-name { font-weight: 800; font-size: 15px; color: #eee; letter-spacing: 0.5px; overflow: hidden; text-overflow: ellipsis; }
+        .asset-meta { display: flex; justify-content: space-between; font-size: 11px; color: #666; }
+        .asset-len-badge { background: #333; padding: 2px 5px; border-radius: 3px; color: #aaa; }
+        
+        .price-tag { 
+            margin-top: 5px; font-size: 11px; text-align: center;
+            background: #000; padding: 4px; border-radius: 4px; color: #FCD535; display: none; border: 1px solid #333;
+        }
+        .asset-card.priced .price-tag { display: block; }
+
+        /* Controls */
+        .controls { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 100; }
+        .btn-main { background: #FCD535; border: none; padding: 12px 24px; font-weight: bold; cursor: pointer; border-radius: 6px; font-size: 14px; width: 100%; }
+        .btn-main:hover { background: #e0bc2e; }
+        .stats { margin-bottom: 10px; color: #ccc; font-size: 13px; text-align: center; }
+        
         input[type="file"] { display: none; }
-        .upload-label { background: #333; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        .upload-label { background: #333; padding: 10px 20px; border-radius: 5px; cursor: pointer; border: 1px solid #444; font-size: 13px; }
+        .upload-label:hover { background: #444; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>👑 Sovereign Manager</h1>
+        <div>
+            <h1>👑 Sovereign Asset Manager</h1>
+            <div style="font-size:12px; color:#666; margin-top:5px;">Optimize Listings for High Value Assets</div>
+        </div>
         <div>
             <label for="fileInput" class="upload-label">📂 Load Inventory JSON</label>
             <input type="file" id="fileInput" accept=".json">
         </div>
     </div>
 
-    <div class="filters" id="priceFilters">
-        </div>
+    <div class="filter-label">1. Select Listing Price (USD)</div>
+    <div class="filters" id="priceFilters"></div>
 
-    <div id="content"></div>
+    <div class="filter-label" style="margin-top:15px;">2. Filter by Name Length</div>
+    <div class="filters">
+        <div class="btn-filter len-active" onclick="setLengthMode('all', this)">Show All</div>
+        <div class="btn-filter" onclick="setLengthMode('1-3', this)">💎 Rare (1-3 Chars)</div>
+        <div class="btn-filter" onclick="setLengthMode('4-5', this)">🔥 Premium (4-5 Chars)</div>
+        <div class="btn-filter" onclick="setLengthMode('6-10', this)">✨ Standard (6-10 Chars)</div>
+        <div class="btn-filter" onclick="setLengthMode('11+', this)">📜 Long (11+ Chars)</div>
+    </div>
+
+    <hr style="border:0; border-top:1px solid #222; margin: 20px 0;">
+
+    <div id="content">
+        <div style="text-align:center; padding:50px; color:#444;">Please load the inventory file to begin.</div>
+    </div>
 
     <div class="controls" style="display:none;" id="saveControls">
-        <div style="margin-bottom:10px; color:#888;">Assigned: <span id="countAssigned" style="color:#fff">0</span> Assets</div>
+        <div class="stats"><span id="countAssigned" style="color:#fff; font-weight:bold;">0</span> Assets Priced</div>
         <button class="btn-main" onclick="downloadPlan()">💾 Download Listing Plan</button>
     </div>
 </div>
 
 <script>
+    // Config
     const prices = [100000, 50000, 30000, 20000, 10000, 5000, 1000];
+    
+    // State
     let currentPrice = null;
+    let currentLengthFilter = 'all'; // 'all', '1-3', '4-5', '6-10', '11+'
     let inventory = [];
     let plan = {}; // { tokenId: price }
 
-    // Init UI
-    const filterContainer = document.getElementById('priceFilters');
+    // Init Price Buttons
+    const priceContainer = document.getElementById('priceFilters');
     prices.forEach(p => {
         const btn = document.createElement('div');
-        btn.className = 'price-btn';
+        btn.className = 'btn-filter';
         btn.innerText = `$${p.toLocaleString()}`;
         btn.onclick = () => setPriceMode(p, btn);
-        filterContainer.appendChild(btn);
+        priceContainer.appendChild(btn);
     });
+
+    // --- Actions ---
 
     function setPriceMode(price, btn) {
         currentPrice = price;
-        document.querySelectorAll('.price-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        document.querySelectorAll('#priceFilters .btn-filter').forEach(b => b.classList.remove('price-active'));
+        btn.classList.add('price-active');
     }
 
-    // Load File
+    function setLengthMode(mode, btn) {
+        currentLengthFilter = mode;
+        // Update UI buttons
+        const parent = btn.parentElement;
+        parent.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('len-active'));
+        btn.classList.add('len-active');
+        
+        // Re-render to show/hide items
+        renderWallets();
+    }
+
+    // --- File Handling ---
+
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
             inventory = JSON.parse(e.target.result);
+            
+            // ✅ AUTO-SORT: Shortest names first within each wallet
+            inventory.forEach(wallet => {
+                wallet.assets.sort((a, b) => {
+                    // Sort by length first
+                    const lenDiff = a.name.length - b.name.length;
+                    if (lenDiff !== 0) return lenDiff;
+                    // Then alphabetical
+                    return a.name.localeCompare(b.name);
+                });
+            });
+
             renderWallets();
             document.getElementById('saveControls').style.display = 'block';
         };
         reader.readAsText(file);
     });
 
+    // --- Rendering ---
+
     function renderWallets() {
         const content = document.getElementById('content');
         content.innerHTML = '';
         
+        let visibleCount = 0;
+
         inventory.forEach(wallet => {
+            // Filter assets based on length mode
+            const visibleAssets = wallet.assets.filter(asset => {
+                const len = asset.name.length;
+                if (currentLengthFilter === 'all') return true;
+                if (currentLengthFilter === '1-3') return len >= 1 && len <= 3;
+                if (currentLengthFilter === '4-5') return len >= 4 && len <= 5;
+                if (currentLengthFilter === '6-10') return len >= 6 && len <= 10;
+                if (currentLengthFilter === '11+') return len >= 11;
+                return true;
+            });
+
+            if (visibleAssets.length === 0) return; // Skip empty wallet sections
+
+            visibleCount += visibleAssets.length;
+
             const section = document.createElement('div');
             section.className = 'wallet-section';
-            section.innerHTML = `<div class="wallet-title">WALLET #${wallet.walletId} (${wallet.assets.length} items) - ${wallet.address}</div>`;
+            
+            section.innerHTML = `
+                <div class="wallet-header">
+                    <span class="wallet-title">WALLET #${wallet.walletId} <span style="color:#444">|</span> ${wallet.address.substring(0,6)}...${wallet.address.substring(38)}</span>
+                    <span style="font-size:12px; color:#555;">${visibleAssets.length} Visible</span>
+                </div>
+            `;
             
             const grid = document.createElement('div');
             grid.className = 'assets-grid';
             
-            wallet.assets.forEach(asset => {
+            visibleAssets.forEach(asset => {
                 const card = document.createElement('div');
                 card.className = 'asset-card';
-                card.id = `card-${asset.id}`;
+                if (plan[asset.id]) card.classList.add('selected', 'priced'); // Restore state
+                
                 card.onclick = () => toggleAsset(asset.id, card);
                 
+                // Show existing price if set
+                const priceTagDisplay = plan[asset.id] ? `$${plan[asset.id].toLocaleString()}` : '';
+
                 card.innerHTML = `
-                    <div class="asset-name">${asset.name}</div>
-                    <div class="asset-id">#${asset.id}</div>
-                    <div class="asset-price-tag" id="tag-${asset.id}"></div>
+                    <div class="asset-meta">
+                        <span>#${asset.id}</span>
+                        <span class="asset-len-badge">${asset.name.length}L</span>
+                    </div>
+                    <div class="asset-name" title="${asset.name}">${asset.name}</div>
+                    <div class="price-tag" id="tag-${asset.id}">${priceTagDisplay}</div>
                 `;
                 grid.appendChild(card);
             });
@@ -131,22 +228,31 @@
             section.appendChild(grid);
             content.appendChild(section);
         });
+
+        if (visibleCount === 0) {
+            content.innerHTML = `<div style="text-align:center; padding:40px; color:#666;">No assets found matching length filter: <b>${currentLengthFilter}</b></div>`;
+        }
     }
 
+    // --- Logic ---
+
     function toggleAsset(id, card) {
-        if (!currentPrice) { alert("Please select a price filter first!"); return; }
+        if (!currentPrice) { 
+            alert("⚠️ Please select a PRICE first (Step 1)."); 
+            return; 
+        }
         
-        // Toggle Logic
+        const tag = document.getElementById(`tag-${id}`);
+
+        // Logic: If already priced with SAME price -> Remove. Else -> Update.
         if (plan[id] === currentPrice) {
-            // Remove if clicked again with same price
             delete plan[id];
             card.classList.remove('selected', 'priced');
-            document.getElementById(`tag-${id}`).innerText = '';
+            tag.innerText = '';
         } else {
-            // Assign new price
             plan[id] = currentPrice;
             card.classList.add('selected', 'priced');
-            document.getElementById(`tag-${id}`).innerText = `$${currentPrice.toLocaleString()}`;
+            tag.innerText = `$${currentPrice.toLocaleString()}`;
         }
         updateCount();
     }
@@ -156,6 +262,10 @@
     }
 
     function downloadPlan() {
+        if (Object.keys(plan).length === 0) {
+            alert("No assets assigned! Select a price and click on assets.");
+            return;
+        }
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(plan, null, 2));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
