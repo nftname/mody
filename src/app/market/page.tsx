@@ -389,75 +389,91 @@ function MarketPage() {
 
   }, [publicClient, timeFilter]); 
 
+    // --- CORE FIX: Search Logic Priority (Exact Match > Starts With > Contains) ---
   const finalData = useMemo(() => {
       let processedData = [...realListings];
 
-      // --- 1. SEARCH FILTER (ADDED) ---
-      // This applies to ALL data before pagination or other filters
+      // 1. SEARCH LOGIC (Global Search on all 50+ pages content)
       if (searchQuery) {
-          const query = searchQuery.toLowerCase();
+          const query = searchQuery.trim().toLowerCase();
+          
+          // First: Filter to get ONLY relevant items
           processedData = processedData.filter(item => 
               item.name && item.name.toLowerCase().includes(query)
           );
-      }
 
-      // 2. REAL TIME FILTERING (Hide inactive assets)
-      if (timeFilter !== 'All') {
-          let limit = Infinity;
-          const now = Date.now();
-          if (timeFilter === '1H') limit = 3600 * 1000;
-          else if (timeFilter === '6H') limit = 3600 * 6 * 1000;
-          else if (timeFilter === '24H') limit = 3600 * 24 * 1000;
-          else if (timeFilter === '7D') limit = 3600 * 24 * 7 * 1000;
-
-          processedData = processedData.filter(item => {
-              const timeDiff = now - (item.lastActive || 0); 
-              return timeDiff <= limit;
-          });
-      }
-      
-      if (activeFilter === 'Top') { processedData.sort((a, b) => b.volume - a.volume); }
-      else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
-      else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
-      else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
-      else if (activeFilter === 'Conviction') {
+          // Second: Sort by Relevance (The "Pro" Logic)
           processedData.sort((a, b) => {
-              // Primary: Highest Conviction Score -> Lowest
-              const scoreDiff = (Number(b.convictionScore) || 0) - (Number(a.convictionScore) || 0);
-              if (scoreDiff !== 0) return scoreDiff;
-              // Tie-breaker: Highest Volume
-              return (Number(b.volume) || 0) - (Number(a.volume) || 0);
-          });
-      }
-      else { processedData.sort((a, b) => a.id - b.id); }
+              const nameA = a.name.toLowerCase();
+              const nameB = b.name.toLowerCase();
 
+              // Priority 1: Exact Match (e.g. User types "ai", Item "ai" comes #1)
+              if (nameA === query && nameB !== query) return -1;
+              if (nameA !== query && nameB === query) return 1;
+
+              // Priority 2: Starts With (e.g. "air" comes before "kairo")
+              const startsA = nameA.startsWith(query);
+              const startsB = nameB.startsWith(query);
+              if (startsA && !startsB) return -1;
+              if (!startsA && startsB) return 1;
+
+              // Priority 3: Alphabetical Order for remaining items
+              if (nameA < nameB) return -1;
+              if (nameA > nameB) return 1;
+              return 0;
+          });
+      } 
+      // 2. NORMAL FILTERS (Only apply if NOT searching to keep search results pure)
+      else {
+          // Time Filter
+          if (timeFilter !== 'All') {
+              let limit = Infinity;
+              const now = Date.now();
+              if (timeFilter === '1H') limit = 3600 * 1000;
+              else if (timeFilter === '6H') limit = 3600 * 6 * 1000;
+              else if (timeFilter === '24H') limit = 3600 * 24 * 1000;
+              else if (timeFilter === '7D') limit = 3600 * 24 * 7 * 1000;
+
+              processedData = processedData.filter(item => {
+                  const timeDiff = now - (item.lastActive || 0); 
+                  return timeDiff <= limit;
+              });
+          }
+
+          // Section Sorting
+          if (activeFilter === 'Top') { processedData.sort((a, b) => b.volume - a.volume); }
+          else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
+          else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
+          else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
+          else if (activeFilter === 'Conviction') {
+              processedData.sort((a, b) => {
+                  const scoreDiff = (Number(b.convictionScore) || 0) - (Number(a.convictionScore) || 0);
+                  if (scoreDiff !== 0) return scoreDiff;
+                  return (Number(b.volume) || 0) - (Number(a.volume) || 0);
+              });
+          }
+          else { processedData.sort((a, b) => a.id - b.id); }
+      }
+
+      // 3. MANUAL COLUMN SORT (Overrides everything if user explicitly clicks a column header)
       if (sortConfig) {
           processedData.sort((a: any, b: any) => {
-              // 1. Numeric Values (Price, Volume, LastSale, Trending, Conviction)
-              // Logic: Up Arrow ('asc') = Highest First (Descending logic)
               if (['volume', 'pricePol', 'lastSale', 'trendingScore', 'convictionScore'].includes(sortConfig.key)) {
                   const numA = Number(a[sortConfig.key]) || 0;
                   const numB = Number(b[sortConfig.key]) || 0;
                   return sortConfig.direction === 'asc' ? numB - numA : numA - numB;
               }
-              // 2. Rank (Dynamic based on Active Filter)
-              // Logic: Up Arrow ('asc') = Rank 1, 2, 3... (Best items first)
               if (sortConfig.key === 'rank') {
-                  // Direction 'asc' (Up Arrow) means we want Rank 1, 2, 3... (Best items first)
-                  // So we sort by the SCORE descending.
                   const modifier = sortConfig.direction === 'asc' ? 1 : -1;
-
-                  // Sort based on the active section's metric
+                  // If searching, Rank is just 1,2,3...
+                  if (searchQuery) return (a.id - b.id) * modifier;
+                  
                   if (activeFilter === 'Trending') return (b.trendingScore - a.trendingScore) * modifier;
                   if (activeFilter === 'Top') return (b.volume - a.volume) * modifier;
                   if (activeFilter === 'Most Offers') return (b.offersCount - a.offersCount) * modifier;
                   if (activeFilter === 'Conviction') return (b.convictionScore - a.convictionScore) * modifier;
-                  
-                  // Fallback for 'All' or others: Sort by ID as a default rank
                   return (a.id - b.id) * modifier; 
               }
-              // 3. Name
-              // Logic: Up Arrow ('asc') = A to Z
               if (sortConfig.key === 'name') {
                   if (a.name < b.name) return sortConfig.direction === 'asc' ? -1 : 1;
                   if (a.name > b.name) return sortConfig.direction === 'asc' ? 1 : -1;
@@ -467,7 +483,8 @@ function MarketPage() {
           });
       }
       return processedData;
-  }, [activeFilter, favoriteIds, sortConfig, realListings, timeFilter, searchQuery]); // Added searchQuery dependency
+  }, [activeFilter, favoriteIds, sortConfig, realListings, timeFilter, searchQuery]);
+
   const totalPages = Math.ceil(finalData.length / ITEMS_PER_PAGE);
   const currentTableData = finalData.slice(
       (currentPage - 1) * ITEMS_PER_PAGE,
@@ -478,8 +495,6 @@ function MarketPage() {
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'desc';
-    
-    // EXCEPTION: For 'rank', we want the first click to be 'asc' (1, 2, 3...)
     if (key === 'rank') direction = 'asc';
 
     if (sortConfig && sortConfig.key === key && sortConfig.direction === direction) {
@@ -542,17 +557,14 @@ function MarketPage() {
         </div>
       </div>
 
-      {/* REPLACED 'container' with 'market-content-wrapper' for matching desktop width */}
+      {/* FILTERS */}
       <section className="market-content-wrapper mb-0 mt-4">
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" style={{ borderColor: '#222 !important', padding: '2px 0' }}>
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
                   <div onClick={() => { setActiveFilter('Watchlist'); setSortConfig(null); setCurrentPage(1); }} className={`cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : 'text-header-gray'}`} style={{ fontSize: '13.5px', fontWeight: 'bold', paddingBottom: '4px' }}>Watchlist</div>
-                  
-                  {/* Conviction Filter (Replaces All Assets) */}
                   <div onClick={() => { setActiveFilter('Conviction'); setSortConfig(null); setCurrentPage(1); }} className={`cursor-pointer filter-item fw-bold ${activeFilter === 'Conviction' ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
                       Conviction <i className="bi bi-fire text-warning ms-1"></i>
                   </div>
-
                   {['Trending', 'Top', 'Most Offers'].map(f => (
                       <div key={f} onClick={() => { setActiveFilter(f); setSortConfig(null); setCurrentPage(1); }} className={`cursor-pointer filter-item fw-bold ${activeFilter === f ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>{f}</div>
                   ))}
@@ -572,28 +584,28 @@ function MarketPage() {
           </div>
       </section>
 
-      {/* --- ADDED SEARCH BAR SECTION --- */}
+      {/* --- REFINED SEARCH BAR (Width -30%, Height -20%, Faint Border) --- */}
       <section className="market-content-wrapper mt-3 mb-2">
-        <div className="d-flex align-items-center position-relative" style={{ width: '100%', maxWidth: '380px' }}>
-            <i className="bi bi-search position-absolute text-secondary" style={{ left: '12px', fontSize: '14px', zIndex: 10 }}></i>
+        <div className="d-flex align-items-center position-relative" style={{ width: '100%', maxWidth: '265px' }}>
+            <i className="bi bi-search position-absolute text-secondary" style={{ left: '12px', fontSize: '13px', zIndex: 10 }}></i>
             <input 
                 type="text" 
                 placeholder="Search..." 
                 value={searchQuery}
                 onChange={(e) => { 
                     setSearchQuery(e.target.value); 
-                    setCurrentPage(1); // Reset pagination on type
+                    setCurrentPage(1); 
                 }}
                 className="form-control"
                 style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)', // 5% Glass
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                    border: '1px solid rgba(200, 200, 200, 0.15)', // Very faint gray border
                     borderRadius: '4px',
                     color: '#fff',
                     paddingLeft: '35px',
-                    paddingTop: '8px',
-                    paddingBottom: '8px',
-                    fontSize: '14px',
+                    paddingTop: '6px', // Reduced Height
+                    paddingBottom: '6px', // Reduced Height
+                    fontSize: '13px',
                     boxShadow: 'none',
                     backdropFilter: 'blur(5px)'
                 }}
@@ -601,7 +613,7 @@ function MarketPage() {
         </div>
       </section>
 
-      {/* REPLACED 'container' with 'market-content-wrapper' for matching desktop width */}
+      {/* TABLE */}
       <section className="market-content-wrapper mt-2 pt-0">
           <div className="table-responsive no-scrollbar">
               {loading ? ( <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
@@ -620,9 +632,7 @@ function MarketPage() {
                               <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 0', borderBottom: '1px solid #333', textAlign: 'left', width: '15%', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Price <SortArrows active={sortConfig?.key === 'pricePol'} direction={sortConfig?.direction} /></div>
                               </th>
-                              {/* Shifting Right via Padding (10%) */}
                               <th style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 40px', borderBottom: '1px solid #333', textAlign: 'left', width: '18%' }}>Last Sale</th>
-                              {/* Shifting Right via Padding (20%) */}
                               <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 60px', borderBottom: '1px solid #333', textAlign: 'left', width: '20%', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
@@ -634,15 +644,12 @@ function MarketPage() {
                       </thead>
                       <tbody>
                           {currentTableData.map((item: any, index: number) => {
-                              // 1. Calculate Global Index
                               const globalIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
                               const totalCount = finalData.length;
-
-                              // 2. Determine Dynamic Rank based on Sort Direction
-                              let dynamicRank = globalIndex + 1; // Default (ASC)
+                              let dynamicRank = globalIndex + 1; 
 
                               if (sortConfig && sortConfig.key === 'rank' && sortConfig.direction === 'desc') {
-                                  dynamicRank = totalCount - globalIndex; // Flip for DESC
+                                  dynamicRank = totalCount - globalIndex; 
                               }
 
                               return (
@@ -650,7 +657,6 @@ function MarketPage() {
                                     <td style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center gap-3">
                                             <i className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} style={{ fontSize: '12px' }} onClick={(e) => handleToggleFavorite(e, item.id)}></i>
-                                            {/* 3. Apply Compact Formatting here */}
                                             <span style={getRankStyle(dynamicRank) as any}>{formatCompactNumber(dynamicRank)}</span>
                                         </div>
                                     </td>
@@ -660,7 +666,6 @@ function MarketPage() {
                                             <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
                                         </Link>
                                     </td>
-                                    {/* Price Column with Change Indicator */}
                                     <td className="text-start" style={{ padding: '14px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center gap-2">
                                             <span className="text-white fw-bold" style={{ fontSize: '14px', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
@@ -672,11 +677,9 @@ function MarketPage() {
                                             )}
                                         </div>
                                     </td>
-                                    {/* Last Sale Column (Keep as is) */}
                                     <td className="text-start" style={{ padding: '14px 10px 14px 40px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '400', color: '#B0B0B0' }}>{item.lastSale ? formatPrice(item.lastSale) : '---'}</span>
                                     </td>
-                                    {/* Volume Column (Cleaned - No Arrows) */}
                                     <td className="text-start" style={{ padding: '14px 10px 14px 60px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center justify-content-start gap-2">
                                             <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
@@ -689,7 +692,6 @@ function MarketPage() {
                                             {item.convictionScore > 0 ? (
                                                 <div className="d-flex align-items-center justify-content-start gap-1">
                                                     <span>{formatCompactNumber(item.convictionScore)}</span>
-                                                    {/* Fire for Top 3 Ranks Only */}
                                                     {dynamicRank <= 3 && <i className="bi bi-fire text-warning"></i>}
                                                 </div>
                                             ) : (
