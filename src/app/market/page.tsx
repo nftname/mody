@@ -603,8 +603,8 @@ function MarketPage() {
                     borderRadius: '4px',
                     color: '#fff',
                     paddingLeft: '35px',
-                    paddingTop: '6px', // Reduced Height
-                    paddingBottom: '6px', // Reduced Height
+                    paddingTop: '4px', // Reduced Height
+                    paddingBottom: '4px', // Reduced Height
                     fontSize: '13px',
                     boxShadow: 'none',
                     backdropFilter: 'blur(5px)'
