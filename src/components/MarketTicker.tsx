@@ -11,7 +11,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- Market ABI (Same as Home) ---
+// --- Market ABI ---
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
@@ -103,45 +103,49 @@ export default function MarketTicker() {
 
             if (tokenIds.length === 0) return;
 
-            // B. Get Volume Data from Supabase (For sorting Top Performers)
-            const { data: sales } = await supabase
+            // B. Get Activities from Supabase (Sale & List ONLY)
+            const { data: activities } = await supabase
                 .from('activities')
-                .select('token_id, price, created_at')
-                .eq('activity_type', 'Sale');
-            const { data: lists } = await supabase
-              .from('activities')
-              .select('token_id, created_at')
-              .eq('activity_type', 'List');
+                .select('token_id, price, activity_type, created_at')
+                .in('activity_type', ['Sale', 'List']) // Fetch both types efficiently
+                .order('created_at', { ascending: false });
 
             const volumeMap: Record<number, number> = {};
             const latestListTimeMap: Record<number, number> = {};
+            
             let volToday = 0; 
             let volYest = 0;
             const oneDay = 24 * 60 * 60 * 1000;
 
-            if (sales) {
-                sales.forEach((s: any) => {
-                    const tid = Number(s.token_id);
-                    const price = Number(s.price) || 0;
-                    const time = new Date(s.created_at).getTime();
-                    
-                    // Map volume per ID
-                    volumeMap[tid] = (volumeMap[tid] || 0) + price;
+            if (activities) {
+                activities.forEach((act: any) => {
+                    const tid = Number(act.token_id);
+                    // Parse Time Safely
+                    let actTime: number;
+                    try {
+                        const dateStr = act.created_at.includes('Z') ? act.created_at : act.created_at + 'Z';
+                        actTime = new Date(dateStr).getTime();
+                        if (isNaN(actTime)) actTime = new Date(act.created_at).getTime();
+                    } catch { actTime = new Date(act.created_at).getTime(); }
 
-                    // Calculate Global NNM Vol
-                    if (now - time <= oneDay) volToday += price;
-                    else if (now - time <= 2 * oneDay) volYest += price;
+                    // --- Logic 1: Volume Calculation (Sale Only) ---
+                    if (act.activity_type === 'Sale') {
+                        const price = Number(act.price) || 0;
+                        volumeMap[tid] = (volumeMap[tid] || 0) + price;
+
+                        if (now - actTime <= oneDay) volToday += price;
+                        else if (now - actTime <= 2 * oneDay) volYest += price;
+                    }
+
+                    // --- Logic 2: Listing Time (List Only - NO MINT) ---
+                    // This is the "Just Listed" Fix
+                    if (act.activity_type === 'List') {
+                        if (!latestListTimeMap[tid] || actTime > latestListTimeMap[tid]) {
+                            latestListTimeMap[tid] = actTime;
+                        }
+                    }
                 });
             }
-              if (lists) {
-                lists.forEach((l: any) => {
-                  const tid = Number(l.token_id);
-                  const time = new Date(l.created_at).getTime();
-                  if (!latestListTimeMap[tid] || time > latestListTimeMap[tid]) {
-                    latestListTimeMap[tid] = time;
-                  }
-                });
-              }
             
             // Set NNM Vol Change
             setNnmVolChange(volYest === 0 ? (volToday > 0 ? 100 : 0) : ((volToday - volYest) / volYest) * 100);
@@ -161,18 +165,20 @@ export default function MarketTicker() {
                 } catch { return `Asset #${tokenId}`; }
             };
 
-            // D. Prepare Base List
+            // D. Prepare Base List from Contract IDs
             const allItems = tokenIds.map(id => ({
               id: Number(id),
               volume: volumeMap[Number(id)] || 0,
-              listedAt: latestListTimeMap[Number(id)] || 0
+              listedAt: latestListTimeMap[Number(id)] || 0 // Will be 0 if no 'List' event found
             }));
 
-            // --- Logic 1: Just Listed (Sort by ID Descending -> Newest ID first) ---
+            // --- LIST 1: JUST LISTED (Strict Sort by listedAt) ---
             const sortedNew = [...allItems]
-              .sort((a, b) => (b.listedAt || 0) - (a.listedAt || 0) || b.id - a.id)
+              .filter(item => item.listedAt > 0) // Must have a list event
+              .sort((a, b) => b.listedAt - a.listedAt) // Newest first
               .slice(0, 3);
-            let newItemsData = await Promise.all(sortedNew.map(async (item, i) => {
+
+            const newItemsData = await Promise.all(sortedNew.map(async (item, i) => {
               const name = await getRealName(BigInt(item.id));
               return {
                 id: `just-${i}`,
@@ -182,27 +188,9 @@ export default function MarketTicker() {
                 type: 'NEW' as const
               };
             }));
-            if (newItemsData.length < 3) {
-              const needed = 3 - newItemsData.length;
-              const fallbackPool = allItems
-                .filter(a => !sortedNew.some(s => s.id === a.id))
-                .sort((a, b) => b.id - a.id)
-                .slice(0, needed);
-              const fallbackItems = await Promise.all(fallbackPool.map(async (item, idx) => {
-                const name = await getRealName(BigInt(item.id));
-                return {
-                  id: `just-fb-${idx}`,
-                  label: 'Just Listed',
-                  value: name,
-                  link: `/asset/${item.id}`,
-                  type: 'NEW' as const
-                };
-              }));
-              newItemsData = [...newItemsData, ...fallbackItems];
-            }
             setNewItems(newItemsData);
 
-            // --- Logic 2: Top Performers (Sort by Volume Descending -> Highest Sales first) ---
+            // --- LIST 2: TOP PERFORMERS (Sort by Volume) ---
             const sortedTop = [...allItems].sort((a, b) => b.volume - a.volume).slice(0, 3);
             const topItemsData = await Promise.all(sortedTop.map(async (item, i) => {
                 const name = await getRealName(BigInt(item.id));
@@ -218,7 +206,7 @@ export default function MarketTicker() {
 
             setLastFetchTime(now);
 
-        } catch (e) { console.error("Home Logic Error", e); }
+        } catch (e) { console.error("Ticker Logic Error", e); }
     };
 
     fetchHomeLogicData();
@@ -303,8 +291,7 @@ export default function MarketTicker() {
             background-color: #1a1a1a;
         }
         @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+          0% { transform: translateX(0); } 100% { transform: translateX(-50%); }
         }
       `}</style>
     </div>
