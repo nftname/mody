@@ -402,7 +402,7 @@ function MarketPage() {
             // Finally set all data
             setRealListings(items);
 
-            setRealListings(items.filter(i => i !== null));
+
         } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
     };
 
