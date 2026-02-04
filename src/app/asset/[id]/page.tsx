@@ -1079,7 +1079,7 @@ function AssetPage() {
                                                             <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '30%' }}>To</th>
                                                             <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '12%' }}>Status</th>
                                                             <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '13%', textAlign: 'right' }}>Exp</th>
-                                                            <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th>
+                                                            <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '0%' }}></th>
                                                         </tr>
                                                     </thead>
                                                             <tbody>
