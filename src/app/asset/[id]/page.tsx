@@ -191,6 +191,11 @@ function AssetPage() {
     const [hasConvicted, setHasConvicted] = useState(false);
     const [isConvictionPending, setIsConvictionPending] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+    
+    // --- PAGINATION STATE ---
+    const [offersPage, setOffersPage] = useState(1);
+    const [activityPage, setActivityPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -1057,89 +1062,160 @@ function AssetPage() {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="table-responsive">
-                                            <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
-                                                <thead><tr>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>WPOL</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>From</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>To</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Status</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Exp</th>
-                                                    <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '15%' }}></th>
-                                                </tr></thead>
-                                                <tbody>
-                                                    {offersList.length === 0 ? (
-                                                        <tr><td colSpan={6} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>No active offers</td></tr>
-                                                    ) : (
-                                                        offersList.map((offer) => {
-                                                            const offerStatus = getOfferStatus(offer.status, offer.expiration, offer.isOutdated);
-                                                            const isAccepted = offer.status === 'accepted';
-                                                            const rowBg = isAccepted ? 'rgba(14, 203, 129, 0.08)' : 'transparent';
-                                                            const canAccept = isOwner && !offer.isMyOffer && offerStatus.label === 'ACTIVE' && !offer.isOutdated;
-                                                            const canCancel = offer.isMyOffer && (offerStatus.label === 'ACTIVE' || offerStatus.label === 'OUTDATED');
-                                                            return (
-                                                                <tr key={offer.id} style={{ backgroundColor: rowBg }}>
-                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600', fontSize: '13px' }}>{formatCompactNumber(offer.price)}</td>
-                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><Link href={`/profile/${offer.bidder_address}`} style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</Link></td>
-                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><Link href={`/profile/${asset.owner}`} style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{asset?.owner === address ? 'You' : (asset?.owner ? asset.owner.slice(0,6) : '-')}</Link></td>
-                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>
-                                                                        <span style={{ 
-                                                                            display: 'inline-block',
-                                                                            padding: '3px 8px',
-                                                                            borderRadius: '4px',
-                                                                            fontSize: '10px',
-                                                                            fontWeight: 'bold',
-                                                                            color: offerStatus.color,
-                                                                            backgroundColor: offerStatus.bg,
-                                                                            border: `1px solid ${offerStatus.color}`
-                                                                        }}>
-                                                                            {offerStatus.label}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>{offer.timeLeft}</td>
-                                                                    <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
-                                                                        {canAccept && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
-                                                                        {canCancel && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm fw-bold" style={{ fontSize: '11px', padding: '4px 12px', background: 'rgba(240, 196, 32, 0.1)', border: `1px solid ${GOLD_SOLID}`, color: GOLD_SOLID, backdropFilter: 'blur(4px)', borderRadius: '8px' }}>Cancel</button>}
-                                                                    </td>
-                                                                </tr>
-                                                            );
-                                                        })
+                                        
+                                        {/* PAGINATION LOGIC */}
+                                        {(() => {
+                                            const totalOffersPages = Math.ceil(offersList.length / ITEMS_PER_PAGE);
+                                            const currentOffers = offersList.slice((offersPage - 1) * ITEMS_PER_PAGE, offersPage * ITEMS_PER_PAGE);
+                                            
+                                            return (
+                                                <>
+                                                    <div className="table-responsive">
+                                                        <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
+                                                            <thead><tr>
+                                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>WPOL</th>
+                                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>From</th>
+                                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>To</th>
+                                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Status</th>
+                                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '12px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>Exp</th>
+                                                                <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '15%' }}></th>
+                                                            </tr></thead>
+                                                            <tbody>
+                                                                {currentOffers.length === 0 ? (
+                                                                    <tr><td colSpan={6} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>No active offers</td></tr>
+                                                                ) : (
+                                                                    currentOffers.map((offer) => {
+                                                                        const offerStatus = getOfferStatus(offer.status, offer.expiration, offer.isOutdated);
+                                                                        const isAccepted = offer.status === 'accepted';
+                                                                        const rowBg = isAccepted ? 'rgba(14, 203, 129, 0.08)' : 'transparent';
+                                                                        const canAccept = isOwner && !offer.isMyOffer && offerStatus.label === 'ACTIVE' && !offer.isOutdated;
+                                                                        const canCancel = offer.isMyOffer && (offerStatus.label === 'ACTIVE' || offerStatus.label === 'OUTDATED');
+                                                                        return (
+                                                                            <tr key={offer.id} style={{ backgroundColor: rowBg }}>
+                                                                                <td className="align-middle" style={{ backgroundColor: rowBg, color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600', fontSize: '13px' }}>{formatCompactNumber(offer.price)}</td>
+                                                                                <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><Link href={`/profile/${offer.bidder_address}`} style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{offer.bidder_address === address ? 'You' : offer.bidder_address.slice(0,6)}</Link></td>
+                                                                                <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}><Link href={`/profile/${asset.owner}`} style={{ color: GOLD_SOLID, textDecoration: 'none', fontSize: '13px' }}>{asset?.owner === address ? 'You' : (asset?.owner ? asset.owner.slice(0,6) : '-')}</Link></td>
+                                                                                <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>
+                                                                                    <span style={{ 
+                                                                                        display: 'inline-block',
+                                                                                        padding: '3px 8px',
+                                                                                        borderRadius: '4px',
+                                                                                        fontSize: '10px',
+                                                                                        fontWeight: 'bold',
+                                                                                        color: offerStatus.color,
+                                                                                        backgroundColor: offerStatus.bg,
+                                                                                        border: `1px solid ${offerStatus.color}`
+                                                                                    }}>
+                                                                                        {offerStatus.label}
+                                                                                    </span>
+                                                                                </td>
+                                                                                <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>{offer.timeLeft}</td>
+                                                                                <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
+                                                                                    {canAccept && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
+                                                                                    {canCancel && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm fw-bold" style={{ fontSize: '11px', padding: '4px 12px', background: 'rgba(240, 196, 32, 0.1)', border: `1px solid ${GOLD_SOLID}`, color: GOLD_SOLID, backdropFilter: 'blur(4px)', borderRadius: '8px' }}>Cancel</button>}
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                    {/* OFFERS PAGINATION CONTROLS */}
+                                                    {totalOffersPages > 1 && (
+                                                        <div className="d-flex justify-content-center align-items-center gap-3 mt-3 pt-2" style={{ borderTop: `1px solid ${BORDER_COLOR}` }}>
+                                                            <button 
+                                                                onClick={() => setOffersPage(prev => Math.max(prev - 1, 1))} 
+                                                                disabled={offersPage === 1}
+                                                                className="btn btn-sm text-white" 
+                                                                style={{ background: 'transparent', border: 'none', opacity: offersPage === 1 ? 0.3 : 1 }}
+                                                            >
+                                                                <i className="bi bi-chevron-left"></i>
+                                                            </button>
+                                                            <span style={{ fontSize: '12px', color: TEXT_MUTED }}>
+                                                                Page {offersPage} of {totalOffersPages}
+                                                            </span>
+                                                            <button 
+                                                                onClick={() => setOffersPage(prev => Math.min(prev + 1, totalOffersPages))} 
+                                                                disabled={offersPage === totalOffersPages}
+                                                                className="btn btn-sm text-white" 
+                                                                style={{ background: 'transparent', border: 'none', opacity: offersPage === totalOffersPages ? 0.3 : 1 }}
+                                                            >
+                                                                <i className="bi bi-chevron-right"></i>
+                                                            </button>
+                                                        </div>
                                                     )}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 )}
 
                                 {activeTab === 'Activity' && (
-                                    <div className="p-3 pb-5">
-                                        <div className="table-responsive">
-                                            <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0', fontSize: '11px' }}>
-                                                <thead><tr>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '12%' }}>Event</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '18%' }}>$</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>From</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>To</th>
-                                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '10%', textAlign: 'right' }}>Date</th>
-                                                </tr></thead>
-                                                <tbody>
-                                                    {activityList.map((act, index) => (
-                                                        <tr key={index}>
-                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>{act.type}</td>
-                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>{act.price ? formatCompactNumber(act.price) : '-'}</td>
-                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>
-                                                                {act.from ? <Link href={`/profile/${act.from}`} style={{color: GOLD_SOLID, textDecoration: 'none'}}>{act.from.slice(0,6)}</Link> : '-'}
-                                                            </td>
-                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>
-                                                                {act.to ? (act.to === 'Market' ? 'Market' : <Link href={`/profile/${act.to}`} style={{color: GOLD_SOLID, textDecoration: 'none'}}>{act.to.slice(0,6)}</Link>) : '-'}
-                                                            </td>
-                                                            <td className="align-middle" style={{ backgroundColor: 'transparent', color: TEXT_MUTED, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>{new Date(act.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                                                        </tr>
-                                                    ))}
-                                                    {activityList.length === 0 && <tr><td colSpan={5} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>No recent activity</td></tr>}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                    <div className="p-3 pb-4">
+                                        {/* PAGINATION LOGIC */}
+                                        {(() => {
+                                            const totalActivityPages = Math.ceil(activityList.length / ITEMS_PER_PAGE);
+                                            const currentActivity = activityList.slice((activityPage - 1) * ITEMS_PER_PAGE, activityPage * ITEMS_PER_PAGE);
+                                            
+                                            return (
+                                                <>
+                                                    <div className="table-responsive">
+                                                        <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0', fontSize: '11px' }}>
+                                                            <thead><tr>
+                                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '12%' }}>Event</th>
+                                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '18%' }}>$</th>
+                                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>From</th>
+                                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>To</th>
+                                                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '10%', textAlign: 'right' }}>Date</th>
+                                                            </tr></thead>
+                                                            <tbody>
+                                                                {currentActivity.map((act, index) => (
+                                                                    <tr key={index}>
+                                                                        <td className="align-middle" style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>{act.type}</td>
+                                                                        <td className="align-middle" style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>{act.price ? formatCompactNumber(act.price) : '-'}</td>
+                                                                        <td className="align-middle" style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>
+                                                                            {act.from ? <Link href={`/profile/${act.from}`} style={{color: GOLD_SOLID, textDecoration: 'none'}}>{act.from.slice(0,6)}</Link> : '-'}
+                                                                        </td>
+                                                                        <td className="align-middle" style={{ backgroundColor: 'transparent', color: GOLD_SOLID, padding: '12px 0', borderBottom: '1px solid #2d2d2d' }}>
+                                                                            {act.to ? (act.to === 'Market' ? 'Market' : <Link href={`/profile/${act.to}`} style={{color: GOLD_SOLID, textDecoration: 'none'}}>{act.to.slice(0,6)}</Link>) : '-'}
+                                                                        </td>
+                                                                        <td className="align-middle" style={{ backgroundColor: 'transparent', color: TEXT_MUTED, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>{new Date(act.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                                                                    </tr>
+                                                                ))}
+                                                                {currentActivity.length === 0 && <tr><td colSpan={5} className="text-center py-5 text-muted" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, backgroundColor: 'transparent' }}>No recent activity</td></tr>}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                    {/* ACTIVITY PAGINATION CONTROLS */}
+                                                    {totalActivityPages > 1 && (
+                                                        <div className="d-flex justify-content-center align-items-center gap-3 mt-3 pt-2" style={{ borderTop: `1px solid ${BORDER_COLOR}` }}>
+                                                            <button 
+                                                                onClick={() => setActivityPage(prev => Math.max(prev - 1, 1))} 
+                                                                disabled={activityPage === 1}
+                                                                className="btn btn-sm text-white" 
+                                                                style={{ background: 'transparent', border: 'none', opacity: activityPage === 1 ? 0.3 : 1 }}
+                                                            >
+                                                                <i className="bi bi-chevron-left"></i>
+                                                            </button>
+                                                            <span style={{ fontSize: '12px', color: TEXT_MUTED }}>
+                                                                Page {activityPage} of {totalActivityPages}
+                                                            </span>
+                                                            <button 
+                                                                onClick={() => setActivityPage(prev => Math.min(prev + 1, totalActivityPages))} 
+                                                                disabled={activityPage === totalActivityPages}
+                                                                className="btn btn-sm text-white" 
+                                                                style={{ background: 'transparent', border: 'none', opacity: activityPage === totalActivityPages ? 0.3 : 1 }}
+                                                            >
+                                                                <i className="bi bi-chevron-right"></i>
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 )}
                             </div>
