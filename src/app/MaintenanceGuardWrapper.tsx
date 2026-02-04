@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
@@ -10,37 +10,68 @@ import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const OWNER_WALLET = (process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS || "").toLowerCase();
+const CACHE_TIME = 60000;
 
 export default function MaintenanceGuardWrapper({ children }: { children: React.ReactNode }) {
   const { address, isConnected } = useAccount();
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [maintenanceMsg, setMaintenanceMsg] = useState('');
   const [loading, setLoading] = useState(true);
+  const [lastCheck, setLastCheck] = useState(0);
   
   const pathname = usePathname();
 
-  useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const { data: settings } = await supabase.from('app_settings').select('*').eq('id', 1).single();
-        if (settings) {
-          setIsMaintenance(settings.is_maintenance_mode);
-          setMaintenanceMsg(settings.announcement_text || "Our platform is currently undergoing scheduled upgrades.");
-        }
-        if (isConnected && address) {
-          const { data: banned } = await supabase.from('banned_wallets').select('id').eq('wallet_address', address.toLowerCase()).single();
-          if (banned) { console.log("Wallet is banned:", address); }
-        }
-      } catch (e) { console.error(e); } 
-      finally { setLoading(false); }
-    };
-    checkStatus();
-  }, [pathname, isConnected, address]);
+  const fetchSettings = useCallback(async (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastCheck < CACHE_TIME) return;
 
-  // ✅ Secure: Only owner wallet can bypass maintenance mode
+    try {
+      const { data: settings } = await supabase
+        .from('app_settings')
+        .select('is_maintenance_mode, announcement_text')
+        .eq('id', 1)
+        .single();
+
+      if (settings) {
+        setIsMaintenance(settings.is_maintenance_mode);
+        setMaintenanceMsg(settings.announcement_text || "Our platform is currently undergoing scheduled upgrades.");
+        setLastCheck(now);
+      }
+    } catch (e) {
+      console.error("Critical Security Check Failed");
+    } finally {
+      setLoading(false);
+    }
+  }, [lastCheck]);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [pathname, fetchSettings]);
+
+  useEffect(() => {
+    const checkBanned = async () => {
+      if (isConnected && address) {
+        try {
+          const { data: banned } = await supabase
+            .from('banned_wallets')
+            .select('id')
+            .eq('wallet_address', address.toLowerCase())
+            .single();
+          
+          if (banned) {
+            window.location.href = '/403';
+          }
+        } catch (e) {}
+      }
+    };
+    checkBanned();
+  }, [isConnected, address]);
+
   const isOwner = isConnected && address?.toLowerCase() === OWNER_WALLET;
 
-  if (loading) return <div style={{background:'#F9F9F7', height:'100vh'}} />;
+  if (loading) {
+    return <div style={{background:'#F9F9F7', height:'100vh'}} />;
+  }
 
   if (isMaintenance && !isOwner) {
     return (
