@@ -9,6 +9,7 @@ import PWAInstallBanner from "@/components/PWAInstallBanner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
+  metadataBase: new URL('https://nnm.market'),
   title: 'NNM | Digital Name Assets',
   description: 'The definitive marketplace for NFT Digital Identity. Secure your immutable priority on the blockchain. True ownership. Non-custodial.',
   openGraph: {
