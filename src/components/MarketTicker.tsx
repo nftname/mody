@@ -47,26 +47,30 @@ export default function MarketTicker() {
   const [newItems, setNewItems] = useState<TickerItem[]>([]);
   const [lastFetchTime, setLastFetchTime] = useState(0);
 
-  // 1. Fetch Prices (CoinGecko)
+  // --- TWEAK 1: Fast Price Engine (Internal API) ---
+  // Replaces the old CoinGecko direct fetch
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd&include_24hr_change=true');
+        // الاتصال بالـ API الداخلي السريع
+        const res = await fetch('/api/prices');
         const data = await res.json();
-        const polKey = data['polygon-ecosystem-token'] ? 'polygon-ecosystem-token' : 'matic-network';
         
-        if (data.ethereum && data[polKey]) {
-            setPrices({ 
-                eth: data.ethereum.usd, 
-                ethChange: data.ethereum.usd_24h_change,
-                pol: data[polKey].usd,
-                polChange: data[polKey].usd_24h_change
-            });
-        }
-      } catch (e) { console.error(e); }
+        // البيانات تأتي جاهزة من السيرفر (بما في ذلك التغيير إن وجد، أو نفترض 0 مؤقتاً)
+        // ملاحظة: الـ API الحالي يرجع السعر فقط.
+        // لتحسين الدقة مستقبلاً، يمكن تعديل الـ API ليرجع نسبة التغيير أيضاً.
+        // حالياً سنستخدم السعر المحدث، ونفترض نسبة تغيير تقديرية أو 0 إذا لم تتوفر.
+        
+        setPrices({ 
+            eth: data.eth || 0, 
+            ethChange: 0, // أو يمكن جلبها من الـ API إذا طورناه
+            pol: data.pol || 0,
+            polChange: 0  // أو يمكن جلبها من الـ API إذا طورناه
+        });
+      } catch (e) { console.error("Internal Price API Error", e); }
     };
     fetchPrices();
-    const interval = setInterval(fetchPrices, 60000);
+    const interval = setInterval(fetchPrices, 60000); // تحديث كل دقيقة
     return () => clearInterval(interval);
   }, []);
 
@@ -104,11 +108,10 @@ export default function MarketTicker() {
             if (tokenIds.length === 0) return;
 
             // B. Get Activities from Supabase (Sale & List ONLY)
-            // ✅ IMPORTANT: Fetch 'List' activity to determine sorting
             const { data: activities } = await supabase
                 .from('activities')
                 .select('token_id, price, activity_type, created_at')
-                .in('activity_type', ['Sale', 'List']) // Fetch only relevant types
+                .in('activity_type', ['Sale', 'List']) 
                 .order('created_at', { ascending: false });
 
             const volumeMap: Record<number, number> = {};
@@ -128,7 +131,6 @@ export default function MarketTicker() {
                         if (isNaN(actTime)) actTime = new Date(act.created_at).getTime();
                     } catch { actTime = new Date(act.created_at).getTime(); }
 
-                    // --- Logic 1: Volume Calculation (Sale Only) ---
                     if (act.activity_type === 'Sale') {
                         const price = Number(act.price) || 0;
                         volumeMap[tid] = (volumeMap[tid] || 0) + price;
@@ -137,8 +139,6 @@ export default function MarketTicker() {
                         else if (now - actTime <= 2 * oneDay) volYest += price;
                     }
 
-                    // --- Logic 2: Listing Time (List ONLY - STRICT) ---
-                    // ✅ This separates 'List' from 'Mint'. Mints are ignored here.
                     if (act.activity_type === 'List') {
                         if (!latestListTimeMap[tid] || actTime > latestListTimeMap[tid]) {
                             latestListTimeMap[tid] = actTime;
@@ -168,13 +168,13 @@ export default function MarketTicker() {
             const allItems = tokenIds.map(id => ({
               id: Number(id),
               volume: volumeMap[Number(id)] || 0,
-              listedAt: latestListTimeMap[Number(id)] || 0 // 0 if no List activity found
+              listedAt: latestListTimeMap[Number(id)] || 0 
             }));
 
             // --- LIST 1: JUST LISTED (Strict Sort by listedAt) ---
             const sortedNew = [...allItems]
-              .filter(item => item.listedAt > 0) // ✅ MUST have a 'List' event
-              .sort((a, b) => b.listedAt - a.listedAt) // ✅ Sort by Time Descending
+              .filter(item => item.listedAt > 0) 
+              .sort((a, b) => b.listedAt - a.listedAt) 
               .slice(0, 3);
 
             const newItemsData = await Promise.all(sortedNew.map(async (item, i) => {
@@ -188,8 +188,6 @@ export default function MarketTicker() {
               };
             }));
             
-            // If we have less than 3 recent listings, we DO NOT fallback to random IDs.
-            // We just show what we have to maintain integrity.
             setNewItems(newItemsData);
 
             // --- LIST 2: TOP PERFORMERS (Sort by Volume) ---
