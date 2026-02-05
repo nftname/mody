@@ -405,28 +405,25 @@ function AssetPage() {
     const fetchAllData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            // 1. جلب الميتاداتا من الداتا بيز فوراً (بدلاً من IPFS)
-            const { data: dbAsset } = await supabase
-                .from('assets_metadata')
-                .select('*')
-                .eq('token_id', tokenId)
-                .single();
+            const [dbResult, ownerResult, listingResult] = await Promise.all([
+                supabase.from('assets_metadata').select('*').eq('token_id', tokenId).single(),
+                publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'ownerOf', args: [BigInt(tokenId)] }),
+                publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] })
+            ]);
 
-            // 2. جلب المالك وحالة البيع من البلوك تشين (لضمان الأمان واللحيظة)
-            const owner = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'ownerOf', args: [BigInt(tokenId)] });
-            const listingData = await publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] });
+            const dbAsset = dbResult.data;
+            const owner = ownerResult as string;
+            const listingData = listingResult as [string, bigint, boolean];
 
-            // دمج البيانات (اسم وصورة من الداتا بيز + مالك وسعر من العقد)
             setAsset({
                 id: tokenId,
                 name: dbAsset?.name || `NNM #${tokenId}`,
                 description: dbAsset?.description || "",
-                // محاولة قراءة التاير من الداتا بيز، أو العودة للقيمة الافتراضية
-                tier: dbAsset?.tier ? dbAsset.tier.toLowerCase() : (dbAsset?.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founder'),
+                tier: dbAsset?.tier ? dbAsset.tier.toLowerCase() : 'founder',
                 price: listingData[2] ? formatEther(listingData[1]) : '0',
                 owner: owner,
-                image: dbAsset?.image_url || '', // الصورة من الداتا بيز مباشرة
-                mintDate: dbAsset?.mint_date || dbAsset?.attributes?.find((a: any) => a.trait_type === 'Mint Date')?.value
+                image: dbAsset?.image_url || '',
+                mintDate: dbAsset?.mint_date
             });
 
             if (listingData[2]) setListing({ price: formatEther(listingData[1]), seller: listingData[0] });
@@ -435,13 +432,11 @@ function AssetPage() {
             setIsOwner(address?.toLowerCase() === owner.toLowerCase());
             if (address && owner.toLowerCase() === address.toLowerCase()) {
                 const approvedStatus = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'isApprovedForAll', args: [address, MARKETPLACE_ADDRESS as `0x${string}`] });
-                setIsApproved(approvedStatus);
+                setIsApproved(approvedStatus as boolean);
             }
             
-            // جلب الأنشطة (كما هي)
             const { data: actData } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
             
-            // منطق حساب تاريخ آخر بيعة (كما هو)
             let lastSaleTimestamp: number | null = null;
             if (actData) {
                 const lastSaleActivity = actData.find((act: any) => act.activity_type === 'Sale');
@@ -454,7 +449,6 @@ function AssetPage() {
                 }
             }
             
-            // جلب العروض (كما هي)
             const { data: offers } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled');
             if (offers) {
                 let enrichedOffers = offers.map((offer: any) => {
@@ -499,14 +493,12 @@ function AssetPage() {
         } catch (e) { console.error(e); } finally { setLoading(false); }
     }, [tokenId, address, publicClient, offerSort]);
 
+
     // --- TURBO GALLERY: More Assets (Fixed BigInt Error) ---
-    const fetchMoreAssets = useCallback(async () => {
+     const fetchMoreAssets = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         
-        // تحديد الـ 3 أصول التالية
         const startId = BigInt(tokenId);
-        
-        // ✅ FIX: استخدام BigInt() بدلاً من 1n لحل مشكلة التايب سكريبت
         const nextIds = [
             (startId + BigInt(1)).toString(), 
             (startId + BigInt(2)).toString(), 
@@ -514,7 +506,6 @@ function AssetPage() {
         ];
 
         try {
-            // 1. جلب الصور والأسماء من الداتا بيز (ضربة واحدة سريعة)
             const { data: dbAssets } = await supabase
                 .from('assets_metadata')
                 .select('*')
@@ -525,36 +516,42 @@ function AssetPage() {
                 return;
             }
 
-            // 2. التحقق من السعر فقط (اختياري وسريع) من البلوك تشين
-            const loadedAssets = await Promise.all(dbAssets.map(async (meta: any) => {
-                let isListed = false;
-                let price = '0';
-                
-                try {
-                    const listingData = await publicClient.readContract({ 
-                        address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                        abi: MARKETPLACE_ABI, 
-                        functionName: 'listings', 
-                        args: [BigInt(meta.token_id)] 
-                    });
-                    if (listingData[2]) { 
-                        isListed = true; 
-                        price = formatEther(listingData[1]); 
-                    }
-                } catch (e) { /* ignore contract errors */ }
-
-                return {
-                    id: meta.token_id,
-                    name: meta.name,
-                    image: meta.image_url,
-                    price: price,
-                    isListed: isListed
-                };
+            const initialAssets = dbAssets.map((meta: any) => ({
+                id: meta.token_id,
+                name: meta.name,
+                image: meta.image_url,
+                price: '...',
+                isListed: false
             }));
 
-            setMoreAssets(loadedAssets);
+            setMoreAssets(initialAssets);
+
+            if (publicClient) {
+                const updatedAssets = await Promise.all(initialAssets.map(async (asset: any) => {
+                    let price = 'Not Listed';
+                    let isListed = false;
+                    try {
+                        const listingData = await publicClient.readContract({ 
+                            address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                            abi: MARKETPLACE_ABI, 
+                            functionName: 'listings', 
+                            args: [BigInt(asset.id)] 
+                        });
+                        if (listingData[2]) { 
+                            isListed = true; 
+                            const rawPrice = formatEther(listingData[1]);
+                            price = parseFloat(rawPrice).toFixed(4).replace(/\.?0+$/, "") + ' POL';
+                        }
+                    } catch (e) { }
+
+                    return { ...asset, price, isListed };
+                }));
+                
+                setMoreAssets(updatedAssets);
+            }
         } catch (e) { console.error("Gallery fetch error", e); }
     }, [tokenId, publicClient]);
+
 
     const refreshWpolData = useCallback(async () => {
         if (address && publicClient) {
