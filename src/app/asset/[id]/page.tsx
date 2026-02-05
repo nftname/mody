@@ -1,5 +1,6 @@
 'use client';
 
+import AssetGallery from '@/components/AssetGallery';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
@@ -399,20 +400,17 @@ function AssetPage() {
     };
 
       // --- TURBO FETCH: Main Asset Data ---
-   const fetchAllData = useCallback(async () => {
+    const fetchAllData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         
-        // 1. الداتا بيز (مع مانع تكرار صارم)
+        // 1. الموجة الأولى: الداتا بيز (عرض فوري للصورة)
         supabase.from('assets_metadata').select('*').eq('token_id', tokenId).single()
             .then((res: any) => {
                 const dbAsset = res.data;
                 if (dbAsset) {
                     setAsset((prev: any) => {
-                        // 🛑 هذا هو كود الفرامل: إذا كانت الصورة موجودة، توقف فوراً ولا تحدث الـ State
-                        if (prev && prev.image === dbAsset.image_url && prev.name === dbAsset.name) {
-                            return prev;
-                        }
-                        
+                        // كابح التكرار: لا نحدث إذا كانت الصورة موجودة
+                        if (prev && prev.id === tokenId && prev.image === dbAsset.image_url) return prev;
                         return {
                             id: tokenId,
                             name: dbAsset.name,
@@ -424,30 +422,24 @@ function AssetPage() {
                             mintDate: dbAsset.mint_date
                         };
                     });
-                    // نخفي التحميل فقط إذا كان ظاهراً
-                    setLoading((l) => l ? false : l);
+                    setLoading(false); 
                 }
             });
 
         try {
-            // 2. البلوك تشين
+            // 2. الموجة الثانية: البلوك تشين (تحديث السعر والمالك)
             const [owner, listingData] = await Promise.all([
                 publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'ownerOf', args: [BigInt(tokenId)] }),
                 publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] })
             ]);
 
             const listingArr = listingData as [string, bigint, boolean];
-            const newPrice = listingArr[2] ? formatEther(listingArr[1]) : '0';
             
-            // تحديث السعر والمالك فقط إذا تغيرا
-            setAsset((prev: any) => {
-                if (prev && prev.owner === owner && prev.price === newPrice) return prev;
-                return {
-                    ...prev,
-                    owner: owner,
-                    price: newPrice === '0' && prev?.price === '...' ? '0' : newPrice
-                };
-            });
+            setAsset((prev: any) => ({
+                ...prev, 
+                owner: owner,
+                price: listingArr[2] ? formatEther(listingArr[1]) : (prev?.price === '...' ? '0' : prev?.price)
+            }));
 
             if (listingArr[2]) setListing({ price: formatEther(listingArr[1]), seller: listingArr[0] });
             else setListing(null);
@@ -460,7 +452,7 @@ function AssetPage() {
                 setIsApproved(approved as boolean);
             }
 
-            // 🛑 تم عزل جلب العروض والأنشطة لكي لا يتأثروا بترتيب العروض (offerSort)
+            // 3. الموجة الثالثة: الأنشطة والعروض (بدون تعطيل)
             const { data: actData } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
             const { data: offers } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled');
             
@@ -477,12 +469,8 @@ function AssetPage() {
                     timeLeft: formatDuration(offer.expiration),
                     isOutdated: false 
                 }));
-                
-                // الترتيب يتم هنا ولكن لا نضعه في مصفوفة التبعيات
-                if (offerSort === 'Newest') enrichedOffers.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                else if (offerSort === 'High Price') enrichedOffers.sort((a: any, b: any) => b.price - a.price);
-                else if (offerSort === 'Low Price') enrichedOffers.sort((a: any, b: any) => a.price - b.price);
-                
+                // ترتيب العروض يتم هنا مرة واحدة
+                enrichedOffers.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 setOffersList(enrichedOffers);
             }
             
@@ -490,20 +478,18 @@ function AssetPage() {
                  const formattedActs = actData.map((item: any) => ({
                     type: item.activity_type, price: item.price, from: item.from_address, to: item.to_address, date: item.created_at, rawDate: new Date(item.created_at).getTime()
                 }));
+                
                 const { data: offerActData } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled').order('created_at', { ascending: false });
                 const formattedOffers = (offerActData || []).map((item: any) => ({
                     type: 'Offer', price: item.price, from: item.bidder_address, to: 'Market', date: item.created_at, rawDate: new Date(item.created_at).getTime()
                 }));
+
                 const mergedActivity = [...formattedActs, ...formattedOffers].sort((a: any, b: any) => b.rawDate - a.rawDate);
                 setActivityList(mergedActivity);
             }
 
         } catch (e) { console.error("Chain fetch error:", e); }
-        
-    // 🛑 هام جداً: أزلت offerSort من هنا لأنه هو سبب الحلقة المفرغة
-    }, [tokenId, address, publicClient]);  // تمت إزالة offerSort لمنع التكرار
-
-
+    }, [tokenId, address, publicClient]); //  // تمت إزالة offerSort لمنع التكرار
 
 
     // --- TURBO GALLERY: More Assets (Fixed BigInt Error) ---
@@ -994,42 +980,16 @@ function AssetPage() {
                                             </div>
                                         </Accordion>
 
-                                        <Accordion title="More from this collection" icon="bi-collection">
-                                            <div className="d-flex gap-3 overflow-auto pb-3 px-3" style={{ scrollbarWidth: 'none' }}>
-                                                {moreAssets.length > 0 ? moreAssets.map(item => {
-                                                    const isItemFav = favoriteIds.has(item.id);
-                                                    return (
-                                                        <Link key={item.id} href={`/asset/${item.id}`} className="text-decoration-none">
-                                                            <div className="h-100 d-flex flex-column" style={{ width: '220px', backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
-                                                                <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
-                                                                    {/* FAVORITE BUTTON (MORE ASSETS) */}
-                                                                    <button 
-                                                                        onClick={(e) => handleToggleFavorite(e, item.id)} 
-                                                                        className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" 
-                                                                        style={{ zIndex: 10 }}
-                                                                    >
-                                                                        <i className={`bi ${isItemFav ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isItemFav ? '#FFFFFF' : 'white', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
-                                                                    </button>
-                                                                    {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
-                                                                </div>
-                                                                <div className="p-3 d-flex flex-column flex-grow-1">
-                                                                    <div className="d-flex justify-content-between align-items-start mb-1">
-                                                                        <div className="text-white fw-bold text-truncate" style={{ fontSize: '14px', maxWidth: '80%' }}>{item.name}</div>
-                                                                        <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
-                                                                    </div>
-                                                                    <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
-                                                                    <div className="mt-auto">
-                                                                        <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Not Listed</span>}</div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </Link>
-                                                    );
-                                                }) : (
-                                                    <div className="text-muted text-center w-100 py-3">Loading more assets...</div>
-                                                )}
+                                                                               <Accordion title="More from this collection" icon="bi-collection">
+                                            <div className="py-2">
+                                                <AssetGallery 
+                                                    tokenId={tokenId} 
+                                                    favoriteIds={favoriteIds} 
+                                                    onToggleFavorite={handleToggleFavorite} 
+                                                />
                                             </div>
                                         </Accordion>
+
                                     </div>
                                 )}
 
