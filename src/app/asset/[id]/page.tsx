@@ -399,15 +399,20 @@ function AssetPage() {
     };
 
       // --- TURBO FETCH: Main Asset Data ---
-    const fetchAllData = useCallback(async () => {
+   const fetchAllData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         
+        // 1. الداتا بيز (مع مانع تكرار صارم)
         supabase.from('assets_metadata').select('*').eq('token_id', tokenId).single()
             .then((res: any) => {
                 const dbAsset = res.data;
                 if (dbAsset) {
                     setAsset((prev: any) => {
-                        if (prev && prev.id === tokenId) return prev;
+                        // 🛑 هذا هو كود الفرامل: إذا كانت الصورة موجودة، توقف فوراً ولا تحدث الـ State
+                        if (prev && prev.image === dbAsset.image_url && prev.name === dbAsset.name) {
+                            return prev;
+                        }
+                        
                         return {
                             id: tokenId,
                             name: dbAsset.name,
@@ -419,23 +424,30 @@ function AssetPage() {
                             mintDate: dbAsset.mint_date
                         };
                     });
-                    setLoading(false); 
+                    // نخفي التحميل فقط إذا كان ظاهراً
+                    setLoading((l) => l ? false : l);
                 }
             });
 
         try {
+            // 2. البلوك تشين
             const [owner, listingData] = await Promise.all([
                 publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'ownerOf', args: [BigInt(tokenId)] }),
                 publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] })
             ]);
 
             const listingArr = listingData as [string, bigint, boolean];
+            const newPrice = listingArr[2] ? formatEther(listingArr[1]) : '0';
             
-            setAsset((prev: any) => ({
-                ...prev, 
-                owner: owner,
-                price: listingArr[2] ? formatEther(listingArr[1]) : (prev?.price === '...' ? '0' : prev?.price)
-            }));
+            // تحديث السعر والمالك فقط إذا تغيرا
+            setAsset((prev: any) => {
+                if (prev && prev.owner === owner && prev.price === newPrice) return prev;
+                return {
+                    ...prev,
+                    owner: owner,
+                    price: newPrice === '0' && prev?.price === '...' ? '0' : newPrice
+                };
+            });
 
             if (listingArr[2]) setListing({ price: formatEther(listingArr[1]), seller: listingArr[0] });
             else setListing(null);
@@ -448,46 +460,25 @@ function AssetPage() {
                 setIsApproved(approved as boolean);
             }
 
+            // 🛑 تم عزل جلب العروض والأنشطة لكي لا يتأثروا بترتيب العروض (offerSort)
             const { data: actData } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
             const { data: offers } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled');
             
-            let lastSaleTimestamp: number | null = null;
-            if (actData) {
-                const lastSaleActivity = actData.find((act: any) => act.activity_type === 'Sale');
-                if (lastSaleActivity) {
-                    try {
-                        const dateStr = lastSaleActivity.created_at.includes('Z') ? lastSaleActivity.created_at : lastSaleActivity.created_at + 'Z';
-                        lastSaleTimestamp = new Date(dateStr).getTime();
-                        if (isNaN(lastSaleTimestamp)) lastSaleTimestamp = new Date(lastSaleActivity.created_at).getTime();
-                    } catch { lastSaleTimestamp = new Date(lastSaleActivity.created_at).getTime(); }
-                }
-            }
-
             if (offers) {
-                 let enrichedOffers = offers.map((offer: any) => {
-                    let offerCreatedAt: number;
-                    try {
-                        const dateStr = offer.created_at.includes('Z') ? offer.created_at : offer.created_at + 'Z';
-                        offerCreatedAt = new Date(dateStr).getTime();
-                        if (isNaN(offerCreatedAt)) offerCreatedAt = new Date(offer.created_at).getTime();
-                    } catch { offerCreatedAt = new Date(offer.created_at).getTime(); }
-                    
-                    const isOutdated = lastSaleTimestamp !== null && offerCreatedAt < lastSaleTimestamp;
-
-                    return {
-                        id: offer.id,
-                        bidder_address: offer.bidder_address,
-                        price: offer.price,
-                        expiration: offer.expiration,
-                        status: offer.status,
-                        signature: offer.signature,
-                        isMyOffer: address && offer.bidder_address.toLowerCase() === address.toLowerCase(),
-                        created_at: offer.created_at,
-                        timeLeft: formatDuration(offer.expiration),
-                        isOutdated: isOutdated 
-                    };
-                });
+                 let enrichedOffers = offers.map((offer: any) => ({
+                    id: offer.id,
+                    bidder_address: offer.bidder_address,
+                    price: offer.price,
+                    expiration: offer.expiration,
+                    status: offer.status,
+                    signature: offer.signature,
+                    isMyOffer: address && offer.bidder_address.toLowerCase() === address.toLowerCase(),
+                    created_at: offer.created_at,
+                    timeLeft: formatDuration(offer.expiration),
+                    isOutdated: false 
+                }));
                 
+                // الترتيب يتم هنا ولكن لا نضعه في مصفوفة التبعيات
                 if (offerSort === 'Newest') enrichedOffers.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 else if (offerSort === 'High Price') enrichedOffers.sort((a: any, b: any) => b.price - a.price);
                 else if (offerSort === 'Low Price') enrichedOffers.sort((a: any, b: any) => a.price - b.price);
@@ -499,18 +490,18 @@ function AssetPage() {
                  const formattedActs = actData.map((item: any) => ({
                     type: item.activity_type, price: item.price, from: item.from_address, to: item.to_address, date: item.created_at, rawDate: new Date(item.created_at).getTime()
                 }));
-                
                 const { data: offerActData } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled').order('created_at', { ascending: false });
                 const formattedOffers = (offerActData || []).map((item: any) => ({
                     type: 'Offer', price: item.price, from: item.bidder_address, to: 'Market', date: item.created_at, rawDate: new Date(item.created_at).getTime()
                 }));
-
                 const mergedActivity = [...formattedActs, ...formattedOffers].sort((a: any, b: any) => b.rawDate - a.rawDate);
                 setActivityList(mergedActivity);
             }
 
         } catch (e) { console.error("Chain fetch error:", e); }
-    }, [tokenId, address, publicClient, offerSort]); // تمت إزالة offerSort لمنع التكرار
+        
+    // 🛑 هام جداً: أزلت offerSort من هنا لأنه هو سبب الحلقة المفرغة
+    }, [tokenId, address, publicClient]);  // تمت إزالة offerSort لمنع التكرار
 
 
 
