@@ -1111,7 +1111,7 @@ function AssetPage() {
                                                                                         {offerStatus.label}
                                                                                     </span>
                                                                                 </td>
-                                                                                <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px' }}>{offer.timeLeft}</td>
+                                                                                <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d', color: TEXT_MUTED, fontSize: '13px', textAlign: 'right' }}>{offer.timeLeft}</td>
                                                                                 <td className="align-middle" style={{ backgroundColor: rowBg, padding: '12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}>
                                                                                     {canAccept && <button onClick={() => handleAccept(offer)} className="btn btn-sm btn-light fw-bold" style={{ fontSize: '11px', padding: '4px 12px' }}>Accept</button>}
                                                                                     {canCancel && <button onClick={() => handleCancelOffer(offer.id)} className="btn btn-sm fw-bold" style={{ fontSize: '11px', padding: '4px 12px', background: 'rgba(240, 196, 32, 0.1)', border: `1px solid ${GOLD_SOLID}`, color: GOLD_SOLID, backdropFilter: 'blur(4px)', borderRadius: '8px' }}>Cancel</button>}
