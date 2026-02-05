@@ -1,0 +1,23 @@
+--- 🕵️ DEEP FORENSIC AUDIT (POL + WPOL) [2026-02-05T16:18:40.712Z] ---
+
+✅ Loaded 5 Wallets.
+🎯 Goal: Find the missing funds (Checking Locked WPOL).
+
+--- 🏦 ASSET HOLDINGS CHECK (POL + WPOL) ---
+🆔 Wallet 1: [Native: 0.14] + [WPOL: 0.00] = Total: 0.14 POL 
+🆔 Wallet 2: [Native: 0.14] + [WPOL: 0.00] = Total: 0.14 POL 
+🆔 Wallet 3: [Native: 0.14] + [WPOL: 0.00] = Total: 0.14 POL 
+🆔 Wallet 4: [Native: 0.14] + [WPOL: 0.00] = Total: 0.14 POL 
+🆔 Wallet 5: [Native: 0.14] + [WPOL: 0.00] = Total: 0.14 POL 
+
+==================================================
+💰 GRAND TOTAL RECOVERED IN WALLETS:
+   👉 Native POL:  0.70
+   👉 Wrapped POL: 0.00 (Hidden/Reserved)
+   💵 TOTAL ASSETS: 0.70 POL
+==================================================
+🔥 EST. GAS BURNED (12H): ~3.66 POL
+
+--- 🕵️ EXTERNAL TRANSFER SCAN (Small Batches) ---
+
+✅ SECURE: No funds were transferred to external wallets.

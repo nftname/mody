@@ -1,0 +1,38 @@
+--- 🕵️ DEEP PAST AUDIT & CONTRACT CHECK [2026-02-05T16:42:33.314Z] ---
+
+
+--- 🏛️ CONTRACT VAULT CHECK (STUCK FUNDS) ---
+✅ Marketplace is Clean (Balance: 0 WPOL). Money passed through correctly.
+✅ Registry is Clean (Balance: 0 WPOL). Money passed through correctly.
+
+🕒 TIME SHIFT: Looking back from -10h to -18h
+🔢 BLOCK RANGE: 82565338 -> 82578428
+
+--- ⛽ HISTORICAL GAS ANALYSIS ---
+👤 Wallet #7 | Activity: 74 Txns | Gas: ~2.22 POL
+👤 Wallet #8 | Activity: 77 Txns | Gas: ~2.31 POL
+👤 Wallet #9 | Activity: 84 Txns | Gas: ~2.52 POL
+👤 Wallet #10 | Activity: 62 Txns | Gas: ~1.86 POL
+👤 Wallet #11 | Activity: 83 Txns | Gas: ~2.49 POL
+👤 Wallet #12 | Activity: 75 Txns | Gas: ~2.25 POL
+👤 Wallet #13 | Activity: 81 Txns | Gas: ~2.43 POL
+👤 Wallet #14 | Activity: 52 Txns | Gas: ~1.56 POL
+👤 Wallet #15 | Activity: 45 Txns | Gas: ~1.35 POL
+👤 Wallet #16 | Activity: 46 Txns | Gas: ~1.38 POL
+👤 Wallet #17 | Activity: 46 Txns | Gas: ~1.38 POL
+👤 Wallet #18 | Activity: 50 Txns | Gas: ~1.50 POL
+👤 Wallet #19 | Activity: 62 Txns | Gas: ~1.86 POL
+👤 Wallet #20 | Activity: 43 Txns | Gas: ~1.29 POL
+👤 Wallet #21 | Activity: 54 Txns | Gas: ~1.62 POL
+👤 Wallet #22 | Activity: 77 Txns | Gas: ~2.31 POL
+👤 Wallet #23 | Activity: 46 Txns | Gas: ~1.38 POL
+👤 Wallet #24 | Activity: 36 Txns | Gas: ~1.08 POL
+👤 Wallet #25 | Activity: 40 Txns | Gas: ~1.20 POL
+👤 Wallet #26 | Activity: 28 Txns | Gas: ~0.84 POL
+👤 Wallet #27 | Activity: 41 Txns | Gas: ~1.23 POL
+👤 Wallet #28 | Activity: 76 Txns | Gas: ~2.28 POL
+👤 Wallet #29 | Activity: 48 Txns | Gas: ~1.44 POL
+👤 Wallet #30 | Activity: 61 Txns | Gas: ~1.83 POL
+🔥🔥 TOTAL GAS BURNED (IN WINDOW): ~37.92 POL
+
+--- 🕵️ EXTERNAL TRANSFER MONITOR ---

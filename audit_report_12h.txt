@@ -1,0 +1,142 @@
+--- 🕵️ FORENSIC AUDIT REPORT [2026-02-05T15:57:26.521Z] ---
+
+✅ Loaded 25 Wallets for inspection.
+🛡️ Whitelist Strategy: Only transfers between these 30 wallets + Market are SAFE.
+
+🕒 Timeframe: Last 12 Hours
+🔢 Block Range: 82573801 -> 82593437 (~19636 Blocks)
+
+--- 🏥 INDIVIDUAL WALLET HEALTH CHECK ---
+
+🆔 Wallet 6 (0x48B2A4E0a13b7594216704875EA318A47e4FfACc)
+   💰 Balance Now: 0.1137 POL [✅ OK]
+   📉 Activity: 94 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~2.8200 POL
+
+🆔 Wallet 7 (0x0184Bf26E9C3bd07230928Eb2e281a3dBc1E8e19)
+   💰 Balance Now: 0.1146 POL [✅ OK]
+   📉 Activity: 64 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.9200 POL
+
+🆔 Wallet 8 (0x654f845AfcDdfA89D73E212b9A813B5F8AA90c7b)
+   💰 Balance Now: 0.1035 POL [✅ OK]
+   📉 Activity: 56 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.6800 POL
+
+🆔 Wallet 9 (0xC2A893d3A7054638038cB013A14021c32Ec3a70c)
+   💰 Balance Now: 0.1042 POL [✅ OK]
+   📉 Activity: 79 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~2.3700 POL
+
+🆔 Wallet 10 (0xAeBd218990dE3f179954Cd8a6Ee1c33c8B039F20)
+   💰 Balance Now: 0.1058 POL [✅ OK]
+   📉 Activity: 41 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.2300 POL
+
+🆔 Wallet 11 (0xeC02f481C46b4FCBeFdEAb70abd7a7D4B2A07a33)
+   💰 Balance Now: 0.1069 POL [✅ OK]
+   📉 Activity: 54 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.6200 POL
+
+🆔 Wallet 12 (0xc45023ebEEFF0772c5Fc55Aded198FF1Ce58074e)
+   💰 Balance Now: 0.1077 POL [✅ OK]
+   📉 Activity: 44 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.3200 POL
+
+🆔 Wallet 13 (0x5503bE70fD97D1bdB3b7110f14e9c997B365eCAf)
+   💰 Balance Now: 0.1080 POL [✅ OK]
+   📉 Activity: 58 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.7400 POL
+
+🆔 Wallet 14 (0xC958C34AC43FEf119F20326b4E9e15fCAB3d3268)
+   💰 Balance Now: 0.1069 POL [✅ OK]
+   📉 Activity: 48 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.4400 POL
+
+🆔 Wallet 15 (0x229aD709C5B103097007F744aED0343985e01769)
+   💰 Balance Now: 0.1076 POL [✅ OK]
+   📉 Activity: 47 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.4100 POL
+
+🆔 Wallet 16 (0x9D8AdCef02c563731f816eCA00fE8Ba860436065)
+   💰 Balance Now: 0.0988 POL [✅ OK]
+   📉 Activity: 30 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~0.9000 POL
+
+🆔 Wallet 17 (0xeAd5B437A71E18697E233e7eafF2509221939B01)
+   💰 Balance Now: 0.0990 POL [✅ OK]
+   📉 Activity: 44 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.3200 POL
+
+🆔 Wallet 18 (0x1a926dd0d6CFa9E997f3aB52a04813cd6B9f9661)
+   💰 Balance Now: 0.1009 POL [✅ OK]
+   📉 Activity: 32 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~0.9600 POL
+
+🆔 Wallet 19 (0xe2487DA5067546A08867f38470aC23A17b5441DD)
+   💰 Balance Now: 0.1006 POL [✅ OK]
+   📉 Activity: 52 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.5600 POL
+
+🆔 Wallet 20 (0xdC2E1F271425817d1d1843aD68b413630f9DfcF3)
+   💰 Balance Now: 0.1008 POL [✅ OK]
+   📉 Activity: 38 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.1400 POL
+
+🆔 Wallet 21 (0x21bD964eCf04aBa35650172123Bd42953B067a0C)
+   💰 Balance Now: 0.1009 POL [✅ OK]
+   📉 Activity: 45 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.3500 POL
+
+🆔 Wallet 22 (0x8B6cE7465eCf52402206896F81A3504BD489E3bd)
+   💰 Balance Now: 0.1017 POL [✅ OK]
+   📉 Activity: 39 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.1700 POL
+
+🆔 Wallet 23 (0xA65d4789429a52aE56B2E61efc9cD1E51278484b)
+   💰 Balance Now: 0.1000 POL [✅ OK]
+   📉 Activity: 41 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.2300 POL
+
+🆔 Wallet 24 (0x78A39e9FeA8d115d407A16c38d44276c104643C6)
+   💰 Balance Now: 0.1005 POL [✅ OK]
+   📉 Activity: 43 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.2900 POL
+
+🆔 Wallet 25 (0xB73a60f55B43Cc053Fe080F8811159E525c5bf46)
+   💰 Balance Now: 0.1017 POL [✅ OK]
+   📉 Activity: 36 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.0800 POL
+
+🆔 Wallet 26 (0x484dDe32afBa0497f01980F316f85BDFC004e57B)
+   💰 Balance Now: 0.1023 POL [✅ OK]
+   📉 Activity: 32 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~0.9600 POL
+
+🆔 Wallet 27 (0xB7f6a0ac4af231B6Ea0336931A9496aaB96538ba)
+   💰 Balance Now: 0.1028 POL [✅ OK]
+   📉 Activity: 31 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~0.9300 POL
+
+🆔 Wallet 28 (0x45B586643474ABba7ABb5FAF3Ae415f675b8A6e7)
+   💰 Balance Now: 0.1041 POL [✅ OK]
+   📉 Activity: 48 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.4400 POL
+
+🆔 Wallet 29 (0x5c4A53E521cBb712686401BD38779Ee30965C228)
+   💰 Balance Now: 0.1055 POL [✅ OK]
+   📉 Activity: 38 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.1400 POL
+
+🆔 Wallet 30 (0x48370E9EC371344AC518bE555EeA1Ed121c3f082)
+   💰 Balance Now: 0.1068 POL [✅ OK]
+   📉 Activity: 46 Txns executed in 12h.
+   🔥 Est. Gas Burned: ~1.3800 POL
+
+🔥 TOTAL ESTIMATED GAS BURNED (ALL WALLETS): ~35.40 POL
+
+--- 🕵️ DETECTING STRANGE TRANSFERS (OUTSIDE NETWORK) ---
+📡 Scanning WPOL transfers... Please wait...
+
+✅ CLEAN SCAN: No WPOL transfers found to outside addresses.
+ℹ️ Conclusion: If money is missing, it was likely consumed by Gas Fees (Network Burn).

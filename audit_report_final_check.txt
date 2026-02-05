@@ -1,0 +1,46 @@
+--- 🕵️ FINAL HISTORICAL AUDIT [2026-02-05T16:52:46.118Z] ---
+
+
+--- 🏛️ CONTRACT CHECK (STUCK FUNDS) ---
+✅ Marketplace (WPOL): Clean (Balance: 0 WPOL)
+✅ Registry (Native POL): Clean (Balance: 0 POL)
+
+--- ⛽ HISTORICAL ACTIVITY ---
+Timeframe: From -10h to -18h
+🔥 🔥 HOT WALLET: No Activity
+👤 Wallet #1: No Activity
+👤 Wallet #2: 125 Txns | Gas: ~3.75 POL
+👤 Wallet #3: No Activity
+👤 Wallet #4: No Activity
+👤 Wallet #5: No Activity
+👤 Wallet #6: 994 Txns | Gas: ~29.82 POL
+👤 Wallet #7: 71 Txns | Gas: ~2.13 POL
+👤 Wallet #8: 79 Txns | Gas: ~2.37 POL
+👤 Wallet #9: 89 Txns | Gas: ~2.67 POL
+👤 Wallet #10: 57 Txns | Gas: ~1.71 POL
+👤 Wallet #11: 82 Txns | Gas: ~2.46 POL
+👤 Wallet #12: 73 Txns | Gas: ~2.19 POL
+👤 Wallet #13: 79 Txns | Gas: ~2.37 POL
+👤 Wallet #14: 51 Txns | Gas: ~1.53 POL
+👤 Wallet #15: 46 Txns | Gas: ~1.38 POL
+👤 Wallet #16: 48 Txns | Gas: ~1.44 POL
+👤 Wallet #17: 46 Txns | Gas: ~1.38 POL
+👤 Wallet #18: 50 Txns | Gas: ~1.50 POL
+👤 Wallet #19: 65 Txns | Gas: ~1.95 POL
+👤 Wallet #20: 43 Txns | Gas: ~1.29 POL
+👤 Wallet #21: 57 Txns | Gas: ~1.71 POL
+👤 Wallet #22: 76 Txns | Gas: ~2.28 POL
+👤 Wallet #23: 43 Txns | Gas: ~1.29 POL
+👤 Wallet #24: 36 Txns | Gas: ~1.08 POL
+👤 Wallet #25: No Activity
+👤 Wallet #26: No Activity
+👤 Wallet #27: 40 Txns | Gas: ~1.20 POL
+👤 Wallet #28: No Activity
+👤 Wallet #29: No Activity
+👤 Wallet #30: No Activity
+
+🔥🔥 TOTAL GAS IN PERIOD: ~57.18 POL
+
+--- 🕵️ EXTERNAL TRANSFERS (WPOL) ---
+
+✅ NO SUSPICIOUS TRANSFERS FOUND in that period.

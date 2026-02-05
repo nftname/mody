@@ -1,0 +1,19 @@
+--- 🕵️ FINAL INSPECTOR: CONTRACT & HOT WALLET [2026-02-05T16:33:15.038Z] ---
+
+🎯 TARGET 1: HOT WALLET (0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e)
+🎯 TARGET 2: MARKETPLACE CONTRACT (0xd0d0359d478a34757a7C6778004d4AE19735B34a)
+
+--- ⏳ CHECKING HOT WALLET GAS CONSUMPTION (12H) ---
+   💰 Current Balance: 425.891184004095980231 POL
+   💎 Wrapped Balance: 0 WPOL
+   📉 Transactions Sent: 0 (Last 12 Hours)
+   🔥 ESTIMATED GAS BURNED: ~0.00 POL
+
+--- 🏦 CHECKING MARKETPLACE CONTRACT VAULT ---
+   ℹ️  Searching for funds stuck inside the contract itself...
+   🏛️  Contract Native Balance:  0.0000 POL
+   💎  Contract WPOL Balance:    0.0000 WPOL
+
+   ✅ The Contract is empty (No stuck funds).
+
+--- 🕵️ HOT WALLET EXTERNAL TRANSFERS ---

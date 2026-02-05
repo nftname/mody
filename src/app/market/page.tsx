@@ -170,25 +170,26 @@ function MarketPage() {
 
   const publicClient = usePublicClient();
 
+   // --- TWEAK 1: New Fast Price Engine (Internal API) ---
   useEffect(() => {
       const fetchPrices = async () => {
           try {
-              const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
+              // الاتصال بالـ API الداخلي السريع بدلاً من كوين جيكو المباشر
+              const res = await fetch('/api/prices');
               const data = await res.json();
               
-              const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
-              const ethPrice = data['ethereum']?.usd || 0;
-
+              // البيانات تأتي جاهزة ومنظمة من السيرفر
               setExchangeRates({
-                  pol: polPrice, 
-                  eth: ethPrice
+                  pol: data.pol || 0, 
+                  eth: data.eth || 0
               });
           } catch (e) { 
-              console.error("Price API Error", e); 
+              console.error("Internal Price API Error", e); 
           }
       };
       fetchPrices();
-      const interval = setInterval(fetchPrices, 30000); 
+      // تحديث كل 60 ثانية لتقليل الضغط
+      const interval = setInterval(fetchPrices, 60000); 
       return () => clearInterval(interval);
   }, []);
 
@@ -219,11 +220,12 @@ function MarketPage() {
       } catch (err) { }
   };
 
+// --- TWEAK 2: Turbo Data Engine (Supabase + Blockchain Mix) ---
   useEffect(() => {
     const fetchMarketData = async () => {
         if (!publicClient) return;
         try {
-            // 1. Fetch Listings from Smart Contract
+            // A. قراءة البلوك تشين (للأسعار الحية والمالكين فقط)
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -233,161 +235,130 @@ function MarketPage() {
 
             if (tokenIds.length === 0) { setRealListings([]); setLoading(false); return; }
 
-            // 2. Fetch Data from Supabase (Activities, Offers, Votes)
-            const { data: allActivities } = await supabase
-                .from('activities')
-                .select('*')
-                .order('created_at', { ascending: false }); 
-            
-            const { data: offersData } = await supabase
-                .from('offers')
-                .select('token_id')
-                .eq('status', 'active');
+            // تحويل المعرفات لنصوص للبحث في الداتا بيز
+            const tokenIdsStr = tokenIds.map(id => id.toString());
 
-            const { data: votesData, error: voteError } = await supabase
-                .from('conviction_votes')
-                .select('token_id');
-            
-            if (voteError) console.error("Supabase Vote Error:", voteError);
+            // B. جلب كل البيانات دفعة واحدة من Supabase (بدلاً من IPFS)
+            const [
+                { data: dbAssets },
+                { data: allActivities },
+                { data: offersData },
+                { data: votesData }
+            ] = await Promise.all([
+                // 1. البيانات الوصفية (الاسم، الصورة، التاير) من جدولنا الجديد
+                supabase.from('assets_metadata').select('*').in('token_id', tokenIdsStr),
+                // 2. الأنشطة
+                supabase.from('activities').select('*').order('created_at', { ascending: false }),
+                // 3. العروض
+                supabase.from('offers').select('token_id').eq('status', 'active'),
+                // 4. التصويتات
+                supabase.from('conviction_votes').select('token_id')
+            ]);
 
-            // Force conversion to string to ensure matching works
+            // C. تجهيز خرائط البيانات (Maps) للسرعة القصوى
+            
+            // خريطة الميتاداتا
+            const assetsMap: Record<string, any> = {};
+            if (dbAssets) {
+                dbAssets.forEach((asset: any) => {
+                    assetsMap[asset.token_id.toString()] = asset;
+                });
+            }
+
+            // خريطة التصويت
             const votesMap: Record<string, number> = {};
-            if (votesData && votesData.length > 0) {
+            if (votesData) {
                 votesData.forEach((v: any) => {
-                    // Handle potential nested objects or raw numbers
                     const idStr = String(v.token_id).trim();
                     votesMap[idStr] = (votesMap[idStr] || 0) + 100;
                 });
             }
-            
-            console.log("📊 Conviction Votes Map:", votesMap);
-            console.log("📊 Total Votes Records:", votesData?.length || 0);
 
+            // خريطة العروض
+            const offersCountMap: Record<number, number> = {};
+            if (offersData) {
+                offersData.forEach((o: any) => {
+                    const tid = Number(o.token_id);
+                    offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
+                });
+            }
+
+            // خريطة الإحصائيات
             const statsMap: Record<number, any> = {}; 
             const now = Date.now();
-
-            // --- Time Filter Logic ---
-            let timeLimit = Infinity;
-            if (timeFilter === '1H') timeLimit = 3600 * 1000;
-            else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
-            else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
-            else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
 
             if (allActivities) {
                 allActivities.forEach((act: any) => {
                     const tid = Number(act.token_id);
                     const price = Number(act.price) || 0;
-                    
-                    // Parse date with UTC consideration - handle both formats
-                    let actTime: number;
-                    try {
-                        // Try parsing with Z if not already present
-                        const dateStr = act.created_at.includes('Z') ? act.created_at : act.created_at + 'Z';
-                        actTime = new Date(dateStr).getTime();
-                        // Validate timestamp
-                        if (isNaN(actTime)) {
-                            actTime = new Date(act.created_at).getTime();
-                        }
-                    } catch {
-                        actTime = new Date(act.created_at).getTime();
-                    }
+                    let actTime = new Date(act.created_at).getTime();
                 
-                    // Init stats with lastActive tracking
                     if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
 
-                    // TRACK LATEST ACTIVITY FOR FILTERING
-                    if (actTime > statsMap[tid].lastActive) {
-                        statsMap[tid].lastActive = actTime;
-                    }
+                    if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
 
-                    // 1. Capture Last Sale (Always latest known price)
                     if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
                          statsMap[tid].lastSale = price; 
                     }
 
-                    // 2. Calculate Volume - ACCUMULATE ALL SALES REGARDLESS OF TIME FILTER
                     if (act.activity_type === 'Sale') {
-                        const age = now - actTime;
-                        // Only validate timestamp is not in future
-                        if (age >= 0) {
-                            statsMap[tid].volume += price;
-                            statsMap[tid].sales += 1;
-                        }
+                        statsMap[tid].volume += price;
+                        statsMap[tid].sales += 1;
                     }
 
-                    // 3. Track Listing Time
                     if ((act.activity_type === 'List' || act.activity_type === 'Mint')) {
-                        if (actTime > statsMap[tid].listedTime) {
-                            statsMap[tid].listedTime = actTime;
-                        }
+                        if (actTime > statsMap[tid].listedTime) statsMap[tid].listedTime = actTime;
                     }
                 });
             }
 
-            const offersCountMap: any = {};
-            if (offersData) offersData.forEach((o: any) => {
-                const tid = Number(o.token_id);
-                offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
+            // D. الدمج النهائي (بدون انتظار IPFS)
+            const items = tokenIds.map((id, index) => {
+                const tid = Number(id); 
+                const idStr = id.toString();
+                
+                // هنا السرعة: نأخذ البيانات من الماب الجاهزة بدلاً من طلبها
+                const meta = assetsMap[idStr] || { name: `Asset #${id}`, tier: 'Common' };
+                
+                const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
+                const offersCount = offersCountMap[tid] || 0;
+                const conviction = votesMap[idStr] || 0;
+                
+                // حسابات الترتيب
+                const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
+                const pricePol = parseFloat(formatEther(prices[index]));
+                
+                let change = 0;
+                if (stats.lastSale > 0) {
+                    change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
+                }
+
+                return {
+                    id: tid,
+                    name: meta.name,          // من الداتا بيز
+                    tier: meta.tier,          // من الداتا بيز
+                    // image: meta.image_url, // (متاح لو أردت استخدامه مستقبلاً)
+                    pricePol: pricePol, 
+                    lastSale: stats.lastSale,
+                    volume: stats.volume,
+                    listedTime: stats.listedTime,
+                    lastActive: stats.lastActive,
+                    trendingScore: trendingScore,
+                    offersCount: offersCount,
+                    convictionScore: conviction,
+                    listed: 'Now', 
+                    change: change,
+                    currencySymbol: 'POL'
+                };
             });
 
-            // 3. Merge On-Chain & Off-Chain Data
-            const items = await Promise.all(tokenIds.map(async (id, index) => {
-                try {
-                    const tid = Number(id); 
-                    const idStr = id.toString(); // KEY FIX: Convert BigInt to String for lookup
-                    const uri = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [id] });
-                    const metaRes = await fetch(resolveIPFS(uri));
-                    const meta = metaRes.ok ? await metaRes.json() : {};
-                    const tierAttr = (meta.attributes as any[])?.find((a: any) => a.trait_type === "Tier")?.value || "founder";
-                    
-                    const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
-                    const offersCount = offersCountMap[tid] || 0;
-                    // LOOKUP: Use the String Key
-                    const conviction = votesMap[idStr] || 0;
-                    
-                    // Debug: Log conviction for first few items
-                    if (index < 3) {
-                        console.log(`🔍 Token #${idStr}: conviction=${conviction}`);
-                    }
-                    
-                    // HIGH IMPACT FORMULA: Weight Sales (20), Offers (5), and Conviction (0.2)
-                    // Note: Conviction is now 100× larger per vote, so weight adjusted from 20 to 0.2
-                    const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
-                    
-                    const pricePol = parseFloat(formatEther(prices[index]));
-                    
-                    // Calculate Change based on Last Sale
-                    let change = 0;
-                    if (stats.lastSale > 0) {
-                        change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
-                    }
-
-                    return {
-                        id: tid,
-                        name: meta.name || `Asset #${id}`,
-                        tier: tierAttr,
-                        pricePol: pricePol, 
-                        lastSale: stats.lastSale,
-                        volume: stats.volume,
-                        listedTime: stats.listedTime,
-                        lastActive: stats.lastActive,
-                        trendingScore: trendingScore,
-                        offersCount: offersCount,
-                        convictionScore: conviction,
-                        listed: 'Now', 
-                        change: change,
-                        currencySymbol: 'POL'
-                    };
-                } catch (e) { return null; }
-            }));
-
-            setRealListings(items.filter(i => i !== null));
+            setRealListings(items);
         } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
     };
 
     fetchMarketData();
 
-  }, [publicClient, timeFilter]); 
+  }, [publicClient, timeFilter]);  
 
     // --- CORE FIX: Search Logic Priority (Exact Match > Starts With > Contains) ---
   const finalData = useMemo(() => {
