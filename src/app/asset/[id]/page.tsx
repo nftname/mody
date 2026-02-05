@@ -401,24 +401,32 @@ function AssetPage() {
         }
     };
 
+      // --- TURBO FETCH: Main Asset Data ---
     const fetchAllData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [BigInt(tokenId)] });
-            const metaRes = await fetch(resolveIPFS(tokenURI));
-            const meta = metaRes.ok ? await metaRes.json() : {};
+            // 1. جلب الميتاداتا من الداتا بيز فوراً (بدلاً من IPFS)
+            const { data: dbAsset } = await supabase
+                .from('assets_metadata')
+                .select('*')
+                .eq('token_id', tokenId)
+                .single();
+
+            // 2. جلب المالك وحالة البيع من البلوك تشين (لضمان الأمان واللحيظة)
             const owner = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'ownerOf', args: [BigInt(tokenId)] });
             const listingData = await publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] });
 
+            // دمج البيانات (اسم وصورة من الداتا بيز + مالك وسعر من العقد)
             setAsset({
                 id: tokenId,
-                name: meta.name || `NNM #${tokenId}`,
-                description: meta.description || "",
-                tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founder',
-                price: listingData[2] ? formatEther(listingData[1]) : (meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'),
+                name: dbAsset?.name || `NNM #${tokenId}`,
+                description: dbAsset?.description || "",
+                // محاولة قراءة التاير من الداتا بيز، أو العودة للقيمة الافتراضية
+                tier: dbAsset?.tier ? dbAsset.tier.toLowerCase() : (dbAsset?.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founder'),
+                price: listingData[2] ? formatEther(listingData[1]) : '0',
                 owner: owner,
-                image: resolveIPFS(meta.image),
-                mintDate: meta.attributes?.find((a: any) => a.trait_type === 'Mint Date')?.value
+                image: dbAsset?.image_url || '', // الصورة من الداتا بيز مباشرة
+                mintDate: dbAsset?.mint_date || dbAsset?.attributes?.find((a: any) => a.trait_type === 'Mint Date')?.value
             });
 
             if (listingData[2]) setListing({ price: formatEther(listingData[1]), seller: listingData[0] });
@@ -430,10 +438,10 @@ function AssetPage() {
                 setIsApproved(approvedStatus);
             }
             
-            // Fetch activities to check for last sale date
+            // جلب الأنشطة (كما هي)
             const { data: actData } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
             
-            // Find the most recent 'Sale' activity timestamp
+            // منطق حساب تاريخ آخر بيعة (كما هو)
             let lastSaleTimestamp: number | null = null;
             if (actData) {
                 const lastSaleActivity = actData.find((act: any) => act.activity_type === 'Sale');
@@ -441,31 +449,22 @@ function AssetPage() {
                     try {
                         const dateStr = lastSaleActivity.created_at.includes('Z') ? lastSaleActivity.created_at : lastSaleActivity.created_at + 'Z';
                         lastSaleTimestamp = new Date(dateStr).getTime();
-                        if (isNaN(lastSaleTimestamp)) {
-                            lastSaleTimestamp = new Date(lastSaleActivity.created_at).getTime();
-                        }
-                    } catch {
-                        lastSaleTimestamp = new Date(lastSaleActivity.created_at).getTime();
-                    }
+                        if (isNaN(lastSaleTimestamp)) lastSaleTimestamp = new Date(lastSaleActivity.created_at).getTime();
+                    } catch { lastSaleTimestamp = new Date(lastSaleActivity.created_at).getTime(); }
                 }
             }
             
+            // جلب العروض (كما هي)
             const { data: offers } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled');
             if (offers) {
                 let enrichedOffers = offers.map((offer: any) => {
-                    // Parse offer creation date
                     let offerCreatedAt: number;
                     try {
                         const dateStr = offer.created_at.includes('Z') ? offer.created_at : offer.created_at + 'Z';
                         offerCreatedAt = new Date(dateStr).getTime();
-                        if (isNaN(offerCreatedAt)) {
-                            offerCreatedAt = new Date(offer.created_at).getTime();
-                        }
-                    } catch {
-                        offerCreatedAt = new Date(offer.created_at).getTime();
-                    }
+                        if (isNaN(offerCreatedAt)) offerCreatedAt = new Date(offer.created_at).getTime();
+                    } catch { offerCreatedAt = new Date(offer.created_at).getTime(); }
                     
-                    // Check if offer is outdated (created before last sale)
                     const isOutdated = lastSaleTimestamp !== null && offerCreatedAt < lastSaleTimestamp;
                     
                     return {
@@ -481,7 +480,6 @@ function AssetPage() {
                         isOutdated: isOutdated
                     };
                 });
-                // ✅ Surgical Fix 2: Added (a: any, b: any) to all sorts to prevent implicit any errors
                 if (offerSort === 'Newest') enrichedOffers.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 if (offerSort === 'High Price') enrichedOffers.sort((a: any, b: any) => b.price - a.price);
                 if (offerSort === 'Low Price') enrichedOffers.sort((a: any, b: any) => a.price - b.price);
@@ -489,57 +487,73 @@ function AssetPage() {
             }
 
             const { data: offerActData } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled').order('created_at', { ascending: false });
-
             const formattedActs = (actData || []).map((item: any) => ({
-                type: item.activity_type,
-                price: item.price,
-                from: item.from_address,
-                to: item.to_address,
-                date: item.created_at,
-                rawDate: new Date(item.created_at).getTime()
+                type: item.activity_type, price: item.price, from: item.from_address, to: item.to_address, date: item.created_at, rawDate: new Date(item.created_at).getTime()
             }));
-
             const formattedOffers = (offerActData || []).map((item: any) => ({
-                type: 'Offer',
-                price: item.price,
-                from: item.bidder_address,
-                to: 'Market', 
-                date: item.created_at,
-                rawDate: new Date(item.created_at).getTime()
+                type: 'Offer', price: item.price, from: item.bidder_address, to: 'Market', date: item.created_at, rawDate: new Date(item.created_at).getTime()
             }));
-
             const mergedActivity = [...formattedActs, ...formattedOffers].sort((a, b) => b.rawDate - a.rawDate);
             setActivityList(mergedActivity);
 
         } catch (e) { console.error(e); } finally { setLoading(false); }
     }, [tokenId, address, publicClient, offerSort]);
 
+    // --- TURBO GALLERY: More Assets (Fixed BigInt Error) ---
     const fetchMoreAssets = useCallback(async () => {
         if (!tokenId || !publicClient) return;
-        const startId = BigInt(tokenId) + BigInt(1);
-        const batchIds = [startId, startId + BigInt(1), startId + BigInt(2)];
-        const loadedAssets: any[] = [];
-        for (const nextId of batchIds) {
-            try {
-                const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [nextId] });
-                const metaRes = await fetch(resolveIPFS(tokenURI));
-                const meta = metaRes.ok ? await metaRes.json() : {};
+        
+        // تحديد الـ 3 أصول التالية
+        const startId = BigInt(tokenId);
+        
+        // ✅ FIX: استخدام BigInt() بدلاً من 1n لحل مشكلة التايب سكريبت
+        const nextIds = [
+            (startId + BigInt(1)).toString(), 
+            (startId + BigInt(2)).toString(), 
+            (startId + BigInt(3)).toString()
+        ];
+
+        try {
+            // 1. جلب الصور والأسماء من الداتا بيز (ضربة واحدة سريعة)
+            const { data: dbAssets } = await supabase
+                .from('assets_metadata')
+                .select('*')
+                .in('token_id', nextIds);
+
+            if (!dbAssets || dbAssets.length === 0) {
+                setMoreAssets([]);
+                return;
+            }
+
+            // 2. التحقق من السعر فقط (اختياري وسريع) من البلوك تشين
+            const loadedAssets = await Promise.all(dbAssets.map(async (meta: any) => {
                 let isListed = false;
-                let price = meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0';
+                let price = '0';
+                
                 try {
-                    const listingData = await publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [nextId] });
-                    if (listingData[2]) { isListed = true; price = formatEther(listingData[1]); }
-                } catch (e) {}
-                loadedAssets.push({
-                    id: nextId.toString(),
-                    name: meta.name || `NNM #${nextId}`,
-                    image: resolveIPFS(meta.image) || '',
+                    const listingData = await publicClient.readContract({ 
+                        address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                        abi: MARKETPLACE_ABI, 
+                        functionName: 'listings', 
+                        args: [BigInt(meta.token_id)] 
+                    });
+                    if (listingData[2]) { 
+                        isListed = true; 
+                        price = formatEther(listingData[1]); 
+                    }
+                } catch (e) { /* ignore contract errors */ }
+
+                return {
+                    id: meta.token_id,
+                    name: meta.name,
+                    image: meta.image_url,
                     price: price,
                     isListed: isListed
-                });
-            } catch (e) {}
-        }
-        setMoreAssets(loadedAssets);
+                };
+            }));
+
+            setMoreAssets(loadedAssets);
+        } catch (e) { console.error("Gallery fetch error", e); }
     }, [tokenId, publicClient]);
 
     const refreshWpolData = useCallback(async () => {
