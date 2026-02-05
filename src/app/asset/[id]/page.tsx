@@ -221,13 +221,10 @@ function AssetPage() {
     useEffect(() => {
         const fetchPrices = async () => {
             try {
-                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
+                // استخدام السيرفر الداخلي بدلاً من كوين جيكو المباشر
+                const res = await fetch('/api/prices');
                 const data = await res.json();
-
-                const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
-                const ethPrice = data['ethereum']?.usd || 0;
-
-                setExchangeRates({ pol: polPrice, eth: ethPrice });
+                setExchangeRates({ pol: data.pol || 0, eth: data.eth || 0 });
             } catch (e) { console.error("Price API Error", e); }
         };
         fetchPrices();
@@ -405,15 +402,12 @@ function AssetPage() {
     const fetchAllData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         
-        // 1. قراءة الداتا بيز (تم اصلاح خطأ النوع هنا)
         supabase.from('assets_metadata').select('*').eq('token_id', tokenId).single()
-            .then((res: any) => { // ✅ استخدام res: any لحل مشكلة النوع
+            .then((res: any) => {
                 const dbAsset = res.data;
                 if (dbAsset) {
                     setAsset((prev: any) => {
-                        // منع التكرار إذا كانت البيانات مطابقة
-                        if (prev && prev.id === tokenId && prev.image === dbAsset.image_url) return prev;
-                        
+                        if (prev && prev.id === tokenId) return prev;
                         return {
                             id: tokenId,
                             name: dbAsset.name,
@@ -430,7 +424,6 @@ function AssetPage() {
             });
 
         try {
-            // 2. قراءة البلوك تشين
             const [owner, listingData] = await Promise.all([
                 publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'ownerOf', args: [BigInt(tokenId)] }),
                 publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] })
@@ -439,7 +432,7 @@ function AssetPage() {
             const listingArr = listingData as [string, bigint, boolean];
             
             setAsset((prev: any) => ({
-                ...prev, // ✅ تم حل خطأ prev هنا سابقاً
+                ...prev, 
                 owner: owner,
                 price: listingArr[2] ? formatEther(listingArr[1]) : (prev?.price === '...' ? '0' : prev?.price)
             }));
@@ -455,27 +448,50 @@ function AssetPage() {
                 setIsApproved(approved as boolean);
             }
 
-            // تحميل البيانات الثانوية
             const { data: actData } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
             const { data: offers } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled');
             
+            let lastSaleTimestamp: number | null = null;
+            if (actData) {
+                const lastSaleActivity = actData.find((act: any) => act.activity_type === 'Sale');
+                if (lastSaleActivity) {
+                    try {
+                        const dateStr = lastSaleActivity.created_at.includes('Z') ? lastSaleActivity.created_at : lastSaleActivity.created_at + 'Z';
+                        lastSaleTimestamp = new Date(dateStr).getTime();
+                        if (isNaN(lastSaleTimestamp)) lastSaleTimestamp = new Date(lastSaleActivity.created_at).getTime();
+                    } catch { lastSaleTimestamp = new Date(lastSaleActivity.created_at).getTime(); }
+                }
+            }
+
             if (offers) {
-                 let enrichedOffers = offers.map((offer: any) => ({
-                    id: offer.id,
-                    bidder_address: offer.bidder_address,
-                    price: offer.price,
-                    expiration: offer.expiration,
-                    status: offer.status,
-                    signature: offer.signature,
-                    isMyOffer: address && offer.bidder_address.toLowerCase() === address.toLowerCase(),
-                    created_at: offer.created_at,
-                    timeLeft: formatDuration(offer.expiration),
-                    isOutdated: false 
-                }));
-                // ترتيب العروض (تمت اضافة any للمقارنة لمنع الاخطاء)
+                 let enrichedOffers = offers.map((offer: any) => {
+                    let offerCreatedAt: number;
+                    try {
+                        const dateStr = offer.created_at.includes('Z') ? offer.created_at : offer.created_at + 'Z';
+                        offerCreatedAt = new Date(dateStr).getTime();
+                        if (isNaN(offerCreatedAt)) offerCreatedAt = new Date(offer.created_at).getTime();
+                    } catch { offerCreatedAt = new Date(offer.created_at).getTime(); }
+                    
+                    const isOutdated = lastSaleTimestamp !== null && offerCreatedAt < lastSaleTimestamp;
+
+                    return {
+                        id: offer.id,
+                        bidder_address: offer.bidder_address,
+                        price: offer.price,
+                        expiration: offer.expiration,
+                        status: offer.status,
+                        signature: offer.signature,
+                        isMyOffer: address && offer.bidder_address.toLowerCase() === address.toLowerCase(),
+                        created_at: offer.created_at,
+                        timeLeft: formatDuration(offer.expiration),
+                        isOutdated: isOutdated 
+                    };
+                });
+                
                 if (offerSort === 'Newest') enrichedOffers.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                if (offerSort === 'High Price') enrichedOffers.sort((a: any, b: any) => b.price - a.price);
-                if (offerSort === 'Low Price') enrichedOffers.sort((a: any, b: any) => a.price - b.price);
+                else if (offerSort === 'High Price') enrichedOffers.sort((a: any, b: any) => b.price - a.price);
+                else if (offerSort === 'Low Price') enrichedOffers.sort((a: any, b: any) => a.price - b.price);
+                
                 setOffersList(enrichedOffers);
             }
             
@@ -484,7 +500,6 @@ function AssetPage() {
                     type: item.activity_type, price: item.price, from: item.from_address, to: item.to_address, date: item.created_at, rawDate: new Date(item.created_at).getTime()
                 }));
                 
-                // معالجة العروض في النشاطات
                 const { data: offerActData } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled').order('created_at', { ascending: false });
                 const formattedOffers = (offerActData || []).map((item: any) => ({
                     type: 'Offer', price: item.price, from: item.bidder_address, to: 'Market', date: item.created_at, rawDate: new Date(item.created_at).getTime()
@@ -495,7 +510,7 @@ function AssetPage() {
             }
 
         } catch (e) { console.error("Chain fetch error:", e); }
-    }, [tokenId, address, publicClient]); // تمت إزالة offerSort لمنع التكرار
+    }, [tokenId, address, publicClient, offerSort]); // تمت إزالة offerSort لمنع التكرار
 
 
 
@@ -511,7 +526,6 @@ function AssetPage() {
             (startId + BigInt(3)).toString()
         ];
 
-        // 1. الداتا بيز أولاً (فوري)
         const { data: dbAssets } = await supabase
             .from('assets_metadata')
             .select('*')
@@ -522,20 +536,16 @@ function AssetPage() {
             return;
         }
 
-        // إعداد البيانات الأولية
         const initialAssets = dbAssets.map((meta: any) => ({
             id: meta.token_id,
             name: meta.name,
             image: meta.image_url,
-            price: '...', // يظهر فوراً
+            price: '...', 
             isListed: false
         }));
 
-        // تحديث الـ State فوراً لرؤية الصور
         setMoreAssets(initialAssets);
 
-        // 2. التحقق من الأسعار في الخلفية (بدون تعطيل)
-        // نستخدم Promise.allSettled لتجنب توقف الكود بالكامل إذا فشل طلب واحد
         Promise.allSettled(initialAssets.map(async (asset: any) => {
             try {
                 const listingData = await publicClient.readContract({ 
@@ -548,7 +558,6 @@ function AssetPage() {
                 const listingArr = listingData as [string, bigint, boolean];
                 if (listingArr[2]) { 
                     const rawPrice = formatEther(listingArr[1]);
-                    // إصلاح الأرقام العشرية (4 خانات)
                     const finalPrice = parseFloat(rawPrice).toFixed(4).replace(/\.?0+$/, "") + ' POL';
                     return { ...asset, price: finalPrice, isListed: true };
                 }
@@ -558,11 +567,11 @@ function AssetPage() {
             }
         })).then((results) => {
             const updatedAssets = results.map((res: any) => res.value || res.reason);
-            // نحدث الـ State مرة ثانية فقط بالأسعار الجديدة
             setMoreAssets(updatedAssets);
         });
 
     }, [tokenId, publicClient]);
+
 
 
 
