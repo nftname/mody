@@ -154,10 +154,11 @@ export default function ProfilePage() {
     }
   };
 
-  const fetchAssets = async () => {
+   const fetchAssets = async () => {
     if (!targetAddress) return;
     setLoading(true);
     try {
+      // 1. البلوك تشين: التحقق من الملكية الحالية (Source of Truth)
       const balanceBigInt = await publicClient.readContract({
         address: NFT_COLLECTION_ADDRESS as `0x${string}`,
         abi: CONTRACT_ABI,
@@ -168,6 +169,7 @@ export default function ProfilePage() {
       const count = Number(balanceBigInt);
       if (!count) { setMyAssets([]); setLoading(false); return; }
 
+      // جلب جميع الـ Token IDs التي يملكها هذا العنوان
       const tokenIds = await Promise.all(
         Array.from({ length: count }, (_, i) => 
             publicClient.readContract({
@@ -179,25 +181,38 @@ export default function ProfilePage() {
         )
       );
 
-      const batches = chunk(tokenIds, 5);
+      // تحويل الـ IDs لنصوص للبحث في الداتا بيز
+      const tokenIdsStr = tokenIds.map(id => id.toString());
+
+      // 2. الداتا بيز: جلب الصور والأسماء دفعة واحدة (بدلاً من IPFS)
+      const { data: dbAssets } = await supabase
+          .from('assets_metadata')
+          .select('*')
+          .in('token_id', tokenIdsStr);
+
+      // إنشاء خريطة للبحث السريع
+      const assetsMap = new Map();
+      if (dbAssets) {
+          dbAssets.forEach((a: any) => assetsMap.set(a.token_id, a));
+      }
+
+      // 3. الدمج: دمج بيانات الملكية مع الصور مع حالة البيع
+      // نستخدم chunks هنا فقط لتخفيف الضغط على RPC عند فحص حالة البيع (listings)
+      const batches = chunk(tokenIds, 10);
       const loaded: any[] = [];
 
       for (const batch of batches) {
         const batchResults = await Promise.all(
           batch.map(async (tokenId: any) => {
             try {
-              const tokenURI = await publicClient.readContract({
-                  address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-                  abi: CONTRACT_ABI,
-                  functionName: 'tokenURI',
-                  args: [tokenId]
-              });
-
-              const metaRes = await fetch(resolveIPFS(tokenURI));
-              const meta = metaRes.ok ? await metaRes.json() : {};
+              const idStr = tokenId.toString();
+              // الحصول على الميتاداتا من الماب الجاهزة
+              const meta = assetsMap.get(idStr) || {};
 
               let isListed = false;
               let listingPrice = '0';
+              
+              // فحص حالة البيع من البلوك تشين
               try {
                   const listingData = await publicClient.readContract({
                       address: MARKETPLACE_ADDRESS as `0x${string}`,
@@ -209,24 +224,26 @@ export default function ProfilePage() {
                       isListed = true;
                       listingPrice = formatEther(listingData[1]);
                   }
-              } catch (e) { console.warn(e); }
+              } catch (e) { }
               
               return {
-                id: tokenId.toString(),
-                name: meta.name || `NNM #${tokenId.toString()}`,
-                image: resolveIPFS(meta.image) || '',
-                tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
-                price: isListed ? listingPrice : (meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'),
+                id: idStr,
+                name: meta.name || `NNM #${idStr}`,
+                // استخدام الصورة من الداتا بيز مباشرة
+                image: meta.image_url ? resolveIPFS(meta.image_url) : '', 
+                tier: meta.tier ? meta.tier.toLowerCase() : 'founders',
+                price: isListed ? listingPrice : '0',
                 isListed: isListed
               };
             } catch (error) { return null; }
           })
         );
         loaded.push(...(batchResults.filter(Boolean) as any[]));
-        setMyAssets([...loaded]); 
+        setMyAssets([...loaded]); // تحديث تدريجي للقائمة
       }
     } catch (error) { console.error("Fetch Assets Error:", error); } finally { setLoading(false); }
   };
+
 
   const fetchOffers = async () => {
       if (!targetAddress || !isOwner) return; 
@@ -298,10 +315,11 @@ export default function ProfilePage() {
       } catch (e) { console.error("Offers Error", e); } finally { setLoading(false); }
   };
 
-  const fetchCreated = async () => {
+   const fetchCreated = async () => {
       if (!targetAddress) return;
       setLoading(true);
       try {
+          // 1. جلب الـ IDs التي قام المستخدم بصناعتها من سجل النشاطات
           const { data, error } = await supabase
             .from('activities')
             .select('token_id, created_at')
@@ -319,30 +337,36 @@ export default function ProfilePage() {
           const dateMap: Record<string, string> = {};
           data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
 
-          // ✅ Fix 3: Added (item: any)
           const tokenIds = [...new Set(data.map((item: any) => item.token_id))];
-          const batches = chunk(tokenIds, 4); 
-          const loadedCreated: any[] = [];
 
-          for (const batch of batches) {
-              const batchResults = await Promise.all(batch.map(async (tokenId: any) => {
-                  try {
-                      const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'tokenURI', args: [BigInt(tokenId)] });
-                      const metaRes = await fetch(resolveIPFS(tokenURI));
-                      const meta = metaRes.ok ? await metaRes.json() : {};
-                      return {
-                          id: tokenId.toString(),
-                          name: meta.name || `NNM #${tokenId.toString()}`,
-                          image: resolveIPFS(meta.image) || '',
-                          tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
-                          price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0',
-                          mintDate: dateMap[tokenId]
-                      };
-                  } catch { return null; }
-              }));
-              loadedCreated.push(...(batchResults.filter(Boolean) as any[]));
-              setCreatedAssets([...loadedCreated]); 
+          // 2. جلب تفاصيل هذه الأصول من جدول الميتاداتا (ضربة واحدة)
+          const { data: dbAssets } = await supabase
+            .from('assets_metadata')
+            .select('*')
+            .in('token_id', tokenIds);
+
+          const assetsMap = new Map();
+          if (dbAssets) {
+              dbAssets.forEach((a: any) => assetsMap.set(a.token_id, a));
           }
+
+          // 3. تجميع البيانات
+          const loadedCreated = tokenIds.map((id: any) => {
+              const idStr = id.toString();
+              const meta = assetsMap.get(idStr) || {};
+              
+              return {
+                  id: idStr,
+                  name: meta.name || `NNM #${idStr}`,
+                  image: meta.image_url ? resolveIPFS(meta.image_url) : '',
+                  tier: meta.tier ? meta.tier.toLowerCase() : 'founders',
+                  price: '0', // لا يهم السعر هنا غالباً
+                  mintDate: dateMap[idStr]
+              };
+          });
+
+          setCreatedAssets(loadedCreated);
+
       } catch (e) { 
           console.error("Created Fetch Error:", e); 
       } finally { setLoading(false); }
