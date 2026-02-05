@@ -404,33 +404,45 @@ function AssetPage() {
       // --- TURBO FETCH: Main Asset Data ---
     const fetchAllData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
+        
         try {
-            const [dbResult, ownerResult, listingResult] = await Promise.all([
-                supabase.from('assets_metadata').select('*').eq('token_id', tokenId).single(),
-                publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'ownerOf', args: [BigInt(tokenId)] }),
-                publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] })
-            ]);
+            // --- الموجة 1: الداتا بيز (فوري) ---
+            const { data: dbAsset } = await supabase
+                .from('assets_metadata')
+                .select('*')
+                .eq('token_id', tokenId)
+                .single();
 
-            const dbAsset = dbResult.data;
-            const owner = ownerResult as string;
-            const listingData = listingResult as [string, bigint, boolean];
+            if (dbAsset) {
+                setAsset({
+                    id: tokenId,
+                    name: dbAsset.name,
+                    description: dbAsset.description || "",
+                    tier: dbAsset.tier ? dbAsset.tier.toLowerCase() : 'founder',
+                    price: '...', 
+                    owner: '...', 
+                    image: dbAsset.image_url, 
+                    mintDate: dbAsset.mint_date
+                });
+                setLoading(false); 
+            }
 
-            setAsset({
-                id: tokenId,
-                name: dbAsset?.name || `NNM #${tokenId}`,
-                description: dbAsset?.description || "",
-                tier: dbAsset?.tier ? dbAsset.tier.toLowerCase() : 'founder',
-                price: listingData[2] ? formatEther(listingData[1]) : '0',
+            // --- الموجة 2: البلوك تشين (لاحق) ---
+            const owner = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'ownerOf', args: [BigInt(tokenId)] });
+            const listingData = await publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] });
+
+            // ✅ التعديل هنا: إضافة (prev: any) لحل خطأ التايب سكريبت
+            setAsset((prev: any) => ({
+                ...prev,
                 owner: owner,
-                image: dbAsset?.image_url || '',
-                mintDate: dbAsset?.mint_date
-            });
+                price: listingData[2] ? formatEther(listingData[1]) : (prev?.price === '...' ? '0' : prev?.price)
+            }));
 
             if (listingData[2]) setListing({ price: formatEther(listingData[1]), seller: listingData[0] });
             else setListing(null);
 
-            setIsOwner(address?.toLowerCase() === owner.toLowerCase());
-            if (address && owner.toLowerCase() === address.toLowerCase()) {
+            setIsOwner(address?.toLowerCase() === (owner as string).toLowerCase());
+            if (address && (owner as string).toLowerCase() === address.toLowerCase()) {
                 const approvedStatus = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'isApprovedForAll', args: [address, MARKETPLACE_ADDRESS as `0x${string}`] });
                 setIsApproved(approvedStatus as boolean);
             }
@@ -494,8 +506,9 @@ function AssetPage() {
     }, [tokenId, address, publicClient, offerSort]);
 
 
+
     // --- TURBO GALLERY: More Assets (Fixed BigInt Error) ---
-     const fetchMoreAssets = useCallback(async () => {
+      const fetchMoreAssets = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         
         const startId = BigInt(tokenId);
@@ -505,52 +518,58 @@ function AssetPage() {
             (startId + BigInt(3)).toString()
         ];
 
-        try {
-            const { data: dbAssets } = await supabase
-                .from('assets_metadata')
-                .select('*')
-                .in('token_id', nextIds);
+        // 1. العرض الفوري (الداتا بيز)
+        const { data: dbAssets } = await supabase
+            .from('assets_metadata')
+            .select('*')
+            .in('token_id', nextIds);
 
-            if (!dbAssets || dbAssets.length === 0) {
-                setMoreAssets([]);
-                return;
-            }
+        if (!dbAssets || dbAssets.length === 0) {
+            setMoreAssets([]);
+            return;
+        }
 
-            const initialAssets = dbAssets.map((meta: any) => ({
-                id: meta.token_id,
-                name: meta.name,
-                image: meta.image_url,
-                price: '...',
-                isListed: false
-            }));
+        // نعرض الصور فوراً والأسعار "..."
+        const initialAssets = dbAssets.map((meta: any) => ({
+            id: meta.token_id,
+            name: meta.name,
+            image: meta.image_url, // ✅ الصورة تظهر فوراً
+            price: '...',
+            isListed: false
+        }));
 
-            setMoreAssets(initialAssets);
+        setMoreAssets(initialAssets);
 
-            if (publicClient) {
-                const updatedAssets = await Promise.all(initialAssets.map(async (asset: any) => {
-                    let price = 'Not Listed';
-                    let isListed = false;
-                    try {
-                        const listingData = await publicClient.readContract({ 
-                            address: MARKETPLACE_ADDRESS as `0x${string}`, 
-                            abi: MARKETPLACE_ABI, 
-                            functionName: 'listings', 
-                            args: [BigInt(asset.id)] 
-                        });
-                        if (listingData[2]) { 
-                            isListed = true; 
-                            const rawPrice = formatEther(listingData[1]);
-                            price = parseFloat(rawPrice).toFixed(4).replace(/\.?0+$/, "") + ' POL';
-                        }
-                    } catch (e) { }
+        // 2. التحديث اللاحق (البلوك تشين)
+        if (publicClient) {
+            // نستخدم Promise.allSettled لكي لا يؤثر فشل واحد على البقية
+            const promises = initialAssets.map(async (asset: any) => {
+                try {
+                    const listingData = await publicClient.readContract({ 
+                        address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                        abi: MARKETPLACE_ABI, 
+                        functionName: 'listings', 
+                        args: [BigInt(asset.id)] 
+                    });
+                    
+                    if (listingData[2]) { 
+                        const rawPrice = formatEther(listingData[1]);
+                        const finalPrice = parseFloat(rawPrice).toFixed(4).replace(/\.?0+$/, "") + ' POL';
+                        return { ...asset, price: finalPrice, isListed: true };
+                    }
+                    return { ...asset, price: 'Not Listed', isListed: false };
+                } catch (e) { 
+                    return { ...asset, price: 'Not Listed', isListed: false };
+                }
+            });
 
-                    return { ...asset, price, isListed };
-                }));
-                
+            // عندما تنتهي الطلبات، نحدث الحالة
+            Promise.all(promises).then(updatedAssets => {
                 setMoreAssets(updatedAssets);
-            }
-        } catch (e) { console.error("Gallery fetch error", e); }
+            });
+        }
     }, [tokenId, publicClient]);
+
 
 
     const refreshWpolData = useCallback(async () => {
