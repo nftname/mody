@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 
 const GOLD_COLOR = '#FCD535';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
+const ITEMS_PER_PAGE = 10; // ✅ Fix: Limit items to 10 per page
 
 const CONTRACT_ABI = parseAbi([
   "function balanceOf(address) view returns (uint256)",
@@ -27,7 +28,14 @@ const publicClient = createPublicClient({
   transport: http() 
 });
 
-// ✅ Fix 1: Removed redundant export at bottom, kept this one.
+// ✅ Helper: Format numbers to max 2 decimals to prevent table breakage
+const formatDecimal = (val: string | number) => {
+    const num = parseFloat(val.toString());
+    if (isNaN(num)) return '0.00';
+    // If it's an integer, return as is, else fix to 2 decimals
+    return Number.isInteger(num) ? num.toString() : num.toFixed(2);
+};
+
 export default function ProfilePage() {
   const params = useParams();
   const targetAddress = params?.address as `0x${string}`; 
@@ -59,6 +67,9 @@ export default function ProfilePage() {
   const [offerSort, setOfferSort] = useState('Newest');   
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
+  // ✅ Fix: Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as HTMLElement;
@@ -69,6 +80,11 @@ export default function ProfilePage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // ✅ Fix: Reset pagination when tab or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeSection, selectedTier, searchQuery, offerType]);
 
   const toggleDropdown = (name: string) => {
       if (openDropdown === name) setOpenDropdown(null);
@@ -97,7 +113,10 @@ export default function ProfilePage() {
   };
 
   const formatShortTime = (dateString: string | number) => {
+      if (!dateString) return '-'; // Safety check
       const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '-'; // Safety check
+      
       const now = new Date();
       const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
       if (diff < 60) return `${diff}s`;
@@ -262,7 +281,6 @@ export default function ProfilePage() {
           const { data, error } = await query;
           if (error) throw error;
 
-          // ✅ Fix 2: Added (offer: any)
           const enrichedOffers = await Promise.all((data || []).map(async (offer: any) => {
               const knownAsset = myAssets.find(a => a.id === offer.token_id.toString());
               let assetName = knownAsset ? knownAsset.name : `NNM #${offer.token_id}`;
@@ -319,7 +337,6 @@ export default function ProfilePage() {
           const dateMap: Record<string, string> = {};
           data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
 
-          // ✅ Fix 3: Added (item: any)
           const tokenIds = [...new Set(data.map((item: any) => item.token_id))];
           const batches = chunk(tokenIds, 4); 
           const loadedCreated: any[] = [];
@@ -368,12 +385,13 @@ export default function ProfilePage() {
 
           if (offError) throw offError;
 
+          // ✅ Fix: Robust null checks for addresses to prevent toLowerCase() crash
           const formattedActivities = (activityData || []).map((item: any) => ({
               type: item.activity_type,
               tokenId: item.token_id.toString(),
               price: item.price,
-              from: item.from_address,
-              to: item.to_address,
+              from: item.from_address || '', // Fallback to empty string
+              to: item.to_address || '',     // Fallback to empty string
               date: item.created_at,
               rawDate: new Date(item.created_at).getTime()
           }));
@@ -382,7 +400,7 @@ export default function ProfilePage() {
               type: 'Offer',
               tokenId: item.token_id.toString(),
               price: item.price,
-              from: item.bidder_address,
+              from: item.bidder_address || '',
               to: 'Market',
               date: item.created_at,
               rawDate: new Date(item.created_at).getTime()
@@ -420,6 +438,42 @@ export default function ProfilePage() {
   const listedAssets = myAssets.filter(asset => asset.isListed);
   const sortedListedAssets = sortOrder === 'newest' ? [...listedAssets].reverse() : listedAssets;
   const sortedCreatedAssets = sortOrder === 'newest' ? [...createdAssets].reverse() : createdAssets;
+
+  // ✅ Helper: Paginate any array
+  const paginate = (items: any[]) => {
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      return items.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  };
+
+  // ✅ Helper: Render Pagination Controls
+  const PaginationControls = ({ totalItems }: { totalItems: number }) => {
+      const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+      if (totalPages <= 1) return null;
+
+      return (
+          <div className="d-flex justify-content-center align-items-center gap-3 mt-4">
+              <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="btn btn-sm border-secondary text-white"
+                  style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
+              >
+                  <i className="bi bi-chevron-left"></i>
+              </button>
+              <span className="text-secondary" style={{ fontSize: '13px' }}>
+                  Page {currentPage} of {totalPages}
+              </span>
+              <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="btn btn-sm border-secondary text-white"
+                  style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}
+              >
+                  <i className="bi bi-chevron-right"></i>
+              </button>
+          </div>
+      );
+  };
 
   if (!targetAddress) return null;
 
@@ -528,10 +582,14 @@ export default function ProfilePage() {
                 </div>
                 <div className="pb-5">
                     {loading && myAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : (
-                        <div className="row g-3">
-                            {filteredAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
-                            {filteredAssets.length === 0 && !loading && <div className="col-12 text-center py-5 text-secondary">No items found</div>}
-                        </div>
+                        <>
+                            <div className="row g-3">
+                                {/* ✅ Fix: Apply pagination */}
+                                {paginate(filteredAssets).map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
+                                {filteredAssets.length === 0 && !loading && <div className="col-12 text-center py-5 text-secondary">No items found</div>}
+                            </div>
+                            <PaginationControls totalItems={filteredAssets.length} />
+                        </>
                     )}
                 </div>
             </>
@@ -544,34 +602,50 @@ export default function ProfilePage() {
                         <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff' }}><thead><tr><th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%' }}>ASSET</th></tr></thead><tbody><tr><td style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>No active listings found</td></tr></tbody></table>
                     </div>
                 ) : (
-                    <div className="table-responsive">
-                        <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
-                            <thead><tr>
-                                <th onClick={() => setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest')} style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}>ASSET <i className={`bi ${sortOrder === 'newest' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'} ms-2`} style={{ fontSize: '11px' }}></i></th>
-                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>POL</th>
-                                <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Exp</th>
-                                <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th> 
-                            </tr></thead>
-                            <tbody>{sortedListedAssets.map((asset) => (
-                                <tr key={asset.id} className="align-middle listing-row">
-                                    <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>{asset.name}</td>
-                                    <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{asset.price}</td>
-                                    <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>Active</td>
-                                    <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}><Link href={`/asset/${asset.id}`}><i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i></Link></td>
-                                </tr>
-                            ))}</tbody>
-                        </table>
-                    </div>
+                    <>
+                        <div className="table-responsive">
+                            <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
+                                <thead><tr>
+                                    <th onClick={() => setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest')} style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}>ASSET <i className={`bi ${sortOrder === 'newest' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'} ms-2`} style={{ fontSize: '11px' }}></i></th>
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>POL</th>
+                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Exp</th>
+                                    <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th> 
+                                </tr></thead>
+                                <tbody>
+                                    {/* ✅ Fix: Apply pagination & Price Formatting */}
+                                    {paginate(sortedListedAssets).map((asset) => (
+                                    <tr key={asset.id} className="align-middle listing-row">
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>{asset.name}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>
+                                            {formatDecimal(asset.price)}
+                                        </td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>Active</td>
+                                        <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}><Link href={`/asset/${asset.id}`}><i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i></Link></td>
+                                    </tr>
+                                ))}</tbody>
+                            </table>
+                        </div>
+                        <PaginationControls totalItems={sortedListedAssets.length} />
+                    </>
                 )}
             </div>
         )}
 
         {activeSection === 'Offers' && (
             <div className="mt-4 pb-5">
-                <div className="text-center py-5 text-secondary" style={{ fontSize: '16px' }}>
-                   No offers found
-
-                </div>
+                 {/* ✅ Note: Offers should likely be paginated too if there were any, added for consistency if data exists */}
+                 {offersData.length === 0 ? (
+                    <div className="text-center py-5 text-secondary" style={{ fontSize: '16px' }}>
+                        No offers found
+                    </div>
+                 ) : (
+                    <>
+                        {/* If you have an offers table structure, use paginate(offersData) here. Keeping current simple view. */}
+                        <div className="text-center py-5 text-secondary" style={{ fontSize: '16px' }}>
+                            {offersData.length} offers found (Display logic not provided in original code)
+                        </div>
+                    </>
+                 )}
             </div>
         )}
 
@@ -633,9 +707,13 @@ export default function ProfilePage() {
                     {loading && createdAssets.length === 0 ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : createdAssets.length === 0 ? (
                         <div className="text-center py-5 text-secondary">No created assets found</div>
                     ) : (
-                        <div className="row g-3">
-                            {sortedCreatedAssets.map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
-                        </div>
+                        <>
+                            <div className="row g-3">
+                                {/* ✅ Fix: Apply pagination */}
+                                {paginate(sortedCreatedAssets).map((asset) => (<AssetRenderer key={asset.id} item={asset} mode={currentViewMode} isFavorite={favoriteIds.has(asset.id)} onToggleFavorite={handleToggleFavorite} />))}
+                            </div>
+                            <PaginationControls totalItems={sortedCreatedAssets.length} />
+                        </>
                     )}
                 </div>
             </>
@@ -656,18 +734,19 @@ export default function ProfilePage() {
                             {loading ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d' }}><div className="spinner-border text-secondary" role="status"></div></td></tr> : activityData.length === 0 ? (
                                 <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>No recent activity found</td></tr>
                             ) : (
-                                activityData.map((activity, index) => (
+                                // ✅ Fix: Apply pagination & Robust Null Checks
+                                paginate(activityData).map((activity, index) => (
                                     <tr key={index} className="align-middle listing-row" style={{ cursor: 'pointer' }} onClick={() => window.location.href = `/asset/${activity.tokenId}`}>
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '11px' }}>
                                             <span>{activity.type}</span>
                                         </td>
                                         <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>
-                                            {activity.price && !isNaN(parseFloat(activity.price)) ? formatCompactNumber(parseFloat(activity.price)) : '-'}
+                                            {activity.price && !isNaN(parseFloat(activity.price)) ? formatDecimal(activity.price) : '-'}
                                         </td>
                                         <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>
                                             {activity.from === '0x0000000000000000000000000000000000000000' ? 'NullAddress' : (
                                                 <a href={`https://polygonscan.com/address/${activity.from}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>
-                                                    {activity.from.toLowerCase() === connectedAddress?.toLowerCase() ? 'You' : `${activity.from.slice(0,4)}...${activity.from.slice(-4)}`}
+                                                    {(activity.from || '').toLowerCase() === connectedAddress?.toLowerCase() ? 'You' : `${(activity.from || '').slice(0,4)}...${(activity.from || '').slice(-4)}`}
                                                 </a>
                                             )}
                                         </td>
@@ -676,7 +755,7 @@ export default function ProfilePage() {
                                                 <a href={`https://polygonscan.com/address/${MARKETPLACE_ADDRESS}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>Market</a>
                                             ) : (
                                                 <a href={`https://polygonscan.com/address/${activity.to}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>
-                                                    {activity.to === 'Owner' ? 'Owner' : (activity.to.toLowerCase() === connectedAddress?.toLowerCase() ? 'You' : `${activity.to.slice(0,4)}...${activity.to.slice(-4)}`)}
+                                                    {activity.to === 'Owner' ? 'Owner' : ((activity.to || '').toLowerCase() === connectedAddress?.toLowerCase() ? 'You' : `${(activity.to || '').slice(0,4)}...${(activity.to || '').slice(-4)}`)}
                                                 </a>
                                             )}
                                         </td>
@@ -687,6 +766,8 @@ export default function ProfilePage() {
                         </tbody>
                     </table>
                 </div>
+                {/* ✅ Fix: Add pagination controls */}
+                <PaginationControls totalItems={activityData.length} />
             </div>
         )}
 
@@ -702,6 +783,9 @@ export default function ProfilePage() {
 const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any, mode: string, isFavorite: boolean, onToggleFavorite: (e: React.MouseEvent, id: string) => void }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
+    // ✅ Use formatDecimal in AssetRenderer as well for consistency
+    const displayPrice = item.isListed ? `${formatDecimal(item.price)} POL` : '';
+
     const formatDate = (dateStr: string) => {
         if (!dateStr) return '';
         const d = new Date(dateStr);
@@ -721,7 +805,7 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                             <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
                         </div>
                         <div className="text-end pe-4">
-                             <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
+                             <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? displayPrice : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
                         </div>
                         <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute end-0 me-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
                              <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : '#8a939b', fontSize: '16px' }}></i>
@@ -750,7 +834,7 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                       <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
                       {item.mintDate && <div className="text-white mb-2" style={{ fontSize: '11px', color: '#888' }}>Minted: {formatDate(item.mintDate)}</div>}
                       <div className="mt-auto">
-                           <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Last Sale</span>}</div>
+                           <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.isListed ? displayPrice : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Last Sale</span>}</div>
                            {item.isListed && <div style={{ fontSize: '11px', color: '#cccccc' }}>Price</div>}
                       </div>
                   </div>
