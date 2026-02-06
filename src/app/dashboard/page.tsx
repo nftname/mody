@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   
   // --- Pagination States ---
-  const ITEMS_PER_PAGE = 20;
+  const ITEMS_PER_PAGE = 10;
   const [pageItems, setPageItems] = useState(1);
   const [pageListings, setPageListings] = useState(1);
   const [pageOffers, setPageOffers] = useState(1);
@@ -621,27 +621,33 @@ export default function DashboardPage() {
   const sortedListedAssets = sortOrder === 'newest' ? [...listedAssets].reverse() : listedAssets;
   const sortedCreatedAssets = sortOrder === 'newest' ? [...createdAssets].reverse() : createdAssets;
 
+ // --- Pagination Helper Component ---
+
   // --- Pagination Helper Component ---
   const PaginationFooter = ({ currentPage, totalCount, onPageChange }: any) => {
       const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
       if (totalPages <= 1) return null;
 
       return (
-          <div className="d-flex justify-content-between align-items-center mt-4 px-2" style={{ gap: '10px' }}>
+          <div className="d-flex justify-content-center align-items-center mt-4 gap-4">
               <button 
                   onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
                   disabled={currentPage === 1}
-                  className="btn btn-sm"
-                  style={{ border: '1px solid #2d2d2d', backgroundColor: currentPage === 1 ? '#0d0d0d' : '#161b22', color: '#fff' }}
+                  className="btn p-0 border-0"
+                  style={{ color: currentPage === 1 ? '#444' : '#fff', fontSize: '18px' }}
               >
                   <i className="bi bi-chevron-left"></i>
               </button>
-              <span style={{ color: '#fff', fontSize: '13px' }}>Page {currentPage} of {totalPages}</span>
+              
+              <span style={{ color: '#8a939b', fontSize: '14px' }}>
+                  Page {currentPage} of {totalPages}
+              </span>
+
               <button 
                   onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="btn btn-sm"
-                  style={{ border: '1px solid #2d2d2d', backgroundColor: currentPage === totalPages ? '#0d0d0d' : '#161b22', color: '#fff' }}
+                  className="btn p-0 border-0"
+                  style={{ color: currentPage === totalPages ? '#444' : '#fff', fontSize: '18px' }}
               >
                   <i className="bi bi-chevron-right"></i>
               </button>
@@ -1066,7 +1072,7 @@ export default function DashboardPage() {
 
                 {/* Data Table with Pagination */}
                 {(() => {
-                    const indexOfLastLog = currentPage * 10;
+                    const indexOfLastLog = currentPage * ITEMS_PER_PAGE;
                     const indexOfFirstLog = indexOfLastLog - 10;
                     const currentLogs = convictionLogs.slice(indexOfFirstLog, indexOfLastLog);
                     const totalPages = Math.ceil(convictionLogs.length / 10);
