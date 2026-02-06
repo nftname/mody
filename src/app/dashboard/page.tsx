@@ -1042,19 +1042,23 @@ export default function DashboardPage() {
         {/* --- 6. CONVICTION --- */}
         {activeSection === 'Conviction' && (
             <div className="mt-4 pb-5 fade-in">
-                {/* Header: Balances */}
+                    {/* Header: Balances */}
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 p-4 rounded-4" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d' }}>
                     <div className="d-flex gap-5">
                         <div className="d-flex flex-column">
-                            <span style={{ fontSize: '12px', color: '#8a939b', textTransform: 'uppercase', letterSpacing: '1px' }}>WNNM Balance</span>
-                            <span className="text-white fw-bold" style={{ fontSize: '24px', fontFamily: 'monospace' }}>
-                                {walletBalances.wnnm} <span style={{ fontSize: '14px', color: '#FCD535' }}>WNNM</span>
+                            {/* WNNM Balance */}
+                            <span className="balance-label" style={{ color: '#8a939b', textTransform: 'uppercase', letterSpacing: '1px' }}>WNNM Balance</span>
+                            <span className="text-white fw-bold d-flex align-items-baseline gap-1">
+                                <span className="balance-number" style={{ fontFamily: 'monospace' }}>{walletBalances.wnnm}</span>
+                                <span className="balance-unit" style={{ color: '#FCD535' }}>WNNM</span>
                             </span>
                         </div>
                         <div className="d-flex flex-column" style={{ borderLeft: '1px solid #333', paddingLeft: '20px' }}>
-                            <span style={{ fontSize: '12px', color: '#8a939b', textTransform: 'uppercase', letterSpacing: '1px' }}>NNM Balance</span>
-                            <span className="text-white fw-bold" style={{ fontSize: '24px', fontFamily: 'monospace' }}>
-                                {walletBalances.nnm} <span style={{ fontSize: '14px', color: '#FCD535' }}>NNM</span>
+                            {/* NNM Balance */}
+                            <span className="balance-label" style={{ color: '#8a939b', textTransform: 'uppercase', letterSpacing: '1px' }}>NNM Balance</span>
+                            <span className="text-white fw-bold d-flex align-items-baseline gap-1">
+                                <span className="balance-number" style={{ fontFamily: 'monospace' }}>{walletBalances.nnm}</span>
+                                <span className="balance-unit" style={{ color: '#FCD535' }}>NNM</span>
                             </span>
                         </div>
                     </div>
@@ -1152,6 +1156,30 @@ export default function DashboardPage() {
       <style jsx global>{`
         .listing-row:hover td { background-color: rgba(255, 255, 255, 0.03) !important; }
         table, th, td, tr, .table { background-color: transparent !important; }
+
+        /* --- Default Styles (Desktop) --- */
+        .balance-label { font-size: 12px; white-space: nowrap; }
+        .balance-number { font-size: 24px; }
+        .balance-unit { font-size: 14px; }
+
+        /* --- Mobile Only Edits (تعديلات الموبايل فقط) --- */
+        @media (max-width: 768px) {
+            /* تصغير العنوان بنسبة 20% (من 12 إلى 10) */
+            .balance-label {
+                font-size: 10px !important;
+            }
+            
+            /* تصغير الأرقام بنسبة 30% (من 24 إلى 17) لضمان بقاء الرمز الذهبي بجوارها */
+            .balance-number {
+                font-size: 17px !important;
+            }
+
+            /* تصغير الرمز الذهبي قليلاً ليتناسب مع الرقم */
+            .balance-unit {
+                font-size: 11px !important;
+                white-space: nowrap; /* يمنع نزول الرمز للأسفل نهائياً */
+            }
+        }
       `}</style>
 
       {showClaimModal && (
