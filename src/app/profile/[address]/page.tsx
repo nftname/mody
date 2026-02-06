@@ -783,14 +783,22 @@ export default function ProfilePage() {
 const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any, mode: string, isFavorite: boolean, onToggleFavorite: (e: React.MouseEvent, id: string) => void }) => {
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
-    // ✅ Use formatDecimal in AssetRenderer as well for consistency
-    const displayPrice = item.isListed ? `${formatDecimal(item.price)} POL` : '';
+    // دالة حماية لتنسيق السعر تمنع الانهيار
+    const safePrice = () => {
+        try {
+            if (!item.isListed || !item.price) return '';
+            // تأكد من وجود دالة formatDecimal في الملف، وإلا اعرض السعر كما هو
+            return typeof formatDecimal === 'function' ? `${formatDecimal(item.price)} POL` : `${item.price} POL`;
+        } catch (e) { return '0 POL'; }
+    };
 
     const formatDate = (dateStr: string) => {
         if (!dateStr) return '';
         const d = new Date(dateStr);
         return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     };
+
+    const displayPrice = safePrice();
 
     if (mode === 'list') {
         return (
@@ -801,7 +809,7 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                              {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#333' }}></div>)}
                         </div>
                         <div className="flex-grow-1">
-                            <div className="text-white" style={{ fontSize: '14px', fontWeight: '600' }}>{item.name}</div>
+                            <div className="text-white" style={{ fontSize: '14px', fontWeight: '600' }}>{item.name || `NNM #${item.id}`}</div>
                             <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
                         </div>
                         <div className="text-end pe-4">
@@ -815,7 +823,7 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
             </div>
         );
     }
-    // الوضع Grid أو Large (نفس الهيكلية)
+
     return (
       <div className={colClass}>
           <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
@@ -828,7 +836,7 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                   </div>
                   <div className="p-3 d-flex flex-column flex-grow-1">
                       <div className="d-flex justify-content-between align-items-start mb-1">
-                          <div className="text-white fw-bold text-truncate" style={{ fontSize: '14px', maxWidth: '80%' }}>{item.name}</div>
+                          <div className="text-white fw-bold text-truncate" style={{ fontSize: '14px', maxWidth: '80%' }}>{item.name || `NNM #${item.id}`}</div>
                           <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
                       </div>
                       <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
@@ -847,3 +855,4 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
       </div>
     );
 };
+
