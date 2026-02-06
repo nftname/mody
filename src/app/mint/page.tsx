@@ -311,43 +311,44 @@ const MintContent = () => {
                  actualPriceInPOL = parseFloat(formatEther(valueToSend));
              }
 
-             // Supabase Logging - استخدام insert لضمان سجل جديد لكل معاملة
+             // Supabase Logging & Secure Saving
              const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
+             
              if (transferLog && transferLog.topics[3]) {
                  const mintedId = parseInt(transferLog.topics[3], 16);
+
+                 // 1. تسجيل النشاط (Activities) - اختياري، يمكن تركه للمتصفح أو نقله
                  await supabase.from('activities').insert([{
                      token_id: mintedId,
                      activity_type: 'Mint',
                      from_address: '0x0000000000000000000000000000000000000000',
-                      to_address: address, 
+                     to_address: address, 
                      price: actualPriceInPOL.toFixed(4),
                      created_at: new Date().toISOString()
                  }]);
 
-                 // ============================================================
-                 // 🚀 NEW: Save Full Asset Data to DB (لعدم الاعتماد على البلوك تشين لاحقاً)
-                 // ============================================================
-                 const { error: saveError } = await supabase
-                    .from('assets_metadata')
-                    .upsert({
-                        token_id: mintedId,                // رقم الأصل المستخرج من البلوك تشين
-                        name: searchTerm,                  // الاسم
-                        tier: tierName,                    // التصنيف (ELITE, IMMORTAL...)
-                        image_url: gatewayUrl,             // رابط الصورة الذي تم رفعه
-                        description: LONG_DESCRIPTION,     // الوصف الكبير
-                        attributes: metadataObject.attributes, // كافة الخصائص (بما فيها التاريخ الديناميكي)
-                        mint_date: dynamicDate,            // تاريخ الطباعة الفعلي
-                        metadata_uri: tokenURI,            // رابط ملف الجيسون
-                        updated_at: new Date().toISOString()
-                    });
-
-                 if (saveError) {
-                    console.error("❌ Failed to save asset to DB:", saveError.message);
-                 } else {
-                    console.log("✅ Asset saved to DB successfully!");
+                 // 2. 🚀 الحفظ الآمن في الجدول الرئيسي عبر الـ API
+                 try {
+                     await fetch('/api/save-asset', {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json' },
+                         body: JSON.stringify({
+                             token_id: mintedId,
+                             name: searchTerm,
+                             tier: tierName,
+                             image_url: gatewayUrl,
+                             description: LONG_DESCRIPTION,
+                             attributes: metadataObject.attributes,
+                             mint_date: dynamicDate,
+                             metadata_uri: tokenURI
+                         })
+                     });
+                     console.log("✅ Asset Metadata Saved via Secure API");
+                 } catch (e) {
+                     console.error("❌ Failed to save metadata:", e);
                  }
-                 // ============================================================
              }
+
              if (address) notifyRewardSystem(address);
 
           }
