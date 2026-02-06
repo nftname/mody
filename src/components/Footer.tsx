@@ -6,7 +6,7 @@ const Footer = () => {
   const headerFontSize = '14px';       // حجم العناوين الرئيسية
   
   const socialFontSize = '13px';       // 1. حجم خط روابط التواصل الاجتماعي (ثابت)
-  const standardLinkFontSize = '11px'; // 2. حجم خط الروابط الـ 12 الأخرى (تم تصغيره كما طلبت)
+  const standardLinkFontSize = '9px'; // 2. حجم خط الروابط الـ 12 الأخرى (تم تصغيره كما طلبت)
   
   const linkColor = 'rgba(255, 255, 255, 0.5)';
   const linkHoverColor = '#FCD535';
