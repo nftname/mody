@@ -11,10 +11,11 @@ const Navbar = () => {
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  
   // State for Dropdowns
+  const [isInsightsOpen, setIsInsightsOpen] = useState(false); // Used for NGX now based on your logic
   const [isNNMConceptOpen, setIsNNMConceptOpen] = useState(false);
-  const [isNGXOpen, setIsNGXOpen] = useState(false);
-
+  
   const [searchQuery, setSearchQuery] = useState('');
   
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -43,8 +44,8 @@ const Navbar = () => {
     setIsDrawerOpen(false);
     setDrawerTranslate(0);
     setIsMobileSearchOpen(false);
+    setIsInsightsOpen(false);
     setIsNNMConceptOpen(false);
-    setIsNGXOpen(false);
   }, [pathname]);
 
   const toggleDrawer = () => {
@@ -64,8 +65,8 @@ const Navbar = () => {
         router.push('/dashboard');
     }
     closeDrawer(); 
+    setIsInsightsOpen(false);
     setIsNNMConceptOpen(false);
-    setIsNGXOpen(false);
   };
 
   const handlePortfolioClick = (e: React.MouseEvent) => {
@@ -104,7 +105,7 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  // ✅ الألوان الموحدة (جراحي)
+  // ✅ الألوان الموحدة 
   const exactDarkColor = '#0B0E11'; 
   const drawerBgColor = '#1E1E1E'; 
   
@@ -116,11 +117,12 @@ const Navbar = () => {
 
   const elementHeight = '29px'; 
   const elementFontSize = '11px';
-  // New Font Size for Desktop Links (10% smaller than 13px -> ~11.7px)
-  const navLinkFontSize = '11.7px'; 
-  // New Font Size for Mega Menu (20% smaller -> ~10.4px)
-  const megaMenuFontSize = '10.5px';
+  // Reduced by 10% from 13px -> ~11.7px
+  const navFontSize = '11.7px'; 
+  // Reduced by 20% for the new dropdown -> ~10.4px
+  const dropDownSmallFont = '10.5px';
 
+  // --- START WALLET LOGIC (RESTORED EXACTLY FROM ORIGINAL) ---
   const customDisconnectStyle = {
     background: 'transparent',
     color: metallicGoldHex,
@@ -157,42 +159,6 @@ const Navbar = () => {
     padding: '0 8px'
   };
 
-  const portfolioBtnStyle = {
-    color: metallicGoldHex, 
-    border: 'none', 
-    background: 'transparent', 
-    padding: '0 6px',
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    cursor: 'pointer', 
-    transition: 'all 0.2s', 
-    height: '23px', 
-  };
-
-  // Updated Menu Icons for Drawer
-  const menuIcons: { [key: string]: string } = {
-    'Home': 'bi-house-door',
-    'Market': 'bi-shop',
-    'NGX': 'bi-activity',
-    'Mint': 'bi-diamond',
-    'ChainFace': 'bi-person-badge', // New Icon for ChainFace
-    'NNM Concept': 'bi-layers'
-  };
-
-  // Base items for mapping (Desktop logic handles them individually now)
-  const simpleMenuItems = ['Home', 'Market'];
-
-  // ✅ القائمة السفلية المحدثة - Added Contact here
-  const bottomDrawerItems = [
-    { label: 'News & Updates', href: '/news', icon: 'bi-newspaper' },
-    { label: 'Market Indices', href: '/market-indices', icon: 'bi-graph-up-arrow' },
-    { label: 'Affiliate Program', href: '/affiliate', icon: 'bi-briefcase' },
-    { label: 'Rankings', href: '/ranking', icon: 'bi-trophy' },
-    { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' },
-    { label: 'Contact', href: '/contact', icon: 'bi-chat-left-text' } // Moved here
-  ];
-
   const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
     const height = isMobile ? '28px' : elementHeight; 
     const minWidth = isMobile ? '80px' : '110px'; 
@@ -228,6 +194,42 @@ const Navbar = () => {
       </div>
     );
   };
+  // --- END WALLET LOGIC ---
+
+  const portfolioBtnStyle = {
+    color: metallicGoldHex, 
+    border: 'none', 
+    background: 'transparent', 
+    padding: '0 6px',
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    cursor: 'pointer', 
+    transition: 'all 0.2s', 
+    height: '23px', 
+  };
+
+  const menuIcons: { [key: string]: string } = {
+    'Home': 'bi-house-door',
+    'Market': 'bi-shop',
+    'NGX': 'bi-activity',
+    'Mint': 'bi-diamond',
+    'ChainFace': 'bi-person-badge', // New Icon
+    'NNM Concept': 'bi-layers'
+  };
+
+  // Main items for loop (ChainFace added manually in Desktop layout)
+  const menuItems = ['Home', 'Market'];
+
+  // Mobile Bottom Drawer Items (Contact moved here)
+  const bottomDrawerItems = [
+    { label: 'News & Updates', href: '/news', icon: 'bi-newspaper' },
+    { label: 'Market Indices', href: '/market-indices', icon: 'bi-graph-up-arrow' },
+    { label: 'Affiliate Program', href: '/affiliate', icon: 'bi-briefcase' },
+    { label: 'Rankings', href: '/ranking', icon: 'bi-trophy' },
+    { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' },
+    { label: 'Contact', href: '/contact', icon: 'bi-chat-left-text' } // Moved from top list
+  ];
 
   const ChicProfileIcon = ({ size = 24, color = metallicGoldHex }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -316,46 +318,47 @@ const Navbar = () => {
         {/* DESKTOP CONTENT */}
         <div className="d-none d-lg-flex flex-grow-1 align-items-center justify-content-between" id="desktopNav">
             
-            {/* Desktop Links - Surgical Precision Layout */}
+            {/* Desktop Links */}
             <div className="d-flex align-items-center" style={{ flexShrink: 1, minWidth: 0, paddingTop: '5px' }}> 
                 <ul className="navbar-nav mb-2 mb-lg-0 d-flex flex-row align-items-center" style={{ gap: '18px' }}>
                     
-                    {/* 1. Home & Market */}
-                    {simpleMenuItems.map((item) => (
+                    {/* Home & Market */}
+                    {menuItems.map((item) => (
                         <li className="nav-item" key={item}>
                             <Link 
                                 href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                                 onClick={(e) => handleNavClick(item, e)}
                                 className={`nav-link fw-medium desktop-nav-link ${pathname === (item === 'Home' ? '/' : `/${item.toLowerCase()}`) ? 'active' : ''}`}
-                                style={{ fontSize: navLinkFontSize, whiteSpace: 'nowrap' }} 
+                                style={{ fontSize: navFontSize, whiteSpace: 'nowrap' }} 
                             >
                                 {item}
                             </Link>
                         </li>
                     ))}
-
-                    {/* 2. NGX Dropdown (New) */}
+                    
+                    {/* NGX Dropdown (Was Insights) */}
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
-                        onMouseEnter={() => setIsNGXOpen(true)}
-                        onMouseLeave={() => setIsNGXOpen(false)}>
+                        onMouseEnter={() => setIsInsightsOpen(true)}
+                        onMouseLeave={() => setIsInsightsOpen(false)}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Link 
                           href="/ngx"
                           className={`nav-link fw-medium shadow-none desktop-nav-link ${pathname === '/ngx' ? 'active' : ''}`}
-                          style={{ fontSize: navLinkFontSize, whiteSpace: 'nowrap', padding: '0.5rem 0' }}
+                          style={{ fontSize: navFontSize, whiteSpace: 'nowrap', padding: '0.5rem 0' }}
                         >
                           NGX
                         </Link>
                         <button 
-                          onClick={(e) => { e.preventDefault(); setIsNGXOpen(!isNGXOpen); }}
+                          onClick={(e) => { e.preventDefault(); setIsInsightsOpen(!isInsightsOpen); }}
                           className="btn p-0 border-0 bg-transparent"
                           style={{ fontSize: '9px', color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          title="Toggle dropdown"
                         >
                           <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
                         </button>
                       </div>
                       
-                      <ul className={`dropdown-menu shadow-lg ${isNGXOpen ? 'show' : ''}`} 
+                      <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
                           style={{ 
                               position: 'absolute',
                               top: '100%',
@@ -375,7 +378,7 @@ const Navbar = () => {
                             <li key={subItem.label}>
                                 <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href={subItem.href} 
                                     style={{ 
-                                        fontSize: navLinkFontSize, 
+                                        fontSize: navFontSize, 
                                         transition: '0.2s', 
                                         color: '#E0E0E0',
                                         borderBottom: idx !== arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
@@ -388,31 +391,31 @@ const Navbar = () => {
                       </ul>
                     </li>
 
-                    {/* 3. Mint */}
+                    {/* Mint */}
                     <li className="nav-item">
                         <Link 
                             href="/mint"
                             onClick={(e) => handleNavClick('Mint', e)}
                             className={`nav-link fw-medium desktop-nav-link ${pathname === '/mint' ? 'active' : ''}`}
-                            style={{ fontSize: navLinkFontSize, whiteSpace: 'nowrap' }} 
+                            style={{ fontSize: navFontSize, whiteSpace: 'nowrap' }} 
                         >
                             Mint
                         </Link>
                     </li>
 
-                    {/* 4. ChainFace (New Section inserted here) */}
+                    {/* ChainFace (New Item) */}
                     <li className="nav-item">
                         <Link 
                             href="/chainface"
                             onClick={(e) => handleNavClick('ChainFace', e)}
                             className={`nav-link fw-medium desktop-nav-link ${pathname === '/chainface' ? 'active' : ''}`}
-                            style={{ fontSize: navLinkFontSize, whiteSpace: 'nowrap' }} 
+                            style={{ fontSize: navFontSize, whiteSpace: 'nowrap' }} 
                         >
                             ChainFace
                         </Link>
                     </li>
                     
-                    {/* 5. NNM Concept Dropdown (2-Column Layout) */}
+                    {/* NNM Concept Dropdown (2 Columns) */}
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsNNMConceptOpen(true)}
                         onMouseLeave={() => setIsNNMConceptOpen(false)}>
@@ -420,7 +423,7 @@ const Navbar = () => {
                         <Link 
                           href="/nnm-concept"
                           className={`nav-link fw-medium shadow-none desktop-nav-link`}
-                          style={{ fontSize: navLinkFontSize, whiteSpace: 'nowrap', padding: '0.5rem 0' }}
+                          style={{ fontSize: navFontSize, whiteSpace: 'nowrap', padding: '0.5rem 0' }}
                         >
                           NNM Concept
                         </Link>
@@ -428,12 +431,13 @@ const Navbar = () => {
                           onClick={(e) => { e.preventDefault(); setIsNNMConceptOpen(!isNNMConceptOpen); }}
                           className="btn p-0 border-0 bg-transparent"
                           style={{ fontSize: '9px', color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          title="Toggle dropdown"
                         >
                           <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
                         </button>
                       </div>
                       
-                      {/* Mega Menu Dropdown */}
+                      {/* Mega Dropdown Structure */}
                       <div className={`dropdown-menu shadow-lg ${isNNMConceptOpen ? 'show' : ''}`} 
                           style={{ 
                               position: 'absolute',
@@ -441,7 +445,7 @@ const Navbar = () => {
                               left: '0',
                               backgroundColor: dropdownColor, 
                               border: `1px solid ${subtleBorder}`, 
-                              minWidth: '280px', // Wider for 2 columns
+                              minWidth: '320px', 
                               marginTop: '0px', 
                               padding: '0',
                               borderRadius: '8px',
@@ -450,28 +454,32 @@ const Navbar = () => {
                               overflow: 'hidden'
                           }}>
                         
-                        {/* Left Column: Conviction & Registry */}
-                        <div style={{ width: '50%', padding: '8px 0', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-                            <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/conviction-rank" style={{ fontSize: megaMenuFontSize, color: '#E0E0E0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                Conviction Rank
-                            </Link>
-                            <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/ranking" style={{ fontSize: megaMenuFontSize, color: '#E0E0E0' }}>
-                                Registry Rank
-                            </Link>
+                        {/* Right Column: NNM Concept + How it Works */}
+                        <div style={{ flex: 1, borderRight: '1px solid rgba(255,255,255,0.05)', padding: '6px 0' }}>
+                           <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/nnm-concept" 
+                                style={{ fontSize: dropDownSmallFont, color: '#E0E0E0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                NNM Concept
+                           </Link>
+                           <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/how-it-works" 
+                                style={{ fontSize: dropDownSmallFont, color: '#E0E0E0' }}>
+                                How it Works
+                           </Link>
                         </div>
 
-                        {/* Right Column: NNM Concept & How it works */}
-                        <div style={{ width: '50%', padding: '8px 0' }}>
-                             <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/nnm-concept" style={{ fontSize: megaMenuFontSize, color: '#E0E0E0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                NNM Concept
-                            </Link>
-                            <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/how-it-works" style={{ fontSize: megaMenuFontSize, color: '#E0E0E0' }}>
-                                How it Works
-                            </Link>
+                        {/* Left Column: Conviction + Registry */}
+                        <div style={{ flex: 1, padding: '6px 0' }}>
+                           <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/conviction-rank" 
+                                style={{ fontSize: dropDownSmallFont, color: '#E0E0E0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                Conviction Rank
+                           </Link>
+                           <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/ranking" 
+                                style={{ fontSize: dropDownSmallFont, color: '#E0E0E0' }}>
+                                Registry Rank
+                           </Link>
                         </div>
+
                       </div>
                     </li>
-                    
                 </ul>
             </div>
 
@@ -509,7 +517,6 @@ const Navbar = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-          {/* ... Drawer Content ... */}
           <div style={{
               position: 'absolute',
               right: '0',
@@ -556,11 +563,9 @@ const Navbar = () => {
 
           <div className="drawer-content px-4 pt-4 pb-5 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
               <div className="d-flex flex-column w-100 justify-content-start gap-2" style={{ marginTop: '-8px' }}>
-                  
-                  {/* MAIN DRAWER LIST */}
                   <div className="d-flex flex-column gap-2">
-                    {/* Home, Market, NGX, Mint */}
-                    {['Home', 'Market', 'NGX', 'Mint'].map((item) => (
+                    {/* Standard Items */}
+                    {menuItems.map((item) => (
                         <Link key={item} 
                                 href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                                 onClick={closeDrawer}
@@ -570,14 +575,23 @@ const Navbar = () => {
                             {item}
                         </Link>
                     ))}
-                    
-                    {/* REPLACED Contact with ChainFace here */}
+
+                    <Link href="/ngx" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                        <i className="bi bi-activity opacity-75" style={{ fontSize: '18px' }}></i>
+                        NGX
+                    </Link>
+
+                    <Link href="/mint" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                        <i className="bi bi-diamond opacity-75" style={{ fontSize: '18px' }}></i>
+                        Mint
+                    </Link>
+
+                    {/* ChainFace Replaced Contact Here */}
                     <Link href="/chainface" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
                         <i className="bi bi-person-badge opacity-75" style={{ fontSize: '18px' }}></i>
                         ChainFace
                     </Link>
 
-                    {/* NNM Concept & Subs */}
                     <Link href="/nnm-concept" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
                         <i className="bi bi-layers opacity-75" style={{ fontSize: '18px' }}></i>
                         NNM Concept
@@ -594,8 +608,8 @@ const Navbar = () => {
 
                   <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.03)', opacity: 1, marginTop: '6px', marginBottom: '6px' }} />
 
-                  {/* SECONDARY DRAWER LIST (Grey) - Added Contact Here */}
-                  <div className="d-flex flex-column gap-1"> 
+                  {/* Secondary Items (Contact moved here) */}
+                  <div className="d-flex flex-column gap-2">
                     {bottomDrawerItems.map((item) => (
                         <Link key={item.label} 
                                 href={item.href}
