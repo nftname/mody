@@ -66,7 +66,16 @@ const domain = { name: 'NNMMarketplace', version: '11', chainId: 137, verifyingC
 const types = { Offer: [{ name: 'bidder', type: 'address' }, { name: 'tokenId', type: 'uint256' }, { name: 'price', type: 'uint256' }, { name: 'expiration', type: 'uint256' }] } as const;
 
 const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
-const resolveIPFS = (uri: string) => uri?.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri || '';
+const resolveIPFS = (uri: string) => {
+    if (!uri) return '';
+    if (uri.includes('gateway.pinata.cloud')) {
+        return uri.replace('https://gateway.pinata.cloud/ipfs/', 'https://dweb.link/ipfs/');
+    }
+    if (uri.startsWith('ipfs://')) {
+        return uri.replace('ipfs://', 'https://dweb.link/ipfs/');
+    }
+    return uri;
+};
 const formatShortTime = (date: string) => {
     const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
     if (diff < 60) return `${diff}s`; if (diff < 3600) return `${Math.floor(diff / 60)}m`; if (diff < 86400) return `${Math.floor(diff / 3600)}h`; return `${Math.floor(diff / 86400)}d`;
