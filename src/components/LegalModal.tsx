@@ -207,6 +207,15 @@ export default function LegalModal() {
             </ul>
             <p className="mb-3">This affects UI only; the on-chain token remains immutable.</p>
 
+            <div style={{ height: '1px', backgroundColor: '#333', margin: '12px 0' }}></div>
+
+            <h6 className="fw-bold mt-3 mb-2" style={{ fontSize: '13px', fontWeight: '600', color: '#E6E8EA' }}>IV. CHAINFACE PROTOCOL</h6>
+
+            <p className="mb-1" style={{ fontWeight: '500', color: '#E6E8EA' }}>15. FULL AUTONOMY AND ZERO LIABILITY</p>
+            <p className="mb-3">
+              By using this website and the ChainFace service, you acknowledge and agree that you have full control over your digital identity, wallet connections, and transactions. ChainFace does not hold, manage, or have access to your funds, personal assets, or any private keys. All interactions are peer-to-peer, and you are solely responsible for any decisions, payments, or transfers made through your ChainFace page. ChainFace provides the platform as-is for identity display and interaction purposes only. Use of the service constitutes your acceptance of zero liability on ChainFace’s part and guarantees complete autonomy and privacy for all users.
+            </p>
+
             <p className="mt-4 mb-0" style={{ fontSize: '10px', color: '#687080' }}>
               <strong style={{ fontWeight: '500', color: '#848E9C' }}>MODIFICATIONS:</strong> NNM may update these terms. Continued use constitutes acceptance.
             </p>

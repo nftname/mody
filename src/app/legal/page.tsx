@@ -246,6 +246,19 @@ export default function LegalPage() {
                 </div>
             </section>
 
+            {/* SECTION IV - CHAINFACE (NEW) */}
+            <section className="mb-5">
+                <h2 className="section-title mb-4">IV. CHAINFACE PROTOCOL</h2>
+                
+                {/* 15 - NEW */}
+                <div className="term-block mb-4">
+                    <h3 className="term-heading">15. FULL AUTONOMY AND ZERO LIABILITY</h3>
+                    <p className="term-text">
+                        By using this website and the ChainFace service, you acknowledge and agree that you have full control over your digital identity, wallet connections, and transactions. ChainFace does not hold, manage, or have access to your funds, personal assets, or any private keys. All interactions are peer-to-peer, and you are solely responsible for any decisions, payments, or transfers made through your ChainFace page. ChainFace provides the platform as-is for identity display and interaction purposes only. Use of the service constitutes your acceptance of zero liability on ChainFace’s part and guarantees complete autonomy and privacy for all users.
+                    </p>
+                </div>
+            </section>
+
             <footer className="mt-5 pt-4 border-top border-secondary border-opacity-25 mb-5">
               <p style={{ fontSize: '13px', color: '#687080', fontStyle: 'italic' }}>
                 <strong style={{ color: TEXT_OFF_WHITE }}>MODIFICATIONS:</strong> NNM may update these terms. Continued use constitutes acceptance.
