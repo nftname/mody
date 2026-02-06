@@ -11,8 +11,10 @@ const Navbar = () => {
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+  // State for Dropdowns
   const [isNNMConceptOpen, setIsNNMConceptOpen] = useState(false);
+  const [isNGXOpen, setIsNGXOpen] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState('');
   
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -41,8 +43,8 @@ const Navbar = () => {
     setIsDrawerOpen(false);
     setDrawerTranslate(0);
     setIsMobileSearchOpen(false);
-    setIsInsightsOpen(false);
     setIsNNMConceptOpen(false);
+    setIsNGXOpen(false);
   }, [pathname]);
 
   const toggleDrawer = () => {
@@ -62,8 +64,8 @@ const Navbar = () => {
         router.push('/dashboard');
     }
     closeDrawer(); 
-    setIsInsightsOpen(false);
     setIsNNMConceptOpen(false);
+    setIsNGXOpen(false);
   };
 
   const handlePortfolioClick = (e: React.MouseEvent) => {
@@ -114,6 +116,10 @@ const Navbar = () => {
 
   const elementHeight = '29px'; 
   const elementFontSize = '11px';
+  // New Font Size for Desktop Links (10% smaller than 13px -> ~11.7px)
+  const navLinkFontSize = '11.7px'; 
+  // New Font Size for Mega Menu (20% smaller -> ~10.4px)
+  const megaMenuFontSize = '10.5px';
 
   const customDisconnectStyle = {
     background: 'transparent',
@@ -164,23 +170,27 @@ const Navbar = () => {
     height: '23px', 
   };
 
+  // Updated Menu Icons for Drawer
   const menuIcons: { [key: string]: string } = {
     'Home': 'bi-house-door',
     'Market': 'bi-shop',
     'NGX': 'bi-activity',
     'Mint': 'bi-diamond',
+    'ChainFace': 'bi-person-badge', // New Icon for ChainFace
     'NNM Concept': 'bi-layers'
   };
 
-  const menuItems = ['Home', 'Market', 'NGX', 'Mint'];
+  // Base items for mapping (Desktop logic handles them individually now)
+  const simpleMenuItems = ['Home', 'Market'];
 
-  // ✅ القائمة السفلية المحدثة - Blog في النهاية
+  // ✅ القائمة السفلية المحدثة - Added Contact here
   const bottomDrawerItems = [
     { label: 'News & Updates', href: '/news', icon: 'bi-newspaper' },
     { label: 'Market Indices', href: '/market-indices', icon: 'bi-graph-up-arrow' },
     { label: 'Affiliate Program', href: '/affiliate', icon: 'bi-briefcase' },
     { label: 'Rankings', href: '/ranking', icon: 'bi-trophy' },
-    { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' }
+    { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' },
+    { label: 'Contact', href: '/contact', icon: 'bi-chat-left-text' } // Moved here
   ];
 
   const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
@@ -306,101 +316,46 @@ const Navbar = () => {
         {/* DESKTOP CONTENT */}
         <div className="d-none d-lg-flex flex-grow-1 align-items-center justify-content-between" id="desktopNav">
             
-            {/* Desktop Links */}
+            {/* Desktop Links - Surgical Precision Layout */}
             <div className="d-flex align-items-center" style={{ flexShrink: 1, minWidth: 0, paddingTop: '5px' }}> 
                 <ul className="navbar-nav mb-2 mb-lg-0 d-flex flex-row align-items-center" style={{ gap: '18px' }}>
-                    {menuItems.map((item) => (
+                    
+                    {/* 1. Home & Market */}
+                    {simpleMenuItems.map((item) => (
                         <li className="nav-item" key={item}>
                             <Link 
-                                href={item === 'Portfolio' ? '/dashboard' : (item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`)}
+                                href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                                 onClick={(e) => handleNavClick(item, e)}
                                 className={`nav-link fw-medium desktop-nav-link ${pathname === (item === 'Home' ? '/' : `/${item.toLowerCase()}`) ? 'active' : ''}`}
-                                style={{ fontSize: '13px', whiteSpace: 'nowrap' }} 
+                                style={{ fontSize: navLinkFontSize, whiteSpace: 'nowrap' }} 
                             >
                                 {item}
                             </Link>
                         </li>
                     ))}
-                    
-                    {/* NNM Concept Dropdown */}
+
+                    {/* 2. NGX Dropdown (New) */}
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
-                        onMouseEnter={() => setIsNNMConceptOpen(true)}
-                        onMouseLeave={() => setIsNNMConceptOpen(false)}>
+                        onMouseEnter={() => setIsNGXOpen(true)}
+                        onMouseLeave={() => setIsNGXOpen(false)}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Link 
-                          href="/nnm-concept"
-                          className={`nav-link fw-medium shadow-none desktop-nav-link`}
-                          style={{ fontSize: '13px', whiteSpace: 'nowrap', padding: '0.5rem 0' }}
+                          href="/ngx"
+                          className={`nav-link fw-medium shadow-none desktop-nav-link ${pathname === '/ngx' ? 'active' : ''}`}
+                          style={{ fontSize: navLinkFontSize, whiteSpace: 'nowrap', padding: '0.5rem 0' }}
                         >
-                          NNM Concept
+                          NGX
                         </Link>
                         <button 
-                          onClick={(e) => { e.preventDefault(); setIsNNMConceptOpen(!isNNMConceptOpen); }}
+                          onClick={(e) => { e.preventDefault(); setIsNGXOpen(!isNGXOpen); }}
                           className="btn p-0 border-0 bg-transparent"
                           style={{ fontSize: '9px', color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                          title="Toggle dropdown"
                         >
                           <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
                         </button>
                       </div>
                       
-                      <ul className={`dropdown-menu shadow-lg ${isNNMConceptOpen ? 'show' : ''}`} 
-                          style={{ 
-                              position: 'absolute',
-                              top: '100%',
-                              left: '0',
-                              backgroundColor: dropdownColor, 
-                              border: `1px solid ${subtleBorder}`, 
-                              minWidth: '180px', 
-                              marginTop: '0px', 
-                              paddingTop: '8px', 
-                              paddingBottom: '8px',
-                              borderRadius: '8px'
-                          }}>
-                        {[
-                          { label: 'How it Works', href: '/how-it-works' },
-                          { label: 'Conviction Rank', href: '/conviction-rank' },
-                          { label: 'Registry Rank', href: '/ranking' }
-                        ].map((subItem, idx, arr) => (
-                            <li key={subItem.label}>
-                                <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href={subItem.href} 
-                                    style={{ 
-                                        fontSize: '13px', 
-                                        transition: '0.2s', 
-                                        color: '#E0E0E0',
-                                        borderBottom: idx !== arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
-                                    }} 
-                                >
-                                    {subItem.label}
-                                </Link>
-                            </li>
-                        ))}
-                      </ul>
-                    </li>
-                    
-                    {/* Insights Dropdown */}
-                    <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
-                        onMouseEnter={() => setIsInsightsOpen(true)}
-                        onMouseLeave={() => setIsInsightsOpen(false)}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <a 
-                          href="/market-indices"
-                          className={`nav-link fw-medium shadow-none desktop-nav-link`}
-                          style={{ fontSize: '13px', whiteSpace: 'nowrap', padding: '0.5rem 0', textDecoration: 'none', color: 'inherit' }}
-                        >
-                          Insights
-                        </a>
-                        <button 
-                          onClick={(e) => { e.preventDefault(); setIsInsightsOpen(!isInsightsOpen); }}
-                          className="btn p-0 border-0 bg-transparent"
-                          style={{ fontSize: '9px', color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                          title="Toggle dropdown"
-                        >
-                          <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
-                        </button>
-                      </div>
-                      
-                      <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
+                      <ul className={`dropdown-menu shadow-lg ${isNGXOpen ? 'show' : ''}`} 
                           style={{ 
                               position: 'absolute',
                               top: '100%',
@@ -414,13 +369,13 @@ const Navbar = () => {
                               borderRadius: '8px'
                           }}>
                         {[
-                          { label: 'Market Indices', href: '/market-indices' },
-                          { label: 'Contact', href: '/contact' }
+                          { label: 'NGX', href: '/ngx' },
+                          { label: 'Market Indices', href: '/market-indices' }
                         ].map((subItem, idx, arr) => (
                             <li key={subItem.label}>
                                 <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href={subItem.href} 
                                     style={{ 
-                                        fontSize: '13px', 
+                                        fontSize: navLinkFontSize, 
                                         transition: '0.2s', 
                                         color: '#E0E0E0',
                                         borderBottom: idx !== arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
@@ -432,6 +387,91 @@ const Navbar = () => {
                         ))}
                       </ul>
                     </li>
+
+                    {/* 3. Mint */}
+                    <li className="nav-item">
+                        <Link 
+                            href="/mint"
+                            onClick={(e) => handleNavClick('Mint', e)}
+                            className={`nav-link fw-medium desktop-nav-link ${pathname === '/mint' ? 'active' : ''}`}
+                            style={{ fontSize: navLinkFontSize, whiteSpace: 'nowrap' }} 
+                        >
+                            Mint
+                        </Link>
+                    </li>
+
+                    {/* 4. ChainFace (New Section inserted here) */}
+                    <li className="nav-item">
+                        <Link 
+                            href="/chainface"
+                            onClick={(e) => handleNavClick('ChainFace', e)}
+                            className={`nav-link fw-medium desktop-nav-link ${pathname === '/chainface' ? 'active' : ''}`}
+                            style={{ fontSize: navLinkFontSize, whiteSpace: 'nowrap' }} 
+                        >
+                            ChainFace
+                        </Link>
+                    </li>
+                    
+                    {/* 5. NNM Concept Dropdown (2-Column Layout) */}
+                    <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
+                        onMouseEnter={() => setIsNNMConceptOpen(true)}
+                        onMouseLeave={() => setIsNNMConceptOpen(false)}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Link 
+                          href="/nnm-concept"
+                          className={`nav-link fw-medium shadow-none desktop-nav-link`}
+                          style={{ fontSize: navLinkFontSize, whiteSpace: 'nowrap', padding: '0.5rem 0' }}
+                        >
+                          NNM Concept
+                        </Link>
+                        <button 
+                          onClick={(e) => { e.preventDefault(); setIsNNMConceptOpen(!isNNMConceptOpen); }}
+                          className="btn p-0 border-0 bg-transparent"
+                          style={{ fontSize: '9px', color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        >
+                          <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
+                        </button>
+                      </div>
+                      
+                      {/* Mega Menu Dropdown */}
+                      <div className={`dropdown-menu shadow-lg ${isNNMConceptOpen ? 'show' : ''}`} 
+                          style={{ 
+                              position: 'absolute',
+                              top: '100%',
+                              left: '0',
+                              backgroundColor: dropdownColor, 
+                              border: `1px solid ${subtleBorder}`, 
+                              minWidth: '280px', // Wider for 2 columns
+                              marginTop: '0px', 
+                              padding: '0',
+                              borderRadius: '8px',
+                              display: isNNMConceptOpen ? 'flex' : 'none',
+                              flexDirection: 'row',
+                              overflow: 'hidden'
+                          }}>
+                        
+                        {/* Left Column: Conviction & Registry */}
+                        <div style={{ width: '50%', padding: '8px 0', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                            <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/conviction-rank" style={{ fontSize: megaMenuFontSize, color: '#E0E0E0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                Conviction Rank
+                            </Link>
+                            <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/ranking" style={{ fontSize: megaMenuFontSize, color: '#E0E0E0' }}>
+                                Registry Rank
+                            </Link>
+                        </div>
+
+                        {/* Right Column: NNM Concept & How it works */}
+                        <div style={{ width: '50%', padding: '8px 0' }}>
+                             <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/nnm-concept" style={{ fontSize: megaMenuFontSize, color: '#E0E0E0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                NNM Concept
+                            </Link>
+                            <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/how-it-works" style={{ fontSize: megaMenuFontSize, color: '#E0E0E0' }}>
+                                How it Works
+                            </Link>
+                        </div>
+                      </div>
+                    </li>
+                    
                 </ul>
             </div>
 
@@ -516,8 +556,11 @@ const Navbar = () => {
 
           <div className="drawer-content px-4 pt-4 pb-5 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
               <div className="d-flex flex-column w-100 justify-content-start gap-2" style={{ marginTop: '-8px' }}>
+                  
+                  {/* MAIN DRAWER LIST */}
                   <div className="d-flex flex-column gap-2">
-                    {menuItems.map((item) => (
+                    {/* Home, Market, NGX, Mint */}
+                    {['Home', 'Market', 'NGX', 'Mint'].map((item) => (
                         <Link key={item} 
                                 href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                                 onClick={closeDrawer}
@@ -527,6 +570,14 @@ const Navbar = () => {
                             {item}
                         </Link>
                     ))}
+                    
+                    {/* REPLACED Contact with ChainFace here */}
+                    <Link href="/chainface" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                        <i className="bi bi-person-badge opacity-75" style={{ fontSize: '18px' }}></i>
+                        ChainFace
+                    </Link>
+
+                    {/* NNM Concept & Subs */}
                     <Link href="/nnm-concept" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
                         <i className="bi bi-layers opacity-75" style={{ fontSize: '18px' }}></i>
                         NNM Concept
@@ -539,16 +590,12 @@ const Navbar = () => {
                         <i className="bi bi-trophy opacity-75" style={{ fontSize: '18px' }}></i>
                         Conviction Rank
                     </Link>
-                    <Link href="/contact" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
-                        <i className="bi bi-chat-left-text opacity-75" style={{ fontSize: '18px' }}></i>
-                        Contact
-                    </Link>
                   </div>
 
                   <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.03)', opacity: 1, marginTop: '6px', marginBottom: '6px' }} />
 
-                  {/* ✅ هنا التعديل الذي طلبته: استخدام القائمة الجديدة بالأسماء والروابط الصحيحة */}
-                  <div className="d-flex flex-column gap-2">
+                  {/* SECONDARY DRAWER LIST (Grey) - Added Contact Here */}
+                  <div className="d-flex flex-column gap-1"> 
                     {bottomDrawerItems.map((item) => (
                         <Link key={item.label} 
                                 href={item.href}
