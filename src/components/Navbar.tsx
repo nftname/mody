@@ -365,7 +365,7 @@ const Navbar = () => {
                               left: '0',
                               backgroundColor: dropdownColor, 
                               border: `1px solid ${subtleBorder}`, 
-                              minWidth: '160px', 
+                              minWidth: '120px', 
                               marginTop: '0px', 
                               paddingTop: '8px', 
                               paddingBottom: '8px',
@@ -445,7 +445,7 @@ const Navbar = () => {
                               left: '0',
                               backgroundColor: dropdownColor, 
                               border: `1px solid ${subtleBorder}`, 
-                              minWidth: '320px', 
+                              minWidth: '240px', 
                               marginTop: '0px', 
                               padding: '0',
                               borderRadius: '8px',
@@ -625,13 +625,35 @@ const Navbar = () => {
 
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-5">
                   <div className="d-flex justify-content-start align-items-center px-2" style={{ gap: '25px', paddingRight: '80px', width: '100%' }}>
-                      <i className="bi bi-twitter-x" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
-                      <i className="bi bi-facebook" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
-                      <i className="bi bi-discord" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
-                      <i className="bi bi-telegram" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
-                      <i className="bi bi-instagram" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
+                      
+                      {/* X (Twitter) - Updated to Profile Link */}
+                      <a href="https://x.com/nnmmarket" target="_blank" rel="noopener noreferrer">
+                        <i className="bi bi-twitter-x" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
+                      </a>
+
+                      {/* Facebook */}
+                      <a href="https://www.facebook.com/profile.php?id=61586895007931" target="_blank" rel="noopener noreferrer">
+                        <i className="bi bi-facebook" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
+                      </a>
+
+                      {/* Discord */}
+                      <a href="https://discord.gg/gNR8zwgtpc" target="_blank" rel="noopener noreferrer">
+                        <i className="bi bi-discord" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
+                      </a>
+
+                      {/* Medium (Replaces Telegram) */}
+                      <a href="https://medium.com/@nftnnmmarket" target="_blank" rel="noopener noreferrer">
+                        <i className="bi bi-medium" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
+                      </a>
+
+                      {/* Instagram */}
+                      <a href="https://www.instagram.com/NNM_Assets" target="_blank" rel="noopener noreferrer">
+                        <i className="bi bi-instagram" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
+                      </a>
+                      
                   </div>
               </div>
+
           </div>
       </div>
 

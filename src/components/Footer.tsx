@@ -2,9 +2,11 @@
 import Link from 'next/link';
 
 const Footer = () => {
-  // ✅ إعدادات الأحجام الموحدة (ثوابت لضمان الدقة)
-  const headerFontSize = '14px'; // للعناوين الرئيسية الأربعة
-  const linkFontSize = '12px';   // لجميع الفروع والروابط بلا استثناء
+  // ✅ فك الارتباط: متغيرات منفصلة تماماً للتحكم الدقيق
+  const headerFontSize = '14px';       // حجم العناوين الرئيسية
+  
+  const socialFontSize = '13px';       // 1. حجم خط روابط التواصل الاجتماعي (ثابت)
+  const standardLinkFontSize = '11px'; // 2. حجم خط الروابط الـ 12 الأخرى (تم تصغيره كما طلبت)
   
   const linkColor = 'rgba(255, 255, 255, 0.5)';
   const linkHoverColor = '#FCD535';
@@ -14,27 +16,27 @@ const Footer = () => {
         <div className="container">
             <div className="row g-3">
                 
-                {/* SECTION 1: COMMUNITY */}
+                {/* SECTION 1: COMMUNITY (SOCIALS) */}
                 <div className="col-6 col-md-3 pe-md-2" style={{ borderRight: '1px solid rgba(255, 255, 255, 0.05)' }}>
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Community</h6>
                     <div className="d-flex flex-column gap-2">
-                        {/* 1. X (Twitter) */}
+                        {/* 1. X (Twitter) - Correct Link */}
                         <a href="https://x.com/nnmmarket" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-twitter-x"></i><span>Twitter</span>
                         </a>
-                        {/* 2. Discord */}
-                        <a href="#" className="footer-social-row">
+                        {/* 2. Discord - Correct Link */}
+                        <a href="https://discord.gg/gNR8zwgtpc" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-discord"></i><span>Discord</span>
                         </a>
-                        {/* 3. Medium */}
+                        {/* 3. Medium - Correct Link */}
                         <a href="https://medium.com/@nftnnmmarket" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-medium"></i><span>Medium</span>
                         </a>
-                        {/* 4. Facebook */}
-                        <a href="#" className="footer-social-row">
+                        {/* 4. Facebook - Correct Link */}
+                        <a href="https://www.facebook.com/profile.php?id=61586895007931" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-facebook"></i><span>Facebook</span>
                         </a>
-                        {/* 5. Instagram */}
+                        {/* 5. Instagram - Correct Link */}
                         <a href="https://www.instagram.com/NNM_Assets" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-instagram"></i><span>Instagram</span>
                         </a>
@@ -84,22 +86,22 @@ const Footer = () => {
         </div>
 
         <style jsx>{`
-            /* Social Rows Style */
+            /* Social Rows Style (مفصولة تماماً) */
             .footer-social-row { 
                 display: flex; align-items: center; gap: 10px; 
                 color: ${linkColor}; 
                 text-decoration: none; 
-                font-size: ${linkFontSize}; /* تم توحيده: 10px */
+                font-size: ${socialFontSize}; /* يأخذ من متغير السوشيال فقط */
                 transition: all 0.2s ease; 
             }
             .footer-social-row:hover { color: #fff; transform: translateX(5px); }
-            .footer-social-row i { color: ${linkHoverColor}; font-size: 13px; } 
+            .footer-social-row i { color: ${linkHoverColor}; font-size: 14px; } 
             
-            /* General Links Style */
+            /* General Links Style (للأقسام الـ 12 الأخرى) */
             .footer-link-item { 
                 text-decoration: none; 
                 color: ${linkColor}; 
-                ​font-size: 16px !important; /* تم توحيده: 10px */
+                font-size: ${standardLinkFontSize}; /* يأخذ من المتغير المصغر */
                 transition: color 0.2s; 
             }
             .footer-link-item:hover { color: ${linkHoverColor}; }
