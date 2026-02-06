@@ -7,15 +7,21 @@ const supabaseAdmin = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// دالة تسريع الصور (تحويل Pinata إلى بوابة سريعة)
+// ✅ دالة تسريع الصور (تم التعديل: استخدام dweb.link بدلاً من cloudflare المحظور)
 const optimizeImage = (url: string) => {
     if (!url) return null;
+    
+    // إذا كان الرابط من Pinata (التي قد تكون بطيئة)، نحوله إلى dweb.link
     if (url.includes('gateway.pinata.cloud')) {
-        return url.replace('https://gateway.pinata.cloud/ipfs/', 'https://cloudflare-ipfs.com/ipfs/');
+        return url.replace('https://gateway.pinata.cloud/ipfs/', 'https://dweb.link/ipfs/');
     }
+    
+    // التعامل مع روابط ipfs:// المباشرة
     if (url.startsWith('ipfs://')) {
-        return url.replace('ipfs://', 'https://cloudflare-ipfs.com/ipfs/');
+        return url.replace('ipfs://', 'https://dweb.link/ipfs/');
     }
+    
+    // إذا كان الرابط سليماً ولا يحتاج تعديل
     return url;
 };
 
@@ -37,7 +43,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Asset not found in DB' }, { status: 404 });
         }
 
-        // تحسين رابط الصورة قبل إرساله للموقع
+        // تحسين رابط الصورة قبل إرساله للموقع باستخدام البوابة الجديدة
         const optimizedImage = optimizeImage(data.image_url);
 
         // إرجاع البيانات نظيفة وجاهزة
@@ -53,6 +59,3 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
 }
-
-
-
