@@ -71,7 +71,7 @@ export default function NNMConceptPage() {
           data: {
             labels: ['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026','2027','2028','2029','2030'],
             datasets: [{
-              label: 'Nexus Asset Value', // تم التعديل
+              label: 'Nexus Asset Value', 
               data: [0.1, 0.3, 0.8, 1.5, 3.2, 6, 10, 15, 20, 35, 50, 70, 90, 120],
               borderColor: GOLD_BASE,
               backgroundColor: 'rgba(240, 196, 32, 0.08)', 
@@ -244,9 +244,10 @@ export default function NNMConceptPage() {
       {/* --- HEADER SECTION --- */}
       <section className="container-fluid px-0 pt-5" style={{ paddingBottom: '60px' }}>
           <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
-              <div className="text-start text-lg-center mx-auto">
+              {/* ✅ ALIGNMENT CHANGE: text-start instead of text-center */}
+              <div className="text-start mx-auto">
                   
-                  {/* Main Title - تم التعديل */}
+                  {/* Main Title */}
                     <h1 style={{ 
                       fontFamily: '"Inter", "Segoe UI", sans-serif', 
                       fontSize: '1.5rem', 
@@ -259,14 +260,13 @@ export default function NNMConceptPage() {
                       NNM — The <span style={{ color: GOLD_MEDIUM }}>Nexus</span> <span style={{ color: TEXT_OFF_WHITE }}>Digital Name Asset Concept</span>
                     </h1>
                   
-                  {/* Main Subtext - تم التعديل وإزالة اللون الذهبي الزائد */}
+                  {/* Main Subtext */}
                     <p style={{ 
                       marginTop: '15px', 
                       marginBottom: 0,
                       maxWidth: '900px',
                       lineHeight: '1.6',
-                      marginLeft: 'auto', // Centering on Desktop
-                      marginRight: 'auto', // Centering on Desktop
+                      // ✅ ALIGNMENT CHANGE: Removed auto margins for left alignment
                     }}>
                       The <span className="fw-bold" style={{ color: TEXT_OFF_WHITE }}>Nexus Asset</span> represents the ultimate tier of digital name ownership, far beyond standard tokens. Each <span className="fw-bold" style={{ color: TEXT_OFF_WHITE }}>Nexus Name</span> establishes immutable priority within the Web3 ecosystem, securing a permanent place in digital history. As we approach 2026, these assets are poised to become the cornerstone of digital identity and value.
                   </p>
@@ -282,7 +282,7 @@ export default function NNMConceptPage() {
               {/* --- LEFT COLUMN (50%) --- */}
               <div className="col-12 col-lg-6">
                 
-                {/* Authority Section - تم التعديل */}
+                {/* Authority Section */}
                 <div className="mb-5">
                   <h2 className="text-white h5 mb-3 fw-bold font-imperium" style={{ color: GOLD_MEDIUM }}>Authority & Scarcity</h2>
                   <p style={{ lineHeight: '1.7', maxWidth: '95%' }}>
@@ -290,7 +290,7 @@ export default function NNMConceptPage() {
                   </p>
                 </div>
 
-                {/* Why Nexus Stands Apart - تم التعديل */}
+                {/* Why Nexus Stands Apart */}
                 <div className="mb-5">
                    <h2 className="h4 mb-4 fw-bold font-imperium text-white" style={{ color: TEXT_OFF_WHITE }}>Why Nexus Stands Apart</h2>
                    
@@ -314,16 +314,9 @@ export default function NNMConceptPage() {
                 <div className="info-card-static">
                   <h3 className="text-white h6 mb-3 fw-bold border-bottom border-secondary pb-2" style={{ color: TEXT_OFF_WHITE }}>Asset Class Hierarchy</h3>
                   <ul className="list-unstyled mb-0">
-                    {/* 1. Digital Name Assets (Gold) */}
                     <li className="mb-2"><span style={{ color: GOLD_MEDIUM, fontWeight: 'bold' }}>- Digital Name Assets — </span> Immutable Priority</li>
-                    
-                    {/* 2. Art NFTs */}
                     <li className="mb-2"><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Art NFTs — </span> Digital Collectibles</li>
-                    
-                    {/* 3. Gaming NFTs */}
                     <li className="mb-2"><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Gaming NFTs — </span> Interactive Assets</li>
-                    
-                    {/* 4. Utility NFTs */}
                     <li><span className="text-white" style={{ color: TEXT_OFF_WHITE }}>- Utility NFTs — </span> Access Mechanisms</li>
                   </ul>
                 </div>
@@ -332,7 +325,7 @@ export default function NNMConceptPage() {
               {/* --- RIGHT COLUMN (50%) --- */}
               <div className="col-12 col-lg-6">
                 
-                {/* Title Above Chart - تم التعديل */}
+                {/* Title Above Chart */}
                 <div className="mb-3">
                     <h3 className="text-white h5 mb-2 font-imperium fw-bold" style={{ color: TEXT_OFF_WHITE }}>Valuation Trajectory (2017–2030)</h3>
                     <p style={{ lineHeight: '1.5' }}>
@@ -349,9 +342,19 @@ export default function NNMConceptPage() {
 
                 {/* Text OUTSIDE and BELOW Chart */}
                 <div className="ps-2">
-                    <p className="mt-2 mb-0" style={{ fontStyle: 'italic', lineHeight: '1.5' }}>
+                    <p className="mt-2 mb-4" style={{ fontStyle: 'italic', lineHeight: '1.5' }}>
                         Historical trends are presented for contextual reference only. Projections are illustrative and hypothetical and do not imply guaranteed outcomes.
                     </p>
+
+                    {/* ✅ NEW SECTION: ChainFace Integration */}
+                    <div className="mt-5 mb-4 pt-4 border-top border-secondary border-opacity-25">
+                        <h3 className="text-white h5 mb-3 font-imperium fw-bold" style={{ color: TEXT_OFF_WHITE }}>
+                            Your <span style={{ color: '#fff', fontWeight: '800' }}>ChainFace</span> Identity
+                        </h3>
+                        <p style={{ lineHeight: '1.6' }}>
+                            Claim your unique NNM name and unlock your <span style={{ color: '#fff', fontWeight: 'bold' }}>ChainFace</span> — your lifetime blockchain identity with 100,000 Confet points, five stars, and free verification. Your online presence is no longer optional — it’s essential for the future.
+                        </p>
+                    </div>
                 
                 </div>
 

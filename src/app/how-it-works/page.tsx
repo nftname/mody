@@ -257,19 +257,33 @@ export default function HowItWorksPage() {
               </p>
             </section>
 
-             {/* --- NEW SECTION: Conviction Rank --- */}
+             {/* --- Conviction Rank Section (Updated with Inline Link) --- */}
             <section className="mb-5 ps-lg-3">
               <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
                 Conviction Rank — Measuring Belief, Not Hype
               </h2>
               <p style={{ lineHeight: '1.6', marginBottom: '14px' }}>
                 Most NFT marketplaces focus on price and volume. But Conviction Rank shows which digital names are truly backed by verified supporters. Each supporter signals real belief, creating a transparent layer of trust across the market. Conviction Rank explains why price moves before it moves and highlights assets with lasting confidence.
+                <Link href="/conviction-rank" className="text-decoration-none fw-bold ms-2" style={{ color: '#FDB931', borderBottom: '1px solid #FDB931' }}>
+                      Learn more about Conviction Rank →
+                </Link>
+              </p>
+            </section>
+
+             {/* --- NEW SECTION: ChainFace --- */}
+             <section className="mb-5 ps-lg-3">
+              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+                ChainFace — Your <span style={{ color: GOLD_MEDIUM }}>Personal Blockchain Identity</span>
+              </h2>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px' }}>
+                By claiming your unique name in the NNM Registry, you instantly gain lifetime membership in ChainFace — your personal blockchain identity visible to the world, complete with 100,000 Confet points, five stars, and free verification.
               </p>
               <p style={{ lineHeight: '1.6' }}>
-                  <Link href="/conviction-rank" className="text-decoration-none fw-bold" style={{ color: '#FDB931', borderBottom: '1px solid #FDB931' }}>
-                      Learn more about Conviction Rank →
-                  </Link>
-             </p>
+                Being present on the internet is no longer a luxury — it is essential for your future. Secure your place now and establish your identity in the blockchain era.
+                <Link href="/chainface" className="text-decoration-none fw-bold ms-2" style={{ color: '#FDB931', borderBottom: '1px solid #FDB931' }}>
+                    Learn more about ChainFace →
+                </Link>
+              </p>
             </section>
             {/* --- END NEW SECTION --- */}
 
