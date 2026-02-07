@@ -212,7 +212,7 @@ const Navbar = () => {
   const menuIcons: { [key: string]: string } = {
     'Home': 'bi-house-door',
     'Market': 'bi-shop',
-    'NGX': 'bi-activity',
+    'NGX Index': 'bi-activity',
     'Mint': 'bi-diamond',
     'ChainFace': 'bi-person-badge', // New Icon
     'NNM Concept': 'bi-layers'
