@@ -2,11 +2,8 @@
 import Link from 'next/link';
 import React from 'react';
 
-// --- (1) ASSETS & ICONS ---
-
-// الشارة الذهبية (The Sovereign Badge)
 const GoldenCheckBadge = () => (
-    <svg width="24" height="24" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '8px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }}>
+    <svg width="28" height="28" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '10px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }}>
         <defs>
             <linearGradient id="goldBadgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#FFD700" />
@@ -18,18 +15,16 @@ const GoldenCheckBadge = () => (
     </svg>
 );
 
-// النجوم الخمسة (The Reputation)
 const FiveStars = () => (
-    <div style={{ display: 'flex', gap: '2px', marginTop: '4px' }}>
+    <div style={{ display: 'flex', gap: '4px', marginTop: '8px', justifyContent: 'center' }}>
         {[1, 2, 3, 4, 5].map((s) => (
-            <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F0C420" stroke="#B8860B" strokeWidth="1">
+            <svg key={s} width="18" height="18" viewBox="0 0 24 24" fill="#F0C420" stroke="#B8860B" strokeWidth="1">
                 <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
             </svg>
         ))}
     </div>
 );
 
-// أيقونات العملات (SVGs احترافية)
 const CryptoLogo = ({ type }: { type: string }) => {
     switch (type) {
         case 'BTC': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M22.6 14.2c.4-2.6-1.6-4-4.3-5l.9-3.5-2.1-.5-.8 3.4c-.6-.1-1.1-.3-1.7-.4l.9-3.5-2.1-.5-.9 3.6c-.5-.1-.9-.2-1.4-.3l-3-.8-.6 2.3s1.6.4 1.6.4c.9.2 1 .8 1 1.2l-1 4.1c.1 0 .2 0 .3.1-.1 0-.2 0-.3-.1l-1.4 5.6c-.1.3-.4.7-1 .6 0 0-1.6-.4-1.6-.4l-1.1 2.6 2.8.7c.5.1 1 .3 1.5.4l-.9 3.6 2.1.5.9-3.6c.6.1 1.1.3 1.7.4l-.9 3.6 2.1.5.9-3.5c3.6.7 6.4.4 7.6-2.9.9-2.7-.1-4.2-1.9-5.2 1.4-.3 2.4-1.2 2.7-3z" fill="#FFF"/></svg>;
@@ -59,63 +54,67 @@ export default function DemoProfilePage() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
 
-        /* الكرت المتداخل (The Identity Card) */
-        .chainface-card-container {
-            position: relative;
+        .hero-banner {
             width: 100%;
-            max-width: 600px; 
-            height: 320px; 
-            margin: -100px auto 0 auto; 
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.2);
-            z-index: 10;
-            background-color: #1a1a1a; 
-            /* هنا تم تعديل الامتداد إلى jpg */
-            background-image: url('/images/chainface-card-bg.jpg'); 
+            height: 280px;
+            background-image: url('/images/your-chainface.jpg');
             background-size: cover;
             background-position: center;
+            position: relative;
+        }
+        .hero-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4));
+        }
+
+        .identity-card-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 280px;
+            margin: -140px auto 0 auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.35);
+            border: 2px solid rgba(255,255,255,0.3);
+            z-index: 10;
+            background-color: #1a1a1a;
+            background-image: url('/images/chainface-card-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .card-content {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
+            text-align: center;
             color: white;
             z-index: 20;
-        }
-
-        .card-header {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            color: rgba(255,255,255,0.8);
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-            text-transform: uppercase;
+            margin-top: 60px; 
         }
 
         .card-name-row {
             display: flex;
             align-items: center;
+            justify-content: center;
         }
 
         .card-name {
             font-family: 'Satoshi', sans-serif;
-            font-size: 36px;
+            font-size: 42px;
             font-weight: 900;
             text-transform: uppercase;
             color: white;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            margin-right: 5px;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            letter-spacing: 1px;
         }
 
-        /* أزرار الدفع */
         .pay-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
-            max-width: 70%;
+            max-width: 700px;
             margin: 0 auto;
         }
 
@@ -138,7 +137,6 @@ export default function DemoProfilePage() {
             border-color: #ccc;
         }
 
-        /* الزر التسويقي السفلي */
         .marketing-btn {
             display: inline-flex;
             align-items: center;
@@ -159,116 +157,75 @@ export default function DemoProfilePage() {
         .marketing-btn:hover { transform: scale(1.02); }
 
         @media (max-width: 768px) {
-            .pay-grid { grid-template-columns: 1fr; max-width: 100%; }
-            .card-name { font-size: 28px; }
-            .chainface-card-container { width: 95%; height: 200px; margin-top: -50px; }
+            .hero-banner { height: 200px; }
+            .identity-card-container { max-width: 90%; height: 220px; margin: -100px auto 0 auto; }
+            .card-name { font-size: 32px; }
+            .card-content { margin-top: 40px; }
+            .pay-grid { grid-template-columns: 1fr; max-width: 90%; }
         }
       `}</style>
 
-      {/* --- (1) HERO BANNER --- */}
-      <div style={{ 
-          width: '100%', 
-          height: '350px',
-          position: 'relative',
-          overflow: 'hidden'
-      }}>
-          {/* هنا تم تعديل الامتداد إلى jpg */}
-          <img 
-            src="/images/your-chainface.jpg" 
-            alt="Cover" 
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-          />
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.2)' }}></div>
+      <div className="hero-banner">
+          <div className="hero-overlay"></div>
       </div>
 
-
-      {/* --- (2) THE IDENTITY CARD (Overlapping) --- */}
-      <div className="container" style={{ padding: '0 20px', position: 'relative' }}>
-          
-          <div className="chainface-card-container">
+      <div className="container-fluid" style={{ padding: '0', position: 'relative' }}>
+          <div className="identity-card-container">
               <div className="card-content">
-                  <div className="card-header">ChainFace</div>
-                  
                   <div className="card-name-row">
                       <span className="card-name">ALEXANDER</span>
                       <GoldenCheckBadge />
                   </div>
-                  
                   <FiveStars />
               </div>
           </div>
-
       </div>
 
-
-      {/* --- (3) PROFILE INFO & BIO --- */}
-      <div className="container" style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px', textAlign: 'center' }}>
+      <div className="container" style={{ maxWidth: '800px', margin: '60px auto', padding: '0 20px', textAlign: 'center' }}>
           
-          <h2 style={{ 
-              fontFamily: 'Satoshi, sans-serif', 
-              fontWeight: '700', 
-              fontSize: '22px', 
-              color: '#4A148C',
-              lineHeight: '1.4',
-              marginBottom: '10px'
-          }}>
+          <h2 style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: '700', fontSize: '24px', color: '#4A148C', lineHeight: '1.4', marginBottom: '15px' }}>
               Welcome to my sovereign territory on Web3. 
           </h2>
-          <p style={{ color: '#666', fontSize: '16px', maxWidth: '600px', margin: '0 auto 40px auto' }}>
+          <p style={{ color: '#666', fontSize: '17px', maxWidth: '650px', margin: '0 auto 40px auto', lineHeight: '1.6' }}>
               No intermediaries, no noise—just direct value and absolute ownership.
               <br/>
-              <span style={{ color: '#888', fontSize: '14px', marginTop: '10px', display: 'block' }}>
-                 Conviction: <strong>500,000</strong> 💎
+              <span style={{ color: '#888', fontSize: '15px', marginTop: '15px', display: 'block', fontWeight: '600' }}>
+                 Conviction: <strong style={{ color: '#4A148C' }}>500,000</strong> 💎
               </span>
           </p>
 
-
-          {/* --- (4) PAYMENT BUTTONS --- */}
           <div className="pay-grid">
               <PayButton type="BTC" name="Bitcoin" />
               <PayButton type="ETH" name="Ethereum" />
               <PayButton type="POLYGON" name="Polygon" />
-              
               <PayButton type="SOL" name="Solana" />
               <PayButton type="BNB" name="BNB Chain" />
               <PayButton type="USDT" name="Tether" />
           </div>
 
-          <p style={{ marginTop: '30px', fontSize: '12px', color: '#aaa', fontStyle: 'italic' }}>
+          <p style={{ marginTop: '30px', fontSize: '13px', color: '#aaa', fontStyle: 'italic' }}>
               We do not manage your money. We simply present your identity.
           </p>
 
       </div>
 
-
-        {/* --- (5) MARKETING FOOTER --- */}
-      <div style={{ 
-          marginTop: '60px', 
-          padding: '40px 20px', 
-          backgroundColor: '#fff', 
-          borderTop: '1px solid #eee',
-          textAlign: 'center'
-      }}>
-          <p style={{ fontFamily: 'Cinzel, serif', fontSize: '18px', color: '#111', marginBottom: '10px' }}>
+      <div style={{ marginTop: '80px', padding: '50px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
+          <p style={{ fontFamily: 'Cinzel, serif', fontSize: '20px', color: '#111', marginBottom: '10px', fontWeight: '700' }}>
               Ownership is the new status. Claim your sovereign asset now.
           </p>
           
-          {/* تم تصحيح justify-content إلى justifyContent */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
-              
-              <div style={{ display: 'flex', gap: '10px', color: '#ccc' }}>
-                  <i className="bi bi-hand-thumbs-up-fill" style={{ fontSize: '20px', cursor: 'pointer' }}></i>
-                  <i className="bi bi-hand-thumbs-down-fill" style={{ fontSize: '20px', cursor: 'pointer' }}></i>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', marginTop: '25px' }}>
+              <div style={{ display: 'flex', gap: '15px', color: '#ccc' }}>
+                  <i className="bi bi-hand-thumbs-up-fill" style={{ fontSize: '24px', cursor: 'pointer', transition: '0.2s' }}></i>
+                  <i className="bi bi-hand-thumbs-down-fill" style={{ fontSize: '24px', cursor: 'pointer' }}></i>
               </div>
 
               <Link href="/chainface" className="marketing-btn">
                   YOUR CHAINFACE
               </Link>
-
           </div>
       </div>
 
     </main>
   );
 }
-
