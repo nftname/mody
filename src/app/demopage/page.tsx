@@ -2,8 +2,7 @@
 import Link from 'next/link';
 import React from 'react';
 
-// --- Components (Scaled Down by 50%) ---
-
+// --- Components (Same as before) ---
 const GoldenCheckBadge = () => (
     <svg width="18" height="18" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '6px', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
         <defs>
@@ -56,36 +55,47 @@ export default function DemoProfilePage() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
 
-        /* حاوية الصفحة القياسية (Web Standard Container) */
+        /* حاوية الصفحة */
         .page-container {
-            max-width: 1000px;
+            width: 100%;
+            max-width: 1400px; /* نسمح بعرض كبير ليتناسب مع الصور العريضة */
             margin: 0 auto;
             position: relative;
-            padding: 0 15px;
         }
 
-        /* 1. البنر القياسي (Standard Banner) - ارتفاع 220 بكسل فقط */
-        .hero-banner {
+        /* 1. البنر الذكي (Smart Aspect Ratio Banner) */
+        .hero-banner-wrapper {
             width: 100%;
-            height: 220px; /* الارتفاع القياسي للبروفايلات */
-            background-image: url('/images/your-chainface.jpg');
-            background-size: 100% 100%; /* إجبار الصورة على الظهور بالكامل بدون قص */
-            background-position: center;
-            background-repeat: no-repeat;
             position: relative;
+            /* السحر هنا: هذا الصندوق سيأخذ دائماً نفس نسبة أبعاد صورتك (1280/3360 = 38.1%) */
+            padding-bottom: 38.09%; 
+            background-color: #000;
+            overflow: hidden;
         }
+        
+        .hero-banner-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* تضمن ظهور الصورة بالكامل دون قص */
+        }
+        
         .hero-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.2));
+            pointer-events: none;
         }
 
-        /* 2. الكرت الصغير (Identity Card) - تم التصغير 50% */
+        /* 2. الكرت الصغير (Identity Card) */
         .identity-card-container {
             position: relative;
-            width: 260px;  /* عرض صغير جداً ومناسب */
-            height: 140px; /* ارتفاع صغير */
-            margin-top: -70px; /* تداخل للنصف فقط */
-            margin-left: 20px; /* محاذاة لليسار */
+            width: 260px;
+            height: 140px;
+            /* نرفعه للأعلى ليتداخل مع البنر، القيمة تعتمد على حجم البنر المتغير */
+            margin-top: -70px; 
+            margin-left: 5%; /* مسافة من اليسار */
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
@@ -104,7 +114,7 @@ export default function DemoProfilePage() {
             text-align: center;
             color: white;
             z-index: 20;
-            margin-top: 15px; /* مسافة بسيطة من الأعلى داخل الكرت */
+            margin-top: 15px;
         }
 
         .card-name-row {
@@ -115,7 +125,7 @@ export default function DemoProfilePage() {
 
         .card-name {
             font-family: 'Satoshi', sans-serif;
-            font-size: 20px; /* خط صغير وأنيق */
+            font-size: 20px;
             font-weight: 900;
             text-transform: uppercase;
             color: white;
@@ -171,21 +181,25 @@ export default function DemoProfilePage() {
         .marketing-btn:hover { transform: scale(1.02); }
 
         @media (max-width: 768px) {
-            .hero-banner { height: 160px; } /* أصغر للجوال */
             .identity-card-container { margin: -50px auto 0 auto; } /* في الوسط للجوال */
             .pay-grid { grid-template-columns: 1fr; max-width: 100%; }
         }
       `}</style>
 
-      {/* 1. Hero Banner */}
-      <div className="hero-banner">
+      {/* 1. Hero Banner Container */}
+      <div className="hero-banner-wrapper">
+          <img 
+            src="/images/your-chainface.jpg" 
+            alt="ChainFace Cover" 
+            className="hero-banner-img"
+          />
           <div className="hero-overlay"></div>
       </div>
 
       {/* 2. Page Container (Holds Card & Content) */}
       <div className="page-container">
           
-          {/* Identity Card (Left Aligned, Small) */}
+          {/* Identity Card */}
           <div className="identity-card-container">
               <div className="card-content">
                   <div className="card-name-row">
@@ -197,7 +211,7 @@ export default function DemoProfilePage() {
           </div>
 
           {/* 3. Main Content */}
-          <div style={{ maxWidth: '700px', margin: '30px auto', textAlign: 'center' }}>
+          <div style={{ maxWidth: '700px', margin: '30px auto', textAlign: 'center', padding: '0 20px' }}>
               
               <h2 style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: '700', fontSize: '22px', color: '#4A148C', marginBottom: '10px' }}>
                   Welcome to my sovereign territory on Web3. 
