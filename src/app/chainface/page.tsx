@@ -45,9 +45,9 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- FIX 2 & 3: 7-Pointed Star (Geometric) + Reduced Size (11px) ---
+// --- FIX: TRUE 7-Pointed Star + Reduced Size (10px) ---
 const SevenPointStar = ({ style }: { style?: React.CSSProperties }) => (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={style}>
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={style}>
         <defs>
             <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#FFF7CC" />
@@ -55,21 +55,21 @@ const SevenPointStar = ({ style }: { style?: React.CSSProperties }) => (
                 <stop offset="100%" stopColor="#B8860B" />
             </linearGradient>
              <filter id="starShadow" x="-50%" y="-50%" width="200%" height="200%">
-                 <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#000" floodOpacity="0.5"/>
+                 <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000" floodOpacity="0.6"/>
             </filter>
         </defs>
         <g filter="url(#starShadow)">
-            {/* 7-Pointed Star Path */}
-            <path d="M12 1L14.5 8.5H22L16 13L18.5 21L12 16.5L5.5 21L8 13L2 8.5H9.5L12 1Z" 
+            {/* رسمة نجمة سباعية حقيقية دقيقة */}
+            <path d="M12 1L14.5 9H23L16.5 14L19 22L12 17L5 22L7.5 14L1 9H9.5L12 1Z" 
                   fill="url(#starGradient)" 
                   stroke="#fff" 
-                  strokeWidth="1.5" 
+                  strokeWidth="1.2" 
                   strokeLinecap="round" 
                   strokeLinejoin="round"/>
-            {/* Simple Checkmark */}
-            <path d="M8.5 12L10.5 14L15.5 9" 
+            {/* علامة صح صغيرة في المنتصف */}
+            <path d="M8.5 12.5L10.5 14.5L15.5 9.5" 
                   stroke="#5d4000" 
-                  strokeWidth="2" 
+                  strokeWidth="1.8" 
                   strokeLinecap="round" 
                   strokeLinejoin="round"/>
         </g>
@@ -116,16 +116,16 @@ export default function ChainFacePage() {
             padding-bottom: 20px;
         }
 
-        /* --- SIGNATURE BUTTON STYLES (FIX 1: FORCE FIXED SIZE) --- */
+         /* --- FINAL FIX: LOCKED SIZE & REDUCED HOVER --- */
         .signature-btn {
             display: inline-flex;
             align-items: center;
-            /* Force exact dimensions - No shrinking allowed */
+            /* تثبيت الحجم بالقوة */
             width: 190px !important; 
             min-width: 190px !important;
             height: 55px !important;
             min-height: 55px !important;
-            flex-shrink: 0 !important; /* Critical: prevents squashing */
+            flex-shrink: 0 !important; /* هذا السطر يمنع الزر من الانعصار مهما حدث */
             
             background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
             border-radius: 30px;
@@ -136,6 +136,7 @@ export default function ChainFacePage() {
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            white-space: nowrap; /* يمنع النص من الالتفاف */
         }
         .signature-btn::before {
              content: '';
@@ -145,9 +146,9 @@ export default function ChainFacePage() {
              border-radius: 30px 30px 0 0;
              pointer-events: none;
         }
-        /* FIX 4: Reduced Hover Movement (50% less) */
+        /* تخفيف حركة الرفع للنصف كما طلبت */
         .signature-btn:hover {
-            transform: translateY(-1.5px); /* Was -3px */
+            transform: translateY(-1.5px); 
             box-shadow: 0 8px 25px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.2);
             border-color: rgba(255,255,255,0.2);
         }
@@ -298,7 +299,7 @@ export default function ChainFacePage() {
                               <span className="sig-name">ALEXANDER</span>
                           </div>
                           {/* 7-Point Star - Positioned clean above name */}
-                          <SevenPointStar style={{ position: 'absolute', top: '7px', right: '55px' }} />
+                          <SevenPointStar style={{ position: 'absolute', top: '7px', right: '58px' }} />
                       </Link>
 
                   </div>
