@@ -45,7 +45,7 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- FIX: TRUE 7-Pointed Star + Reduced Size (10px) ---
+// --- FIX: TRUE 7-Pointed Star (Heptagram) + Small Size (10px) ---
 const SevenPointStar = ({ style }: { style?: React.CSSProperties }) => (
     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={style}>
         <defs>
@@ -59,14 +59,14 @@ const SevenPointStar = ({ style }: { style?: React.CSSProperties }) => (
             </filter>
         </defs>
         <g filter="url(#starShadow)">
-            {/* رسمة نجمة سباعية حقيقية دقيقة */}
-            <path d="M12 1L14.5 9H23L16.5 14L19 22L12 17L5 22L7.5 14L1 9H9.5L12 1Z" 
+            {/* مسار النجمة السباعية الدقيق */}
+            <path d="M12 2L14.5 9H22L16 13.5L18.5 21L12 16.5L5.5 21L8 13.5L2 9H9.5L12 2Z" 
                   fill="url(#starGradient)" 
                   stroke="#fff" 
                   strokeWidth="1.2" 
                   strokeLinecap="round" 
                   strokeLinejoin="round"/>
-            {/* علامة صح صغيرة في المنتصف */}
+            {/* علامة صح دقيقة */}
             <path d="M8.5 12.5L10.5 14.5L15.5 9.5" 
                   stroke="#5d4000" 
                   strokeWidth="1.8" 
@@ -116,16 +116,23 @@ export default function ChainFacePage() {
             padding-bottom: 20px;
         }
 
-         /* --- FINAL FIX: LOCKED SIZE & REDUCED HOVER --- */
+        /* --- FINAL SIGNATURE BUTTON STYLE (LOCKED DIMENSIONS) --- */
         .signature-btn {
-            display: inline-flex;
+            display: flex; /* Changed from inline-flex to flex to enforce size */
             align-items: center;
-            /* تثبيت الحجم بالقوة */
+            justify-content: flex-start; /* Ensure content starts from left */
+            
+            /* أبعاد ثابتة غير قابلة للتغيير نهائياً */
             width: 190px !important; 
             min-width: 190px !important;
+            max-width: 190px !important;
             height: 55px !important;
             min-height: 55px !important;
-            flex-shrink: 0 !important; /* هذا السطر يمنع الزر من الانعصار مهما حدث */
+            max-height: 55px !important;
+            
+            /* منع الانكماش */
+            flex-shrink: 0 !important;
+            flex-grow: 0 !important;
             
             background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
             border-radius: 30px;
@@ -136,7 +143,8 @@ export default function ChainFacePage() {
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            white-space: nowrap; /* يمنع النص من الالتفاف */
+            box-sizing: border-box; /* مهم جداً للحفاظ على الأبعاد */
+            margin: 0; /* تصفير الهوامش الخارجية */
         }
         .signature-btn::before {
              content: '';
@@ -146,7 +154,6 @@ export default function ChainFacePage() {
              border-radius: 30px 30px 0 0;
              pointer-events: none;
         }
-        /* تخفيف حركة الرفع للنصف كما طلبت */
         .signature-btn:hover {
             transform: translateY(-1.5px); 
             box-shadow: 0 8px 25px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.2);
@@ -163,7 +170,7 @@ export default function ChainFacePage() {
             justify-content: center;
             margin-right: 12px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            flex-shrink: 0; /* Protect QR from shrinking */
+            flex-shrink: 0; 
         }
         .sig-qr-code {
             width: 23px;
@@ -180,7 +187,7 @@ export default function ChainFacePage() {
             justify-content: center;
             flex-grow: 1;
             padding-right: 5px; 
-            overflow: hidden; /* Prevent text overflow */
+            overflow: hidden; 
         }
         
         .sig-label {
@@ -291,7 +298,7 @@ export default function ChainFacePage() {
                           </p>
                       </div>
 
-                      {/* Button (Exact Asset Replica) */}
+                      {/* Button (Exact Asset Replica - Top) */}
                       <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
                           <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
@@ -411,7 +418,7 @@ export default function ChainFacePage() {
                           </p>
                       </div>
 
-                      {/* Button (Exact Replica - Fixed Size) */}
+                      {/* Button (Exact Replica - Fixed Size - Bottom) */}
                       <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
                           <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
@@ -419,7 +426,7 @@ export default function ChainFacePage() {
                               <span className="sig-name">ALEXANDER</span>
                           </div>
                           {/* 7-Point Star */}
-                          <SevenPointStar style={{ position: 'absolute', top: '7px', right: '55px' }} />
+                          <SevenPointStar style={{ position: 'absolute', top: '7px', right: '58px' }} />
                       </Link>
 
                   </div>
