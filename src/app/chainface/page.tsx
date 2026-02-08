@@ -47,7 +47,7 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
 
 // --- NEW: Golden Circle Check Badge (Extracted & Converted to SVG) ---
 const GoldenCheckBadge = () => (
-    <svg width="12" height="12" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '10px', filter: 'drop-shadow(0 0 2px rgba(255, 215, 0, 0.3))' }}>
+    <svg width="12" height="12" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '15px', filter: 'drop-shadow(0 0 2px rgba(255, 215, 0, 0.3))' }}>
         <defs>
             <linearGradient id="goldBadgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#FFD700" />
@@ -271,7 +271,7 @@ export default function ChainFacePage() {
                   <div className="d-flex flex-column align-items-center justify-content-center rounded-3" 
                        style={{ 
                            width: '100%',
-                           maxWidth: '500px', 
+                           maxWidth: '600px', 
                            backgroundColor: 'rgba(36, 36, 36, 0.4)', 
                            border: '1px solid rgba(255, 255, 255, 0.05)',
                            gap: '15px', 
