@@ -44,6 +44,23 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
+// --- LUXURY STAR BADGE COMPONENT (SVG) ---
+const LuxuryStarBadge = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" style={{ position: 'absolute', top: '8px', right: '12px', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5))' }}>
+        <defs>
+            <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FFF7CC" />
+                <stop offset="40%" stopColor="#FFD700" />
+                <stop offset="100%" stopColor="#B8860B" />
+            </linearGradient>
+        </defs>
+        {/* Star Shape */}
+        <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z" fill="url(#starGradient)" stroke="#fff" strokeWidth="0.5"/>
+        {/* Checkmark inside */}
+        <path d="M9 12l2 2 4-4" fill="none" stroke="#5d4000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
 export default function ChainFacePage() {
   return (
     <main className="chainface-page" style={{ 
@@ -57,7 +74,7 @@ export default function ChainFacePage() {
     }}>
       
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         
         .cf-header { color: ${TEXT_OFF_WHITE}; font-weight: 700; margin-bottom: 0.8rem; font-size: 1.15rem; }
         .cf-text { color: ${TEXT_BODY_COLOR}; line-height: 1.6; font-size: 14.5px; margin-bottom: 1rem; }
@@ -84,29 +101,30 @@ export default function ChainFacePage() {
             padding-bottom: 20px;
         }
 
-        /* Signature Button Style (Micro Card - Refined) */
+        /* --- SIGNATURE BUTTON STYLES (UPDATED) --- */
         .signature-btn {
             display: inline-flex;
             align-items: center;
-            width: 190px; /* عرض مناسب للكبسولة المصغرة */
-            height: 55px; /* ارتفاع أعلى قليلاً */
-            background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%); /* التدرج من الصورة */
+            width: 190px;
+            height: 55px;
+            background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
             border-radius: 30px;
             padding: 0 12px;
             text-decoration: none;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.08);
             transition: all 0.3s ease;
-            margin-left: 20px; /* زيادة المسافة عن النص */
-            position: relative;
+            margin-left: 20px;
+            position: relative; /* المهم لتثبيت النجمة */
             overflow: hidden;
         }
-        .signature-btn::before { /* لمعة زجاجية */
+        .signature-btn::before {
              content: '';
              position: absolute;
              top: 0; left: 0; width: 100%; height: 50%;
              background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
              border-radius: 30px 30px 0 0;
+             pointer-events: none;
         }
         .signature-btn:hover {
             transform: translateY(-3px);
@@ -114,71 +132,61 @@ export default function ChainFacePage() {
             border-color: rgba(255,255,255,0.2);
         }
 
-        /* QR Code (Refined) */
+        /* QR Code Container - Reduced Size by 20% */
         .sig-qr-container {
-            width: 34px; /* حجم أصغر للحاوية البيضاء */
-            height: 34px;
-            background: rgba(255,255,255,0.92); /* أقل بياضاً قليلاً */
-            border-radius: 8px;
+            width: 28px; /* تم التصغير من 34px */
+            height: 28px;
+            background: rgba(255,255,255,0.92);
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 12px; /* زيادة المسافة بين QR والاسم */
+            margin-right: 12px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
         .sig-qr-code {
-            width: 28px; /* حجم الكود نفسه */
-            height: 28px;
+            width: 23px; /* تم التصغير */
+            height: 23px;
             background-image: url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ALEXANDER_CF_SIGNATURE');
             background-size: cover;
-            opacity: 0.85; /* جعل الخطوط السوداء أكثر وضوحاً بتقليل الشفافية */
-            mix-blend-mode: multiply; /* دمج لزيادة تباين الأسود */
+            opacity: 0.85;
+            mix-blend-mode: multiply;
         }
 
-        /* Text & Badge Container */
         .sig-content {
             display: flex;
             flex-direction: column;
             justify-content: center;
             flex-grow: 1;
+            padding-right: 5px; /* مساحة صغيرة لتجنب التلاصق */
         }
         
-        /* ChainFace Label (Top) */
+        /* ChainFace Label - CORRECTED CASE */
         .sig-label {
             font-family: 'Orbitron', sans-serif;
-            font-size: 8px; /* حجم صغير */
-            color: rgba(255,255,255,0.9);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 1px;
+            font-size: 9px;
+            color: rgba(255,255,255,0.95);
+            letter-spacing: 0.5px;
+            /* text-transform: uppercase; REMOVED */ 
+            margin-bottom: 2px;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            font-weight: 700;
         }
 
-        /* Name (ALEXANDER - Resized) */
+        /* Name (ALEXANDER) */
         .sig-name {
             font-family: 'Satoshi', sans-serif;
             font-weight: 900;
-            font-size: 15px; /* تصغير الحجم بنسبة 10% تقريباً (كان 16px أو أكبر) */
+            font-size: 15px;
             text-transform: uppercase;
             background: linear-gradient(to bottom, #ffffff 40%, #b0b0b0 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: 0.2px;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-            display: flex; /* لضبط المحاذاة مع الشارة */
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
+            display: block;
         }
         
-        /* Gold Badge */
-        .sig-badge {
-            color: #FFD700;
-            font-size: 14px;
-            margin-left: auto; /* دفع الشارة لليمين */
-            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
-        }
-
         /* Ticker Animations */
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
         .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
@@ -220,7 +228,7 @@ export default function ChainFacePage() {
                   </p>
               </div>
 
-              {/* RIGHT: Image Area (Top Aligned) */}
+              {/* RIGHT: Image Area */}
               <div className="col-12 col-lg-6 d-flex justify-content-lg-start justify-content-center ps-lg-5">
                   <div style={{ 
                       width: '100%', 
@@ -248,8 +256,6 @@ export default function ChainFacePage() {
               
               {/* LEFT COLUMN */}
               <div className="col-12 col-md-6 pe-md-4" style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-                  
-                  {/* What Is ChainFace? */}
                   <div className="content-block">
                       <h3 className="cf-header">What Is ChainFace?</h3>
                       <p className="cf-text">A digital identity page linked to your NNM digital name.</p>
@@ -262,7 +268,6 @@ export default function ChainFacePage() {
                       <p className="cf-text fw-bold text-white small">It is the interface of the blockchain.</p>
                   </div>
 
-                  {/* Built for Everyone */}
                   <div className="content-block">
                       <h3 className="cf-header">Built for Everyone</h3>
                       <p className="cf-text mb-2">Whether you are:</p>
@@ -277,7 +282,6 @@ export default function ChainFacePage() {
                       </p>
                   </div>
 
-                   {/* Why Now? */}
                    <div className="content-block">
                       <h3 className="cf-header">Why Now?</h3>
                       <p className="cf-text">
@@ -285,13 +289,10 @@ export default function ChainFacePage() {
                       </p>
                       <p className="cf-text text-white">Join early. Secure your place.</p>
                   </div>
-
               </div>
 
               {/* RIGHT COLUMN */}
               <div className="col-12 col-md-6 ps-md-4">
-                  
-                  {/* Why NNM Matters */}
                   <div className="content-block">
                       <h3 className="cf-header">Why Digital Names Matter</h3>
                       <p className="cf-text">
@@ -307,7 +308,6 @@ export default function ChainFacePage() {
                       </p>
                   </div>
 
-                  {/* Trust & Principles */}
                   <div className="content-block">
                       <h3 className="cf-header">Trust & Freedom</h3>
                       <p className="cf-text">Blockchain means freedom. The world needs clarity.</p>
@@ -321,7 +321,6 @@ export default function ChainFacePage() {
                       </p>
                   </div>
 
-                  {/* Payments */}
                   <div className="content-block">
                       <h3 className="cf-header">Payments, Done Right</h3>
                       <ul className="cf-list">
@@ -331,51 +330,47 @@ export default function ChainFacePage() {
                       </ul>
                       <p className="cf-text">We do not manage your money. We simply present your identity.</p>
                   </div>
-
               </div>
           </div>
 
-          {/* FINAL THOUGHT (Redesigned with Signature Button - CORRECTED) */}
+          {/* FINAL THOUGHT & SIGNATURE */}
           <div className="row justify-content-center mt-5">
-              <div className="col-12 col-md-11"> {/* زيادة عرض الحاوية قليلاً */}
+              <div className="col-12 col-md-11">
                   <div className="d-flex flex-column flex-md-row align-items-center justify-content-center p-4 rounded-3" 
                        style={{ 
                            backgroundColor: '#242424', 
                            border: '1px solid #333',
-                           gap: '25px' /* زيادة المسافة بين النص والزر */
+                           gap: '25px'
                        }}>
                       
-                      {/* Text Part: Corrected & Punchy */}
+                      {/* Text */}
                       <div className="text-center text-md-end">
-                          {/* تصحيح العبارة الأولى */}
                           <p className="cf-text mb-0" style={{ fontSize: '15px', letterSpacing: '0.3px' }}>
                             Future is not about an address. It is about a <span className="text-white fw-bold">ChainFace</span>.
                           </p>
-                          {/* تصحيح العبارة الثانية (إزالة النقطتين) */}
                           <p className="text-white fw-bold mb-0" style={{ fontSize: '16px', letterSpacing: '0.5px' }}>
                             See your place on the blockchain
                           </p>
                       </div>
 
-                      {/* The Signature Button (Micro Card - Detailed Fixes) */}
+                      {/* --- THE SIGNATURE BUTTON (UPDATED) --- */}
                       <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
-                          {/* QR Icon (Refined & Spaced) */}
+                          {/* QR Icon */}
                           <div className="sig-qr-container">
                               <div className="sig-qr-code"></div>
                           </div>
                           
-                          {/* Content Container (Label + Name + Badge) */}
+                          {/* Content */}
                           <div className="sig-content">
-                              {/* Added ChainFace Label */}
+                              {/* ChainFace (PascalCase) */}
                               <span className="sig-label">ChainFace</span>
                               
-                              {/* Name (ALEXANDER - Resized) & Badge */}
-                              <span className="sig-name">
-                                  ALEXANDER
-                                  {/* Check Icon (Badge) */}
-                                  <i className="bi bi-patch-check-fill sig-badge"></i>
-                              </span>
+                              {/* Name */}
+                              <span className="sig-name">ALEXANDER</span>
                           </div>
+
+                          {/* Luxury Star Badge (Positioned Absolute Top Right) */}
+                          <LuxuryStarBadge />
                       </Link>
 
                   </div>
