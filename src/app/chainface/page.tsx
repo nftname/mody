@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import React from 'react'; // Import React for types
+import React from 'react';
 
 // --- CONSTANTS & STYLES ---
 const GOLD_BASE = '#F0C420';
@@ -45,22 +45,33 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- FIX 1: Reduced Seal Size by ~35% (from 22px to 14px) ---
-const LuxuryVerificationSeal = ({ style }: { style?: React.CSSProperties }) => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={style}>
+// --- FIX 2 & 3: 7-Pointed Star (Geometric) + Reduced Size (11px) ---
+const SevenPointStar = ({ style }: { style?: React.CSSProperties }) => (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={style}>
         <defs>
-            <linearGradient id="sealGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#FFF7CC" />
                 <stop offset="40%" stopColor="#FFD700" />
                 <stop offset="100%" stopColor="#B8860B" />
             </linearGradient>
-            <filter id="sealShadow" x="-50%" y="-50%" width="200%" height="200%">
-                 <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000" floodOpacity="0.4"/>
+             <filter id="starShadow" x="-50%" y="-50%" width="200%" height="200%">
+                 <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#000" floodOpacity="0.5"/>
             </filter>
         </defs>
-        <g filter="url(#sealShadow)">
-            <path d="M22.5 12.5c0-1.58-.875-2.95-2.14-3.6.99-1.18 1.33-2.8.765-4.235-.565-1.435-1.925-2.35-3.465-2.35-1.26-1.265-3.19-1.605-4.625-.765-.65-1.265-2.02-2.14-3.6-2.14-1.58 0-2.9.915-3.6 2.14-1.435-.84-3.365-.5-4.625.765-1.54 0-2.9.915-3.465 2.35-.565 1.435-.225 3.055.765 4.235-1.265.65-2.14 2.02-2.14 3.6 0 1.58.875 2.95 2.14 3.6-.99 1.18-1.33 2.8-.765 4.235.565 1.435 1.925 2.35 3.465 2.35 1.26 1.265 3.19 1.605 4.625.765.65 1.265 2.02 2.14 3.6 2.14 1.58 0 2.95-.875 3.6-2.14 1.435.84 3.365.5 4.625-.765 1.54 0 2.9-.915 3.465-2.35.565-1.435.225-3.055-.765-4.235 1.265-.65 2.14-2.02 2.14-3.6z" fill="url(#sealGradient)" stroke="#fff" strokeWidth="0.5" transform="scale(0.9) translate(1.5, 1.5)"/>
-            <path d="M9 12l2 2 4-4" fill="none" stroke="#5d4000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <g filter="url(#starShadow)">
+            {/* 7-Pointed Star Path */}
+            <path d="M12 1L14.5 8.5H22L16 13L18.5 21L12 16.5L5.5 21L8 13L2 8.5H9.5L12 1Z" 
+                  fill="url(#starGradient)" 
+                  stroke="#fff" 
+                  strokeWidth="1.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"/>
+            {/* Simple Checkmark */}
+            <path d="M8.5 12L10.5 14L15.5 9" 
+                  stroke="#5d4000" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"/>
         </g>
     </svg>
 );
@@ -105,12 +116,17 @@ export default function ChainFacePage() {
             padding-bottom: 20px;
         }
 
-        /* --- SIGNATURE BUTTON STYLES (FIX 2: Standardized Size) --- */
+        /* --- SIGNATURE BUTTON STYLES (FIX 1: FORCE FIXED SIZE) --- */
         .signature-btn {
             display: inline-flex;
             align-items: center;
-            width: 190px; /* حجم ثابت وموحد */
-            height: 55px; /* حجم ثابت وموحد */
+            /* Force exact dimensions - No shrinking allowed */
+            width: 190px !important; 
+            min-width: 190px !important;
+            height: 55px !important;
+            min-height: 55px !important;
+            flex-shrink: 0 !important; /* Critical: prevents squashing */
+            
             background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
             border-radius: 30px;
             padding: 0 12px;
@@ -129,8 +145,9 @@ export default function ChainFacePage() {
              border-radius: 30px 30px 0 0;
              pointer-events: none;
         }
+        /* FIX 4: Reduced Hover Movement (50% less) */
         .signature-btn:hover {
-            transform: translateY(-3px);
+            transform: translateY(-1.5px); /* Was -3px */
             box-shadow: 0 8px 25px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.2);
             border-color: rgba(255,255,255,0.2);
         }
@@ -145,6 +162,7 @@ export default function ChainFacePage() {
             justify-content: center;
             margin-right: 12px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            flex-shrink: 0; /* Protect QR from shrinking */
         }
         .sig-qr-code {
             width: 23px;
@@ -161,6 +179,7 @@ export default function ChainFacePage() {
             justify-content: center;
             flex-grow: 1;
             padding-right: 5px; 
+            overflow: hidden; /* Prevent text overflow */
         }
         
         .sig-label {
@@ -171,6 +190,7 @@ export default function ChainFacePage() {
             margin-bottom: 2px;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
             font-weight: 700;
+            white-space: nowrap;
         }
 
         .sig-name {
@@ -184,6 +204,7 @@ export default function ChainFacePage() {
             letter-spacing: 0.2px;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
             display: block;
+            white-space: nowrap;
         }
         
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
@@ -226,7 +247,7 @@ export default function ChainFacePage() {
                   </p>
               </div>
 
-              {/* RIGHT: Image Area & CTA BOX (FIXED) */}
+              {/* RIGHT: Image Area & CTA BOX */}
               <div className="col-12 col-lg-6 d-flex flex-column align-items-center align-items-lg-start ps-lg-5">
                   {/* Top Image */}
                   <div style={{ 
@@ -247,17 +268,16 @@ export default function ChainFacePage() {
                       />
                   </div>
 
-                  {/* --- FIX 3: UPPER CTA BOX (REMOVED PADDING, ADDED TRANSPARENCY) --- */}
+                  {/* UPPER CTA BOX */}
                   <div className="d-flex flex-column align-items-center justify-content-center rounded-3" 
                        style={{ 
                            width: '100%',
-                           maxWidth: '420px', // Matches image width
-                           // لون خلفية شبه شفاف يتماهى مع الخلفية
+                           maxWidth: '420px', 
                            backgroundColor: 'rgba(36, 36, 36, 0.4)', 
                            border: '1px solid rgba(255, 255, 255, 0.05)',
-                           gap: '15px', // مسافة أقل بين النص والزر
+                           gap: '15px', 
                            textAlign: 'center',
-                           padding: '15px 0' // هوامش علوية وسفلية قليلة جداً
+                           padding: '15px 0' 
                        }}>
                       
                       {/* Text */}
@@ -270,15 +290,15 @@ export default function ChainFacePage() {
                           </p>
                       </div>
 
-                      {/* Button (Same Size as Bottom) */}
+                      {/* Button (Exact Asset Replica) */}
                       <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
                           <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
                               <span className="sig-label">ChainFace</span>
                               <span className="sig-name">ALEXANDER</span>
                           </div>
-                          {/* Seal positioned with adjusted top/right */}
-                          <LuxuryVerificationSeal style={{ position: 'absolute', top: '8px', right: '52px' }} />
+                          {/* 7-Point Star - Positioned clean above name */}
+                          <SevenPointStar style={{ position: 'absolute', top: '7px', right: '55px' }} />
                       </Link>
 
                   </div>
@@ -370,7 +390,7 @@ export default function ChainFacePage() {
               </div>
           </div>
 
-          {/* FINAL THOUGHT & SIGNATURE (BOTTOM - SAME SIZE BUTTON) */}
+          {/* FINAL THOUGHT & SIGNATURE (BOTTOM) */}
           <div className="row justify-content-center mt-5">
               <div className="col-12 col-md-11">
                   <div className="d-flex flex-column flex-md-row align-items-center justify-content-center p-4 rounded-3" 
@@ -390,15 +410,15 @@ export default function ChainFacePage() {
                           </p>
                       </div>
 
-                      {/* Button (Same Size as Top) */}
+                      {/* Button (Exact Replica - Fixed Size) */}
                       <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
                           <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
                               <span className="sig-label">ChainFace</span>
                               <span className="sig-name">ALEXANDER</span>
                           </div>
-                          {/* Seal positioned with adjusted top/right */}
-                          <LuxuryVerificationSeal style={{ position: 'absolute', top: '8px', right: '52px' }} />
+                          {/* 7-Point Star */}
+                          <SevenPointStar style={{ position: 'absolute', top: '7px', right: '55px' }} />
                       </Link>
 
                   </div>
