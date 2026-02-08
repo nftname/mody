@@ -193,10 +193,13 @@ export default function ChainFacePage() {
             white-space: nowrap;
         }
 
-        .sig-name {
+         .sig-name {
             font-family: 'Satoshi', sans-serif;
             font-weight: 900;
-            font-size: 15px;
+            
+        
+            font-size: 15px; 
+            
             text-transform: uppercase;
             background: linear-gradient(to bottom, #ffffff 40%, #b0b0b0 100%);
             -webkit-background-clip: text;
@@ -204,7 +207,12 @@ export default function ChainFacePage() {
             letter-spacing: 0.2px;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
             display: block;
-            white-space: nowrap;
+            
+        
+            white-space: nowrap;       
+            overflow: hidden;         
+            text-overflow: ellipsis;   
+            max-width: 105px;         
         }
         
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
@@ -299,7 +307,7 @@ export default function ChainFacePage() {
                                   <span className="sig-label">ChainFace</span>
                                   <GoldenCheckBadge />
                               </div>
-                              <span className="sig-name">ALEXANDER</span>
+                              <span className="sig-name" style={{ fontSize: 'ALEXANDER'.length > 10 ? '11px' : '15px' }}>ALEXANDER</span>
                           </div>
                       </Link>
 
@@ -422,7 +430,7 @@ export default function ChainFacePage() {
                                   <span className="sig-label">ChainFace</span>
                                   <GoldenCheckBadge />
                               </div>
-                              <span className="sig-name">ALEXANDER</span>
+                              <span className="sig-name" style={{ fontSize: 'ALEXANDER'.length > 10 ? '11px' : '15px' }}>ALEXANDER</span>
                           </div>
                       </Link>
 
