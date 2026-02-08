@@ -1,6 +1,5 @@
 'use client';
 import Link from 'next/link';
-import Image from 'next/image';
 
 // --- CONSTANTS & STYLES ---
 const GOLD_BASE = '#F0C420';
@@ -45,11 +44,10 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- MAIN COMPONENT ---
 export default function ChainFacePage() {
   return (
     <main className="chainface-page" style={{ 
-      backgroundColor: '#1E1E1E', // نفس لون خلفية Conviction
+      backgroundColor: '#1E1E1E', 
       minHeight: '100vh', 
       paddingBottom: '0px', 
       fontFamily: '"Inter", "Segoe UI", sans-serif',
@@ -58,19 +56,19 @@ export default function ChainFacePage() {
       flexDirection: 'column'
     }}>
       
-      {/* GLOBAL STYLES */}
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
         
-        .cf-header { color: ${TEXT_OFF_WHITE}; font-weight: 700; margin-bottom: 1rem; }
-        .cf-text { color: ${TEXT_BODY_COLOR}; line-height: 1.7; font-size: 15px; margin-bottom: 1.5rem; }
-        .cf-list { list-style: none; padding-left: 0; margin-bottom: 1.5rem; }
+        .cf-header { color: ${TEXT_OFF_WHITE}; font-weight: 700; margin-bottom: 0.8rem; font-size: 1.15rem; }
+        .cf-text { color: ${TEXT_BODY_COLOR}; line-height: 1.6; font-size: 14.5px; margin-bottom: 1rem; }
+        .cf-list { list-style: none; padding-left: 0; margin-bottom: 1.2rem; }
         .cf-list li { 
             position: relative; 
-            padding-left: 20px; 
+            padding-left: 18px; 
             color: ${TEXT_BODY_COLOR}; 
-            margin-bottom: 8px; 
-            font-size: 15px;
+            margin-bottom: 6px; 
+            font-size: 14.5px;
+            line-height: 1.5;
         }
         .cf-list li::before {
             content: "•";
@@ -78,9 +76,14 @@ export default function ChainFacePage() {
             font-weight: bold;
             position: absolute;
             left: 0;
-            top: 0;
+            top: 1px;
         }
         
+        .content-block {
+            background-color: transparent;
+            padding-bottom: 20px;
+        }
+
         /* Ticker Animations */
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
         .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
@@ -88,182 +91,166 @@ export default function ChainFacePage() {
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
       `}</style>
 
-      {/* --- HERO SECTION (Split Layout) --- */}
+      {/* --- HERO SECTION --- */}
       <section className="container pt-5 pb-5">
-          <div className="row g-5 align-items-start">
+          <div className="row g-5 align-items-center">
               
-              {/* LEFT COLUMN: Main Text */}
-              <div className="col-12 col-lg-7">
+              {/* LEFT: Text Area (Slightly narrower for balance) */}
+              <div className="col-12 col-lg-6">
                   <h1 className="fw-bold mb-2" 
                       style={{ 
                           fontSize: '2.5rem', 
                           fontFamily: '"Inter", sans-serif',
                           color: TEXT_OFF_WHITE,
-                          lineHeight: '1.2'
+                          lineHeight: '1.1'
                       }}>
                     ChainFace
                   </h1>
-                  <h2 className="fw-light mb-4" style={{ fontSize: '1.5rem', color: GOLD_BASE }}>
+                  <h2 className="fw-light mb-4" style={{ fontSize: '1.4rem', color: GOLD_BASE }}>
                     Your Face on the Blockchain
                   </h2>
                   
-                  <p className="cf-text fw-medium" style={{ fontSize: '1.1rem', color: '#FFF' }}>
+                  <p className="cf-text fw-medium" style={{ fontSize: '1.05rem', color: '#FFF' }}>
                     The one place where your digital identity moves beyond an address — into presence, trust, and real interaction.
                   </p>
 
-                  <hr style={{ borderColor: 'rgba(255,255,255,0.1)', margin: '30px 0' }} />
+                  <div style={{ width: '60px', height: '2px', backgroundColor: GOLD_BASE, margin: '25px 0' }}></div>
 
-                  <h3 className="cf-header h4">Why ChainFace Exists</h3>
+                  <h3 className="cf-header h5">Why ChainFace Exists</h3>
                   <p className="cf-text">
                     In the blockchain world, everything exists — except the face. Addresses are long. Transactions are silent. And trust is scattered across numbers.
                   </p>
                   <p className="cf-text">
-                    ChainFace was created to close that gap. It is not a social network. It is not a wallet. It is not a financial intermediary.
-                  </p>
-                  <p className="cf-text">
-                    It is your official space on the blockchain — one clear, human place where others recognize you and interact with confidence.
+                    ChainFace closes that gap. Not a social network. Not a wallet. Not a financial intermediary. It is your official space on the blockchain — clear, human, and trusted.
                   </p>
               </div>
 
-              {/* RIGHT COLUMN: Image (Placeholder) */}
-              <div className="col-12 col-lg-5">
+              {/* RIGHT: Image Area (Shifted towards center visually) */}
+              <div className="col-12 col-lg-6 d-flex justify-content-lg-start justify-content-center ps-lg-5">
                   <div style={{ 
                       width: '100%', 
+                      maxWidth: '420px', 
                       position: 'relative', 
                       borderRadius: '12px', 
                       overflow: 'hidden',
-                      border: `1px solid ${GOLD_BASE}40`, // Gold border with transparency
-                      boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+                      border: `1px solid ${GOLD_BASE}30`, 
+                      boxShadow: '0 25px 50px rgba(0,0,0,0.6)'
                   }}>
-                      {/* استبدل الرابط أدناه برابط صورتك الحقيقية */}
                       <img 
                         src="/images/chainface-hero.jpg" 
                         alt="ChainFace Identity" 
                         style={{ width: '100%', height: 'auto', display: 'block' }} 
-                        // في حال لم تكن الصورة موجودة بعد، يمكنك استخدام هذا الرابط المؤقت كبديل للتجربة:
-                        // src="https://placehold.co/768x1376/1E1E1E/F0C420?text=ChainFace+Identity"
                       />
                   </div>
               </div>
           </div>
       </section>
 
-      {/* --- CONTENT BLOCKS --- */}
+      {/* --- SPLIT CONTENT LAYOUT --- */}
       <section className="container pb-5">
-          <div className="row justify-content-center">
-              <div className="col-12 col-lg-8">
+          <div className="row g-5">
+              
+              {/* LEFT COLUMN: Features & Definition */}
+              <div className="col-12 col-md-6 pe-md-4" style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
                   
                   {/* What Is ChainFace? */}
-                  <div className="mb-5">
-                      <h3 className="cf-header h4">What Is ChainFace?</h3>
-                      <p className="cf-text">ChainFace is a digital identity page linked to your NNM digital name.</p>
-                      <p className="cf-text mb-2">A page that:</p>
+                  <div className="content-block">
+                      <h3 className="cf-header">What Is ChainFace?</h3>
+                      <p className="cf-text">A digital identity page linked to your NNM digital name.</p>
                       <ul className="cf-list">
                           <li>Receives payments directly to your wallets</li>
                           <li>Displays verification and trust signals</li>
                           <li>Gives you a professional presence in Web3</li>
-                          <li>With no middlemen</li>
-                          <li>No custody of funds</li>
-                          <li>No technical complexity</li>
+                          <li>No middlemen, no custody, no complexity</li>
                       </ul>
-                      <p className="cf-text fw-bold text-white">It is the interface of the blockchain.</p>
+                      <p className="cf-text fw-bold text-white small">It is the interface of the blockchain.</p>
                   </div>
 
                   {/* Built for Everyone */}
-                  <div className="mb-5">
-                      <h3 className="cf-header h4">Built for Everyone</h3>
+                  <div className="content-block">
+                      <h3 className="cf-header">Built for Everyone</h3>
                       <p className="cf-text mb-2">Whether you are:</p>
                       <ul className="cf-list">
                           <li>An individual receiving value</li>
                           <li>A freelancer or creator</li>
-                          <li>A digital merchant</li>
-                          <li>An investor</li>
-                          <li>Or someone entering blockchain for the first time</li>
+                          <li>A digital merchant or investor</li>
+                          <li>Or entering blockchain for the first time</li>
                       </ul>
                       <p className="cf-text">
-                        ChainFace is the simplest starting point. No explanations needed. No technical barriers. Your name opens the door.
+                        The simplest starting point. No explanations needed. Your name opens the door.
                       </p>
                   </div>
 
-                  {/* Why NNM Digital Names Matter */}
-                  <div className="mb-5">
-                      <h3 className="cf-header h4">Why NNM Digital Names Matter</h3>
+                   {/* Why Now? */}
+                   <div className="content-block">
+                      <h3 className="cf-header">Why Now?</h3>
                       <p className="cf-text">
-                        Anyone can own a wallet address. But not every name creates presence. NNM names are more than NFTs. They are keys to a future identity layer.
+                        Years ago, online presence was optional. Then essential. Today, blockchain presence is inevitable. ChainFace is an identity layer built before the space crowds.
                       </p>
-                      <p className="cf-text mb-2">With ChainFace:</p>
+                      <p className="cf-text text-white">Join early. Secure your place.</p>
+                  </div>
+
+              </div>
+
+              {/* RIGHT COLUMN: Value & Principles */}
+              <div className="col-12 col-md-6 ps-md-4">
+                  
+                  {/* Why NNM Matters */}
+                  <div className="content-block">
+                      <h3 className="cf-header">Why Digital Names Matter</h3>
+                      <p className="cf-text">
+                        Anyone can own a wallet. Not everyone owns presence. NNM names are keys to a future identity layer.
+                      </p>
                       <ul className="cf-list">
                           <li>The name becomes a face</li>
                           <li>The face becomes trust</li>
-                          <li>And trust becomes real interaction</li>
+                          <li>Trust becomes real interaction</li>
                       </ul>
-                      <p className="cf-text mb-2">That is why NNM offers:</p>
-                      <ul className="cf-list">
-                          <li>Elite Class</li>
-                          <li>Founders Class</li>
-                          <li>Immortals Class</li>
-                      </ul>
-                      <p className="cf-text">Each class reflects your level of presence, not just ownership.</p>
+                      <p className="cf-text">
+                        NNM offers <strong>Elite</strong>, <strong>Founders</strong>, and <strong>Immortals</strong> classes. Each reflects your level of presence, not just ownership.
+                      </p>
                   </div>
 
-                  {/* Trust Without Breaking Blockchain Principles */}
-                  <div className="mb-5">
-                      <h3 className="cf-header h4">Trust Without Breaking Blockchain Principles</h3>
-                      <p className="cf-text">Blockchain was built for freedom. The real world still needs clarity.</p>
-                      <p className="cf-text mb-2">With ChainFace:</p>
+                  {/* Trust & Principles */}
+                  <div className="content-block">
+                      <h3 className="cf-header">Trust & Freedom</h3>
+                      <p className="cf-text">Blockchain means freedom. The world needs clarity.</p>
                       <ul className="cf-list">
                           <li>Verification is optional</li>
                           <li>Identity is fully controlled by you</li>
                           <li>Privacy is your decision</li>
                       </ul>
-                      <p className="cf-text mb-2">You choose to be:</p>
-                      <ul className="cf-list">
-                          <li>Unverified</li>
-                          <li>Wallet-Verified</li>
-                          <li>ID-Verified</li>
-                          <li>Business-Verified</li>
-                      </ul>
-                      <p className="cf-text">Transparency here is a feature, not an obligation.</p>
+                      <p className="cf-text">
+                        Choose: Unverified, Wallet-Verified, ID-Verified, or Business-Verified. Transparency is a feature, not an obligation.
+                      </p>
                   </div>
 
                   {/* Payments */}
-                  <div className="mb-5">
-                      <h3 className="cf-header h4">Payments, the Way They Should Be</h3>
+                  <div className="content-block">
+                      <h3 className="cf-header">Payments, Done Right</h3>
                       <ul className="cf-list">
-                          <li>Wallet-to-Wallet</li>
-                          <li>Peer-to-Peer</li>
+                          <li>Wallet-to-Wallet (Peer-to-Peer)</li>
                           <li>No intermediaries</li>
-                          <li>No custody</li>
+                          <li>No custody of funds</li>
                       </ul>
-                      <p className="cf-text">Payments are peer-to-peer. ChainFace never holds funds.</p>
                       <p className="cf-text">We do not manage your money. We simply present your identity.</p>
                   </div>
 
-                  {/* Why Now? */}
-                  <div className="mb-5">
-                      <h3 className="cf-header h4">Why Now?</h3>
-                      <p className="cf-text">
-                        Years ago, having an online presence was optional. Then it became essential.
-                      </p>
-                      <p className="cf-text">
-                        Today, having a presence on the blockchain is becoming inevitable. ChainFace is not a trend. It is an identity layer — built before the space becomes crowded.
-                      </p>
-                      <p className="cf-text">Those who join early secure their place in the future.</p>
-                  </div>
+              </div>
+          </div>
 
-                  {/* Final Thought */}
-                  <div className="text-center mt-5 p-4 rounded-3" style={{ backgroundColor: '#242424', border: '1px solid #333' }}>
-                      <h3 className="cf-header h4 mb-3">Final Thought</h3>
-                      <p className="cf-text fst-italic">
+          {/* FINAL THOUGHT (Full Width) */}
+          <div className="row justify-content-center mt-4">
+              <div className="col-12 col-md-8">
+                  <div className="text-center p-4 rounded-3" style={{ backgroundColor: '#242424', border: '1px solid #333' }}>
+                      <p className="cf-text fst-italic mb-2">
                         In the future, people will not ask: What is your address? They will ask:
                       </p>
                       <h4 className="fw-bold text-white mb-3">Where is your face on the blockchain?</h4>
-                      <p className="cf-text">
-                        ChainFace is not a page. It is not a product.
+                      <p className="cf-text mb-0">
+                        ChainFace is not a product. <span className="text-white fw-bold">It is your place.</span>
                       </p>
-                      <p className="fw-bold text-white mb-0" style={{ fontSize: '1.2rem' }}>It is your place.</p>
                   </div>
-
               </div>
           </div>
       </section>
