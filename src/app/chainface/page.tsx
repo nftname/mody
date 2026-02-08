@@ -166,10 +166,11 @@ export default function ChainFacePage() {
             mix-blend-mode: multiply;
         }
 
-        .sig-content {
+       .sig-content {
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: flex-start; /* هذا السطر سيضبط المحاذاة */
             flex-grow: 1;
             padding-right: 5px; 
             overflow: hidden; 
@@ -412,7 +413,8 @@ export default function ChainFacePage() {
                       </div>
 
                       {/* Button (Bottom) */}
-                      <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
+                      <Link href="/chainface-demo" className="signature-btn" style={{ minWidth: '190px', width: '190px', flex: 'none' }} title="View Example Profile">
+
                           <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
                               {/* السطر العلوي: الكلمة + الشارة */}
