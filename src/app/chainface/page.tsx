@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import React from 'react'; // Import React for types
 
 // --- CONSTANTS & STYLES ---
 const GOLD_BASE = '#F0C420';
@@ -44,20 +45,23 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- LUXURY STAR BADGE COMPONENT (SVG) ---
-const LuxuryStarBadge = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" style={{ position: 'absolute', top: '8px', right: '12px', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5))' }}>
+// --- FIX: Added type definition for 'style' props ---
+const LuxuryVerificationSeal = ({ style }: { style?: React.CSSProperties }) => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={style}>
         <defs>
-            <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="sealGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#FFF7CC" />
                 <stop offset="40%" stopColor="#FFD700" />
                 <stop offset="100%" stopColor="#B8860B" />
             </linearGradient>
+            <filter id="sealShadow" x="-50%" y="-50%" width="200%" height="200%">
+                 <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000" floodOpacity="0.4"/>
+            </filter>
         </defs>
-        {/* Star Shape */}
-        <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z" fill="url(#starGradient)" stroke="#fff" strokeWidth="0.5"/>
-        {/* Checkmark inside */}
-        <path d="M9 12l2 2 4-4" fill="none" stroke="#5d4000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <g filter="url(#sealShadow)">
+            <path d="M22.5 12.5c0-1.58-.875-2.95-2.14-3.6.99-1.18 1.33-2.8.765-4.235-.565-1.435-1.925-2.35-3.465-2.35-1.26-1.265-3.19-1.605-4.625-.765-.65-1.265-2.02-2.14-3.6-2.14-1.58 0-2.9.915-3.6 2.14-1.435-.84-3.365-.5-4.625.765-1.54 0-2.9.915-3.465 2.35-.565 1.435-.225 3.055.765 4.235-1.265.65-2.14 2.02-2.14 3.6 0 1.58.875 2.95 2.14 3.6-.99 1.18-1.33 2.8-.765 4.235.565 1.435 1.925 2.35 3.465 2.35 1.26 1.265 3.19 1.605 4.625.765.65 1.265 2.02 2.14 3.6 2.14 1.58 0 2.95-.875 3.6-2.14 1.435.84 3.365.5 4.625-.765 1.54 0 2.9-.915 3.465-2.35.565-1.435.225-3.055-.765-4.235 1.265-.65 2.14-2.02 2.14-3.6z" fill="url(#sealGradient)" stroke="#fff" strokeWidth="0.5" transform="scale(0.9) translate(1.5, 1.5)"/>
+            <path d="M9 12l2 2 4-4" fill="none" stroke="#5d4000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
     </svg>
 );
 
@@ -101,7 +105,7 @@ export default function ChainFacePage() {
             padding-bottom: 20px;
         }
 
-        /* --- SIGNATURE BUTTON STYLES (UPDATED) --- */
+        /* --- SIGNATURE BUTTON STYLES --- */
         .signature-btn {
             display: inline-flex;
             align-items: center;
@@ -114,9 +118,9 @@ export default function ChainFacePage() {
             box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.08);
             transition: all 0.3s ease;
-            margin-left: 20px;
-            position: relative; /* المهم لتثبيت النجمة */
+            position: relative;
             overflow: hidden;
+            /* margin removed from here to allow flexibility in containers */
         }
         .signature-btn::before {
              content: '';
@@ -132,9 +136,9 @@ export default function ChainFacePage() {
             border-color: rgba(255,255,255,0.2);
         }
 
-        /* QR Code Container - Reduced Size by 20% */
+        /* QR Code Container */
         .sig-qr-container {
-            width: 28px; /* تم التصغير من 34px */
+            width: 28px; 
             height: 28px;
             background: rgba(255,255,255,0.92);
             border-radius: 6px;
@@ -145,7 +149,7 @@ export default function ChainFacePage() {
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
         .sig-qr-code {
-            width: 23px; /* تم التصغير */
+            width: 23px;
             height: 23px;
             background-image: url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ALEXANDER_CF_SIGNATURE');
             background-size: cover;
@@ -158,16 +162,15 @@ export default function ChainFacePage() {
             flex-direction: column;
             justify-content: center;
             flex-grow: 1;
-            padding-right: 5px; /* مساحة صغيرة لتجنب التلاصق */
+            padding-right: 5px; 
         }
         
-        /* ChainFace Label - CORRECTED CASE */
+        /* ChainFace Label */
         .sig-label {
             font-family: 'Orbitron', sans-serif;
             font-size: 9px;
             color: rgba(255,255,255,0.95);
             letter-spacing: 0.5px;
-            /* text-transform: uppercase; REMOVED */ 
             margin-bottom: 2px;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
             font-weight: 700;
@@ -228,8 +231,9 @@ export default function ChainFacePage() {
                   </p>
               </div>
 
-              {/* RIGHT: Image Area */}
-              <div className="col-12 col-lg-6 d-flex justify-content-lg-start justify-content-center ps-lg-5">
+              {/* RIGHT: Image Area & NEW CTA BOX */}
+              <div className="col-12 col-lg-6 d-flex flex-column align-items-center align-items-lg-start ps-lg-5">
+                  {/* Top Image */}
                   <div style={{ 
                       width: '100%', 
                       maxWidth: '420px', 
@@ -238,7 +242,8 @@ export default function ChainFacePage() {
                       overflow: 'hidden',
                       border: `1px solid ${GOLD_BASE}30`, 
                       boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
-                      marginTop: '0px'
+                      marginTop: '0px',
+                      marginBottom: '20px'
                   }}>
                       <img 
                         src="/images/chainface-hero.jpg" 
@@ -246,12 +251,46 @@ export default function ChainFacePage() {
                         style={{ width: '100%', height: 'auto', display: 'block' }} 
                       />
                   </div>
+
+                  {/* --- NEW: UPPER CTA BOX (FILLING EMPTY SPACE) --- */}
+                  <div className="d-flex flex-column align-items-center justify-content-center p-4 rounded-3" 
+                       style={{ 
+                           width: '100%',
+                           maxWidth: '420px', // Matches image width
+                           backgroundColor: '#242424', 
+                           border: '1px solid #333',
+                           gap: '20px',
+                           textAlign: 'center'
+                       }}>
+                      
+                      {/* Text */}
+                      <div>
+                          <p className="cf-text mb-1" style={{ fontSize: '15px', letterSpacing: '0.3px' }}>
+                            Future is not about an address. It is about a <span className="text-white fw-bold">ChainFace</span>.
+                          </p>
+                          <p className="text-white fw-bold mb-0" style={{ fontSize: '16px', letterSpacing: '0.5px' }}>
+                            See your place on the blockchain
+                          </p>
+                      </div>
+
+                      {/* Button */}
+                      <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
+                          <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
+                          <div className="sig-content">
+                              <span className="sig-label">ChainFace</span>
+                              <span className="sig-name">ALEXANDER</span>
+                          </div>
+                          <LuxuryVerificationSeal style={{ position: 'absolute', top: '5px', right: '48px' }} />
+                      </Link>
+
+                  </div>
+
               </div>
           </div>
       </section>
 
       {/* --- SPLIT CONTENT LAYOUT --- */}
-      <section className="container pb-5">
+      <section className="container pb-5 mt-4">
           <div className="row g-5">
               
               {/* LEFT COLUMN */}
@@ -333,7 +372,7 @@ export default function ChainFacePage() {
               </div>
           </div>
 
-          {/* FINAL THOUGHT & SIGNATURE */}
+          {/* FINAL THOUGHT & SIGNATURE (BOTTOM) */}
           <div className="row justify-content-center mt-5">
               <div className="col-12 col-md-11">
                   <div className="d-flex flex-column flex-md-row align-items-center justify-content-center p-4 rounded-3" 
@@ -353,24 +392,14 @@ export default function ChainFacePage() {
                           </p>
                       </div>
 
-                      {/* --- THE SIGNATURE BUTTON (UPDATED) --- */}
+                      {/* Button */}
                       <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
-                          {/* QR Icon */}
-                          <div className="sig-qr-container">
-                              <div className="sig-qr-code"></div>
-                          </div>
-                          
-                          {/* Content */}
+                          <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
-                              {/* ChainFace (PascalCase) */}
                               <span className="sig-label">ChainFace</span>
-                              
-                              {/* Name */}
                               <span className="sig-name">ALEXANDER</span>
                           </div>
-
-                          {/* Luxury Star Badge (Positioned Absolute Top Right) */}
-                          <LuxuryStarBadge />
+                          <LuxuryVerificationSeal style={{ position: 'absolute', top: '5px', right: '48px' }} />
                       </Link>
 
                   </div>
