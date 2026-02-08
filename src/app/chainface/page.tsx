@@ -299,7 +299,7 @@ export default function ChainFacePage() {
                       </div>
 
                       {/* Button (Top) */}
-                      <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
+                      <Link href="/demopage" className="signature-btn" title="View Example Profile">
                           <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
                               {/* السطر العلوي: الكلمة + الشارة */}
@@ -421,7 +421,7 @@ export default function ChainFacePage() {
                       </div>
 
                       {/* Button (Bottom) */}
-                      <Link href="/chainface-demo" className="signature-btn" style={{ minWidth: '190px', width: '190px', flex: 'none' }} title="View Example Profile">
+                      <Link href="/demopage" className="signature-btn" style={{ minWidth: '190px', width: '190px', flex: 'none' }} title="View Example Profile">
 
                           <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
