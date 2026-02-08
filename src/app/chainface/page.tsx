@@ -307,8 +307,7 @@ export default function ChainFacePage() {
                                   <span className="sig-label">ChainFace</span>
                                   <GoldenCheckBadge />
                               </div>
-                              <span className="sig-name" style={{ fontSize: 'ALEXANDER THE GREAT'.length > 10 ? '11px' : '15px' }}>ALEXANDER THE GREAT</span>
-
+                              <span className="sig-name" style={{ fontSize: 'ALEXANDER'.length > 10 ? '11px' : '15px' }}>ALEXANDER</span>
                           </div>
                       </Link>
 
@@ -431,8 +430,7 @@ export default function ChainFacePage() {
                                   <span className="sig-label">ChainFace</span>
                                   <GoldenCheckBadge />
                               </div>
-                              <span className="sig-name" style={{ fontSize: 'ALEXANDER THE GREAT'.length > 10 ? '11px' : '15px' }}>ALEXANDER THE GREAT</span>
-
+                              <span className="sig-name" style={{ fontSize: 'ALEXANDER'.length > 10 ? '11px' : '15px' }}>ALEXANDER</span>
                           </div>
                       </Link>
 
