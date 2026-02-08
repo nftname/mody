@@ -45,34 +45,19 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- FIX: TRUE 7-Pointed Star (Heptagram) + Small Size (10px) ---
-const SevenPointStar = ({ style }: { style?: React.CSSProperties }) => (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={style}>
+// --- NEW: Golden Circle Check Badge (Extracted & Converted to SVG) ---
+const GoldenCheckBadge = () => (
+    <svg width="12" height="12" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '4px', filter: 'drop-shadow(0 0 2px rgba(255, 215, 0, 0.3))' }}>
         <defs>
-            <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#FFF7CC" />
-                <stop offset="40%" stopColor="#FFD700" />
-                <stop offset="100%" stopColor="#B8860B" />
+            <linearGradient id="goldBadgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FFD700" />
+                <stop offset="100%" stopColor="#FFA500" />
             </linearGradient>
-             <filter id="starShadow" x="-50%" y="-50%" width="200%" height="200%">
-                 <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000" floodOpacity="0.6"/>
-            </filter>
         </defs>
-        <g filter="url(#starShadow)">
-            {/* مسار النجمة السباعية الدقيق */}
-            <path d="M12 2L14.5 9H22L16 13.5L18.5 21L12 16.5L5.5 21L8 13.5L2 9H9.5L12 2Z" 
-                  fill="url(#starGradient)" 
-                  stroke="#fff" 
-                  strokeWidth="1.2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"/>
-            {/* علامة صح دقيقة */}
-            <path d="M8.5 12.5L10.5 14.5L15.5 9.5" 
-                  stroke="#5d4000" 
-                  strokeWidth="1.8" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"/>
-        </g>
+        {/* الدائرة الذهبية مع الإطار الأبيض */}
+        <circle cx="21" cy="21" r="20" fill="url(#goldBadgeGradient)" stroke="#ffffff" strokeWidth="2"/>
+        {/* علامة الصح السوداء */}
+        <path d="M12 21l6 6 12-12" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
     </svg>
 );
 
@@ -118,9 +103,9 @@ export default function ChainFacePage() {
 
         /* --- FINAL SIGNATURE BUTTON STYLE (LOCKED DIMENSIONS) --- */
         .signature-btn {
-            display: flex; /* Changed from inline-flex to flex to enforce size */
+            display: flex;
             align-items: center;
-            justify-content: flex-start; /* Ensure content starts from left */
+            justify-content: flex-start;
             
             /* أبعاد ثابتة غير قابلة للتغيير نهائياً */
             width: 190px !important; 
@@ -143,8 +128,8 @@ export default function ChainFacePage() {
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            box-sizing: border-box; /* مهم جداً للحفاظ على الأبعاد */
-            margin: 0; /* تصفير الهوامش الخارجية */
+            box-sizing: border-box;
+            margin: 0;
         }
         .signature-btn::before {
              content: '';
@@ -190,12 +175,18 @@ export default function ChainFacePage() {
             overflow: hidden; 
         }
         
+        /* حاوية للسطر العلوي (الكلمة + الشارة) */
+        .sig-top-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
         .sig-label {
             font-family: 'Orbitron', sans-serif;
             font-size: 9px;
             color: rgba(255,255,255,0.95);
             letter-spacing: 0.5px;
-            margin-bottom: 2px;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
             font-weight: 700;
             white-space: nowrap;
@@ -298,15 +289,17 @@ export default function ChainFacePage() {
                           </p>
                       </div>
 
-                      {/* Button (Exact Asset Replica - Top) */}
+                      {/* Button (Top) */}
                       <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
                           <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
-                              <span className="sig-label">ChainFace</span>
+                              {/* السطر العلوي: الكلمة + الشارة */}
+                              <div className="sig-top-row">
+                                  <span className="sig-label">ChainFace</span>
+                                  <GoldenCheckBadge />
+                              </div>
                               <span className="sig-name">ALEXANDER</span>
                           </div>
-                          {/* 7-Point Star - Positioned clean above name */}
-                          <SevenPointStar style={{ position: 'absolute', top: '7px', right: '58px' }} />
                       </Link>
 
                   </div>
@@ -418,15 +411,17 @@ export default function ChainFacePage() {
                           </p>
                       </div>
 
-                      {/* Button (Exact Replica - Fixed Size - Bottom) */}
+                      {/* Button (Bottom) */}
                       <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
                           <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
-                              <span className="sig-label">ChainFace</span>
+                              {/* السطر العلوي: الكلمة + الشارة */}
+                              <div className="sig-top-row">
+                                  <span className="sig-label">ChainFace</span>
+                                  <GoldenCheckBadge />
+                              </div>
                               <span className="sig-name">ALEXANDER</span>
                           </div>
-                          {/* 7-Point Star */}
-                          <SevenPointStar style={{ position: 'absolute', top: '7px', right: '58px' }} />
                       </Link>
 
                   </div>
