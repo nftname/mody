@@ -3,7 +3,7 @@ import Link from 'next/link';
 import React from 'react';
 
 const GoldenCheckBadge = () => (
-    <svg width="28" height="28" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '10px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }}>
+    <svg width="32" height="32" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '12px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
         <defs>
             <linearGradient id="goldBadgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#FFD700" />
@@ -16,9 +16,9 @@ const GoldenCheckBadge = () => (
 );
 
 const FiveStars = () => (
-    <div style={{ display: 'flex', gap: '4px', marginTop: '8px', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', gap: '6px', marginTop: '12px', justifyContent: 'center' }}>
         {[1, 2, 3, 4, 5].map((s) => (
-            <svg key={s} width="18" height="18" viewBox="0 0 24 24" fill="#F0C420" stroke="#B8860B" strokeWidth="1">
+            <svg key={s} width="36" height="36" viewBox="0 0 24 24" fill="#F0C420" stroke="#B8860B" strokeWidth="1">
                 <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
             </svg>
         ))}
@@ -54,9 +54,16 @@ export default function DemoProfilePage() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
 
+        .page-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+            padding: 0 20px;
+        }
+
         .hero-banner {
             width: 100%;
-            height: 280px;
+            height: 260px;
             background-image: url('/images/your-chainface.jpg');
             background-size: cover;
             background-position: center;
@@ -64,19 +71,18 @@ export default function DemoProfilePage() {
         }
         .hero-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4));
+            background: linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.3));
         }
 
         .identity-card-container {
             position: relative;
-            width: 100%;
-            max-width: 500px;
-            height: 280px;
-            margin: -140px auto 0 auto;
-            border-radius: 20px;
+            width: 380px; 
+            height: 230px; 
+            margin-top: -115px; 
+            border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 25px 50px rgba(0,0,0,0.35);
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.4);
             z-index: 10;
             background-color: #1a1a1a;
             background-image: url('/images/chainface-card-bg.jpg');
@@ -91,23 +97,24 @@ export default function DemoProfilePage() {
             text-align: center;
             color: white;
             z-index: 20;
-            margin-top: 60px; 
+            margin-top: 45px; 
         }
 
         .card-name-row {
             display: flex;
             align-items: center;
             justify-content: center;
+            transform: translateY(-5px); 
         }
 
         .card-name {
             font-family: 'Satoshi', sans-serif;
-            font-size: 42px;
+            font-size: 38px;
             font-weight: 900;
             text-transform: uppercase;
             color: white;
             text-shadow: 0 4px 15px rgba(0,0,0,0.6);
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
         .pay-grid {
@@ -156,12 +163,11 @@ export default function DemoProfilePage() {
         }
         .marketing-btn:hover { transform: scale(1.02); }
 
-        @media (max-width: 768px) {
-            .hero-banner { height: 200px; }
-            .identity-card-container { max-width: 90%; height: 220px; margin: -100px auto 0 auto; }
+        @media (max-width: 992px) {
+            .page-container { display: flex; flex-direction: column; align-items: center; }
+            .identity-card-container { width: 340px; height: 210px; margin-top: -100px; }
             .card-name { font-size: 32px; }
-            .card-content { margin-top: 40px; }
-            .pay-grid { grid-template-columns: 1fr; max-width: 90%; }
+            .pay-grid { grid-template-columns: 1fr; max-width: 100%; }
         }
       `}</style>
 
@@ -169,7 +175,7 @@ export default function DemoProfilePage() {
           <div className="hero-overlay"></div>
       </div>
 
-      <div className="container-fluid" style={{ padding: '0', position: 'relative' }}>
+      <div className="page-container">
           <div className="identity-card-container">
               <div className="card-content">
                   <div className="card-name-row">
@@ -181,7 +187,7 @@ export default function DemoProfilePage() {
           </div>
       </div>
 
-      <div className="container" style={{ maxWidth: '800px', margin: '60px auto', padding: '0 20px', textAlign: 'center' }}>
+      <div className="container" style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px', textAlign: 'center' }}>
           
           <h2 style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: '700', fontSize: '24px', color: '#4A148C', lineHeight: '1.4', marginBottom: '15px' }}>
               Welcome to my sovereign territory on Web3. 
