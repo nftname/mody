@@ -57,7 +57,7 @@ export default function ChainFacePage() {
     }}>
       
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500&display=swap');
         
         .cf-header { color: ${TEXT_OFF_WHITE}; font-weight: 700; margin-bottom: 0.8rem; font-size: 1.15rem; }
         .cf-text { color: ${TEXT_BODY_COLOR}; line-height: 1.6; font-size: 14.5px; margin-bottom: 1rem; }
@@ -84,51 +84,99 @@ export default function ChainFacePage() {
             padding-bottom: 20px;
         }
 
-        /* Signature Button Style (Micro Card) */
+        /* Signature Button Style (Micro Card - Refined) */
         .signature-btn {
             display: inline-flex;
             align-items: center;
-            justify-content: space-between;
-            width: 180px; /* العرض المصغر */
-            height: 50px; /* ارتفاع سطرين تقريباً */
-            background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%); /* نفس تدرج الكرت الأصلي */
-            border-radius: 25px;
+            width: 190px; /* عرض مناسب للكبسولة المصغرة */
+            height: 55px; /* ارتفاع أعلى قليلاً */
+            background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%); /* التدرج من الصورة */
+            border-radius: 30px;
             padding: 0 12px;
             text-decoration: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.08);
             transition: all 0.3s ease;
-            margin-left: 15px; /* مسافة عن النص */
-            vertical-align: middle;
+            margin-left: 20px; /* زيادة المسافة عن النص */
+            position: relative;
+            overflow: hidden;
+        }
+        .signature-btn::before { /* لمعة زجاجية */
+             content: '';
+             position: absolute;
+             top: 0; left: 0; width: 100%; height: 50%;
+             background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+             border-radius: 30px 30px 0 0;
         }
         .signature-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
-            border-color: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.2);
         }
-        .sig-qr {
-            width: 28px;
-            height: 28px;
-            background: rgba(255,255,255,0.9);
-            border-radius: 6px;
+
+        /* QR Code (Refined) */
+        .sig-qr-container {
+            width: 34px; /* حجم أصغر للحاوية البيضاء */
+            height: 34px;
+            background: rgba(255,255,255,0.92); /* أقل بياضاً قليلاً */
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-right: 12px; /* زيادة المسافة بين QR والاسم */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
-        .sig-qr i { color: #000; font-size: 14px; }
+        .sig-qr-code {
+            width: 28px; /* حجم الكود نفسه */
+            height: 28px;
+            background-image: url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ALEXANDER_CF_SIGNATURE');
+            background-size: cover;
+            opacity: 0.85; /* جعل الخطوط السوداء أكثر وضوحاً بتقليل الشفافية */
+            mix-blend-mode: multiply; /* دمج لزيادة تباين الأسود */
+        }
+
+        /* Text & Badge Container */
+        .sig-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex-grow: 1;
+        }
+        
+        /* ChainFace Label (Top) */
+        .sig-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 8px; /* حجم صغير */
+            color: rgba(255,255,255,0.9);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 1px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Name (ALEXANDER - Resized) */
         .sig-name {
             font-family: 'Satoshi', sans-serif;
             font-weight: 900;
-            font-size: 16px;
+            font-size: 15px; /* تصغير الحجم بنسبة 10% تقريباً (كان 16px أو أكبر) */
             text-transform: uppercase;
-            background: linear-gradient(to bottom, #ffffff 30%, #a0a0a0 100%);
+            background: linear-gradient(to bottom, #ffffff 40%, #b0b0b0 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.2px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            display: flex; /* لضبط المحاذاة مع الشارة */
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
         }
+        
+        /* Gold Badge */
         .sig-badge {
             color: #FFD700;
             font-size: 14px;
+            margin-left: auto; /* دفع الشارة لليمين */
+            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
         }
 
         /* Ticker Animations */
@@ -140,10 +188,10 @@ export default function ChainFacePage() {
 
       {/* --- HERO SECTION --- */}
       <section className="container pt-5 pb-5">
-          <div className="row g-5 align-items-start"> {/* align-items-start للمحاذاة العلوية */}
+          <div className="row g-5 align-items-start">
               
               {/* LEFT: Text Area */}
-              <div className="col-12 col-lg-6 pt-2"> {/* pt-2 محاذاة دقيقة مع الصورة */}
+              <div className="col-12 col-lg-6 pt-2">
                   <h1 className="fw-bold mb-2" 
                       style={{ 
                           fontSize: '2.5rem', 
@@ -182,7 +230,7 @@ export default function ChainFacePage() {
                       overflow: 'hidden',
                       border: `1px solid ${GOLD_BASE}30`, 
                       boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
-                      marginTop: '0px' /* التأكيد على عدم وجود هامش علوي */
+                      marginTop: '0px'
                   }}>
                       <img 
                         src="/images/chainface-hero.jpg" 
@@ -287,38 +335,47 @@ export default function ChainFacePage() {
               </div>
           </div>
 
-          {/* FINAL THOUGHT (Redesigned with Signature Button) */}
+          {/* FINAL THOUGHT (Redesigned with Signature Button - CORRECTED) */}
           <div className="row justify-content-center mt-5">
-              <div className="col-12 col-md-10">
+              <div className="col-12 col-md-11"> {/* زيادة عرض الحاوية قليلاً */}
                   <div className="d-flex flex-column flex-md-row align-items-center justify-content-center p-4 rounded-3" 
                        style={{ 
                            backgroundColor: '#242424', 
                            border: '1px solid #333',
-                           gap: '20px'
+                           gap: '25px' /* زيادة المسافة بين النص والزر */
                        }}>
                       
-                      {/* Text Part: Short & Punchy */}
+                      {/* Text Part: Corrected & Punchy */}
                       <div className="text-center text-md-end">
-                          <p className="cf-text mb-0" style={{ fontSize: '15px' }}>
-                            Future is not about an address. It is about a Face.
+                          {/* تصحيح العبارة الأولى */}
+                          <p className="cf-text mb-0" style={{ fontSize: '15px', letterSpacing: '0.3px' }}>
+                            Future is not about an address. It is about a <span className="text-white fw-bold">ChainFace</span>.
                           </p>
-                          <p className="text-white fw-bold mb-0" style={{ fontSize: '16px' }}>
-                            See your place on the blockchain:
+                          {/* تصحيح العبارة الثانية (إزالة النقطتين) */}
+                          <p className="text-white fw-bold mb-0" style={{ fontSize: '16px', letterSpacing: '0.5px' }}>
+                            See your place on the blockchain
                           </p>
                       </div>
 
-                      {/* The Signature Button (Micro Card) */}
+                      {/* The Signature Button (Micro Card - Detailed Fixes) */}
                       <Link href="/chainface-demo" className="signature-btn" title="View Example Profile">
-                          {/* QR Icon (Mini) */}
-                          <div className="sig-qr">
-                              <i className="bi bi-qr-code"></i>
+                          {/* QR Icon (Refined & Spaced) */}
+                          <div className="sig-qr-container">
+                              <div className="sig-qr-code"></div>
                           </div>
                           
-                          {/* Name (ALEXANDER) */}
-                          <span className="sig-name">ALEXANDER</span>
-                          
-                          {/* Check Icon */}
-                          <i className="bi bi-patch-check-fill sig-badge"></i>
+                          {/* Content Container (Label + Name + Badge) */}
+                          <div className="sig-content">
+                              {/* Added ChainFace Label */}
+                              <span className="sig-label">ChainFace</span>
+                              
+                              {/* Name (ALEXANDER - Resized) & Badge */}
+                              <span className="sig-name">
+                                  ALEXANDER
+                                  {/* Check Icon (Badge) */}
+                                  <i className="bi bi-patch-check-fill sig-badge"></i>
+                              </span>
+                          </div>
                       </Link>
 
                   </div>
