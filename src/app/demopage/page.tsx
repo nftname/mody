@@ -83,23 +83,24 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
-        /* --- تعديل البنر للكمبيوتر --- */
+        /* --- تعديل البنر للكمبيوتر (النسبة والاحتواء) --- */
         .hero-banner-wrapper {
             width: 100%;
-            height: 32vh;           /* ارتفاع 32% من الشاشة */
+            height: 30vh;           /* 30% من ارتفاع الشاشة كما طلبت */
             position: relative;
             background-color: #000;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
+            display: flex;          
+            justify-content: center; /* توسيط الصورة في حال كانت الشاشة عريضة */
+            align-items: flex-start;
         }
 
         .hero-banner-img {
-            width: 100%;
-            height: 100%;
-            /* contain: الحل السحري لتصغير الصورة بنفس نسبة الطول والعرض */
-            object-fit: contain;    
-            object-position: center;
+            width: auto;            /* العرض يتكيف للحفاظ على النسبة */
+            height: 100%;           /* الارتفاع يأخذ كامل الـ 30vh */
+            max-width: 100%;        /* لا تتجاوز عرض الشاشة */
+            object-fit: contain;    /* تظهر الصورة كاملة دون قص */
+            object-position: top center;
         }
         
         .hero-overlay {
@@ -137,8 +138,7 @@ export default function DemoProfilePage() {
             width: 260px;
             height: 140px;
             margin-top: -30px; 
-            /* إزاحة الكرت لليمين (زيادة المارجن) */
-            margin-left: 10%; 
+            margin-left: 2.5%; 
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 15px 35px rgba(0,0,0,0.25);
@@ -237,22 +237,13 @@ export default function DemoProfilePage() {
             .hero-banner-wrapper { 
                 height: 18vh;
                 min-height: 150px;
-                /* في الجوال، الصورة تعمل بشكل جيد مع cover */
-                display: block;
+                display: block; /* العودة للوضع الطبيعي في الجوال */
             } 
 
             .hero-banner-img {
-                object-fit: cover;
-            }
-
-            /* زر الرجوع المصغر جداً للجوال */
-            .back-btn {
-                width: 25px;        
-                height: 25px;
-                top: 15px;
-                left: 15px;
-                font-size: 12px;    
-                border-width: 0.5px;
+                width: 100%;
+                height: 100%;
+                object-fit: cover; /* في الجوال تعمل Cover بشكل جيد */
             }
             
             .identity-card-container { 
