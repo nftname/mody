@@ -1,9 +1,9 @@
 'use client';
 import Link from 'next/link';
 import React from 'react';
-import { useRouter } from 'next/navigation'; // لاستخدام خاصية الرجوع
+import { useRouter } from 'next/navigation';
 
-// --- Components (Same as before) ---
+// --- Components (مكونات الأيقونات كما هي) ---
 const GoldenCheckBadge = () => (
     <svg width="18" height="18" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '6px', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
         <defs>
@@ -50,14 +50,20 @@ const PayButton = ({ type, name }: { type: string, name: string }) => (
 );
 
 export default function DemoProfilePage() {
-  const router = useRouter(); // لاستخدام زر الرجوع
+  const router = useRouter(); 
 
   return (
-    <main style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', fontFamily: '"Inter", sans-serif' }}>
+    // أضفنا z-index عالي للتأكد من أن الصفحة تغطي أي شيء آخر
+    <main style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
       
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+
+        /* --- الحل الجذري لإخفاء النافبار والفوتر الخاصين بالموقع --- */
+        nav, footer, .navbar, .footer, header:not(.hero-banner-wrapper) {
+            display: none !important;
+        }
 
         /* حاوية الصفحة */
         .page-container {
@@ -67,10 +73,11 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
-        /* 1. البنر الجديد (25% من ارتفاع الشاشة) */
+        /* 1. البنر (35% من ارتفاع الشاشة) + إجبار الصورة على الظهور بالكامل */
         .hero-banner-wrapper {
             width: 100%;
-            height: 25vh;              /* 👈 25% من ارتفاع الشاشة */
+            height: 35vh;              /* 👈 35% كما طلبت بالضبط */
+            min-height: 250px;         /* حماية للشاشات الصغيرة */
             position: relative;
             background-color: #000;
             overflow: hidden;
@@ -79,60 +86,61 @@ export default function DemoProfilePage() {
         .hero-banner-img {
             width: 100%;
             height: 100%;
-            object-fit: cover;       /* تغطي المساحة بالكامل */
+            /* استخدام fill يجبر الصورة على التمدد لملء المربع بالكامل 35vh * 100%
+               هذا يضمن ظهور اللوجو والكلمة بالكامل دون أي قص 
+            */
+            object-fit: fill;       
             object-position: center;
         }
         
         .hero-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3));
+            background: linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.2));
             pointer-events: none;
         }
 
-        /* زر الرجوع (Back Arrow) */
+        /* زر الرجوع */
         .back-btn {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 40px;
-            height: 40px;
+            top: 25px;
+            left: 25px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
-            background-color: rgba(0,0,0,0.5); /* خلفية نصف شفافة للوضوح */
-            backdrop-filter: blur(5px);
+            background-color: rgba(0,0,0,0.6); 
+            backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 20px;
+            font-size: 22px;
             cursor: pointer;
-            z-index: 100; /* فوق كل شيء */
-            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 100;
+            border: 1px solid rgba(255,255,255,0.3);
             transition: all 0.2s ease;
         }
         .back-btn:hover {
-            background-color: rgba(0,0,0,0.8);
+            background-color: rgba(0,0,0,0.9);
             transform: scale(1.05);
         }
 
-        /* 2. الكرت الصغير (Identity Card) - تداخل 10% فقط */
+        /* 2. الكرت الصغير - ضبط التداخل */
         .identity-card-container {
             position: relative;
             width: 260px;
             height: 140px;
-            /* الكرت ارتفاعه 140px. 
-               نريد تداخل 10% من ارتفاع البنر (تقريباً) أو من الكرت نفسه.
-               سنجعله يدخل في الصورة قليلاً من الأسفل.
-               الهامش السلبي يرفعه للأعلى. لنجرب رفعه 30px فقط ليكون تداخلاً بسيطاً.
+            /* تداخل بسيط: بما أن البنر 35% وهو كبير،
+               سنجعل الكرت يتداخل بمقدار 40 بكسل فقط ليكون منظره جمالياً
             */
-            margin-top: -30px; 
-            margin-left: 5%; /* مسافة من اليسار */
+            margin-top: -40px; 
+            margin-left: 5%; 
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            border: 2px solid rgba(255,255,255,0.6);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+            border: 2px solid rgba(255,255,255,0.8);
             z-index: 10;
             background-color: #1a1a1a;
-            /* تم تغيير الامتداد إلى png */
+            /* صورة الكرت png */
             background-image: url('/images/chainface-card-bg.png');
             background-size: cover;
             background-position: center;
@@ -212,6 +220,7 @@ export default function DemoProfilePage() {
         .marketing-btn:hover { transform: scale(1.02); }
 
         @media (max-width: 768px) {
+            .hero-banner-wrapper { height: 30vh; } /* تصغير طفيف للجوال */
             .identity-card-container { margin: -30px auto 0 auto; } /* في الوسط للجوال */
             .pay-grid { grid-template-columns: 1fr; max-width: 100%; }
         }
@@ -220,12 +229,12 @@ export default function DemoProfilePage() {
       {/* 1. Hero Banner Container */}
       <div className="hero-banner-wrapper">
           
-          {/* زر الرجوع داخل البنر */}
+          {/* زر الرجوع */}
           <div className="back-btn" onClick={() => router.back()}>
               <i className="bi bi-arrow-left"></i>
           </div>
 
-          {/* تم تغيير الامتداد إلى png */}
+          {/* صورة البنر png وتملأ المساحة بالكامل */}
           <img 
             src="/images/your-chainface.png" 
             alt="ChainFace Cover" 
@@ -234,10 +243,10 @@ export default function DemoProfilePage() {
           <div className="hero-overlay"></div>
       </div>
 
-      {/* 2. Page Container (Holds Card & Content) */}
+      {/* 2. Page Container */}
       <div className="page-container">
           
-          {/* Identity Card (تداخل بسيط 10%) */}
+          {/* Identity Card */}
           <div className="identity-card-container">
               <div className="card-content">
                   <div className="card-name-row">
@@ -278,7 +287,7 @@ export default function DemoProfilePage() {
           </div>
       </div>
 
-      {/* 4. Footer */}
+      {/* 4. Footer الخاص بهذه الصفحة فقط */}
       <div style={{ marginTop: '60px', padding: '40px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
           <p style={{ fontFamily: 'Cinzel, serif', fontSize: '18px', color: '#111', marginBottom: '10px', fontWeight: '700' }}>
               Ownership is the new status. Claim your sovereign asset now.
