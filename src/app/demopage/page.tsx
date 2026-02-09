@@ -6,17 +6,14 @@ import { useRouter } from 'next/navigation';
 // --- (1) الشارات ---
 const ThreeVerificationBadges = () => (
     <div className="badges-container" style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-        {/* Green */}
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
             <circle cx="21" cy="21" r="19" fill="#25D366" stroke="#888888" strokeWidth="1"/>
             <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Blue */}
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
             <circle cx="21" cy="21" r="19" fill="#1DA1F2" stroke="#888888" strokeWidth="1"/>
             <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Gold */}
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
             <defs>
                 <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -41,63 +38,74 @@ const FiveStars = () => (
     </div>
 );
 
-// --- (3) الأيقونات (تم تحديث USDT ومنع الضغط) ---
+// --- (3) الأيقونات (تم تكبير الحجم وضبط الـ viewBox) ---
 const CryptoLogo = ({ type }: { type: string }) => {
-    // هذا الستايل يضمن أن الأيقونة ثابتة ولا تنضغط أبداً مهما صغر الزر
-    const style = { width: '32px', height: '32px', flexShrink: 0 }; 
+    // 👈 هنا مربط الفرس: تم تكبير الحجم إلى 45 بكسل لملء الدائرة وعدم الضغط
+    const style = { flexShrink: 0, width: '45px', height: '45px' }; 
     
     switch (type) {
         case 'BTC': return (
-            <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#F7931A"/>
-                <path d="M23.189 14.02c.314-2.096-1.283-3.223-3.465-3.975l.708-2.84-1.728-.43-.69 2.765c-.454-.114-.92-.22-1.385-.326l.695-2.783L15.596 6l-.708 2.839c-.376-.086-.746-.17-1.104-.26l.002-.009-2.384-.595-.46 1.846s1.283.294 1.256.312c.7.175.826.638.805 1.006l-.806 3.235c.048.012.11.03.18.057l-.183-.045-1.13 4.532c-.086.212-.303.531-.793.41.018.025-1.256-.313-1.256-.313l-.858 1.978 2.25.561c.418.105.828.215 1.231.318l-.715 2.872 1.727.43.708-2.84c.472.127.93.245 1.378.357l-.706 2.828 1.728.43.715-2.866c2.948.558 5.164.333 6.097-2.333.752-2.146-.037-3.385-1.588-4.192 1.13-.26 1.98-1.003 2.207-2.538zm-3.95 5.538c-.533 2.147-4.148.986-5.32.695l.95-3.805c1.172.293 4.929.872 4.37 3.11zm.535-5.569c-.487 1.953-3.495.96-4.47.717l.86-3.45c.975.243 4.118.696 3.61 2.733z" fill="#FFF"/>
+            <svg style={style} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="32" cy="32" r="32" fill="#F7931A"/>
+                <path d="M44.384 25.875c.628-4.194-2.566-6.446-6.93-7.95L38.87 13.5l-3.456-.86-.842 3.376c-.909-.227-1.84-.44-2.77-.65L32.644 12l-3.457-.862-1.39 5.57s-.96-.24-1.353-.15c.894.204 1.05.746.993 1.187l-1.613 6.47c.097.024.22.06.356.114l-.366-.09-2.26 9.064c-.171.424-.606 1.062-1.586.818.036.05-1.352-.15-1.352-.15l-1.716 3.957 4.5.872c.836.21 1.656.43 2.462.636l-1.43 5.742 3.455.862 1.416-5.68c.944.256 1.86.49 2.756.714l-1.412 5.656 3.456.862 1.43-5.732c5.896 1.116 10.328.666 12.194-4.666 1.504-4.292-.074-6.77-3.176-8.384 2.26-.52 3.96-2.006 4.414-5.076zM38.484 36.95c-1.066 4.294-8.296 1.972-10.64 1.39l1.9-7.61c2.344.586 9.858 1.744 8.74 6.22zm1.07-11.138c-.974 3.906-6.99 1.92-8.94 1.434l1.72-6.9c1.95.486 8.236 1.392 7.22 5.466z" fill="white"/>
             </svg>
         );
         case 'ETH': return (
             <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="16" cy="16" r="16" fill="#627EEA"/>
-                <path d="M16.498 4v8.87l7.497 3.35z" fill="#C0CBF6"/><path d="M16.498 4L9 16.22l7.498-3.35z" fill="#FFF"/><path d="M16.498 21.968v6.027L24 17.616z" fill="#C0CBF6"/><path d="M16.498 27.995v-6.028L9 17.616z" fill="#FFF"/><path d="M16.498 20.573l7.497-4.353-7.497-3.348z" fill="#8197EE"/><path d="M9 16.22l7.498 4.353v-7.701z" fill="#C0CBF6"/>
+                <path d="M16 4L15.865 4.46V23.734L16 23.869L23.498 19.434L16 4Z" fill="#C0CBF6"/>
+                <path d="M16 4L8.5 19.434L16 23.869V14.186V4Z" fill="white"/>
+                <path d="M16 25.0755L15.932 25.1585V28.7995L16 29.0005L23.503 19.9575L16 25.0755Z" fill="#C0CBF6"/>
+                <path d="M16 29.0005V25.0755L8.5 19.9575L16 29.0005Z" fill="white"/>
+                <path d="M16 23.8695L23.498 19.4345L16 14.1865V23.8695Z" fill="#8197EE"/>
+                <path d="M8.5 19.4345L16 23.8695V14.1865L8.5 19.4345Z" fill="#C0CBF6"/>
             </svg>
         );
         case 'POLYGON': return (
             <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="16" cy="16" r="16" fill="#8247E5"/>
-                <path d="M21.9 10.325L16.5 7.275a1 1 0 00-1 0L10.1 10.325a1 1 0 00-.5.866v6.1a1 1 0 00.5.866l5.4 3.05a1 1 0 001 0l5.4-3.05a1 1 0 00.5-.866v-6.1a1 1 0 00-.5-.866zM16 20.275l-4.5-2.541v-5.082L16 15.193l4.5-2.541v5.082L16 20.275z" fill="#FFF"/>
+                <path d="M21.9 10.325L16.5 7.275a1 1 0 00-1 0L10.1 10.325a1 1 0 00-.5.866v6.1a1 1 0 00.5.866l5.4 3.05a1 1 0 001 0l5.4-3.05a1 1 0 00.5-.866v-6.1a1 1 0 00-.5-.866zM16 20.275l-4.5-2.541v-5.082L16 15.193l4.5-2.541v5.082L16 20.275z" fill="white"/>
             </svg>
         );
         case 'SOL': return (
             <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="16" cy="16" r="16" fill="#000"/>
-                <path d="M9.5 19.3l2.2-2.3h13l-2.2 2.3z" fill="url(#solGrad)"/><path d="M22.5 12.7l-2.2 2.3h-13l2.2-2.3z" fill="url(#solGrad)"/><path d="M9.5 25.8l2.2-2.3h13l-2.2 2.3z" fill="url(#solGrad)"/>
-                <defs><linearGradient id="solGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#00FFA3"/><stop offset="1" stopColor="#DC1FFF"/></linearGradient></defs>
+                <path d="M8.5 19.3L10.7 17H23.7L21.5 19.3H8.5Z" fill="url(#solGrad)"/>
+                <path d="M23.5 12.7L21.3 15H8.30005L10.5 12.7H23.5Z" fill="url(#solGrad)"/>
+                <path d="M8.5 25.8L10.7 23.5H23.7L21.5 25.8H8.5Z" fill="url(#solGrad)"/>
+                <defs>
+                    <linearGradient id="solGrad" x1="8.5" y1="12.7" x2="23.7" y2="25.8" gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stopColor="#00FFA3"/>
+                        <stop offset="1" stopColor="#DC1FFF"/>
+                    </linearGradient>
+                </defs>
             </svg>
         );
         case 'BNB': return (
             <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="16" cy="16" r="16" fill="#F3BA2F"/>
-                <path d="M16 11.406L13.692 13.714L16 16.022L18.308 13.714L16 11.406ZM12.146 13.714L10.606 15.254L12.152 16.8L13.692 15.26L12.146 13.714ZM16 8.246L14.454 9.792L16 11.338L17.546 9.792L16 8.246ZM19.854 13.714L18.308 15.26L19.848 16.8L21.394 15.254L19.854 13.714ZM16 20.662L17.546 22.208L16 23.754L14.454 22.208L16 20.662ZM10.612 10.64L8.223 13.029L10.515 15.321L12.904 12.932L10.612 10.64ZM21.402 10.627L19.11 12.919L21.388 15.197L23.68 12.905L21.402 10.627ZM10.521 16.892L8.229 19.184L10.618 21.573L12.91 19.281L10.521 16.892ZM19.096 19.294L21.388 17.002L23.777 19.391L21.485 21.683L19.096 19.294Z" fill="#FFF"/>
+                <path d="M12.115 16L16 19.877L19.885 16L16 12.123L12.115 16ZM8.215 16L10.5 18.277L8.208 20.562L6 18.369L8.215 16ZM16 8.246L18.285 10.531L16 12.808L13.723 10.523L16 8.246ZM19.9 16L22.115 18.369L19.907 20.562L17.615 18.277L19.9 16ZM16 23.754L18.277 21.477L20.562 23.754L18.285 26.046L16 23.754ZM8.223 13.73L10.5 11.453L12.792 13.746L10.5 16.023L8.223 13.73Z" fill="white"/>
             </svg>
         );
         case 'USDT': return (
             <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="16" cy="16" r="16" fill="#26A17B"/>
-                <path d="M19.825 14.28V11.83H24.5V10H7.5V11.83H12.175V14.28C12.175 14.39 12.175 14.5 12.185 14.61C9.722 14.9 7.9 15.65 7.9 16.53C7.9 17.41 9.712 18.15 12.165 18.45V24H19.825V18.45C22.288 18.16 24.1 17.41 24.1 16.53C24.1 15.65 22.288 14.91 19.835 14.61C19.835 14.5 19.825 14.39 19.825 14.28ZM19.825 16.53C19.825 17.15 18.032 17.65 15.995 17.65C13.958 17.65 12.175 17.15 12.175 16.53C12.175 15.91 13.958 15.41 15.995 15.41C18.032 15.41 19.825 15.91 19.825 16.53Z" fill="white"/>
+                <path fillRule="evenodd" clipRule="evenodd" d="M19.96 14.28V11.83H24.5V10H7.5V11.83H12.04V14.28C12.04 14.39 12.04 14.5 12.05 14.61C9.62 14.9 7.82 15.65 7.82 16.53C7.82 17.41 9.61 18.15 12.03 18.45V24H19.96V18.45C22.39 18.16 24.18 17.41 24.18 16.53C24.18 15.65 22.39 14.91 19.97 14.61C19.97 14.5 19.96 14.39 19.96 14.28ZM19.96 16.53C19.96 17.15 18.19 17.65 16 17.65C13.81 17.65 12.04 17.15 12.04 16.53C12.04 15.91 13.81 15.41 16 15.41C18.19 15.41 19.96 15.91 19.96 16.53Z" fill="white"/>
             </svg>
         );
         default: return null;
     }
 };
 
-
 const PayButton = ({ type, name }: { type: string, name: string }) => (
     <button className="pay-btn">
         <div style={{ display: 'flex', alignItems: 'center', width: '100%', height: '100%' }}>
-            {/* الأيقونة على اليسار */}
-            <div style={{ marginRight: '10px', display: 'flex', alignItems: 'center' }}>
+            {/* الأيقونة بحجم ثابت ومساحة ثابتة */}
+            <div style={{ marginRight: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <CryptoLogo type={type} />
             </div>
             
-            {/* النص في المنتصف */}
+            {/* النص في المنتصف بالنسبة للمساحة المتبقية */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
                 <span style={{ fontWeight: '800', fontSize: '15px', color: '#1A1A1A', marginBottom: '0px', lineHeight: '1.2' }}>{name}</span>
                 <span style={{ fontSize: '11px', fontWeight: '600', color: '#777', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Send</span>
@@ -136,7 +144,6 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
-        /* --- الهيدر (الكمبيوتر) --- */
         .hero-banner-wrapper {
             width: 100%;
             height: auto;
@@ -181,7 +188,6 @@ export default function DemoProfilePage() {
             transition: all 0.2s ease;
         }
 
-        /* --- الكرت --- */
         .identity-card-container {
             position: relative;
             width: 260px;
@@ -228,7 +234,6 @@ export default function DemoProfilePage() {
         .stars-container { gap: 5px; margin-top: 8px; margin-bottom: 5px; }
         .badges-container { margin-bottom: 10px; margin-top: -5px; }
 
-        /* --- Conviction --- */
         .conviction-box {
             position: relative;
             text-align: center;
@@ -281,7 +286,6 @@ export default function DemoProfilePage() {
             font-weight: 600;
         }
 
-        /* --- الأزرار --- */
         .pay-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -343,7 +347,6 @@ export default function DemoProfilePage() {
             font-weight: 700;
         }
 
-        /* --- تنسيقات الجوال --- */
         @media (max-width: 768px) {
             .hero-banner-wrapper { 
                 height: auto; 
