@@ -3,7 +3,6 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// --- (1) الشارات ---
 const ThreeVerificationBadges = () => (
     <div style={{ display: 'flex', gap: '5px', marginBottom: '4px', justifyContent: 'center' }}>
         <svg width="14" height="14" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))' }}>
@@ -27,7 +26,6 @@ const ThreeVerificationBadges = () => (
     </div>
 );
 
-// --- (2) النجوم ---
 const FiveStars = () => (
     <div style={{ display: 'flex', gap: '2px', marginTop: '2px', justifyContent: 'center' }}>
         {[1, 2, 3, 4, 5].map((s) => (
@@ -38,7 +36,6 @@ const FiveStars = () => (
     </div>
 );
 
-// --- (3) أيقونات العملات ---
 const CryptoLogo = ({ type }: { type: string }) => {
     switch (type) {
         case 'BTC': return <svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M22.6 14.2c.4-2.6-1.6-4-4.3-5l.9-3.5-2.1-.5-.8 3.4c-.6-.1-1.1-.3-1.7-.4l.9-3.5-2.1-.5-.9 3.6c-.5-.1-.9-.2-1.4-.3l-3-.8-.6 2.3s1.6.4 1.6.4c.9.2 1 .8 1 1.2l-1 4.1c.1 0 .2 0 .3.1-.1 0-.2 0-.3-.1l-1.4 5.6c-.1.3-.4.7-1 .6 0 0-1.6-.4-1.6-.4l-1.1 2.6 2.8.7c.5.1 1 .3 1.5.4l-.9 3.6 2.1.5.9-3.6c.6.1 1.1.3 1.7.4l-.9 3.6 2.1.5.9-3.5c3.6.7 6.4.4 7.6-2.9.9-2.7-.1-4.2-1.9-5.2 1.4-.3 2.4-1.2 2.7-3z" fill="#FFF"/></svg>;
@@ -86,19 +83,22 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
-        /* --- الهيدر في الكمبيوتر: تمدد كامل (Fill) --- */
+        /* --- تعديل البنر للكمبيوتر --- */
         .hero-banner-wrapper {
             width: 100%;
-            height: 30vh;           /* ارتفاع ثابت 30% من الشاشة */
+            height: 32vh;           /* ارتفاع 32% من الشاشة */
             position: relative;
             background-color: #000;
             overflow: hidden;
+            display: flex;
+            justify-content: center;
         }
 
         .hero-banner-img {
             width: 100%;
             height: 100%;
-            object-fit: fill;       /* إجبار الصورة على ملء العرض والارتفاع بالكامل بدون قص */
+            /* contain: الحل السحري لتصغير الصورة بنفس نسبة الطول والعرض */
+            object-fit: contain;    
             object-position: center;
         }
         
@@ -108,7 +108,6 @@ export default function DemoProfilePage() {
             pointer-events: none;
         }
 
-        /* زر الرجوع للكمبيوتر */
         .back-btn {
             position: absolute;
             top: 25px;
@@ -138,8 +137,8 @@ export default function DemoProfilePage() {
             width: 260px;
             height: 140px;
             margin-top: -30px; 
-            /* إزاحة الكرت لليمين قليلاً (زيادة المارجن يسار) */
-            margin-left: 6%; 
+            /* إزاحة الكرت لليمين (زيادة المارجن) */
+            margin-left: 10%; 
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 15px 35px rgba(0,0,0,0.25);
@@ -238,15 +237,22 @@ export default function DemoProfilePage() {
             .hero-banner-wrapper { 
                 height: 18vh;
                 min-height: 150px;
+                /* في الجوال، الصورة تعمل بشكل جيد مع cover */
+                display: block;
             } 
 
-            /* زر الرجوع المصغر للجوال */
+            .hero-banner-img {
+                object-fit: cover;
+            }
+
+            /* زر الرجوع المصغر جداً للجوال */
             .back-btn {
-                width: 30px;        /* تصغير بنسبة كبيرة */
-                height: 30px;
-                top: 20px;
-                left: 20px;
-                font-size: 14px;    /* تصغير الأيقونة */
+                width: 25px;        
+                height: 25px;
+                top: 15px;
+                left: 15px;
+                font-size: 12px;    
+                border-width: 0.5px;
             }
             
             .identity-card-container { 
