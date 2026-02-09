@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import React from 'react';
+import { useRouter } from 'next/navigation'; // لاستخدام خاصية الرجوع
 
 // --- Components (Same as before) ---
 const GoldenCheckBadge = () => (
@@ -49,52 +50,81 @@ const PayButton = ({ type, name }: { type: string, name: string }) => (
 );
 
 export default function DemoProfilePage() {
+  const router = useRouter(); // لاستخدام زر الرجوع
+
   return (
     <main style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', fontFamily: '"Inter", sans-serif' }}>
       
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
+        @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
 
         /* حاوية الصفحة */
         .page-container {
             width: 100%;
-            max-width: 1400px; /* نسمح بعرض كبير ليتناسب مع الصور العريضة */
+            max-width: 1400px;
             margin: 0 auto;
             position: relative;
         }
 
-        /* 1. البنر الذكي (Smart Aspect Ratio Banner) */
-   .hero-banner-wrapper {
-    width: 100%;
-    height: 30vh;              /* 👈 30% من ارتفاع الشاشة */
-    min-height: 180px;         /* حماية من الصغر */
-    max-height: 380px;         /* حماية من التضخم */
-    position: relative;
-    background-color: #000;
-    overflow: hidden;
-}
+        /* 1. البنر الجديد (25% من ارتفاع الشاشة) */
+        .hero-banner-wrapper {
+            width: 100%;
+            height: 25vh;              /* 👈 25% من ارتفاع الشاشة */
+            position: relative;
+            background-color: #000;
+            overflow: hidden;
+        }
 
-.hero-banner-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;       /* 👈 أهم سطر: بدون قص */
-    object-position: center;
-    background-color: #000;
-}
+        .hero-banner-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;       /* تغطي المساحة بالكامل */
+            object-position: center;
+        }
         
         .hero-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.2));
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3));
             pointer-events: none;
         }
 
-        /* 2. الكرت الصغير (Identity Card) */
+        /* زر الرجوع (Back Arrow) */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.5); /* خلفية نصف شفافة للوضوح */
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 100; /* فوق كل شيء */
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.2s ease;
+        }
+        .back-btn:hover {
+            background-color: rgba(0,0,0,0.8);
+            transform: scale(1.05);
+        }
+
+        /* 2. الكرت الصغير (Identity Card) - تداخل 10% فقط */
         .identity-card-container {
             position: relative;
             width: 260px;
             height: 140px;
-            /* نرفعه للأعلى ليتداخل مع البنر، القيمة تعتمد على حجم البنر المتغير */
-            margin-top: -70px; 
+            /* الكرت ارتفاعه 140px. 
+               نريد تداخل 10% من ارتفاع البنر (تقريباً) أو من الكرت نفسه.
+               سنجعله يدخل في الصورة قليلاً من الأسفل.
+               الهامش السلبي يرفعه للأعلى. لنجرب رفعه 30px فقط ليكون تداخلاً بسيطاً.
+            */
+            margin-top: -30px; 
             margin-left: 5%; /* مسافة من اليسار */
             border-radius: 12px;
             overflow: hidden;
@@ -102,7 +132,8 @@ export default function DemoProfilePage() {
             border: 2px solid rgba(255,255,255,0.6);
             z-index: 10;
             background-color: #1a1a1a;
-            background-image: url('/images/chainface-card-bg.jpg');
+            /* تم تغيير الامتداد إلى png */
+            background-image: url('/images/chainface-card-bg.png');
             background-size: cover;
             background-position: center;
             display: flex;
@@ -181,15 +212,22 @@ export default function DemoProfilePage() {
         .marketing-btn:hover { transform: scale(1.02); }
 
         @media (max-width: 768px) {
-            .identity-card-container { margin: -50px auto 0 auto; } /* في الوسط للجوال */
+            .identity-card-container { margin: -30px auto 0 auto; } /* في الوسط للجوال */
             .pay-grid { grid-template-columns: 1fr; max-width: 100%; }
         }
       `}</style>
 
       {/* 1. Hero Banner Container */}
       <div className="hero-banner-wrapper">
+          
+          {/* زر الرجوع داخل البنر */}
+          <div className="back-btn" onClick={() => router.back()}>
+              <i className="bi bi-arrow-left"></i>
+          </div>
+
+          {/* تم تغيير الامتداد إلى png */}
           <img 
-            src="/images/your-chainface.jpg" 
+            src="/images/your-chainface.png" 
             alt="ChainFace Cover" 
             className="hero-banner-img"
           />
@@ -199,7 +237,7 @@ export default function DemoProfilePage() {
       {/* 2. Page Container (Holds Card & Content) */}
       <div className="page-container">
           
-          {/* Identity Card */}
+          {/* Identity Card (تداخل بسيط 10%) */}
           <div className="identity-card-container">
               <div className="card-content">
                   <div className="card-name-row">
