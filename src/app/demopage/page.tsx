@@ -92,8 +92,8 @@ export default function DemoProfilePage() {
             width: 100%;
             height: 30vh; 
             height: auto;          /* الارتفاع أوتوماتيكي */
-             aspect-ratio: 3.35;  /* النسبة الأصلية للصورة (3360/1280) تضمن عدم القص */
-             max-height: 200px;      /* حد أقصى للارتفاع */
+             aspect-ratio: 1.3;  /* النسبة الأصلية للصورة (3360/1280) تضمن عدم القص */
+             max-height: 250px;      /* حد أقصى للارتفاع */
             position: relative;
             background-color: #000;
             overflow: hidden;
@@ -273,7 +273,7 @@ export default function DemoProfilePage() {
               <i className="bi bi-arrow-left"></i>
           </div>
           <img 
-            src="/images/your-chainface.jpg" 
+            src="/images/your-chainface.png" 
             alt="ChainFace Cover" 
             className="hero-banner-img"
           />
