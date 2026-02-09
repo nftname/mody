@@ -2,11 +2,9 @@
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-// استيراد مكون الصورة من Next.js لضمان الأداء والجودة
-import Image from 'next/image';
+// قمنا بإزالة import Image لأنه يسبب المشكلة مع الروابط الخارجية بدون إعدادات
 
-// --- (1) روابط الشعارات الرسمية (CDN Links - High Quality) ---
-// المصدر: CryptoLogos.cc & CoinMarketCap (Official SVGs/PNGs)
+// --- (1) روابط الشعارات الرسمية (CDN Links) ---
 const COIN_LOGOS = {
     BTC: "https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=026",
     ETH: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=026",
@@ -16,18 +14,20 @@ const COIN_LOGOS = {
     USDT: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=026",
 };
 
-// --- (2) زر الدفع الفخم (صورة + نص) ---
+// --- (2) زر الدفع الفخم (تم تعديله لاستخدام img العادية لحل مشكلة 400) ---
 const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name: string }) => (
     <button className="web3-payment-btn">
         <div className="btn-content">
-            {/* الحاوية الخاصة باللوجو - تضمن عدم التشويه */}
+            {/* الحاوية الخاصة باللوجو */}
             <div className="logo-wrapper">
-                <Image 
+                {/* استخدام img العادية لتخطي قيود سيرفر Next.js */}
+                <img 
                     src={COIN_LOGOS[type]} 
                     alt={`${name} Logo`} 
-                    width={32} 
-                    height={32} 
+                    width="32" 
+                    height="32" 
                     className="coin-logo"
+                    style={{ objectFit: 'contain' }}
                 />
             </div>
             
@@ -40,7 +40,7 @@ const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name
     </button>
 );
 
-// --- (3) Helper Components (Badges & Stars - No Changes) ---
+// --- (3) Helper Components ---
 const ThreeVerificationBadges = () => (
     <div className="badges-container" style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
@@ -93,7 +93,6 @@ export default function DemoProfilePage() {
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
 
-        /* --- Global Resets --- */
         nav, footer, .navbar, .footer, header:not(.hero-banner-wrapper) {
             display: none !important;
         }
@@ -143,7 +142,7 @@ export default function DemoProfilePage() {
             transition: all 0.2s ease;
         }
 
-        /* --- Profile Card --- */
+        /* --- Card --- */
         .identity-card-container {
             position: relative;
             width: 260px;
@@ -178,7 +177,7 @@ export default function DemoProfilePage() {
         .stars-container { gap: 5px; margin-top: 8px; margin-bottom: 5px; }
         .badges-container { margin-bottom: 10px; margin-top: -5px; }
 
-        /* --- Conviction Section --- */
+        /* --- Conviction --- */
         .conviction-box {
             position: relative; text-align: center; margin-top: 15px; margin-bottom: 30px;
         }
@@ -200,21 +199,20 @@ export default function DemoProfilePage() {
             right: -25px; top: 50%; transform: translateY(-50%);
         }
 
-        /* --- Web3 Payment Buttons Grid --- */
+        /* --- Payment Grid --- */
         .pay-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 Columns on Desktop */
+            grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             max-width: 800px;
             margin: 0 auto;
         }
 
-        /* Button Style (Flexbox + Image) */
         .web3-payment-btn {
             background: #FFFFFF;
             border: 1px solid #E5E7EB;
             border-radius: 16px;
-            height: 72px; /* ارتفاع قياسي ومريح */
+            height: 72px;
             width: 100%;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -239,10 +237,9 @@ export default function DemoProfilePage() {
         }
 
         .logo-wrapper {
-            /* حاوية اللوجو تضمن الحجم الثابت */
             width: 32px; 
             height: 32px;
-            min-width: 32px; /* منع الانضغاط */
+            min-width: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -250,7 +247,6 @@ export default function DemoProfilePage() {
         }
         
         .coin-logo {
-            /* ضمان جودة الصورة */
             width: 100%;
             height: 100%;
             object-fit: contain; 
@@ -275,7 +271,7 @@ export default function DemoProfilePage() {
         .action-text {
             font-size: 11px;
             font-weight: 600;
-            color: #6B7280; /* رمادي متوسط */
+            color: #6B7280;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-top: 2px;
@@ -326,14 +322,13 @@ export default function DemoProfilePage() {
             }
             .footer-note { font-size: 10px; }
 
-            /* Grid for Mobile: 2 Columns */
             .pay-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 10px;
             }
             
             .web3-payment-btn {
-                height: 64px; /* أقصر قليلاً للجوال */
+                height: 60px;
                 padding: 0 12px;
             }
             
@@ -376,7 +371,7 @@ export default function DemoProfilePage() {
 
           <div style={{ maxWidth: '800px', margin: '20px auto', textAlign: 'center', padding: '0 20px' }}>
               
-              {/* --- Web3 Payment Buttons Grid --- */}
+              {/* --- New Web3 Payment Buttons --- */}
               <div className="pay-grid">
                   <Web3PaymentButton type="BTC" name="Bitcoin" />
                   <Web3PaymentButton type="ETH" name="Ethereum" />
