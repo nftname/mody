@@ -41,25 +41,33 @@ const FiveStars = () => (
     </div>
 );
 
+// --- (3) الأيقونات (تم تحديث USDT ومنع الضغط) ---
 const CryptoLogo = ({ type }: { type: string }) => {
+    // ستايل موحد لمنع الضغط
+    const style = { flexShrink: 0 }; 
+    
     switch (type) {
-        case 'BTC': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M22.6 14.2c.4-2.6-1.6-4-4.3-5l.9-3.5-2.1-.5-.8 3.4c-.6-.1-1.1-.3-1.7-.4l.9-3.5-2.1-.5-.9 3.6c-.5-.1-.9-.2-1.4-.3l-3-.8-.6 2.3s1.6.4 1.6.4c.9.2 1 .8 1 1.2l-1 4.1c.1 0 .2 0 .3.1-.1 0-.2 0-.3-.1l-1.4 5.6c-.1.3-.4.7-1 .6 0 0-1.6-.4-1.6-.4l-1.1 2.6 2.8.7c.5.1 1 .3 1.5.4l-.9 3.6 2.1.5.9-3.6c.6.1 1.1.3 1.7.4l-.9 3.6 2.1.5.9-3.5c3.6.7 6.4.4 7.6-2.9.9-2.7-.1-4.2-1.9-5.2 1.4-.3 2.4-1.2 2.7-3z" fill="#FFF"/></svg>;
-        case 'ETH': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627EEA"/><path d="M16 4l-8.5 14L16 29l8.5-11z" fill="#FFF" opacity="0.6"/><path d="M16 4v14l8.5-4z" fill="#FFF"/></svg>;
-        case 'POLYGON': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#8247E5"/><path d="M21.5 10.5L16 7.5l-5.5 3v6l5.5 3 5.5-3z" stroke="#FFF" strokeWidth="2" fill="none"/></svg>;
-        case 'SOL': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#000"/><path d="M8 22.5l2.5-2.5h13l-2.5 2.5zm13.5-6l-2.5 2.5h-13l2.5-2.5zm-13.5-6l2.5-2.5h13l-2.5 2.5z" fill="url(#solGrad)"/><defs><linearGradient id="solGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#00FFA3"/><stop offset="1" stopColor="#DC1FFF"/></linearGradient></defs></svg>;
-        case 'BNB': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F3BA2F"/><path d="M16 11l-3 3 3 3 3-3-3-3zm0-5l-8 8 8 8 8-8-8-8zm0 21l-3-3 3-3 3 3-3 3z" fill="#FFF"/></svg>;
-        case 'USDT': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path d="M18.5 15.5v-2h5v-2h-15v2h5v2c0 2.5 4 2.5 4 0v-4" stroke="#FFF" strokeWidth="2" fill="none"/><path d="M16 23c-4.5 0-8-1-8-2.5s3.5-2.5 8-2.5 8 1 8 2.5-3.5 2.5-8 2.5z" fill="none" stroke="#FFF"/></svg>;
+        case 'BTC': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M22.6 14.2c.4-2.6-1.6-4-4.3-5l.9-3.5-2.1-.5-.8 3.4c-.6-.1-1.1-.3-1.7-.4l.9-3.5-2.1-.5-.9 3.6c-.5-.1-.9-.2-1.4-.3l-3-.8-.6 2.3s1.6.4 1.6.4c.9.2 1 .8 1 1.2l-1 4.1c.1 0 .2 0 .3.1-.1 0-.2 0-.3-.1l-1.4 5.6c-.1.3-.4.7-1 .6 0 0-1.6-.4-1.6-.4l-1.1 2.6 2.8.7c.5.1 1 .3 1.5.4l-.9 3.6 2.1.5.9-3.6c.6.1 1.1.3 1.7.4l-.9 3.6 2.1.5.9-3.5c3.6.7 6.4.4 7.6-2.9.9-2.7-.1-4.2-1.9-5.2 1.4-.3 2.4-1.2 2.7-3z" fill="#FFF"/></svg>;
+        case 'ETH': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627EEA"/><path d="M16 4l-8.5 14L16 29l8.5-11z" fill="#FFF" opacity="0.6"/><path d="M16 4v14l8.5-4z" fill="#FFF"/></svg>;
+        case 'POLYGON': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#8247E5"/><path d="M21.5 10.5L16 7.5l-5.5 3v6l5.5 3 5.5-3z" stroke="#FFF" strokeWidth="2" fill="none"/></svg>;
+        case 'SOL': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#000"/><path d="M8 22.5l2.5-2.5h13l-2.5 2.5zm13.5-6l-2.5 2.5h-13l2.5-2.5zm-13.5-6l2.5-2.5h13l-2.5 2.5z" fill="url(#solGrad)"/><defs><linearGradient id="solGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#00FFA3"/><stop offset="1" stopColor="#DC1FFF"/></linearGradient></defs></svg>;
+        case 'BNB': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F3BA2F"/><path d="M16 11l-3 3 3 3 3-3-3-3zm0-5l-8 8 8 8 8-8-8-8zm0 21l-3-3 3-3 3 3-3 3z" fill="#FFF"/></svg>;
+        // تم تحديث أيقونة USDT لتكون أوضح
+        case 'USDT': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path d="M16 23c-4.5 0-8-1-8-2.5s3.5-2.5 8-2.5 8 1 8 2.5-3.5 2.5-8 2.5z" stroke="#FFF" strokeWidth="1.5" fill="none"/><path d="M13 14v9h6v-9h5v-3h-16v3h5z" fill="#FFF"/></svg>;
         default: return null;
     }
 };
 
 const PayButton = ({ type, name }: { type: string, name: string }) => (
     <button className="pay-btn">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
             <CryptoLogo type={type} />
-            <span style={{ fontWeight: '700', fontSize: '14px' }}>{name}</span>
+            {/* تم تعديل التنسيق ليكون الاسم وتحته كلمة Send */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginLeft: '12px' }}>
+                <span style={{ fontWeight: '700', fontSize: '14px', lineHeight: '1.2', color: '#333' }}>{name}</span>
+                <span style={{ fontSize: '11px', opacity: 0.7, lineHeight: '1.2', color: '#555' }}>Send</span>
+            </div>
         </div>
-        <span style={{ fontSize: '11px', opacity: 0.7 }}>Send</span>
     </button>
 );
 
@@ -71,7 +79,6 @@ export default function DemoProfilePage() {
       setFeedback(prev => prev === type ? null : type);
   };
 
-  // اللون الموحد الجديد (أرجواني غامق)
   const deepPurpleColor = '#2E1A47'; 
 
   return (
@@ -93,7 +100,7 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
-        /* --- الهيدر --- */
+        /* --- الهيدر (الكمبيوتر) --- */
         .hero-banner-wrapper {
             width: 100%;
             height: auto;
@@ -118,7 +125,6 @@ export default function DemoProfilePage() {
             pointer-events: none;
         }
 
-        /* زر العودة (الكمبيوتر) */
         .back-btn {
             position: absolute;
             top: 55px; 
@@ -151,7 +157,6 @@ export default function DemoProfilePage() {
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.4);
             z-index: 10;
-            /* خلفية الكرت */
             background: radial-gradient(circle at center, #0F172A 0%, #1e1b4b 40%, #581c87 100%);
             display: flex;
             flex-direction: column;
@@ -189,7 +194,7 @@ export default function DemoProfilePage() {
             letter-spacing: 0.5px;
         }
 
-        /* الأحجام */
+        /* --- الأيقونات (الكمبيوتر) --- */
         .badge-icon { width: 23px; height: 23px; } 
         .star-icon { width: 21px; height: 21px; } 
         
@@ -231,11 +236,25 @@ export default function DemoProfilePage() {
             font-family: 'Satoshi', sans-serif;
         }
         .conviction-diamond {
-            font-size: 18px; /* تصغير الماسة 10% */
+            font-size: 18px; 
             color: ${deepPurpleColor}; 
         }
 
-        /* --- أزرار الدفع --- */
+        .thank-you-title {
+            font-family: 'Satoshi', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            color: ${deepPurpleColor};
+            margin-bottom: 10px;
+        }
+        .thank-you-subtitle {
+            color: ${deepPurpleColor};
+            font-size: 16px;
+            line-height: 1.5;
+            font-weight: 600;
+        }
+
+        /* --- تنسيق الأزرار (عام) --- */
         .pay-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -248,11 +267,12 @@ export default function DemoProfilePage() {
             background: #fff;
             border: 1px solid #eee;
             border-radius: 12px;
-            /* زيادة الارتفاع بشكل كبير جداً لمنع قص الأيقونات */
-            height: 70px;
+            /* زيادة الارتفاع لمنع قص الأيقونات */
+            height: 75px; 
             padding: 0 15px;
             display: flex;
-            justify-content: space-between;
+            /* نستخدم flex-start لكي تكون المحاذاة لليسار */
+            justify-content: flex-start; 
             align-items: center;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -290,21 +310,6 @@ export default function DemoProfilePage() {
              font-style: italic;
         }
 
-        /* عبارة الشكر وال CTA */
-        .thank-you-title {
-            font-family: 'Satoshi', sans-serif;
-            font-weight: 700;
-            font-size: 22px;
-            color: ${deepPurpleColor};
-            margin-bottom: 10px;
-        }
-        .thank-you-subtitle {
-            color: ${deepPurpleColor};
-            font-size: 16px;
-            line-height: 1.5;
-            font-weight: 600;
-        }
-
         .cta-phrase {
             font-family: 'Cinzel', serif;
             font-size: 18px;
@@ -315,26 +320,28 @@ export default function DemoProfilePage() {
 
         /* --- تنسيقات الجوال --- */
         @media (max-width: 768px) {
+            /* تعديل الهيدر ليأخذ النسبة الصحيحة للصورة */
             .hero-banner-wrapper { 
-                height: 18vh;
-                min-height: 150px;
-                aspect-ratio: unset;
-                max-height: unset;
+                height: auto; 
+                min-height: unset; /* إزالة الحد الأدنى */
+                aspect-ratio: 3.3 / 1; /* النسبة السحرية للصورة */
                 margin-top: -40px;
-                display: block;
+                display: flex; /* تغيير العرض لـ flex لضمان التمركز */
+                justify-content: center;
+                align-items: center;
             } 
             
             .hero-banner-img {
-                /* توسيط الصورة في الجوال لتظهر في المنتصف تماماً */
-                object-fit: cover;
-                object-position: center center;
+                width: 100%;
+                height: 100%;
+                object-fit: cover; /* تغطية كاملة ضمن النسبة المحددة */
             }
 
             /* رفع السهم للمنطقة البيضاء */
             .back-btn {
                 width: 28px;        
                 height: 28px;
-                top: 15px; /* رفع للأعلى في المنطقة البيضاء */
+                top: 15px; /* تم رفعه للأعلى */
                 left: 15px;
                 font-size: 14px;    
                 border-width: 0.5px;
@@ -358,7 +365,6 @@ export default function DemoProfilePage() {
             .stars-container { gap: 1px; margin-top: 4px; margin-bottom: 2px; }
             .badges-container { margin-bottom: 2px; margin-top: -2px; }
 
-            /* تكبير خط CTA في الجوال 50% ولون أرجواني غامق */
             .cta-phrase {
                 font-size: 17px; 
                 letter-spacing: -0.5px;
@@ -370,7 +376,7 @@ export default function DemoProfilePage() {
 
             .footer-note { font-size: 10px; }
             
-            /* زرين بجوار بعض في الجوال */
+            /* أزرار الدفع للجوال (زرين في الصف) */
             .pay-grid { 
                 grid-template-columns: repeat(2, 1fr); 
                 max-width: 100%; 
