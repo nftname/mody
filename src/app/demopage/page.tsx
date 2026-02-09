@@ -141,7 +141,7 @@ export default function DemoProfilePage() {
             height: 140px;
             /* الكمبيوتر: تداخل بسيط جداً 10% */
             margin-top: -30px; 
-            margin-left: 10%; 
+            margin-left:7%; 
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 15px 35px rgba(0,0,0,0.25);
