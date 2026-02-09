@@ -3,7 +3,74 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// --- (1) الشارات ---
+// --- (1) Modern Web3 Standard Icons (2025 Vector Assets) ---
+// تم استخدام مسارات SVG الرسمية المحدثة لضمان الدقة والوضوح التام
+const CryptoIcon = ({ type }: { type: string }) => {
+    switch (type) {
+        case 'BTC': return (
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="16" fill="#F7931A"/>
+                <path d="M22.2 13.9C22.5 12.3 21.3 11.5 19.7 10.9L20.2 8.8L18.9 8.5L18.4 10.6C18 10.5 17.7 10.4 17.3 10.3L17.8 8.2L16.5 7.9L16 10C15.7 10 15.3 9.9 15 9.9L13.2 9.5L12.8 11.1C12.8 11.1 13.8 11.3 13.8 11.3C14.5 11.5 14.6 11.8 14.6 12.1L13.7 15.5C13.8 15.5 13.8 15.5 13.9 15.5C13.8 15.6 13.8 15.6 13.7 15.6L12.6 20.2C12.5 20.3 12.4 20.6 12 20.5C12 20.5 11.1 20.3 11.1 20.3L10.3 22.1L13.7 22.9C14.3 23.1 15 23.2 15.6 23.4L15.1 25.5L16.4 25.8L16.9 23.7C17.3 23.8 17.6 23.9 18 24L17.5 26.1L18.8 26.4L19.3 24.3C21.5 24.7 23.2 24.5 23.9 22.5C24.4 20.9 23.8 20 22.7 19.4C23.5 19.2 24.1 18.7 24.3 17.5ZM20.8 21C20.4 22.6 17.7 21.7 16.8 21.5L17.5 18.6C18.4 18.9 21.3 19.3 20.8 21ZM21.2 16.8C20.8 18.3 18.5 17.6 17.8 17.4L18.4 14.8C19.1 15 21.5 15.4 21.2 16.8Z" fill="white"/>
+            </svg>
+        );
+        case 'ETH': return (
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="16" fill="#627EEA"/>
+                <path d="M16 4L8.5 16.5L16 21L23.5 16.5L16 4Z" fill="white" fillOpacity="0.6"/>
+                <path d="M16 4V21L23.5 16.5L16 4Z" fill="white"/>
+                <path d="M16 22L8.5 17.5L16 28L23.5 17.5L16 22Z" fill="white" fillOpacity="0.6"/>
+                <path d="M16 28V22L23.5 17.5L16 28Z" fill="white"/>
+            </svg>
+        );
+        case 'POLYGON': return (
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="16" fill="#8247E5"/>
+                <path d="M22.5 10.5L16.5 7L10.5 10.5V16.5L16.5 20L22.5 16.5V10.5Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16.5 12V16M16.5 16L13 18M16.5 16L20 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+        );
+        case 'SOL': return (
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="16" fill="#000"/>
+                <path d="M8 20.5L10 18.5H24L22 20.5H8Z" fill="#14F195"/>
+                <path d="M24 14.5L22 16.5H8L10 14.5H24Z" fill="#9945FF"/>
+                <path d="M8 8.5L10 6.5H24L22 8.5H8Z" fill="#14F195"/>
+            </svg>
+        );
+        case 'BNB': return (
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="16" fill="#F3BA2F"/>
+                <path d="M12.1 16L16 19.9L19.9 16L16 12.1L12.1 16ZM9 16L10.5 17.5L9 19L7.5 17.5L9 16ZM16 9L17.5 10.5L16 12L14.5 10.5L16 9ZM23 16L24.5 17.5L23 19L21.5 17.5L23 16ZM16 23L17.5 24.5L16 26L14.5 24.5L16 23Z" fill="white"/>
+            </svg>
+        );
+        case 'USDT': return (
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="16" fill="#26A17B"/>
+                <path d="M19.5 13.5H22V11H10V13.5H12.5V23H15V25H17V23H19.5V13.5Z" fill="white"/>
+            </svg>
+        );
+        default: return null;
+    }
+};
+
+// --- (2) Web3 Payment Button Component ---
+// تصميم موحد للأزرار، يظهر الأيقونة واسم الشبكة بوضوح
+const Web3PaymentButton = ({ type, name }: { type: string, name: string }) => (
+    <button className="web3-payment-btn">
+        <div className="btn-content">
+            <div className="token-info">
+                <CryptoIcon type={type} />
+                <span className="token-name">{name}</span>
+            </div>
+            {/* سهم بسيط لإظهار أن الزر قابل للنقر (اختياري ويضفي طابعاً تفاعلياً) */}
+            <div className="action-arrow">
+                <i className="bi bi-chevron-right"></i>
+            </div>
+        </div>
+    </button>
+);
+
+// --- (3) Helper Components (Badges & Stars) ---
 const ThreeVerificationBadges = () => (
     <div className="badges-container" style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
@@ -27,7 +94,6 @@ const ThreeVerificationBadges = () => (
     </div>
 );
 
-// --- (2) النجوم ---
 const FiveStars = () => (
     <div className="stars-container" style={{ display: 'flex', justifyContent: 'center' }}>
         {[1, 2, 3, 4, 5].map((s) => (
@@ -37,95 +103,6 @@ const FiveStars = () => (
         ))}
     </div>
 );
-
-// --- (1) المكون الجديد للأيقونات الرسمية (Official Vector Assets) ---
-const CryptoLogo = ({ type }: { type: string }) => {
-    // حجم ثابت 46px لضمان الفخامة والوضوح وعدم الانضغاط
-    const style = { width: '46px', height: '46px', flexShrink: 0 }; 
-    
-    switch (type) {
-        // المصدر: Bitcoin.org Brand Resources
-        case 'BTC': return (
-            <svg style={style} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="32" cy="32" r="32" fill="#F7931A"/>
-                <path d="M44.384 25.875c.628-4.194-2.566-6.446-6.93-7.95L38.87 13.5l-3.456-.86-.842 3.376c-.909-.227-1.84-.44-2.77-.65L32.644 12l-3.457-.862-1.39 5.57s-.96-.24-1.353-.15c.894.204 1.05.746.993 1.187l-1.613 6.47c.097.024.22.06.356.114l-.366-.09-2.26 9.064c-.171.424-.606 1.062-1.586.818.036.05-1.352-.15-1.352-.15l-1.716 3.957 4.5.872c.836.21 1.656.43 2.462.636l-1.43 5.742 3.455.862 1.416-5.68c.944.256 1.86.49 2.756.714l-1.412 5.656 3.456.862 1.43-5.732c5.896 1.116 10.328.666 12.194-4.666 1.504-4.292-.074-6.77-3.176-8.384 2.26-.52 3.96-2.006 4.414-5.076zM38.484 36.95c-1.066 4.294-8.296 1.972-10.64 1.39l1.9-7.61c2.344.586 9.858 1.744 8.74 6.22zm1.07-11.138c-.974 3.906-6.99 1.92-8.94 1.434l1.72-6.9c1.95.486 8.236 1.392 7.22 5.466z" fill="white"/>
-            </svg>
-        );
-        // المصدر: Ethereum Foundation Assets
-        case 'ETH': return (
-            <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#627EEA"/>
-                <path d="M16.498 4v8.87l7.497 3.35z" fill="#C0CBF6"/>
-                <path d="M16.498 4L9 16.22l7.498-3.35z" fill="#FFF"/>
-                <path d="M16.498 21.968v6.027L24 17.616z" fill="#C0CBF6"/>
-                <path d="M16.498 27.995v-6.028L9 17.616z" fill="#FFF"/>
-                <path d="M16.498 20.573l7.497-4.353-7.497-3.348z" fill="#8197EE"/>
-                <path d="M9 16.22l7.498 4.353v-7.701z" fill="#C0CBF6"/>
-            </svg>
-        );
-        // المصدر: Polygon Brand Kit (Official Purple Hexagon)
-        case 'POLYGON': return (
-            <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#8247E5"/>
-                <path d="M23.175 11.233l-5.633-3.25c-0.308-0.175-0.692-0.175-1 0l-1.833 1.058-2.675-1.542c-0.308-0.175-0.692-0.175-1 0l-5.633 3.25c-0.308 0.175-0.5 0.508-0.5 0.867v6.5c0 0.358 0.192 0.692 0.5 0.867l5.633 3.25c0.308 0.175 0.692 0.175 1 0l1.833-1.058 2.675 1.542c0.308 0.175 0.692 0.175 1 0l5.633-3.25c0.308-0.175 0.5-0.508 0.5-0.867v-6.5c0-0.358-0.192-0.692-0.5-0.867zM15.542 18.025l-2.675 1.542v-3.083l2.675-1.542 2.675 1.542v3.083z" fill="#FFF"/>
-            </svg>
-        );
-        // المصدر: Solana Brand Press Kit
-        case 'SOL': return (
-            <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#000"/>
-                <path d="M8.5 19.3L10.7 17H23.7L21.5 19.3H8.5Z" fill="url(#solGrad)"/>
-                <path d="M23.5 12.7L21.3 15H8.30005L10.5 12.7H23.5Z" fill="url(#solGrad)"/>
-                <path d="M8.5 25.8L10.7 23.5H23.7L21.5 25.8H8.5Z" fill="url(#solGrad)"/>
-                <defs>
-                    <linearGradient id="solGrad" x1="8.5" y1="12.7" x2="23.7" y2="25.8" gradientUnits="userSpaceOnUse">
-                        <stop offset="0" stopColor="#00FFA3"/>
-                        <stop offset="1" stopColor="#DC1FFF"/>
-                    </linearGradient>
-                </defs>
-            </svg>
-        );
-        // المصدر: Binance Exchange Brand (Yellow Box)
-        case 'BNB': return (
-            <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#F3BA2F"/>
-                <path d="M16 11.406L13.692 13.714L16 16.022L18.308 13.714L16 11.406ZM12.146 13.714L10.606 15.254L12.152 16.8L13.692 15.26L12.146 13.714ZM16 8.246L14.454 9.792L16 11.338L17.546 9.792L16 8.246ZM19.854 13.714L18.308 15.26L19.848 16.8L21.394 15.254L19.854 13.714ZM16 20.662L17.546 22.208L16 23.754L14.454 22.208L16 20.662ZM10.612 10.64L8.223 13.029L10.515 15.321L12.904 12.932L10.612 10.64ZM21.402 10.627L19.11 12.919L21.388 15.197L23.68 12.905L21.402 10.627ZM10.521 16.892L8.229 19.184L10.618 21.573L12.91 19.281L10.521 16.892ZM19.096 19.294L21.388 17.002L23.777 19.391L21.485 21.683L19.096 19.294Z" fill="#FFF"/>
-            </svg>
-        );
-        // المصدر: Tether.to Official Brand Assets (Green Circle with T)
-        case 'USDT': return (
-            <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#26A17B"/>
-                <path d="M18.8 14.5h3.9v-2.3h-13.4v2.3h3.9v8.9h5.6v-8.9z" fill="#FFF"/>
-            </svg>
-        );
-        default: return null;
-    }
-};
-
-// --- (2) زر الدفع المعدل (توسيط كلمة Send تحت اسم الشبكة) ---
-const PayButton = ({ type, name }: { type: string, name: string }) => (
-    <button className="pay-btn">
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%', height: '100%' }}>
-            {/* القسم الأيسر: الأيقونة الرسمية */}
-            <div style={{ marginRight: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CryptoLogo type={type} />
-            </div>
-            
-            {/* القسم الأوسط: النصوص */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
-                {/* اسم الشبكة */}
-                <span style={{ fontWeight: '800', fontSize: '15px', color: '#1A1A1A', lineHeight: '1.2' }}>{name}</span>
-                
-                {/* كلمة Send في منتصف اسم الشبكة تقريباً (باستخدام العرض الكامل للحاوية ومحاذاتها لليسار كما طلبت) */}
-                <span style={{ fontSize: '11px', fontWeight: '700', color: '#777', textTransform: 'uppercase', marginTop: '2px', letterSpacing: '0.5px' }}>
-                    Send
-                </span>
-            </div>
-        </div>
-    </button>
-);
-
 
 export default function DemoProfilePage() {
   const router = useRouter();
@@ -142,10 +119,11 @@ export default function DemoProfilePage() {
     <main style={{ backgroundColor: '#F0EDF2', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
       
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
 
+        /* --- Reset & Base --- */
         nav, footer, .navbar, .footer, header:not(.hero-banner-wrapper) {
             display: none !important;
         }
@@ -157,7 +135,7 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
-        /* --- الهيدر --- */
+        /* --- Header --- */
         .hero-banner-wrapper {
             width: 100%;
             height: auto;
@@ -184,25 +162,18 @@ export default function DemoProfilePage() {
 
         .back-btn {
             position: absolute;
-            top: 55px; 
-            left: 25px;
-            width: 45px;
-            height: 45px;
+            top: 55px; left: 25px;
+            width: 45px; height: 45px;
             border-radius: 50%;
             background-color: rgba(0,0,0,0.6); 
             backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 22px;
-            cursor: pointer;
-            z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 22px; cursor: pointer; z-index: 100;
             border: 1px solid rgba(255,255,255,0.3);
             transition: all 0.2s ease;
         }
 
-        /* --- الكرت --- */
+        /* --- Profile Card --- */
         .identity-card-container {
             position: relative;
             width: 260px;
@@ -215,31 +186,19 @@ export default function DemoProfilePage() {
             border: 1px solid rgba(255,255,255,0.4);
             z-index: 10;
             background: radial-gradient(circle at center, #0F172A 0%, #1e1b4b 40%, #581c87 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 5px 0;
         }
 
         .card-content {
-            text-align: center;
-            color: white;
-            z-index: 20;
-            margin: 5px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
+            text-align: center; color: white; z-index: 20; margin: 5px 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;
         }
 
         .card-name {
             font-family: 'Satoshi', sans-serif;
-            font-size: 20px;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: white;
+            font-size: 20px; font-weight: 900;
+            text-transform: uppercase; color: white;
             text-shadow: 0 3px 10px rgba(0,0,0,0.7);
             letter-spacing: 0.5px;
         }
@@ -249,186 +208,146 @@ export default function DemoProfilePage() {
         .stars-container { gap: 5px; margin-top: 8px; margin-bottom: 5px; }
         .badges-container { margin-bottom: 10px; margin-top: -5px; }
 
-        /* --- Conviction --- */
+        /* --- Conviction Section --- */
         .conviction-box {
-            position: relative;
-            text-align: center;
-            margin-top: 15px;
-            margin-bottom: 30px;
+            position: relative; text-align: center; margin-top: 15px; margin-bottom: 30px;
         }
         .conviction-label {
             color: ${deepPurpleColor}; 
-            font-size: 14px;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-family: 'Satoshi', sans-serif;
-            letter-spacing: 1px;
+            font-size: 14px; font-weight: 700; text-transform: uppercase;
+            font-family: 'Satoshi', sans-serif; letter-spacing: 1px;
             display: block; 
         }
-        
         .conviction-number-wrapper {
-            position: relative;
-            display: inline-block; 
-            margin-top: 5px;
+            position: relative; display: inline-block; margin-top: 5px;
         }
-
         .conviction-number {
             color: ${deepPurpleColor};
-            font-size: 20px; 
-            font-weight: 900;
-            font-family: 'Satoshi', sans-serif;
+            font-size: 20px; font-weight: 900; font-family: 'Satoshi', sans-serif;
         }
-        
         .conviction-diamond {
-            position: absolute;
-            font-size: 18px; 
-            color: ${diamondColor};
-            right: -25px; 
-            top: 50%;
-            transform: translateY(-50%);
+            position: absolute; font-size: 18px; color: ${diamondColor};
+            right: -25px; top: 50%; transform: translateY(-50%);
         }
 
-        .thank-you-title {
-            font-family: 'Satoshi', sans-serif;
-            font-weight: 700;
-            font-size: 22px;
-            color: ${deepPurpleColor};
-            margin-bottom: 10px;
-        }
-        .thank-you-subtitle {
-            color: ${deepPurpleColor};
-            font-size: 16px;
-            line-height: 1.5;
-            font-weight: 600;
-        }
-
-        /* --- الأزرار --- */
+        /* --- Payment Grid (Web3 Buttons) --- */
         .pay-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            max-width: 750px;
+            grid-template-columns: repeat(3, 1fr); /* 3 أعمدة للكمبيوتر */
+            gap: 12px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
-        .pay-btn {
-            background: #fff;
-            border: 1px solid #eee;
-            border-radius: 16px;
-            height: 75px; 
-            padding: 0 15px;
-            display: flex;
-            justify-content: flex-start; 
-            align-items: center;
+        /* تنسيق الزر الموحد */
+        .web3-payment-btn {
+            background: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            height: 64px; /* ارتفاع قياسي ومريح */
+            width: 100%;
             cursor: pointer;
             transition: all 0.2s ease;
-            color: #333;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-        }
-        .pay-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
-            border-color: #d1d5db;
-        }
-
-        .marketing-btn {
-            display: inline-flex;
+            padding: 0 16px;
+            display: flex;
             align-items: center;
-            justify-content: center;
-            width: 200px;
-            height: 48px;
-            background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
-            border-radius: 25px;
-            color: white;
-            font-family: 'Satoshi', sans-serif;
-            font-weight: 900;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .web3-payment-btn:hover {
+            border-color: #D1D5DB;
+            background: #F9FAFB;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .token-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .token-name {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            color: #111827;
+        }
+
+        .action-arrow {
+            color: #9CA3AF;
             font-size: 14px;
-            text-transform: uppercase;
-            text-decoration: none;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
         }
 
+        /* --- Text & Footer --- */
         .footer-note {
-             margin-top: 30px;
-             font-size: 12px;
-             color: #aaa;
-             font-style: italic;
+             margin-top: 30px; font-size: 12px; color: #aaa; font-style: italic;
         }
-
+        .thank-you-title {
+            font-family: 'Satoshi', sans-serif; font-weight: 700; font-size: 22px;
+            color: ${deepPurpleColor}; margin-bottom: 10px;
+        }
+        .thank-you-subtitle {
+            color: ${deepPurpleColor}; font-size: 16px; line-height: 1.5; font-weight: 600;
+        }
         .cta-phrase {
-            font-family: 'Cinzel', serif;
-            font-size: 18px;
-            color: ${deepPurpleColor};
-            margin-bottom: 10px;
-            font-weight: 700;
+            font-family: 'Cinzel', serif; font-size: 18px; color: ${deepPurpleColor};
+            margin-bottom: 10px; font-weight: 700;
         }
 
-        /* --- تنسيقات الجوال --- */
+        /* --- Mobile Responsive --- */
         @media (max-width: 768px) {
             .hero-banner-wrapper { 
-                height: auto; 
-                min-height: unset; 
-                aspect-ratio: 3.3 / 1; 
-                margin-top: -40px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
+                height: auto; min-height: unset; aspect-ratio: 3.3 / 1; 
+                margin-top: -40px; display: flex; justify-content: center; align-items: center;
             } 
-            
             .hero-banner-img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover; 
-                object-position: center center;
+                width: 100%; height: 100%; object-fit: cover; object-position: center center;
             }
-
             .back-btn {
-                width: 28px;        
-                height: 28px;
-                top: 15px; 
-                left: 15px;
-                font-size: 14px;    
-                border-width: 0.5px;
+                width: 28px; height: 28px; top: 15px; left: 15px; font-size: 14px; border-width: 0.5px;
             }
-            
             .identity-card-container { 
-                width: 40%;
-                height: 80px;
-                min-width: 140px;
-                margin: -22px 0 0 20px;
-                border-radius: 12px;
-                border-width: 0.8px;
-                padding: 2px 0;
+                width: 40%; height: 80px; min-width: 140px; margin: -22px 0 0 20px;
+                border-radius: 12px; border-width: 0.8px; padding: 2px 0;
             }
-
             .card-content { margin: 2px 0; }
             .card-name { font-size: 15px; }
-
             .badge-icon { width: 13px; height: 13px; }
             .star-icon { width: 11px; height: 11px; }
             .stars-container { gap: 1px; margin-top: 4px; margin-bottom: 2px; }
             .badges-container { margin-bottom: 2px; margin-top: -2px; }
-
-            .cta-phrase {
-                font-size: 17px; 
-                letter-spacing: -0.5px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                color: ${deepPurpleColor};
-            }
-
-            .footer-note { font-size: 10px; }
             
-            .pay-grid { 
-                grid-template-columns: repeat(2, 1fr); 
-                max-width: 100%; 
+            .cta-phrase {
+                font-size: 17px; letter-spacing: -0.5px; white-space: nowrap;
+                overflow: hidden; text-overflow: ellipsis; color: ${deepPurpleColor};
+            }
+            .footer-note { font-size: 10px; }
+
+            /* Grid for Mobile: 2 Columns */
+            .pay-grid {
+                grid-template-columns: repeat(2, 1fr);
                 gap: 10px;
             }
             
-            .pay-btn {
-                padding: 0 10px;
+            .web3-payment-btn {
+                height: 60px; /* أقصر قليلاً للجوال */
+                padding: 0 12px;
+            }
+            
+            .token-name {
+                font-size: 14px;
+            }
+            
+            .action-arrow {
+                display: none; /* إخفاء السهم في الجوال لتوفير مساحة */
             }
         }
       `}</style>
@@ -464,15 +383,16 @@ export default function DemoProfilePage() {
               </div>
           </div>
 
-          <div style={{ maxWidth: '700px', margin: '20px auto', textAlign: 'center', padding: '0 20px' }}>
+          <div style={{ maxWidth: '800px', margin: '20px auto', textAlign: 'center', padding: '0 20px' }}>
               
+              {/* --- شبكة الأزرار الستة --- */}
               <div className="pay-grid">
-                  <PayButton type="BTC" name="Bitcoin" />
-                  <PayButton type="ETH" name="Ethereum" />
-                  <PayButton type="POLYGON" name="Polygon" />
-                  <PayButton type="SOL" name="Solana" />
-                  <PayButton type="BNB" name="BNB Chain" />
-                  <PayButton type="USDT" name="Tether" />
+                  <Web3PaymentButton type="BTC" name="Bitcoin" />
+                  <Web3PaymentButton type="ETH" name="Ethereum" />
+                  <Web3PaymentButton type="POLYGON" name="Polygon" />
+                  <Web3PaymentButton type="SOL" name="Solana" />
+                  <Web3PaymentButton type="BNB" name="BNB Chain" />
+                  <Web3PaymentButton type="USDT" name="Tether" />
               </div>
 
               <p className="footer-note">
