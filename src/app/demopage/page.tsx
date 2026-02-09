@@ -3,37 +3,38 @@ import Link from 'next/link';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 
-// --- مكونات الشارات الثلاثة (أزرق، ذهبي، أخضر) ---
+// --- (1) تعديل الشارات: تصغير الحجم وتنحيف الإطار الأبيض ---
 const ThreeVerificationBadges = () => (
-    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', gap: '5px', marginBottom: '4px', justifyContent: 'center' }}>
         {/* Blue Badge */}
-        <svg width="18" height="18" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
-            <circle cx="21" cy="21" r="20" fill="#1DA1F2" stroke="#ffffff" strokeWidth="2"/>
-            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        <svg width="14" height="14" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))' }}>
+            <circle cx="21" cy="21" r="20" fill="#1DA1F2" stroke="#ffffff" strokeWidth="1.5"/>
+            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         {/* Gold Badge */}
-        <svg width="18" height="18" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
+        <svg width="14" height="14" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))' }}>
             <defs>
                 <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#FFD700" />
                     <stop offset="100%" stopColor="#FFA500" />
                 </linearGradient>
             </defs>
-            <circle cx="21" cy="21" r="20" fill="url(#goldGrad)" stroke="#ffffff" strokeWidth="2"/>
-            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="21" cy="21" r="20" fill="url(#goldGrad)" stroke="#ffffff" strokeWidth="1.5"/>
+            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         {/* Green Badge */}
-        <svg width="18" height="18" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
-            <circle cx="21" cy="21" r="20" fill="#25D366" stroke="#ffffff" strokeWidth="2"/>
-            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        <svg width="14" height="14" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))' }}>
+            <circle cx="21" cy="21" r="20" fill="#25D366" stroke="#ffffff" strokeWidth="1.5"/>
+            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     </div>
 );
 
+// --- (2) تعديل النجوم: تقريب المسافات ---
 const FiveStars = () => (
-    <div style={{ display: 'flex', gap: '3px', marginTop: '6px', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', gap: '2px', marginTop: '2px', justifyContent: 'center' }}>
         {[1, 2, 3, 4, 5].map((s) => (
-            <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F0C420" stroke="#B8860B" strokeWidth="1">
+            <svg key={s} width="12" height="12" viewBox="0 0 24 24" fill="#F0C420" stroke="#B8860B" strokeWidth="1">
                 <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
             </svg>
         ))}
@@ -128,16 +129,21 @@ export default function DemoProfilePage() {
             transform: scale(1.05);
         }
 
+        /* --- تنسيقات الكرت للكمبيوتر --- */
         .identity-card-container {
             position: relative;
             width: 260px;
             height: 140px;
-            margin-top: -40px; 
-            margin-left: 5%; 
-            border-radius: 35px;
+            /* تم تقليل التداخل ليصبح بسيطاً جداً (حوالي 10%) */
+            margin-top: -25px; 
+            /* تم تقليل المسافة من اليسار بنسبة 50% (كانت 5% أصبحت 2.5%) */
+            margin-left: 2.5%; 
+            /* تم تقليل الدوران للحواف */
+            border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 15px 35px rgba(0,0,0,0.25);
-            border: 2px solid rgba(255,255,255,0.8);
+            /* إطار أبيض خفيف جداً ونحيف */
+            border: 1px solid rgba(255,255,255,0.3);
             z-index: 10;
             background-color: #1a1a1a;
             background-image: url('/images/chainface-card-bg.png');
@@ -152,7 +158,6 @@ export default function DemoProfilePage() {
             text-align: center;
             color: white;
             z-index: 20;
-            /* تم تعديل المارجن لأن الشارات أصبحت بالأعلى */
             margin-top: 5px; 
             display: flex;
             flex-direction: column;
@@ -221,6 +226,14 @@ export default function DemoProfilePage() {
         }
         .marketing-btn:hover { transform: scale(1.02); }
 
+        .footer-note {
+             margin-top: 25px;
+             font-size: 12px;
+             color: #aaa;
+             font-style: italic;
+        }
+
+        /* --- تنسيقات الجوال --- */
         @media (max-width: 768px) {
             .hero-banner-wrapper { 
                 height: 18vh;
@@ -228,17 +241,25 @@ export default function DemoProfilePage() {
             } 
             
             .identity-card-container { 
+                /* تم تصغير حجم الكرت بنسبة 25% */
                 width: 40%;
                 height: 80px;
                 min-width: 140px;
-                /* التعديل: محاذاة لليسار مع مسافة 20 بكسل */
+                /* محاذاة لليسار مع مسافة + تقليل التداخل */
                 margin: -22px 0 0 20px;
-                /* التعديل: تقليل الدوران للجوال ليكون أقل حدة من 40 */
-                border-radius: 20px;
+                /* تقليل حده الدائرية في الجوال (كانت 40) */
+                border-radius: 25px;
+                /* إطار نحيف جداً للجوال */
+                border-width: 0.5px;
             }
             
             .card-name {
                 font-size: 15px;
+            }
+
+            /* تصغير خط عبارة الدفع في الجوال لتأتي في سطر واحد */
+            .footer-note {
+                font-size: 10px;
             }
 
             .pay-grid { grid-template-columns: 1fr; max-width: 100%; }
@@ -246,11 +267,9 @@ export default function DemoProfilePage() {
       `}</style>
 
       <div className="hero-banner-wrapper">
-          
           <div className="back-btn" onClick={() => router.back()}>
               <i className="bi bi-arrow-left"></i>
           </div>
-
           <img 
             src="/images/your-chainface.png" 
             alt="ChainFace Cover" 
@@ -260,7 +279,6 @@ export default function DemoProfilePage() {
       </div>
 
       <div className="page-container">
-          
           <div className="identity-card-container">
               <div className="card-content">
                   {/* الشارات الثلاثة في الأعلى */}
@@ -268,15 +286,12 @@ export default function DemoProfilePage() {
                   
                   <div className="card-name-row">
                       <span className="card-name">ALEXANDER</span>
-                      {/* تمت إزالة العلامة الفردية من هنا */}
                   </div>
                   <FiveStars />
               </div>
           </div>
 
           <div style={{ maxWidth: '700px', margin: '30px auto', textAlign: 'center', padding: '0 20px' }}>
-              
-              {/* العبارة الترحيبية الجديدة */}
               <h2 style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: '700', fontSize: '22px', color: '#4A148C', marginBottom: '10px' }}>
                   Thank you for stepping into my ChainFace.
               </h2>
@@ -297,8 +312,8 @@ export default function DemoProfilePage() {
                   <PayButton type="USDT" name="Tether" />
               </div>
 
-              {/* عبارة إخلاء المسؤولية الجديدة */}
-              <p style={{ marginTop: '25px', fontSize: '12px', color: '#aaa', fontStyle: 'italic' }}>
+              {/* تم حذف العبارة القديمة واستبدالها بالجديدة مع كلاس للتحكم بالحجم */}
+              <p className="footer-note">
                   Payments are peer-to-peer. ChainFace never holds funds.
               </p>
 
@@ -306,9 +321,8 @@ export default function DemoProfilePage() {
       </div>
 
       <div style={{ marginTop: '60px', padding: '40px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
-          <p style={{ fontFamily: 'Cinzel, serif', fontSize: '18px', color: '#111', marginBottom: '10px', fontWeight: '700' }}>
-              Ownership is the new status. Claim your sovereign asset now.
-          </p>
+          
+          {/* تم حذف عبارة Ownership is the new status */}
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', marginTop: '20px' }}>
               <div style={{ display: 'flex', gap: '15px', color: '#ccc' }}>
