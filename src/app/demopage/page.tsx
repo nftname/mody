@@ -49,11 +49,10 @@ const PayButton = ({ type, name }: { type: string, name: string }) => (
 );
 
 export default function DemoProfilePage() {
-  const router = useRouter(); 
+  const router = useRouter();
 
   return (
     <main style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
-      
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
@@ -81,7 +80,7 @@ export default function DemoProfilePage() {
         .hero-banner-img {
             width: 100%;
             height: 100%;
-            object-fit: fill;       
+            object-fit: cover;
             object-position: center;
         }
         
@@ -121,7 +120,7 @@ export default function DemoProfilePage() {
             height: 140px;
             margin-top: -40px; 
             margin-left: 5%; 
-            border-radius: 35px; /* تعديل الحواف للكمبيوتر */
+            border-radius: 35px;
             overflow: hidden;
             box-shadow: 0 15px 35px rgba(0,0,0,0.25);
             border: 2px solid rgba(255,255,255,0.8);
@@ -206,17 +205,22 @@ export default function DemoProfilePage() {
 
         @media (max-width: 768px) {
             .hero-banner-wrapper { 
-                height: 18vh; /* تقليل الارتفاع لمنع شد الصورة في الجوال */
+                height: 18vh;
                 min-height: 150px;
             } 
             
             .identity-card-container { 
-                width: 65%; /* تصغير حجم الكرت */
-                min-width: 200px;
-                margin: -35px auto 0 auto; /* توسيط الكرت مع تداخل بسيط */
-                border-radius: 40px; /* زيادة التكور للحواف جداً للجوال */
-            } 
+                width: 40%;
+                height: 80px;
+                min-width: 140px;
+                margin: -22px auto 0 auto;
+                border-radius: 40px;
+            }
             
+            .card-name {
+                font-size: 15px;
+            }
+
             .pay-grid { grid-template-columns: 1fr; max-width: 100%; }
         }
       `}</style>
