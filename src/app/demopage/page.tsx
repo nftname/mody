@@ -92,7 +92,7 @@ export default function DemoProfilePage() {
             width: 100%;
             height: auto;           /* الارتفاع أوتوماتيكي */
             aspect-ratio: 2.625;    /* النسبة الأصلية للصورة (3360/1280) تضمن عدم القص */
-            max-height: 450px;      /* حد أقصى للارتفاع */
+            max-height: 350px;      /* حد أقصى للارتفاع */
             position: relative;
             background-color: #000;
             overflow: hidden;
