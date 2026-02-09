@@ -3,22 +3,20 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// --- (1) الشارات المعدلة (إطار رمادي، علامة صح بارزة، حجم أصغر 5%) ---
+// --- (1) الشارات ---
 const ThreeVerificationBadges = () => (
     <div className="badges-container" style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-        {/* Green Badge */}
+        {/* Green */}
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
-            {/* الإطار رمادي ليعطي شعور الطفو */}
             <circle cx="21" cy="21" r="19" fill="#25D366" stroke="#888888" strokeWidth="1"/>
-            {/* علامة الصح تخرج قليلاً من الأعلى (تم تعديل المسار d) */}
             <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Blue Badge */}
+        {/* Blue */}
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
             <circle cx="21" cy="21" r="19" fill="#1DA1F2" stroke="#888888" strokeWidth="1"/>
             <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Gold Badge */}
+        {/* Gold */}
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
             <defs>
                 <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -45,12 +43,12 @@ const FiveStars = () => (
 
 const CryptoLogo = ({ type }: { type: string }) => {
     switch (type) {
-        case 'BTC': return <svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M22.6 14.2c.4-2.6-1.6-4-4.3-5l.9-3.5-2.1-.5-.8 3.4c-.6-.1-1.1-.3-1.7-.4l.9-3.5-2.1-.5-.9 3.6c-.5-.1-.9-.2-1.4-.3l-3-.8-.6 2.3s1.6.4 1.6.4c.9.2 1 .8 1 1.2l-1 4.1c.1 0 .2 0 .3.1-.1 0-.2 0-.3-.1l-1.4 5.6c-.1.3-.4.7-1 .6 0 0-1.6-.4-1.6-.4l-1.1 2.6 2.8.7c.5.1 1 .3 1.5.4l-.9 3.6 2.1.5.9-3.6c.6.1 1.1.3 1.7.4l-.9 3.6 2.1.5.9-3.5c3.6.7 6.4.4 7.6-2.9.9-2.7-.1-4.2-1.9-5.2 1.4-.3 2.4-1.2 2.7-3z" fill="#FFF"/></svg>;
-        case 'ETH': return <svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627EEA"/><path d="M16 4l-8.5 14L16 29l8.5-11z" fill="#FFF" opacity="0.6"/><path d="M16 4v14l8.5-4z" fill="#FFF"/></svg>;
-        case 'POLYGON': return <svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#8247E5"/><path d="M21.5 10.5L16 7.5l-5.5 3v6l5.5 3 5.5-3z" stroke="#FFF" strokeWidth="2" fill="none"/></svg>;
-        case 'SOL': return <svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#000"/><path d="M8 22.5l2.5-2.5h13l-2.5 2.5zm13.5-6l-2.5 2.5h-13l2.5-2.5zm-13.5-6l2.5-2.5h13l-2.5 2.5z" fill="url(#solGrad)"/><defs><linearGradient id="solGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#00FFA3"/><stop offset="1" stopColor="#DC1FFF"/></linearGradient></defs></svg>;
-        case 'BNB': return <svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F3BA2F"/><path d="M16 11l-3 3 3 3 3-3-3-3zm0-5l-8 8 8 8 8-8-8-8zm0 21l-3-3 3-3 3 3-3 3z" fill="#FFF"/></svg>;
-        case 'USDT': return <svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path d="M18.5 15.5v-2h5v-2h-15v2h5v2c0 2.5 4 2.5 4 0v-4" stroke="#FFF" strokeWidth="2" fill="none"/><path d="M16 23c-4.5 0-8-1-8-2.5s3.5-2.5 8-2.5 8 1 8 2.5-3.5 2.5-8 2.5z" fill="none" stroke="#FFF"/></svg>;
+        case 'BTC': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M22.6 14.2c.4-2.6-1.6-4-4.3-5l.9-3.5-2.1-.5-.8 3.4c-.6-.1-1.1-.3-1.7-.4l.9-3.5-2.1-.5-.9 3.6c-.5-.1-.9-.2-1.4-.3l-3-.8-.6 2.3s1.6.4 1.6.4c.9.2 1 .8 1 1.2l-1 4.1c.1 0 .2 0 .3.1-.1 0-.2 0-.3-.1l-1.4 5.6c-.1.3-.4.7-1 .6 0 0-1.6-.4-1.6-.4l-1.1 2.6 2.8.7c.5.1 1 .3 1.5.4l-.9 3.6 2.1.5.9-3.6c.6.1 1.1.3 1.7.4l-.9 3.6 2.1.5.9-3.5c3.6.7 6.4.4 7.6-2.9.9-2.7-.1-4.2-1.9-5.2 1.4-.3 2.4-1.2 2.7-3z" fill="#FFF"/></svg>;
+        case 'ETH': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627EEA"/><path d="M16 4l-8.5 14L16 29l8.5-11z" fill="#FFF" opacity="0.6"/><path d="M16 4v14l8.5-4z" fill="#FFF"/></svg>;
+        case 'POLYGON': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#8247E5"/><path d="M21.5 10.5L16 7.5l-5.5 3v6l5.5 3 5.5-3z" stroke="#FFF" strokeWidth="2" fill="none"/></svg>;
+        case 'SOL': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#000"/><path d="M8 22.5l2.5-2.5h13l-2.5 2.5zm13.5-6l-2.5 2.5h-13l2.5-2.5zm-13.5-6l2.5-2.5h13l-2.5 2.5z" fill="url(#solGrad)"/><defs><linearGradient id="solGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#00FFA3"/><stop offset="1" stopColor="#DC1FFF"/></linearGradient></defs></svg>;
+        case 'BNB': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F3BA2F"/><path d="M16 11l-3 3 3 3 3-3-3-3zm0-5l-8 8 8 8 8-8-8-8zm0 21l-3-3 3-3 3 3-3 3z" fill="#FFF"/></svg>;
+        case 'USDT': return <svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path d="M18.5 15.5v-2h5v-2h-15v2h5v2c0 2.5 4 2.5 4 0v-4" stroke="#FFF" strokeWidth="2" fill="none"/><path d="M16 23c-4.5 0-8-1-8-2.5s3.5-2.5 8-2.5 8 1 8 2.5-3.5 2.5-8 2.5z" fill="none" stroke="#FFF"/></svg>;
         default: return null;
     }
 };
@@ -59,7 +57,7 @@ const PayButton = ({ type, name }: { type: string, name: string }) => (
     <button className="pay-btn">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CryptoLogo type={type} />
-            <span style={{ fontWeight: '700', fontSize: '13px' }}>{name}</span>
+            <span style={{ fontWeight: '700', fontSize: '14px' }}>{name}</span>
         </div>
         <span style={{ fontSize: '11px', opacity: 0.7 }}>Send</span>
     </button>
@@ -82,7 +80,7 @@ export default function DemoProfilePage() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap'); /* استيراد خط Cinzel للعبارة */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
 
         nav, footer, .navbar, .footer, header:not(.hero-banner-wrapper) {
             display: none !important;
@@ -120,6 +118,7 @@ export default function DemoProfilePage() {
             pointer-events: none;
         }
 
+        /* زر العودة (الكمبيوتر) */
         .back-btn {
             position: absolute;
             top: 55px; 
@@ -152,6 +151,7 @@ export default function DemoProfilePage() {
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.4);
             z-index: 10;
+            /* خلفية الكرت */
             background: radial-gradient(circle at center, #0F172A 0%, #1e1b4b 40%, #581c87 100%);
             display: flex;
             flex-direction: column;
@@ -172,6 +172,13 @@ export default function DemoProfilePage() {
             width: 100%;
         }
 
+        .card-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
         .card-name {
             font-family: 'Satoshi', sans-serif;
             font-size: 20px;
@@ -182,7 +189,7 @@ export default function DemoProfilePage() {
             letter-spacing: 0.5px;
         }
 
-        /* --- تحجيم الشارات والنجوم (تصغير 5% للكمبيوتر لفك الضغط) --- */
+        /* الأحجام */
         .badge-icon { width: 23px; height: 23px; } 
         .star-icon { width: 21px; height: 21px; } 
         
@@ -193,19 +200,18 @@ export default function DemoProfilePage() {
         }
         
         .badges-container {
-            /* رفع الشارات للأعلى */
-            margin-bottom: 10px; /* مسافة أكبر عن الاسم */
-            margin-top: -5px; /* رفعها للأعلى */
+            margin-bottom: 10px;
+            margin-top: -5px; 
         }
 
-        /* --- قسم Conviction --- */
+        /* --- Conviction --- */
         .conviction-box {
             text-align: center;
             margin-top: 15px;
             margin-bottom: 30px;
         }
         .conviction-label {
-            color: ${deepPurpleColor}; /* اللون الموحد */
+            color: ${deepPurpleColor}; 
             font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
@@ -219,31 +225,17 @@ export default function DemoProfilePage() {
             gap: 8px;
         }
         .conviction-number {
-            color: ${deepPurpleColor}; /* اللون الموحد */
+            color: ${deepPurpleColor};
             font-size: 20px; 
             font-weight: 900;
             font-family: 'Satoshi', sans-serif;
         }
         .conviction-diamond {
-            font-size: 22px; 
-            color: ${deepPurpleColor}; /* اللون الموحد */
+            font-size: 18px; /* تصغير الماسة 10% */
+            color: ${deepPurpleColor}; 
         }
 
-        /* --- نصوص الشكر --- */
-        .thank-you-title {
-            font-family: 'Satoshi', sans-serif;
-            font-weight: 700;
-            font-size: 22px;
-            color: ${deepPurpleColor}; /* اللون الموحد */
-            margin-bottom: 10px;
-        }
-        .thank-you-subtitle {
-            color: ${deepPurpleColor}; /* اللون الموحد */
-            font-size: 16px;
-            line-height: 1.5;
-            font-weight: 600;
-        }
-
+        /* --- أزرار الدفع --- */
         .pay-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -255,15 +247,22 @@ export default function DemoProfilePage() {
         .pay-btn {
             background: #fff;
             border: 1px solid #eee;
-            border-radius: 10px;
-            padding: 10px 12px;
+            border-radius: 12px;
+            /* زيادة الارتفاع بشكل كبير جداً لمنع قص الأيقونات */
+            height: 70px;
+            padding: 0 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
             transition: all 0.2s ease;
             color: #333;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .pay-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+            border-color: #ddd;
         }
 
         .marketing-btn {
@@ -291,11 +290,25 @@ export default function DemoProfilePage() {
              font-style: italic;
         }
 
-        /* عبارة CTA (الكمبيوتر) */
+        /* عبارة الشكر وال CTA */
+        .thank-you-title {
+            font-family: 'Satoshi', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            color: ${deepPurpleColor};
+            margin-bottom: 10px;
+        }
+        .thank-you-subtitle {
+            color: ${deepPurpleColor};
+            font-size: 16px;
+            line-height: 1.5;
+            font-weight: 600;
+        }
+
         .cta-phrase {
             font-family: 'Cinzel', serif;
             font-size: 18px;
-            color: ${deepPurpleColor}; /* اللون الموحد */
+            color: ${deepPurpleColor};
             margin-bottom: 10px;
             font-weight: 700;
         }
@@ -312,14 +325,16 @@ export default function DemoProfilePage() {
             } 
             
             .hero-banner-img {
+                /* توسيط الصورة في الجوال لتظهر في المنتصف تماماً */
                 object-fit: cover;
-                object-position: center;
+                object-position: center center;
             }
 
+            /* رفع السهم للمنطقة البيضاء */
             .back-btn {
                 width: 28px;        
                 height: 28px;
-                top: 45px;  
+                top: 15px; /* رفع للأعلى في المنطقة البيضاء */
                 left: 15px;
                 font-size: 14px;    
                 border-width: 0.5px;
@@ -338,25 +353,28 @@ export default function DemoProfilePage() {
             .card-content { margin: 2px 0; }
             .card-name { font-size: 15px; }
 
-            /* تصغير الشارات للجوال أيضا 5% */
             .badge-icon { width: 13px; height: 13px; }
             .star-icon { width: 11px; height: 11px; }
             .stars-container { gap: 1px; margin-top: 4px; margin-bottom: 2px; }
             .badges-container { margin-bottom: 2px; margin-top: -2px; }
 
-            /* CTA للجوال: تكبير الخط 50% وضبطه لسطر واحد */
+            /* تكبير خط CTA في الجوال 50% ولون أرجواني غامق */
             .cta-phrase {
-                font-size: 16px; /* زيادة الحجم */
-                letter-spacing: -0.8px; /* ضغط الحروف */
-                white-space: nowrap; /* منع النزول لسطر ثاني */
+                font-size: 17px; 
+                letter-spacing: -0.5px;
+                white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                width: 95%; /* ضمان عدم خروجها عن الشاشة */
-                margin: 0 auto 10px auto;
+                color: ${deepPurpleColor};
             }
 
             .footer-note { font-size: 10px; }
-            .pay-grid { grid-template-columns: 1fr; max-width: 100%; }
+            
+            /* زرين بجوار بعض في الجوال */
+            .pay-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                max-width: 100%; 
+            }
         }
       `}</style>
 
@@ -406,7 +424,6 @@ export default function DemoProfilePage() {
                   Payments are peer-to-peer. ChainFace never holds funds.
               </p>
 
-              {/* قسم الشكر والتفاعل - النصوص باللون الموحد */}
               <div style={{ marginTop: '40px', marginBottom: '10px' }}>
                 <h2 className="thank-you-title">
                       Thank you for stepping into my ChainFace.
@@ -434,7 +451,6 @@ export default function DemoProfilePage() {
 
       <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
           
-          {/* عبارة CTA مكبرة وباللون الموحد */}
           <p className="cta-phrase">
              Claim your sovereign name assets now.
           </p>
