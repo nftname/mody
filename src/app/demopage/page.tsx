@@ -90,7 +90,7 @@ export default function DemoProfilePage() {
         /* --- تعديل البنر للكمبيوتر ليظهر الصورة كاملة --- */
         .hero-banner-wrapper {
             width: 100%;
-            height: 30vh; 
+            height: 20vh; 
             height: auto;          /* الارتفاع أوتوماتيكي */
              aspect-ratio: 3.464;  /* النسبة الأصلية للصورة (3360/1280) تضمن عدم القص */
              max-height: 297px;      /* حد أقصى للارتفاع */
