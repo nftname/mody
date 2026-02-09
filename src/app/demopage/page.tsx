@@ -3,29 +3,31 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// --- (1) الشارات ---
+// --- (1) الشارات المعدلة (إطار رمادي، علامة صح بارزة، حجم أصغر 5%) ---
 const ThreeVerificationBadges = () => (
-    <div className="badges-container" style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
-        {/* Green */}
-        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5))' }}>
-            <circle cx="21" cy="21" r="20" fill="#25D366" stroke="#ffffff" strokeWidth="2"/>
-            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    <div className="badges-container" style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+        {/* Green Badge */}
+        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
+            {/* الإطار رمادي ليعطي شعور الطفو */}
+            <circle cx="21" cy="21" r="19" fill="#25D366" stroke="#888888" strokeWidth="1"/>
+            {/* علامة الصح تخرج قليلاً من الأعلى (تم تعديل المسار d) */}
+            <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Blue */}
-        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5))' }}>
-            <circle cx="21" cy="21" r="20" fill="#1DA1F2" stroke="#ffffff" strokeWidth="2"/>
-            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Blue Badge */}
+        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
+            <circle cx="21" cy="21" r="19" fill="#1DA1F2" stroke="#888888" strokeWidth="1"/>
+            <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Gold */}
-        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5))' }}>
+        {/* Gold Badge */}
+        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
             <defs>
                 <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#FFD700" />
                     <stop offset="100%" stopColor="#FFA500" />
                 </linearGradient>
             </defs>
-            <circle cx="21" cy="21" r="20" fill="url(#goldGrad)" stroke="#ffffff" strokeWidth="2"/>
-            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="21" cy="21" r="19" fill="url(#goldGrad)" stroke="#888888" strokeWidth="1"/>
+            <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     </div>
 );
@@ -71,13 +73,16 @@ export default function DemoProfilePage() {
       setFeedback(prev => prev === type ? null : type);
   };
 
+  // اللون الموحد الجديد (أرجواني غامق)
+  const deepPurpleColor = '#2E1A47'; 
+
   return (
-    // خلفية أوف وايت غامقة قليلاً (#F0EDF2)
     <main style={{ backgroundColor: '#F0EDF2', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
       
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap'); /* استيراد خط Cinzel للعبارة */
 
         nav, footer, .navbar, .footer, header:not(.hero-banner-wrapper) {
             display: none !important;
@@ -134,12 +139,8 @@ export default function DemoProfilePage() {
             border: 1px solid rgba(255,255,255,0.3);
             transition: all 0.2s ease;
         }
-        .back-btn:hover {
-            background-color: rgba(0,0,0,0.9);
-            transform: scale(1.05);
-        }
 
-        /* --- تصميم الكرت بألوان فخمة --- */
+        /* --- الكرت --- */
         .identity-card-container {
             position: relative;
             width: 260px;
@@ -151,10 +152,7 @@ export default function DemoProfilePage() {
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.4);
             z-index: 10;
-            
-            /* --- التدرج الفخم الجديد: بنفسجي لامع من الأطراف وكحلي عميق في الوسط --- */
             background: radial-gradient(circle at center, #0F172A 0%, #1e1b4b 40%, #581c87 100%);
-            
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -174,13 +172,6 @@ export default function DemoProfilePage() {
             width: 100%;
         }
 
-        .card-name-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
-
         .card-name {
             font-family: 'Satoshi', sans-serif;
             font-size: 20px;
@@ -191,31 +182,30 @@ export default function DemoProfilePage() {
             letter-spacing: 0.5px;
         }
 
-        /* --- تحجيم العناصر في الكمبيوتر --- */
-        .badge-icon { width: 24px; height: 24px; } 
-        .star-icon { width: 22px; height: 22px; } 
+        /* --- تحجيم الشارات والنجوم (تصغير 5% للكمبيوتر لفك الضغط) --- */
+        .badge-icon { width: 23px; height: 23px; } 
+        .star-icon { width: 21px; height: 21px; } 
         
         .stars-container { 
             gap: 5px; 
-            /* إنزال النجوم للأسفل لعدم مزاحمة الاسم */
             margin-top: 8px;
             margin-bottom: 5px; 
         }
         
         .badges-container {
             /* رفع الشارات للأعلى */
-            margin-bottom: 5px;
-            margin-top: 0px;
+            margin-bottom: 10px; /* مسافة أكبر عن الاسم */
+            margin-top: -5px; /* رفعها للأعلى */
         }
 
-        /* --- تنسيق قسم Conviction الجديد (ألوان كحلية/أرجوانية غامقة) --- */
+        /* --- قسم Conviction --- */
         .conviction-box {
             text-align: center;
             margin-top: 15px;
             margin-bottom: 30px;
         }
         .conviction-label {
-            color: #1e1b4b; /* كحلي غامق */
+            color: ${deepPurpleColor}; /* اللون الموحد */
             font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
@@ -229,26 +219,26 @@ export default function DemoProfilePage() {
             gap: 8px;
         }
         .conviction-number {
-            color: #1e1b4b; /* كحلي غامق */
-            font-size: 20px; /* تصغير الخط 25% (كان 26-28) */
+            color: ${deepPurpleColor}; /* اللون الموحد */
+            font-size: 20px; 
             font-weight: 900;
             font-family: 'Satoshi', sans-serif;
         }
         .conviction-diamond {
             font-size: 22px; 
-            color: #1e1b4b; /* كحلي غامق للماسة */
+            color: ${deepPurpleColor}; /* اللون الموحد */
         }
 
-        /* --- نصوص الشكر الجديدة (بنفس اللون الكحلي) --- */
+        /* --- نصوص الشكر --- */
         .thank-you-title {
             font-family: 'Satoshi', sans-serif;
             font-weight: 700;
             font-size: 22px;
-            color: #1e1b4b; /* كحلي غامق */
+            color: ${deepPurpleColor}; /* اللون الموحد */
             margin-bottom: 10px;
         }
         .thank-you-subtitle {
-            color: #1e1b4b; /* كحلي غامق */
+            color: ${deepPurpleColor}; /* اللون الموحد */
             font-size: 16px;
             line-height: 1.5;
             font-weight: 600;
@@ -275,11 +265,6 @@ export default function DemoProfilePage() {
             color: #333;
             box-shadow: 0 2px 4px rgba(0,0,0,0.03);
         }
-        .pay-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-            border-color: #ddd;
-        }
 
         .marketing-btn {
             display: inline-flex;
@@ -298,7 +283,6 @@ export default function DemoProfilePage() {
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             transition: transform 0.2s;
         }
-        .marketing-btn:hover { transform: scale(1.02); }
 
         .footer-note {
              margin-top: 25px;
@@ -307,10 +291,11 @@ export default function DemoProfilePage() {
              font-style: italic;
         }
 
+        /* عبارة CTA (الكمبيوتر) */
         .cta-phrase {
             font-family: 'Cinzel', serif;
             font-size: 18px;
-            color: #111;
+            color: ${deepPurpleColor}; /* اللون الموحد */
             margin-bottom: 10px;
             font-weight: 700;
         }
@@ -327,16 +312,14 @@ export default function DemoProfilePage() {
             } 
             
             .hero-banner-img {
-                /* إرجاع الصورة لوضعها الطبيعي في الجوال */
                 object-fit: cover;
                 object-position: center;
             }
 
-            /* رفع السهم وتصغيره للجوال */
             .back-btn {
                 width: 28px;        
                 height: 28px;
-                top: 45px;  /* رفع مناسب لتخطي الحافة */
+                top: 45px;  
                 left: 15px;
                 font-size: 14px;    
                 border-width: 0.5px;
@@ -355,15 +338,21 @@ export default function DemoProfilePage() {
             .card-content { margin: 2px 0; }
             .card-name { font-size: 15px; }
 
-            .badge-icon { width: 14px; height: 14px; }
-            .star-icon { width: 12px; height: 12px; }
+            /* تصغير الشارات للجوال أيضا 5% */
+            .badge-icon { width: 13px; height: 13px; }
+            .star-icon { width: 11px; height: 11px; }
             .stars-container { gap: 1px; margin-top: 4px; margin-bottom: 2px; }
-            .badges-container { margin-bottom: 2px; margin-top: 0px; }
+            .badges-container { margin-bottom: 2px; margin-top: -2px; }
 
-            /* تكبير خط CTA في الجوال قليلاً */
+            /* CTA للجوال: تكبير الخط 50% وضبطه لسطر واحد */
             .cta-phrase {
-                font-size: 13px; 
-                letter-spacing: normal;
+                font-size: 16px; /* زيادة الحجم */
+                letter-spacing: -0.8px; /* ضغط الحروف */
+                white-space: nowrap; /* منع النزول لسطر ثاني */
+                overflow: hidden;
+                text-overflow: ellipsis;
+                width: 95%; /* ضمان عدم خروجها عن الشاشة */
+                margin: 0 auto 10px auto;
             }
 
             .footer-note { font-size: 10px; }
@@ -394,13 +383,11 @@ export default function DemoProfilePage() {
               <FiveStars />
           </div>
 
-          {/* قسم Conviction الجديد (تحت الكرت) */}
           <div className="conviction-box">
               <div className="conviction-label">Conviction</div>
               <div className="conviction-value-row">
                   <span className="conviction-number">500,000</span>
-                  {/* الماسة تم تلوينها بالكحلي عبر الكلاس */}
-                  <span className="conviction-diamond">💎</span> 
+                  <span className="conviction-diamond">💎</span>
               </div>
           </div>
 
@@ -419,7 +406,7 @@ export default function DemoProfilePage() {
                   Payments are peer-to-peer. ChainFace never holds funds.
               </p>
 
-              {/* قسم الشكر والتفاعل (أصبح جزءاً من الخلفية الرئيسية) */}
+              {/* قسم الشكر والتفاعل - النصوص باللون الموحد */}
               <div style={{ marginTop: '40px', marginBottom: '10px' }}>
                 <h2 className="thank-you-title">
                       Thank you for stepping into my ChainFace.
@@ -429,7 +416,6 @@ export default function DemoProfilePage() {
                   </p>
               </div>
 
-              {/* أزرار التفاعل (تحت النص مباشرة) */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
                   <i 
                     className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-gold' : 'text-grey'}`} 
@@ -446,9 +432,9 @@ export default function DemoProfilePage() {
           </div>
       </div>
 
-      {/* الفوتر الأبيض السفلي فقط للزر وعبارة الحث */}
       <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
           
+          {/* عبارة CTA مكبرة وباللون الموحد */}
           <p className="cta-phrase">
              Claim your sovereign name assets now.
           </p>
