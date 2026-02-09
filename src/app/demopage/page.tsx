@@ -3,45 +3,45 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// --- (1) الشارات (تم إعادة الترتيب: أخضر، أزرق، ذهبي) ---
+// --- (1) الشارات ---
 const ThreeVerificationBadges = () => (
-    <div style={{ display: 'flex', gap: '5px', marginBottom: '0px', justifyContent: 'center' }}>
-        {/* Green Badge */}
-        <svg width="14" height="14" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))' }}>
-            <circle cx="21" cy="21" r="20" fill="#25D366" stroke="#ffffff" strokeWidth="1.5"/>
-            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <div className="badges-container" style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
+        {/* Green */}
+        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5))' }}>
+            <circle cx="21" cy="21" r="20" fill="#25D366" stroke="#ffffff" strokeWidth="2"/>
+            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Blue Badge */}
-        <svg width="14" height="14" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))' }}>
-            <circle cx="21" cy="21" r="20" fill="#1DA1F2" stroke="#ffffff" strokeWidth="1.5"/>
-            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Blue */}
+        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5))' }}>
+            <circle cx="21" cy="21" r="20" fill="#1DA1F2" stroke="#ffffff" strokeWidth="2"/>
+            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Gold Badge */}
-        <svg width="14" height="14" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))' }}>
+        {/* Gold */}
+        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5))' }}>
             <defs>
                 <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#FFD700" />
                     <stop offset="100%" stopColor="#FFA500" />
                 </linearGradient>
             </defs>
-            <circle cx="21" cy="21" r="20" fill="url(#goldGrad)" stroke="#ffffff" strokeWidth="1.5"/>
-            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="21" cy="21" r="20" fill="url(#goldGrad)" stroke="#ffffff" strokeWidth="2"/>
+            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     </div>
 );
 
-// --- (2) النجوم (تم زيادة الحجم 25% إلى 15px) ---
+// --- (2) النجوم ---
 const FiveStars = () => (
-    <div style={{ display: 'flex', gap: '2px', marginTop: '4px', justifyContent: 'center' }}>
+    <div className="stars-container" style={{ display: 'flex', justifyContent: 'center' }}>
         {[1, 2, 3, 4, 5].map((s) => (
-            // تم تغيير الحجم هنا من 12 إلى 15
-            <svg key={s} width="15" height="15" viewBox="0 0 24 24" fill="#F0C420" stroke="#B8860B" strokeWidth="1">
+            <svg key={s} className="star-icon" viewBox="0 0 24 24" fill="#F0C420" stroke="#B8860B" strokeWidth="1">
                 <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
             </svg>
         ))}
     </div>
 );
 
+// --- (3) الأيقونات ---
 const CryptoLogo = ({ type }: { type: string }) => {
     switch (type) {
         case 'BTC': return <svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M22.6 14.2c.4-2.6-1.6-4-4.3-5l.9-3.5-2.1-.5-.8 3.4c-.6-.1-1.1-.3-1.7-.4l.9-3.5-2.1-.5-.9 3.6c-.5-.1-.9-.2-1.4-.3l-3-.8-.6 2.3s1.6.4 1.6.4c.9.2 1 .8 1 1.2l-1 4.1c.1 0 .2 0 .3.1-.1 0-.2 0-.3-.1l-1.4 5.6c-.1.3-.4.7-1 .6 0 0-1.6-.4-1.6-.4l-1.1 2.6 2.8.7c.5.1 1 .3 1.5.4l-.9 3.6 2.1.5.9-3.6c.6.1 1.1.3 1.7.4l-.9 3.6 2.1.5.9-3.5c3.6.7 6.4.4 7.6-2.9.9-2.7-.1-4.2-1.9-5.2 1.4-.3 2.4-1.2 2.7-3z" fill="#FFF"/></svg>;
@@ -73,8 +73,9 @@ export default function DemoProfilePage() {
   };
 
   return (
-    // تم تعديل لون الخلفية إلى أوف وايت مائل للأرجواني الخفيف
-    <main style={{ backgroundColor: '#f8f5fa', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
+    // الخلفية: أوف وايت غامق قليلاً حسب الطلب (#F2EFF5)
+    <main style={{ backgroundColor: '#F2EFF5', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
+      
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
@@ -90,22 +91,22 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
+        /* --- الهيدر: تعديل ليتجاوز الخط الأسود --- */
         .hero-banner-wrapper {
             width: 100%;
             height: auto;
             aspect-ratio: 3.3 / 1;
             max-height: 300px;
             position: relative;
-            background-color: transparent; /* جعل الخلفية شفافة */
+            background-color: transparent;
             overflow: hidden;
-            /* إضافة مارجن سالب علوي لتخطي الشريط الأسود في المتصفح */
-            margin-top: -40px;
+            margin-top: -40px; /* تجاوز الخط الأسود */
         }
 
         .hero-banner-img {
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: contain; /* منع القص */
             object-position: center;
         }
         
@@ -117,7 +118,7 @@ export default function DemoProfilePage() {
 
         .back-btn {
             position: absolute;
-            top: 55px; /* زيادة المسافة العلوية بسبب المارجن السالب للهيدر */
+            top: 55px; 
             left: 25px;
             width: 45px;
             height: 45px;
@@ -139,6 +140,7 @@ export default function DemoProfilePage() {
             transform: scale(1.05);
         }
 
+        /* --- الكرت --- */
         .identity-card-container {
             position: relative;
             width: 260px;
@@ -147,36 +149,37 @@ export default function DemoProfilePage() {
             margin-left: 10%; 
             border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
-            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.4); /* إطار أبيض أنحف */
             z-index: 10;
             
-            /* --- تعديل خلفية الكرت لتكون تدرج لوني CSS بدلاً من صورة --- */
-            background: linear-gradient(180deg, #d8b4fe 0%, #4c1d95 55%, #c084fc 100%);
+            /* --- التدرج اللوني الجديد (أرجواني -> كحلي غامق -> أرجواني) --- */
+            background: linear-gradient(180deg, #A855F7 0%, #1e1b4b 50%, #A855F7 100%);
             
             display: flex;
-            align-items: center;
-            justify-content: space-between; /* توزيع المحتوى عمودياً */
             flex-direction: column;
-            /* إضافة بادينج للتحكم في المسافات العلوية والسفلية بدقة */
-            padding: 12px 0 8px 0;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 0;
         }
 
         .card-content {
             text-align: center;
             color: white;
             z-index: 20;
-            /* زيادة المسافة بين الشارات والاسم */
-            margin-top: 10px; 
+            margin: 5px 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            width: 100%;
         }
 
         .card-name-row {
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 100%;
         }
 
         .card-name {
@@ -185,8 +188,56 @@ export default function DemoProfilePage() {
             font-weight: 900;
             text-transform: uppercase;
             color: white;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.6);
+            text-shadow: 0 3px 10px rgba(0,0,0,0.7);
             letter-spacing: 0.5px;
+        }
+
+        /* --- تكبير العناصر في الكمبيوتر --- */
+        .badge-icon { width: 24px; height: 24px; } /* تكبير الشارات */
+        .star-icon { width: 22px; height: 22px; } /* تكبير النجوم */
+        
+        .stars-container { 
+            gap: 5px; 
+            /* رفع النجوم للأعلى بعيداً عن الحافة */
+            margin-bottom: 15px; 
+        }
+        
+        /* إبعاد الشارات عن الحافة العلوية والاسم */
+        .badges-container {
+            margin-bottom: 8px;
+            margin-top: 5px;
+        }
+
+        /* --- تنسيق قسم Conviction الجديد --- */
+        .conviction-box {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 30px;
+        }
+        .conviction-label {
+            color: #C084FC; /* لون بنفسجي فاتح/ذهبي خفيف */
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-family: 'Satoshi', sans-serif;
+            letter-spacing: 1px;
+        }
+        .conviction-value-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .conviction-number {
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 26px;
+            font-weight: 900;
+            font-family: 'Satoshi', sans-serif;
+        }
+        .conviction-diamond {
+            font-size: 22px; 
         }
 
         .pay-grid {
@@ -242,6 +293,14 @@ export default function DemoProfilePage() {
              font-style: italic;
         }
 
+        .cta-phrase {
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            color: #111;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
         /* --- تنسيقات الجوال --- */
         @media (max-width: 768px) {
             .hero-banner-wrapper { 
@@ -249,44 +308,50 @@ export default function DemoProfilePage() {
                 min-height: 150px;
                 aspect-ratio: unset;
                 max-height: unset;
-                /* المارجن السالب للجوال أيضاً */
                 margin-top: -40px;
+                display: block;
             } 
+            
+            .hero-banner-img {
+                object-fit: cover;
+            }
 
-            /* تعديل مكان زر الرجوع في الجوال ليتناسب مع المارجن السالب */
+            /* رفع السهم وتصغيره للجوال */
             .back-btn {
-                width: 25px;        
-                height: 25px;
-                top: 50px; 
+                width: 28px;        
+                height: 28px;
+                top: 10px;  /* رفع قوي للأعلى */
                 left: 15px;
-                font-size: 12px;    
+                font-size: 14px;    
                 border-width: 0.5px;
             }
             
             .identity-card-container { 
                 width: 40%;
-                height: 90px; /* زيادة طفيفة في الارتفاع لاستيعاب النجوم الأكبر */
+                height: 80px;
                 min-width: 140px;
                 margin: -22px 0 0 20px;
                 border-radius: 12px;
                 border-width: 0.8px;
-                /* بادينج أقل للجوال */
-                padding: 8px 0 5px 0;
+                padding: 2px 0;
             }
 
-            .card-content {
-                /* مسافة أقل في الجوال */
-                margin-top: 5px;
-            }
-            
-            .card-name {
-                font-size: 15px;
+            .card-content { margin: 2px 0; }
+            .card-name { font-size: 15px; }
+
+            /* إعادة الأحجام لطبيعتها في الجوال */
+            .badge-icon { width: 14px; height: 14px; }
+            .star-icon { width: 12px; height: 12px; }
+            .stars-container { gap: 1px; margin-bottom: 5px; }
+            .badges-container { margin-bottom: 2px; margin-top: 2px; }
+
+            /* تصغير خط CTA ليكون سطر واحد */
+            .cta-phrase {
+                font-size: 11px; 
+                letter-spacing: -0.5px; /* ضغط الحروف قليلاً */
             }
 
-            .footer-note {
-                font-size: 10px;
-            }
-
+            .footer-note { font-size: 10px; }
             .pay-grid { grid-template-columns: 1fr; max-width: 100%; }
         }
       `}</style>
@@ -305,22 +370,27 @@ export default function DemoProfilePage() {
 
       <div className="page-container">
           <div className="identity-card-container">
-              {/* المحتوى العلوي: الشارات والاسم */}
               <div className="card-content">
                   <ThreeVerificationBadges />
                   <div className="card-name-row">
                       <span className="card-name">ALEXANDER</span>
                   </div>
               </div>
-              {/* المحتوى السفلي: النجوم */}
               <FiveStars />
           </div>
 
-          <div style={{ maxWidth: '700px', margin: '30px auto', textAlign: 'center', padding: '0 20px' }}>
-              
-              {/* تم نقل العبارة الترحيبية من هنا */}
+          {/* قسم Conviction الجديد (تحت الكرت) */}
+          <div className="conviction-box">
+              <div className="conviction-label">Conviction</div>
+              <div className="conviction-value-row">
+                  <span className="conviction-number">500,000</span>
+                  <span className="conviction-diamond">💎</span>
+              </div>
+          </div>
 
-              <div className="pay-grid" style={{marginTop: '50px'}}>
+          <div style={{ maxWidth: '700px', margin: '20px auto', textAlign: 'center', padding: '0 20px' }}>
+              
+              <div className="pay-grid">
                   <PayButton type="BTC" name="Bitcoin" />
                   <PayButton type="ETH" name="Ethereum" />
                   <PayButton type="POLYGON" name="Polygon" />
@@ -338,38 +408,34 @@ export default function DemoProfilePage() {
 
       <div style={{ marginTop: '40px', padding: '40px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
           
-          {/* تم نقل العبارة الترحيبية إلى هنا قبل زر الإجراء */}
-          <div style={{ marginBottom: '30px' }}>
+          <div style={{ marginBottom: '20px' }}>
             <h2 style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: '700', fontSize: '22px', color: '#4A148C', marginBottom: '10px' }}>
                   Thank you for stepping into my ChainFace.
               </h2>
               <p style={{ color: '#666', fontSize: '16px', lineHeight: '1.5', fontWeight: '500' }}>
                   Your trust means everything.
-                  <br/>
-                  <span style={{ color: '#888', fontSize: '13px', marginTop: '10px', display: 'block', fontWeight: '600' }}>
-                     Conviction: <strong style={{ color: '#4A148C' }}>500,000</strong> 💎
-                  </span>
               </p>
           </div>
 
-          <p style={{ fontFamily: 'Cinzel, serif', fontSize: '18px', color: '#111', marginBottom: '10px', fontWeight: '700' }}>
+          {/* أزرار التفاعل في المكان الجديد */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
+              <i 
+                className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-gold' : 'text-grey'}`} 
+                style={{ fontSize: '24px', cursor: 'pointer', color: feedback === 'like' ? '#F0C420' : '#ccc', transition: '0.3s' }}
+                onClick={() => toggleFeedback('like')}
+              ></i>
+              <i 
+                className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-gold' : 'text-grey'}`} 
+                style={{ fontSize: '24px', cursor: 'pointer', color: feedback === 'dislike' ? '#F0C420' : '#ccc', transition: '0.3s' }}
+                onClick={() => toggleFeedback('dislike')}
+              ></i>
+          </div>
+
+          <p className="cta-phrase">
              Claim your sovereign name assets now.
           </p>
           
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', marginTop: '20px' }}>
-              <div style={{ display: 'flex', gap: '15px' }}>
-                  <i 
-                    className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-gold' : 'text-grey'}`} 
-                    style={{ fontSize: '22px', cursor: 'pointer', color: feedback === 'like' ? '#F0C420' : '#ccc', transition: '0.3s' }}
-                    onClick={() => toggleFeedback('like')}
-                  ></i>
-                  <i 
-                    className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-gold' : 'text-grey'}`} 
-                    style={{ fontSize: '22px', cursor: 'pointer', color: feedback === 'dislike' ? '#F0C420' : '#ccc', transition: '0.3s' }}
-                    onClick={() => toggleFeedback('dislike')}
-                  ></i>
-              </div>
-
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px' }}>
               <Link href="/chainface" className="marketing-btn">
                   YOUR CHAINFACE
               </Link>
