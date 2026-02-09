@@ -88,14 +88,14 @@ export default function DemoProfilePage() {
         }
 
         /* --- تعديل البنر للكمبيوتر ليظهر الصورة كاملة --- */
-        .hero-banner-wrapper {
-            width: 100%;
-            height: auto;           /* الارتفاع أوتوماتيكي */
-            aspect-ratio: 2.625;    /* النسبة الأصلية للصورة (3360/1280) تضمن عدم القص */
-            max-height: 300px;      /* حد أقصى للارتفاع */
-            position: relative;
-            background-color: #000;
-            overflow: hidden;
+       .hero-banner-wrapper {
+           width: 100%;
+           height: 30vh;          /* هذا هو السطر الأهم */
+           min-height: 200px;     /* أقل ارتفاع */
+           max-height: 380px;     /* أقصى ارتفاع */
+           position: relative;
+           background-color: #000;
+           overflow: hidden;
         }
 
         .hero-banner-img {
