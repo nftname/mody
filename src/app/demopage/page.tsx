@@ -41,7 +41,6 @@ const FiveStars = () => (
     </div>
 );
 
-// --- (3) الأيقونات ---
 const CryptoLogo = ({ type }: { type: string }) => {
     switch (type) {
         case 'BTC': return <svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M22.6 14.2c.4-2.6-1.6-4-4.3-5l.9-3.5-2.1-.5-.8 3.4c-.6-.1-1.1-.3-1.7-.4l.9-3.5-2.1-.5-.9 3.6c-.5-.1-.9-.2-1.4-.3l-3-.8-.6 2.3s1.6.4 1.6.4c.9.2 1 .8 1 1.2l-1 4.1c.1 0 .2 0 .3.1-.1 0-.2 0-.3-.1l-1.4 5.6c-.1.3-.4.7-1 .6 0 0-1.6-.4-1.6-.4l-1.1 2.6 2.8.7c.5.1 1 .3 1.5.4l-.9 3.6 2.1.5.9-3.6c.6.1 1.1.3 1.7.4l-.9 3.6 2.1.5.9-3.5c3.6.7 6.4.4 7.6-2.9.9-2.7-.1-4.2-1.9-5.2 1.4-.3 2.4-1.2 2.7-3z" fill="#FFF"/></svg>;
@@ -73,8 +72,8 @@ export default function DemoProfilePage() {
   };
 
   return (
-    // الخلفية: أوف وايت غامق قليلاً حسب الطلب (#F2EFF5)
-    <main style={{ backgroundColor: '#F2EFF5', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
+    // خلفية أوف وايت غامقة قليلاً (#F0EDF2)
+    <main style={{ backgroundColor: '#F0EDF2', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
       
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
@@ -91,7 +90,7 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
-        /* --- الهيدر: تعديل ليتجاوز الخط الأسود --- */
+        /* --- الهيدر --- */
         .hero-banner-wrapper {
             width: 100%;
             height: auto;
@@ -100,13 +99,13 @@ export default function DemoProfilePage() {
             position: relative;
             background-color: transparent;
             overflow: hidden;
-            margin-top: -40px; /* تجاوز الخط الأسود */
+            margin-top: -40px; 
         }
 
         .hero-banner-img {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* منع القص */
+            object-fit: contain;
             object-position: center;
         }
         
@@ -140,7 +139,7 @@ export default function DemoProfilePage() {
             transform: scale(1.05);
         }
 
-        /* --- الكرت --- */
+        /* --- تصميم الكرت بألوان فخمة --- */
         .identity-card-container {
             position: relative;
             width: 260px;
@@ -150,11 +149,11 @@ export default function DemoProfilePage() {
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.4); /* إطار أبيض أنحف */
+            border: 1px solid rgba(255,255,255,0.4);
             z-index: 10;
             
-            /* --- التدرج اللوني الجديد (أرجواني -> كحلي غامق -> أرجواني) --- */
-            background: linear-gradient(180deg, #A855F7 0%, #1e1b4b 50%, #A855F7 100%);
+            /* --- التدرج الفخم الجديد: بنفسجي لامع من الأطراف وكحلي عميق في الوسط --- */
+            background: radial-gradient(circle at center, #0F172A 0%, #1e1b4b 40%, #581c87 100%);
             
             display: flex;
             flex-direction: column;
@@ -192,30 +191,31 @@ export default function DemoProfilePage() {
             letter-spacing: 0.5px;
         }
 
-        /* --- تكبير العناصر في الكمبيوتر --- */
-        .badge-icon { width: 24px; height: 24px; } /* تكبير الشارات */
-        .star-icon { width: 22px; height: 22px; } /* تكبير النجوم */
+        /* --- تحجيم العناصر في الكمبيوتر --- */
+        .badge-icon { width: 24px; height: 24px; } 
+        .star-icon { width: 22px; height: 22px; } 
         
         .stars-container { 
             gap: 5px; 
-            /* رفع النجوم للأعلى بعيداً عن الحافة */
-            margin-bottom: 15px; 
+            /* إنزال النجوم للأسفل لعدم مزاحمة الاسم */
+            margin-top: 8px;
+            margin-bottom: 5px; 
         }
         
-        /* إبعاد الشارات عن الحافة العلوية والاسم */
         .badges-container {
-            margin-bottom: 8px;
-            margin-top: 5px;
+            /* رفع الشارات للأعلى */
+            margin-bottom: 5px;
+            margin-top: 0px;
         }
 
-        /* --- تنسيق قسم Conviction الجديد --- */
+        /* --- تنسيق قسم Conviction الجديد (ألوان كحلية/أرجوانية غامقة) --- */
         .conviction-box {
             text-align: center;
             margin-top: 15px;
             margin-bottom: 30px;
         }
         .conviction-label {
-            color: #C084FC; /* لون بنفسجي فاتح/ذهبي خفيف */
+            color: #1e1b4b; /* كحلي غامق */
             font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
@@ -229,15 +229,29 @@ export default function DemoProfilePage() {
             gap: 8px;
         }
         .conviction-number {
-            background: linear-gradient(90deg, #FFD700, #FFA500);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 26px;
+            color: #1e1b4b; /* كحلي غامق */
+            font-size: 20px; /* تصغير الخط 25% (كان 26-28) */
             font-weight: 900;
             font-family: 'Satoshi', sans-serif;
         }
         .conviction-diamond {
             font-size: 22px; 
+            color: #1e1b4b; /* كحلي غامق للماسة */
+        }
+
+        /* --- نصوص الشكر الجديدة (بنفس اللون الكحلي) --- */
+        .thank-you-title {
+            font-family: 'Satoshi', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            color: #1e1b4b; /* كحلي غامق */
+            margin-bottom: 10px;
+        }
+        .thank-you-subtitle {
+            color: #1e1b4b; /* كحلي غامق */
+            font-size: 16px;
+            line-height: 1.5;
+            font-weight: 600;
         }
 
         .pay-grid {
@@ -313,14 +327,16 @@ export default function DemoProfilePage() {
             } 
             
             .hero-banner-img {
+                /* إرجاع الصورة لوضعها الطبيعي في الجوال */
                 object-fit: cover;
+                object-position: center;
             }
 
             /* رفع السهم وتصغيره للجوال */
             .back-btn {
                 width: 28px;        
                 height: 28px;
-                top: 10px;  /* رفع قوي للأعلى */
+                top: 45px;  /* رفع مناسب لتخطي الحافة */
                 left: 15px;
                 font-size: 14px;    
                 border-width: 0.5px;
@@ -339,16 +355,15 @@ export default function DemoProfilePage() {
             .card-content { margin: 2px 0; }
             .card-name { font-size: 15px; }
 
-            /* إعادة الأحجام لطبيعتها في الجوال */
             .badge-icon { width: 14px; height: 14px; }
             .star-icon { width: 12px; height: 12px; }
-            .stars-container { gap: 1px; margin-bottom: 5px; }
-            .badges-container { margin-bottom: 2px; margin-top: 2px; }
+            .stars-container { gap: 1px; margin-top: 4px; margin-bottom: 2px; }
+            .badges-container { margin-bottom: 2px; margin-top: 0px; }
 
-            /* تصغير خط CTA ليكون سطر واحد */
+            /* تكبير خط CTA في الجوال قليلاً */
             .cta-phrase {
-                font-size: 11px; 
-                letter-spacing: -0.5px; /* ضغط الحروف قليلاً */
+                font-size: 13px; 
+                letter-spacing: normal;
             }
 
             .footer-note { font-size: 10px; }
@@ -384,7 +399,8 @@ export default function DemoProfilePage() {
               <div className="conviction-label">Conviction</div>
               <div className="conviction-value-row">
                   <span className="conviction-number">500,000</span>
-                  <span className="conviction-diamond">💎</span>
+                  {/* الماسة تم تلوينها بالكحلي عبر الكلاس */}
+                  <span className="conviction-diamond">💎</span> 
               </div>
           </div>
 
@@ -403,39 +419,41 @@ export default function DemoProfilePage() {
                   Payments are peer-to-peer. ChainFace never holds funds.
               </p>
 
+              {/* قسم الشكر والتفاعل (أصبح جزءاً من الخلفية الرئيسية) */}
+              <div style={{ marginTop: '40px', marginBottom: '10px' }}>
+                <h2 className="thank-you-title">
+                      Thank you for stepping into my ChainFace.
+                  </h2>
+                  <p className="thank-you-subtitle">
+                      Your trust means everything.
+                  </p>
+              </div>
+
+              {/* أزرار التفاعل (تحت النص مباشرة) */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
+                  <i 
+                    className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-gold' : 'text-grey'}`} 
+                    style={{ fontSize: '24px', cursor: 'pointer', color: feedback === 'like' ? '#F0C420' : '#ccc', transition: '0.3s' }}
+                    onClick={() => toggleFeedback('like')}
+                  ></i>
+                  <i 
+                    className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-gold' : 'text-grey'}`} 
+                    style={{ fontSize: '24px', cursor: 'pointer', color: feedback === 'dislike' ? '#F0C420' : '#ccc', transition: '0.3s' }}
+                    onClick={() => toggleFeedback('dislike')}
+                  ></i>
+              </div>
+
           </div>
       </div>
 
-      <div style={{ marginTop: '40px', padding: '40px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
+      {/* الفوتر الأبيض السفلي فقط للزر وعبارة الحث */}
+      <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
           
-          <div style={{ marginBottom: '20px' }}>
-            <h2 style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: '700', fontSize: '22px', color: '#4A148C', marginBottom: '10px' }}>
-                  Thank you for stepping into my ChainFace.
-              </h2>
-              <p style={{ color: '#666', fontSize: '16px', lineHeight: '1.5', fontWeight: '500' }}>
-                  Your trust means everything.
-              </p>
-          </div>
-
-          {/* أزرار التفاعل في المكان الجديد */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
-              <i 
-                className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-gold' : 'text-grey'}`} 
-                style={{ fontSize: '24px', cursor: 'pointer', color: feedback === 'like' ? '#F0C420' : '#ccc', transition: '0.3s' }}
-                onClick={() => toggleFeedback('like')}
-              ></i>
-              <i 
-                className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-gold' : 'text-grey'}`} 
-                style={{ fontSize: '24px', cursor: 'pointer', color: feedback === 'dislike' ? '#F0C420' : '#ccc', transition: '0.3s' }}
-                onClick={() => toggleFeedback('dislike')}
-              ></i>
-          </div>
-
           <p className="cta-phrase">
              Claim your sovereign name assets now.
           </p>
           
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '15px' }}>
               <Link href="/chainface" className="marketing-btn">
                   YOUR CHAINFACE
               </Link>
