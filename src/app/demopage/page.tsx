@@ -149,7 +149,7 @@ export default function DemoProfilePage() {
             border: 1px solid rgba(255,255,255,0.3);
             z-index: 10;
             background-color: #1a1a1a;
-            background-image: url('/images/chainface-card-bg.png');
+            background-image: url('/images/chainface-card-bg.jpg');
             background-size: cover;
             background-position: center;
             display: flex;
