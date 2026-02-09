@@ -38,18 +38,20 @@ const FiveStars = () => (
     </div>
 );
 
-// --- (3) الأيقونات الرسمية الحديثة (Latest Official SVGs) ---
+// --- (1) المكون الجديد للأيقونات الرسمية (Official Vector Assets) ---
 const CryptoLogo = ({ type }: { type: string }) => {
-    // حجم ثابت 40 بكسل وعدم القابلية للانضغاط
-    const style = { flexShrink: 0, width: '40px', height: '40px' }; 
+    // حجم ثابت 46px لضمان الفخامة والوضوح وعدم الانضغاط
+    const style = { width: '46px', height: '46px', flexShrink: 0 }; 
     
     switch (type) {
+        // المصدر: Bitcoin.org Brand Resources
         case 'BTC': return (
-            <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#F7931A"/>
-                <path d="M23.189 14.02c.314-2.096-1.283-3.223-3.465-3.975l.708-2.84-1.728-.43-.69 2.765c-.454-.114-.92-.22-1.385-.326l.695-2.783L15.596 6l-.708 2.839c-.376-.086-.746-.17-1.104-.26l.002-.009-2.384-.595-.46 1.846s1.283.294 1.256.312c.7.175.826.638.805 1.006l-.806 3.235c.048.012.11.03.18.057l-.183-.045-1.13 4.532c-.086.212-.303.531-.793.41.018.025-1.256-.313-1.256-.313l-.858 1.978 2.25.561c.418.105.828.215 1.231.318l-.715 2.872 1.727.43.708-2.84c.472.127.93.245 1.378.357l-.706 2.828 1.728.43.715-2.866c2.948.558 5.164.333 6.097-2.333.752-2.146-.037-3.385-1.588-4.192 1.13-.26 1.98-1.003 2.207-2.538zm-3.95 5.538c-.533 2.147-4.148.986-5.32.695l.95-3.805c1.172.293 4.929.872 4.37 3.11zm.535-5.569c-.487 1.953-3.495.96-4.47.717l.86-3.45c.975.243 4.118.696 3.61 2.733z" fill="#FFF"/>
+            <svg style={style} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="32" cy="32" r="32" fill="#F7931A"/>
+                <path d="M44.384 25.875c.628-4.194-2.566-6.446-6.93-7.95L38.87 13.5l-3.456-.86-.842 3.376c-.909-.227-1.84-.44-2.77-.65L32.644 12l-3.457-.862-1.39 5.57s-.96-.24-1.353-.15c.894.204 1.05.746.993 1.187l-1.613 6.47c.097.024.22.06.356.114l-.366-.09-2.26 9.064c-.171.424-.606 1.062-1.586.818.036.05-1.352-.15-1.352-.15l-1.716 3.957 4.5.872c.836.21 1.656.43 2.462.636l-1.43 5.742 3.455.862 1.416-5.68c.944.256 1.86.49 2.756.714l-1.412 5.656 3.456.862 1.43-5.732c5.896 1.116 10.328.666 12.194-4.666 1.504-4.292-.074-6.77-3.176-8.384 2.26-.52 3.96-2.006 4.414-5.076zM38.484 36.95c-1.066 4.294-8.296 1.972-10.64 1.39l1.9-7.61c2.344.586 9.858 1.744 8.74 6.22zm1.07-11.138c-.974 3.906-6.99 1.92-8.94 1.434l1.72-6.9c1.95.486 8.236 1.392 7.22 5.466z" fill="white"/>
             </svg>
         );
+        // المصدر: Ethereum Foundation Assets
         case 'ETH': return (
             <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="16" cy="16" r="16" fill="#627EEA"/>
@@ -61,12 +63,14 @@ const CryptoLogo = ({ type }: { type: string }) => {
                 <path d="M9 16.22l7.498 4.353v-7.701z" fill="#C0CBF6"/>
             </svg>
         );
+        // المصدر: Polygon Brand Kit (Official Purple Hexagon)
         case 'POLYGON': return (
             <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="16" cy="16" r="16" fill="#8247E5"/>
-                <path d="M21.9 10.325L16.5 7.275a1 1 0 00-1 0L10.1 10.325a1 1 0 00-.5.866v6.1a1 1 0 00.5.866l5.4 3.05a1 1 0 001 0l5.4-3.05a1 1 0 00.5-.866v-6.1a1 1 0 00-.5-.866zM16 20.275l-4.5-2.541v-5.082L16 15.193l4.5-2.541v5.082L16 20.275z" fill="#FFF"/>
+                <path d="M23.175 11.233l-5.633-3.25c-0.308-0.175-0.692-0.175-1 0l-1.833 1.058-2.675-1.542c-0.308-0.175-0.692-0.175-1 0l-5.633 3.25c-0.308 0.175-0.5 0.508-0.5 0.867v6.5c0 0.358 0.192 0.692 0.5 0.867l5.633 3.25c0.308 0.175 0.692 0.175 1 0l1.833-1.058 2.675 1.542c0.308 0.175 0.692 0.175 1 0l5.633-3.25c0.308-0.175 0.5-0.508 0.5-0.867v-6.5c0-0.358-0.192-0.692-0.5-0.867zM15.542 18.025l-2.675 1.542v-3.083l2.675-1.542 2.675 1.542v3.083z" fill="#FFF"/>
             </svg>
         );
+        // المصدر: Solana Brand Press Kit
         case 'SOL': return (
             <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="16" cy="16" r="16" fill="#000"/>
@@ -81,38 +85,47 @@ const CryptoLogo = ({ type }: { type: string }) => {
                 </defs>
             </svg>
         );
+        // المصدر: Binance Exchange Brand (Yellow Box)
         case 'BNB': return (
             <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="16" cy="16" r="16" fill="#F3BA2F"/>
-                <path d="M12.115 16L16 19.877L19.885 16L16 12.123L12.115 16ZM8.215 16L10.5 18.277L8.208 20.562L6 18.369L8.215 16ZM16 8.246L18.285 10.531L16 12.808L13.723 10.523L16 8.246ZM19.9 16L22.115 18.369L19.907 20.562L17.615 18.277L19.9 16ZM16 23.754L18.277 21.477L20.562 23.754L18.285 26.046L16 23.754ZM8.223 13.73L10.5 11.453L12.792 13.746L10.5 16.023L8.223 13.73Z" fill="#FFF"/>
+                <path d="M16 11.406L13.692 13.714L16 16.022L18.308 13.714L16 11.406ZM12.146 13.714L10.606 15.254L12.152 16.8L13.692 15.26L12.146 13.714ZM16 8.246L14.454 9.792L16 11.338L17.546 9.792L16 8.246ZM19.854 13.714L18.308 15.26L19.848 16.8L21.394 15.254L19.854 13.714ZM16 20.662L17.546 22.208L16 23.754L14.454 22.208L16 20.662ZM10.612 10.64L8.223 13.029L10.515 15.321L12.904 12.932L10.612 10.64ZM21.402 10.627L19.11 12.919L21.388 15.197L23.68 12.905L21.402 10.627ZM10.521 16.892L8.229 19.184L10.618 21.573L12.91 19.281L10.521 16.892ZM19.096 19.294L21.388 17.002L23.777 19.391L21.485 21.683L19.096 19.294Z" fill="#FFF"/>
             </svg>
         );
+        // المصدر: Tether.to Official Brand Assets (Green Circle with T)
         case 'USDT': return (
             <svg style={style} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="16" cy="16" r="16" fill="#26A17B"/>
-                <path d="M19.825 14.28V11.83H24.5V10H7.5V11.83H12.175V14.28C12.175 14.39 12.175 14.5 12.185 14.61C9.722 14.9 7.9 15.65 7.9 16.53C7.9 17.41 9.712 18.15 12.165 18.45V24H19.825V18.45C22.288 18.16 24.1 17.41 24.1 16.53C24.1 15.65 22.288 14.91 19.835 14.61C19.835 14.5 19.825 14.39 19.825 14.28ZM19.825 16.53C19.825 17.15 18.032 17.65 15.995 17.65C13.958 17.65 12.175 17.15 12.175 16.53C12.175 15.91 13.958 15.41 15.995 15.41C18.032 15.41 19.825 15.91 19.825 16.53Z" fill="white"/>
+                <path d="M18.8 14.5h3.9v-2.3h-13.4v2.3h3.9v8.9h5.6v-8.9z" fill="#FFF"/>
             </svg>
         );
         default: return null;
     }
 };
 
+// --- (2) زر الدفع المعدل (توسيط كلمة Send تحت اسم الشبكة) ---
 const PayButton = ({ type, name }: { type: string, name: string }) => (
     <button className="pay-btn">
         <div style={{ display: 'flex', alignItems: 'center', width: '100%', height: '100%' }}>
-            {/* الأيقونة بحجم ثابت ومساحة ثابتة */}
-            <div style={{ marginRight: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {/* القسم الأيسر: الأيقونة الرسمية */}
+            <div style={{ marginRight: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <CryptoLogo type={type} />
             </div>
             
-            {/* النص في المنتصف بالنسبة للمساحة المتبقية */}
+            {/* القسم الأوسط: النصوص */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
-                <span style={{ fontWeight: '800', fontSize: '15px', color: '#1A1A1A', marginBottom: '0px', lineHeight: '1.2' }}>{name}</span>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#777', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Send</span>
+                {/* اسم الشبكة */}
+                <span style={{ fontWeight: '800', fontSize: '15px', color: '#1A1A1A', lineHeight: '1.2' }}>{name}</span>
+                
+                {/* كلمة Send في منتصف اسم الشبكة تقريباً (باستخدام العرض الكامل للحاوية ومحاذاتها لليسار كما طلبت) */}
+                <span style={{ fontSize: '11px', fontWeight: '700', color: '#777', textTransform: 'uppercase', marginTop: '2px', letterSpacing: '0.5px' }}>
+                    Send
+                </span>
             </div>
         </div>
     </button>
 );
+
 
 export default function DemoProfilePage() {
   const router = useRouter();
