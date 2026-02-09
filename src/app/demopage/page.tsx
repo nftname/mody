@@ -2,75 +2,45 @@
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+// استيراد مكون الصورة من Next.js لضمان الأداء والجودة
+import Image from 'next/image';
 
-// --- (1) Modern Web3 Standard Icons (2025 Vector Assets) ---
-// تم استخدام مسارات SVG الرسمية المحدثة لضمان الدقة والوضوح التام
-const CryptoIcon = ({ type }: { type: string }) => {
-    switch (type) {
-        case 'BTC': return (
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#F7931A"/>
-                <path d="M22.2 13.9C22.5 12.3 21.3 11.5 19.7 10.9L20.2 8.8L18.9 8.5L18.4 10.6C18 10.5 17.7 10.4 17.3 10.3L17.8 8.2L16.5 7.9L16 10C15.7 10 15.3 9.9 15 9.9L13.2 9.5L12.8 11.1C12.8 11.1 13.8 11.3 13.8 11.3C14.5 11.5 14.6 11.8 14.6 12.1L13.7 15.5C13.8 15.5 13.8 15.5 13.9 15.5C13.8 15.6 13.8 15.6 13.7 15.6L12.6 20.2C12.5 20.3 12.4 20.6 12 20.5C12 20.5 11.1 20.3 11.1 20.3L10.3 22.1L13.7 22.9C14.3 23.1 15 23.2 15.6 23.4L15.1 25.5L16.4 25.8L16.9 23.7C17.3 23.8 17.6 23.9 18 24L17.5 26.1L18.8 26.4L19.3 24.3C21.5 24.7 23.2 24.5 23.9 22.5C24.4 20.9 23.8 20 22.7 19.4C23.5 19.2 24.1 18.7 24.3 17.5ZM20.8 21C20.4 22.6 17.7 21.7 16.8 21.5L17.5 18.6C18.4 18.9 21.3 19.3 20.8 21ZM21.2 16.8C20.8 18.3 18.5 17.6 17.8 17.4L18.4 14.8C19.1 15 21.5 15.4 21.2 16.8Z" fill="white"/>
-            </svg>
-        );
-        case 'ETH': return (
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#627EEA"/>
-                <path d="M16 4L8.5 16.5L16 21L23.5 16.5L16 4Z" fill="white" fillOpacity="0.6"/>
-                <path d="M16 4V21L23.5 16.5L16 4Z" fill="white"/>
-                <path d="M16 22L8.5 17.5L16 28L23.5 17.5L16 22Z" fill="white" fillOpacity="0.6"/>
-                <path d="M16 28V22L23.5 17.5L16 28Z" fill="white"/>
-            </svg>
-        );
-        case 'POLYGON': return (
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#8247E5"/>
-                <path d="M22.5 10.5L16.5 7L10.5 10.5V16.5L16.5 20L22.5 16.5V10.5Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M16.5 12V16M16.5 16L13 18M16.5 16L20 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-        );
-        case 'SOL': return (
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#000"/>
-                <path d="M8 20.5L10 18.5H24L22 20.5H8Z" fill="#14F195"/>
-                <path d="M24 14.5L22 16.5H8L10 14.5H24Z" fill="#9945FF"/>
-                <path d="M8 8.5L10 6.5H24L22 8.5H8Z" fill="#14F195"/>
-            </svg>
-        );
-        case 'BNB': return (
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#F3BA2F"/>
-                <path d="M12.1 16L16 19.9L19.9 16L16 12.1L12.1 16ZM9 16L10.5 17.5L9 19L7.5 17.5L9 16ZM16 9L17.5 10.5L16 12L14.5 10.5L16 9ZM23 16L24.5 17.5L23 19L21.5 17.5L23 16ZM16 23L17.5 24.5L16 26L14.5 24.5L16 23Z" fill="white"/>
-            </svg>
-        );
-        case 'USDT': return (
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="16" fill="#26A17B"/>
-                <path d="M19.5 13.5H22V11H10V13.5H12.5V23H15V25H17V23H19.5V13.5Z" fill="white"/>
-            </svg>
-        );
-        default: return null;
-    }
+// --- (1) روابط الشعارات الرسمية (CDN Links - High Quality) ---
+// المصدر: CryptoLogos.cc & CoinMarketCap (Official SVGs/PNGs)
+const COIN_LOGOS = {
+    BTC: "https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=026",
+    ETH: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=026",
+    POLYGON: "https://cryptologos.cc/logos/polygon-matic-logo.svg?v=026",
+    SOL: "https://cryptologos.cc/logos/solana-sol-logo.svg?v=026",
+    BNB: "https://cryptologos.cc/logos/bnb-bnb-logo.svg?v=026",
+    USDT: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=026",
 };
 
-// --- (2) Web3 Payment Button Component ---
-// تصميم موحد للأزرار، يظهر الأيقونة واسم الشبكة بوضوح
-const Web3PaymentButton = ({ type, name }: { type: string, name: string }) => (
+// --- (2) زر الدفع الفخم (صورة + نص) ---
+const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name: string }) => (
     <button className="web3-payment-btn">
         <div className="btn-content">
-            <div className="token-info">
-                <CryptoIcon type={type} />
-                <span className="token-name">{name}</span>
+            {/* الحاوية الخاصة باللوجو - تضمن عدم التشويه */}
+            <div className="logo-wrapper">
+                <Image 
+                    src={COIN_LOGOS[type]} 
+                    alt={`${name} Logo`} 
+                    width={32} 
+                    height={32} 
+                    className="coin-logo"
+                />
             </div>
-            {/* سهم بسيط لإظهار أن الزر قابل للنقر (اختياري ويضفي طابعاً تفاعلياً) */}
-            <div className="action-arrow">
-                <i className="bi bi-chevron-right"></i>
+            
+            {/* معلومات العملة */}
+            <div className="token-info">
+                <span className="token-name">{name}</span>
+                <span className="action-text">Send</span>
             </div>
         </div>
     </button>
 );
 
-// --- (3) Helper Components (Badges & Stars) ---
+// --- (3) Helper Components (Badges & Stars - No Changes) ---
 const ThreeVerificationBadges = () => (
     <div className="badges-container" style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
@@ -119,11 +89,11 @@ export default function DemoProfilePage() {
     <main style={{ backgroundColor: '#F0EDF2', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
       
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
 
-        /* --- Reset & Base --- */
+        /* --- Global Resets --- */
         nav, footer, .navbar, .footer, header:not(.hero-banner-wrapper) {
             display: none !important;
         }
@@ -230,63 +200,88 @@ export default function DemoProfilePage() {
             right: -25px; top: 50%; transform: translateY(-50%);
         }
 
-        /* --- Payment Grid (Web3 Buttons) --- */
+        /* --- Web3 Payment Buttons Grid --- */
         .pay-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 أعمدة للكمبيوتر */
-            gap: 12px;
+            grid-template-columns: repeat(3, 1fr); /* 3 Columns on Desktop */
+            gap: 15px;
             max-width: 800px;
             margin: 0 auto;
         }
 
-        /* تنسيق الزر الموحد */
+        /* Button Style (Flexbox + Image) */
         .web3-payment-btn {
             background: #FFFFFF;
             border: 1px solid #E5E7EB;
-            border-radius: 12px;
-            height: 64px; /* ارتفاع قياسي ومريح */
+            border-radius: 16px;
+            height: 72px; /* ارتفاع قياسي ومريح */
             width: 100%;
             cursor: pointer;
             transition: all 0.2s ease;
             padding: 0 16px;
             display: flex;
             align-items: center;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
         }
 
         .web3-payment-btn:hover {
             border-color: #D1D5DB;
             background: #F9FAFB;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.08);
         }
 
         .btn-content {
             display: flex;
-            justify-content: space-between;
             align-items: center;
             width: 100%;
+            height: 100%;
+        }
+
+        .logo-wrapper {
+            /* حاوية اللوجو تضمن الحجم الثابت */
+            width: 32px; 
+            height: 32px;
+            min-width: 32px; /* منع الانضغاط */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 14px;
+        }
+        
+        .coin-logo {
+            /* ضمان جودة الصورة */
+            width: 100%;
+            height: 100%;
+            object-fit: contain; 
         }
 
         .token-info {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            flex: 1;
         }
 
         .token-name {
             font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 16px;
+            font-weight: 700;
+            font-size: 15px;
             color: #111827;
+            line-height: 1.2;
         }
 
-        .action-arrow {
-            color: #9CA3AF;
-            font-size: 14px;
+        .action-text {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6B7280; /* رمادي متوسط */
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
         }
 
-        /* --- Text & Footer --- */
+        /* --- Footer --- */
         .footer-note {
              margin-top: 30px; font-size: 12px; color: #aaa; font-style: italic;
         }
@@ -338,16 +333,12 @@ export default function DemoProfilePage() {
             }
             
             .web3-payment-btn {
-                height: 60px; /* أقصر قليلاً للجوال */
+                height: 64px; /* أقصر قليلاً للجوال */
                 padding: 0 12px;
             }
             
             .token-name {
                 font-size: 14px;
-            }
-            
-            .action-arrow {
-                display: none; /* إخفاء السهم في الجوال لتوفير مساحة */
             }
         }
       `}</style>
@@ -385,7 +376,7 @@ export default function DemoProfilePage() {
 
           <div style={{ maxWidth: '800px', margin: '20px auto', textAlign: 'center', padding: '0 20px' }}>
               
-              {/* --- شبكة الأزرار الستة --- */}
+              {/* --- Web3 Payment Buttons Grid --- */}
               <div className="pay-grid">
                   <Web3PaymentButton type="BTC" name="Bitcoin" />
                   <Web3PaymentButton type="ETH" name="Ethereum" />
