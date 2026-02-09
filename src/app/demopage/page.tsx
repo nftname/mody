@@ -3,7 +3,6 @@ import Link from 'next/link';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 
-// --- Components (مكونات الأيقونات كما هي) ---
 const GoldenCheckBadge = () => (
     <svg width="18" height="18" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '6px', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
         <defs>
@@ -53,19 +52,16 @@ export default function DemoProfilePage() {
   const router = useRouter(); 
 
   return (
-    // أضفنا z-index عالي للتأكد من أن الصفحة تغطي أي شيء آخر
     <main style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
       
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
 
-        /* --- الحل الجذري لإخفاء النافبار والفوتر الخاصين بالموقع --- */
         nav, footer, .navbar, .footer, header:not(.hero-banner-wrapper) {
             display: none !important;
         }
 
-        /* حاوية الصفحة */
         .page-container {
             width: 100%;
             max-width: 1400px;
@@ -73,11 +69,10 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
-        /* 1. البنر (35% من ارتفاع الشاشة) + إجبار الصورة على الظهور بالكامل */
         .hero-banner-wrapper {
             width: 100%;
-            height: 25vh;              /* 👈 35% كما طلبت بالضبط */
-            min-height: 250px;         /* حماية للشاشات الصغيرة */
+            height: 25vh;
+            min-height: 250px;
             position: relative;
             background-color: #000;
             overflow: hidden;
@@ -86,9 +81,6 @@ export default function DemoProfilePage() {
         .hero-banner-img {
             width: 100%;
             height: 100%;
-            /* استخدام fill يجبر الصورة على التمدد لملء المربع بالكامل 35vh * 100%
-               هذا يضمن ظهور اللوجو والكلمة بالكامل دون أي قص 
-            */
             object-fit: fill;       
             object-position: center;
         }
@@ -99,7 +91,6 @@ export default function DemoProfilePage() {
             pointer-events: none;
         }
 
-        /* زر الرجوع */
         .back-btn {
             position: absolute;
             top: 25px;
@@ -124,23 +115,18 @@ export default function DemoProfilePage() {
             transform: scale(1.05);
         }
 
-        /* 2. الكرت الصغير - ضبط التداخل */
         .identity-card-container {
             position: relative;
             width: 260px;
             height: 140px;
-            /* تداخل بسيط: بما أن البنر 35% وهو كبير،
-               سنجعل الكرت يتداخل بمقدار 40 بكسل فقط ليكون منظره جمالياً
-            */
-            margin-top: -30px; 
+            margin-top: -40px; 
             margin-left: 5%; 
-            border-radius: 12px;
+            border-radius: 35px; /* تعديل الحواف للكمبيوتر */
             overflow: hidden;
             box-shadow: 0 15px 35px rgba(0,0,0,0.25);
             border: 2px solid rgba(255,255,255,0.8);
             z-index: 10;
             background-color: #1a1a1a;
-            /* صورة الكرت png */
             background-image: url('/images/chainface-card-bg.png');
             background-size: cover;
             background-position: center;
@@ -172,7 +158,6 @@ export default function DemoProfilePage() {
             letter-spacing: 0.5px;
         }
 
-        /* الشبكة والزر */
         .pay-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -220,21 +205,28 @@ export default function DemoProfilePage() {
         .marketing-btn:hover { transform: scale(1.02); }
 
         @media (max-width: 768px) {
-            .hero-banner-wrapper { height: 30vh; } /* تصغير طفيف للجوال */
-            .identity-card-container { margin: -30px auto 0 auto; } /* في الوسط للجوال */
+            .hero-banner-wrapper { 
+                height: 18vh; /* تقليل الارتفاع لمنع شد الصورة في الجوال */
+                min-height: 150px;
+            } 
+            
+            .identity-card-container { 
+                width: 65%; /* تصغير حجم الكرت */
+                min-width: 200px;
+                margin: -35px auto 0 auto; /* توسيط الكرت مع تداخل بسيط */
+                border-radius: 40px; /* زيادة التكور للحواف جداً للجوال */
+            } 
+            
             .pay-grid { grid-template-columns: 1fr; max-width: 100%; }
         }
       `}</style>
 
-      {/* 1. Hero Banner Container */}
       <div className="hero-banner-wrapper">
           
-          {/* زر الرجوع */}
           <div className="back-btn" onClick={() => router.back()}>
               <i className="bi bi-arrow-left"></i>
           </div>
 
-          {/* صورة البنر png وتملأ المساحة بالكامل */}
           <img 
             src="/images/your-chainface.png" 
             alt="ChainFace Cover" 
@@ -243,10 +235,8 @@ export default function DemoProfilePage() {
           <div className="hero-overlay"></div>
       </div>
 
-      {/* 2. Page Container */}
       <div className="page-container">
           
-          {/* Identity Card */}
           <div className="identity-card-container">
               <div className="card-content">
                   <div className="card-name-row">
@@ -257,7 +247,6 @@ export default function DemoProfilePage() {
               </div>
           </div>
 
-          {/* 3. Main Content */}
           <div style={{ maxWidth: '700px', margin: '30px auto', textAlign: 'center', padding: '0 20px' }}>
               
               <h2 style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: '700', fontSize: '22px', color: '#4A148C', marginBottom: '10px' }}>
@@ -287,7 +276,6 @@ export default function DemoProfilePage() {
           </div>
       </div>
 
-      {/* 4. Footer الخاص بهذه الصفحة فقط */}
       <div style={{ marginTop: '60px', padding: '40px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
           <p style={{ fontFamily: 'Cinzel, serif', fontSize: '18px', color: '#111', marginBottom: '10px', fontWeight: '700' }}>
               Ownership is the new status. Claim your sovereign asset now.
