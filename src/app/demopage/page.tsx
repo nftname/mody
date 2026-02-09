@@ -1,17 +1,15 @@
 'use client';
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react'; // استدعاء useState للتفاعل
 import { useRouter } from 'next/navigation';
 
-// --- (1) تعديل الشارات: تصغير الحجم وتنحيف الإطار الأبيض ---
+// --- (1) الشارات ---
 const ThreeVerificationBadges = () => (
     <div style={{ display: 'flex', gap: '5px', marginBottom: '4px', justifyContent: 'center' }}>
-        {/* Blue Badge */}
         <svg width="14" height="14" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))' }}>
             <circle cx="21" cy="21" r="20" fill="#1DA1F2" stroke="#ffffff" strokeWidth="1.5"/>
             <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Gold Badge */}
         <svg width="14" height="14" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))' }}>
             <defs>
                 <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -22,7 +20,6 @@ const ThreeVerificationBadges = () => (
             <circle cx="21" cy="21" r="20" fill="url(#goldGrad)" stroke="#ffffff" strokeWidth="1.5"/>
             <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Green Badge */}
         <svg width="14" height="14" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))' }}>
             <circle cx="21" cy="21" r="20" fill="#25D366" stroke="#ffffff" strokeWidth="1.5"/>
             <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -30,7 +27,7 @@ const ThreeVerificationBadges = () => (
     </div>
 );
 
-// --- (2) تعديل النجوم: تقريب المسافات ---
+// --- (2) النجوم ---
 const FiveStars = () => (
     <div style={{ display: 'flex', gap: '2px', marginTop: '2px', justifyContent: 'center' }}>
         {[1, 2, 3, 4, 5].map((s) => (
@@ -41,6 +38,7 @@ const FiveStars = () => (
     </div>
 );
 
+// --- (3) أيقونات العملات ---
 const CryptoLogo = ({ type }: { type: string }) => {
     switch (type) {
         case 'BTC': return <svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M22.6 14.2c.4-2.6-1.6-4-4.3-5l.9-3.5-2.1-.5-.8 3.4c-.6-.1-1.1-.3-1.7-.4l.9-3.5-2.1-.5-.9 3.6c-.5-.1-.9-.2-1.4-.3l-3-.8-.6 2.3s1.6.4 1.6.4c.9.2 1 .8 1 1.2l-1 4.1c.1 0 .2 0 .3.1-.1 0-.2 0-.3-.1l-1.4 5.6c-.1.3-.4.7-1 .6 0 0-1.6-.4-1.6-.4l-1.1 2.6 2.8.7c.5.1 1 .3 1.5.4l-.9 3.6 2.1.5.9-3.6c.6.1 1.1.3 1.7.4l-.9 3.6 2.1.5.9-3.5c3.6.7 6.4.4 7.6-2.9.9-2.7-.1-4.2-1.9-5.2 1.4-.3 2.4-1.2 2.7-3z" fill="#FFF"/></svg>;
@@ -65,6 +63,12 @@ const PayButton = ({ type, name }: { type: string, name: string }) => (
 
 export default function DemoProfilePage() {
   const router = useRouter();
+  // حالة اللايك والديسلايك (ذهبي عند التفعيل)
+  const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
+
+  const toggleFeedback = (type: 'like' | 'dislike') => {
+      setFeedback(prev => prev === type ? null : type);
+  };
 
   return (
     <main style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
@@ -83,10 +87,12 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
+        /* --- تعديل البنر للكمبيوتر ليظهر الصورة كاملة --- */
         .hero-banner-wrapper {
             width: 100%;
-            height: 25vh;
-            min-height: 250px;
+            height: auto;           /* الارتفاع أوتوماتيكي */
+            aspect-ratio: 2.625;    /* النسبة الأصلية للصورة (3360/1280) تضمن عدم القص */
+            max-height: 450px;      /* حد أقصى للارتفاع */
             position: relative;
             background-color: #000;
             overflow: hidden;
@@ -129,20 +135,16 @@ export default function DemoProfilePage() {
             transform: scale(1.05);
         }
 
-        /* --- تنسيقات الكرت للكمبيوتر --- */
         .identity-card-container {
             position: relative;
             width: 260px;
             height: 140px;
-            /* تم تقليل التداخل ليصبح بسيطاً جداً (حوالي 10%) */
-            margin-top: -25px; 
-            /* تم تقليل المسافة من اليسار بنسبة 50% (كانت 5% أصبحت 2.5%) */
+            /* الكمبيوتر: تداخل بسيط جداً 10% */
+            margin-top: -30px; 
             margin-left: 2.5%; 
-            /* تم تقليل الدوران للحواف */
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 15px 35px rgba(0,0,0,0.25);
-            /* إطار أبيض خفيف جداً ونحيف */
             border: 1px solid rgba(255,255,255,0.3);
             z-index: 10;
             background-color: #1a1a1a;
@@ -236,28 +238,27 @@ export default function DemoProfilePage() {
         /* --- تنسيقات الجوال --- */
         @media (max-width: 768px) {
             .hero-banner-wrapper { 
+                /* للجوال نستخدم ارتفاع ثابت مناسب وليس أوتوماتيك لضمان التناسق */
                 height: 18vh;
                 min-height: 150px;
+                aspect-ratio: unset;
+                max-height: unset;
             } 
             
             .identity-card-container { 
-                /* تم تصغير حجم الكرت بنسبة 25% */
                 width: 40%;
                 height: 80px;
                 min-width: 140px;
-                /* محاذاة لليسار مع مسافة + تقليل التداخل */
                 margin: -22px 0 0 20px;
-                /* تقليل حده الدائرية في الجوال (كانت 40) */
-                border-radius: 25px;
-                /* إطار نحيف جداً للجوال */
-                border-width: 0.5px;
+                /* تقليل الدوران بنسبة 50% (كان 25 -> 12px) */
+                border-radius: 12px;
+                border-width: 0.8px;
             }
             
             .card-name {
                 font-size: 15px;
             }
 
-            /* تصغير خط عبارة الدفع في الجوال لتأتي في سطر واحد */
             .footer-note {
                 font-size: 10px;
             }
@@ -281,9 +282,7 @@ export default function DemoProfilePage() {
       <div className="page-container">
           <div className="identity-card-container">
               <div className="card-content">
-                  {/* الشارات الثلاثة في الأعلى */}
                   <ThreeVerificationBadges />
-                  
                   <div className="card-name-row">
                       <span className="card-name">ALEXANDER</span>
                   </div>
@@ -312,7 +311,6 @@ export default function DemoProfilePage() {
                   <PayButton type="USDT" name="Tether" />
               </div>
 
-              {/* تم حذف العبارة القديمة واستبدالها بالجديدة مع كلاس للتحكم بالحجم */}
               <p className="footer-note">
                   Payments are peer-to-peer. ChainFace never holds funds.
               </p>
@@ -322,12 +320,23 @@ export default function DemoProfilePage() {
 
       <div style={{ marginTop: '60px', padding: '40px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
           
-          {/* تم حذف عبارة Ownership is the new status */}
+          {/* العبارة المطلوبة فوق الزر */}
+          <p style={{ fontFamily: 'Cinzel, serif', fontSize: '18px', color: '#111', marginBottom: '10px', fontWeight: '700' }}>
+             Claim your sovereign name assets now.
+          </p>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', marginTop: '20px' }}>
-              <div style={{ display: 'flex', gap: '15px', color: '#ccc' }}>
-                  <i className="bi bi-hand-thumbs-up-fill" style={{ fontSize: '22px', cursor: 'pointer' }}></i>
-                  <i className="bi bi-hand-thumbs-down-fill" style={{ fontSize: '22px', cursor: 'pointer' }}></i>
+              <div style={{ display: 'flex', gap: '15px' }}>
+                  <i 
+                    className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-gold' : 'text-grey'}`} 
+                    style={{ fontSize: '22px', cursor: 'pointer', color: feedback === 'like' ? '#F0C420' : '#ccc', transition: '0.3s' }}
+                    onClick={() => toggleFeedback('like')}
+                  ></i>
+                  <i 
+                    className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-gold' : 'text-grey'}`} 
+                    style={{ fontSize: '22px', cursor: 'pointer', color: feedback === 'dislike' ? '#F0C420' : '#ccc', transition: '0.3s' }}
+                    onClick={() => toggleFeedback('dislike')}
+                  ></i>
               </div>
 
               <Link href="/chainface" className="marketing-btn">
