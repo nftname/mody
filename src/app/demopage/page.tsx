@@ -76,7 +76,7 @@ export default function DemoProfilePage() {
         /* 1. البنر (35% من ارتفاع الشاشة) + إجبار الصورة على الظهور بالكامل */
         .hero-banner-wrapper {
             width: 100%;
-            height: 35vh;              /* 👈 35% كما طلبت بالضبط */
+            height: 25vh;              /* 👈 35% كما طلبت بالضبط */
             min-height: 250px;         /* حماية للشاشات الصغيرة */
             position: relative;
             background-color: #000;
@@ -132,7 +132,7 @@ export default function DemoProfilePage() {
             /* تداخل بسيط: بما أن البنر 35% وهو كبير،
                سنجعل الكرت يتداخل بمقدار 40 بكسل فقط ليكون منظره جمالياً
             */
-            margin-top: -40px; 
+            margin-top: -30px; 
             margin-left: 5%; 
             border-radius: 12px;
             overflow: hidden;
