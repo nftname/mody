@@ -272,7 +272,7 @@ export default function DemoProfilePage() {
               <i className="bi bi-arrow-left"></i>
           </div>
           <img 
-            src="/images/your-chainface.png" 
+            src="/images/your-chainface.jpg" 
             alt="ChainFace Cover" 
             className="hero-banner-img"
           />
