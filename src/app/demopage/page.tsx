@@ -1,8 +1,9 @@
 'use client';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useState } from 'react'; // استدعاء useState للتفاعل
 import { useRouter } from 'next/navigation';
 
+// --- (1) الشارات ---
 const ThreeVerificationBadges = () => (
     <div style={{ display: 'flex', gap: '5px', marginBottom: '4px', justifyContent: 'center' }}>
         <svg width="14" height="14" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))' }}>
@@ -26,6 +27,7 @@ const ThreeVerificationBadges = () => (
     </div>
 );
 
+// --- (2) النجوم ---
 const FiveStars = () => (
     <div style={{ display: 'flex', gap: '2px', marginTop: '2px', justifyContent: 'center' }}>
         {[1, 2, 3, 4, 5].map((s) => (
@@ -36,6 +38,7 @@ const FiveStars = () => (
     </div>
 );
 
+// --- (3) أيقونات العملات ---
 const CryptoLogo = ({ type }: { type: string }) => {
     switch (type) {
         case 'BTC': return <svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M22.6 14.2c.4-2.6-1.6-4-4.3-5l.9-3.5-2.1-.5-.8 3.4c-.6-.1-1.1-.3-1.7-.4l.9-3.5-2.1-.5-.9 3.6c-.5-.1-.9-.2-1.4-.3l-3-.8-.6 2.3s1.6.4 1.6.4c.9.2 1 .8 1 1.2l-1 4.1c.1 0 .2 0 .3.1-.1 0-.2 0-.3-.1l-1.4 5.6c-.1.3-.4.7-1 .6 0 0-1.6-.4-1.6-.4l-1.1 2.6 2.8.7c.5.1 1 .3 1.5.4l-.9 3.6 2.1.5.9-3.6c.6.1 1.1.3 1.7.4l-.9 3.6 2.1.5.9-3.5c3.6.7 6.4.4 7.6-2.9.9-2.7-.1-4.2-1.9-5.2 1.4-.3 2.4-1.2 2.7-3z" fill="#FFF"/></svg>;
@@ -60,6 +63,7 @@ const PayButton = ({ type, name }: { type: string, name: string }) => (
 
 export default function DemoProfilePage() {
   const router = useRouter();
+  // حالة اللايك والديسلايك (ذهبي عند التفعيل)
   const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
 
   const toggleFeedback = (type: 'like' | 'dislike') => {
@@ -83,24 +87,22 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
-        /* --- تعديل البنر للكمبيوتر (النسبة والاحتواء) --- */
+        /* --- تعديل البنر للكمبيوتر ليظهر الصورة كاملة --- */
         .hero-banner-wrapper {
             width: 100%;
-            height: 30vh;           /* 30% من ارتفاع الشاشة كما طلبت */
+            height: auto;           /* الارتفاع أوتوماتيكي */
+            aspect-ratio: 2.625;    /* النسبة الأصلية للصورة (3360/1280) تضمن عدم القص */
+            max-height: 450px;      /* حد أقصى للارتفاع */
             position: relative;
             background-color: #000;
             overflow: hidden;
-            display: flex;          
-            justify-content: center; /* توسيط الصورة في حال كانت الشاشة عريضة */
-            align-items: flex-start;
         }
 
         .hero-banner-img {
-            width: auto;            /* العرض يتكيف للحفاظ على النسبة */
-            height: 100%;           /* الارتفاع يأخذ كامل الـ 30vh */
-            max-width: 100%;        /* لا تتجاوز عرض الشاشة */
-            object-fit: contain;    /* تظهر الصورة كاملة دون قص */
-            object-position: top center;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
         }
         
         .hero-overlay {
@@ -137,6 +139,7 @@ export default function DemoProfilePage() {
             position: relative;
             width: 260px;
             height: 140px;
+            /* الكمبيوتر: تداخل بسيط جداً 10% */
             margin-top: -30px; 
             margin-left: 2.5%; 
             border-radius: 20px;
@@ -235,22 +238,19 @@ export default function DemoProfilePage() {
         /* --- تنسيقات الجوال --- */
         @media (max-width: 768px) {
             .hero-banner-wrapper { 
+                /* للجوال نستخدم ارتفاع ثابت مناسب وليس أوتوماتيك لضمان التناسق */
                 height: 18vh;
                 min-height: 150px;
-                display: block; /* العودة للوضع الطبيعي في الجوال */
+                aspect-ratio: unset;
+                max-height: unset;
             } 
-
-            .hero-banner-img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover; /* في الجوال تعمل Cover بشكل جيد */
-            }
             
             .identity-card-container { 
                 width: 40%;
                 height: 80px;
                 min-width: 140px;
                 margin: -22px 0 0 20px;
+                /* تقليل الدوران بنسبة 50% (كان 25 -> 12px) */
                 border-radius: 12px;
                 border-width: 0.8px;
             }
@@ -320,6 +320,7 @@ export default function DemoProfilePage() {
 
       <div style={{ marginTop: '60px', padding: '40px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
           
+          {/* العبارة المطلوبة فوق الزر */}
           <p style={{ fontFamily: 'Cinzel, serif', fontSize: '18px', color: '#111', marginBottom: '10px', fontWeight: '700' }}>
              Claim your sovereign name assets now.
           </p>
