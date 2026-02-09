@@ -118,7 +118,7 @@ export default function DemoProfilePage() {
             position: relative;
             width: 260px;
             height: 140px;
-            margin-top: -40px; 
+            margin-top: -10px; 
             margin-left: 5%; 
             border-radius: 35px;
             overflow: hidden;
@@ -213,7 +213,7 @@ export default function DemoProfilePage() {
                 width: 40%;
                 height: 80px;
                 min-width: 140px;
-                margin: -22px auto 0 auto;
+                margin: -22px 0 0 20px;
                 border-radius: 40px;
             }
             
