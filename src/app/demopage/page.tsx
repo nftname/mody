@@ -6,17 +6,14 @@ import { useRouter } from 'next/navigation';
 // --- (1) الشارات ---
 const ThreeVerificationBadges = () => (
     <div className="badges-container" style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-        {/* Green */}
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
             <circle cx="21" cy="21" r="19" fill="#25D366" stroke="#888888" strokeWidth="1"/>
             <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Blue */}
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
             <circle cx="21" cy="21" r="19" fill="#1DA1F2" stroke="#888888" strokeWidth="1"/>
             <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {/* Gold */}
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
             <defs>
                 <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -41,31 +38,34 @@ const FiveStars = () => (
     </div>
 );
 
-// --- (3) الأيقونات (تم تحديث USDT ومنع الضغط) ---
+// --- (3) الأيقونات (تم استبدال المسارات بمسارات فيكتور أصلية وعالية الجودة) ---
 const CryptoLogo = ({ type }: { type: string }) => {
-    // ستايل موحد لمنع الضغط
-    const style = { flexShrink: 0 }; 
+    // هذا الستايل يمنع انضغاط الأيقونة نهائياً
+    const style = { flexShrink: 0, minWidth: '32px' }; 
     
     switch (type) {
-        case 'BTC': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M22.6 14.2c.4-2.6-1.6-4-4.3-5l.9-3.5-2.1-.5-.8 3.4c-.6-.1-1.1-.3-1.7-.4l.9-3.5-2.1-.5-.9 3.6c-.5-.1-.9-.2-1.4-.3l-3-.8-.6 2.3s1.6.4 1.6.4c.9.2 1 .8 1 1.2l-1 4.1c.1 0 .2 0 .3.1-.1 0-.2 0-.3-.1l-1.4 5.6c-.1.3-.4.7-1 .6 0 0-1.6-.4-1.6-.4l-1.1 2.6 2.8.7c.5.1 1 .3 1.5.4l-.9 3.6 2.1.5.9-3.6c.6.1 1.1.3 1.7.4l-.9 3.6 2.1.5.9-3.5c3.6.7 6.4.4 7.6-2.9.9-2.7-.1-4.2-1.9-5.2 1.4-.3 2.4-1.2 2.7-3z" fill="#FFF"/></svg>;
-        case 'ETH': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627EEA"/><path d="M16 4l-8.5 14L16 29l8.5-11z" fill="#FFF" opacity="0.6"/><path d="M16 4v14l8.5-4z" fill="#FFF"/></svg>;
-        case 'POLYGON': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#8247E5"/><path d="M21.5 10.5L16 7.5l-5.5 3v6l5.5 3 5.5-3z" stroke="#FFF" strokeWidth="2" fill="none"/></svg>;
-        case 'SOL': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#000"/><path d="M8 22.5l2.5-2.5h13l-2.5 2.5zm13.5-6l-2.5 2.5h-13l2.5-2.5zm-13.5-6l2.5-2.5h13l-2.5 2.5z" fill="url(#solGrad)"/><defs><linearGradient id="solGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#00FFA3"/><stop offset="1" stopColor="#DC1FFF"/></linearGradient></defs></svg>;
-        case 'BNB': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F3BA2F"/><path d="M16 11l-3 3 3 3 3-3-3-3zm0-5l-8 8 8 8 8-8-8-8zm0 21l-3-3 3-3 3 3-3 3z" fill="#FFF"/></svg>;
-        // تم تحديث أيقونة USDT لتكون أوضح
-        case 'USDT': return <svg style={style} width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path d="M16 23c-4.5 0-8-1-8-2.5s3.5-2.5 8-2.5 8 1 8 2.5-3.5 2.5-8 2.5z" stroke="#FFF" strokeWidth="1.5" fill="none"/><path d="M13 14v9h6v-9h5v-3h-16v3h5z" fill="#FFF"/></svg>;
+        case 'BTC': return <svg style={style} width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M23.189 14.02c.314-2.096-1.283-3.223-3.465-3.975l.708-2.84-1.728-.43-.69 2.765c-.454-.114-.92-.22-1.385-.326l.695-2.783L15.596 6l-.708 2.839c-.376-.086-.746-.17-1.104-.26l.002-.009-2.384-.595-.46 1.846s1.283.294 1.256.312c.7.175.826.638.805 1.006l-.806 3.235c.048.012.11.03.18.057l-.183-.045-1.13 4.532c-.086.212-.303.531-.793.41.018.025-1.256-.313-1.256-.313l-.858 1.978 2.25.561c.418.105.828.215 1.231.318l-.715 2.872 1.727.43.708-2.84c.472.127.93.245 1.378.357l-.706 2.828 1.728.43.715-2.866c2.948.558 5.164.333 6.097-2.333.752-2.146-.037-3.385-1.588-4.192 1.13-.26 1.98-1.003 2.207-2.538zm-3.95 5.538c-.533 2.147-4.148.986-5.32.695l.95-3.805c1.172.293 4.929.872 4.37 3.11zm.535-5.569c-.487 1.953-3.495.96-4.47.717l.86-3.45c.975.243 4.118.696 3.61 2.733z" fill="#FFF"/></svg>;
+        case 'ETH': return <svg style={style} width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627EEA"/><path d="M16.498 4v8.87l7.497 3.35z" fill="#C0CBF6"/><path d="M16.498 4L9 16.22l7.498-3.35z" fill="#FFF"/><path d="M16.498 21.968v6.027L24 17.616z" fill="#C0CBF6"/><path d="M16.498 27.995v-6.028L9 17.616z" fill="#FFF"/><path d="M16.498 20.573l7.497-4.353-7.497-3.348z" fill="#8197EE"/><path d="M9 16.22l7.498 4.353v-7.701z" fill="#C0CBF6"/></svg>;
+        case 'POLYGON': return <svg style={style} width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#8247E5"/><path d="M21.9 10.325L16.5 7.275a1 1 0 00-1 0L10.1 10.325a1 1 0 00-.5.866v6.1a1 1 0 00.5.866l5.4 3.05a1 1 0 001 0l5.4-3.05a1 1 0 00.5-.866v-6.1a1 1 0 00-.5-.866zM16 20.275l-4.5-2.541v-5.082L16 15.193l4.5-2.541v5.082L16 20.275z" fill="#FFF"/></svg>;
+        case 'SOL': return <svg style={style} width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#000"/><path d="M9.5 19.3l2.2-2.3h13l-2.2 2.3z" fill="url(#solGrad)"/><path d="M22.5 12.7l-2.2 2.3h-13l2.2-2.3z" fill="url(#solGrad)"/><path d="M9.5 25.8l2.2-2.3h13l-2.2 2.3z" fill="url(#solGrad)"/><defs><linearGradient id="solGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#00FFA3"/><stop offset="1" stopColor="#DC1FFF"/></linearGradient></defs></svg>;
+        case 'BNB': return <svg style={style} width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F3BA2F"/><path d="M12.115 16L16 19.877 19.885 16 16 12.123 12.115 16zm-3.9 0L10.5 18.277l-2.292 2.285L6 18.369l2.215-2.37zm7.785-7.754l2.285 2.285-2.285 2.277L13.723 10.523 16 8.246zm3.9 7.754l2.215 2.37-2.207 2.193-2.293-2.285L19.9 16zM16 23.754l2.277-2.277L20.562 23.754l-2.277 2.292L16 23.754zM8.223 13.73l2.277-2.277 2.292 2.293-2.292 2.277L8.223 13.73z" fill="#FFF"/></svg>;
+        case 'USDT': return <svg style={style} width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path d="M18.8 14.5h3.9v-2.3h-13.4v2.3h3.9v8.9h5.6v-8.9z" fill="#FFF"/></svg>;
         default: return null;
     }
 };
 
 const PayButton = ({ type, name }: { type: string, name: string }) => (
     <button className="pay-btn">
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-            <CryptoLogo type={type} />
-            {/* تم تعديل التنسيق ليكون الاسم وتحته كلمة Send */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginLeft: '12px' }}>
-                <span style={{ fontWeight: '700', fontSize: '14px', lineHeight: '1.2', color: '#333' }}>{name}</span>
-                <span style={{ fontSize: '11px', opacity: 0.7, lineHeight: '1.2', color: '#555' }}>Send</span>
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%', height: '100%' }}>
+            {/* الأيقونة على اليسار */}
+            <div style={{ marginRight: '10px' }}>
+                <CryptoLogo type={type} />
+            </div>
+            
+            {/* حاوية النص: تأخذ المساحة المتبقية وتقوم بتوسيط المحتوى داخلها */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontWeight: '800', fontSize: '15px', color: '#1A1A1A', marginBottom: '2px' }}>{name}</span>
+                <span style={{ fontSize: '11px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Send</span>
             </div>
         </div>
     </button>
@@ -80,6 +80,7 @@ export default function DemoProfilePage() {
   };
 
   const deepPurpleColor = '#2E1A47'; 
+  const diamondColor = '#101740'; // أزرق كحلي غامق للماسة
 
   return (
     <main style={{ backgroundColor: '#F0EDF2', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
@@ -177,13 +178,6 @@ export default function DemoProfilePage() {
             width: 100%;
         }
 
-        .card-name-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
-
         .card-name {
             font-family: 'Satoshi', sans-serif;
             font-size: 20px;
@@ -194,23 +188,15 @@ export default function DemoProfilePage() {
             letter-spacing: 0.5px;
         }
 
-        /* --- الأيقونات (الكمبيوتر) --- */
+        /* الأحجام */
         .badge-icon { width: 23px; height: 23px; } 
         .star-icon { width: 21px; height: 21px; } 
-        
-        .stars-container { 
-            gap: 5px; 
-            margin-top: 8px;
-            margin-bottom: 5px; 
-        }
-        
-        .badges-container {
-            margin-bottom: 10px;
-            margin-top: -5px; 
-        }
+        .stars-container { gap: 5px; margin-top: 8px; margin-bottom: 5px; }
+        .badges-container { margin-bottom: 10px; margin-top: -5px; }
 
         /* --- Conviction --- */
         .conviction-box {
+            position: relative;
             text-align: center;
             margin-top: 15px;
             margin-bottom: 30px;
@@ -222,22 +208,30 @@ export default function DemoProfilePage() {
             text-transform: uppercase;
             font-family: 'Satoshi', sans-serif;
             letter-spacing: 1px;
+            display: block; /* لضمان نزولها في سطر لوحدها */
         }
-        .conviction-value-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+        
+        /* حاوية الرقم والماسة لضبط التوسط المطلق */
+        .conviction-number-wrapper {
+            position: relative;
+            display: inline-block; /* ليكون على قد حجم الرقم */
+            margin-top: 5px;
         }
+
         .conviction-number {
             color: ${deepPurpleColor};
             font-size: 20px; 
             font-weight: 900;
             font-family: 'Satoshi', sans-serif;
         }
+        
         .conviction-diamond {
+            position: absolute;
             font-size: 18px; 
-            color: ${deepPurpleColor}; 
+            color: ${diamondColor};
+            right: -25px; /* دفع الماسة لليمين خارج حدود الرقم */
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         .thank-you-title {
@@ -258,31 +252,30 @@ export default function DemoProfilePage() {
         .pay-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            max-width: 650px;
+            gap: 15px;
+            max-width: 750px;
             margin: 0 auto;
         }
 
         .pay-btn {
             background: #fff;
             border: 1px solid #eee;
-            border-radius: 12px;
-            /* زيادة الارتفاع لمنع قص الأيقونات */
+            border-radius: 16px;
+            /* ارتفاع كبير لإظهار الأيقونة */
             height: 75px; 
             padding: 0 15px;
             display: flex;
-            /* نستخدم flex-start لكي تكون المحاذاة لليسار */
             justify-content: flex-start; 
             align-items: center;
             cursor: pointer;
             transition: all 0.2s ease;
             color: #333;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
         .pay-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 14px rgba(0,0,0,0.08);
-            border-color: #ddd;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+            border-color: #d1d5db;
         }
 
         .marketing-btn {
@@ -304,7 +297,7 @@ export default function DemoProfilePage() {
         }
 
         .footer-note {
-             margin-top: 25px;
+             margin-top: 30px;
              font-size: 12px;
              color: #aaa;
              font-style: italic;
@@ -320,13 +313,13 @@ export default function DemoProfilePage() {
 
         /* --- تنسيقات الجوال --- */
         @media (max-width: 768px) {
-            /* تعديل الهيدر ليأخذ النسبة الصحيحة للصورة */
             .hero-banner-wrapper { 
                 height: auto; 
-                min-height: unset; /* إزالة الحد الأدنى */
-                aspect-ratio: 3.3 / 1; /* النسبة السحرية للصورة */
+                min-height: unset; 
+                /* استخدام Aspect Ratio هو الحل الوحيد لعدم مط الصورة في الجوال */
+                aspect-ratio: 3.3 / 1; 
                 margin-top: -40px;
-                display: flex; /* تغيير العرض لـ flex لضمان التمركز */
+                display: flex;
                 justify-content: center;
                 align-items: center;
             } 
@@ -334,14 +327,17 @@ export default function DemoProfilePage() {
             .hero-banner-img {
                 width: 100%;
                 height: 100%;
-                object-fit: cover; /* تغطية كاملة ضمن النسبة المحددة */
+                /* في الجوال، الصورة يجب أن تكون Cover لتملأ العرض */
+                object-fit: cover; 
+                /* توسيط الصورة */
+                object-position: center center;
             }
 
             /* رفع السهم للمنطقة البيضاء */
             .back-btn {
                 width: 28px;        
                 height: 28px;
-                top: 15px; /* تم رفعه للأعلى */
+                top: 15px; /* في المنطقة البيضاء */
                 left: 15px;
                 font-size: 14px;    
                 border-width: 0.5px;
@@ -380,6 +376,12 @@ export default function DemoProfilePage() {
             .pay-grid { 
                 grid-template-columns: repeat(2, 1fr); 
                 max-width: 100%; 
+                gap: 10px;
+            }
+            
+            /* تقليل بادينج الزر قليلاً في الجوال */
+            .pay-btn {
+                padding: 0 10px;
             }
         }
       `}</style>
@@ -408,8 +410,9 @@ export default function DemoProfilePage() {
           </div>
 
           <div className="conviction-box">
-              <div className="conviction-label">Conviction</div>
-              <div className="conviction-value-row">
+              <span className="conviction-label">Conviction</span>
+              {/* حاوية خاصة لضبط التوسط مع الماسة المطلقة */}
+              <div className="conviction-number-wrapper">
                   <span className="conviction-number">500,000</span>
                   <span className="conviction-diamond">💎</span>
               </div>
