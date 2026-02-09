@@ -3,17 +3,31 @@ import Link from 'next/link';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 
-const GoldenCheckBadge = () => (
-    <svg width="18" height="18" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '6px', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
-        <defs>
-            <linearGradient id="goldBadgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#FFD700" />
-                <stop offset="100%" stopColor="#FFA500" />
-            </linearGradient>
-        </defs>
-        <circle cx="21" cy="21" r="20" fill="url(#goldBadgeGradient)" stroke="#ffffff" strokeWidth="3"/>
-        <path d="M12 21l6 6 12-12" stroke="#000000" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+// --- مكونات الشارات الثلاثة (أزرق، ذهبي، أخضر) ---
+const ThreeVerificationBadges = () => (
+    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', justifyContent: 'center' }}>
+        {/* Blue Badge */}
+        <svg width="18" height="18" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
+            <circle cx="21" cy="21" r="20" fill="#1DA1F2" stroke="#ffffff" strokeWidth="2"/>
+            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        {/* Gold Badge */}
+        <svg width="18" height="18" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
+            <defs>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#FFD700" />
+                    <stop offset="100%" stopColor="#FFA500" />
+                </linearGradient>
+            </defs>
+            <circle cx="21" cy="21" r="20" fill="url(#goldGrad)" stroke="#ffffff" strokeWidth="2"/>
+            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        {/* Green Badge */}
+        <svg width="18" height="18" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
+            <circle cx="21" cy="21" r="20" fill="#25D366" stroke="#ffffff" strokeWidth="2"/>
+            <path d="M12 21l6 6 12-12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    </div>
 );
 
 const FiveStars = () => (
@@ -118,7 +132,7 @@ export default function DemoProfilePage() {
             position: relative;
             width: 260px;
             height: 140px;
-            margin-top: -10px; 
+            margin-top: -40px; 
             margin-left: 5%; 
             border-radius: 35px;
             overflow: hidden;
@@ -138,7 +152,11 @@ export default function DemoProfilePage() {
             text-align: center;
             color: white;
             z-index: 20;
-            margin-top: 15px;
+            /* تم تعديل المارجن لأن الشارات أصبحت بالأعلى */
+            margin-top: 5px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .card-name-row {
@@ -213,8 +231,10 @@ export default function DemoProfilePage() {
                 width: 40%;
                 height: 80px;
                 min-width: 140px;
+                /* التعديل: محاذاة لليسار مع مسافة 20 بكسل */
                 margin: -22px 0 0 20px;
-                border-radius: 40px;
+                /* التعديل: تقليل الدوران للجوال ليكون أقل حدة من 40 */
+                border-radius: 20px;
             }
             
             .card-name {
@@ -243,9 +263,12 @@ export default function DemoProfilePage() {
           
           <div className="identity-card-container">
               <div className="card-content">
+                  {/* الشارات الثلاثة في الأعلى */}
+                  <ThreeVerificationBadges />
+                  
                   <div className="card-name-row">
                       <span className="card-name">ALEXANDER</span>
-                      <GoldenCheckBadge />
+                      {/* تمت إزالة العلامة الفردية من هنا */}
                   </div>
                   <FiveStars />
               </div>
@@ -253,11 +276,12 @@ export default function DemoProfilePage() {
 
           <div style={{ maxWidth: '700px', margin: '30px auto', textAlign: 'center', padding: '0 20px' }}>
               
+              {/* العبارة الترحيبية الجديدة */}
               <h2 style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: '700', fontSize: '22px', color: '#4A148C', marginBottom: '10px' }}>
-                  Welcome to my sovereign territory on Web3. 
+                  Thank you for stepping into my ChainFace.
               </h2>
-              <p style={{ color: '#666', fontSize: '15px', lineHeight: '1.5', marginBottom: '30px' }}>
-                  No intermediaries, no noise—just direct value and absolute ownership.
+              <p style={{ color: '#666', fontSize: '16px', lineHeight: '1.5', marginBottom: '30px', fontWeight: '500' }}>
+                  Your trust means everything.
                   <br/>
                   <span style={{ color: '#888', fontSize: '13px', marginTop: '10px', display: 'block', fontWeight: '600' }}>
                      Conviction: <strong style={{ color: '#4A148C' }}>500,000</strong> 💎
@@ -273,8 +297,9 @@ export default function DemoProfilePage() {
                   <PayButton type="USDT" name="Tether" />
               </div>
 
+              {/* عبارة إخلاء المسؤولية الجديدة */}
               <p style={{ marginTop: '25px', fontSize: '12px', color: '#aaa', fontStyle: 'italic' }}>
-                  We do not manage your money. We simply present your identity.
+                  Payments are peer-to-peer. ChainFace never holds funds.
               </p>
 
           </div>
