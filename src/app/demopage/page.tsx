@@ -107,6 +107,7 @@ export default function DemoProfilePage() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;900&display=swap');
 
         nav, footer, .navbar, .footer, header:not(.hero-banner-wrapper) {
             display: none !important;
@@ -128,28 +129,39 @@ export default function DemoProfilePage() {
             align-items: center;
             justify-content: center;
             margin-top: -40px; 
-            /* إضافة ظل أرجواني ناعم أسفل الهيدر */
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05), 0 8px 15px rgba(124, 28, 88, 0.25);
+            /* إضافة ظل أرجواني ناعم جداً أسفل الهيدر */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05), 0 8px 15px rgba(88, 28, 135, 0.15);
             background-image: radial-gradient(circle at center, #f8f9fa 0%, #ffffff 100%);
-            z-index: 5; /* لضمان ظهور الظل فوق الخلفية */
+            z-index: 5; 
         }
 
         .chainface-metallic-title {
-            font-family: 'Cinzel', serif;
-            font-size: 52px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 3px;
+            /* الخط العصري Outfit */
+            font-family: 'Outfit', sans-serif;
+            font-size: 52px; /* حجم معتدل ومناسب (تم تصغيره من 80px) */
+            font-weight: 800;
+            letter-spacing: -1px; /* تماسك عصري للحروف */
             margin: 0;
             padding-top: 15px;
-            background: linear-gradient(135deg, #5e1139 0%, #240b36 40%, #020c1b 100%);
+            
+            /* ألوان الكرت المستخلصة: كحلي غامق مع أرجواني */
+            background: linear-gradient(
+                135deg, 
+                #1e1b4b 10%,   /* كحلي غامق جداً */
+                #4c1d95 40%,   /* أرجواني غامق */
+                #7c3aed 50%,   /* أرجواني متوسط للمعة */
+                #4c1d95 60%,   /* عودة للأرجواني الغامق */
+                #1e1b4b 90%    /* كحلي غامق جداً */
+            );
+
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 
-                0px 1px 1px rgba(255,255,255,0.8),
-                0px -1px 1px rgba(0,0,0,0.2),
-                0px 4px 8px rgba(0,0,0,0.2);
-            filter: drop-shadow(0 2px 2px rgba(94, 17, 57, 0.2));
+            
+            /* تأثير بروز ناعم وغير مزعج */
+            filter: drop-shadow(0 2px 2px rgba(88, 28, 135, 0.2));
+            
+            /* إلغاء الحروف الكبيرة الإجبارية */
+            text-transform: none;
         }
 
         .back-btn {
@@ -176,8 +188,8 @@ export default function DemoProfilePage() {
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.4);
             z-index: 10;
-            /* تعديل التدرج لتقليل الكحلي وزيادة الأرجواني المحمر */
-            background: linear-gradient(135deg, #1a1333 0%, #4a1259 30%, #7c1c58 60%, #2c0a3a 100%);
+            /* نفس تدرج الألوان المطبق على العنوان */
+            background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 45%, #6d28d9 70%, #1e1b4b 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 5px 0;
         }
