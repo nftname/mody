@@ -197,7 +197,7 @@ export default function DemoProfilePage() {
             width: 100%;
             height: 100%;
             z-index: 1; 
-            opacity: 0.9;
+            opacity: 0.6;
         }
         .node { fill: #94a3b8; }
         .link { stroke: #cbd5e1; stroke-width: 1.5px; }
@@ -268,9 +268,14 @@ export default function DemoProfilePage() {
             color: ${deepPurpleColor};
             font-size: 20px; font-weight: 900; font-family: 'Satoshi', sans-serif;
         }
-        .conviction-diamond {
-            position: absolute; font-size: 18px; color: ${diamondColor};
-            right: -25px; top: 50%; transform: translateY(-50%);
+         .conviction-currency {
+            font-size: 16px;       
+            font-weight: 700;      
+            color: #a855f7;        
+            margin-left: 7px;      
+            position: relative;
+            top: -2px;            
+            font-family: 'Satoshi', sans-serif;
         }
 
         .pay-grid {
@@ -351,7 +356,7 @@ export default function DemoProfilePage() {
         }
 
         .footer-note {
-             margin-top: 30px; font-size: 12px; color: #aaa; font-style: italic;
+             margin-top: 30px; font-size: 12px; color: #666666; font-style: italic;
         }
         .thank-you-title {
             font-family: 'Satoshi', sans-serif; font-weight: 700; font-size: 17px;
@@ -558,8 +563,8 @@ export default function DemoProfilePage() {
           <div className="conviction-box">
               <span className="conviction-label">Conviction</span>
               <div className="conviction-number-wrapper">
-                  <span className="conviction-number">500,000</span>
-                  <span className="conviction-diamond">NNM</span>
+                  <span className="conviction-number">1000,000</span>
+                  <span className="conviction-currency">NNM</span>
               </div>
           </div>
 
