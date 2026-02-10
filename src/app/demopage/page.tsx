@@ -336,6 +336,30 @@ export default function DemoProfilePage() {
                 font-size: 14px;
             }
         }
+
+        .marketing-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 200px;
+    height: 48px;
+    /* التدرج اللوني الفخم الخاص بـ ChainFace */
+    background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
+    border-radius: 25px;
+    color: white;
+    font-family: 'Satoshi', sans-serif;
+    font-weight: 900;
+    font-size: 14px;
+    text-transform: uppercase;
+    text-decoration: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
+}
+.marketing-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
       `}</style>
 
       <div className="hero-banner-wrapper">
@@ -416,7 +440,7 @@ export default function DemoProfilePage() {
              Claim your sovereign name assets now.
           </p>
           
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '15px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px' }}>
               <Link href="/chainface" className="marketing-btn">
                   YOUR CHAINFACE
               </Link>
