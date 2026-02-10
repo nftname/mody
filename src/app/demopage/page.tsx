@@ -142,7 +142,7 @@ export default function DemoProfilePage() {
             letter-spacing: -2px;
             margin: 0;
             padding-top: 15px;
-            padding-left: 35px; /* الإزاحة لليمين */
+            padding-left: 55px; /* الإزاحة لليمين */
             
             background: linear-gradient(
                 135deg, 
