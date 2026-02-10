@@ -128,8 +128,10 @@ export default function DemoProfilePage() {
             align-items: center;
             justify-content: center;
             margin-top: -40px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            /* إضافة ظل أرجواني ناعم أسفل الهيدر */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05), 0 8px 15px rgba(124, 28, 88, 0.25);
             background-image: radial-gradient(circle at center, #f8f9fa 0%, #ffffff 100%);
+            z-index: 5; /* لضمان ظهور الظل فوق الخلفية */
         }
 
         .chainface-metallic-title {
@@ -174,7 +176,8 @@ export default function DemoProfilePage() {
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.4);
             z-index: 10;
-            background: linear-gradient(125deg, #020c1b 0%, #1a1333 35%, #4a1259 70%, #2c0a3a 100%);
+            /* تعديل التدرج لتقليل الكحلي وزيادة الأرجواني المحمر */
+            background: linear-gradient(135deg, #1a1333 0%, #4a1259 30%, #7c1c58 60%, #2c0a3a 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 5px 0;
         }
