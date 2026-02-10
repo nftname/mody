@@ -37,7 +37,6 @@ const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name
 const ThreeVerificationBadges = () => (
     <div className="badges-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
         {/* 1. Green Badge (Security) 
-            الحيلة الاحترافية: نستخدم العلامة الزرقاء الأصلية ونحولها للأخضر بالكود لضمان تطابق الشكل 100% 
         */}
         <img 
             src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg" 
@@ -49,7 +48,7 @@ const ThreeVerificationBadges = () => (
             }} 
         />
         
-        {/* 2. Blue Badge (Identity) - العلامة الرسمية */}
+       
         <img 
             src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg" 
             alt="Identity Verified" 
@@ -60,7 +59,7 @@ const ThreeVerificationBadges = () => (
             }} 
         />
 
-        {/* 3. Gold Badge (Premium) - العلامة الذهبية الأصلية */}
+    
         <img 
             src="https://upload.wikimedia.org/wikipedia/commons/2/2b/Twitter_Verified_Badge_Gold.svg" 
             alt="Gold Tier" 
