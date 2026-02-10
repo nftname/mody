@@ -26,24 +26,28 @@ const COIN_LOGOS: any = {
 
 // --- COMPONENTS ---
 
-// زر الدفع (يفتح المحفظة أو ينسخ العنوان)
-const Web3PaymentButton = ({ type, name, address, onClick }: { type: string, name: string, address: string, onClick: () => void }) => (
-    <button className="web3-payment-btn" onClick={onClick} title={address ? `Send to: ${address.slice(0,6)}...` : 'Not set'}>
+// --- (2) BUTTON COMPONENT (With Delete X) ---
+const Web3PaymentButton = ({ type, name, address, onClick, isOwner, onRemove }: any) => (
+    <button className="web3-payment-btn" onClick={onClick} style={{ opacity: address ? 1 : 0.5, position: 'relative', overflow: 'visible' }}>
+        
+        {/* زر الحذف يظهر فقط للمالك وإذا كان هناك عنوان محفوظ */}
+        {isOwner && address && (
+            <div 
+                onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                style={{ position: 'absolute', top: '-8px', right: '-8px', width: '22px', height: '22px', background: '#ff4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px', border: '2px solid #fff', zIndex: 10 }}>
+                <i className="bi bi-x"></i>
+            </div>
+        )}
+
         <div className="btn-content">
             <div className="logo-wrapper">
-                <img 
-                    src={COIN_LOGOS[type] || COIN_LOGOS.WALLET} 
-                    alt={`${name} Logo`} 
-                    width="32" 
-                    height="32" 
-                    className="coin-logo"
-                    style={{ objectFit: 'contain' }}
-                />
+                <img src={COIN_LOGOS[type] || COIN_LOGOS.WALLET} alt={`${name} Logo`} width="32" height="32" className="coin-logo" style={{ objectFit: 'contain' }} />
             </div>
-            
             <div className="token-info">
                 <span className="token-name">{name}</span>
-                <span className="action-text">{address ? 'Send' : 'Setup'}</span>
+                <span className="action-text">
+                    {address ? 'Send' : (isOwner ? 'Add Wallet' : 'Inactive')}
+                </span>
             </div>
         </div>
     </button>
@@ -143,7 +147,7 @@ const ChainFaceButton = ({ href, name }: { href: string, name: string }) => {
   );
 };
 
-// --- NEW COMPONENT: Wallet Editor Modal ---
+// --- (1) MODAL: CHAINFACE THEME (White/Purple) ---
 const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
     const [selectedCoin, setSelectedCoin] = useState<string | null>(null);
     const [addressInput, setAddressInput] = useState('');
@@ -156,35 +160,42 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
         setIsSaving(true);
         await onSave(selectedCoin, addressInput);
         setIsSaving(false);
-        setSelectedCoin(null); // Return to selection
+        setSelectedCoin(null);
     };
 
+    const deepPurple = '#2E1A47';
+
     return (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(5px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="fade-in" style={{ width: '90%', maxWidth: '400px', backgroundColor: '#1E1E1E', border: '1px solid #FCD535', borderRadius: '20px', padding: '25px', boxShadow: '0 0 40px rgba(252, 213, 53, 0.2)', position: 'relative' }}>
-                <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#888', fontSize: '20px' }}><i className="bi bi-x-lg"></i></button>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(46, 26, 71, 0.6)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {/* Box Styling: White Background, Purple Borders */}
+            <div className="fade-in" style={{ width: '90%', maxWidth: '400px', backgroundColor: '#ffffff', border: `1px solid ${deepPurple}`, borderRadius: '24px', padding: '30px', boxShadow: '0 20px 60px rgba(46, 26, 71, 0.2)', position: 'relative' }}>
+                <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
                 
-                <h3 style={{ color: '#fff', fontSize: '18px', textAlign: 'center', marginBottom: '20px', fontFamily: 'serif', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                    {selectedCoin ? `Set ${selectedCoin} Address` : 'Manage Wallets'}
+                <h3 style={{ color: deepPurple, fontSize: '20px', textAlign: 'center', marginBottom: '25px', fontFamily: 'Outfit, sans-serif', fontWeight: '700', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
+                    {selectedCoin ? `Configure ${selectedCoin}` : 'Select Wallet'}
                 </h3>
 
                 {!selectedCoin ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                         {['BTC', 'ETH', 'SOL', 'BNB', 'USDT', 'POLYGON'].map(coin => (
                             <button key={coin} onClick={() => { setSelectedCoin(coin); setAddressInput(wallets[coin.toLowerCase()] || ''); }} 
-                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #333', borderRadius: '12px', padding: '15px', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                                <img src={COIN_LOGOS[coin]} width="24" height="24" alt={coin} />
-                                <span style={{fontSize: '13px', fontWeight: 'bold'}}>{coin}</span>
+                                style={{ background: '#f8f9fa', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '15px', color: deepPurple, display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', transition: '0.2s' }}
+                                onMouseEnter={(e) => e.currentTarget.style.borderColor = deepPurple}
+                                onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+                            >
+                                <img src={COIN_LOGOS[coin]} width="28" height="28" alt={coin} />
+                                <span style={{fontSize: '14px', fontWeight: '700'}}>{coin}</span>
                             </button>
                         ))}
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <input type="text" value={addressInput} onChange={(e) => setAddressInput(e.target.value)} placeholder={`Paste ${selectedCoin} address...`} 
-                            style={{ width: '100%', padding: '14px', borderRadius: '10px', background: '#000', border: '1px solid #FCD535', color: '#fff', fontSize: '13px', outline: 'none' }} autoFocus />
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            <button onClick={() => setSelectedCoin(null)} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'transparent', border: '1px solid #444', color: '#fff' }}>Back</button>
-                            <button onClick={handleSave} disabled={isSaving} style={{ flex: 2, padding: '12px', borderRadius: '10px', background: 'linear-gradient(135deg, #FCD535 0%, #B3882A 100%)', border: 'none', color: '#000', fontWeight: 'bold' }}>{isSaving ? 'Saving...' : 'Save'}</button>
+                        <div style={{fontSize:'13px', color: '#666'}}>Paste your <b>{selectedCoin}</b> address:</div>
+                        <input type="text" value={addressInput} onChange={(e) => setAddressInput(e.target.value)} placeholder="0x..." 
+                            style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#fff', border: '2px solid #e5e7eb', color: '#333', fontSize: '14px', outline: 'none', fontFamily: 'monospace' }} autoFocus />
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                            <button onClick={() => setSelectedCoin(null)} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'transparent', border: `1px solid ${deepPurple}`, color: deepPurple, fontWeight: '600' }}>Back</button>
+                            <button onClick={handleSave} disabled={isSaving} style={{ flex: 2, padding: '12px', borderRadius: '12px', background: deepPurple, border: 'none', color: '#fff', fontWeight: 'bold' }}>{isSaving ? 'Saving...' : 'Add Wallet'}</button>
                         </div>
                     </div>
                 )}
@@ -350,6 +361,23 @@ export default function ChainFacePage() {
   const qrCodeUrl = typeof window !== 'undefined' 
       ? `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.href)}&bgcolor=ffffff`
       : '';
+
+       const handleShare = async () => {
+      const url = window.location.href;
+      if (navigator.share) {
+          try { await navigator.share({ title: `ChainFace: ${profileData.name}`, url: url }); } catch (e) {}
+      } else {
+          navigator.clipboard.writeText(url);
+          alert('Link Copied!'); // سنستبدلها بتوست لاحقاً إذا أردت
+      }
+  };
+
+  const handleCopyEmbed = () => {
+      const embedCode = `<a href="${window.location.href}">ChainFace: ${profileData.name}</a>`;
+      navigator.clipboard.writeText(embedCode);
+      alert('Embed Code Copied!');
+  };
+
 
   const deepPurpleColor = '#2E1A47'; 
 
@@ -894,25 +922,24 @@ export default function ChainFacePage() {
                   Payments are peer-to-peer. ChainFace never holds funds.
               </p>
 
-              <div style={{ marginTop: '40px', marginBottom: '14px' }}>
-                <h2 className="thank-you-title">
+                <div style={{ marginTop: '40px', marginBottom: '30px', textAlign: 'center' }}>
+                <h2 className="thank-you-title" style={{ fontFamily: 'Satoshi', fontWeight: '700', fontSize: '18px', color: '#2E1A47' }}>
                       Thank you for stepping into my ChainFace.
                   </h2>
-                  <p className="thank-you-subtitle">
-                      {/* Dynamic Custom Message */}
+                  <p className="thank-you-subtitle" style={{ color: '#2E1A47', fontSize: '16px', fontWeight: '600', marginTop: '5px' }}>
                       {profileData.customMessage}
                   </p>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '40px' }}>
                   <i 
-                    className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-gold' : 'text-grey'}`} 
-                    style={{ fontSize: '24px', cursor: 'pointer', color: feedback === 'like' ? '#F0C420' : '#ccc', transition: '0.3s' }}
+                    className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-warning' : 'text-secondary'}`} 
+                    style={{ fontSize: '24px', cursor: 'pointer', transition: '0.3s' }}
                     onClick={() => handleSupportClick('like')}
                   ></i>
                   <i 
-                    className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-gold' : 'text-grey'}`} 
-                    style={{ fontSize: '24px', cursor: 'pointer', color: feedback === 'dislike' ? '#F0C420' : '#ccc', transition: '0.3s' }}
+                    className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-warning' : 'text-secondary'}`} 
+                    style={{ fontSize: '24px', cursor: 'pointer', transition: '0.3s' }}
                     onClick={() => handleSupportClick('dislike')}
                   ></i>
               </div>
@@ -920,16 +947,24 @@ export default function ChainFacePage() {
           </div>
       </div>
 
-       {/* --- (MOD 4) Share Footer --- */}
-      <div style={{ padding: '20px', background: '#fff', borderTop: '1px solid #eee', position: 'fixed', bottom: 0, width: '100%', zIndex: 900, display: 'flex', justifyContent: 'center' }}>
-          <div className="signature-btn" 
-               onClick={() => {
-                   if (navigator.share) navigator.share({ title: profileData.name, url: window.location.href });
-                   else { navigator.clipboard.writeText(window.location.href); alert('Link Copied!'); }
-               }} 
-               style={{ cursor: 'pointer', justifyContent: 'center', width: 'auto', minWidth: '220px' }}>
-              <span style={{ fontSize: '16px', fontWeight: 'bold', letterSpacing: '1px' }}>SHARE PROFILE</span>
-              <i className="bi bi-share-fill ms-3"></i>
+      <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
+          
+          <p className="cta-phrase">
+             Claim your sovereign name assets now
+          </p>
+          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px', gap: '15px' }}>
+            
+              <div onClick={handleShare} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
+                  <i className="bi bi-share-fill"></i>
+              </div>
+
+              <ChainFaceButton href="/mint" name={profileData.name} />
+
+              <div onClick={handleCopyEmbed} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
+                  <i className="bi bi-file-earmark-code"></i>
+              </div>
+
           </div>
       </div>
 
