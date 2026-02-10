@@ -454,7 +454,7 @@ export default function DemoProfilePage() {
               <span className="conviction-label">Conviction</span>
               <div className="conviction-number-wrapper">
                   <span className="conviction-number">500,000</span>
-                  <span className="conviction-diamond">💎</span>
+                  <span className="conviction-diamond"></span>
               </div>
           </div>
 
