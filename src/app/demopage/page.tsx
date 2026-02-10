@@ -424,7 +424,7 @@ export default function DemoProfilePage() {
              Claim your sovereign name assets now.
           </p>
           
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '12px' }}>
               <Link href="/mint" className="marketing-btn">
                   YOUR CHAINFACE
               </Link>
