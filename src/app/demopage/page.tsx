@@ -598,7 +598,7 @@ export default function DemoProfilePage() {
               <div className="card-content">
                   <ThreeVerificationBadges />
                   <div className="card-name-row">
-                      <span className="card-name">Alexander THE KAING OF </span>
+                      <span className="card-name">Alexander</span>
                   </div>
               </div>
               <FiveStars />
