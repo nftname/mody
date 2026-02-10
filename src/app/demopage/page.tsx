@@ -34,32 +34,45 @@ const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name
     </button>
 );
 
-const ThreeVerificationBadges = () => {
-    // Verified Badge Shape Path (Official Scalloped Shape)
-    const badgePath = "M22.25 12.5c0-1.58-.875-2.95-2.148-3.6.55-1.57.2-3.38-1.1-4.56C17.7 3.14 15.88 2.8 14.3 3.34c-.65-1.28-2.02-2.15-3.6-2.15s-2.95.87-3.6 2.15c-1.57-.54-3.38-.2-4.69 1.1-1.3 1.18-1.65 2.99-1.1 4.56-1.28.65-2.15 2.02-2.15 3.6s.87 2.95 2.15 3.6c-.55 1.57-.2 3.38 1.1 4.56 1.3 1.18 3.12 1.52 4.69.98.65 1.28 2.02 2.15 3.6 2.15s2.95-.87 3.6-2.15c1.58.54 3.39.2 4.69-1.1 1.3-1.18 1.65-2.99 1.1-4.56 1.28-.65 2.15-2.02 2.15-3.6zM11.64 17.77l-3.54-3.54 1.41-1.41 2.12 2.12 5.66-5.66 1.41 1.41-7.07 7.07z";
-    
-    // Common style for 3D effect and size
-    const badgeStyle = { width: '24px', height: '24px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' };
+const ThreeVerificationBadges = () => (
+    <div className="badges-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
+        {/* 1. Green Badge (Security) 
+            نستخدم صورة العلامة الزرقاء الأصلية ونحول لونها للأخضر لضمان تطابق الشكل 100% مع البقية
+        */}
+        <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Twitter_Verified_Badge.svg/640px-Twitter_Verified_Badge.svg.png" 
+            alt="Security Verified" 
+            style={{ 
+                width: '24px', 
+                height: '24px', 
+                // هذا الفلتر يحول اللون الأزرق إلى أخضر زمردي فخم
+                filter: 'hue-rotate(260deg) drop-shadow(0 3px 5px rgba(0,0,0,0.2))' 
+            }} 
+        />
+        
+        {/* 2. Blue Badge (Identity) - صورة أصلية */}
+        <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Twitter_Verified_Badge.svg/640px-Twitter_Verified_Badge.svg.png" 
+            alt="Identity Verified" 
+            style={{ 
+                width: '24px', 
+                height: '24px', 
+                filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.2))' 
+            }} 
+        />
 
-    return (
-        <div className="badges-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
-            {/* 1. Green Badge (Security - Emerald Green) */}
-            <svg viewBox="0 0 25 25" fill="#10B981" style={badgeStyle} xmlns="http://www.w3.org/2000/svg">
-                <path d={badgePath} />
-            </svg>
-            
-            {/* 2. Blue Badge (Identity - Official Blue) */}
-            <svg viewBox="0 0 25 25" fill="#1DA1F2" style={badgeStyle} xmlns="http://www.w3.org/2000/svg">
-                <path d={badgePath} />
-            </svg>
-
-            {/* 3. Gold Badge (Premium - Luxury Gold) */}
-            <svg viewBox="0 0 25 25" fill="#D4AF37" style={badgeStyle} xmlns="http://www.w3.org/2000/svg">
-                 <path d={badgePath} />
-            </svg>
-        </div>
-    );
-};
+        {/* 3. Gold Badge (Premium) - صورة أصلية */}
+        <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Twitter_Verified_Badge_Gold.svg/640px-Twitter_Verified_Badge_Gold.svg.png" 
+            alt="Gold Tier" 
+            style={{ 
+                width: '24px', 
+                height: '24px', 
+                filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.2))' 
+            }} 
+        />
+    </div>
+);
 
 
 
