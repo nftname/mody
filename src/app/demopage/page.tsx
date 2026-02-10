@@ -129,38 +129,33 @@ export default function DemoProfilePage() {
             align-items: center;
             justify-content: center;
             margin-top: -40px; 
-            /* إضافة ظل أرجواني ناعم جداً أسفل الهيدر */
             box-shadow: 0 4px 20px rgba(0,0,0,0.05), 0 8px 15px rgba(88, 28, 135, 0.15);
             background-image: radial-gradient(circle at center, #f8f9fa 0%, #ffffff 100%);
             z-index: 5; 
         }
 
         .chainface-metallic-title {
-            /* الخط العصري Outfit */
             font-family: 'Outfit', sans-serif;
-            font-size: 52px; /* حجم معتدل ومناسب (تم تصغيره من 80px) */
-            font-weight: 800;
-            letter-spacing: -1px; /* تماسك عصري للحروف */
+            font-size: 65px;     /* التعديل الأول: تكبير الخط 25% */
+            font-weight: 700;    /* التعديل الثاني: تخفيف السمك من 800 إلى 700 */
+            letter-spacing: -1px;
             margin: 0;
             padding-top: 15px;
             
-            /* ألوان الكرت المستخلصة: كحلي غامق مع أرجواني */
+            /* التعديل الثالث: تفتيح اللون الغامق قليلاً ليظهر اللون بشكل أفضل */
             background: linear-gradient(
                 135deg, 
-                #1e1b4b 10%,   /* كحلي غامق جداً */
-                #4c1d95 40%,   /* أرجواني غامق */
-                #7c3aed 50%,   /* أرجواني متوسط للمعة */
-                #4c1d95 60%,   /* عودة للأرجواني الغامق */
-                #1e1b4b 90%    /* كحلي غامق جداً */
+                #2e1065 10%,   /* بداية بنفسجي غامق بدلاً من الكحلي الأسود */
+                #581c87 40%,   
+                #9333ea 50%,   /* منتصف أفتح قليلاً للإضاءة */
+                #581c87 60%,   
+                #2e1065 90%    /* نهاية بنفسجي غامق */
             );
 
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             
-            /* تأثير بروز ناعم وغير مزعج */
             filter: drop-shadow(0 2px 2px rgba(88, 28, 135, 0.2));
-            
-            /* إلغاء الحروف الكبيرة الإجبارية */
             text-transform: none;
         }
 
@@ -188,7 +183,6 @@ export default function DemoProfilePage() {
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.4);
             z-index: 10;
-            /* نفس تدرج الألوان المطبق على العنوان */
             background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 45%, #6d28d9 70%, #1e1b4b 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 5px 0;
@@ -333,7 +327,7 @@ export default function DemoProfilePage() {
                 margin-top: -40px;
             } 
             .chainface-metallic-title {
-                font-size: 34px;
+                font-size: 42px; /* تكبير الخط في الجوال أيضاً ليتناسب مع النسبة */
             }
             .back-btn {
                 width: 34px; height: 34px; top: 15px; left: 15px; font-size: 16px;
