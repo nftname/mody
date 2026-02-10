@@ -34,43 +34,33 @@ const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name
     </button>
 );
 
-const ThreeVerificationBadges = () => (
-    <div className="badges-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
-        {/* 1. Green Badge (Security) 
-        */}
-        <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg" 
-            alt="Security Verified" 
-            style={{ 
-                width: '24px', 
-                height: '24px', 
-                filter: 'hue-rotate(260deg) brightness(1.1) drop-shadow(0 4px 6px rgba(0,0,0,0.2))' 
-            }} 
-        />
-        
-       
-        <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg" 
-            alt="Identity Verified" 
-            style={{ 
-                width: '24px', 
-                height: '24px', 
-                filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' 
-            }} 
-        />
-
+const ThreeVerificationBadges = () => {
+    // Verified Badge Shape Path (Official Scalloped Shape)
+    const badgePath = "M22.25 12.5c0-1.58-.875-2.95-2.148-3.6.55-1.57.2-3.38-1.1-4.56C17.7 3.14 15.88 2.8 14.3 3.34c-.65-1.28-2.02-2.15-3.6-2.15s-2.95.87-3.6 2.15c-1.57-.54-3.38-.2-4.69 1.1-1.3 1.18-1.65 2.99-1.1 4.56-1.28.65-2.15 2.02-2.15 3.6s.87 2.95 2.15 3.6c-.55 1.57-.2 3.38 1.1 4.56 1.3 1.18 3.12 1.52 4.69.98.65 1.28 2.02 2.15 3.6 2.15s2.95-.87 3.6-2.15c1.58.54 3.39.2 4.69-1.1 1.3-1.18 1.65-2.99 1.1-4.56 1.28-.65 2.15-2.02 2.15-3.6zM11.64 17.77l-3.54-3.54 1.41-1.41 2.12 2.12 5.66-5.66 1.41 1.41-7.07 7.07z";
     
-        <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/2/2b/Twitter_Verified_Badge_Gold.svg" 
-            alt="Gold Tier" 
-            style={{ 
-                width: '24px', 
-                height: '24px', 
-                filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' 
-            }} 
-        />
-    </div>
-);
+    // Common style for 3D effect and size
+    const badgeStyle = { width: '24px', height: '24px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' };
+
+    return (
+        <div className="badges-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
+            {/* 1. Green Badge (Security - Emerald Green) */}
+            <svg viewBox="0 0 25 25" fill="#10B981" style={badgeStyle} xmlns="http://www.w3.org/2000/svg">
+                <path d={badgePath} />
+            </svg>
+            
+            {/* 2. Blue Badge (Identity - Official Blue) */}
+            <svg viewBox="0 0 25 25" fill="#1DA1F2" style={badgeStyle} xmlns="http://www.w3.org/2000/svg">
+                <path d={badgePath} />
+            </svg>
+
+            {/* 3. Gold Badge (Premium - Luxury Gold) */}
+            <svg viewBox="0 0 25 25" fill="#D4AF37" style={badgeStyle} xmlns="http://www.w3.org/2000/svg">
+                 <path d={badgePath} />
+            </svg>
+        </div>
+    );
+};
+
 
 
 const FiveStars = () => (
@@ -441,7 +431,7 @@ export default function DemoProfilePage() {
              Claim your sovereign name assets now
           </p>
           
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px' }}>
               <Link href="/mint" className="marketing-btn">
                   YOUR ChainFace
               </Link>
