@@ -28,20 +28,28 @@ const COIN_LOGOS: any = {
 
 // --- (2) BUTTON COMPONENT (With Delete X) ---
 const Web3PaymentButton = ({ type, name, address, onClick, isOwner, onRemove }: any) => (
-    <button className="web3-payment-btn" onClick={onClick} style={{ opacity: address ? 1 : 0.5, position: 'relative', overflow: 'visible' }}>
-        
-        {/* زر الحذف يظهر فقط للمالك وإذا كان هناك عنوان محفوظ */}
+    <button 
+        className="web3-payment-btn" 
+        onClick={onClick} 
+        style={{ 
+            opacity: address ? 1 : 0.4, 
+            filter: address ? 'none' : 'grayscale(100%)',
+            position: 'relative', 
+            overflow: 'visible',
+            cursor: isOwner || address ? 'pointer' : 'default'
+        }}
+    >
         {isOwner && address && (
             <div 
                 onClick={(e) => { e.stopPropagation(); onRemove(); }}
-                style={{ position: 'absolute', top: '-8px', right: '-8px', width: '22px', height: '22px', background: '#ff4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px', border: '2px solid #fff', zIndex: 10 }}>
+                style={{ position: 'absolute', top: '-8px', right: '-8px', width: '22px', height: '22px', background: '#ff4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px', border: '2px solid #fff', zIndex: 10, cursor: 'pointer' }}>
                 <i className="bi bi-x"></i>
             </div>
         )}
 
         <div className="btn-content">
             <div className="logo-wrapper">
-                <img src={COIN_LOGOS[type] || COIN_LOGOS.WALLET} alt={`${name} Logo`} width="32" height="32" className="coin-logo" style={{ objectFit: 'contain' }} />
+                <img src={COIN_LOGOS[type] || COIN_LOGOS.WALLET} alt={name} width="32" height="32" className="coin-logo" style={{ objectFit: 'contain' }} />
             </div>
             <div className="token-info">
                 <span className="token-name">{name}</span>
@@ -132,10 +140,12 @@ const GoldenCheckBadge = () => (
     </svg>
 );
 
-const ChainFaceButton = ({ href, name }: { href: string, name: string }) => {
+const ChainFaceButton = ({ name, currentUrl }: { name: string, currentUrl: string }) => {
+  const qrBg = currentUrl ? `url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}&bgcolor=ffffff')` : 'none';
+  
   return (
-    <Link href={href} className="signature-btn" title="Mint Your ChainFace">
-        <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
+    <Link href="/mint" className="signature-btn">
+        <div className="sig-qr-container"><div className="sig-qr-code" style={{ backgroundImage: qrBg }}></div></div>
         <div className="sig-content">
             <div className="sig-top-row">
                 <span className="sig-label">ChainFace</span>
@@ -377,6 +387,35 @@ export default function ChainFacePage() {
       navigator.clipboard.writeText(embedCode);
       alert('Embed Code Copied!');
   };
+
+  // --- (3) New Logic for Copy & Share ---
+  const [currentPageUrl, setCurrentPageUrl] = useState('');
+  const [copiedTip, setCopiedTip] = useState<string | null>(null);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+
+  useEffect(() => {
+      if (typeof window !== 'undefined') setCurrentPageUrl(window.location.href);
+  }, []);
+
+  const handleRemoveWallet = async (coin: string) => {
+      if (!isOwner) return;
+      handleSaveWallet(coin, ''); 
+  };
+
+  const handleCopyLink = () => {
+      navigator.clipboard.writeText(currentPageUrl);
+      setCopiedTip('link');
+      setTimeout(() => setCopiedTip(null), 2000);
+  };
+  
+  const handleShareClick = async () => {
+      if (navigator.share) {
+          try { await navigator.share({ title: `ChainFace: ${profileData.name}`, url: currentPageUrl }); } catch (e) {}
+      } else {
+          setShowShareMenu(!showShareMenu);
+      }
+  };
+
 
 
   const deepPurpleColor = '#2E1A47'; 
@@ -947,22 +986,40 @@ export default function ChainFacePage() {
           </div>
       </div>
 
-      <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
+      <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center', position: 'relative' }}>
           
-          <p className="cta-phrase">
-             Claim your sovereign name assets now
+          <p style={{ color: '#2E1A47', fontSize: '14px', fontWeight: '500', marginBottom: '25px', lineHeight: '1.5' }}>
+             Share this sovereign link button with friends, clients, or anyone you wish to view your page or pay you securely.
           </p>
           
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px', gap: '15px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', position: 'relative' }}>
             
-              <div onClick={handleShare} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
-                  <i className="bi bi-share-fill"></i>
+              <div style={{ position: 'relative' }}>
+                  <div onClick={handleShareClick} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
+                      <i className="bi bi-share-fill"></i>
+                  </div>
+                  
+                  {showShareMenu && (
+                      <div className="fade-in" style={{ position: 'absolute', bottom: '50px', left: '-80px', background: '#fff', border: '1px solid #eee', borderRadius: '12px', padding: '10px', boxShadow: '0 5px 20px rgba(0,0,0,0.1)', display: 'flex', gap: '10px', zIndex: 100 }}>
+                          <a href={`https://wa.me/?text=${encodeURIComponent(currentPageUrl)}`} target="_blank" style={{ color: '#25D366', fontSize: '20px' }}><i className="bi bi-whatsapp"></i></a>
+                          <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentPageUrl)}`} target="_blank" style={{ color: '#1877F2', fontSize: '20px' }}><i className="bi bi-facebook"></i></a>
+                          <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(currentPageUrl)}`} target="_blank" style={{ color: '#1DA1F2', fontSize: '20px' }}><i className="bi bi-twitter-x"></i></a>
+                          <a href={`mailto:?body=${encodeURIComponent(currentPageUrl)}`} style={{ color: '#EA4335', fontSize: '20px' }}><i className="bi bi-envelope-fill"></i></a>
+                      </div>
+                  )}
               </div>
 
-              <ChainFaceButton href="/mint" name={profileData.name} />
+              <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
 
-              <div onClick={handleCopyEmbed} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
-                  <i className="bi bi-file-earmark-code"></i>
+              <div style={{ position: 'relative' }}>
+                  <div onClick={handleCopyLink} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
+                      <i className="bi bi-link-45deg" style={{ fontSize: '20px' }}></i>
+                  </div>
+                  {copiedTip === 'link' && (
+                      <div className="fade-in" style={{ position: 'absolute', top: '50%', left: '100%', transform: 'translateY(-50%)', marginLeft: '10px', background: '#2E1A47', color: '#fff', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                          Copied!
+                      </div>
+                  )}
               </div>
 
           </div>
