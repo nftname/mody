@@ -136,20 +136,20 @@ export default function DemoProfilePage() {
 
         .chainface-metallic-title {
             font-family: 'Outfit', sans-serif;
-            font-size: 65px;     /* التعديل الأول: تكبير الخط 25% */
-            font-weight: 700;    /* التعديل الثاني: تخفيف السمك من 800 إلى 700 */
+            font-size: 80px;    
+            font-weight: 700;   
             letter-spacing: -1px;
             margin: 0;
             padding-top: 15px;
             
-            /* التعديل الثالث: تفتيح اللون الغامق قليلاً ليظهر اللون بشكل أفضل */
-            background: linear-gradient(
+            
+           background: linear-gradient(
                 135deg, 
-                #2e1065 10%,   /* بداية بنفسجي غامق بدلاً من الكحلي الأسود */
-                #581c87 40%,   
-                #9333ea 50%,   /* منتصف أفتح قليلاً للإضاءة */
-                #581c87 60%,   
-                #2e1065 90%    /* نهاية بنفسجي غامق */
+                #4c1d95 10%,   
+                #6d28d9 40%,   
+                #a78bfa 50%,   
+                #6d28d9 60%,   
+                #4c1d95 90%    
             );
 
             -webkit-background-clip: text;
