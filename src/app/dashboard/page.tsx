@@ -733,14 +733,7 @@ export default function DashboardPage() {
                                        <Link key={asset.id} href={`/your-chainface/${asset.id}`} className="text-decoration-none">
 
                                             <div className="d-flex align-items-center gap-3 p-2 rounded-2 hover-bg-dark" style={{ cursor: 'pointer', transition: '0.2s' }}>
-                                                {/* Asset Image/Placeholder */}
-                                                <div style={{ width: '28px', height: '28px', borderRadius: '4px', overflow: 'hidden', background: '#000', border: '1px solid #333' }}>
-                                                     {asset.image ? (
-                                                        <img src={asset.image} alt="asset" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                     ) : (
-                                                        <div className="d-flex align-items-center justify-content-center h-100 text-secondary" style={{fontSize: '10px'}}>#</div>
-                                                     )}
-                                                </div>
+                                        
                                                 
                                                 {/* Asset Name */}
                                                 <div className="d-flex flex-column">
