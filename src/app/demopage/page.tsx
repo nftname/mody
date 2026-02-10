@@ -3,6 +3,7 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+// 
 const COIN_LOGOS = {
     BTC: "https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=026",
     ETH: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=026",
@@ -34,10 +35,10 @@ const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name
     </button>
 );
 
+// 
 const ThreeVerificationBadges = () => {
     const badgePath = "M22.25 12.5c0-1.58-.875-2.95-2.148-3.6.55-1.57.2-3.38-1.1-4.56C17.7 3.14 15.88 2.8 14.3 3.34c-.65-1.28-2.02-2.15-3.6-2.15s-2.95.87-3.6 2.15c-1.57-.54-3.38-.2-4.69 1.1-1.3 1.18-1.65 2.99-1.1 4.56-1.28.65-2.15 2.02-2.15 3.6s.87 2.95 2.15 3.6c-.55 1.57-.2 3.38 1.1 4.56 1.3 1.18 3.12 1.52 4.69.98.65 1.28 2.02 2.15 3.6 2.15s2.95-.87 3.6-2.15c1.58.54 3.39.2 4.69-1.1 1.3-1.18 1.65-2.99 1.1-4.56 1.28-.65 2.15-2.02 2.15-3.6z";
     const checkPath = "M10.5 17.5L5.5 12.5L7 11L10.5 14.5L17.5 7.5L19 9L10.5 17.5Z";
-
     const badgeStyle = { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' };
 
     return (
@@ -64,12 +65,10 @@ const ThreeVerificationBadges = () => {
                 <path d={badgePath} fill="url(#greenLuxury)" />
                 <path d={checkPath} fill="#FFFFFF" />
             </svg>
-            
             <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg" className="verification-badge">
                 <path d={badgePath} fill="url(#blueLuxury)" />
                 <path d={checkPath} fill="#FFFFFF" />
             </svg>
-
             <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg" className="verification-badge">
                  <path d={badgePath} fill="url(#goldLuxury)" />
                  <path d={checkPath} fill="#FFFFFF" />
@@ -77,7 +76,6 @@ const ThreeVerificationBadges = () => {
         </div>
     );
 };
-
 
 const FiveStars = () => (
     <div className="stars-container" style={{ display: 'flex', justifyContent: 'center' }}>
@@ -89,6 +87,36 @@ const FiveStars = () => (
     </div>
 );
 
+// 
+const GoldenCheckBadge = () => (
+    <svg width="12" height="12" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '15px', filter: 'drop-shadow(0 0 2px rgba(255, 215, 0, 0.3))' }}>
+        <defs>
+            <linearGradient id="goldBadgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FFD700" />
+                <stop offset="100%" stopColor="#FFA500" />
+            </linearGradient>
+        </defs>
+        <circle cx="21" cy="21" r="20" fill="url(#goldBadgeGradient)" stroke="#ffffff" strokeWidth="2"/>
+        <path d="M12 21l6 6 12-12" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    </svg>
+);
+
+const ChainFaceButton = ({ href }: { href: string }) => {
+  return (
+    <Link href={href} className="signature-btn" title="View Example Profile">
+        <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
+        <div className="sig-content">
+            <div className="sig-top-row">
+                <span className="sig-label">ChainFace</span>
+                <GoldenCheckBadge />
+            </div>
+            <span className="sig-name">ALEXANDER</span>
+        </div>
+    </Link>
+  );
+};
+
+//
 export default function DemoProfilePage() {
   const router = useRouter();
   const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
@@ -142,7 +170,7 @@ export default function DemoProfilePage() {
             letter-spacing: -2px;
             margin: 0;
             padding-top: 15px;
-            padding-left: 95px; /* الإزاحة لليمين */
+            padding-left: 95px; 
             
             background: linear-gradient(
                 135deg, 
@@ -162,7 +190,6 @@ export default function DemoProfilePage() {
             z-index: 10;
         }
 
-        /* تنسيق شبكة البلوك تشين */
         .blockchain-svg {
             position: absolute;
             top: 0;
@@ -338,14 +365,113 @@ export default function DemoProfilePage() {
             margin-bottom: 10px; font-weight: 700;
         }
 
+        /* --- STYLES FOR THE NEW CHAINFACE BUTTON --- */
+        .signature-btn {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 190px !important; 
+            min-width: 190px !important;
+            max-width: 190px !important;
+            height: 55px !important;
+            min-height: 55px !important;
+            max-height: 55px !important;
+            flex-shrink: 0 !important;
+            flex-grow: 0 !important;
+            background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
+            border-radius: 30px;
+            padding: 0 12px;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            cursor: pointer;
+            margin: 0;
+        }
+        .signature-btn::before {
+             content: '';
+             position: absolute;
+             top: 0; left: 0; width: 100%; height: 50%;
+             background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+             border-radius: 30px 30px 0 0;
+             pointer-events: none;
+        }
+        .signature-btn:hover {
+            transform: translateY(-1.5px); 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .sig-qr-container {
+            width: 28px; 
+            height: 28px;
+            background: rgba(255,255,255,0.92);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            flex-shrink: 0; 
+        }
+        .sig-qr-code {
+            width: 23px;
+            height: 23px;
+            background-image: url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ALEXANDER_CF_SIGNATURE');
+            background-size: cover;
+            opacity: 0.85;
+            mix-blend-mode: multiply;
+        }
+        .sig-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            flex-grow: 1;
+            padding-right: 5px; 
+            overflow: hidden; 
+        }
+        .sig-top-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+        .sig-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            color: rgba(255,255,255,0.95);
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .sig-name {
+            font-family: 'Satoshi', sans-serif;
+            font-weight: 900;
+            font-size: 15px; 
+            text-transform: uppercase;
+            background: linear-gradient(to bottom, #ffffff 40%, #b0b0b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.2px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            display: block;
+            white-space: nowrap;       
+            overflow: hidden;         
+            text-overflow: ellipsis;   
+            max-width: 105px;         
+        }
+
         @media (max-width: 768px) {
             .hero-banner-wrapper { 
                 height: 160px;
                 margin-top: -40px;
             } 
             .chainface-metallic-title {
-                font-size: 48px; /* تكبير الخط في الجوال */
-                padding-left: 20px; /* تقليل الإزاحة قليلاً في الجوال */
+                font-size: 48px; 
+                padding-left: 20px; 
             }
             .back-btn {
                 width: 34px; height: 34px; top: 15px; left: 15px; font-size: 16px;
@@ -381,27 +507,6 @@ export default function DemoProfilePage() {
                 font-size: 14px;
             }
         }
-
-        .marketing-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 200px;
-            height: 48px;
-            background: linear-gradient(110deg, #7c1c58 0%, #3b1a57 50%, #1a237e 100%);
-            border-radius: 25px;
-            color: white;
-            font-family: 'Satoshi', sans-serif;
-            font-weight: 900;
-            font-size: 14px;
-            text-decoration: none;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
-        }
-        .marketing-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
       `}</style>
 
       <div className="hero-banner-wrapper">
@@ -409,7 +514,7 @@ export default function DemoProfilePage() {
               <i className="bi bi-arrow-left"></i>
           </div>
           
-          {/* تم تصحيح جميع Attributes من class إلى className لضمان عدم وجود أخطاء */}
+          {/* شبكة البلوك تشين الخفيفة في الخلفية */}
           <svg className="blockchain-svg" width="100%" height="100%" viewBox="0 0 900 220" preserveAspectRatio="xMidYMid slice">
             <line x1="50" y1="50" x2="150" y2="100" className="link" />
             <line x1="50" y1="180" x2="150" y2="100" className="link" />
@@ -454,7 +559,7 @@ export default function DemoProfilePage() {
               <span className="conviction-label">Conviction</span>
               <div className="conviction-number-wrapper">
                   <span className="conviction-number">500,000</span>
-                  <span className="conviction-diamond"></span>
+                  <span className="conviction-diamond">💎</span>
               </div>
           </div>
 
@@ -505,9 +610,8 @@ export default function DemoProfilePage() {
           </p>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px' }}>
-              <Link href="/mint" className="marketing-btn">
-                  Your ChainFace
-              </Link>
+            
+              <ChainFaceButton href="/mint" />
           </div>
       </div>
 
