@@ -696,7 +696,76 @@ export default function DashboardPage() {
                 </Link>
                 <button onClick={copyToClipboard} className="btn p-0 border-0" style={{ color: '#8a939b' }}>
                     {isCopied ? <i className="bi bi-check-lg text-success"></i> : <i className="bi bi-copy"></i>}
-                </button>   {/* --- SECRET ADMIN BUTTON --- */}
+                </button>  
+                     {/* --- CHAINFACE DROPDOWN BUTTON --- */}
+                <div className="position-relative dropdown-container ms-3">
+                    <button 
+                        onClick={() => toggleDropdown('chainface')} 
+                        className="btn d-flex align-items-center gap-2 px-3" 
+                        style={{ 
+                            background: 'rgba(252, 213, 53, 0.08)', 
+                            border: '1px solid #FCD535', 
+                            borderRadius: '8px', 
+                            color: '#FCD535', 
+                            fontSize: '13px', 
+                            height: '32px', 
+                            fontWeight: '600',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 0 10px rgba(252, 213, 53, 0.1)'
+                        }}
+                    >
+                        <i className="bi bi-person-vcard-fill"></i>
+                        Your ChainFace
+                        <i className={`bi bi-chevron-${openDropdown === 'chainface' ? 'up' : 'down'}`} style={{ fontSize: '10px', marginLeft: '2px' }}></i>
+                    </button>
+
+                    {/* --- DROPDOWN MENU --- */}
+                    {openDropdown === 'chainface' && (
+                        <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg fade-in" style={{ top: '100%', left: 0, minWidth: '220px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 1000 }}>
+                            
+                            <div style={{ padding: '8px 10px', borderBottom: '1px solid #333', marginBottom: '6px' }}>
+                                <span style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>Select Asset to Edit</span>
+                            </div>
+
+                            <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="d-flex flex-column gap-1">
+                                {myAssets.length > 0 ? (
+                                    myAssets.map((asset) => (
+                                       <Link key={asset.id} href={`/your-chainface/${asset.id}`} className="text-decoration-none">
+
+                                            <div className="d-flex align-items-center gap-3 p-2 rounded-2 hover-bg-dark" style={{ cursor: 'pointer', transition: '0.2s' }}>
+                                                {/* Asset Image/Placeholder */}
+                                                <div style={{ width: '28px', height: '28px', borderRadius: '4px', overflow: 'hidden', background: '#000', border: '1px solid #333' }}>
+                                                     {asset.image ? (
+                                                        <img src={asset.image} alt="asset" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                     ) : (
+                                                        <div className="d-flex align-items-center justify-content-center h-100 text-secondary" style={{fontSize: '10px'}}>#</div>
+                                                     )}
+                                                </div>
+                                                
+                                                {/* Asset Name */}
+                                                <div className="d-flex flex-column">
+                                                    <span style={{ color: '#fff', fontSize: '13px', fontWeight: '500' }}>{asset.name}</span>
+                                                    <span style={{ color: '#666', fontSize: '10px' }}>#{asset.id}</span>
+                                                </div>
+                                                
+                                                {/* Arrow Icon */}
+                                                <i className="bi bi-box-arrow-up-right ms-auto" style={{ fontSize: '11px', color: '#FCD535' }}></i>
+                                            </div>
+                                        </Link>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-3">
+                                        <span style={{ color: '#666', fontSize: '12px' }}>No names owned yet.</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+                {/* --- END CHAINFACE DROPDOWN --- */}
+
+                
+                 {/* --- SECRET ADMIN BUTTON --- */}
                 {isAdmin && (
                     <div className="d-flex align-items-center gap-2 ms-3">
                         {/* Existing Admin Control Button */}
@@ -1185,6 +1254,9 @@ export default function DashboardPage() {
                 font-size: 11px !important;
                 white-space: nowrap; /* يمنع نزول الرمز للأسفل نهائياً */
             }
+            .hover-bg-dark:hover { background-color: rgba(255, 255, 255, 0.05) !important; 
+            }
+
         }
       `}</style>
 
@@ -1301,3 +1373,4 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
       </div>
     );
 };
+
