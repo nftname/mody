@@ -35,25 +35,27 @@ const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name
 );
 
 const ThreeVerificationBadges = () => (
-    <div className="badges-container" style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
-            <circle cx="21" cy="21" r="19" fill="#25D366" stroke="#888888" strokeWidth="1"/>
-            <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
-            <circle cx="21" cy="21" r="19" fill="#1DA1F2" stroke="#888888" strokeWidth="1"/>
-            <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
-            <defs>
-                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#FFD700" />
-                    <stop offset="100%" stopColor="#FFA500" />
-                </linearGradient>
-            </defs>
-            <circle cx="21" cy="21" r="19" fill="url(#goldGrad)" stroke="#888888" strokeWidth="1"/>
-            <path d="M10 24 L18 32 L34 10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+    <div className="badges-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
+        {/* Green Badge (Security) */}
+        <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Check_green_icon.svg" 
+            alt="Secure Verified" 
+            style={{ width: '22px', height: '22px', filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.3))' }} 
+        />
+        
+        {/* Gold Badge (Premium/Central) */}
+        <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/2/2b/Twitter_Verified_Badge_Gold.svg" 
+            alt="Gold Verified" 
+            style={{ width: '24px', height: '24px', filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.3))' }} 
+        />
+
+        {/* Blue Badge (Identity) */}
+        <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg" 
+            alt="Blue Verified" 
+            style={{ width: '22px', height: '22px', filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.3))' }} 
+        />
     </div>
 );
 
@@ -406,7 +408,8 @@ export default function DemoProfilePage() {
                   <i 
                     className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-gold' : 'text-grey'}`} 
                     style={{ fontSize: '24px', cursor: 'pointer', color: feedback === 'like' ? '#F0C420' : '#ccc', transition: '0.3s' }}
-                    onClick={() => router.push('/mint')}
+                    onClick={() => toggleFeedback('like')}
+
                   ></i>
                   <i 
                     className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-gold' : 'text-grey'}`} 
@@ -424,7 +427,7 @@ export default function DemoProfilePage() {
              Claim your sovereign name assets now.
           </p>
           
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '16px' }}>
               <Link href="/mint" className="marketing-btn">
                   YOUR CHAINFACE
               </Link>
