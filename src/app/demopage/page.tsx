@@ -294,7 +294,7 @@ export default function DemoProfilePage() {
              margin-top: 30px; font-size: 12px; color: #aaa; font-style: italic;
         }
         .thank-you-title {
-            font-family: 'Satoshi', sans-serif; font-weight: 700; font-size: 22px;
+            font-family: 'Satoshi', sans-serif; font-weight: 700; font-size: 17px;
             color: ${deepPurpleColor}; margin-bottom: 10px;
         }
         .thank-you-subtitle {
@@ -323,7 +323,7 @@ export default function DemoProfilePage() {
             .card-content { margin: 2px 0; }
             .card-name { font-size: 15px; }
             .badge-icon { width: 13px; height: 13px; }
-            .verification-badge { width: 17px; height: 17px; }
+            .verification-badge { width: 14px; height: 14px; }
             .star-icon { width: 11px; height: 11px; }
             .stars-container { gap: 1px; margin-top: 4px; margin-bottom: 2px; }
             .badges-container { margin-bottom: 2px; margin-top: -2px; }
