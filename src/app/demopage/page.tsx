@@ -473,8 +473,8 @@ export default function DemoProfilePage() {
             position: absolute;
             top: 55px;
             right: 25px;
-            width: 64px; 
-            height: 64px;
+            width: 84px; 
+            height: 84px;
             border-radius: 12px;
             background-color: #f8f9fa; 
             display: flex; align-items: center; justify-content: center;
@@ -490,8 +490,8 @@ export default function DemoProfilePage() {
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
         .qr-image-generated {
-            width: 48px;
-            height: 48px;
+            width: 64px;
+            height: 64px;
             mix-blend-mode: multiply;
             opacity: 0.85;
         }
