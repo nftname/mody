@@ -38,7 +38,7 @@ const ThreeVerificationBadges = () => {
     const badgePath = "M22.25 12.5c0-1.58-.875-2.95-2.148-3.6.55-1.57.2-3.38-1.1-4.56C17.7 3.14 15.88 2.8 14.3 3.34c-.65-1.28-2.02-2.15-3.6-2.15s-2.95.87-3.6 2.15c-1.57-.54-3.38-.2-4.69 1.1-1.3 1.18-1.65 2.99-1.1 4.56-1.28.65-2.15 2.02-2.15 3.6s.87 2.95 2.15 3.6c-.55 1.57-.2 3.38 1.1 4.56 1.3 1.18 3.12 1.52 4.69.98.65 1.28 2.02 2.15 3.6 2.15s2.95-.87 3.6-2.15c1.58.54 3.39.2 4.69-1.1 1.3-1.18 1.65-2.99 1.1-4.56 1.28-.65 2.15-2.02 2.15-3.6z";
     const checkPath = "M10.5 17.5L5.5 12.5L7 11L10.5 14.5L17.5 7.5L19 9L10.5 17.5Z";
 
-    const badgeStyle = { width: '22px', height: '22px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' };
+    const badgeStyle = { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' };
 
     return (
         <div className="badges-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
@@ -60,17 +60,17 @@ const ThreeVerificationBadges = () => {
                 </defs>
             </svg>
 
-            <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg" className="verification-badge">
                 <path d={badgePath} fill="url(#greenLuxury)" />
                 <path d={checkPath} fill="#FFFFFF" />
             </svg>
             
-            <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg" className="verification-badge">
                 <path d={badgePath} fill="url(#blueLuxury)" />
                 <path d={checkPath} fill="#FFFFFF" />
             </svg>
 
-            <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg" className="verification-badge">
                  <path d={badgePath} fill="url(#goldLuxury)" />
                  <path d={checkPath} fill="#FFFFFF" />
             </svg>
@@ -167,7 +167,7 @@ export default function DemoProfilePage() {
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.4);
             z-index: 10;
-            background: radial-gradient(circle at center, #0F172A 0%, #1e1b4b 40%, #581c87 100%);
+            background: linear-gradient(125deg, #020c1b 0%, #1a1333 35%, #4a1259 70%, #2c0a3a 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 5px 0;
         }
@@ -178,9 +178,10 @@ export default function DemoProfilePage() {
         }
 
         .card-name {
-            font-family: 'Satoshi', sans-serif;
-            font-size: 20px; font-weight: 900;
-            text-transform: uppercase; color: white;
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
             text-shadow: 0 3px 10px rgba(0,0,0,0.7);
             letter-spacing: 0.5px;
         }
@@ -189,6 +190,7 @@ export default function DemoProfilePage() {
         .star-icon { width: 21px; height: 21px; } 
         .stars-container { gap: 5px; margin-top: 8px; margin-bottom: 5px; }
         .badges-container { margin-bottom: 10px; margin-top: -5px; }
+        .verification-badge { width: 22px; height: 22px; }
 
         .conviction-box {
             position: relative; text-align: center; margin-top: 15px; margin-bottom: 30px;
@@ -299,7 +301,7 @@ export default function DemoProfilePage() {
             color: ${deepPurpleColor}; font-size: 16px; line-height: 1.5; font-weight: 600;
         }
         .cta-phrase {
-            font-family: 'Cinzel', serif; font-size: 27px; color: ${deepPurpleColor};
+            font-family: 'Cinzel', serif; font-size: 20px; color: ${deepPurpleColor};
             margin-bottom: 10px; font-weight: 700;
         }
 
@@ -321,13 +323,13 @@ export default function DemoProfilePage() {
             .card-content { margin: 2px 0; }
             .card-name { font-size: 15px; }
             .badge-icon { width: 13px; height: 13px; }
+            .verification-badge { width: 17px; height: 17px; }
             .star-icon { width: 11px; height: 11px; }
             .stars-container { gap: 1px; margin-top: 4px; margin-bottom: 2px; }
             .badges-container { margin-bottom: 2px; margin-top: -2px; }
             
             .cta-phrase {
-                font-size: 25px; letter-spacing: -0.5px; white-space: nowrap;
-                overflow: hidden; text-overflow: ellipsis; color: ${deepPurpleColor};
+                font-size: 19px; letter-spacing: -0.5px; color: ${deepPurpleColor};
             }
             .footer-note { font-size: 10px; }
 
@@ -352,13 +354,12 @@ export default function DemoProfilePage() {
             justify-content: center;
             width: 200px;
             height: 48px;
-            background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
+            background: linear-gradient(110deg, #7c1c58 0%, #3b1a57 50%, #1a237e 100%);
             border-radius: 25px;
             color: white;
             font-family: 'Satoshi', sans-serif;
             font-weight: 900;
             font-size: 14px;
-            text-transform: uppercase;
             text-decoration: none;
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             transition: transform 0.2s;
@@ -386,7 +387,7 @@ export default function DemoProfilePage() {
               <div className="card-content">
                   <ThreeVerificationBadges />
                   <div className="card-name-row">
-                      <span className="card-name">ALEXANDER</span>
+                      <span className="card-name">Alexander</span>
                   </div>
               </div>
               <FiveStars />
@@ -429,7 +430,6 @@ export default function DemoProfilePage() {
                     className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-gold' : 'text-grey'}`} 
                     style={{ fontSize: '24px', cursor: 'pointer', color: feedback === 'like' ? '#F0C420' : '#ccc', transition: '0.3s' }}
                     onClick={() => toggleFeedback('like')}
-
                   ></i>
                   <i 
                     className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-gold' : 'text-grey'}`} 
@@ -449,7 +449,7 @@ export default function DemoProfilePage() {
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px' }}>
               <Link href="/mint" className="marketing-btn">
-                  YOUR ChainFace
+                  Your ChainFace
               </Link>
           </div>
       </div>
