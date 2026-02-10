@@ -129,21 +129,22 @@ export default function DemoProfilePage() {
             align-items: center;
             justify-content: center;
             margin-top: -40px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05), 0 8px 15px rgba(88, 28, 135, 0.15);
-            background-image: radial-gradient(circle at center, #f8f9fa 0%, #ffffff 100%);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            background-image: radial-gradient(circle at center, #ffffff 40%, #f8f9fa 100%);
             z-index: 5; 
+            overflow: hidden;
         }
 
         .chainface-metallic-title {
             font-family: 'Outfit', sans-serif;
-            font-size: 80px;    
-            font-weight: 700;   
-            letter-spacing: -1px;
+            font-size: 80px;     
+            font-weight: 700;
+            letter-spacing: -2px;
             margin: 0;
             padding-top: 15px;
+            padding-left: 35px; /* الإزاحة لليمين */
             
-            
-           background: linear-gradient(
+            background: linear-gradient(
                 135deg, 
                 #4c1d95 10%,   
                 #6d28d9 40%,   
@@ -157,7 +158,23 @@ export default function DemoProfilePage() {
             
             filter: drop-shadow(0 2px 2px rgba(88, 28, 135, 0.2));
             text-transform: none;
+            position: relative;
+            z-index: 10;
         }
+
+        /* تنسيق شبكة البلوك تشين */
+        .blockchain-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; 
+            opacity: 0.6;
+        }
+        .node { fill: #e0e7ff; }
+        .link { stroke: #eef2ff; stroke-width: 1.5px; }
+        .node-active { fill: #d8b4fe; }
 
         .back-btn {
             position: absolute;
@@ -327,7 +344,8 @@ export default function DemoProfilePage() {
                 margin-top: -40px;
             } 
             .chainface-metallic-title {
-                font-size: 42px; /* تكبير الخط في الجوال أيضاً ليتناسب مع النسبة */
+                font-size: 48px; /* تكبير الخط في الجوال */
+                padding-left: 20px; /* تقليل الإزاحة قليلاً في الجوال */
             }
             .back-btn {
                 width: 34px; height: 34px; top: 15px; left: 15px; font-size: 16px;
@@ -390,6 +408,34 @@ export default function DemoProfilePage() {
           <div className="back-btn" onClick={() => router.back()}>
               <i className="bi bi-arrow-left"></i>
           </div>
+          
+          {/* تم تصحيح جميع Attributes من class إلى className لضمان عدم وجود أخطاء */}
+          <svg className="blockchain-svg" width="100%" height="100%" viewBox="0 0 900 220" preserveAspectRatio="xMidYMid slice">
+            <line x1="50" y1="50" x2="150" y2="100" className="link" />
+            <line x1="50" y1="180" x2="150" y2="100" className="link" />
+            <line x1="150" y1="100" x2="250" y2="40" className="link" />
+            <line x1="150" y1="100" x2="220" y2="180" className="link" />
+            <line x1="250" y1="40" x2="350" y2="90" className="link" />
+            <line x1="850" y1="170" x2="750" y2="120" className="link" />
+            <line x1="850" y1="40" x2="750" y2="120" className="link" />
+            <line x1="750" y1="120" x2="650" y2="180" className="link" />
+            <line x1="750" y1="120" x2="680" y2="50" className="link" />
+            <line x1="680" y1="50" x2="580" y2="100" className="link" />
+            
+            <circle cx="50" cy="50" r="4" className="node" />
+            <circle cx="50" cy="180" r="3" className="node" />
+            <circle cx="150" cy="100" r="5" className="node-active" />
+            <circle cx="250" cy="40" r="4" className="node" />
+            <circle cx="220" cy="180" r="3" className="node" />
+            <circle cx="350" cy="90" r="3" className="node" />
+            <circle cx="850" cy="170" r="4" className="node" />
+            <circle cx="850" cy="40" r="3" className="node" />
+            <circle cx="750" cy="120" r="5" className="node-active" />
+            <circle cx="650" cy="180" r="4" className="node" />
+            <circle cx="680" cy="50" r="3" className="node" />
+            <circle cx="580" cy="100" r="3" className="node" />
+        </svg>
+
           <h1 className="chainface-metallic-title">ChainFace</h1>
       </div>
 
