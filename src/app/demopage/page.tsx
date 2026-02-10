@@ -197,10 +197,10 @@ export default function DemoProfilePage() {
             width: 100%;
             height: 100%;
             z-index: 1; 
-            opacity: 0.6;
+            opacity: 0.9;
         }
-        .node { fill: #e0e7ff; }
-        .link { stroke: #eef2ff; stroke-width: 1.5px; }
+        .node { fill: #94a3b8; }
+        .link { stroke: #cbd5e1; stroke-width: 1.5px; }
         .node-active { fill: #d8b4fe; }
 
         .back-btn {
@@ -559,7 +559,7 @@ export default function DemoProfilePage() {
               <span className="conviction-label">Conviction</span>
               <div className="conviction-number-wrapper">
                   <span className="conviction-number">500,000</span>
-                  <span className="conviction-diamond">💎</span>
+                  <span className="conviction-diamond">NNM</span>
               </div>
           </div>
 
