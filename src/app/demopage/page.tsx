@@ -197,7 +197,7 @@ export default function DemoProfilePage() {
             width: 100%;
             height: 100%;
             z-index: 1; 
-            opacity: 0.6;
+            opacity: 0.4;
         }
         .node { fill: #94a3b8; }
         .link { stroke: #cbd5e1; stroke-width: 1.5px; }
