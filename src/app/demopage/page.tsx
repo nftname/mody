@@ -106,7 +106,7 @@ export default function DemoProfilePage() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap');
 
         nav, footer, .navbar, .footer, header:not(.hero-banner-wrapper) {
             display: none !important;
@@ -121,38 +121,45 @@ export default function DemoProfilePage() {
 
         .hero-banner-wrapper {
             width: 100%;
-            height: auto;
-            aspect-ratio: 3.3 / 1;
-            max-height: 300px;
+            height: 220px;
             position: relative;
-            background-color: transparent;
-            overflow: hidden;
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin-top: -40px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            background-image: radial-gradient(circle at center, #f8f9fa 0%, #ffffff 100%);
         }
 
-        .hero-banner-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            object-position: center;
-        }
-        
-        .hero-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.2));
-            pointer-events: none;
+        .chainface-metallic-title {
+            font-family: 'Cinzel', serif;
+            font-size: 52px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            padding-top: 15px;
+            background: linear-gradient(135deg, #5e1139 0%, #240b36 40%, #020c1b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 
+                0px 1px 1px rgba(255,255,255,0.8),
+                0px -1px 1px rgba(0,0,0,0.2),
+                0px 4px 8px rgba(0,0,0,0.2);
+            filter: drop-shadow(0 2px 2px rgba(94, 17, 57, 0.2));
         }
 
         .back-btn {
             position: absolute;
             top: 55px; left: 25px;
-            width: 45px; height: 45px;
+            width: 42px; height: 42px;
             border-radius: 50%;
-            background-color: rgba(0,0,0,0.6); 
-            backdrop-filter: blur(8px);
+            background-color: #f8f9fa; 
             display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 22px; cursor: pointer; z-index: 100;
-            border: 1px solid rgba(255,255,255,0.3);
+            color: #2E1A47; font-size: 20px; cursor: pointer; z-index: 100;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             transition: all 0.2s ease;
         }
 
@@ -307,14 +314,14 @@ export default function DemoProfilePage() {
 
         @media (max-width: 768px) {
             .hero-banner-wrapper { 
-                height: auto; min-height: unset; aspect-ratio: 3.3 / 1; 
-                margin-top: -40px; display: flex; justify-content: center; align-items: center;
+                height: 160px;
+                margin-top: -40px;
             } 
-            .hero-banner-img {
-                width: 100%; height: 100%; object-fit: cover; object-position: center center;
+            .chainface-metallic-title {
+                font-size: 34px;
             }
             .back-btn {
-                width: 28px; height: 28px; top: 15px; left: 15px; font-size: 14px; border-width: 0.5px;
+                width: 34px; height: 34px; top: 15px; left: 15px; font-size: 16px;
             }
             .identity-card-container { 
                 width: 40%; height: 80px; min-width: 140px; margin: -22px 0 0 20px;
@@ -323,7 +330,7 @@ export default function DemoProfilePage() {
             .card-content { margin: 2px 0; }
             .card-name { font-size: 15px; }
             .badge-icon { width: 13px; height: 13px; }
-            .verification-badge { width: 14px; height: 14px; }
+            .verification-badge { width: 13px; height: 13px; }
             .star-icon { width: 11px; height: 11px; }
             .stars-container { gap: 1px; margin-top: 4px; margin-bottom: 2px; }
             .badges-container { margin-bottom: 2px; margin-top: -2px; }
@@ -374,12 +381,7 @@ export default function DemoProfilePage() {
           <div className="back-btn" onClick={() => router.back()}>
               <i className="bi bi-arrow-left"></i>
           </div>
-          <img 
-            src="/images/your-chainface.jpg" 
-            alt="ChainFace Cover" 
-            className="hero-banner-img"
-          />
-          <div className="hero-overlay"></div>
+          <h1 className="chainface-metallic-title">ChainFace</h1>
       </div>
 
       <div className="page-container">
