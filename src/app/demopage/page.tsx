@@ -238,13 +238,18 @@ export default function DemoProfilePage() {
             display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;
         }
 
-        .card-name {
+         .card-name {
             font-family: 'Cinzel', serif;
             font-size: 22px;
             font-weight: 700;
             color: white;
             text-shadow: 0 3px 10px rgba(0,0,0,0.7);
             letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px;
+            display: block;
         }
 
         .badge-icon { width: 23px; height: 23px; } 
@@ -593,7 +598,7 @@ export default function DemoProfilePage() {
               <div className="card-content">
                   <ThreeVerificationBadges />
                   <div className="card-name-row">
-                      <span className="card-name">Alexander</span>
+                      <span className="card-name">Alexander THE KAING OF </span>
                   </div>
               </div>
               <FiveStars />
