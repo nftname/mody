@@ -34,45 +34,60 @@ const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name
     </button>
 );
 
-const ThreeVerificationBadges = () => (
-    <div className="badges-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
-        {/* 1. Green Badge (Security) 
-            نستخدم صورة العلامة الزرقاء الأصلية ونحول لونها للأخضر لضمان تطابق الشكل 100% مع البقية
-        */}
-        <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Twitter_Verified_Badge.svg/640px-Twitter_Verified_Badge.svg.png" 
-            alt="Security Verified" 
-            style={{ 
-                width: '24px', 
-                height: '24px', 
-                // هذا الفلتر يحول اللون الأزرق إلى أخضر زمردي فخم
-                filter: 'hue-rotate(260deg) drop-shadow(0 3px 5px rgba(0,0,0,0.2))' 
-            }} 
-        />
-        
-        {/* 2. Blue Badge (Identity) - صورة أصلية */}
-        <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Twitter_Verified_Badge.svg/640px-Twitter_Verified_Badge.svg.png" 
-            alt="Identity Verified" 
-            style={{ 
-                width: '24px', 
-                height: '24px', 
-                filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.2))' 
-            }} 
-        />
+const ThreeVerificationBadges = () => {
+    // الشكل الهندسي الرسمي الموحد (Scalloped Shape)
+    const badgePath = "M22.25 12.5c0-1.58-.875-2.95-2.148-3.6.55-1.57.2-3.38-1.1-4.56C17.7 3.14 15.88 2.8 14.3 3.34c-.65-1.28-2.02-2.15-3.6-2.15s-2.95.87-3.6 2.15c-1.57-.54-3.38-.2-4.69 1.1-1.3 1.18-1.65 2.99-1.1 4.56-1.28.65-2.15 2.02-2.15 3.6s.87 2.95 2.15 3.6c-.55 1.57-.2 3.38 1.1 4.56 1.3 1.18 3.12 1.52 4.69.98.65 1.28 2.02 2.15 3.6 2.15s2.95-.87 3.6-2.15c1.58.54 3.39.2 4.69-1.1 1.3-1.18 1.65-2.99 1.1-4.56 1.28-.65 2.15-2.02 2.15-3.6z";
+    // علامة الصح الداخلية
+    const checkPath = "M10.5 17.5L5.5 12.5L7 11L10.5 14.5L17.5 7.5L19 9L10.5 17.5Z";
 
-        {/* 3. Gold Badge (Premium) - صورة أصلية */}
-        <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Twitter_Verified_Badge_Gold.svg/640px-Twitter_Verified_Badge_Gold.svg.png" 
-            alt="Gold Tier" 
-            style={{ 
-                width: '24px', 
-                height: '24px', 
-                filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.2))' 
-            }} 
-        />
-    </div>
-);
+    // ستايل موحد للحجم والظل الواقعي
+    const badgeStyle = { width: '26px', height: '26px', filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.3))' };
+
+    return (
+        <div className="badges-container" style={{ display: 'flex', gap: '10px', justifyContent: 'center', alignItems: 'center' }}>
+            {/* تعريف التدرجات اللونية الفخمة (Gradients) */}
+            <svg width="0" height="0">
+                <defs>
+                    {/* تدرج الذهب الملكي */}
+                    <linearGradient id="goldLuxury" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#FCD535" />
+                        <stop offset="50%" stopColor="#F7931A" />
+                        <stop offset="100%" stopColor="#B3882A" />
+                    </linearGradient>
+                    {/* تدرج الأزرق الرسمي */}
+                    <linearGradient id="blueLuxury" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#4A90E2" />
+                        <stop offset="100%" stopColor="#1DA1F2" />
+                    </linearGradient>
+                    {/* تدرج الأخضر الزمردي */}
+                    <linearGradient id="greenLuxury" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#34D399" />
+                        <stop offset="100%" stopColor="#059669" />
+                    </linearGradient>
+                </defs>
+            </svg>
+
+            {/* 1. Green Badge (Security) */}
+            <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg">
+                <path d={badgePath} fill="url(#greenLuxury)" />
+                <path d={checkPath} fill="#FFFFFF" />
+            </svg>
+            
+            {/* 2. Blue Badge (Identity) */}
+            <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg">
+                <path d={badgePath} fill="url(#blueLuxury)" />
+                <path d={checkPath} fill="#FFFFFF" />
+            </svg>
+
+            {/* 3. Gold Badge (Premium) - في المنتصف */}
+            <svg viewBox="0 0 25 25" style={{ ...badgeStyle, width: '28px', height: '28px' }} xmlns="http://www.w3.org/2000/svg">
+                 <path d={badgePath} fill="url(#goldLuxury)" />
+                 <path d={checkPath} fill="#FFFFFF" />
+            </svg>
+        </div>
+    );
+};
+
 
 
 
