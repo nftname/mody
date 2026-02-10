@@ -36,28 +36,43 @@ const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name
 
 const ThreeVerificationBadges = () => (
     <div className="badges-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
-        {/* Green Badge (Security) */}
-        <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Check_green_icon.svg" 
-            alt="Secure Verified" 
-            style={{ width: '22px', height: '22px', filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.3))' }} 
-        />
-        
-        {/* Gold Badge (Premium/Central) */}
-        <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/2/2b/Twitter_Verified_Badge_Gold.svg" 
-            alt="Gold Verified" 
-            style={{ width: '24px', height: '24px', filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.3))' }} 
-        />
-
-        {/* Blue Badge (Identity) */}
+        {/* 1. Green Badge (Security) 
+            الحيلة الاحترافية: نستخدم العلامة الزرقاء الأصلية ونحولها للأخضر بالكود لضمان تطابق الشكل 100% 
+        */}
         <img 
             src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg" 
-            alt="Blue Verified" 
-            style={{ width: '22px', height: '22px', filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.3))' }} 
+            alt="Security Verified" 
+            style={{ 
+                width: '24px', 
+                height: '24px', 
+                filter: 'hue-rotate(260deg) brightness(1.1) drop-shadow(0 4px 6px rgba(0,0,0,0.2))' 
+            }} 
+        />
+        
+        {/* 2. Blue Badge (Identity) - العلامة الرسمية */}
+        <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg" 
+            alt="Identity Verified" 
+            style={{ 
+                width: '24px', 
+                height: '24px', 
+                filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' 
+            }} 
+        />
+
+        {/* 3. Gold Badge (Premium) - العلامة الذهبية الأصلية */}
+        <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/2/2b/Twitter_Verified_Badge_Gold.svg" 
+            alt="Gold Tier" 
+            style={{ 
+                width: '24px', 
+                height: '24px', 
+                filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' 
+            }} 
         />
     </div>
 );
+
 
 const FiveStars = () => (
     <div className="stars-container" style={{ display: 'flex', justifyContent: 'center' }}>
@@ -424,12 +439,12 @@ export default function DemoProfilePage() {
       <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
           
           <p className="cta-phrase">
-             Claim your sovereign name assets now.
+             Claim your sovereign name assets now
           </p>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '16px' }}>
               <Link href="/mint" className="marketing-btn">
-                  YOUR CHAINFACE
+                  YOUR ChainFace
               </Link>
           </div>
       </div>
