@@ -120,7 +120,8 @@ const ChainFaceButton = ({ href }: { href: string }) => {
 export default function DemoProfilePage() {
   const router = useRouter();
   const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
-
+  const profileUrl = "https://chainface.com/alexander";
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(profileUrl)}&bgcolor=ffffff`;
   const toggleFeedback = (type: 'like' | 'dislike') => {
       setFeedback(prev => prev === type ? null : type);
   };
@@ -468,8 +469,39 @@ export default function DemoProfilePage() {
             text-overflow: ellipsis;   
             max-width: 105px;         
         }
-
-        @media (max-width: 768px) {
+            .header-qr-btn {
+            position: absolute;
+            top: 55px;
+            right: 25px;
+            width: 42px; 
+            height: 42px;
+            border-radius: 12px;
+            background-color: #f8f9fa; 
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .header-qr-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .qr-image-generated {
+            width: 32px;
+            height: 32px;
+            mix-blend-mode: multiply;
+            opacity: 0.85;
+        }
+         @media (max-width: 768px) {
+            .header-qr-btn {
+                 width: 34px; height: 34px; top: 15px; right: 15px;
+            }
+            .qr-image-generated {
+                width: 24px; height: 24px;
+            }
             .hero-banner-wrapper { 
                 height: 160px;
                 margin-top: -40px;
@@ -518,7 +550,14 @@ export default function DemoProfilePage() {
           <div className="back-btn" onClick={() => router.back()}>
               <i className="bi bi-arrow-left"></i>
           </div>
-          
+       <div className="header-qr-btn" title="Scan to Share Profile">
+              <img 
+                src={qrCodeUrl} 
+                alt="Profile QR Code" 
+                className="qr-image-generated"
+              />
+          </div>
+   
           {/* شبكة البلوك تشين الخفيفة في الخلفية */}
           <svg className="blockchain-svg" width="100%" height="100%" viewBox="0 0 900 220" preserveAspectRatio="xMidYMid slice">
             <line x1="50" y1="50" x2="150" y2="100" className="link" />
