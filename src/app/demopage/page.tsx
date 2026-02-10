@@ -2,9 +2,7 @@
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-// قمنا بإزالة import Image لأنه يسبب المشكلة مع الروابط الخارجية بدون إعدادات
 
-// --- (1) روابط الشعارات الرسمية (CDN Links) ---
 const COIN_LOGOS = {
     BTC: "https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=026",
     ETH: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=026",
@@ -14,13 +12,10 @@ const COIN_LOGOS = {
     USDT: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=026",
 };
 
-// --- (2) زر الدفع الفخم (تم تعديله لاستخدام img العادية لحل مشكلة 400) ---
 const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name: string }) => (
     <button className="web3-payment-btn">
         <div className="btn-content">
-            {/* الحاوية الخاصة باللوجو */}
             <div className="logo-wrapper">
-                {/* استخدام img العادية لتخطي قيود سيرفر Next.js */}
                 <img 
                     src={COIN_LOGOS[type]} 
                     alt={`${name} Logo`} 
@@ -31,7 +26,6 @@ const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name
                 />
             </div>
             
-            {/* معلومات العملة */}
             <div className="token-info">
                 <span className="token-name">{name}</span>
                 <span className="action-text">Send</span>
@@ -40,7 +34,6 @@ const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name
     </button>
 );
 
-// --- (3) Helper Components ---
 const ThreeVerificationBadges = () => (
     <div className="badges-container" style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
         <svg className="badge-icon" viewBox="0 0 42 42" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}>
@@ -104,7 +97,6 @@ export default function DemoProfilePage() {
             position: relative;
         }
 
-        /* --- Header --- */
         .hero-banner-wrapper {
             width: 100%;
             height: auto;
@@ -142,7 +134,6 @@ export default function DemoProfilePage() {
             transition: all 0.2s ease;
         }
 
-        /* --- Card --- */
         .identity-card-container {
             position: relative;
             width: 260px;
@@ -177,7 +168,6 @@ export default function DemoProfilePage() {
         .stars-container { gap: 5px; margin-top: 8px; margin-bottom: 5px; }
         .badges-container { margin-bottom: 10px; margin-top: -5px; }
 
-        /* --- Conviction --- */
         .conviction-box {
             position: relative; text-align: center; margin-top: 15px; margin-bottom: 30px;
         }
@@ -199,7 +189,6 @@ export default function DemoProfilePage() {
             right: -25px; top: 50%; transform: translateY(-50%);
         }
 
-        /* --- Payment Grid --- */
         .pay-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -277,7 +266,6 @@ export default function DemoProfilePage() {
             margin-top: 2px;
         }
 
-        /* --- Footer --- */
         .footer-note {
              margin-top: 30px; font-size: 12px; color: #aaa; font-style: italic;
         }
@@ -289,11 +277,10 @@ export default function DemoProfilePage() {
             color: ${deepPurpleColor}; font-size: 16px; line-height: 1.5; font-weight: 600;
         }
         .cta-phrase {
-            font-family: 'Cinzel', serif; font-size: 18px; color: ${deepPurpleColor};
+            font-family: 'Cinzel', serif; font-size: 27px; color: ${deepPurpleColor};
             margin-bottom: 10px; font-weight: 700;
         }
 
-        /* --- Mobile Responsive --- */
         @media (max-width: 768px) {
             .hero-banner-wrapper { 
                 height: auto; min-height: unset; aspect-ratio: 3.3 / 1; 
@@ -317,7 +304,7 @@ export default function DemoProfilePage() {
             .badges-container { margin-bottom: 2px; margin-top: -2px; }
             
             .cta-phrase {
-                font-size: 17px; letter-spacing: -0.5px; white-space: nowrap;
+                font-size: 25px; letter-spacing: -0.5px; white-space: nowrap;
                 overflow: hidden; text-overflow: ellipsis; color: ${deepPurpleColor};
             }
             .footer-note { font-size: 10px; }
@@ -338,28 +325,26 @@ export default function DemoProfilePage() {
         }
 
         .marketing-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 200px;
-    height: 48px;
-    /* التدرج اللوني الفخم الخاص بـ ChainFace */
-    background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
-    border-radius: 25px;
-    color: white;
-    font-family: 'Satoshi', sans-serif;
-    font-weight: 900;
-    font-size: 14px;
-    text-transform: uppercase;
-    text-decoration: none;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    transition: transform 0.2s;
-}
-.marketing-btn:hover {
-    transform: scale(1.02);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-}
-
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 200px;
+            height: 48px;
+            background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
+            border-radius: 25px;
+            color: white;
+            font-family: 'Satoshi', sans-serif;
+            font-weight: 900;
+            font-size: 14px;
+            text-transform: uppercase;
+            text-decoration: none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .marketing-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
       `}</style>
 
       <div className="hero-banner-wrapper">
@@ -395,7 +380,6 @@ export default function DemoProfilePage() {
 
           <div style={{ maxWidth: '800px', margin: '20px auto', textAlign: 'center', padding: '0 20px' }}>
               
-              {/* --- New Web3 Payment Buttons --- */}
               <div className="pay-grid">
                   <Web3PaymentButton type="BTC" name="Bitcoin" />
                   <Web3PaymentButton type="ETH" name="Ethereum" />
@@ -409,7 +393,7 @@ export default function DemoProfilePage() {
                   Payments are peer-to-peer. ChainFace never holds funds.
               </p>
 
-              <div style={{ marginTop: '40px', marginBottom: '10px' }}>
+              <div style={{ marginTop: '40px', marginBottom: '14px' }}>
                 <h2 className="thank-you-title">
                       Thank you for stepping into my ChainFace.
                   </h2>
@@ -422,7 +406,7 @@ export default function DemoProfilePage() {
                   <i 
                     className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-gold' : 'text-grey'}`} 
                     style={{ fontSize: '24px', cursor: 'pointer', color: feedback === 'like' ? '#F0C420' : '#ccc', transition: '0.3s' }}
-                    onClick={() => toggleFeedback('like')}
+                    onClick={() => router.push('/mint')}
                   ></i>
                   <i 
                     className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-gold' : 'text-grey'}`} 
@@ -440,8 +424,8 @@ export default function DemoProfilePage() {
              Claim your sovereign name assets now.
           </p>
           
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px' }}>
-              <Link href="/chainface" className="marketing-btn">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '18px' }}>
+              <Link href="/mint" className="marketing-btn">
                   YOUR CHAINFACE
               </Link>
           </div>
