@@ -815,22 +815,25 @@ export default function ChainFacePage() {
             font-weight: 700;
             white-space: nowrap;
         }
-        .sig-name {
-            font-family: 'Satoshi', sans-serif;
-            font-weight: 900;
-            font-size: 15px; 
-            text-transform: uppercase;
-            background: linear-gradient(to bottom, #ffffff 40%, #b0b0b0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 0.2px;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-            display: block;
-            white-space: nowrap;       
-            overflow: hidden;         
-            text-overflow: ellipsis;   
-            max-width: 140px;         
-        }
+.sig-name {
+    font-family: 'Satoshi', sans-serif;
+    font-weight: 900;
+    font-size: 15px;
+    text-transform: uppercase;
+    background: linear-gradient(to bottom, #ffffff 40%, #b0b0b0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.2px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 105px; 
+    line-height: 1.4;      
+    padding-bottom: 3px;   
+    margin-top: -2px;      
+}
             .header-qr-btn {
             position: absolute;
             top: 55px;
