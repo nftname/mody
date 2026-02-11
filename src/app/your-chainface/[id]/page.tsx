@@ -181,15 +181,33 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
     const [selectedCoin, setSelectedCoin] = useState<string | null>(null);
     const [addressInput, setAddressInput] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState(false); 
+
+    useEffect(() => {
+        if (isOpen) {
+            setSelectedCoin(null);
+            setSaveSuccess(false);
+            setIsSaving(false);
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
     const handleSave = async () => {
         if (!selectedCoin) return;
         setIsSaving(true);
+        
+       
         await onSave(selectedCoin, addressInput);
+        
         setIsSaving(false);
-        setSelectedCoin(null);
+        setSaveSuccess(true); 
+
+      
+        setTimeout(() => {
+            setSaveSuccess(false);
+            setSelectedCoin(null); 
+        }, 1000);
     };
 
     const handleBackgroundClick = (e: any) => {
@@ -200,14 +218,17 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
 
     return (
         <div onClick={handleBackgroundClick} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(46, 26, 71, 0.6)', backdropFilter: 'blur(5px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="fade-in" style={{ width: '90%', maxWidth: '400px', backgroundColor: '#ffffff', border: `1px solid ${deepPurple}`, borderRadius: '24px', padding: '30px', boxShadow: '0 20px 60px rgba(46, 26, 71, 0.2)', position: 'relative' }}>
-                <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
+            <div className="fade-in" style={{ width: '90%', maxWidth: '400px', backgroundColor: '#ffffff', border: `1px solid ${deepPurple}`, borderRadius: '24px', padding: '30px', boxShadow: '0 20px 60px rgba(46, 26, 71, 0.2)', position: 'relative', minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
+                
+                {}
+                <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
                 
                 <h3 style={{ color: deepPurple, fontSize: '20px', textAlign: 'center', marginBottom: '20px', fontFamily: 'Outfit, sans-serif', fontWeight: '700', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
                     {selectedCoin ? `Configure ${selectedCoin}` : 'Select Wallet'}
                 </h3>
 
                 {!selectedCoin ? (
+                  
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                         {['BTC', 'ETH', 'SOL', 'BNB', 'USDT', 'POLYGON'].map(coin => (
                             <button key={coin} onClick={() => { setSelectedCoin(coin); setAddressInput(wallets[coin.toLowerCase()] || ''); }} 
@@ -218,13 +239,24 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
                         ))}
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                   
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', flex: 1 }}>
                         <div style={{fontSize:'13px', color: '#666'}}>Paste your <b>{selectedCoin}</b> address:</div>
+                        
                         <input type="text" value={addressInput} onChange={(e) => setAddressInput(e.target.value)} placeholder="0x..." 
                             style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#fff', border: '2px solid #e5e7eb', color: '#333', fontSize: '14px', outline: 'none', fontFamily: 'monospace' }} autoFocus />
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                        
+                        <div style={{ marginTop: 'auto', display: 'flex', gap: '10px' }}>
                             <button onClick={() => setSelectedCoin(null)} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'transparent', border: `1px solid ${deepPurple}`, color: deepPurple, fontWeight: '600' }}>Back</button>
-                            <button onClick={handleSave} disabled={isSaving} style={{ flex: 2, padding: '12px', borderRadius: '12px', background: deepPurple, border: 'none', color: '#fff', fontWeight: 'bold' }}>{isSaving ? 'Saving...' : 'Confirm'}</button>
+                            
+                            <button onClick={handleSave} disabled={isSaving || saveSuccess} 
+                                style={{ 
+                                    flex: 2, padding: '12px', borderRadius: '12px', border: 'none', color: '#fff', fontWeight: 'bold',
+                                    background: saveSuccess ? '#10B981' : deepPurple, // أخضر عند النجاح
+                                    transition: '0.3s'
+                                }}>
+                                {isSaving ? 'Saving...' : (saveSuccess ? <span>Saved <i className="bi bi-check-lg"></i></span> : 'Confirm')}
+                            </button>
                         </div>
                     </div>
                 )}
@@ -232,6 +264,7 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
         </div>
     );
 };
+
 
 
 // --- MAIN PAGE ---
@@ -258,22 +291,43 @@ export default function ChainFacePage() {
    // --- (MOD 2) Wallet Logic ---
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleSaveWallet = async (coin: string, walletAddr: string) => {
+ const handleSaveWallet = async (coin: string, walletAddr: string) => {
       if (!isOwner) return;
-      const columnMap: any = { 'BTC': 'btc_address', 'ETH': 'eth_address', 'SOL': 'sol_address', 'BNB': 'bnb_address', 'USDT': 'usdt_address', 'POLYGON': 'matic_address' };
+      
+     
+      const columnMap: any = { 
+          'BTC': 'btc_address', 
+          'ETH': 'eth_address', 
+          'SOL': 'sol_address', 
+          'BNB': 'bnb_address', 
+          'USDT': 'usdt_address', 
+          'POLYGON': 'matic_address' 
+      };
+
       try {
-          const updates: any = { token_id: tokenId, owner_address: address, updated_at: new Date().toISOString() };
-          updates[columnMap[coin]] = walletAddr;
-          await supabase.from('chainface_profiles').upsert(updates, { onConflict: 'token_id' });
           
-          // Update UI
+          const updates: any = { 
+              token_id: tokenId, 
+             
+              updated_at: new Date().toISOString() 
+          };
+          updates[columnMap[coin]] = walletAddr; 
+
+          const { error } = await supabase.from('chainface_profiles').upsert(updates, { onConflict: 'token_id' });
+
+          if (error) throw error;
+          
+         
           setProfileData((prev: any) => ({
-              ...prev, wallets: { ...prev.wallets, [coin.toLowerCase()]: walletAddr }
+              ...prev, 
+              wallets: { ...prev.wallets, [coin.toLowerCase()]: walletAddr }
           }));
-          // (Optional) Close modal or allow more edits
-          // setIsModalOpen(false); 
-          alert(`${coin} Address Saved!`); // Temporary confirmation
-      } catch (e) { console.error("Save error", e); }
+
+         
+      } catch (e) { 
+          console.error("Save error", e); 
+          alert("Error saving wallet. Please try again."); 
+      }
   };
 
 
@@ -1007,7 +1061,7 @@ export default function ChainFacePage() {
               {isOwner && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                       <button onClick={() => setIsModalOpen(true)} style={{ background: 'transparent', border: '1px solid #2E1A47', borderRadius: '20px', padding: '5px 12px', fontSize: '11px', fontWeight: 'bold', color: '#2E1A47', cursor: 'pointer' }}>
-                          <i className="bi bi-gear-fill me-1"></i> Configure
+                          <i className="bi bi-gear-fill me-1"></i> Settings
                       </button>
                   </div>
               )}
@@ -1016,14 +1070,16 @@ export default function ChainFacePage() {
 
               <div className="pay-grid">
                   {Object.keys(COIN_LOGOS).filter(k => k !== 'WALLET').map(coin => {
-                      const addr = profileData.wallets[coin.toLowerCase()] || profileData.wallets[coin === 'POLYGON' ? 'polygon' : ''];
-                      if (!isOwner && !addr) return null; // Hide from visitors if empty
+                      const addr = profileData.wallets[coin === 'POLYGON' ? 'matic' : coin.toLowerCase()];
+                      
                       return (
                           <Web3PaymentButton 
                               key={coin}
                               type={coin} 
                               name={coin === 'POLYGON' ? 'Polygon' : coin} 
                               address={addr} 
+                              isOwner={isOwner} 
+                              onRemove={() => handleRemoveWallet(coin)} 
                               onClick={() => isOwner ? setIsModalOpen(true) : handleCopyWallet(addr, coin)} 
                           />
                       );
