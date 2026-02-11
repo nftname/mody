@@ -698,65 +698,65 @@ export default function ChainFacePage() {
             line-height: 1.2;
         }
 
-        /* --- LUXURY SCREENSHOT MODE --- */
+              /* --- LUXURY SCREENSHOT MODE --- */
         .screenshot-mode .signature-btn {
-             background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%) !important;
+             background: linear-gradient(135deg, #3b0d34 0%, #180929 100%) !important;
              width: auto !important;
-             min-width: 450px !important;
-             height: 130px !important;
-             padding: 15px 50px !important;
-             border-radius: 65px !important;
-             border: 3px solid rgba(255, 215, 0, 0.6) !important;
+             min-width: 600px !important;
+             height: 180px !important;
+             padding: 0 50px !important;
+             border-radius: 90px !important;
+             border: 4px solid rgba(255, 215, 0, 0.8) !important;
              display: flex !important;
              align-items: center !important;
              justify-content: center !important;
              gap: 30px !important;
-             box-shadow: 0 30px 60px rgba(0,0,0,0.8) !important;
+             box-shadow: none !important;
+             margin: 0 !important;
         }
 
         .screenshot-mode .sig-name {
             background: none !important;
             -webkit-text-fill-color: #ffffff !important;
             color: #ffffff !important;
-            font-size: 42px !important;
+            font-size: 55px !important;
             font-weight: 900 !important;
-            margin-top: 0 !important;
-            padding-bottom: 5px !important;
+            margin: 0 !important;
+            padding: 0 !important;
             line-height: 1 !important;
             text-shadow: 0 4px 15px rgba(0,0,0,1) !important;
             white-space: nowrap !important;
         }
 
         .screenshot-mode .sig-label {
-            font-size: 16px !important;
-            color: #cccccc !important;
-            margin-bottom: 8px !important;
-            letter-spacing: 3px !important;
-            text-transform: uppercase !important;
+            display: none !important;
         }
 
         .screenshot-mode .sig-qr-container {
-             width: 80px !important;
-             height: 80px !important;
+             width: 100px !important;
+             height: 100px !important;
              background: #fff !important;
-             border-radius: 12px !important;
-             padding: 5px !important;
+             border-radius: 20px !important;
+             padding: 10px !important;
+             display: flex !important;
+             align-items: center !important;
+             justify-content: center !important;
         }
         
         .screenshot-mode .sig-qr-code {
-             width: 70px !important;
-             height: 70px !important;
+             width: 80px !important;
+             height: 80px !important;
              opacity: 1 !important;
              mix-blend-mode: normal !important;
         }
 
         .screenshot-mode svg {
-            width: 45px !important;
-            height: 45px !important;
+            width: 60px !important;
+            height: 60px !important;
             opacity: 1 !important;
             z-index: 9999 !important;
             display: block !important;
-            margin-left: 15px !important;
+            margin-left: 20px !important;
             filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)) !important;
         }
 
@@ -1131,9 +1131,8 @@ export default function ChainFacePage() {
                       </div>
                   )}
               </div>
-
               {/* Capsule Button Container */}
-<div id="cf-btn" style={{ display: 'inline-block', background: '#1a1a1a', padding: '40px', borderRadius: '0' }}>
+<div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '10px' }}>
     <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
 </div>
 
@@ -1143,6 +1142,7 @@ export default function ChainFacePage() {
                   <div onClick={handleCopyLink} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
                       <i className="bi bi-files" style={{ fontSize: '20px' }}></i>
                   </div>
+
                   {copiedTip === 'link' && (
                       <div className="fade-in" style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', background: '#2E1A47', color: '#fff', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
                           Copied!
