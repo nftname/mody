@@ -698,17 +698,73 @@ export default function ChainFacePage() {
             line-height: 1.2;
         }
 
+        /* --- LUXURY SCREENSHOT MODE --- */
+        .screenshot-mode .signature-btn {
+             background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%) !important;
+             width: auto !important;
+             min-width: 450px !important;
+             height: 130px !important;
+             padding: 15px 50px !important;
+             border-radius: 65px !important;
+             border: 3px solid rgba(255, 215, 0, 0.6) !important;
+             display: flex !important;
+             align-items: center !important;
+             justify-content: center !important;
+             gap: 30px !important;
+             box-shadow: 0 30px 60px rgba(0,0,0,0.8) !important;
+        }
+
         .screenshot-mode .sig-name {
-    background: none !important;
-    -webkit-text-fill-color: #ffffff !important;
-    color: #ffffff !important;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8) !important;
-}
-.screenshot-mode .signature-btn {
-     background: #2E1A47 !important;
-     box-shadow: none !important;
-     border: 1px solid #4a3b69 !important;
-}
+            background: none !important;
+            -webkit-text-fill-color: #ffffff !important;
+            color: #ffffff !important;
+            font-size: 42px !important;
+            font-weight: 900 !important;
+            margin-top: 0 !important;
+            padding-bottom: 5px !important;
+            line-height: 1 !important;
+            text-shadow: 0 4px 15px rgba(0,0,0,1) !important;
+            white-space: nowrap !important;
+        }
+
+        .screenshot-mode .sig-label {
+            font-size: 16px !important;
+            color: #cccccc !important;
+            margin-bottom: 8px !important;
+            letter-spacing: 3px !important;
+            text-transform: uppercase !important;
+        }
+
+        .screenshot-mode .sig-qr-container {
+             width: 80px !important;
+             height: 80px !important;
+             background: #fff !important;
+             border-radius: 12px !important;
+             padding: 5px !important;
+        }
+        
+        .screenshot-mode .sig-qr-code {
+             width: 70px !important;
+             height: 70px !important;
+             opacity: 1 !important;
+             mix-blend-mode: normal !important;
+        }
+
+        .screenshot-mode svg {
+            width: 45px !important;
+            height: 45px !important;
+            opacity: 1 !important;
+            z-index: 9999 !important;
+            display: block !important;
+            margin-left: 15px !important;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)) !important;
+        }
+
+        .screenshot-mode svg path,
+        .screenshot-mode svg circle {
+            fill: #FFD700 !important;
+            stroke: none !important;
+        }
 
         .action-text {
             font-size: 11px;
@@ -735,6 +791,7 @@ export default function ChainFacePage() {
         }
 
         /* --- STYLES FOR THE NEW CHAINFACE BUTTON --- */
+
         .signature-btn {
             display: flex;
             align-items: center;
@@ -1075,8 +1132,8 @@ export default function ChainFacePage() {
                   )}
               </div>
 
-              {/* Capsule Button */}
-<div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '4px', borderRadius: '35px' }}>
+              {/* Capsule Button Container */}
+<div id="cf-btn" style={{ display: 'inline-block', background: '#1a1a1a', padding: '40px', borderRadius: '0' }}>
     <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
 </div>
 
