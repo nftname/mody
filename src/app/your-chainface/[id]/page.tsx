@@ -748,7 +748,7 @@ export default function ChainFacePage() {
             flex-grow: 0 !important;
             background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
             border-radius: 30px;
-            padding: 0 12px;
+            padding: 0 12px 0 24px;
             text-decoration: none;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.08);
@@ -909,6 +909,14 @@ export default function ChainFacePage() {
                 font-size: 14px;
             }
         }
+                    .action-btn {
+            transition: transform 0.1s ease !important;
+        }
+        .action-btn:active {
+            transform: scale(0.9) !important; /* تصغير الزر عند الضغط */
+            background-color: #e0e0e0 !important; /* تغميق اللون قليلاً عند الضغط */
+        }
+
       `}</style>
 
       <div className="hero-banner-wrapper">
@@ -1071,7 +1079,7 @@ export default function ChainFacePage() {
             
               {/* Share Button & Menu */}
               <div style={{ position: 'relative' }}>
-                  <div onClick={handleShareClick} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
+                  <div onClick={handleShareClick} className="action-btn" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
                       <i className="bi bi-share-fill"></i>
                   </div>
                   
