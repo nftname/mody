@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAccount, useReadContract } from 'wagmi';
 import { parseAbi } from 'viem';
-import { NFT_COLLECTION_ADDRESS } from '@/data/config'; // تأكد من المسار
-import { supabase } from '@/lib/supabase'; // تأكد من المسار
+import { NFT_COLLECTION_ADDRESS } from '@/data/config'; 
+import { supabase } from '@/lib/supabase';
 
 // --- CONSTANTS & ABI ---
 const CONTRACT_ABI = parseAbi([
@@ -52,7 +52,7 @@ const Web3PaymentButton = ({ type, name, address, onClick, isOwner, onRemove }: 
             </div>
         </div>
 
-        {/* زر الحذف X (للمالك فقط) */}
+        {}
         {isOwner && address && (
             <div 
                 onClick={(e) => { e.stopPropagation(); onRemove(); }}
@@ -80,7 +80,7 @@ const Web3PaymentButton = ({ type, name, address, onClick, isOwner, onRemove }: 
     </button>
 );
 
-// شارات التوثيق (ديناميكية حسب الطلب)
+
 const ThreeVerificationBadges = ({ verifiedLevel }: { verifiedLevel: string }) => {
     // Logic: Gold is always there (Base verification).
     // Blue adds on right. Green adds on right of Blue.
@@ -196,14 +196,10 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
     const handleSave = async () => {
         if (!selectedCoin) return;
         setIsSaving(true);
-        
-       
         await onSave(selectedCoin, addressInput);
-        
         setIsSaving(false);
         setSaveSuccess(true); 
 
-      
         setTimeout(() => {
             setSaveSuccess(false);
             setSelectedCoin(null); 
@@ -220,7 +216,6 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
         <div onClick={handleBackgroundClick} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(46, 26, 71, 0.6)', backdropFilter: 'blur(5px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="fade-in" style={{ width: '90%', maxWidth: '400px', backgroundColor: '#ffffff', border: `1px solid ${deepPurple}`, borderRadius: '24px', padding: '30px', boxShadow: '0 20px 60px rgba(46, 26, 71, 0.2)', position: 'relative', minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
                 
-                {}
                 <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
                 
                 <h3 style={{ color: deepPurple, fontSize: '20px', textAlign: 'center', marginBottom: '20px', fontFamily: 'Outfit, sans-serif', fontWeight: '700', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
@@ -228,7 +223,6 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
                 </h3>
 
                 {!selectedCoin ? (
-                  
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                         {['BTC', 'ETH', 'SOL', 'BNB', 'USDT', 'POLYGON'].map(coin => (
                             <button key={coin} onClick={() => { setSelectedCoin(coin); setAddressInput(wallets[coin.toLowerCase()] || ''); }} 
@@ -239,7 +233,6 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
                         ))}
                     </div>
                 ) : (
-                   
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', flex: 1 }}>
                         <div style={{fontSize:'13px', color: '#666'}}>Paste your <b>{selectedCoin}</b> address:</div>
                         
@@ -252,7 +245,7 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
                             <button onClick={handleSave} disabled={isSaving || saveSuccess} 
                                 style={{ 
                                     flex: 2, padding: '12px', borderRadius: '12px', border: 'none', color: '#fff', fontWeight: 'bold',
-                                    background: saveSuccess ? '#10B981' : deepPurple, // أخضر عند النجاح
+                                    background: saveSuccess ? '#10B981' : deepPurple, 
                                     transition: '0.3s'
                                 }}>
                                 {isSaving ? 'Saving...' : (saveSuccess ? <span>Saved <i className="bi bi-check-lg"></i></span> : 'Confirm')}
@@ -264,7 +257,6 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
         </div>
     );
 };
-
 
 
 // --- MAIN PAGE ---
@@ -291,42 +283,34 @@ export default function ChainFacePage() {
    // --- (MOD 2) Wallet Logic ---
   const [isModalOpen, setIsModalOpen] = useState(false);
 
- const handleSaveWallet = async (coin: string, walletAddr: string) => {
+  const handleSaveWallet = async (coin: string, walletAddr: string) => {
       if (!isOwner) return;
       
-     
       const columnMap: any = { 
-          'BTC': 'btc_address', 
-          'ETH': 'eth_address', 
-          'SOL': 'sol_address', 
-          'BNB': 'bnb_address', 
-          'USDT': 'usdt_address', 
-          'POLYGON': 'matic_address' 
+          'BTC': 'btc_address', 'ETH': 'eth_address', 'SOL': 'sol_address', 
+          'BNB': 'bnb_address', 'USDT': 'usdt_address', 'POLYGON': 'matic_address' 
       };
 
       try {
-          
           const updates: any = { 
               token_id: tokenId, 
-             
+              owner_address: address, 
               updated_at: new Date().toISOString() 
           };
+          
           updates[columnMap[coin]] = walletAddr; 
 
           const { error } = await supabase.from('chainface_profiles').upsert(updates, { onConflict: 'token_id' });
 
           if (error) throw error;
           
-         
           setProfileData((prev: any) => ({
               ...prev, 
               wallets: { ...prev.wallets, [coin.toLowerCase()]: walletAddr }
           }));
 
-         
       } catch (e) { 
           console.error("Save error", e); 
-          alert("Error saving wallet. Please try again."); 
       }
   };
 
