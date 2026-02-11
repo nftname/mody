@@ -32,21 +32,14 @@ const Web3PaymentButton = ({ type, name, address, onClick, isOwner, onRemove }: 
         className="web3-payment-btn" 
         onClick={onClick} 
         style={{ 
-            opacity: address ? 1 : 0.4, 
-            filter: address ? 'none' : 'grayscale(100%)',
+            opacity: address ? 1 : 0.5, 
             position: 'relative', 
             overflow: 'visible',
-            cursor: isOwner || address ? 'pointer' : 'default'
+            cursor: isOwner || address ? 'pointer' : 'default',
+            filter: address ? 'none' : 'grayscale(100%)',
+            transition: '0.2s'
         }}
     >
-        {isOwner && address && (
-            <div 
-                onClick={(e) => { e.stopPropagation(); onRemove(); }}
-                style={{ position: 'absolute', top: '-8px', right: '-8px', width: '22px', height: '22px', background: '#ff4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px', border: '2px solid #fff', zIndex: 10, cursor: 'pointer' }}>
-                <i className="bi bi-x"></i>
-            </div>
-        )}
-
         <div className="btn-content">
             <div className="logo-wrapper">
                 <img src={COIN_LOGOS[type] || COIN_LOGOS.WALLET} alt={name} width="32" height="32" className="coin-logo" style={{ objectFit: 'contain' }} />
@@ -58,6 +51,32 @@ const Web3PaymentButton = ({ type, name, address, onClick, isOwner, onRemove }: 
                 </span>
             </div>
         </div>
+
+        {/* زر الحذف X (للمالك فقط) */}
+        {isOwner && address && (
+            <div 
+                onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                style={{ 
+                    position: 'absolute', 
+                    top: '50%', 
+                    right: '15px', 
+                    transform: 'translateY(-50%)',
+                    width: '24px', 
+                    height: '24px', 
+                    background: '#ff4444', 
+                    borderRadius: '50%', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    color: 'white', 
+                    fontSize: '14px', 
+                    zIndex: 10,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                }}>
+                <i className="bi bi-x"></i>
+            </div>
+        )}
     </button>
 );
 
@@ -173,15 +192,18 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
         setSelectedCoin(null);
     };
 
+    const handleBackgroundClick = (e: any) => {
+        if (e.target === e.currentTarget) onClose();
+    };
+
     const deepPurple = '#2E1A47';
 
     return (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(46, 26, 71, 0.6)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {/* Box Styling: White Background, Purple Borders */}
+        <div onClick={handleBackgroundClick} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(46, 26, 71, 0.6)', backdropFilter: 'blur(5px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="fade-in" style={{ width: '90%', maxWidth: '400px', backgroundColor: '#ffffff', border: `1px solid ${deepPurple}`, borderRadius: '24px', padding: '30px', boxShadow: '0 20px 60px rgba(46, 26, 71, 0.2)', position: 'relative' }}>
                 <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
                 
-                <h3 style={{ color: deepPurple, fontSize: '20px', textAlign: 'center', marginBottom: '25px', fontFamily: 'Outfit, sans-serif', fontWeight: '700', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
+                <h3 style={{ color: deepPurple, fontSize: '20px', textAlign: 'center', marginBottom: '20px', fontFamily: 'Outfit, sans-serif', fontWeight: '700', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
                     {selectedCoin ? `Configure ${selectedCoin}` : 'Select Wallet'}
                 </h3>
 
@@ -189,10 +211,7 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                         {['BTC', 'ETH', 'SOL', 'BNB', 'USDT', 'POLYGON'].map(coin => (
                             <button key={coin} onClick={() => { setSelectedCoin(coin); setAddressInput(wallets[coin.toLowerCase()] || ''); }} 
-                                style={{ background: '#f8f9fa', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '15px', color: deepPurple, display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', transition: '0.2s' }}
-                                onMouseEnter={(e) => e.currentTarget.style.borderColor = deepPurple}
-                                onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
-                            >
+                                style={{ background: '#f8f9fa', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '15px', color: deepPurple, display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', transition: '0.2s' }}>
                                 <img src={COIN_LOGOS[coin]} width="28" height="28" alt={coin} />
                                 <span style={{fontSize: '14px', fontWeight: '700'}}>{coin}</span>
                             </button>
@@ -205,7 +224,7 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
                             style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#fff', border: '2px solid #e5e7eb', color: '#333', fontSize: '14px', outline: 'none', fontFamily: 'monospace' }} autoFocus />
                         <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                             <button onClick={() => setSelectedCoin(null)} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'transparent', border: `1px solid ${deepPurple}`, color: deepPurple, fontWeight: '600' }}>Back</button>
-                            <button onClick={handleSave} disabled={isSaving} style={{ flex: 2, padding: '12px', borderRadius: '12px', background: deepPurple, border: 'none', color: '#fff', fontWeight: 'bold' }}>{isSaving ? 'Saving...' : 'Add Wallet'}</button>
+                            <button onClick={handleSave} disabled={isSaving} style={{ flex: 2, padding: '12px', borderRadius: '12px', background: deepPurple, border: 'none', color: '#fff', fontWeight: 'bold' }}>{isSaving ? 'Saving...' : 'Confirm'}</button>
                         </div>
                     </div>
                 )}
@@ -213,6 +232,7 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
         </div>
     );
 };
+
 
 // --- MAIN PAGE ---
 export default function ChainFacePage() {
@@ -389,9 +409,9 @@ export default function ChainFacePage() {
   };
 
   // --- (3) New Logic for Copy & Share ---
+  const [showShareMenu, setShowShareMenu] = useState(false);
   const [currentPageUrl, setCurrentPageUrl] = useState('');
   const [copiedTip, setCopiedTip] = useState<string | null>(null);
-  const [showShareMenu, setShowShareMenu] = useState(false);
 
   useEffect(() => {
       if (typeof window !== 'undefined') setCurrentPageUrl(window.location.href);
@@ -986,7 +1006,7 @@ export default function ChainFacePage() {
           </div>
       </div>
 
-      <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center', position: 'relative' }}>
+     <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center', position: 'relative' }}>
           
           <p style={{ color: '#2E1A47', fontSize: '14px', fontWeight: '500', marginBottom: '25px', lineHeight: '1.5' }}>
              Share this sovereign link button with friends, clients, or anyone you wish to view your page or pay you securely.
@@ -994,37 +1014,41 @@ export default function ChainFacePage() {
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', position: 'relative' }}>
             
+              {/* Share Button & Menu */}
               <div style={{ position: 'relative' }}>
                   <div onClick={handleShareClick} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
                       <i className="bi bi-share-fill"></i>
                   </div>
                   
                   {showShareMenu && (
-                      <div className="fade-in" style={{ position: 'absolute', bottom: '50px', left: '-80px', background: '#fff', border: '1px solid #eee', borderRadius: '12px', padding: '10px', boxShadow: '0 5px 20px rgba(0,0,0,0.1)', display: 'flex', gap: '10px', zIndex: 100 }}>
-                          <a href={`https://wa.me/?text=${encodeURIComponent(currentPageUrl)}`} target="_blank" style={{ color: '#25D366', fontSize: '20px' }}><i className="bi bi-whatsapp"></i></a>
-                          <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentPageUrl)}`} target="_blank" style={{ color: '#1877F2', fontSize: '20px' }}><i className="bi bi-facebook"></i></a>
-                          <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(currentPageUrl)}`} target="_blank" style={{ color: '#1DA1F2', fontSize: '20px' }}><i className="bi bi-twitter-x"></i></a>
-                          <a href={`mailto:?body=${encodeURIComponent(currentPageUrl)}`} style={{ color: '#EA4335', fontSize: '20px' }}><i className="bi bi-envelope-fill"></i></a>
+                      <div className="fade-in" style={{ position: 'absolute', bottom: '55px', left: '-60px', background: '#fff', border: '1px solid #eee', borderRadius: '16px', padding: '10px', boxShadow: '0 10px 40px rgba(0,0,0,0.15)', display: 'flex', gap: '15px', zIndex: 100, minWidth: '200px', justifyContent: 'center' }}>
+                          <a href={`https://wa.me/?text=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="WhatsApp" style={{ color: '#25D366', fontSize: '24px' }}><i className="bi bi-whatsapp"></i></a>
+                          <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="Facebook" style={{ color: '#1877F2', fontSize: '24px' }}><i className="bi bi-facebook"></i></a>
+                          <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="X (Twitter)" style={{ color: '#000', fontSize: '24px' }}><i className="bi bi-twitter-x"></i></a>
+                          <a href={`https://t.me/share/url?url=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="Telegram" style={{ color: '#0088cc', fontSize: '24px' }}><i className="bi bi-telegram"></i></a>
+                          <a href={`mailto:?body=${encodeURIComponent(currentPageUrl)}`} title="Email" style={{ color: '#EA4335', fontSize: '24px' }}><i className="bi bi-envelope-fill"></i></a>
                       </div>
                   )}
               </div>
 
+              {/* Capsule Button */}
               <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
 
+              {/* Copy Button */}
               <div style={{ position: 'relative' }}>
                   <div onClick={handleCopyLink} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
-                      <i className="bi bi-link-45deg" style={{ fontSize: '20px' }}></i>
+                      <i className="bi bi-files" style={{ fontSize: '20px' }}></i>
                   </div>
                   {copiedTip === 'link' && (
-                      <div className="fade-in" style={{ position: 'absolute', top: '50%', left: '100%', transform: 'translateY(-50%)', marginLeft: '10px', background: '#2E1A47', color: '#fff', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                      <div className="fade-in" style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', background: '#2E1A47', color: '#fff', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
                           Copied!
                       </div>
                   )}
               </div>
 
           </div>
-      </div>
-
+      </div> 
+      
     </main>
   );
 }
