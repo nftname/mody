@@ -311,7 +311,8 @@ export default function ChainFacePage() {
               console.error("Supabase Save Error:", error);
               throw error;
           }
-          
+          const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
+
       
           setProfileData((prev: any) => ({
               ...prev, 
