@@ -316,7 +316,8 @@ export default function ChainFacePage() {
       
           setProfileData((prev: any) => ({
               ...prev, 
-              wallets: { ...prev.wallets, [coin.toLowerCase()]: walletAddr }
+              wallets: { ...prev.wallets, [stateKey]: walletAddr }
+
           }));
 
       } catch (e) { 
