@@ -247,7 +247,7 @@ export default function ChainFacePage() {
   const [profileData, setProfileData] = useState<any>({
       name: '',
       owner: '',
-      customMessage: 'Thank you for stopping in.',
+      customMessage: '',
       verifiedLevel: 'none', // gold is default implied
       wallets: { btc: '', eth: '', sol: '', bnb: '', usdt: '', matic: '' },
       stats: { conviction: 0, likes: 0, dislikes: 0 }
@@ -455,8 +455,7 @@ export default function ChainFacePage() {
         await navigator.share({
           files: [file],
           title: `ChainFace: ${profileData.name}`,
-          text: `Check out my ChainFace Identity:`,
-          url: currentPageUrl
+         text: ` My ChainFace Identity:\n${currentPageUrl}`,
         });
       } else {
         setShowShareMenu(!showShareMenu);
@@ -739,9 +738,9 @@ export default function ChainFacePage() {
             display: flex;
             align-items: center;
             justify-content: flex-start;
-            width: 190px !important; 
-            min-width: 190px !important;
-            max-width: 190px !important;
+            width: 220px !important; 
+            min-width: 220px !important;
+            max-width: 220px !important;
             height: 55px !important;
             min-height: 55px !important;
             max-height: 55px !important;
@@ -830,7 +829,7 @@ export default function ChainFacePage() {
             white-space: nowrap;       
             overflow: hidden;         
             text-overflow: ellipsis;   
-            max-width: 105px;         
+            max-width: 140px;         
         }
             .header-qr-btn {
             position: absolute;
@@ -996,7 +995,6 @@ export default function ChainFacePage() {
                        {/* --- (MOD 3-B) Wallet Config & Buttons --- */}
               {isOwner && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#333' }}>Payment Methods</span>
                       <button onClick={() => setIsModalOpen(true)} style={{ background: 'transparent', border: '1px solid #2E1A47', borderRadius: '20px', padding: '5px 12px', fontSize: '11px', fontWeight: 'bold', color: '#2E1A47', cursor: 'pointer' }}>
                           <i className="bi bi-gear-fill me-1"></i> Configure
                       </button>
@@ -1053,7 +1051,7 @@ export default function ChainFacePage() {
      <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center', position: 'relative' }}>
           
           <p style={{ color: '#2E1A47', fontSize: '14px', fontWeight: '500', marginBottom: '25px', lineHeight: '1.5' }}>
-             Share this sovereign link button with friends, clients, or anyone you wish to view your page or pay you securely.
+             Share this sovereign link button with friends, clients, or anyone you wish to view your page.
           </p>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', position: 'relative' }}>
