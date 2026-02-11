@@ -287,13 +287,18 @@ export default function ChainFacePage() {
       if (!isOwner) return;
       
       const columnMap: any = { 
-          'BTC': 'btc_address', 'ETH': 'eth_address', 'SOL': 'sol_address', 
-          'BNB': 'bnb_address', 'USDT': 'usdt_address', 'POLYGON': 'matic_address' 
+          'BTC': 'btc_address', 
+          'ETH': 'eth_address', 
+          'SOL': 'sol_address', 
+          'BNB': 'bnb_address', 
+          'USDT': 'usdt_address', 
+          'POLYGON': 'matic_address' 
       };
 
       try {
+         
           const updates: any = { 
-              token_id: tokenId, 
+              token_id: Number(tokenId),
               owner_address: address, 
               updated_at: new Date().toISOString() 
           };
@@ -302,17 +307,22 @@ export default function ChainFacePage() {
 
           const { error } = await supabase.from('chainface_profiles').upsert(updates, { onConflict: 'token_id' });
 
-          if (error) throw error;
+          if (error) {
+              console.error("Supabase Save Error:", error);
+              throw error;
+          }
           
+      
           setProfileData((prev: any) => ({
               ...prev, 
               wallets: { ...prev.wallets, [coin.toLowerCase()]: walletAddr }
           }));
 
       } catch (e) { 
-          console.error("Save error", e); 
+          console.error("Save execution failed", e); 
       }
   };
+
 
 
   // --- BLOCKCHAIN HOOKS ---
