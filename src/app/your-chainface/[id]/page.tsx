@@ -433,6 +433,8 @@ export default function ChainFacePage() {
     const element = document.getElementById('cf-btn');
     if (!element) return;
 
+    element.classList.add('screenshot-mode');
+
     try {
       const canvas = await html2canvas(element, {
         backgroundColor: null,
@@ -443,6 +445,8 @@ export default function ChainFacePage() {
       });
 
       const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/png', 1.0));
+      element.classList.remove('screenshot-mode');
+
       if (!blob) return;
       
       const file = new File([blob], 'chainface-id.png', { type: 'image/png' });
@@ -459,8 +463,11 @@ export default function ChainFacePage() {
       }
     } catch (error) {
       console.error(error);
+      element.classList.remove('screenshot-mode');
     }
   };
+
+
 
 
   const deepPurpleColor = '#2E1A47'; 
@@ -690,6 +697,18 @@ export default function ChainFacePage() {
             color: #111827;
             line-height: 1.2;
         }
+
+        .screenshot-mode .sig-name {
+    background: none !important;
+    -webkit-text-fill-color: #ffffff !important;
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8) !important;
+}
+.screenshot-mode .signature-btn {
+     background: #2E1A47 !important;
+     box-shadow: none !important;
+     border: 1px solid #4a3b69 !important;
+}
 
         .action-text {
             font-size: 11px;
@@ -1057,10 +1076,9 @@ export default function ChainFacePage() {
               </div>
 
               {/* Capsule Button */}
-<div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '2px' }}>
+<div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '4px', borderRadius: '35px' }}>
     <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
 </div>
-
 
 
               {/* Copy Button */}
