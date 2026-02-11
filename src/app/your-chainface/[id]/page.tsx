@@ -698,36 +698,33 @@ export default function ChainFacePage() {
             line-height: 1.2;
         }
 
-              /* --- LUXURY SCREENSHOT MODE --- */
-          /* --- SAFE SCREENSHOT MODE --- */
-        .screenshot-mode .signature-btn {
-             background: linear-gradient(135deg, #3b0d34 0%, #180929 100%) !important;
-             /* هنا كان الخطأ: ألغينا العرض الثابت الكبير */
+                .screenshot-mode .signature-btn {
+             background: linear-gradient(135deg, #2E1A47 0%, #1a0f2e 100%) !important;
              width: auto !important;
-             max-width: 100% !important; 
              height: auto !important;
-             padding: 10px 20px !important;
+             min-height: 80px !important;
+             padding: 10px 30px !important;
              border-radius: 50px !important;
-             border: 2px solid rgba(255, 215, 0, 0.8) !important;
+             border: none !important;
+             box-shadow: 0 10px 25px rgba(0,0,0,0.6) !important;
              display: flex !important;
              align-items: center !important;
              justify-content: center !important;
              gap: 15px !important;
-             box-shadow: none !important;
              margin: 0 !important;
+             overflow: visible !important;
         }
 
         .screenshot-mode .sig-name {
             background: none !important;
             -webkit-text-fill-color: #ffffff !important;
             color: #ffffff !important;
-            /* حجم خط متناسب مع الموبايل وليس ضخماً */
-            font-size: 24px !important; 
+            font-size: 32px !important;
             font-weight: 900 !important;
             margin: 0 !important;
             padding: 0 !important;
-            line-height: 1.2 !important;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8) !important;
+            line-height: 1 !important;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
             white-space: nowrap !important;
         }
 
@@ -736,31 +733,34 @@ export default function ChainFacePage() {
         }
 
         .screenshot-mode .sig-qr-container {
-             width: 50px !important;
-             height: 50px !important;
+             width: 60px !important;
+             height: 60px !important;
              background: #fff !important;
-             border-radius: 10px !important;
+             border-radius: 12px !important;
              padding: 4px !important;
              display: flex !important;
              align-items: center !important;
              justify-content: center !important;
+             flex-shrink: 0 !important;
+             box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
         }
         
         .screenshot-mode .sig-qr-code {
-             width: 42px !important;
-             height: 42px !important;
+             width: 50px !important;
+             height: 50px !important;
              opacity: 1 !important;
              mix-blend-mode: normal !important;
         }
 
         .screenshot-mode svg {
-            width: 30px !important;
-            height: 30px !important;
+            width: 35px !important;
+            height: 35px !important;
             opacity: 1 !important;
             z-index: 9999 !important;
             display: block !important;
             margin-left: 10px !important;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)) !important;
+            overflow: visible !important;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)) !important;
         }
 
         .screenshot-mode svg path,
@@ -792,8 +792,6 @@ export default function ChainFacePage() {
             font-family: 'Cinzel', serif; font-size: 20px; color: ${deepPurpleColor};
             margin-bottom: 10px; font-weight: 700;
         }
-
-        /* --- STYLES FOR THE NEW CHAINFACE BUTTON --- */
 
         .signature-btn {
             display: flex;
@@ -1134,10 +1132,11 @@ export default function ChainFacePage() {
                       </div>
                   )}
               </div>
-              {/* Capsule Button Container */}
-<div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '10px' }}>
+              {/* Capsule Button Container - Tight Crop */}
+<div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '2px', margin: '5px' }}>
     <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
 </div>
+
 
 
               {/* Copy Button */}
