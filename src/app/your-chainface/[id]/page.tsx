@@ -429,13 +429,38 @@ export default function ChainFacePage() {
   };
   
   const handleShareClick = async () => {
-      if (navigator.share) {
-          try { await navigator.share({ title: `ChainFace: ${profileData.name}`, url: currentPageUrl }); } catch (e) {}
-      } else {
-          setShowShareMenu(!showShareMenu);
-      }
-  };
+    const html2canvas = (await import('html2canvas')).default;
+    const element = document.getElementById('cf-btn');
+    if (!element) return;
 
+    try {
+      const canvas = await html2canvas(element, {
+        backgroundColor: null,
+        scale: 3,
+        useCORS: true,
+        logging: false,
+        allowTaint: true
+      });
+
+      const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/png', 1.0));
+      if (!blob) return;
+      
+      const file = new File([blob], 'chainface-id.png', { type: 'image/png' });
+
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `ChainFace: ${profileData.name}`,
+          text: `Check out my ChainFace Identity:`,
+          url: currentPageUrl
+        });
+      } else {
+        setShowShareMenu(!showShareMenu);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
 
   const deepPurpleColor = '#2E1A47'; 
@@ -1032,7 +1057,11 @@ export default function ChainFacePage() {
               </div>
 
               {/* Capsule Button */}
-              <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
+<div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '2px' }}>
+    <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
+</div>
+
+
 
               {/* Copy Button */}
               <div style={{ position: 'relative' }}>
@@ -1048,7 +1077,7 @@ export default function ChainFacePage() {
 
           </div>
       </div> 
-      
+
     </main>
   );
 }
