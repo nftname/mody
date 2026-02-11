@@ -278,10 +278,16 @@ export default function ChainFacePage() {
       stats: { conviction: 0, likes: 0, dislikes: 0 }
   });
   const [isOwner, setIsOwner] = useState(false);
-  const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
-
-   // --- (MOD 2) Wallet Logic ---
+    const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+ 
+  const [messages, setMessages] = useState<any[]>([]);
+  const [visitorMessage, setVisitorMessage] = useState('');
+  const [showVisitorBox, setShowVisitorBox] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [isLinkExpired, setIsLinkExpired] = useState(false);
 
   const handleSaveWallet = async (coin: string, walletAddr: string) => {
       if (!isOwner) return;
@@ -350,7 +356,14 @@ export default function ChainFacePage() {
       setLoading(true);
 
       try {
-          // 1. Fetch Name from Metadata (or DB)
+          const currentOwnerStr = String(realOwnerAddress).toLowerCase();
+          
+          const urlParams = new URLSearchParams(window.location.search);
+          const ownerInLink = urlParams.get('owner')?.toLowerCase();
+          if (ownerInLink && ownerInLink !== currentOwnerStr) {
+              setIsLinkExpired(true);
+          }
+
           let assetName = `NNM #${tokenId}`;
           if (tokenURI) {
               const url = tokenURI.startsWith('ipfs://') ? tokenURI.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : tokenURI;
@@ -358,77 +371,85 @@ export default function ChainFacePage() {
               if (meta.name) assetName = meta.name;
           }
 
-          // 2. Fetch Conviction Score
-          const { count: convictionCount } = await supabase
-              .from('conviction_votes')
-              .select('*', { count: 'exact', head: true })
-              .eq('token_id', tokenId);
+          const { count: convictionCount } = await supabase.from('conviction_votes').select('*', { count: 'exact', head: true }).eq('token_id', tokenId);
 
-          // 3. Fetch ChainFace Profile (Custom Settings)
-          const { data: profile, error } = await supabase
+          const { data: profile } = await supabase
               .from('chainface_profiles')
               .select('*')
               .eq('token_id', tokenId)
+              .eq('owner_address', currentOwnerStr) 
               .maybeSingle();
 
-          // --- KILL SWITCH LOGIC ---
-          // If profile exists BUT owner address in DB != Real Blockchain Owner -> RESET/IGNORE
-          let safeProfile = profile;
-          const currentOwnerStr = String(realOwnerAddress).toLowerCase();
-          
-          if (profile && profile.owner_address && profile.owner_address.toLowerCase() !== currentOwnerStr) {
-              console.warn("⚠️ KILL SWITCH ACTIVATED: Owner changed. Resetting view.");
-              safeProfile = null; // Treat as if no profile exists (Default View)
-              
-              // Optional: Fire a background cleanup (Clean DB)
-              // await supabase.from('chainface_profiles').delete().eq('token_id', tokenId);
-          }
-
-          // 4. Construct Final Data
           setProfileData({
               name: assetName,
               owner: currentOwnerStr,
-              customMessage: safeProfile?.custom_message || '',
-              verifiedLevel: safeProfile?.verified_level || 'none',
+              customMessage: profile?.custom_message || '',
+              verifiedLevel: profile?.verified_level || 'none',
               wallets: {
-                  btc: safeProfile?.btc_address || '',
-                  eth: safeProfile?.eth_address || '',
-                  sol: safeProfile?.sol_address || '',
-                  bnb: safeProfile?.bnb_address || '',
-                  usdt: safeProfile?.usdt_address || '',
-                  matic: safeProfile?.matic_address || ''
+                  btc: profile?.btc_address || '',
+                  eth: profile?.eth_address || '',
+                  sol: profile?.sol_address || '',
+                  bnb: profile?.bnb_address || '',
+                  usdt: profile?.usdt_address || '',
+                  matic: profile?.matic_address || ''
               },
               stats: {
-                  conviction: (convictionCount || 0) * 100, // Assuming 100 per vote
-                  likes: safeProfile?.likes_count || 0,
-                  dislikes: safeProfile?.dislikes_count || 0
+                  conviction: (convictionCount || 0) * 100,
+                  likes: profile?.likes_count || 0,
+                  dislikes: profile?.dislikes_count || 0
               }
           });
 
-          // 5. Check Ownership Permission
-          if (address && address.toLowerCase() === currentOwnerStr) {
-              setIsOwner(true);
-          } else {
-              setIsOwner(false);
-          }
+          setIsOwner(address?.toLowerCase() === currentOwnerStr);
 
       } catch (err) {
-          console.error("Error loading ChainFace:", err);
+          console.error("Error:", err);
       } finally {
           setLoading(false);
       }
   }, [tokenId, realOwnerAddress, tokenURI, address]);
 
+  const fetchMessages = useCallback(async () => {
+    if (!isOwner || !tokenId) return;
+    const { data } = await supabase
+      .from('chainface_messages')
+      .select('*')
+      .eq('token_id', tokenId)
+      .order('created_at', { ascending: sortOrder === 'oldest' });
+    if (data) setMessages(data);
+  }, [tokenId, isOwner, sortOrder]);
+
   useEffect(() => {
       fetchChainFaceData();
-  }, [fetchChainFaceData]);
+      if (isOwner) fetchMessages();
+  }, [fetchChainFaceData, fetchMessages, isOwner]);
 
+  const handleSendMessage = async () => {
+    if (!visitorMessage.trim()) return;
+    setIsSending(true);
+    await supabase.from('chainface_messages').insert([
+      { token_id: Number(tokenId), message_text: visitorMessage, sender_wallet: address || 'Anonymous' }
+    ]);
+    setVisitorMessage('');
+    setShowVisitorBox(false);
+    setIsSending(false);
+  };
 
-  // --- HANDLERS ---
-  const handleCopyWallet = (address: string, symbol: string) => {
-      if (!address) return;
-      navigator.clipboard.writeText(address);
-      alert(`${symbol} Address Copied: ${address}`);
+  
+   const handleWalletAction = (walletAddr: string, coin: string) => {
+      if (!walletAddr || isLinkExpired) return;
+
+      navigator.clipboard.writeText(walletAddr);
+      
+      let protocol = '';
+      const lowerCoin = coin.toLowerCase();
+      if (lowerCoin === 'btc') protocol = `bitcoin:${walletAddr}`;
+      else if (lowerCoin === 'sol') protocol = `solana:${walletAddr}`;
+      else protocol = `ethereum:${walletAddr}`;
+      
+      if (protocol) window.location.href = protocol;
+      
+      setShowVisitorBox(true);
   };
 
   const handleSupportClick = async (type: 'like' | 'dislike') => {
@@ -472,8 +493,14 @@ export default function ChainFacePage() {
       handleSaveWallet(coin, ''); 
   };
 
+  const getSecureUrl = () => {
+    const url = new URL(window.location.origin + window.location.pathname);
+    if (profileData.owner) url.searchParams.set('owner', profileData.owner);
+    return url.toString();
+  };
+
   const handleCopyLink = () => {
-      navigator.clipboard.writeText(currentPageUrl);
+      navigator.clipboard.writeText(getSecureUrl());
       setCopiedTip('link');
       setTimeout(() => setCopiedTip(null), 2000);
   };
@@ -505,7 +532,7 @@ export default function ChainFacePage() {
         await navigator.share({
           files: [file],
           title: `ChainFace: ${profileData.name}`,
-         text: ` My ChainFace Identity:\n${currentPageUrl}`,
+          text: `My Secure ChainFace Identity:\n${getSecureUrl()}`,
         });
       } else {
         setShowShareMenu(!showShareMenu);
@@ -515,8 +542,6 @@ export default function ChainFacePage() {
       element.classList.remove('screenshot-mode');
     }
   };
-
-
 
 
   const deepPurpleColor = '#2E1A47'; 
@@ -1076,11 +1101,72 @@ export default function ChainFacePage() {
                               address={addr} 
                               isOwner={isOwner} 
                               onRemove={() => handleRemoveWallet(coin)} 
-                              onClick={() => isOwner ? setIsModalOpen(true) : handleCopyWallet(addr, coin)} 
+                              // تم تصحيح الاسم هنا ليصبح handleWalletAction
+                              onClick={() => isOwner ? setIsModalOpen(true) : handleWalletAction(addr, coin)} 
                           />
                       );
                   })}
               </div>
+
+{isLinkExpired && (
+    <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B', padding: '15px', borderRadius: '16px', fontSize: '13px', fontWeight: '600', marginBottom: '25px', textAlign: 'center' }}>
+        ⚠️ This link belongs to a previous owner. Please ask for the current secure link.
+    </div>
+)}
+
+{!isOwner && showVisitorBox && (
+    <div className="fade-in" style={{ margin: '30px 0', padding: '20px', background: '#fff', borderRadius: '24px', border: '1px solid #eee', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', textAlign: 'left' }}>
+        <h4 style={{ color: '#2E1A47', fontSize: '15px', fontWeight: '700', marginBottom: '12px' }}>Leave a private note for the owner</h4>
+        <textarea 
+            value={visitorMessage}
+            onChange={(e) => setVisitorMessage(e.target.value)}
+            placeholder="e.g. I just sent the payment for the project..."
+            style={{ width: '100%', minHeight: '100px', border: 'none', background: '#f8f9fa', borderRadius: '15px', padding: '15px', fontSize: '14px', outline: 'none', resize: 'none' }}
+        />
+        <button 
+            onClick={handleSendMessage} 
+            disabled={isSending} 
+            style={{ width: '100%', marginTop: '12px', padding: '12px', borderRadius: '12px', background: '#2E1A47', color: '#fff', border: 'none', fontWeight: '700', cursor: 'pointer', transition: '0.3s' }}
+        >
+            {isSending ? 'Sending Message...' : 'Send Message'}
+        </button>
+    </div>
+)}
+
+{isOwner && (
+    <div style={{ marginTop: '40px', textAlign: 'left' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+            <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#2E1A47', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Inbound Messages</h4>
+            <select 
+                value={sortOrder} 
+                onChange={(e:any) => setSortOrder(e.target.value)} 
+                style={{ border: 'none', background: 'transparent', fontSize: '11px', color: '#666', outline: 'none', cursor: 'pointer' }}
+            >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+            </select>
+        </div>
+        
+        {messages.length === 0 ? (
+            <div style={{ padding: '30px', background: '#fff', borderRadius: '20px', color: '#ccc', fontSize: '13px', textAlign: 'center', border: '1px dashed #eee' }}>
+                Your inbox is currently empty.
+            </div>
+        ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {messages.slice(0, 5).map(m => (
+                    <div key={m.id} className="fade-in" style={{ padding: '15px', background: '#fff', borderRadius: '18px', border: '1px solid #f5f5f5', boxShadow: '0 2px 5px rgba(0,0,0,0.01)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '700', marginBottom: '6px' }}>
+                            <span style={{ color: '#a855f7' }}>FROM: {m.sender_wallet.slice(0,6)}...{m.sender_wallet.slice(-4)}</span>
+                            <span style={{ color: '#aaa' }}>{new Date(m.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '13px', color: '#2E1A47', fontWeight: '500', lineHeight: '1.4' }}>{m.message_text}</p>
+                    </div>
+                ))}
+            </div>
+        )}
+    </div>
+)}
+
 
               <p className="footer-note">
                   Payments are peer-to-peer. ChainFace never holds funds.
@@ -1120,8 +1206,8 @@ export default function ChainFacePage() {
 
           </div>
       </div>
-
-     <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center', position: 'relative' }}>
+      {isOwner && (
+        <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center', position: 'relative' }}>
           
           <p style={{ color: '#2E1A47', fontSize: '14px', fontWeight: '500', marginBottom: '25px', lineHeight: '1.5' }}>
              Share this sovereign link button with friends, clients, or anyone you wish to view your page.
@@ -1129,7 +1215,6 @@ export default function ChainFacePage() {
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', position: 'relative' }}>
             
-              {/* Share Button & Menu */}
               <div style={{ position: 'relative' }}>
                   <div onClick={handleShareClick} className="action-btn" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
                       <i className="bi bi-share-fill"></i>
@@ -1146,15 +1231,12 @@ export default function ChainFacePage() {
                   )}
               </div>
 
-              {/* Capsule Button */}
-<div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '4px', borderRadius: '35px' }}>
-    <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
-</div>
+              <div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '4px', borderRadius: '35px' }}>
+                  <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
+              </div>
 
-
-              {/* Copy Button */}
               <div style={{ position: 'relative' }}>
-                  <div onClick={handleCopyLink} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
+                  <div onClick={handleCopyLink} className="action-btn" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
                       <i className="bi bi-files" style={{ fontSize: '20px' }}></i>
                   </div>
                   {copiedTip === 'link' && (
@@ -1165,7 +1247,8 @@ export default function ChainFacePage() {
               </div>
 
           </div>
-      </div> 
+        </div> 
+      )}
 
     </main>
   );
