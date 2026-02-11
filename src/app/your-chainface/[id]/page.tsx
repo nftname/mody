@@ -699,18 +699,20 @@ export default function ChainFacePage() {
         }
 
               /* --- LUXURY SCREENSHOT MODE --- */
+          /* --- SAFE SCREENSHOT MODE --- */
         .screenshot-mode .signature-btn {
              background: linear-gradient(135deg, #3b0d34 0%, #180929 100%) !important;
+             /* هنا كان الخطأ: ألغينا العرض الثابت الكبير */
              width: auto !important;
-             min-width: 600px !important;
-             height: 180px !important;
-             padding: 0 50px !important;
-             border-radius: 90px !important;
-             border: 4px solid rgba(255, 215, 0, 0.8) !important;
+             max-width: 100% !important; 
+             height: auto !important;
+             padding: 10px 20px !important;
+             border-radius: 50px !important;
+             border: 2px solid rgba(255, 215, 0, 0.8) !important;
              display: flex !important;
              align-items: center !important;
              justify-content: center !important;
-             gap: 30px !important;
+             gap: 15px !important;
              box-shadow: none !important;
              margin: 0 !important;
         }
@@ -719,12 +721,13 @@ export default function ChainFacePage() {
             background: none !important;
             -webkit-text-fill-color: #ffffff !important;
             color: #ffffff !important;
-            font-size: 55px !important;
+            /* حجم خط متناسب مع الموبايل وليس ضخماً */
+            font-size: 24px !important; 
             font-weight: 900 !important;
             margin: 0 !important;
             padding: 0 !important;
-            line-height: 1 !important;
-            text-shadow: 0 4px 15px rgba(0,0,0,1) !important;
+            line-height: 1.2 !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8) !important;
             white-space: nowrap !important;
         }
 
@@ -733,31 +736,31 @@ export default function ChainFacePage() {
         }
 
         .screenshot-mode .sig-qr-container {
-             width: 100px !important;
-             height: 100px !important;
+             width: 50px !important;
+             height: 50px !important;
              background: #fff !important;
-             border-radius: 20px !important;
-             padding: 10px !important;
+             border-radius: 10px !important;
+             padding: 4px !important;
              display: flex !important;
              align-items: center !important;
              justify-content: center !important;
         }
         
         .screenshot-mode .sig-qr-code {
-             width: 80px !important;
-             height: 80px !important;
+             width: 42px !important;
+             height: 42px !important;
              opacity: 1 !important;
              mix-blend-mode: normal !important;
         }
 
         .screenshot-mode svg {
-            width: 60px !important;
-            height: 60px !important;
+            width: 30px !important;
+            height: 30px !important;
             opacity: 1 !important;
             z-index: 9999 !important;
             display: block !important;
-            margin-left: 20px !important;
-            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)) !important;
+            margin-left: 10px !important;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)) !important;
         }
 
         .screenshot-mode svg path,
