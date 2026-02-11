@@ -338,7 +338,7 @@ export default function ChainFacePage() {
           setProfileData({
               name: assetName,
               owner: currentOwnerStr,
-              customMessage: safeProfile?.custom_message || 'Thank you for stopping in.',
+              customMessage: safeProfile?.custom_message || '',
               verifiedLevel: safeProfile?.verified_level || 'none',
               wallets: {
                   btc: safeProfile?.btc_address || '',
@@ -738,12 +738,12 @@ export default function ChainFacePage() {
             display: flex;
             align-items: center;
             justify-content: flex-start;
-            width: 220px !important; 
-            min-width: 220px !important;
-            max-width: 220px !important;
-            height: 55px !important;
-            min-height: 55px !important;
-            max-height: 55px !important;
+            width: 190px !important; 
+            min-width: 190px !important;
+            max-width: 190px !important;
+            height: 68px !important;
+            min-height: 68px !important;
+            max-height: 68px !important;
             flex-shrink: 0 !important;
             flex-grow: 0 !important;
             background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
@@ -1032,15 +1032,25 @@ export default function ChainFacePage() {
                   </p>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '40px' }}>
+                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '40px' }}>
                   <i 
-                    className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-warning' : 'text-secondary'}`} 
-                    style={{ fontSize: '24px', cursor: 'pointer', transition: '0.3s' }}
+                    className={`bi bi-hand-thumbs-up-fill ${feedback === 'like' ? 'text-warning' : ''}`} 
+                    style={{ 
+                        fontSize: '24px', 
+                        cursor: 'pointer', 
+                        transition: '0.3s',
+                        color: feedback === 'like' ? '' : '#d1d5db' // هنا جعلناه رمادي فاتح جداً
+                    }}
                     onClick={() => handleSupportClick('like')}
                   ></i>
                   <i 
-                    className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-warning' : 'text-secondary'}`} 
-                    style={{ fontSize: '24px', cursor: 'pointer', transition: '0.3s' }}
+                    className={`bi bi-hand-thumbs-down-fill ${feedback === 'dislike' ? 'text-warning' : ''}`} 
+                    style={{ 
+                        fontSize: '24px', 
+                        cursor: 'pointer', 
+                        transition: '0.3s',
+                        color: feedback === 'dislike' ? '' : '#d1d5db' // هنا جعلناه رمادي فاتح جداً
+                    }}
                     onClick={() => handleSupportClick('dislike')}
                   ></i>
               </div>
