@@ -521,6 +521,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
       setTimeout(() => setCopiedTip(null), 2000);
   };
   
+
   const handleShareClick = async () => {
     const html2canvas = (await import('html2canvas')).default;
     const element = document.getElementById('cf-btn');
@@ -534,7 +535,26 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
         scale: 3,
         useCORS: true,
         logging: false,
-        allowTaint: true
+        allowTaint: true,
+        onclone: (clonedDoc) => {
+            const el = clonedDoc.getElementById('cf-btn');
+            if (!el) return;
+
+            const nameEl = el.querySelector('.sig-name') as any;
+            if (nameEl) {
+                nameEl.style.background = 'none';
+                nameEl.style.webkitTextFillColor = '#ffffff';
+                nameEl.style.color = '#ffffff';
+                nameEl.style.textShadow = '0 2px 4px rgba(0,0,0,0.8)';
+            }
+
+            const btnEl = el.querySelector('.signature-btn') as any;
+            if (btnEl) {
+                btnEl.style.background = '#2E1A47';
+                btnEl.style.boxShadow = 'none';
+                btnEl.style.border = '1px solid #4a3b69';
+            }
+        }
       });
 
       const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/png', 1.0));
@@ -558,7 +578,6 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
       element.classList.remove('screenshot-mode');
     }
   };
-
 
   const deepPurpleColor = '#2E1A47'; 
 
