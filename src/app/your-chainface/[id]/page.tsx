@@ -488,8 +488,7 @@ export default function ChainFacePage() {
     }
 
     if (isMobile) {
-        const targetChain = chainId || 1;
-        const deepLink = `https://metamask.app.link/send/${walletAddr}@${targetChain}`;
+             const deepLink = `https://metamask.app.link/send/${walletAddr}`;
         window.location.href = deepLink;
     } else {
         try {
