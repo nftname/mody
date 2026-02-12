@@ -383,21 +383,16 @@ export default function ChainFacePage() {
 
           let safeProfile = profile;
 
-          // ============================================================
-          // كود تفعيل التريجر: نحدث المالك فقط، والداتا بيس تمسح الباقي
-          // ============================================================
+          // =============================================================
           if (profile && profile.owner_address && profile.owner_address.toLowerCase() !== currentOwnerStr) {
               
               console.log("New Owner Detected! Updating DB to trigger auto-wipe...");
 
-              // نرسل أمر تحديث المالك فقط
-              // قاعدة البيانات ستلاحظ التغيير وتقوم بمسح الرسائل والمحافظ تلقائياً
               await supabase.from('chainface_profiles').update({
                   owner_address: currentOwnerStr,
                   updated_at: new Date().toISOString()
               }).eq('token_id', tokenId);
 
-              // نخفي البيانات القديمة من الشاشة فوراً
               safeProfile = null;
               setMessages([]); 
           }
@@ -478,7 +473,17 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
         protocol = `bitcoin:${walletAddr}`;
     } else if (lowerCoin === 'sol') {
         protocol = `solana:${walletAddr}`;
+    } else if (lowerCoin === 'polygon' || lowerCoin === 'matic') {
+        // Polygon Chain ID: 137
+        protocol = `ethereum:${walletAddr}@137`;
+    } else if (lowerCoin === 'bnb') {
+        // BSC Chain ID: 56
+        protocol = `ethereum:${walletAddr}@56`;
+    } else if (lowerCoin === 'eth') {
+        // Ethereum Chain ID: 1
+        protocol = `ethereum:${walletAddr}@1`;
     } else {
+        // Default for USDT or others (Generic)
         protocol = `ethereum:${walletAddr}`;
     }
 
@@ -488,6 +493,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
 
     setShowVisitorBox(true);
 };
+
 
   const handleSupportClick = async (type: 'like' | 'dislike') => {
       setFeedback(type);
@@ -506,7 +512,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
           try { await navigator.share({ title: `ChainFace: ${profileData.name}`, url: url }); } catch (e) {}
       } else {
           navigator.clipboard.writeText(url);
-          alert('Link Copied!'); // سنستبدلها بتوست لاحقاً إذا أردت
+          alert('Link Copied!');
       }
   };
 
