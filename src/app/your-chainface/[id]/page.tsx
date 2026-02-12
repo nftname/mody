@@ -1156,7 +1156,8 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
 
       {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
         <>
-          <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center', position: 'relative' }}>
+
+     <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center', position: 'relative' }}>
           
           <p style={{ color: '#2E1A47', fontSize: '14px', fontWeight: '500', marginBottom: '25px', lineHeight: '1.5' }}>
              Share this sovereign link button with friends, clients, or anyone you wish to view your page.
@@ -1183,8 +1184,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
 
               {/* Capsule Button */}
 <div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '4px', borderRadius: '35px' }}>
-    <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} isOwner={isOwner} />
-
+    <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
 </div>
 
 
