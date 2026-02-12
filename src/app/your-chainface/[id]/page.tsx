@@ -2,8 +2,8 @@
 import Link from 'next/link';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useAccount, useReadContract } from 'wagmi';
-import { parseAbi } from 'viem';
+import { useAccount, useReadContract, useSendTransaction } from 'wagmi';
+import { parseAbi, parseEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS } from '@/data/config'; 
 import { supabase } from '@/lib/supabase';
 
@@ -266,6 +266,7 @@ export default function ChainFacePage() {
   const tokenId = params?.id as string;
   
   const { address } = useAccount();
+  const { sendTransaction } = useSendTransaction();
 
   // --- STATE ---
   const [loading, setLoading] = useState(true);
@@ -461,33 +462,45 @@ export default function ChainFacePage() {
   };
 
   
-const handleWalletAction = (walletAddr: string, coin: string) => {
+  const handleWalletAction = (walletAddr: string, coin: string) => {
     if (!walletAddr || isLinkExpired) return;
 
     navigator.clipboard.writeText(walletAddr);
 
     const lowerCoin = coin.toLowerCase();
-    let protocol = '';
+    
+    let chainId;
+    if (lowerCoin === 'eth' || lowerCoin === 'usdt') chainId = 1;
+    else if (lowerCoin === 'polygon' || lowerCoin === 'matic') chainId = 137;
+    else if (lowerCoin === 'bnb') chainId = 56;
+
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     if (lowerCoin === 'btc') {
-        protocol = `bitcoin:${walletAddr}`;
-    } else if (lowerCoin === 'sol') {
-        protocol = `solana:${walletAddr}`;
-    } else if (lowerCoin === 'polygon' || lowerCoin === 'matic') {
-        // Polygon Chain ID: 137
-        protocol = `ethereum:${walletAddr}@137`;
-    } else if (lowerCoin === 'bnb') {
-        // BSC Chain ID: 56
-        protocol = `ethereum:${walletAddr}@56`;
-    } else if (lowerCoin === 'eth') {
-        // Ethereum Chain ID: 1
-        protocol = `ethereum:${walletAddr}@1`;
-    } else {
-        // Default for USDT or others (Generic)
-        protocol = `ethereum:${walletAddr}`;
+        window.location.href = `bitcoin:${walletAddr}`;
+        setShowVisitorBox(true);
+        return;
     }
-    if (protocol) {
-        window.location.href = protocol;
+    if (lowerCoin === 'sol') {
+        window.location.href = `solana:${walletAddr}`;
+        setShowVisitorBox(true);
+        return;
+    }
+
+    if (isMobile) {
+        const targetChain = chainId || 1;
+        const deepLink = `https://metamask.app.link/send/${walletAddr}@${targetChain}`;
+        window.location.href = deepLink;
+    } else {
+        try {
+            sendTransaction({ 
+                to: walletAddr as `0x${string}`,
+                value: parseEther('0'),
+                chainId: chainId
+            });
+        } catch (e) {
+            window.location.href = `ethereum:${walletAddr}`;
+        }
     }
 
     setShowVisitorBox(true);
