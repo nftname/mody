@@ -717,23 +717,23 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
             font-family: 'Satoshi', sans-serif;
         }
 
-        .pay-grid {
+             .pay-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            max-width: 800px;
+            gap: 12px;
+            max-width: 600px;
             margin: 0 auto;
         }
 
         .web3-payment-btn {
             background: #FFFFFF;
             border: 1px solid #E5E7EB;
-            border-radius: 16px;
-            height: 72px;
+            border-radius: 12px;
+            height: 54px;
             width: 100%;
             cursor: pointer;
             transition: all 0.2s ease;
-            padding: 0 16px;
+            padding: 0 10px;
             display: flex;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
@@ -754,13 +754,13 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
         }
 
         .logo-wrapper {
-            width: 32px; 
-            height: 32px;
-            min-width: 32px;
+            width: 24px; 
+            height: 24px;
+            min-width: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 14px;
+            margin-right: 10px;
         }
         
         .coin-logo {
@@ -780,31 +780,20 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
         .token-name {
             font-family: 'Inter', sans-serif;
             font-weight: 700;
-            font-size: 15px;
+            font-size: 12px;
             color: #111827;
-            line-height: 1.2;
+            line-height: 1.1;
         }
 
-        .screenshot-mode .sig-name {
-    background: none !important;
-    -webkit-text-fill-color: #ffffff !important;
-    color: #ffffff !important;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8) !important;
-}
-.screenshot-mode .signature-btn {
-     background: #2E1A47 !important;
-     box-shadow: none !important;
-     border: 1px solid #4a3b69 !important;
-}
-
         .action-text {
-            font-size: 11px;
+            font-size: 9px;
             font-weight: 600;
             color: #6B7280;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-top: 2px;
         }
+
 
         .footer-note {
              margin-top: 30px; font-size: 12px; color: #666666; font-style: italic;
@@ -985,16 +974,16 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
 
             .pay-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
+                gap: 8px;
             }
             
             .web3-payment-btn {
-                height: 60px;
-                padding: 0 12px;
+                height: 45px;
+                padding: 0 8px;
             }
             
             .token-name {
-                font-size: 14px;
+                font-size: 11px;
             }
         }
                     .action-btn {
@@ -1208,13 +1197,30 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
           </div>
       </div> 
 
-          <div style={{ width: '80%', margin: '40px auto', paddingBottom: '60px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px' }}>
-                  <h4 style={{ fontSize: '12px', fontWeight: '800', color: '#2E1A47' }}>INBOUND MESSAGES</h4>
-                  <select value={sortOrder} onChange={(e:any) => setSortOrder(e.target.value)} style={{ border: 'none', background: 'transparent', fontSize: '11px', fontWeight: '700' }}>
+                 <div style={{ width: '80%', margin: '40px auto', paddingBottom: '60px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px' }}>
+                  
+                  <select 
+                      value={sortOrder} 
+                      onChange={(e:any) => setSortOrder(e.target.value)} 
+                      style={{ 
+                          border: '1px solid #ddd', 
+                          background: '#fff', 
+                          fontSize: '11px', 
+                          fontWeight: '600', 
+                          padding: '6px 10px', 
+                          borderRadius: '8px', 
+                          color: '#2E1A47',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+                      }}
+                  >
                       <option value="newest">Newest</option>
                       <option value="oldest">Oldest</option>
                   </select>
+
+                  <h4 style={{ fontSize: '12px', fontWeight: '800', color: '#2E1A47', margin: 0 }}>INBOUND MESSAGES</h4>
               </div>
               
               {messages.length === 0 ? (
@@ -1222,7 +1228,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
               ) : (
                   <>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                          {messages.slice((currentPage - 1) * 5, currentPage * 5).map(m => (
+                          {messages.slice((currentPage - 1) * 10, currentPage * 10).map(m => (
                               <div key={m.id} style={{ padding: '15px', background: '#fff', borderRadius: '15px', border: '1px solid #f0f0f0' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '700', color: '#a855f7' }}>
                                       <span>{m.sender_wallet.slice(0,6)}...</span>
@@ -1232,11 +1238,45 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
                               </div>
                           ))}
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
-                          <i className="bi bi-chevron-left" style={{ cursor: 'pointer', opacity: currentPage === 1 ? 0.3 : 1 }} onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}></i>
-                          <span style={{ fontSize: '12px', fontWeight: '700' }}>{currentPage} / {Math.ceil(messages.length / 5)}</span>
-                          <i className="bi bi-chevron-right" style={{ cursor: 'pointer', opacity: currentPage >= Math.ceil(messages.length / 5) ? 0.3 : 1 }} onClick={() => currentPage < Math.ceil(messages.length / 5) && setCurrentPage(currentPage + 1)}></i>
-                      </div>
+
+                      {messages.length > 10 && (
+                          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '25px' }}>
+                              
+                              <button 
+                                  onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+                                  disabled={currentPage === 1}
+                                  style={{ 
+                                      background: 'transparent', 
+                                      border: 'none', 
+                                      cursor: currentPage === 1 ? 'default' : 'pointer', 
+                                      opacity: currentPage === 1 ? 0.3 : 1,
+                                      fontSize: '20px',
+                                      color: '#2E1A47'
+                                  }}
+                              >
+                                  <i className="bi bi-arrow-left-circle-fill"></i>
+                              </button>
+
+                              <span style={{ fontSize: '14px', fontWeight: '700', color: '#2E1A47' }}>
+                                  {currentPage} <span style={{color:'#999', margin:'0 5px'}}>/</span> {Math.ceil(messages.length / 10)}
+                              </span>
+
+                              <button 
+                                  onClick={() => currentPage < Math.ceil(messages.length / 10) && setCurrentPage(currentPage + 1)}
+                                  disabled={currentPage >= Math.ceil(messages.length / 10)}
+                                  style={{ 
+                                      background: 'transparent', 
+                                      border: 'none', 
+                                      cursor: currentPage >= Math.ceil(messages.length / 10) ? 'default' : 'pointer', 
+                                      opacity: currentPage >= Math.ceil(messages.length / 10) ? 0.3 : 1,
+                                      fontSize: '20px',
+                                      color: '#2E1A47'
+                                  }}
+                              >
+                                  <i className="bi bi-arrow-right-circle-fill"></i>
+                              </button>
+                          </div>
+                      )}
                   </>
               )}
           </div>
