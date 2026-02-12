@@ -446,24 +446,26 @@ export default function ChainFacePage() {
   };
 
   
-  const handleWalletAction = (walletAddr: string, coin: string) => {
-    if (!walletAddr) return;
-
+const handleWalletAction = (walletAddr: string, coin: string) => {
+    if (!walletAddr || isLinkExpired) return;
+    
     navigator.clipboard.writeText(walletAddr);
     
-    let protocol = '';
     const lowerCoin = coin.toLowerCase();
+    let url = '';
 
-    if (lowerCoin === 'btc') protocol = `bitcoin:${walletAddr}`;
-    else if (lowerCoin === 'sol') protocol = `solana:${walletAddr}`;
-    else protocol = `ethereum:${walletAddr}`;
-    
-    if (protocol && !isLinkExpired) {
-      window.location.assign(protocol);
+    if (lowerCoin === 'btc') url = `bitcoin:${walletAddr}`;
+    else if (lowerCoin === 'sol') url = `solana:${walletAddr}`;
+    else if (lowerCoin === 'eth' || lowerCoin === 'matic' || lowerCoin === 'polygon' || lowerCoin === 'bnb' || lowerCoin === 'usdt') {
+        url = `ethereum:${walletAddr}`;
+    }
+
+    if (url) {
+        window.location.href = url;
     }
     
     setShowVisitorBox(true);
-  };
+};
 
   const handleSupportClick = async (type: 'like' | 'dislike') => {
       setFeedback(type);
@@ -1135,16 +1137,16 @@ export default function ChainFacePage() {
         <textarea 
             value={visitorMessage}
             onChange={(e) => setVisitorMessage(e.target.value)}
-            placeholder="e.g. I just sent the payment for the project..."
+            placeholder="....."
             style={{ width: '100%', minHeight: '100px', border: 'none', background: '#f8f9fa', borderRadius: '15px', padding: '15px', fontSize: '14px', outline: 'none', resize: 'none', color: '#2E1A47' }}
         />
-        <button 
-            onClick={handleSendMessage} 
-            disabled={isSending} 
-            style={{ width: '100%', marginTop: '12px', padding: '12px', borderRadius: '12px', background: '#2E1A47', color: '#fff', border: 'none', fontWeight: '700', cursor: 'pointer', transition: '0.3s' }}
-        >
-            {isSending ? 'Sending Message...' : 'Send Message'}
-        </button>
+       <button 
+    onClick={handleSendMessage} 
+    disabled={isSending} 
+    style={{ display: 'block', width: '25%', marginLeft: 'auto', marginTop: '12px', padding: '10px', borderRadius: '12px', background: '#2E1A47', color: '#fff', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '12px' }}
+>
+    {isSending ? '...' : 'Send Message'}
+</button>
     </div>
 )}
    
@@ -1189,14 +1191,7 @@ export default function ChainFacePage() {
                   Payments are peer-to-peer. ChainFace never holds funds.
               </p>
 
-                <div style={{ marginTop: '40px', marginBottom: '30px', textAlign: 'center' }}>
-                <h2 className="thank-you-title" style={{ fontFamily: 'Satoshi', fontWeight: '700', fontSize: '18px', color: '#2E1A47' }}>
-                      Thank you for stepping into my ChainFace.
-                  </h2>
-                  <p className="thank-you-subtitle" style={{ color: '#2E1A47', fontSize: '16px', fontWeight: '600', marginTop: '5px' }}>
-                      {profileData.customMessage}
-                  </p>
-              </div>
+
 
                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '40px' }}>
                   <i 
@@ -1284,6 +1279,43 @@ export default function ChainFacePage() {
         )}
     </div>
 )}
+
+{isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
+  <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center', position: 'relative' }}>
+    <p style={{ color: '#2E1A47', fontSize: '14px', fontWeight: '500', marginBottom: '25px', lineHeight: '1.5' }}>
+       Share this sovereign link button with friends, clients, or anyone you wish to view your page.
+    </p>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', position: 'relative' }}>
+        <div style={{ position: 'relative' }}>
+            <div onClick={handleShareClick} className="action-btn" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
+                <i className="bi bi-share-fill"></i>
+            </div>
+            {showShareMenu && (
+                <div className="fade-in" style={{ position: 'absolute', bottom: '55px', left: '-60px', background: '#fff', border: '1px solid #eee', borderRadius: '16px', padding: '10px', boxShadow: '0 10px 40px rgba(0,0,0,0.15)', display: 'flex', gap: '15px', zIndex: 100, minWidth: '200px', justifyContent: 'center' }}>
+                    <a href={`https://wa.me/?text=${encodeURIComponent(getSecureUrl())}`} target="_blank" style={{ color: '#25D366', fontSize: '24px' }}><i className="bi bi-whatsapp"></i></a>
+                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getSecureUrl())}`} target="_blank" style={{ color: '#1877F2', fontSize: '24px' }}><i className="bi bi-facebook"></i></a>
+                    <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(getSecureUrl())}`} target="_blank" style={{ color: '#000', fontSize: '24px' }}><i className="bi bi-twitter-x"></i></a>
+                    <a href={`https://t.me/share/url?url=${encodeURIComponent(getSecureUrl())}`} target="_blank" style={{ color: '#0088cc', fontSize: '24px' }}><i className="bi bi-telegram"></i></a>
+                </div>
+            )}
+        </div>
+        <div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '4px', borderRadius: '35px' }}>
+            <ChainFaceButton name={profileData.name} currentUrl={getSecureUrl()} />
+        </div>
+        <div style={{ position: 'relative' }}>
+            <div onClick={handleCopyLink} className="action-btn" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
+                <i className="bi bi-files" style={{ fontSize: '20px' }}></i>
+            </div>
+            {copiedTip === 'link' && (
+                <div className="fade-in" style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', background: '#2E1A47', color: '#fff', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                    Copied!
+                </div>
+            )}
+        </div>
+    </div>
+  </div> 
+)}
+
     </main>
   );
 }
