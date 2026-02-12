@@ -360,6 +360,7 @@ export default function ChainFacePage() {
           
           const urlParams = new URLSearchParams(window.location.search);
           const ownerInLink = urlParams.get('owner')?.toLowerCase();
+          
           if (ownerInLink && ownerInLink !== currentOwnerStr) {
               setIsLinkExpired(true);
           }
@@ -377,26 +378,30 @@ export default function ChainFacePage() {
               .from('chainface_profiles')
               .select('*')
               .eq('token_id', tokenId)
-              .eq('owner_address', currentOwnerStr) 
               .maybeSingle();
+
+          let safeProfile = profile;
+          if (profile && profile.owner_address && profile.owner_address.toLowerCase() !== currentOwnerStr) {
+              safeProfile = null;
+          }
 
           setProfileData({
               name: assetName,
               owner: currentOwnerStr,
-              customMessage: profile?.custom_message || '',
-              verifiedLevel: profile?.verified_level || 'none',
+              customMessage: safeProfile?.custom_message || '',
+              verifiedLevel: safeProfile?.verified_level || 'none',
               wallets: {
-                  btc: profile?.btc_address || '',
-                  eth: profile?.eth_address || '',
-                  sol: profile?.sol_address || '',
-                  bnb: profile?.bnb_address || '',
-                  usdt: profile?.usdt_address || '',
-                  matic: profile?.matic_address || ''
+                  btc: safeProfile?.btc_address || '',
+                  eth: safeProfile?.eth_address || '',
+                  sol: safeProfile?.sol_address || '',
+                  bnb: safeProfile?.bnb_address || '',
+                  usdt: safeProfile?.usdt_address || '',
+                  matic: safeProfile?.matic_address || ''
               },
               stats: {
                   conviction: (convictionCount || 0) * 100,
-                  likes: profile?.likes_count || 0,
-                  dislikes: profile?.dislikes_count || 0
+                  likes: safeProfile?.likes_count || 0,
+                  dislikes: safeProfile?.dislikes_count || 0
               }
           });
 
