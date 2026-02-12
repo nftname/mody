@@ -1124,7 +1124,7 @@ export default function ChainFacePage() {
             }
             .hero-banner-wrapper { 
                 height: 160px;
-                margin-top: -40px;
+                margin-top: -550px;
             } 
             .chainface-metallic-title {
                 font-size: 48px; 
