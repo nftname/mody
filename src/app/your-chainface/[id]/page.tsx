@@ -767,7 +767,7 @@ export default function ChainFacePage() {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: -55px; 
+            margin-top: -60px; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.08);
             background-image: radial-gradient(circle at center, #ffffff 40%, #f8f9fa 100%);
             z-index: 5; 
@@ -1124,7 +1124,7 @@ export default function ChainFacePage() {
             }
             .hero-banner-wrapper { 
                 height: 160px;
-                margin-top: -550px;
+                margin-top: -60px;
             } 
             .chainface-metallic-title {
                 font-size: 48px; 
