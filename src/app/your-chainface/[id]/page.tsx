@@ -286,37 +286,54 @@ const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
 
     return (
         <div onClick={handleBackgroundClick} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(46, 26, 71, 0.6)', backdropFilter: 'blur(4px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {/* تم تقليل العرض الأقصى إلى 320px وتقليل الحواشي الداخلية */}
-            <div className="fade-in" style={{ width: '85%', maxWidth: '320px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '20px', boxShadow: '0 15px 40px rgba(46, 26, 71, 0.2)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+            <div className="fade-in" style={{ width: '85%', maxWidth: '300px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '18px', boxShadow: '0 15px 40px rgba(46, 26, 71, 0.2)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
                 
-                <button onClick={onClose} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: '#999', fontSize: '16px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
+                <button onClick={onClose} style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: '#999', fontSize: '16px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
                 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '12px' }}>
-                    <img src={COIN_LOGOS[coin] || COIN_LOGOS.WALLET} width="24" height="24" alt={coin} style={{ objectFit: 'contain' }} />
-                    <h3 style={{ margin: 0, color: deepPurple, fontSize: '16px', fontFamily: 'Outfit, sans-serif', fontWeight: '700' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+                    <img src={COIN_LOGOS[coin] || COIN_LOGOS.WALLET} width="20" height="20" alt={coin} style={{ objectFit: 'contain' }} />
+                    <h3 style={{ margin: 0, color: deepPurple, fontSize: '15px', fontFamily: 'Outfit, sans-serif', fontWeight: '700' }}>
                         Send {coin}
                     </h3>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     
-                    <div style={{ background: '#f8f9fa', padding: '10px', borderRadius: '10px', fontSize: '11px', color: '#555', wordBreak: 'break-all', border: '1px solid #e9ecef', lineHeight: '1.4' }}>
-                        <span style={{ fontWeight: '600', display: 'block', marginBottom: '2px', color: '#888', fontSize: '10px', textTransform: 'uppercase' }}>Recipient:</span>
-                        {address}
+                    {}
+                    <div style={{ background: '#f8f9fa', padding: '8px 10px', borderRadius: '8px', border: '1px solid #e9ecef', width: '100%', overflow: 'hidden' }}>
+                        <span style={{ fontWeight: '600', display: 'block', marginBottom: '1px', color: '#888', fontSize: '9px', textTransform: 'uppercase' }}>Recipient:</span>
+                        <div style={{ 
+                            fontSize: '10px', 
+                            color: '#555', 
+                            whiteSpace: 'nowrap',       
+                            overflow: 'hidden',         
+                            textOverflow: 'ellipsis',   
+                            fontFamily: 'monospace'
+                        }}>
+                            {address}
+                        </div>
                     </div>
 
                     <div>
-                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600', color: '#333' }}>Amount</label>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '11px', fontWeight: '600', color: '#333' }}>Amount</label>
                         <div style={{ position: 'relative' }}>
+                            {}
                             <input 
-                                type="number" 
+                                type="text" 
+                                inputMode="decimal"
                                 value={amount} 
-                                onChange={(e) => setAmount(e.target.value)} 
+                                onChange={(e) => {
+                            
+                                    const val = e.target.value;
+                                    if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                                        setAmount(val);
+                                    }
+                                }} 
                                 placeholder="0.00" 
-                                style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', background: '#fff', border: '1px solid #d1d5db', color: '#333', fontSize: '14px', outline: 'none', fontFamily: 'Inter, sans-serif', fontWeight: '500' }} 
+                                style={{ width: '100%', padding: '8px 35px 8px 10px', borderRadius: '8px', background: '#fff', border: '1px solid #d1d5db', color: '#333', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif', fontWeight: '500' }} 
                                 autoFocus 
                             />
-                            <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '600', color: '#888', fontSize: '12px' }}>
+                            <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontWeight: '600', color: '#888', fontSize: '11px', pointerEvents: 'none' }}>
                                 {coin}
                             </span>
                         </div>
@@ -326,14 +343,14 @@ const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
                         onClick={handlePay} 
                         disabled={isProcessing || !amount} 
                         style={{ 
-                            marginTop: '5px',
+                            marginTop: '4px',
                             width: '100%', 
-                            padding: '12px', 
-                            borderRadius: '10px', 
+                            padding: '10px', 
+                            borderRadius: '8px', 
                             border: 'none', 
                             color: '#fff', 
                             fontWeight: '600',
-                            fontSize: '14px',
+                            fontSize: '13px',
                             background: deepPurple, 
                             cursor: (isProcessing || !amount) ? 'default' : 'pointer',
                             opacity: (isProcessing || !amount) ? 0.7 : 1,
@@ -341,12 +358,12 @@ const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '8px'
+                            gap: '6px'
                         }}>
                         {isProcessing ? 'Processing...' : (
                             <>
                                 <span>Pay Now</span>
-                                <img src={COIN_LOGOS[coin]} width="16" height="16" style={{ filter: 'brightness(0) invert(1)' }} alt="" />
+                                <img src={COIN_LOGOS[coin]} width="14" height="14" style={{ filter: 'brightness(0) invert(1)' }} alt="" />
                             </>
                         )}
                     </button>
@@ -1451,6 +1468,39 @@ export default function ChainFacePage() {
 
         </>
       )}
+      
+      {/* --- FOOTER START --- */}
+      <div 
+          onClick={() => router.push('/')}
+          style={{
+              width: '100%',
+              height: '110px', 
+              backgroundImage: 'radial-gradient(circle at center, #ffffff 40%, #f8f9fa 100%)',
+              borderTop: '1px solid #e5e7eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              marginTop: 'auto',
+              position: 'relative',
+              zIndex: 10
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = '#2E1A47'}
+          onMouseLeave={(e) => e.currentTarget.style.color = '#4b5563'}
+      >
+          <span style={{
+              color: '#4b5563', 
+              fontSize: '13px', 
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: '500',
+              transition: 'color 0.2s ease',
+              textAlign: 'center',
+              padding: '0 20px'
+          }}>
+              © 2025 NNM Digital Name Assets Market ChainFace. All rights reserved.
+          </span>
+      </div>
+      {/* --- FOOTER END --- */}
 
     </main>
   );
