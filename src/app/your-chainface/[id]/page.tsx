@@ -767,7 +767,7 @@ export default function ChainFacePage() {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: -75px; 
+            margin-top: -55px; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.08);
             background-image: radial-gradient(circle at center, #ffffff 40%, #f8f9fa 100%);
             z-index: 5; 
@@ -1122,7 +1122,7 @@ export default function ChainFacePage() {
             mix-blend-mode: multiply;
             opacity: 0.85;
         }
-         @media (max-width: 768px) {
+@media (max-width: 768px) {
     .header-qr-btn {
         width: 34px;
         height: 34px;
@@ -1135,7 +1135,7 @@ export default function ChainFacePage() {
     }
     .hero-banner-wrapper {
         height: 160px;
-        margin-top: -85px;
+        margin-top: -55px;
     }
     .chainface-metallic-title {
         font-size: 48px;
@@ -1144,9 +1144,10 @@ export default function ChainFacePage() {
     .back-btn {
         width: 34px;
         height: 34px;
-        top: 100px;
+        top: 70px;
         left: 15px;
         font-size: 16px;
+        z-index: 9999999 !important;
     }
     .identity-card-container {
         width: 40%;
@@ -1204,6 +1205,7 @@ export default function ChainFacePage() {
         font-size: 11px;
     }
 }
+
                     .action-btn {
             transition: transform 0.1s ease !important;
         }
@@ -1530,7 +1532,7 @@ export default function ChainFacePage() {
       >
           <span style={{
               color: '#4b5563', 
-              fontSize: '9px', 
+              fontSize: '11px', 
               fontFamily: 'Inter, sans-serif',
               fontWeight: '500',
               transition: 'color 0.2s ease',
