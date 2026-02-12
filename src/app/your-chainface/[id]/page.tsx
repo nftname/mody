@@ -258,6 +258,102 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
     );
 };
 
+const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
+    const [amount, setAmount] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setAmount('');
+            setIsProcessing(false);
+        }
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    const handlePay = async () => {
+        if (!amount || parseFloat(amount) <= 0) return;
+        setIsProcessing(true);
+        await onConfirm(amount);
+        setIsProcessing(false);
+    };
+
+    const handleBackgroundClick = (e: any) => {
+        if (e.target === e.currentTarget) onClose();
+    };
+
+    const deepPurple = '#2E1A47';
+
+    return (
+        <div onClick={handleBackgroundClick} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(46, 26, 71, 0.6)', backdropFilter: 'blur(5px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="fade-in" style={{ width: '90%', maxWidth: '380px', backgroundColor: '#ffffff', borderRadius: '20px', padding: '30px', boxShadow: '0 20px 60px rgba(46, 26, 71, 0.25)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+                
+                <button onClick={onClose} style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
+                    <img src={COIN_LOGOS[coin] || COIN_LOGOS.WALLET} width="32" height="32" alt={coin} style={{ objectFit: 'contain' }} />
+                    <h3 style={{ margin: 0, color: deepPurple, fontSize: '18px', fontFamily: 'Outfit, sans-serif', fontWeight: '700' }}>
+                        Send {coin}
+                    </h3>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    
+                    <div style={{ background: '#f8f9fa', padding: '12px', borderRadius: '12px', fontSize: '13px', color: '#555', wordBreak: 'break-all', border: '1px solid #e9ecef' }}>
+                        <span style={{ fontWeight: '600', display: 'block', marginBottom: '4px', color: '#888', fontSize: '11px', textTransform: 'uppercase' }}>Recipient:</span>
+                        {address}
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#333' }}>Amount</label>
+                        <div style={{ position: 'relative' }}>
+                            <input 
+                                type="number" 
+                                value={amount} 
+                                onChange={(e) => setAmount(e.target.value)} 
+                                placeholder="0.00" 
+                                style={{ width: '100%', padding: '14px 14px 14px 14px', borderRadius: '12px', background: '#fff', border: '2px solid #e5e7eb', color: '#333', fontSize: '16px', outline: 'none', fontFamily: 'Inter, sans-serif', fontWeight: '500' }} 
+                                autoFocus 
+                            />
+                            <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', fontWeight: '600', color: '#888', fontSize: '14px' }}>
+                                {coin}
+                            </span>
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={handlePay} 
+                        disabled={isProcessing || !amount} 
+                        style={{ 
+                            marginTop: '10px',
+                            width: '100%', 
+                            padding: '16px', 
+                            borderRadius: '12px', 
+                            border: 'none', 
+                            color: '#fff', 
+                            fontWeight: '600',
+                            fontSize: '16px',
+                            background: deepPurple, 
+                            cursor: (isProcessing || !amount) ? 'default' : 'pointer',
+                            opacity: (isProcessing || !amount) ? 0.7 : 1,
+                            transition: '0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px'
+                        }}>
+                        {isProcessing ? 'Processing...' : (
+                            <>
+                                <span>Pay Now</span>
+                                <img src={COIN_LOGOS[coin]} width="20" height="20" style={{ filter: 'brightness(0) invert(1)' }} alt="" />
+                            </>
+                        )}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // --- MAIN PAGE ---
 export default function ChainFacePage() {
@@ -281,8 +377,12 @@ export default function ChainFacePage() {
   const [isOwner, setIsOwner] = useState(false);
     const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+   // --- NEW PAYMENT MODAL STATE ---
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPaymentCoin, setSelectedPaymentCoin] = useState<string | null>(null);
+  const [selectedPaymentAddress, setSelectedPaymentAddress] = useState<string>('');
+
   
- 
   const [messages, setMessages] = useState<any[]>([]);
   const [visitorMessage, setVisitorMessage] = useState('');
   const [showVisitorBox, setShowVisitorBox] = useState(false);
@@ -464,46 +564,45 @@ export default function ChainFacePage() {
   
   const handleWalletAction = (walletAddr: string, coin: string) => {
     if (!walletAddr || isLinkExpired) return;
-
-    navigator.clipboard.writeText(walletAddr);
-
+    
     const lowerCoin = coin.toLowerCase();
     
-    let chainId;
-    if (lowerCoin === 'eth' || lowerCoin === 'usdt') chainId = 1;
-    else if (lowerCoin === 'polygon' || lowerCoin === 'matic') chainId = 137;
-    else if (lowerCoin === 'bnb') chainId = 56;
-
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    if (lowerCoin === 'btc') {
-        window.location.href = `bitcoin:${walletAddr}`;
-        setShowVisitorBox(true);
-        return;
-    }
-    if (lowerCoin === 'sol') {
-        window.location.href = `solana:${walletAddr}`;
+    if (lowerCoin === 'btc' || lowerCoin === 'sol') {
+        navigator.clipboard.writeText(walletAddr);
+        window.location.href = lowerCoin === 'btc' ? `bitcoin:${walletAddr}` : `solana:${walletAddr}`;
         setShowVisitorBox(true);
         return;
     }
 
-    if (isMobile) {
-             const deepLink = `https://metamask.app.link/send/${walletAddr}`;
-        window.location.href = deepLink;
-    } else {
-        try {
-            sendTransaction({ 
-                to: walletAddr as `0x${string}`,
-                value: parseEther('0'),
-                chainId: chainId
-            });
-        } catch (e) {
-            window.location.href = `ethereum:${walletAddr}`;
-        }
-    }
+    setSelectedPaymentCoin(coin);
+    setSelectedPaymentAddress(walletAddr);
+    setPaymentModalOpen(true);
+  };
 
-    setShowVisitorBox(true);
-};
+  const handleConfirmPayment = async (amount: string) => {
+      if (!selectedPaymentCoin || !selectedPaymentAddress) return;
+
+      try {
+        const lowerCoin = selectedPaymentCoin.toLowerCase();
+        let chainId;
+        
+        if (lowerCoin === 'eth' || lowerCoin === 'usdt') chainId = 1;
+        else if (lowerCoin === 'polygon' || lowerCoin === 'matic') chainId = 137;
+        else if (lowerCoin === 'bnb') chainId = 56;
+
+        sendTransaction({ 
+            to: selectedPaymentAddress as `0x${string}`,
+            value: parseEther(amount),
+            chainId: chainId
+        });
+
+        setPaymentModalOpen(false);
+        setShowVisitorBox(true);
+      } catch (e) {
+        console.error(e);
+      }
+  };
+
 
 
   const handleSupportClick = async (type: 'like' | 'dislike') => {
@@ -1154,7 +1253,14 @@ export default function ChainFacePage() {
               )}
               
               <WalletEditorModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} wallets={profileData.wallets} onSave={handleSaveWallet} />
-
+              <PaymentModal 
+                  isOpen={paymentModalOpen} 
+                  onClose={() => setPaymentModalOpen(false)} 
+                  coin={selectedPaymentCoin} 
+                  address={selectedPaymentAddress} 
+                  onConfirm={handleConfirmPayment} 
+              />
+                    
               <div className="pay-grid">
                   {Object.keys(COIN_LOGOS).filter(k => k !== 'WALLET').map(coin => {
                       const addr = profileData.wallets[coin === 'POLYGON' ? 'matic' : coin.toLowerCase()];
