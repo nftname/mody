@@ -1162,20 +1162,51 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
 
       {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
         <>
-          <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center' }}>
-            <p style={{ color: '#2E1A47', fontSize: '14px', fontWeight: '500', marginBottom: '20px' }}>Share your secure link:</p>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
-                <div onClick={handleShareClick} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                    <i className="bi bi-share-fill"></i>
-                </div>
-                <div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '4px' }}>
-                    <ChainFaceButton name={profileData.name} currentUrl={getSecureUrl()} />
-                </div>
-                <div onClick={handleCopyLink} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                    <i className="bi bi-files"></i>
-                </div>
-            </div>
+          <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center', position: 'relative' }}>
+          
+          <p style={{ color: '#2E1A47', fontSize: '14px', fontWeight: '500', marginBottom: '25px', lineHeight: '1.5' }}>
+             Share this sovereign link button with friends, clients, or anyone you wish to view your page.
+          </p>
+          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', position: 'relative' }}>
+            
+              {/* Share Button & Menu */}
+              <div style={{ position: 'relative' }}>
+                  <div onClick={handleShareClick} className="action-btn" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
+                      <i className="bi bi-share-fill"></i>
+                  </div>
+                  
+                  {showShareMenu && (
+                      <div className="fade-in" style={{ position: 'absolute', bottom: '55px', left: '-60px', background: '#fff', border: '1px solid #eee', borderRadius: '16px', padding: '10px', boxShadow: '0 10px 40px rgba(0,0,0,0.15)', display: 'flex', gap: '15px', zIndex: 100, minWidth: '200px', justifyContent: 'center' }}>
+                          <a href={`https://wa.me/?text=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="WhatsApp" style={{ color: '#25D366', fontSize: '24px' }}><i className="bi bi-whatsapp"></i></a>
+                          <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="Facebook" style={{ color: '#1877F2', fontSize: '24px' }}><i className="bi bi-facebook"></i></a>
+                          <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="X (Twitter)" style={{ color: '#000', fontSize: '24px' }}><i className="bi bi-twitter-x"></i></a>
+                          <a href={`https://t.me/share/url?url=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="Telegram" style={{ color: '#0088cc', fontSize: '24px' }}><i className="bi bi-telegram"></i></a>
+                          <a href={`mailto:?body=${encodeURIComponent(currentPageUrl)}`} title="Email" style={{ color: '#EA4335', fontSize: '24px' }}><i className="bi bi-envelope-fill"></i></a>
+                      </div>
+                  )}
+              </div>
+
+              {/* Capsule Button */}
+<div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '4px', borderRadius: '35px' }}>
+    <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
+</div>
+
+
+              {/* Copy Button */}
+              <div style={{ position: 'relative' }}>
+                  <div onClick={handleCopyLink} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
+                      <i className="bi bi-files" style={{ fontSize: '20px' }}></i>
+                  </div>
+                  {copiedTip === 'link' && (
+                      <div className="fade-in" style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', background: '#2E1A47', color: '#fff', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
+                          Copied!
+                      </div>
+                  )}
+              </div>
+
           </div>
+      </div> 
 
           <div style={{ width: '80%', margin: '40px auto', paddingBottom: '60px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px' }}>
