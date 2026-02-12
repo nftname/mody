@@ -351,7 +351,7 @@ export default function ChainFacePage() {
       query: { enabled: !!tokenId }
   });
 
-  // --- DATA FETCHING & KILL SWITCH LOGIC (SECURE RPC VERSION) ---
+  // --- DATA FETCHING (TRIGGER ACTIVATOR) ---
   const fetchChainFaceData = useCallback(async () => {
       if (!tokenId || !realOwnerAddress) return;
       setLoading(true);
@@ -383,25 +383,25 @@ export default function ChainFacePage() {
 
           let safeProfile = profile;
 
-          // --- التعديل: استدعاء الدالة الأمنية من السيرفر ---
+          // ============================================================
+          // كود تفعيل التريجر: نحدث المالك فقط، والداتا بيس تمسح الباقي
+          // ============================================================
           if (profile && profile.owner_address && profile.owner_address.toLowerCase() !== currentOwnerStr) {
               
-              console.log("Ownership Change Detected! Executing Secure Wipe...");
+              console.log("New Owner Detected! Updating DB to trigger auto-wipe...");
 
-              // نستدعي الدالة التي أنشأناها في Supabase
-              // هذه الدالة ستمسح الرسائل وتصفر المحافظ وتحدث المالك دفعة واحدة
-              const { error } = await supabase.rpc('clean_reset_chainface', {
-                  p_token_id: Number(tokenId),
-                  p_new_owner: currentOwnerStr
-              });
+              // نرسل أمر تحديث المالك فقط
+              // قاعدة البيانات ستلاحظ التغيير وتقوم بمسح الرسائل والمحافظ تلقائياً
+              await supabase.from('chainface_profiles').update({
+                  owner_address: currentOwnerStr,
+                  updated_at: new Date().toISOString()
+              }).eq('token_id', tokenId);
 
-              if (error) console.error("Wipe failed:", error);
-
-              // إخفاء البيانات محلياً لهذه الجلسة
+              // نخفي البيانات القديمة من الشاشة فوراً
               safeProfile = null;
               setMessages([]); 
           }
-          // ----------------------------------------------------
+          // ============================================================
 
           setProfileData({
               name: assetName,
