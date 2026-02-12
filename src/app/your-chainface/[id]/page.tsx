@@ -468,20 +468,24 @@ export default function ChainFacePage() {
   
 const handleWalletAction = (walletAddr: string, coin: string) => {
     if (!walletAddr || isLinkExpired) return;
-    
+
     navigator.clipboard.writeText(walletAddr);
-    
+
     const lowerCoin = coin.toLowerCase();
-    let url = '';
+    let protocol = '';
 
-    if (lowerCoin === 'btc') url = `bitcoin:${walletAddr}`;
-    else if (lowerCoin === 'sol') url = `solana:${walletAddr}`;
-    else url = `ethereum:${walletAddr}`;
-
-    if (url) {
-        window.open(url, '_self');
+    if (lowerCoin === 'btc') {
+        protocol = `bitcoin:${walletAddr}`;
+    } else if (lowerCoin === 'sol') {
+        protocol = `solana:${walletAddr}`;
+    } else {
+        protocol = `ethereum:${walletAddr}`;
     }
-    
+
+    if (protocol) {
+        window.location.href = protocol;
+    }
+
     setShowVisitorBox(true);
 };
 
