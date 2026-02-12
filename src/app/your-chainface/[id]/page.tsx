@@ -1001,8 +1001,8 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
             transition: transform 0.1s ease !important;
         }
         .action-btn:active {
-            transform: scale(0.9) !important; /* تصغير الزر عند الضغط */
-            background-color: #e0e0e0 !important; /* تغميق اللون قليلاً عند الضغط */
+            transform: scale(0.9) !important; 
+            background-color: #e0e0e0 !important; 
         }
 
       `}</style>
@@ -1019,7 +1019,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
               />
           </div>
    
-          {/* شبكة البلوك تشين الخفيفة في الخلفية */}
+          {}
           <svg className="blockchain-svg" width="100%" height="100%" viewBox="0 0 900 220" preserveAspectRatio="xMidYMid slice">
             <line x1="50" y1="50" x2="150" y2="100" className="link" />
             <line x1="50" y1="180" x2="150" y2="100" className="link" />
@@ -1116,7 +1116,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
                               address={addr} 
                               isOwner={isOwner} 
                               onRemove={() => handleRemoveWallet(coin)} 
-                              // تم تصحيح الاسم هنا ليصبح handleWalletAction
+                             
                               onClick={() => isOwner ? setIsModalOpen(true) : handleWalletAction(addr, coin)} 
                           />
                       );
@@ -1129,25 +1129,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
     </div>
 )}
 
-{!isOwner && showVisitorBox && (
-    <div className="fade-in" style={{ margin: '30px 0', padding: '20px', background: '#fff', borderRadius: '24px', border: '1px solid #eee', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', textAlign: 'left' }}>
-        <h4 style={{ color: '#2E1A47', fontSize: '15px', fontWeight: '700', marginBottom: '12px' }}>Leave a private note for the owner</h4>
-        <textarea 
-            value={visitorMessage}
-            onChange={(e) => setVisitorMessage(e.target.value)}
-            placeholder="....."
-            style={{ width: '100%', minHeight: '100px', border: 'none', background: '#f8f9fa', borderRadius: '15px', padding: '15px', fontSize: '14px', outline: 'none', resize: 'none', color: '#2E1A47' }}
-        />
-       <button 
-    onClick={handleSendMessage} 
-    disabled={isSending} 
-    style={{ display: 'block', width: '25%', marginLeft: 'auto', marginTop: '12px', padding: '10px', borderRadius: '12px', background: '#2E1A47', color: '#fff', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '12px' }}
->
-    {isSending ? '...' : 'Send Message'}
-</button>
-    </div>
-)}
-   
+
     {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
 
     <div style={{ marginTop: '40px', textAlign: 'left' }}>
