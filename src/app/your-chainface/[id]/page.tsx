@@ -486,7 +486,6 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
         // Default for USDT or others (Generic)
         protocol = `ethereum:${walletAddr}`;
     }
-
     if (protocol) {
         window.location.href = protocol;
     }
