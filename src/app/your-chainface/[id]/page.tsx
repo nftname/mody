@@ -1153,7 +1153,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
                           style={{ width: '100%', minHeight: '100px', border: 'none', background: '#f8f9fa', borderRadius: '15px', padding: '15px', fontSize: '14px', outline: 'none', resize: 'none', color: '#2E1A47' }}
                       />
                       <button onClick={handleSendMessage} disabled={isSending} style={{ display: 'block', width: '25%', marginLeft: 'auto', marginTop: '12px', padding: '10px', borderRadius: '12px', background: '#2E1A47', color: '#fff', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '11px' }}>
-                          {isSending ? '...' : 'Send Message'}
+                          {isSending ? '...' : 'Send'}
                       </button>
                   </div>
               )}
