@@ -1122,6 +1122,13 @@ export default function ChainFacePage() {
             mix-blend-mode: multiply;
             opacity: 0.85;
         }
+
+@media (max-width: 768px) {
+  div[onClick] {
+    height: 82px !important;
+  }
+}
+
 @media (max-width: 768px) {
     .header-qr-btn {
         width: 34px;
@@ -1134,8 +1141,8 @@ export default function ChainFacePage() {
         height: 24px;
     }
     .hero-banner-wrapper {
-        height: 160px;
-        margin-top: -55px;
+        height: 200px;
+        margin-top: -95px;
     }
     .chainface-metallic-title {
         font-size: 48px;
@@ -1144,7 +1151,7 @@ export default function ChainFacePage() {
     .back-btn {
         width: 34px;
         height: 34px;
-        top: 70px;
+        top: 115px;
         left: 15px;
         font-size: 16px;
         z-index: 9999999 !important;
@@ -1153,7 +1160,7 @@ export default function ChainFacePage() {
         width: 40%;
         height: 80px;
         min-width: 140px;
-        margin: -22px 0 0 20px;
+        margin: -35px 0 0 20px;
         border-radius: 12px;
         border-width: 0.8px;
         padding: 2px 0;
