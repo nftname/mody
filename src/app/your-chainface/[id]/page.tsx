@@ -767,7 +767,7 @@ export default function ChainFacePage() {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: -40px; 
+            margin-top: -75px; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.08);
             background-image: radial-gradient(circle at center, #ffffff 40%, #f8f9fa 100%);
             z-index: 5; 
@@ -815,17 +815,24 @@ export default function ChainFacePage() {
         .node-active { fill: #d8b4fe; }
 
         .back-btn {
-            position: absolute;
-            top: 55px; left: 25px;
-            width: 42px; height: 42px;
-            border-radius: 50%;
-            background-color: #f8f9fa; 
-            display: flex; align-items: center; justify-content: center;
-            color: #2E1A47; font-size: 20px; cursor: pointer; z-index: 100;
-            border: 1px solid #E5E7EB;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            transition: all 0.2s ease;
-        }
+        position: absolute;
+        top: 100px;
+        left: 25px;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2E1A47;
+        font-size: 20px;
+        cursor: pointer;
+        z-index: 999999 !important;
+        border: 1px solid #E5E7EB;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+       }
 
         .identity-card-container {
             position: relative;
@@ -1116,54 +1123,87 @@ export default function ChainFacePage() {
             opacity: 0.85;
         }
          @media (max-width: 768px) {
-            .header-qr-btn {
-                 width: 34px; height: 34px; top: 15px; right: 15px;
-            }
-            .qr-image-generated {
-                width: 24px; height: 24px;
-            }
-            .hero-banner-wrapper { 
-                height: 160px;
-                margin-top: -40px;
-            } 
-            .chainface-metallic-title {
-                font-size: 48px; 
-                padding-left: 20px; 
-            }
-            .back-btn {
-                width: 34px; height: 34px; top: 15px; left: 15px; font-size: 16px;
-            }
-            .identity-card-container { 
-                width: 40%; height: 80px; min-width: 140px; margin: -22px 0 0 20px;
-                border-radius: 12px; border-width: 0.8px; padding: 2px 0;
-            }
-            .card-content { margin: 2px 0; }
-            .card-name { font-size: 15px; }
-            .badge-icon { width: 13px; height: 13px; }
-            .verification-badge { width: 13px; height: 13px; }
-            .star-icon { width: 11px; height: 11px; }
-            .stars-container { gap: 1px; margin-top: 4px; margin-bottom: 2px; }
-            .badges-container { margin-bottom: 2px; margin-top: -2px; }
-            
-            .cta-phrase {
-                font-size: 19px; letter-spacing: -0.5px; color: ${deepPurpleColor};
-            }
-            .footer-note { font-size: 10px; }
-
-            .pay-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-            
-            .web3-payment-btn {
-                height: 45px;
-                padding: 0 8px;
-            }
-            
-            .token-name {
-                font-size: 11px;
-            }
-        }
+    .header-qr-btn {
+        width: 34px;
+        height: 34px;
+        top: 15px;
+        right: 15px;
+    }
+    .qr-image-generated {
+        width: 24px;
+        height: 24px;
+    }
+    .hero-banner-wrapper {
+        height: 160px;
+        margin-top: -85px;
+    }
+    .chainface-metallic-title {
+        font-size: 48px;
+        padding-left: 20px;
+    }
+    .back-btn {
+        width: 34px;
+        height: 34px;
+        top: 100px;
+        left: 15px;
+        font-size: 16px;
+    }
+    .identity-card-container {
+        width: 40%;
+        height: 80px;
+        min-width: 140px;
+        margin: -22px 0 0 20px;
+        border-radius: 12px;
+        border-width: 0.8px;
+        padding: 2px 0;
+    }
+    .card-content {
+        margin: 2px 0;
+    }
+    .card-name {
+        font-size: 15px;
+    }
+    .badge-icon {
+        width: 13px;
+        height: 13px;
+    }
+    .verification-badge {
+        width: 13px;
+        height: 13px;
+    }
+    .star-icon {
+        width: 11px;
+        height: 11px;
+    }
+    .stars-container {
+        gap: 1px;
+        margin-top: 4px;
+        margin-bottom: 2px;
+    }
+    .badges-container {
+        margin-bottom: 2px;
+        margin-top: -2px;
+    }
+    .cta-phrase {
+        font-size: 19px;
+        letter-spacing: -0.5px;
+        color: #2E1A47;
+    }
+    .footer-note {
+        font-size: 10px;
+    }
+    .pay-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .web3-payment-btn {
+        height: 45px;
+        padding: 0 8px;
+    }
+    .token-name {
+        font-size: 11px;
+    }
+}
                     .action-btn {
             transition: transform 0.1s ease !important;
         }
@@ -1490,7 +1530,7 @@ export default function ChainFacePage() {
       >
           <span style={{
               color: '#4b5563', 
-              fontSize: '13px', 
+              fontSize: '9px', 
               fontFamily: 'Inter, sans-serif',
               fontWeight: '500',
               transition: 'color 0.2s ease',
