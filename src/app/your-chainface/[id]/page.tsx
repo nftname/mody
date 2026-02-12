@@ -1130,42 +1130,6 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
 )}
 
 
-    {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
-
-    <div style={{ marginTop: '40px', textAlign: 'left' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-            <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#2E1A47', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Inbound Messages</h4>
-            <select 
-                value={sortOrder} 
-                onChange={(e:any) => setSortOrder(e.target.value)} 
-                style={{ border: 'none', background: '#f0f0f0', fontSize: '11px', color: '#2E1A47', outline: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', appearance: 'none', fontWeight: '700' }}
-
-            >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-            </select>
-        </div>
-        
-        {messages.length === 0 ? (
-            <div style={{ padding: '30px', background: '#fff', borderRadius: '20px', color: '#ccc', fontSize: '13px', textAlign: 'center', border: '1px dashed #eee' }}>
-                Your inbox is currently empty.
-            </div>
-        ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {messages.slice(0, 5).map(m => (
-                    <div key={m.id} className="fade-in" style={{ padding: '15px', background: '#fff', borderRadius: '18px', border: '1px solid #f5f5f5', boxShadow: '0 2px 5px rgba(0,0,0,0.01)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '700', marginBottom: '6px' }}>
-                            <span style={{ color: '#a855f7' }}>FROM: {m.sender_wallet.slice(0,6)}...{m.sender_wallet.slice(-4)}</span>
-                            <span style={{ color: '#aaa' }}>{new Date(m.created_at).toLocaleDateString()}</span>
-                        </div>
-                        <p style={{ margin: 0, fontSize: '13px', color: '#2E1A47', fontWeight: '500', lineHeight: '1.4' }}>{m.message_text}</p>
-                    </div>
-                ))}
-            </div>
-        )}
-    </div>
-)}
-
 
 <p className="footer-note">
                   Payments are peer-to-peer. ChainFace never holds funds.
