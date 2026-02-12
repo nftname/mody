@@ -351,7 +351,7 @@ export default function ChainFacePage() {
       query: { enabled: !!tokenId }
   });
 
-  // --- DATA FETCHING & KILL SWITCH LOGIC (WITH AUTO-WIPE) ---
+  // --- DATA FETCHING & KILL SWITCH LOGIC (SECURE RPC VERSION) ---
   const fetchChainFaceData = useCallback(async () => {
       if (!tokenId || !realOwnerAddress) return;
       setLoading(true);
@@ -383,31 +383,26 @@ export default function ChainFacePage() {
 
           let safeProfile = profile;
 
+          // --- التعديل: استدعاء الدالة الأمنية من السيرفر ---
           if (profile && profile.owner_address && profile.owner_address.toLowerCase() !== currentOwnerStr) {
               
-              console.log("Ownership Change Detected! Wiping old data from DB...");
+              console.log("Ownership Change Detected! Executing Secure Wipe...");
 
-              await supabase
-                  .from('chainface_messages')
-                  .delete()
-                  .eq('token_id', tokenId);
+              // نستدعي الدالة التي أنشأناها في Supabase
+              // هذه الدالة ستمسح الرسائل وتصفر المحافظ وتحدث المالك دفعة واحدة
+              const { error } = await supabase.rpc('clean_reset_chainface', {
+                  p_token_id: Number(tokenId),
+                  p_new_owner: currentOwnerStr
+              });
 
-              await supabase.from('chainface_profiles').update({
-                  owner_address: currentOwnerStr, 
-                  btc_address: null,
-                  eth_address: null,
-                  sol_address: null,
-                  bnb_address: null,
-                  usdt_address: null,
-                  matic_address: null,
-                  custom_message: null, 
-                  updated_at: new Date().toISOString()
-              }).eq('token_id', tokenId);
+              if (error) console.error("Wipe failed:", error);
 
+              // إخفاء البيانات محلياً لهذه الجلسة
               safeProfile = null;
-              
               setMessages([]); 
           }
+          // ----------------------------------------------------
+
           setProfileData({
               name: assetName,
               owner: currentOwnerStr,
