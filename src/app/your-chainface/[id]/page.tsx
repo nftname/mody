@@ -159,11 +159,11 @@ const GoldenCheckBadge = () => (
     </svg>
 );
 
-const ChainFaceButton = ({ name, currentUrl }: { name: string, currentUrl: string }) => {
+const ChainFaceButton = ({ name, currentUrl, isOwner }: { name: string, currentUrl: string, isOwner?: boolean }) => {
   const qrBg = currentUrl ? `url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}&bgcolor=ffffff')` : 'none';
   
   return (
-    <Link href="/mint" className="signature-btn">
+    <Link href={isOwner ? "/dashboard" : "/mint"} className="signature-btn">
         <div className="sig-qr-container"><div className="sig-qr-code" style={{ backgroundImage: qrBg }}></div></div>
         <div className="sig-content">
             <div className="sig-top-row">
@@ -431,8 +431,11 @@ export default function ChainFacePage() {
 
   useEffect(() => {
       fetchChainFaceData();
+  }, [fetchChainFaceData]);
+
+  useEffect(() => {
       if (isOwner) fetchMessages();
-  }, [fetchChainFaceData, fetchMessages, isOwner, address]);
+  }, [isOwner, sortOrder, fetchMessages]);
 
   const handleSendMessage = async () => {
     if (!visitorMessage.trim()) return;
@@ -997,9 +1000,10 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
       `}</style>
 
       <div className="hero-banner-wrapper">
-          <div className="back-btn" onClick={() => router.back()}>
+           <div className="back-btn" onClick={() => router.back()} style={{ zIndex: 9999 }}>
               <i className="bi bi-arrow-left"></i>
           </div>
+
        <div className="header-qr-btn" title="Scan to Share Profile">
               <img 
                 src={qrCodeUrl} 
@@ -1197,9 +1201,8 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
           </div>
       </div> 
 
-                 <div style={{ width: '80%', margin: '40px auto', paddingBottom: '60px' }}>
+              <div style={{ width: '80%', margin: '40px auto', paddingBottom: '60px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px' }}>
-                  
                   <select 
                       value={sortOrder} 
                       onChange={(e:any) => setSortOrder(e.target.value)} 
@@ -1219,8 +1222,6 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
                       <option value="newest">Newest</option>
                       <option value="oldest">Oldest</option>
                   </select>
-
-                  <h4 style={{ fontSize: '12px', fontWeight: '800', color: '#2E1A47', margin: 0 }}>INBOUND MESSAGES</h4>
               </div>
               
               {messages.length === 0 ? (
@@ -1280,6 +1281,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
                   </>
               )}
           </div>
+
         </>
       )}
 

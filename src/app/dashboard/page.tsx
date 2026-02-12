@@ -1230,22 +1230,19 @@ export default function DashboardPage() {
         .balance-number { font-size: 24px; }
         .balance-unit { font-size: 14px; }
 
-        /* --- Mobile Only Edits (تعديلات الموبايل فقط) --- */
+        /* --- Mobile Only Edits  --- */
         @media (max-width: 768px) {
-            /* تصغير العنوان بنسبة 20% (من 12 إلى 10) */
             .balance-label {
                 font-size: 10px !important;
             }
             
-            /* تصغير الأرقام بنسبة 30% (من 24 إلى 17) لضمان بقاء الرمز الذهبي بجوارها */
             .balance-number {
                 font-size: 17px !important;
             }
 
-            /* تصغير الرمز الذهبي قليلاً ليتناسب مع الرقم */
             .balance-unit {
                 font-size: 11px !important;
-                white-space: nowrap; /* يمنع نزول الرمز للأسفل نهائياً */
+                white-space: nowrap; 
             }
             .hover-bg-dark:hover { background-color: rgba(255, 255, 255, 0.05) !important; 
             }
