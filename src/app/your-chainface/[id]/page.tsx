@@ -1000,9 +1000,10 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
       `}</style>
 
       <div className="hero-banner-wrapper">
-           <div className="back-btn" onClick={() => router.back()} style={{ zIndex: 9999 }}>
-              <i className="bi bi-arrow-left"></i>
-          </div>
+           <div className="back-btn" onClick={() => router.back()} style={{ zIndex: 99999, cursor: 'pointer' }}>
+    <i className="bi bi-arrow-left"></i>
+</div>
+
 
        <div className="header-qr-btn" title="Scan to Share Profile">
               <img 
@@ -1182,7 +1183,8 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
 
               {/* Capsule Button */}
 <div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '4px', borderRadius: '35px' }}>
-    <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
+    <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} isOwner={isOwner} />
+
 </div>
 
 
