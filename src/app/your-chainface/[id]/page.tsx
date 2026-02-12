@@ -285,37 +285,38 @@ const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
     const deepPurple = '#2E1A47';
 
     return (
-        <div onClick={handleBackgroundClick} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(46, 26, 71, 0.6)', backdropFilter: 'blur(5px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="fade-in" style={{ width: '90%', maxWidth: '380px', backgroundColor: '#ffffff', borderRadius: '20px', padding: '30px', boxShadow: '0 20px 60px rgba(46, 26, 71, 0.25)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+        <div onClick={handleBackgroundClick} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(46, 26, 71, 0.6)', backdropFilter: 'blur(4px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {/* تم تقليل العرض الأقصى إلى 320px وتقليل الحواشي الداخلية */}
+            <div className="fade-in" style={{ width: '85%', maxWidth: '320px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '20px', boxShadow: '0 15px 40px rgba(46, 26, 71, 0.2)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
                 
-                <button onClick={onClose} style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
+                <button onClick={onClose} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: '#999', fontSize: '16px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
                 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
-                    <img src={COIN_LOGOS[coin] || COIN_LOGOS.WALLET} width="32" height="32" alt={coin} style={{ objectFit: 'contain' }} />
-                    <h3 style={{ margin: 0, color: deepPurple, fontSize: '18px', fontFamily: 'Outfit, sans-serif', fontWeight: '700' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '12px' }}>
+                    <img src={COIN_LOGOS[coin] || COIN_LOGOS.WALLET} width="24" height="24" alt={coin} style={{ objectFit: 'contain' }} />
+                    <h3 style={{ margin: 0, color: deepPurple, fontSize: '16px', fontFamily: 'Outfit, sans-serif', fontWeight: '700' }}>
                         Send {coin}
                     </h3>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     
-                    <div style={{ background: '#f8f9fa', padding: '12px', borderRadius: '12px', fontSize: '13px', color: '#555', wordBreak: 'break-all', border: '1px solid #e9ecef' }}>
-                        <span style={{ fontWeight: '600', display: 'block', marginBottom: '4px', color: '#888', fontSize: '11px', textTransform: 'uppercase' }}>Recipient:</span>
+                    <div style={{ background: '#f8f9fa', padding: '10px', borderRadius: '10px', fontSize: '11px', color: '#555', wordBreak: 'break-all', border: '1px solid #e9ecef', lineHeight: '1.4' }}>
+                        <span style={{ fontWeight: '600', display: 'block', marginBottom: '2px', color: '#888', fontSize: '10px', textTransform: 'uppercase' }}>Recipient:</span>
                         {address}
                     </div>
 
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#333' }}>Amount</label>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600', color: '#333' }}>Amount</label>
                         <div style={{ position: 'relative' }}>
                             <input 
                                 type="number" 
                                 value={amount} 
                                 onChange={(e) => setAmount(e.target.value)} 
                                 placeholder="0.00" 
-                                style={{ width: '100%', padding: '14px 14px 14px 14px', borderRadius: '12px', background: '#fff', border: '2px solid #e5e7eb', color: '#333', fontSize: '16px', outline: 'none', fontFamily: 'Inter, sans-serif', fontWeight: '500' }} 
+                                style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', background: '#fff', border: '1px solid #d1d5db', color: '#333', fontSize: '14px', outline: 'none', fontFamily: 'Inter, sans-serif', fontWeight: '500' }} 
                                 autoFocus 
                             />
-                            <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', fontWeight: '600', color: '#888', fontSize: '14px' }}>
+                            <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '600', color: '#888', fontSize: '12px' }}>
                                 {coin}
                             </span>
                         </div>
@@ -325,14 +326,14 @@ const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
                         onClick={handlePay} 
                         disabled={isProcessing || !amount} 
                         style={{ 
-                            marginTop: '10px',
+                            marginTop: '5px',
                             width: '100%', 
-                            padding: '16px', 
-                            borderRadius: '12px', 
+                            padding: '12px', 
+                            borderRadius: '10px', 
                             border: 'none', 
                             color: '#fff', 
                             fontWeight: '600',
-                            fontSize: '16px',
+                            fontSize: '14px',
                             background: deepPurple, 
                             cursor: (isProcessing || !amount) ? 'default' : 'pointer',
                             opacity: (isProcessing || !amount) ? 0.7 : 1,
@@ -340,12 +341,12 @@ const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '10px'
+                            gap: '8px'
                         }}>
                         {isProcessing ? 'Processing...' : (
                             <>
                                 <span>Pay Now</span>
-                                <img src={COIN_LOGOS[coin]} width="20" height="20" style={{ filter: 'brightness(0) invert(1)' }} alt="" />
+                                <img src={COIN_LOGOS[coin]} width="16" height="16" style={{ filter: 'brightness(0) invert(1)' }} alt="" />
                             </>
                         )}
                     </button>
@@ -354,6 +355,7 @@ const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
         </div>
     );
 };
+
 
 // --- MAIN PAGE ---
 export default function ChainFacePage() {
