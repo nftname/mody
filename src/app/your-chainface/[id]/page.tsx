@@ -351,7 +351,7 @@ export default function ChainFacePage() {
       query: { enabled: !!tokenId }
   });
 
-  // --- DATA FETCHING & KILL SWITCH LOGIC ---
+  // --- DATA FETCHING & KILL SWITCH LOGIC (WITH AUTO-WIPE) ---
   const fetchChainFaceData = useCallback(async () => {
       if (!tokenId || !realOwnerAddress) return;
       setLoading(true);
@@ -382,10 +382,32 @@ export default function ChainFacePage() {
               .maybeSingle();
 
           let safeProfile = profile;
-          if (profile && profile.owner_address && profile.owner_address.toLowerCase() !== currentOwnerStr) {
-              safeProfile = null;
-          }
 
+          if (profile && profile.owner_address && profile.owner_address.toLowerCase() !== currentOwnerStr) {
+              
+              console.log("Ownership Change Detected! Wiping old data from DB...");
+
+              await supabase
+                  .from('chainface_messages')
+                  .delete()
+                  .eq('token_id', tokenId);
+
+              await supabase.from('chainface_profiles').update({
+                  owner_address: currentOwnerStr, 
+                  btc_address: null,
+                  eth_address: null,
+                  sol_address: null,
+                  bnb_address: null,
+                  usdt_address: null,
+                  matic_address: null,
+                  custom_message: null, 
+                  updated_at: new Date().toISOString()
+              }).eq('token_id', tokenId);
+
+              safeProfile = null;
+              
+              setMessages([]); 
+          }
           setProfileData({
               name: assetName,
               owner: currentOwnerStr,
