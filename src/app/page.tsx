@@ -155,8 +155,21 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
 function Home() {
   
     const [activeTab, setActiveTab] = useState<'trending' | 'top'>('trending');
-    const [timeFilter, setTimeFilter] = useState('24H');
+    const [timeFilter, setTimeFilter] = useState('All');
     const [currencyFilter, setCurrencyFilter] = useState('All');
+        // --- SLIDER LOGIC (New) ---
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+    const heroImages = ["/hero-blue.jpg", "/hero-red.jpg", "/hero-black.jpg"]; // صورك الموجودة
+
+    useEffect(() => {
+        if (isPaused) return; 
+        const timer = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+        }, 3000); // تتحرك كل 3 ثواني
+        return () => clearInterval(timer);
+    }, [isPaused]);
+
     const [isMobileCurrencyOpen, setIsMobileCurrencyOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [realListings, setRealListings] = useState<any[]>([]);
