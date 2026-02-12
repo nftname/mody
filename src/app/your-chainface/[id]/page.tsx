@@ -2,8 +2,8 @@
 import Link from 'next/link';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useAccount, useReadContract, useSendTransaction } from 'wagmi';
-import { parseAbi, parseEther } from 'viem';
+import { useAccount, useReadContract } from 'wagmi';
+import { parseAbi } from 'viem';
 import { NFT_COLLECTION_ADDRESS } from '@/data/config'; 
 import { supabase } from '@/lib/supabase';
 
@@ -266,7 +266,6 @@ export default function ChainFacePage() {
   const tokenId = params?.id as string;
   
   const { address } = useAccount();
-  const { sendTransaction } = useSendTransaction();
 
   // --- STATE ---
   const [loading, setLoading] = useState(true);
@@ -468,38 +467,24 @@ export default function ChainFacePage() {
     navigator.clipboard.writeText(walletAddr);
 
     const lowerCoin = coin.toLowerCase();
-    
-    let chainId;
-    if (lowerCoin === 'eth' || lowerCoin === 'usdt') chainId = 1;
-    else if (lowerCoin === 'polygon' || lowerCoin === 'matic') chainId = 137;
-    else if (lowerCoin === 'bnb') chainId = 56;
-
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+    let protocolLink = '';
+
     if (lowerCoin === 'btc') {
-        window.location.href = `bitcoin:${walletAddr}`;
-        setShowVisitorBox(true);
-        return;
-    }
-    if (lowerCoin === 'sol') {
-        window.location.href = `solana:${walletAddr}`;
-        setShowVisitorBox(true);
-        return;
+        protocolLink = `bitcoin:${walletAddr}`;
+    } else if (lowerCoin === 'sol') {
+        protocolLink = `solana:${walletAddr}`;
+    } else {
+        if (isMobile) {
+            protocolLink = `https://metamask.app.link/send/${walletAddr}`;
+        } else {
+            protocolLink = `ethereum:${walletAddr}`;
+        }
     }
 
-    if (isMobile) {
-             const deepLink = `https://metamask.app.link/send/${walletAddr}`;
-        window.location.href = deepLink;
-    } else {
-        try {
-            sendTransaction({ 
-                to: walletAddr as `0x${string}`,
-                value: parseEther('0'),
-                chainId: chainId
-            });
-        } catch (e) {
-            window.location.href = `ethereum:${walletAddr}`;
-        }
+    if (protocolLink) {
+        window.location.href = protocolLink;
     }
 
     setShowVisitorBox(true);
