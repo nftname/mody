@@ -288,6 +288,7 @@ export default function ChainFacePage() {
   const [isSending, setIsSending] = useState(false);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [isLinkExpired, setIsLinkExpired] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleSaveWallet = async (coin: string, walletAddr: string) => {
       if (!isOwner) return;
@@ -405,7 +406,11 @@ export default function ChainFacePage() {
               }
           });
 
-          setIsOwner(address?.toLowerCase() === currentOwnerStr);
+          if (address && currentOwnerStr && address.toLowerCase() === currentOwnerStr) {
+              setIsOwner(true);
+          } else {
+              setIsOwner(false);
+          }
 
       } catch (err) {
           console.error("Error:", err);
@@ -427,7 +432,7 @@ export default function ChainFacePage() {
   useEffect(() => {
       fetchChainFaceData();
       if (isOwner) fetchMessages();
-  }, [fetchChainFaceData, fetchMessages, isOwner]);
+  }, [fetchChainFaceData, fetchMessages, isOwner, address]);
 
   const handleSendMessage = async () => {
     if (!visitorMessage.trim()) return;
@@ -441,20 +446,23 @@ export default function ChainFacePage() {
   };
 
   
-   const handleWalletAction = (walletAddr: string, coin: string) => {
-      if (!walletAddr || isLinkExpired) return;
+  const handleWalletAction = (walletAddr: string, coin: string) => {
+    if (!walletAddr) return;
 
-      navigator.clipboard.writeText(walletAddr);
-      
-      let protocol = '';
-      const lowerCoin = coin.toLowerCase();
-      if (lowerCoin === 'btc') protocol = `bitcoin:${walletAddr}`;
-      else if (lowerCoin === 'sol') protocol = `solana:${walletAddr}`;
-      else protocol = `ethereum:${walletAddr}`;
-      
-      if (protocol) window.location.href = protocol;
-      
-      setShowVisitorBox(true);
+    navigator.clipboard.writeText(walletAddr);
+    
+    let protocol = '';
+    const lowerCoin = coin.toLowerCase();
+
+    if (lowerCoin === 'btc') protocol = `bitcoin:${walletAddr}`;
+    else if (lowerCoin === 'sol') protocol = `solana:${walletAddr}`;
+    else protocol = `ethereum:${walletAddr}`;
+    
+    if (protocol && !isLinkExpired) {
+      window.location.assign(protocol);
+    }
+    
+    setShowVisitorBox(true);
   };
 
   const handleSupportClick = async (type: 'like' | 'dislike') => {
@@ -1056,7 +1064,8 @@ export default function ChainFacePage() {
           </div>
 
            {/* --- (MOD 3-A) Verification Buttons --- */}
-          {isOwner && (
+          {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
+
               <div style={{ marginTop: '15px', marginLeft: '10%', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
                   <button onClick={() => window.open('https://sumsub.com', '_blank')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#666', fontSize: '13px', cursor: 'pointer' }}>
                       <div style={{ width: '20px', height: '20px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', fontSize: '10px' }}><i className="bi bi-star-fill"></i></div>
@@ -1084,7 +1093,8 @@ export default function ChainFacePage() {
           <div style={{ maxWidth: '800px', margin: '20px auto', textAlign: 'center', padding: '0 20px' }}>
               
                        {/* --- (MOD 3-B) Wallet Config & Buttons --- */}
-              {isOwner && (
+              {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                       <button onClick={() => setIsModalOpen(true)} style={{ background: 'transparent', border: '1px solid #2E1A47', borderRadius: '20px', padding: '5px 12px', fontSize: '11px', fontWeight: 'bold', color: '#2E1A47', cursor: 'pointer' }}>
                           <i className="bi bi-gear-fill me-1"></i> Settings
@@ -1126,7 +1136,7 @@ export default function ChainFacePage() {
             value={visitorMessage}
             onChange={(e) => setVisitorMessage(e.target.value)}
             placeholder="e.g. I just sent the payment for the project..."
-            style={{ width: '100%', minHeight: '100px', border: 'none', background: '#f8f9fa', borderRadius: '15px', padding: '15px', fontSize: '14px', outline: 'none', resize: 'none' }}
+            style={{ width: '100%', minHeight: '100px', border: 'none', background: '#f8f9fa', borderRadius: '15px', padding: '15px', fontSize: '14px', outline: 'none', resize: 'none', color: '#2E1A47' }}
         />
         <button 
             onClick={handleSendMessage} 
@@ -1137,15 +1147,17 @@ export default function ChainFacePage() {
         </button>
     </div>
 )}
+   
+    {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
 
-{isOwner && (
     <div style={{ marginTop: '40px', textAlign: 'left' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
             <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#2E1A47', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Inbound Messages</h4>
             <select 
                 value={sortOrder} 
                 onChange={(e:any) => setSortOrder(e.target.value)} 
-                style={{ border: 'none', background: 'transparent', fontSize: '11px', color: '#666', outline: 'none', cursor: 'pointer' }}
+                style={{ border: 'none', background: '#f0f0f0', fontSize: '11px', color: '#2E1A47', outline: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', appearance: 'none', fontWeight: '700' }}
+
             >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -1211,50 +1223,67 @@ export default function ChainFacePage() {
 
           </div>
       </div>
-      {isOwner && (
-        <div style={{ padding: '30px 20px', backgroundColor: '#fff', borderTop: '1px solid #eee', textAlign: 'center', position: 'relative' }}>
-          
-          <p style={{ color: '#2E1A47', fontSize: '14px', fontWeight: '500', marginBottom: '25px', lineHeight: '1.5' }}>
-             Share this sovereign link button with friends, clients, or anyone you wish to view your page.
-          </p>
-          
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', position: 'relative' }}>
-            
-              <div style={{ position: 'relative' }}>
-                  <div onClick={handleShareClick} className="action-btn" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
-                      <i className="bi bi-share-fill"></i>
-                  </div>
-                  
-                  {showShareMenu && (
-                      <div className="fade-in" style={{ position: 'absolute', bottom: '55px', left: '-60px', background: '#fff', border: '1px solid #eee', borderRadius: '16px', padding: '10px', boxShadow: '0 10px 40px rgba(0,0,0,0.15)', display: 'flex', gap: '15px', zIndex: 100, minWidth: '200px', justifyContent: 'center' }}>
-                          <a href={`https://wa.me/?text=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="WhatsApp" style={{ color: '#25D366', fontSize: '24px' }}><i className="bi bi-whatsapp"></i></a>
-                          <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="Facebook" style={{ color: '#1877F2', fontSize: '24px' }}><i className="bi bi-facebook"></i></a>
-                          <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="X (Twitter)" style={{ color: '#000', fontSize: '24px' }}><i className="bi bi-twitter-x"></i></a>
-                          <a href={`https://t.me/share/url?url=${encodeURIComponent(currentPageUrl)}`} target="_blank" title="Telegram" style={{ color: '#0088cc', fontSize: '24px' }}><i className="bi bi-telegram"></i></a>
-                          <a href={`mailto:?body=${encodeURIComponent(currentPageUrl)}`} title="Email" style={{ color: '#EA4335', fontSize: '24px' }}><i className="bi bi-envelope-fill"></i></a>
-                      </div>
-                  )}
-              </div>
+      {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
 
-              <div id="cf-btn" style={{ display: 'inline-block', background: 'transparent', padding: '4px', borderRadius: '35px' }}>
-                  <ChainFaceButton name={profileData.name} currentUrl={currentPageUrl} />
-              </div>
+    <div style={{ marginTop: '40px', textAlign: 'left' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+            <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#2E1A47', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Inbound Messages</h4>
+            <select 
+                value={sortOrder} 
+                onChange={(e:any) => {
+                    setSortOrder(e.target.value);
+                    setCurrentPage(1);
+                }} 
+                style={{ border: 'none', background: '#f0f0f0', fontSize: '11px', color: '#2E1A47', outline: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', appearance: 'none', fontWeight: '700' }}
+            >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+            </select>
+        </div>
+        
+        {messages.length === 0 ? (
+            <div style={{ padding: '30px', background: '#fff', borderRadius: '20px', color: '#ccc', fontSize: '13px', textAlign: 'center', border: '1px dashed #eee' }}>
+                Your inbox is currently empty.
+            </div>
+        ) : (
+            <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minHeight: '300px' }}>
+                    {messages.slice((currentPage - 1) * 5, currentPage * 5).map(m => (
+                        <div key={m.id} className="fade-in" style={{ padding: '15px', background: '#fff', borderRadius: '18px', border: '1px solid #f5f5f5', boxShadow: '0 2px 5px rgba(0,0,0,0.01)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '700', marginBottom: '6px' }}>
+                                <span style={{ color: '#a855f7' }}>FROM: {m.sender_wallet.slice(0,6)}...{m.sender_wallet.slice(-4)}</span>
+                                <span style={{ color: '#aaa' }}>{new Date(m.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <p style={{ margin: 0, fontSize: '13px', color: '#2E1A47', fontWeight: '500', lineHeight: '1.4' }}>{m.message_text}</p>
+                        </div>
+                    ))}
+                </div>
 
-              <div style={{ position: 'relative' }}>
-                  <div onClick={handleCopyLink} className="action-btn" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#2E1A47' }}>
-                      <i className="bi bi-files" style={{ fontSize: '20px' }}></i>
-                  </div>
-                  {copiedTip === 'link' && (
-                      <div className="fade-in" style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', background: '#2E1A47', color: '#fff', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
-                          Copied!
-                      </div>
-                  )}
-              </div>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px' }}>
+                    <button 
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => prev - 1)}
+                        style={{ background: '#fff', border: '1px solid #eee', width: '35px', height: '35px', borderRadius: '50%', cursor: currentPage === 1 ? 'default' : 'pointer', opacity: currentPage === 1 ? 0.4 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2E1A47' }}
+                    >
+                        <i className="bi bi-chevron-left"></i>
+                    </button>
+                    
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#2E1A47' }}>
+                        Page {currentPage} / {Math.ceil(messages.length / 5)}
+                    </span>
 
-          </div>
-        </div> 
-      )}
-
+                    <button 
+                        disabled={currentPage >= Math.ceil(messages.length / 5)}
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        style={{ background: '#fff', border: '1px solid #eee', width: '35px', height: '35px', borderRadius: '50%', cursor: currentPage >= Math.ceil(messages.length / 5) ? 'default' : 'pointer', opacity: currentPage >= Math.ceil(messages.length / 5) ? 0.4 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2E1A47' }}
+                    >
+                        <i className="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </>
+        )}
+    </div>
+)}
     </main>
   );
 }
