@@ -1490,7 +1490,7 @@ export default function ChainFacePage() {
       >
           <span style={{
               color: '#4b5563', 
-              fontSize: '11px', 
+              fontSize: '9px', 
               fontFamily: 'Inter, sans-serif',
               fontWeight: '500',
               transition: 'color 0.2s ease',
