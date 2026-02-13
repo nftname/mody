@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase';
 // --- PAYMENT CONFIG ---
 const TREASURY_ADDRESS = "0x8B0251c2Ce9836A3867adb9a371802AdfFaaC824"; // محفظتك
 const USDT_POLYGON_ADDRESS = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; // عقد USDT الرسمي
-const VERIFICATION_COST_USDT = "50000"; // 0.05 USDT (6 decimals)
+const VERIFICATION_COST_USDT = "1000000"; // 1 USDT (6 decimals)
 
 const ERC20_ABI = parseAbi([
   "function transfer(address to, uint256 amount) returns (bool)"
@@ -1306,7 +1306,7 @@ export default function ChainFacePage() {
                   <p style={{ fontSize: '9px', color: '#9CA3AF', maxWidth: '240px', lineHeight: '1.3', marginBottom: '5px', fontStyle: 'italic' }}>
                       Verification is processed by an independent provider. ChainFace does not store personal data. 
                       <span style={{ color: '#10B981', fontWeight: '600', display: 'block', marginTop: '2px' }}>
-                          (Cost: 0.05 USDT • One-time fee for all assets)
+                          (Cost: 1 USDT • One-time fee for all assets)
                       </span>
                   </p>
 
@@ -1376,7 +1376,7 @@ export default function ChainFacePage() {
                             <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.5', marginBottom: '20px' }}>
                                 To prevent spam and cover processing fees, a one-time fee is required.
                                 <br/><br/>
-                                <strong style={{ color: '#000', fontSize: '16px' }}>Cost: 0.05 USDT</strong>
+                                <strong style={{ color: '#000', fontSize: '16px' }}>Cost: 1 USDT</strong>
                             </p>
                         )}
 
