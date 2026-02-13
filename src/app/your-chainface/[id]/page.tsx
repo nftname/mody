@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase';
 // --- PAYMENT CONFIG ---
 const TREASURY_ADDRESS = "0x8B0251c2Ce9836A3867adb9a371802AdfFaaC824"; // محفظتك
 const USDT_POLYGON_ADDRESS = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; // عقد USDT الرسمي
-const VERIFICATION_COST_USDT = "2000000"; // 2 USDT (6 decimals)
+const VERIFICATION_COST_USDT = "50000"; // 0.05 USDT (6 decimals)
 
 const ERC20_ABI = parseAbi([
   "function transfer(address to, uint256 amount) returns (bool)"
