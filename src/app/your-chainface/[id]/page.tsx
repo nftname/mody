@@ -387,7 +387,8 @@ export default function ChainFacePage() {
 
    // --- VERIFICATION PAYMENT LOGIC ---
   const { writeContractAsync } = useWriteContract();
-  const [verifyStep, setVerifyStep] = useState<'idle' | 'confirm' | 'paying'>('idle');
+  const [verifyStep, setVerifyStep] = useState<'idle' | 'confirm' | 'paying' | 'success'>('idle');
+
   const [targetVerifyType, setTargetVerifyType] = useState<'phone' | 'kyc' | null>(null);
 
   const handleVerificationRequest = (type: 'phone' | 'kyc') => {
@@ -395,34 +396,47 @@ export default function ChainFacePage() {
       setVerifyStep('confirm'); // Open Modal
   };
 
-  const executeVerificationPayment = async () => {
+  
+ 
+   const executeVerificationPayment = async () => {
       if (!targetVerifyType) return;
+      
+      // 1. Show processing state
       setVerifyStep('paying');
+
       try {
-          // 1. Execute Payment (2 USDT)
-          const txHash = await writeContractAsync({
+          // 2. Execute Payment
+          const hash = await writeContractAsync({
               address: USDT_POLYGON_ADDRESS,
               abi: ERC20_ABI,
               functionName: 'transfer',
               args: [TREASURY_ADDRESS, BigInt(VERIFICATION_COST_USDT)], 
           });
+
+          // 3. FORCE SUCCESS (Bypassing React State issues)
+          // هذه الرسالة ستظهر إجبارياً لتؤكد لك أن الكود وصل لهذه المرحلة
+          alert("✅ Payment Sent Successfully!\nClick OK to continue to verification.");
+
+          // 4. Update State
+          setVerifyStep('success');
           
-          // 2. Wait a moment (Optimistic UI) or implement wait logic
-          // For UX speed, we proceed after hash generation, trusting the user isn't expert enough to cancel nonce.
-          
-          // 3. Redirect to Sumsub
-          const finalUrl = `https://sumsub.com?userId=${address}&type=${targetVerifyType}`;
-          window.open(finalUrl, '_blank');
-          
-          // 4. Reset
-          setVerifyStep('idle');
-          setTargetVerifyType(null);
-          
-      } catch (error) {
+      } catch (error: any) {
           console.error("Payment Failed:", error);
-          setVerifyStep('confirm'); // Go back on error
-          alert("Payment failed or rejected. Please ensure you have USDT on Polygon.");
+          // Show the exact error message
+          alert("❌ Payment Error: " + (error.message || "Unknown error"));
+          setVerifyStep('confirm'); 
       }
+  };
+  const openSumsubWindow = () => {
+      if (!targetVerifyType) return;
+      
+      // Now it opens safely because YOU clicked the button
+      const finalUrl = `https://sumsub.com?userId=${address}&type=${targetVerifyType}`;
+      window.open(finalUrl, '_blank');
+      
+      // Reset
+      setVerifyStep('idle');
+      setTargetVerifyType(null);
   };
 
 
@@ -1341,31 +1355,52 @@ export default function ChainFacePage() {
               )}
               
               <WalletEditorModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} wallets={profileData.wallets} onSave={handleSaveWallet} />
-                  {/* --- VERIFICATION PAYMENT MODAL --- */}
+                  {/* --- VERIFICATION PAYMENT MODAL (UPDATED) --- */}
             {verifyStep !== 'idle' && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div className="fade-in" style={{ background: '#fff', padding: '25px', borderRadius: '20px', width: '90%', maxWidth: '320px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
-                        <div style={{ width: '50px', height: '50px', background: '#F0FDF4', borderRadius: '50%', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px', fontSize: '24px' }}><i className="bi bi-shield-lock-fill"></i></div>
                         
-                        <h3 style={{ margin: '0 0 10px', color: '#2E1A47', fontFamily: 'Outfit, sans-serif' }}>Secure Verification</h3>
+                        {/* ICON */}
+                        <div style={{ width: '50px', height: '50px', background: verifyStep === 'success' ? '#ECFDF5' : '#F0FDF4', borderRadius: '50%', color: verifyStep === 'success' ? '#10B981' : '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px', fontSize: '24px' }}>
+                            <i className={`bi ${verifyStep === 'success' ? 'bi-check-lg' : 'bi-shield-lock-fill'}`}></i>
+                        </div>
                         
-                        <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.5', marginBottom: '20px' }}>
-                            To prevent spam and cover processing fees, a one-time fee is required.
-                            <br/><br/>
-                            <strong style={{ color: '#000', fontSize: '16px' }}>Cost: 2.00 USDT</strong>
-                        </p>
+                        {/* TITLE & TEXT */}
+                        <h3 style={{ margin: '0 0 10px', color: '#2E1A47', fontFamily: 'Outfit, sans-serif' }}>
+                            {verifyStep === 'success' ? 'Payment Successful!' : 'Secure Verification'}
+                        </h3>
+                        
+                        {verifyStep !== 'success' && (
+                            <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.5', marginBottom: '20px' }}>
+                                To prevent spam and cover processing fees, a one-time fee is required.
+                                <br/><br/>
+                                <strong style={{ color: '#000', fontSize: '16px' }}>Cost: 0.05 USDT</strong>
+                            </p>
+                        )}
 
-                        <button 
-                            onClick={executeVerificationPayment} 
-                            disabled={verifyStep === 'paying'}
-                            style={{ width: '100%', padding: '14px', background: '#2E1A47', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px', cursor: verifyStep === 'paying' ? 'default' : 'pointer', opacity: verifyStep === 'paying' ? 0.7 : 1 }}>
-                            {verifyStep === 'paying' ? 'Processing Payment...' : 'Pay & Verify Now'}
-                        </button>
+                        {/* BUTTONS */}
+                        {verifyStep === 'success' ? (
+                            <button 
+                                onClick={openSumsubWindow} 
+                                style={{ width: '100%', padding: '14px', background: '#10B981', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)' }}>
+                                Continue to Verification <i className="bi bi-arrow-right ml-2"></i>
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={executeVerificationPayment} 
+                                disabled={verifyStep === 'paying'}
+                                style={{ width: '100%', padding: '14px', background: '#2E1A47', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px', cursor: verifyStep === 'paying' ? 'default' : 'pointer', opacity: verifyStep === 'paying' ? 0.7 : 1 }}>
+                                {verifyStep === 'paying' ? 'Processing Payment...' : 'Pay & Verify Now'}
+                            </button>
+                        )}
                         
-                        <button onClick={() => setVerifyStep('idle')} style={{ marginTop: '10px', background: 'transparent', border: 'none', color: '#888', fontSize: '12px', cursor: 'pointer' }}>Cancel</button>
+                        {verifyStep !== 'success' && verifyStep !== 'paying' && (
+                            <button onClick={() => setVerifyStep('idle')} style={{ marginTop: '10px', background: 'transparent', border: 'none', color: '#888', fontSize: '12px', cursor: 'pointer' }}>Cancel</button>
+                        )}
                     </div>
                 </div>
             )}
+
 
               <PaymentModal 
                   isOpen={paymentModalOpen} 
