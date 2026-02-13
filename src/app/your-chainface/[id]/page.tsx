@@ -423,16 +423,15 @@ export default function ChainFacePage() {
       }
   };
   const openSumsubWindow = () => {
-      if (!targetVerifyType) return;
+      const baseUrl = "https://verify.didit.me/u/Tsy0RqfeTfGJVuQBAb5h7A";
+      const finalUrl = `${baseUrl}?client_user_id=${address || 'unknown'}`;
       
-      // Now it opens safely because YOU clicked the button
-      const finalUrl = `https://sumsub.com?userId=${address}&type=${targetVerifyType}`;
       window.open(finalUrl, '_blank');
       
-      // Reset
       setVerifyStep('idle');
       setTargetVerifyType(null);
   };
+
 
 
   // --- STATE ---
