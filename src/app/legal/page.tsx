@@ -3,8 +3,9 @@ import Link from 'next/link';
 
 // ألوان الهوية الموحدة - تم ضبطها لراحة العين
 const BRAND_GOLD = '#FCD535'; // نفس درجة أصفر باينانس الذهبي
-const TEXT_OFF_WHITE = '#EAECEF'; // أوف وايت مائل للزرقة الخفيفة جداً (مثل نصوص باينانس)
-const TEXT_MUTED = '#848E9C';     // رمادي مائل للزرقة (للنصوص الفرعية)
+const TEXT_OFF_WHITE = '#EAECEF'; // أوف وايت (للعناوين)
+const TEXT_MUTED = '#848E9C';     // رمادي مزرق (للنصوص)
+const TEXT_HIGHLIGHT = '#CFD6E0'; // بلاتيني (للتنبيهات المهمة - وسط بين الأبيض والرمادي)
 
 // --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
@@ -44,7 +45,6 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
 
 export default function LegalPage() {
   return (
-    // التغيير الرئيسي هنا: الخلفية أصبحت #181A20 لتطابق هوية باينانس
     <main className="legal-page" style={{ backgroundColor: '#181A20', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px' }}>
       
       <div className="container pt-5">
@@ -70,7 +70,6 @@ export default function LegalPage() {
 
             {/* INTRO */}
             <section className="mb-5">
-                {/* تغيير لون خلفية الكارد إلى #1E2329 ليتماشى مع الخلفية الجديدة */}
                 <div className="p-4 rounded-3" style={{ backgroundColor: '#1E2329', border: '1px solid #2B3139' }}>
                     <p className="mb-0 fw-medium" style={{ color: TEXT_OFF_WHITE, lineHeight: '1.7', fontSize: '15px' }}>
                         <strong style={{ color: BRAND_GOLD }}>IMPORTANT NOTICE:</strong> By accessing, browsing, connecting a wallet to, minting, listing, interacting with, or otherwise using the NFT Name Market (NNM) website, interface, smart contracts, or ChainFace services (collectively, the “Protocol”), you acknowledge that you have read, understood, and irrevocably agree to be legally bound by this Agreement. If you do not agree, you must immediately discontinue all access.
@@ -200,7 +199,7 @@ export default function LegalPage() {
                     <p className="term-text mt-2">NNM reserves the right to restrict access to wallets suspected of prohibited activities or violation of these Terms.</p>
                 </div>
 
-                {/* 11 - The Strong Burn Clause */}
+                {/* 11 - The Strong Burn Clause (COLOR UPDATED) */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">11. PROHIBITED CONTENT, THIRD-PARTY RIGHTS & RIGHT TO BURN</h3>
                     <p className="term-text">To maintain protocol integrity and compliance, users must NOT mint or display Digital Identity Assets that:</p>
@@ -217,7 +216,8 @@ export default function LegalPage() {
                         <li>If an asset violates the community standards or high-risk policies.</li>
                         <li>If the asset is involved in misuse, unauthorized commercial exploitation, or regulatory concerns.</li>
                     </ul>
-                    <p className="term-text mt-3 fw-bold" style={{ color: '#FF5555' }}>
+                    {/* HERE IS THE COLOR CHANGE: Using TEXT_HIGHLIGHT (#CFD6E0) */}
+                    <p className="term-text mt-3 fw-bold" style={{ color: TEXT_HIGHLIGHT }}>
                         NO REFUNDS: In the event an asset is blocked, delisted, or burned, the user forfeits all access and is not entitled to any refund, compensation, or reimbursement for minting or gas fees.
                     </p>
                 </div>
