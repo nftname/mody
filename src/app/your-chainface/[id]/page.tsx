@@ -398,14 +398,14 @@ export default function ChainFacePage() {
 
   
  
-   const executeVerificationPayment = async () => {
+     const executeVerificationPayment = async () => {
       if (!targetVerifyType) return;
       
-      // 1. Show processing state
+      // 1. Show processing state inside the modal
       setVerifyStep('paying');
 
       try {
-          // 2. Execute Payment
+          // 2. Execute Payment (Wallet Popup Only)
           const hash = await writeContractAsync({
               address: USDT_POLYGON_ADDRESS,
               abi: ERC20_ABI,
@@ -413,17 +413,12 @@ export default function ChainFacePage() {
               args: [TREASURY_ADDRESS, BigInt(VERIFICATION_COST_USDT)], 
           });
 
-          // 3. FORCE SUCCESS (Bypassing React State issues)
-          // هذه الرسالة ستظهر إجبارياً لتؤكد لك أن الكود وصل لهذه المرحلة
-          alert("✅ Payment Sent Successfully!\nClick OK to continue to verification.");
-
-          // 4. Update State
+          // 3. Success! Update UI instantly to Green Step (No Browser Alert)
           setVerifyStep('success');
           
       } catch (error: any) {
           console.error("Payment Failed:", error);
-          // Show the exact error message
-          alert("❌ Payment Error: " + (error.message || "Unknown error"));
+          // If failed, just go back to confirm button silently or show red border
           setVerifyStep('confirm'); 
       }
   };
