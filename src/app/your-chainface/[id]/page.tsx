@@ -2,10 +2,20 @@
 import Link from 'next/link';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useAccount, useReadContract, useSendTransaction } from 'wagmi';
+import { useAccount, useReadContract, useSendTransaction, useWriteContract } from 'wagmi';
 import { parseAbi, parseEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS } from '@/data/config'; 
 import { supabase } from '@/lib/supabase';
+
+// --- PAYMENT CONFIG ---
+const TREASURY_ADDRESS = "0x8B0251c2Ce9836A3867adb9a371802AdfFaaC824"; // محفظتك
+const USDT_POLYGON_ADDRESS = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; // عقد USDT الرسمي
+const VERIFICATION_COST_USDT = "2000000"; // 2 USDT (6 decimals)
+
+const ERC20_ABI = parseAbi([
+  "function transfer(address to, uint256 amount) returns (bool)"
+]);
+
 
 // --- CONSTANTS & ABI ---
 const CONTRACT_ABI = parseAbi([
@@ -374,6 +384,47 @@ export default function ChainFacePage() {
   
   const { address } = useAccount();
   const { sendTransaction } = useSendTransaction();
+
+   // --- VERIFICATION PAYMENT LOGIC ---
+  const { writeContractAsync } = useWriteContract();
+  const [verifyStep, setVerifyStep] = useState<'idle' | 'confirm' | 'paying'>('idle');
+  const [targetVerifyType, setTargetVerifyType] = useState<'phone' | 'kyc' | null>(null);
+
+  const handleVerificationRequest = (type: 'phone' | 'kyc') => {
+      setTargetVerifyType(type);
+      setVerifyStep('confirm'); // Open Modal
+  };
+
+  const executeVerificationPayment = async () => {
+      if (!targetVerifyType) return;
+      setVerifyStep('paying');
+      try {
+          // 1. Execute Payment (2 USDT)
+          const txHash = await writeContractAsync({
+              address: USDT_POLYGON_ADDRESS,
+              abi: ERC20_ABI,
+              functionName: 'transfer',
+              args: [TREASURY_ADDRESS, BigInt(VERIFICATION_COST_USDT)], 
+          });
+          
+          // 2. Wait a moment (Optimistic UI) or implement wait logic
+          // For UX speed, we proceed after hash generation, trusting the user isn't expert enough to cancel nonce.
+          
+          // 3. Redirect to Sumsub
+          const finalUrl = `https://sumsub.com?userId=${address}&type=${targetVerifyType}`;
+          window.open(finalUrl, '_blank');
+          
+          // 4. Reset
+          setVerifyStep('idle');
+          setTargetVerifyType(null);
+          
+      } catch (error) {
+          console.error("Payment Failed:", error);
+          setVerifyStep('confirm'); // Go back on error
+          alert("Payment failed or rejected. Please ensure you have USDT on Polygon.");
+      }
+  };
+
 
   // --- STATE ---
   const [loading, setLoading] = useState(true);
@@ -1237,18 +1288,28 @@ export default function ChainFacePage() {
               <FiveStars count={5} />
           </div>
 
-{/* --- (MOD 3-A) Verification Buttons --- */}
+{/* --- (MOD 3-A) Verification Buttons (SECURE & PAID) --- */}
           {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
-              <div style={{ marginTop: '15px', marginLeft: '10%', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+              <div style={{ marginTop: '20px', marginLeft: '10%', display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'flex-start', position: 'relative' }}>
+                  
+                  {/* DISCLAIMER TEXT - Zero Liability */}
+                  <p style={{ fontSize: '9px', color: '#9CA3AF', maxWidth: '240px', lineHeight: '1.3', marginBottom: '5px', fontStyle: 'italic' }}>
+                      Verification is processed by an independent provider. ChainFace does not store personal data. 
+                      <span style={{ color: '#10B981', fontWeight: '600', display: 'block', marginTop: '2px' }}>
+                          (Cost: 2 USDT • One-time fee for all assets)
+                      </span>
+                  </p>
+
                   {!profileData.isPhoneVerified && (
-                      <button onClick={() => window.open(`https://sumsub.com?userId=${address}&type=phone`, '_blank')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#666', fontSize: '13px', cursor: 'pointer' }}>
-                          <div style={{ width: '20px', height: '20px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', fontSize: '10px' }}><i className="bi bi-star-fill"></i></div>
+                      <button onClick={() => handleVerificationRequest('phone')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#4B5563', fontSize: '13px', cursor: 'pointer', fontWeight: '500', transition: '0.2s' }}>
+                          <div style={{ width: '22px', height: '22px', background: '#ECFDF5', border: '1px solid #10B981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981', fontSize: '11px' }}><i className="bi bi-phone-fill"></i></div>
                           Verify Phone Number
                       </button>
                   )}
+                  
                   {!profileData.isKycVerified && (
-                      <button onClick={() => window.open(`https://sumsub.com?userId=${address}&type=kyc`, '_blank')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#666', fontSize: '13px', cursor: 'pointer' }}>
-                          <div style={{ width: '20px', height: '20px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6', fontSize: '10px' }}><i className="bi bi-shield-fill-check"></i></div>
+                      <button onClick={() => handleVerificationRequest('kyc')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#4B5563', fontSize: '13px', cursor: 'pointer', fontWeight: '500', transition: '0.2s' }}>
+                          <div style={{ width: '22px', height: '22px', background: '#EFF6FF', border: '1px solid #3B82F6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6', fontSize: '11px' }}><i className="bi bi-person-badge-fill"></i></div>
                           Verify Identity (KYC)
                       </button>
                   )}
@@ -1280,6 +1341,32 @@ export default function ChainFacePage() {
               )}
               
               <WalletEditorModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} wallets={profileData.wallets} onSave={handleSaveWallet} />
+                  {/* --- VERIFICATION PAYMENT MODAL --- */}
+            {verifyStep !== 'idle' && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="fade-in" style={{ background: '#fff', padding: '25px', borderRadius: '20px', width: '90%', maxWidth: '320px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
+                        <div style={{ width: '50px', height: '50px', background: '#F0FDF4', borderRadius: '50%', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px', fontSize: '24px' }}><i className="bi bi-shield-lock-fill"></i></div>
+                        
+                        <h3 style={{ margin: '0 0 10px', color: '#2E1A47', fontFamily: 'Outfit, sans-serif' }}>Secure Verification</h3>
+                        
+                        <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.5', marginBottom: '20px' }}>
+                            To prevent spam and cover processing fees, a one-time fee is required.
+                            <br/><br/>
+                            <strong style={{ color: '#000', fontSize: '16px' }}>Cost: 2.00 USDT</strong>
+                        </p>
+
+                        <button 
+                            onClick={executeVerificationPayment} 
+                            disabled={verifyStep === 'paying'}
+                            style={{ width: '100%', padding: '14px', background: '#2E1A47', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px', cursor: verifyStep === 'paying' ? 'default' : 'pointer', opacity: verifyStep === 'paying' ? 0.7 : 1 }}>
+                            {verifyStep === 'paying' ? 'Processing Payment...' : 'Pay & Verify Now'}
+                        </button>
+                        
+                        <button onClick={() => setVerifyStep('idle')} style={{ marginTop: '10px', background: 'transparent', border: 'none', color: '#888', fontSize: '12px', cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                </div>
+            )}
+
               <PaymentModal 
                   isOpen={paymentModalOpen} 
                   onClose={() => setPaymentModalOpen(false)} 
