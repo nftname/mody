@@ -81,12 +81,7 @@ const Web3PaymentButton = ({ type, name, address, onClick, isOwner, onRemove }: 
 );
 
 
-const ThreeVerificationBadges = ({ verifiedLevel }: { verifiedLevel: string }) => {
-    // Logic: Gold is always there (Base verification).
-    // Blue adds on right. Green adds on right of Blue.
-    const hasBlue = verifiedLevel === 'blue' || verifiedLevel === 'green';
-    const hasGreen = verifiedLevel === 'green';
-
+const ThreeVerificationBadges = ({ isPhoneVerified, isKycVerified }: { isPhoneVerified: boolean, isKycVerified: boolean }) => {
     const badgePath = "M22.25 12.5c0-1.58-.875-2.95-2.148-3.6.55-1.57.2-3.38-1.1-4.56C17.7 3.14 15.88 2.8 14.3 3.34c-.65-1.28-2.02-2.15-3.6-2.15s-2.95.87-3.6 2.15c-1.57-.54-3.38-.2-4.69 1.1-1.3 1.18-1.65 2.99-1.1 4.56-1.28.65-2.15 2.02-2.15 3.6s.87 2.95 2.15 3.6c-.55 1.57-.2 3.38 1.1 4.56 1.3 1.18 3.12 1.52 4.69.98.65 1.28 2.02 2.15 3.6 2.15s2.95-.87 3.6-2.15c1.58.54 3.39.2 4.69-1.1 1.3-1.18 1.65-2.99 1.1-4.56 1.28-.65 2.15-2.02 2.15-3.6z";
     const checkPath = "M10.5 17.5L5.5 12.5L7 11L10.5 14.5L17.5 7.5L19 9L10.5 17.5Z";
     const badgeStyle = { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' };
@@ -111,24 +106,21 @@ const ThreeVerificationBadges = ({ verifiedLevel }: { verifiedLevel: string }) =
                 </defs>
             </svg>
 
-            {/* Always Show Gold (NNM Verified) on Left/Center */}
             <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg" className="verification-badge">
                  <path d={badgePath} fill="url(#goldLuxury)" />
                  <path d={checkPath} fill="#FFFFFF" />
             </svg>
 
-            {/* Show Blue if Level >= Blue */}
-            {hasBlue && (
+            {isPhoneVerified && (
                 <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg" className="verification-badge">
-                    <path d={badgePath} fill="url(#blueLuxury)" />
+                    <path d={badgePath} fill="url(#greenLuxury)" />
                     <path d={checkPath} fill="#FFFFFF" />
                 </svg>
             )}
 
-            {/* Show Green if Level == Green */}
-            {hasGreen && (
+            {isKycVerified && (
                 <svg viewBox="0 0 25 25" style={badgeStyle} xmlns="http://www.w3.org/2000/svg" className="verification-badge">
-                    <path d={badgePath} fill="url(#greenLuxury)" />
+                    <path d={badgePath} fill="url(#blueLuxury)" />
                     <path d={checkPath} fill="#FFFFFF" />
                 </svg>
             )}
@@ -389,7 +381,9 @@ export default function ChainFacePage() {
       name: '',
       owner: '',
       customMessage: '',
-      verifiedLevel: 'none', // gold is default implied
+     isPhoneVerified: false,
+      isKycVerified: false,
+
       wallets: { btc: '', eth: '', sol: '', bnb: '', usdt: '', matic: '' },
       stats: { conviction: 0, likes: 0, dislikes: 0 }
   });
@@ -494,6 +488,11 @@ export default function ChainFacePage() {
           }
 
           const { count: convictionCount } = await supabase.from('conviction_votes').select('*', { count: 'exact', head: true }).eq('token_id', tokenId);
+          const { data: walletVerification } = await supabase
+              .from('chainface_wallet_verifications')
+              .select('is_phone_verified, is_kyc_verified')
+              .eq('wallet_address', currentOwnerStr)
+              .maybeSingle();
 
           const { data: profile } = await supabase
               .from('chainface_profiles')
@@ -522,7 +521,9 @@ export default function ChainFacePage() {
               name: assetName,
               owner: currentOwnerStr,
               customMessage: safeProfile?.custom_message || '',
-              verifiedLevel: safeProfile?.verified_level || 'none',
+              sPhoneVerified: walletVerification?.is_phone_verified || false,
+              isKycVerified: walletVerification?.is_kyc_verified || false,
+
               wallets: {
                   btc: safeProfile?.btc_address || '',
                   eth: safeProfile?.eth_address || '',
@@ -561,9 +562,13 @@ export default function ChainFacePage() {
     if (data) setMessages(data);
   }, [tokenId, isOwner, sortOrder]);
 
-  useEffect(() => {
+   useEffect(() => {
       fetchChainFaceData();
+      const handleFocus = () => fetchChainFaceData();
+      window.addEventListener('focus', handleFocus);
+      return () => window.removeEventListener('focus', handleFocus);
   }, [fetchChainFaceData]);
+
 
   useEffect(() => {
       if (isOwner) fetchMessages();
@@ -1222,7 +1227,7 @@ export default function ChainFacePage() {
           <div className="identity-card-container">
               <div className="card-content">
                   {/* Dynamic Badges */}
-                  <ThreeVerificationBadges verifiedLevel={profileData.verifiedLevel} />
+                  <ThreeVerificationBadges isPhoneVerified={profileData.isPhoneVerified} isKycVerified={profileData.isKycVerified} />
                   
                   <div className="card-name-row">
                       {/* Dynamic Name */}
@@ -1232,18 +1237,21 @@ export default function ChainFacePage() {
               <FiveStars count={5} />
           </div>
 
-           {/* --- (MOD 3-A) Verification Buttons --- */}
+{/* --- (MOD 3-A) Verification Buttons --- */}
           {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
-
               <div style={{ marginTop: '15px', marginLeft: '10%', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
-                  <button onClick={() => window.open('https://sumsub.com', '_blank')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#666', fontSize: '13px', cursor: 'pointer' }}>
-                      <div style={{ width: '20px', height: '20px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', fontSize: '10px' }}><i className="bi bi-star-fill"></i></div>
-                      Verify Phone Number
-                  </button>
-                  <button onClick={() => window.open('https://sumsub.com', '_blank')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#666', fontSize: '13px', cursor: 'pointer' }}>
-                      <div style={{ width: '20px', height: '20px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6', fontSize: '10px' }}><i className="bi bi-shield-fill-check"></i></div>
-                      Verify Identity (KYC)
-                  </button>
+                  {!profileData.isPhoneVerified && (
+                      <button onClick={() => window.open(`https://sumsub.com?userId=${address}&type=phone`, '_blank')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#666', fontSize: '13px', cursor: 'pointer' }}>
+                          <div style={{ width: '20px', height: '20px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', fontSize: '10px' }}><i className="bi bi-star-fill"></i></div>
+                          Verify Phone Number
+                      </button>
+                  )}
+                  {!profileData.isKycVerified && (
+                      <button onClick={() => window.open(`https://sumsub.com?userId=${address}&type=kyc`, '_blank')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#666', fontSize: '13px', cursor: 'pointer' }}>
+                          <div style={{ width: '20px', height: '20px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6', fontSize: '10px' }}><i className="bi bi-shield-fill-check"></i></div>
+                          Verify Identity (KYC)
+                      </button>
+                  )}
               </div>
           )}
 
