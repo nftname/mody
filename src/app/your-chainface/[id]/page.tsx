@@ -582,7 +582,7 @@ export default function ChainFacePage() {
               name: assetName,
               owner: currentOwnerStr,
               customMessage: safeProfile?.custom_message || '',
-              sPhoneVerified: walletVerification?.is_phone_verified || false,
+              isPhoneVerified: walletVerification?.is_phone_verified || false,
               isKycVerified: walletVerification?.is_kyc_verified || false,
 
               wallets: {
@@ -1299,28 +1299,34 @@ export default function ChainFacePage() {
           </div>
 
 {/* --- (MOD 3-A) Verification Buttons (SECURE & PAID) --- */}
-          {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
+           {isOwner && address && address.toLowerCase() === profileData.owner?.toLowerCase() && (
               <div style={{ marginTop: '20px', marginLeft: '10%', display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'flex-start', position: 'relative' }}>
                   
-                  {/* DISCLAIMER TEXT - Zero Liability */}
+                  {/* DISCLAIMER TEXT */}
                   <p style={{ fontSize: '9px', color: '#9CA3AF', maxWidth: '240px', lineHeight: '1.3', marginBottom: '5px', fontStyle: 'italic' }}>
                       Verification is processed by an independent provider. ChainFace does not store personal data. 
                       <span style={{ color: '#10B981', fontWeight: '600', display: 'block', marginTop: '2px' }}>
-                          (Cost: 2 USDT • One-time fee for all assets)
+                          (Cost: 0.05 USDT • One-time fee for all assets)
                       </span>
                   </p>
 
-                  {!profileData.isPhoneVerified && (
-                      <button onClick={() => handleVerificationRequest('phone')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#4B5563', fontSize: '13px', cursor: 'pointer', fontWeight: '500', transition: '0.2s' }}>
-                          <div style={{ width: '22px', height: '22px', background: '#ECFDF5', border: '1px solid #10B981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981', fontSize: '11px' }}><i className="bi bi-phone-fill"></i></div>
-                          Verify Phone Number
-                      </button>
-                  )}
-                  
-                  {!profileData.isKycVerified && (
-                      <button onClick={() => handleVerificationRequest('kyc')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#4B5563', fontSize: '13px', cursor: 'pointer', fontWeight: '500', transition: '0.2s' }}>
-                          <div style={{ width: '22px', height: '22px', background: '#EFF6FF', border: '1px solid #3B82F6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6', fontSize: '11px' }}><i className="bi bi-person-badge-fill"></i></div>
-                          Verify Identity (KYC)
+                  {/* SINGLE COMBINED BUTTON WITH STARS */}
+                  {(!profileData.isPhoneVerified || !profileData.isKycVerified) && (
+                      <button onClick={() => handleVerificationRequest('kyc')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#4B5563', fontSize: '13px', cursor: 'pointer', fontWeight: '700', transition: '0.2s' }}>
+                          <div style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg, #EFF6FF 0%, #ECFDF5 100%)', border: '1px solid #3B82F6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2E1A47', fontSize: '14px' }}>
+                              <i className="bi bi-shield-fill-check"></i>
+                          </div>
+                          <span style={{ borderBottom: '1px dotted #999' }}>Verify Phone, ID & Face</span>
+                          
+                          {/* VISUAL STARS PREVIEW */}
+                          <div style={{ display: 'flex', gap: '2px', marginLeft: '5px' }}>
+                              <svg viewBox="0 0 24 24" width="14" height="14" fill="#10B981">
+                                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                              </svg>
+                              <svg viewBox="0 0 24 24" width="14" height="14" fill="#3B82F6">
+                                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                              </svg>
+                          </div>
                       </button>
                   )}
               </div>
