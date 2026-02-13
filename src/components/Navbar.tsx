@@ -13,7 +13,7 @@ const Navbar = () => {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   
   // State for Dropdowns
-  const [isInsightsOpen, setIsInsightsOpen] = useState(false); // Used for NGX now based on your logic
+  const [isInsightsOpen, setIsInsightsOpen] = useState(false); 
   const [isNNMConceptOpen, setIsNNMConceptOpen] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -105,24 +105,23 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  // ✅ الألوان الموحدة 
-  const exactDarkColor = '#0B0E11'; 
-  const drawerBgColor = '#1E1E1E'; 
+  // --- NEW THEME COLORS ---
+  const exactDarkColor = '#181A20'; 
+  const drawerBgColor = '#181A20'; 
   
-  const dropdownColor = '#0B0E11'; 
-  const metallicGoldHex = '#F0C420'; 
-  const subtleBorder = 'rgba(255, 255, 255, 0.08)'; 
-  const offWhiteText = '#E0E0E0';
-  const matteGoldIcon = '#CBA135';
+  const dropdownColor = '#1E2329'; 
+  const metallicGoldHex = '#FCD535'; 
+  const subtleBorder = '#2B3139'; 
+  const offWhiteText = '#EAECEF';
+  const matteGoldIcon = '#FCD535';
+  const mutedText = '#848E9C';
 
   const elementHeight = '29px'; 
   const elementFontSize = '11px';
-  // Reduced by 10% from 13px -> ~11.7px
   const navFontSize = '11.7px'; 
-  // Reduced by 20% for the new dropdown -> ~10.4px
   const dropDownSmallFont = '10.5px';
 
-  // --- START WALLET LOGIC (RESTORED EXACTLY FROM ORIGINAL) ---
+  // --- START WALLET LOGIC ---
   const customDisconnectStyle = {
     background: 'transparent',
     color: metallicGoldHex,
@@ -143,9 +142,9 @@ const Navbar = () => {
   };
 
   const customConnectStyle = {
-    background: '#141414', 
-    color: '#E0E0E0', 
-    border: `1px solid rgba(240, 196, 32, 0.3)`, 
+    background: '#1E2329', 
+    color: offWhiteText, 
+    border: `1px solid ${subtleBorder}`, 
     fontWeight: '500' as const,
     fontSize: elementFontSize,
     borderRadius: '6px',
@@ -214,21 +213,19 @@ const Navbar = () => {
     'Market': 'bi-shop',
     'NGX Index': 'bi-activity',
     'Mint': 'bi-diamond',
-    'ChainFace': 'bi-person-badge', // New Icon
+    'ChainFace': 'bi-person-badge',
     'NNM Concept': 'bi-layers'
   };
 
-  // Main items for loop (ChainFace added manually in Desktop layout)
   const menuItems = ['Home', 'Market'];
 
-  // Mobile Bottom Drawer Items (Contact moved here)
   const bottomDrawerItems = [
     { label: 'News & Updates', href: '/news', icon: 'bi-newspaper' },
     { label: 'Market Indices', href: '/market-indices', icon: 'bi-graph-up-arrow' },
     { label: 'Affiliate Program', href: '/affiliate', icon: 'bi-briefcase' },
     { label: 'Rankings', href: '/ranking', icon: 'bi-trophy' },
     { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' },
-    { label: 'Contact', href: '/contact', icon: 'bi-chat-left-text' } // Moved from top list
+    { label: 'Contact', href: '/contact', icon: 'bi-chat-left-text' }
   ];
 
   const ChicProfileIcon = ({ size = 24, color = metallicGoldHex }) => (
@@ -241,14 +238,14 @@ const Navbar = () => {
     <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink: 0}}>
         <defs>
             <linearGradient id={mobile ? "goldGradMob" : "goldGradDesk"} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FFD700" />
-            <stop offset="50%" stopColor="#FDB931" />
-            <stop offset="100%" stopColor="#FFD700" />
+            <stop offset="0%" stopColor="#FCD535" />
+            <stop offset="50%" stopColor="#F0B90B" />
+            <stop offset="100%" stopColor="#FCD535" />
             </linearGradient>
         </defs>
         <g>
             <path d="M256 20 L356 120 L256 220 L156 120 Z" fill={`url(#${mobile ? "goldGradMob" : "goldGradDesk"})`} />
-            <path d="M156 120 L256 220 L256 240 L156 140 Z" fill="#B8860B" opacity="0.9" />
+            <path d="M156 120 L256 220 L256 240 L156 140 Z" fill="#B3882A" opacity="0.9" />
             <path d="M256 292 L356 392 L256 492 L156 392 Z" fill={`url(#${mobile ? "goldGradMob" : "goldGradDesk"})`} />
             <path d="M120 156 L220 256 L120 356 L20 256 Z" fill={`url(#${mobile ? "goldGradMob" : "goldGradDesk"})`} />
             <path d="M392 156 L492 256 L392 356 L292 256 Z" fill={`url(#${mobile ? "goldGradMob" : "goldGradDesk"})`} />
@@ -336,7 +333,7 @@ const Navbar = () => {
                         </li>
                     ))}
                     
-                    {/* NGX Dropdown (Was Insights) */}
+                    {/* NGX Dropdown */}
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsInsightsOpen(true)}
                         onMouseLeave={() => setIsInsightsOpen(false)}>
@@ -351,7 +348,7 @@ const Navbar = () => {
                         <button 
                           onClick={(e) => { e.preventDefault(); setIsInsightsOpen(!isInsightsOpen); }}
                           className="btn p-0 border-0 bg-transparent"
-                          style={{ fontSize: '9px', color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          style={{ fontSize: '9px', color: offWhiteText, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           title="Toggle dropdown"
                         >
                           <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
@@ -380,8 +377,8 @@ const Navbar = () => {
                                     style={{ 
                                         fontSize: navFontSize, 
                                         transition: '0.2s', 
-                                        color: '#E0E0E0',
-                                        borderBottom: idx !== arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
+                                        color: offWhiteText,
+                                        borderBottom: idx !== arr.length - 1 ? `1px solid ${subtleBorder}` : 'none'
                                     }} 
                                 >
                                     {subItem.label}
@@ -403,7 +400,7 @@ const Navbar = () => {
                         </Link>
                     </li>
 
-                    {/* ChainFace (New Item) */}
+                    {/* ChainFace */}
                     <li className="nav-item">
                         <Link 
                             href="/chainface"
@@ -415,7 +412,7 @@ const Navbar = () => {
                         </Link>
                     </li>
                     
-                    {/* NNM Concept Dropdown (2 Columns) */}
+                    {/* NNM Concept Dropdown */}
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsNNMConceptOpen(true)}
                         onMouseLeave={() => setIsNNMConceptOpen(false)}>
@@ -430,7 +427,7 @@ const Navbar = () => {
                         <button 
                           onClick={(e) => { e.preventDefault(); setIsNNMConceptOpen(!isNNMConceptOpen); }}
                           className="btn p-0 border-0 bg-transparent"
-                          style={{ fontSize: '9px', color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          style={{ fontSize: '9px', color: offWhiteText, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           title="Toggle dropdown"
                         >
                           <i className="bi bi-chevron-down" style={{ fontSize: '9px' }}></i>
@@ -454,26 +451,26 @@ const Navbar = () => {
                               overflow: 'hidden'
                           }}>
                         
-                        {/* Right Column: NNM Concept + How it Works */}
-                        <div style={{ flex: 1, borderRight: '1px solid rgba(255,255,255,0.05)', padding: '6px 0' }}>
+                        {/* Right Column */}
+                        <div style={{ flex: 1, borderRight: `1px solid ${subtleBorder}`, padding: '6px 0' }}>
                            <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/nnm-concept" 
-                                style={{ fontSize: dropDownSmallFont, color: '#E0E0E0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                style={{ fontSize: dropDownSmallFont, color: offWhiteText, borderBottom: `1px solid ${subtleBorder}` }}>
                                 NNM Concept
                            </Link>
                            <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/how-it-works" 
-                                style={{ fontSize: dropDownSmallFont, color: '#E0E0E0' }}>
+                                style={{ fontSize: dropDownSmallFont, color: offWhiteText }}>
                                 How it Works
                            </Link>
                         </div>
 
-                        {/* Left Column: Conviction + Registry */}
+                        {/* Left Column */}
                         <div style={{ flex: 1, padding: '6px 0' }}>
                            <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/conviction-rank" 
-                                style={{ fontSize: dropDownSmallFont, color: '#E0E0E0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                style={{ fontSize: dropDownSmallFont, color: offWhiteText, borderBottom: `1px solid ${subtleBorder}` }}>
                                 Conviction Rank
                            </Link>
                            <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href="/ranking" 
-                                style={{ fontSize: dropDownSmallFont, color: '#E0E0E0' }}>
+                                style={{ fontSize: dropDownSmallFont, color: offWhiteText }}>
                                 Registry Rank
                            </Link>
                         </div>
@@ -488,7 +485,7 @@ const Navbar = () => {
                 <form onSubmit={handleSearch} className="position-relative" style={{ width: '240px', height: elementHeight }}>
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." 
                         value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '34px', border: `1px solid rgba(240, 196, 32, 0.1)`, caretColor: metallicGoldHex }} 
+                        style={{ borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '34px', border: `1px solid ${subtleBorder}`, caretColor: metallicGoldHex }} 
                    />
                    <button type="submit" className="btn p-0 position-absolute" style={{top: '50%', transform: 'translateY(-50%)', left: '10px', border:'none', background:'transparent'}}>
                         <i className="bi bi-search" style={{fontSize: '13px', color: metallicGoldHex}}></i>
@@ -524,7 +521,7 @@ const Navbar = () => {
               transform: 'translateY(-50%)',
               width: '12px',
               height: '60px', 
-              backgroundColor: '#252525', 
+              backgroundColor: '#1E2329', 
               borderTopLeftRadius: '6px',
               borderBottomLeftRadius: '6px',
               display: 'flex',
@@ -552,14 +549,14 @@ const Navbar = () => {
                           width: '36px', height: '36px', 
                           borderRadius: '50%', 
                           backgroundColor: 'transparent', 
-                          border: '1px solid rgba(255,255,255,0.1)', 
+                          border: `1px solid ${subtleBorder}`, 
                           color: offWhiteText 
                       }}>
                   <i className="bi bi-x" style={{ fontSize: '24px' }}></i>
               </button>
           </div>
           
-          <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)', opacity: 1 }} />
+          <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: `1px solid ${subtleBorder}`, opacity: 1 }} />
 
           <div className="drawer-content px-4 pt-4 pb-5 d-flex flex-column h-100 no-scrollbar" style={{ overflowY: 'auto', backgroundColor: 'transparent' }}>
               <div className="d-flex flex-column w-100 justify-content-start gap-2" style={{ marginTop: '-8px' }}>
@@ -570,52 +567,51 @@ const Navbar = () => {
                                 href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                                 onClick={closeDrawer}
                                 className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3"
-                                style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                                style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
                             <i className={`bi ${menuIcons[item]} opacity-75`} style={{ fontSize: '18px' }}></i>
                             {item}
                         </Link>
                     ))}
 
-                    <Link href="/ngx" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                    <Link href="/ngx" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
                         <i className="bi bi-activity opacity-75" style={{ fontSize: '18px' }}></i>
                         NGX
                     </Link>
 
-                    <Link href="/mint" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                    <Link href="/mint" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
                         <i className="bi bi-diamond opacity-75" style={{ fontSize: '18px' }}></i>
                         Mint
                     </Link>
 
-                    {/* ChainFace Replaced Contact Here */}
-                    <Link href="/chainface" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                    <Link href="/chainface" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
                         <i className="bi bi-person-badge opacity-75" style={{ fontSize: '18px' }}></i>
                         ChainFace
                     </Link>
 
-                    <Link href="/nnm-concept" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                    <Link href="/nnm-concept" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
                         <i className="bi bi-layers opacity-75" style={{ fontSize: '18px' }}></i>
                         NNM Concept
                     </Link>
-                    <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                    <Link href="/how-it-works" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
                         <i className="bi bi-info-circle opacity-75" style={{ fontSize: '18px' }}></i>
                         How it Works
                     </Link>
-                    <Link href="/conviction-rank" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px' }}>
+                    <Link href="/conviction-rank" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
                         <i className="bi bi-trophy opacity-75" style={{ fontSize: '18px' }}></i>
                         Conviction Rank
                     </Link>
                   </div>
 
-                  <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.03)', opacity: 1, marginTop: '6px', marginBottom: '6px' }} />
+                  <hr className="m-0" style={{ width: '85%', margin: '0 auto', borderTop: `1px solid ${subtleBorder}`, opacity: 1, marginTop: '6px', marginBottom: '6px' }} />
 
-                  {/* Secondary Items (Contact moved here) */}
+                  {/* Secondary Items */}
                   <div className="d-flex flex-column gap-2">
                     {bottomDrawerItems.map((item) => (
                         <Link key={item.label} 
                                 href={item.href}
                                 onClick={closeDrawer}
                                 className="text-decoration-none fw-normal py-1 d-flex align-items-center gap-3"
-                                style={{ fontSize: '13px', color: '#888' }}>
+                                style={{ fontSize: '13px', color: mutedText }}>
                             <i className={`bi ${item.icon}`} style={{ fontSize: '14px', opacity: 0.8 }}></i>
                             {item.label}
                         </Link>
@@ -626,27 +622,22 @@ const Navbar = () => {
               <div className="drawer-footer pt-3 border-top border-secondary border-opacity-10 mt-2 d-flex align-items-center w-100 mb-5">
                   <div className="d-flex justify-content-start align-items-center px-2" style={{ gap: '25px', paddingRight: '80px', width: '100%' }}>
                       
-                      {/* X (Twitter) - Updated to Profile Link */}
                       <a href="https://x.com/nnmmarket" target="_blank" rel="noopener noreferrer">
                         <i className="bi bi-twitter-x" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       </a>
 
-                      {/* Facebook */}
                       <a href="https://www.facebook.com/profile.php?id=61586895007931" target="_blank" rel="noopener noreferrer">
                         <i className="bi bi-facebook" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       </a>
 
-                      {/* Discord */}
                       <a href="https://discord.gg/gNR8zwgtpc" target="_blank" rel="noopener noreferrer">
                         <i className="bi bi-discord" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       </a>
 
-                      {/* Medium (Replaces Telegram) */}
                       <a href="https://medium.com/@nftnnmmarket" target="_blank" rel="noopener noreferrer">
                         <i className="bi bi-medium" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       </a>
 
-                      {/* Instagram */}
                       <a href="https://www.instagram.com/NNM_Assets" target="_blank" rel="noopener noreferrer">
                         <i className="bi bi-instagram" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       </a>
@@ -674,14 +665,14 @@ const Navbar = () => {
 
       <style jsx global>{`
         .gold-text-gradient {
-            background: linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #FFD700 100%);
+            background: linear-gradient(135deg, #FCD535 0%, #F0B90B 50%, #FCD535 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             text-fill-color: transparent;
         }
 
-        .desktop-nav-link { color: #ffffff !important; transition: color 0.3s ease; }
+        .desktop-nav-link { color: ${offWhiteText} !important; transition: color 0.3s ease; }
         .desktop-nav-link:hover, .desktop-nav-link.active { color: ${metallicGoldHex} !important; }
         
         .dropdown-link-custom:hover, .dropdown-link-custom:focus { 
@@ -692,7 +683,7 @@ const Navbar = () => {
         .search-input-custom { background-color: rgba(255, 255, 255, 0.05) !important; transition: all 0.3s ease; }
         .search-input-custom:focus { background-color: rgba(255, 255, 255, 0.1) !important; border-color: ${metallicGoldHex} !important; }
 
-        .hover-effect-btn:hover { background-color: rgba(240, 196, 32, 0.1) !important; }
+        .hover-effect-btn:hover { background-color: rgba(252, 213, 53, 0.1) !important; }
 
         .mobile-drawer {
             position: fixed;

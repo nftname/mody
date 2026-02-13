@@ -1,7 +1,6 @@
 'use client';
 import Link from 'next/link';
 
-// ألوان الهوية الموحدة - تم ضبطها لراحة العين
 const BRAND_GOLD = '#FCD535'; // نفس درجة أصفر باينانس الذهبي
 const TEXT_OFF_WHITE = '#EAECEF'; // أوف وايت (للعناوين)
 const TEXT_MUTED = '#848E9C';     // رمادي مزرق (للنصوص)
