@@ -8,27 +8,21 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { type, session_id, status, decision } = body;
+    const { type, session_id, decision, client_user_id, vendor_data } = body;
 
-    // 1. 
     if (type !== 'verification_session.completed') {
       return NextResponse.json({ message: 'Ignored event' }, { status: 200 });
     }
 
-    // 2. (Wallet Address) 
-    
-    const walletAddress = body.client_user_id;
+    const walletAddress = client_user_id || vendor_data;
 
     if (!walletAddress) {
       return NextResponse.json({ error: 'No wallet address found' }, { status: 400 });
     }
 
-    // 3. 
     const isApproved = decision === 'approved';
 
     if (isApproved) {
-      // 4(Supabase)
-     
       const { error } = await supabase
         .from('chainface_wallet_verifications')
         .upsert({ 
@@ -39,7 +33,6 @@ export async function POST(req: Request) {
         }, { onConflict: 'wallet_address' });
 
       if (error) {
-        console.error('Supabase Error:', error);
         return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
       }
     }
@@ -47,7 +40,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true }, { status: 200 });
 
   } catch (error) {
-    console.error('Webhook Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -424,13 +424,15 @@ export default function ChainFacePage() {
   };
   const openSumsubWindow = () => {
       const baseUrl = "https://verify.didit.me/u/Tsy0RqfeTfGJVuQBAb5h7A";
-      const finalUrl = `${baseUrl}?client_user_id=${address || 'unknown'}`;
+      const walletParam = address || 'unknown';
+      const finalUrl = `${baseUrl}?client_user_id=${walletParam}&vendor_data=${walletParam}`;
       
       window.open(finalUrl, '_blank');
       
       setVerifyStep('idle');
       setTargetVerifyType(null);
   };
+
 
 
 
