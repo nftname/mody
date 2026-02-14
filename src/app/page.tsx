@@ -68,23 +68,24 @@ const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
 // --- ASSET CARD (UPDATED COLORS) ---
 const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisplay: string, volumeDisplay: string }) => {
     return (
-      <div className="asset-card-container hover-lift" style={{ cursor: 'pointer', backgroundColor: '#1E2329' }}>
+      <div className="asset-card-container hover-lift" style={{ cursor: 'pointer', backgroundColor: '#1E2329', padding: '8px' }}>
           <Link href={`/asset/${item.id}`} className="text-decoration-none w-100">
               <div className="position-relative w-100" style={{ 
-                  height: '160px', 
-                  borderRadius: '12px', 
+                  height: '128px', 
+                  borderRadius: '10px', 
                   overflow: 'hidden', 
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.4)', 
-                  marginBottom: '10px', 
-                  border: '1px solid rgba(255,255,255,0.05)'
+                  boxShadow: '0 6px 15px rgba(0,0,0,0.4)', 
+                  marginBottom: '8px', 
+                  border: '1px solid rgba(255,255,255,0.05)',
+                  backgroundColor: '#000'
               }}>
                    <Image 
                         src="/cart.jpg" 
                         alt={item.name} 
                         fill 
-                        style={{ objectFit: 'fill', objectPosition: 'center' }} 
+                        style={{ objectFit: 'contain', objectPosition: 'center' }} 
                    />
-                   <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.2)' }}></div>
+                   <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.1)' }}></div>
                    <div style={{
                        position: 'absolute',
                        top: '50%',
@@ -97,13 +98,13 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                        <h3 style={{
                            fontFamily: '"Montserrat", sans-serif',
                            fontWeight: '700',
-                           fontSize: '24px',
+                           fontSize: '20px',
                            background: 'linear-gradient(180deg, #e6cf8b 0%, #c49938 50%, #9e7b2a 100%)',
                            WebkitBackgroundClip: 'text',
                            WebkitTextFillColor: 'transparent',
                            filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.5))',
                            margin: 0,
-                           letterSpacing: '2px',
+                           letterSpacing: '1.5px',
                            textTransform: 'uppercase'
                        }}>
                            {item.name}
@@ -111,7 +112,7 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                    </div>
                    <div style={{
                        position: 'absolute',
-                       bottom: '10px',
+                       bottom: '8px',
                        width: '100%',
                        textAlign: 'center',
                        zIndex: 10,
@@ -119,30 +120,30 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                    }}>
                        <p style={{
                            fontFamily: 'serif',
-                           fontSize: '9px',
+                           fontSize: '8px',
                            color: '#D4D4D4',
-                           letterSpacing: '1.5px',
+                           letterSpacing: '1px',
                            margin: 0,
                            textTransform: 'uppercase',
                            fontWeight: '600',
                            textShadow: '0 1px 3px rgba(0,0,0,1)'
                        }}>
-                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} GENESIS <span style={{ opacity: 0.5, margin: '0 4px' }}>|</span> MINTED {item.mintYear || 2026}
+                           <span style={{ color: '#c49938' }}>GEN-0</span> #{item.id} <span style={{ opacity: 0.5, margin: '0 2px' }}>|</span> MINTED {item.mintYear || 2026}
                        </p>
                    </div>
               </div>
-              <div className="w-100 d-flex justify-content-between align-items-end px-2">
+              <div className="w-100 d-flex justify-content-between align-items-end px-1">
                   <div className="text-start">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px', color: '#848E9C' }}>Name</div>
-                      <h5 className="fw-bold m-0" style={{ fontSize: '13px', color: '#EAECEF' }}>{item.name}</h5>
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '8px', letterSpacing: '0.5px', marginBottom: '1px', color: '#848E9C' }}>Name</div>
+                      <h5 className="fw-bold m-0" style={{ fontSize: '11px', color: '#EAECEF' }}>{item.name}</h5>
                   </div>
                   <div className="text-center">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px', color: '#848E9C' }}>Price</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#EAECEF' }}>{priceDisplay}</h5>
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '8px', letterSpacing: '0.5px', marginBottom: '1px', color: '#848E9C' }}>Price</div>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '11px', color: '#EAECEF' }}>{priceDisplay}</h5>
                   </div>
                   <div className="text-end">
-                      <div className="text-secondary text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.5px', marginBottom: '2px', color: '#848E9C' }}>Vol</div>
-                      <h5 className="fw-normal m-0" style={{ fontSize: '13px', color: '#EAECEF' }}>{volumeDisplay}</h5>
+                      <div className="text-secondary text-uppercase" style={{ fontSize: '8px', letterSpacing: '0.5px', marginBottom: '1px', color: '#848E9C' }}>Vol</div>
+                      <h5 className="fw-normal m-0" style={{ fontSize: '11px', color: '#EAECEF' }}>{volumeDisplay}</h5>
                   </div>
               </div>
           </Link>
@@ -458,7 +459,7 @@ function Home() {
                                     src={src} 
                                     alt={`Hero Slide ${index + 1}`} 
                                     fill 
-                                    style={{ objectFit: 'cover' }}
+                                    style={{ objectFit: 'contain', backgroundColor: '#000' }}
                                     priority={index === 0} 
                                 />
                                 {/* Optional: Overlay Gradient */}
