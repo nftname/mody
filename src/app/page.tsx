@@ -83,7 +83,7 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                         src="/cart.jpg" 
                         alt={item.name} 
                         fill 
-                        style={{ objectFit: 'contain', objectPosition: 'center' }} 
+                        style={{ objectFit: 'fill', objectPosition: 'center' }} 
                    />
                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.1)' }}></div>
                    <div style={{
@@ -459,7 +459,8 @@ function Home() {
                                     src={src} 
                                     alt={`Hero Slide ${index + 1}`} 
                                     fill 
-                                    style={{ objectFit: 'contain', backgroundColor: '#000' }}
+                                    style={{ objectFit: 'fill' }}
+
                                     priority={index === 0} 
                                 />
                                 {/* Optional: Overlay Gradient */}
