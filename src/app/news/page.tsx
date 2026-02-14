@@ -74,8 +74,8 @@ export default function NewsPage() {
       
       <MarketTicker />
 
-      <div className="header-wrapper" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, padding: '4px 0', backgroundColor: SURFACE_DARK }}>
-        <div className="container-fluid px-2"> 
+      <div className="header-wrapper" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, padding: '6px 0', backgroundColor: SURFACE_DARK }}>
+        <div className="container-fluid"> 
             <div className="widgets-grid-horizontal">
                 <div className="widget-capsule"> <NGXWidget theme="dark" /> </div>
                 <div className="widget-capsule"> <NGXCapWidget theme="dark" /> </div>
@@ -169,8 +169,8 @@ export default function NewsPage() {
             align-items: center; 
             max-width: 1050px; 
             margin: 0 auto; 
-            padding: 0; 
-            gap: 4px; 
+            padding: 0 12px; 
+            gap: 12px; 
             overflow-x: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -180,7 +180,6 @@ export default function NewsPage() {
         .widget-capsule { 
             flex: 1; 
             min-width: 0;
-            height: auto;
             display: flex;
             justify-content: center;
         }
@@ -236,13 +235,12 @@ export default function NewsPage() {
 
         @media (max-width: 768px) {
             .widgets-grid-horizontal { 
-                justify-content: space-between;
-                padding: 0 6px;
-                gap: 4px;
+                padding: 0 10px; 
+                gap: 10px; 
             }
             .widget-capsule { 
                 flex: 1;
-                min-width: 32%;
+                min-width: 30%;
             }
             .news-card { flex-direction: column-reverse !important; }
             .news-thumbnail { width: 100%; height: 180px; margin-bottom: 15px; }
