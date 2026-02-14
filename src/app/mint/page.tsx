@@ -62,14 +62,15 @@ const MintContent = () => {
     setMounted(true);
   }, []);
 
-  const notifyRewardSystem = async (userWallet: any, tierName: string) => {
+  const notifyRewardSystem = async (userWallet: any, tierName: string, tokenId: number) => {
     try {
         await fetch('/api/nnm/mint-hook', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 wallet: userWallet,
-                tier: tierName 
+                tier: tierName,
+                tokenId: tokenId 
             }),
         });
     } catch (error) {
@@ -313,10 +314,10 @@ const MintContent = () => {
                  } catch (e) {
                      console.error("❌ Failed to save metadata:", e);
                  }
+                 
+                 // التعديل: تمرير الـ ID لربط النقاط به
+                 if (address) notifyRewardSystem(address, tierName, mintedId);
              }
-
-             if (address) notifyRewardSystem(address, tierName);
-
           }
 
           setModalType('success');

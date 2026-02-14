@@ -9,7 +9,7 @@ const supabase = createClient(
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { wallet, tier } = body;
+    const { wallet, tier, tokenId } = body;
 
     if (!wallet) return NextResponse.json({ error: 'Missing wallet' }, { status: 400 });
 
@@ -26,24 +26,37 @@ export async function POST(request: Request) {
 
     const { data: walletData } = await supabase
       .from('nnm_wallets')
-      .select('wnnm_balance')
+      .select('nnm_balance')
       .eq('wallet_address', wallet)
       .single();
 
-    const currentWNNM = walletData ? Number(walletData.wnnm_balance) : 0;
-    const newWNNM = currentWNNM + rewardAmount;
+    const currentNNM = walletData ? Number(walletData.nnm_balance) : 0;
+    const newNNM = currentNNM + rewardAmount;
 
-    const { error } = await supabase
+    const { error: walletError } = await supabase
       .from('nnm_wallets')
       .upsert({ 
         wallet_address: wallet, 
-        wnnm_balance: newWNNM,
+        nnm_balance: newNNM,
         updated_at: new Date().toISOString()
       }, { onConflict: 'wallet_address' });
 
-    if (error) throw error;
+    if (walletError) throw walletError;
 
-    return NextResponse.json({ success: true, added: rewardAmount });
+    if (tokenId) {
+        const { error: voteError } = await supabase
+            .from('conviction_votes')
+            .insert({
+                token_id: tokenId.toString(),
+                supporter_address: wallet,
+                amount: rewardAmount, 
+                created_at: new Date().toISOString()
+            });
+            
+        if (voteError) console.error("Failed to insert conviction record:", voteError);
+    }
+
+    return NextResponse.json({ success: true, added: rewardAmount, type: 'NNM' });
 
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
