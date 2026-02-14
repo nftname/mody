@@ -170,7 +170,7 @@ export default function NewsPage() {
             max-width: 1050px; 
             margin: 0 auto; 
             padding: 0 12px; 
-            gap: 12px; 
+            gap: 20px; 
             overflow-x: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
