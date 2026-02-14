@@ -10,7 +10,7 @@ import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 
 const BACKGROUND_DARK = '#181A20';
 const SURFACE_DARK = '#1E2329';
-const BORDER_COLOR = '#2B3139';
+const BORDER_COLOR = '#333'; 
 const TEXT_PRIMARY = '#EAECEF';
 const TEXT_MUTED = '#848E9C';
 const GOLD_BASE = '#FCD535';
@@ -74,7 +74,7 @@ export default function NewsPage() {
       
       <MarketTicker />
 
-      <div className="header-wrapper border-bottom" style={{ borderColor: BORDER_COLOR, padding: '10px 0', backgroundColor: SURFACE_DARK }}>
+      <div className="header-wrapper" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, padding: '15px 0', backgroundColor: SURFACE_DARK }}>
         <div className="container-fluid p-0"> 
             <div className="widgets-grid-container">
                 <div className="widget-item"> <NGXWidget theme="dark" /> </div>
@@ -88,7 +88,7 @@ export default function NewsPage() {
         <div className="row justify-content-center">
             <div className="col-12 col-lg-10">
                 
-                <div className="d-flex align-items-center mb-5 pb-2 border-bottom" style={{ borderColor: BORDER_COLOR }}>
+                <div className="d-flex align-items-center mb-5 pb-2" style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>
                     <div className="live-dot"></div>
                     <h1 className="h5 fw-bold mb-0 text-white text-uppercase" style={{ letterSpacing: '2px', fontSize: '14px', color: TEXT_PRIMARY }}>Global Market Wire</h1>
                 </div>
@@ -162,8 +162,17 @@ export default function NewsPage() {
       </div>
 
       <style jsx global>{`
-        .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; max-width: 1050px; margin: 0 auto; padding: 0 15px; gap: 10px; }
+        .widgets-grid-container { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            max-width: 1050px; 
+            margin: 0 auto; 
+            padding: 0 15px; 
+            gap: 15px; 
+        }
         .widget-item { flex: 1; min-width: 0; }
+        
         .news-item-wrapper { margin-bottom: 25px; }
         .badge-category { font-size: 10px; font-weight: 700; color: ${GOLD_BASE}; text-transform: uppercase; letter-spacing: 1px; border: 1px solid rgba(252, 213, 53, 0.2); padding: 3px 8px; border-radius: 4px; }
         .text-date { font-size: 10px; color: ${TEXT_MUTED}; font-weight: 600; text-transform: uppercase; }
@@ -171,11 +180,26 @@ export default function NewsPage() {
         .hover-gold:hover { color: ${GOLD_BASE} !important; }
         .news-summary { font-size: 15px; color: ${TEXT_MUTED}; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
         .read-more-link { font-size: 11px; color: ${GOLD_BASE}; text-decoration: none; font-weight: 700; text-transform: uppercase; }
-        .news-thumbnail { width: 180px; height: 110px; border-radius: 4px; overflow: hidden; border: 1px solid ${BORDER_COLOR}; }
+        
+        .news-thumbnail { 
+            width: 180px; 
+            height: 110px; 
+            border-radius: 4px; 
+            overflow: hidden; 
+            border: 1px solid ${BORDER_COLOR}; 
+        }
         .news-thumbnail img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+        
         .live-dot { width: 6px; height: 6px; background-color: #F6465D; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 8px rgba(246, 70, 93, 0.6); animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .news-divider { height: 1px; background: linear-gradient(90deg, transparent 0%, ${BORDER_COLOR} 15%, ${BORDER_COLOR} 85%, transparent 100%); margin-top: 30px; margin-bottom: 30px; }
+        
+        .news-divider { 
+            height: 1px; 
+            background: ${BORDER_COLOR}; 
+            margin-top: 30px; 
+            margin-bottom: 30px; 
+            opacity: 0.5;
+        }
         
         .btn-pagination {
             background: transparent;
@@ -195,21 +219,17 @@ export default function NewsPage() {
             color: ${GOLD_BASE};
             background: rgba(252, 213, 53, 0.05);
         }
-        .btn-pagination:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        .page-indicator {
-            font-size: 13px;
-            color: ${TEXT_MUTED};
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
+        .btn-pagination:disabled { opacity: 0.3; cursor: not-allowed; }
+        .page-indicator { font-size: 13px; color: ${TEXT_MUTED}; font-weight: 500; letter-spacing: 0.5px; }
 
         @media (max-width: 768px) {
+            .widgets-grid-container { 
+                flex-direction: column; 
+                gap: 20px;
+                padding: 10px 20px;
+            }
             .news-card { flex-direction: column-reverse !important; }
             .news-thumbnail { width: 100%; height: 180px; margin-bottom: 15px; }
-            .widgets-grid-container { display: none !important; }
         }
       `}</style>
     </main>
