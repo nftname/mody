@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { createClient } from '@supabase/supabase-js';
-import MarketTicker from '@/components/MarketTicker';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -14,11 +13,13 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- 2. Styles & Constants ---
+// --- 2. Styles & Constants (Updated to Site Theme) ---
 const BRAND_GOLD = '#FCD535';
-const BG_DARK = '#1E1E1E'; 
-const PANEL_BG = '#242424'; 
-const BORDER_COLOR = '#2E2E2E'; 
+const BG_DARK = '#181A20'; 
+const PANEL_BG = '#1E2329'; 
+const BORDER_COLOR = '#2B3139'; 
+const TEXT_PRIMARY = '#EAECEF';
+const TEXT_MUTED = '#848E9C';
 const COLORS = [BRAND_GOLD, '#FFFFFF', '#666666'];
 
 export default function AffiliatePage() {
@@ -27,7 +28,7 @@ export default function AffiliatePage() {
   const [isCopied, setIsCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // --- 3. Real Data States (No Mock Data) ---
+  // --- 3. Real Data States ---
   const [earnings, setEarnings] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,11 +41,8 @@ export default function AffiliatePage() {
   useEffect(() => {
       setMounted(true);
       if (address) {
-          // Generate Link
           const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
           setReferralLink(`${origin}/mint?ref=${address}`);
-          
-          // Fetch DB Data
           fetchAffiliateData(address);
       }
   }, [address]);
@@ -53,7 +51,6 @@ export default function AffiliatePage() {
   const fetchAffiliateData = async (wallet: string) => {
     setLoading(true);
     try {
-        // A. Get Earnings Ledger
         const { data: earningsData } = await supabase
             .from('affiliate_earnings')
             .select('*')
@@ -62,7 +59,6 @@ export default function AffiliatePage() {
         
         if (earningsData) setEarnings(earningsData);
 
-        // B. Get Payout History
         const { data: payoutsData } = await supabase
             .from('affiliate_payouts')
             .select('*')
@@ -78,14 +74,13 @@ export default function AffiliatePage() {
     }
   };
 
-  // --- 5. Helper: Truncate Wallet (3 start ... 3 end) ---
+  // --- 5. Helper: Truncate Wallet ---
   const shortAddress = (str: string) => {
       if (!str || str.length < 8) return str;
-      // التعديل: 3 حروف في البداية + نقط + 3 حروف في النهاية
       return `${str.substring(0, 3)}...${str.substring(str.length - 3)}`;
   };
 
-  // --- 6. The Brain (Calculations) ---
+  // --- 6. Calculations Logic ---
   const stats = useMemo(() => {
     let totalRevenue = 0;
     let mintRevenue = 0;
@@ -114,7 +109,6 @@ export default function AffiliatePage() {
     return { totalRevenue, mintRevenue, royaltyRevenue, unpaidBalance, mintCount, royaltyCount };
   }, [earnings]);
 
-  // Chart Data Preparation
   const pieData = [
     { name: 'Mint Commission (30%)', value: stats.mintRevenue || 1 }, 
     { name: 'Trading Royalties (10%)', value: stats.royaltyRevenue }, 
@@ -129,7 +123,6 @@ export default function AffiliatePage() {
       if (stats.unpaidBalance < 50) return;
       const confirmClaim = confirm(`Request payout for $${stats.unpaidBalance.toFixed(2)}?`);
       if(confirmClaim) {
-          // Logic to insert 'REQUESTED' into DB would go here
           alert("Payout requested successfully! Admin will process it shortly.");
       }
   };
@@ -146,21 +139,17 @@ export default function AffiliatePage() {
   if (!mounted) return null;
 
   return (
-    <main style={{ backgroundColor: BG_DARK, minHeight: '100vh', paddingBottom: '80px', color: '#fff', fontFamily: 'sans-serif' }}>
+    <main style={{ backgroundColor: BG_DARK, minHeight: '100vh', paddingBottom: '80px', color: TEXT_PRIMARY, fontFamily: 'sans-serif' }}>
         
-        <div style={{ marginTop: '0px' }}>
-            <MarketTicker />
-        </div>
-
         <div className="container pt-5">
-            {/* HERO */}
+            {/* HERO - Title Reduced by 25% */}
             <div className="row justify-content-center text-center mb-5">
                 <div className="col-lg-10">
-                    <h6 className="text-uppercase tracking-widest mb-3" style={{ color: '#888', letterSpacing: '3px', fontSize: '11px' }}>Institutional Partner Program</h6>
-                    <h1 className="fw-bold mb-3" style={{ fontSize: '3rem', color: '#E0E0E0', letterSpacing: '-1px' }}>
+                    <h6 className="text-uppercase tracking-widest mb-3" style={{ color: TEXT_MUTED, letterSpacing: '3px', fontSize: '11px' }}>Institutional Partner Program</h6>
+                    <h1 className="fw-bold mb-3" style={{ fontSize: '2.25rem', color: TEXT_PRIMARY, letterSpacing: '-1px' }}>
                         NNM <span style={{ color: BRAND_GOLD }}>Alliance</span>
                     </h1>
-                    <p style={{ color: '#B0B0B0', maxWidth: '700px', margin: '0 auto', lineHeight: '1.6', fontSize: '15px' }}>
+                    <p style={{ color: TEXT_MUTED, maxWidth: '700px', margin: '0 auto', lineHeight: '1.6', fontSize: '15px' }}>
                         Build a sustainable revenue stream. Earn <span style={{ color: '#fff' }}>30% instant commission</span> on mints, plus <span style={{ color: '#fff' }}>10% lifetime royalties</span> on all future trading fees generated by your referred users.
                     </p>
                 </div>
@@ -177,19 +166,22 @@ export default function AffiliatePage() {
             ) : (
                 <div className="fade-in-up">
                     
-                    {/* REFERRAL LINK BAR */}
+                    {/* REFERRAL LINK BAR - Ellipsis for Mobile Single Line */}
                     <div className="p-4 rounded-3 mb-5 d-flex flex-column flex-md-row align-items-center justify-content-between gap-4 glass-panel">
                         <div className="d-flex align-items-center gap-3 w-100" style={{ minWidth: 0 }}>
                             <div className="icon-circle flex-shrink-0"><i className="bi bi-link-45deg"></i></div>
                             <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                                <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#888', letterSpacing: '1px' }}>Your Exclusive Link</label>
+                                <label style={{ fontSize: '10px', textTransform: 'uppercase', color: TEXT_MUTED, letterSpacing: '1px' }}>Your Exclusive Link</label>
                                 <div className="d-flex align-items-center gap-2 mt-1">
                                     <code style={{ 
                                         color: BRAND_GOLD, 
                                         fontSize: '15px', 
                                         background: 'transparent',
-                                        wordBreak: 'break-all', 
-                                        whiteSpace: 'normal',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        display: 'block',
+                                        width: '100%',
                                         lineHeight: '1.4'
                                     }}>
                                         {referralLink}
@@ -254,7 +246,7 @@ export default function AffiliatePage() {
                                             <button className="claim-btn disabled w-100" disabled>
                                                 CLAIM PAYOUT
                                             </button>
-                                            <div style={{ fontSize: '9px', color: '#666', marginTop: '5px' }}>
+                                            <div style={{ fontSize: '9px', color: TEXT_MUTED, marginTop: '5px' }}>
                                                 Minimum payout: $50.00
                                             </div>
                                         </div>
@@ -280,11 +272,11 @@ export default function AffiliatePage() {
                                                     <stop offset="95%" stopColor={BRAND_GOLD} stopOpacity={0}/>
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                                            <XAxis dataKey="name" stroke="#666" fontSize={11} tickLine={false} axisLine={false} />
-                                            <YAxis stroke="#666" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#2B3139" vertical={false} />
+                                            <XAxis dataKey="name" stroke={TEXT_MUTED} fontSize={11} tickLine={false} axisLine={false} />
+                                            <YAxis stroke={TEXT_MUTED} fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
                                             <Tooltip 
-                                                contentStyle={{ backgroundColor: '#242424', border: `1px solid ${BORDER_COLOR}`, borderRadius: '8px', color: '#fff' }}
+                                                contentStyle={{ backgroundColor: PANEL_BG, border: `1px solid ${BORDER_COLOR}`, borderRadius: '8px', color: TEXT_PRIMARY }}
                                                 itemStyle={{ color: BRAND_GOLD }}
                                             />
                                             <Area type="monotone" dataKey="revenue" stroke={BRAND_GOLD} strokeWidth={2} fillOpacity={1} fill="url(#colorRev)" />
@@ -316,21 +308,21 @@ export default function AffiliatePage() {
                                                 ))}
                                             </Pie>
                                             <Tooltip 
-                                                contentStyle={{ backgroundColor: '#242424', border: '1px solid #333', borderRadius: '8px', color: '#fff' }}
+                                                contentStyle={{ backgroundColor: PANEL_BG, border: `1px solid ${BORDER_COLOR}`, borderRadius: '8px', color: TEXT_PRIMARY }}
                                             />
                                             <Legend verticalAlign="bottom" height={36} iconType="circle" />
                                         </PieChart>
                                     </ResponsiveContainer>
                                     <div style={{ position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-                                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>${stats.totalRevenue.toLocaleString()}</div>
-                                        <div style={{ fontSize: '10px', color: '#888' }}>Total Yield</div>
+                                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: TEXT_PRIMARY }}>${stats.totalRevenue.toLocaleString()}</div>
+                                        <div style={{ fontSize: '10px', color: TEXT_MUTED }}>Total Yield</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* TRANSACTION LEDGER TABLE (Optimized Headers) */}
+                    {/* TRANSACTION LEDGER TABLE */}
                     <div className="chart-panel mb-4">
                         <div className="panel-header mb-3">
                             <h5 className="panel-title">Transaction Ledger</h5>
@@ -339,7 +331,6 @@ export default function AffiliatePage() {
                         <div className="table-responsive">
                             <table className="table">
                                 <thead>
-                                    {/* ✅ 1. الاختصارات العالمية */}
                                     <tr>
                                         <th>DATE</th>
                                         <th>TYPE</th>
@@ -356,12 +347,11 @@ export default function AffiliatePage() {
                                     ) : (
                                         currentEarnings.map((item, i) => (
                                             <tr key={item.id || i}>
-                                                <td style={{ color: '#666', fontSize: '11px', whiteSpace: 'nowrap' }}>
+                                                <td style={{ color: TEXT_MUTED, fontSize: '11px', whiteSpace: 'nowrap' }}>
                                                     {new Date(item.created_at).toLocaleDateString()}
                                                 </td>
                                                 <td><span className="type-badge">{item.earnings_type}</span></td>
-                                                {/* ✅ 2. استخدام دالة الاختصار (3 حروف + 3 حروف) */}
-                                                <td style={{ fontFamily: 'monospace', color: '#888', whiteSpace: 'nowrap' }}>
+                                                <td style={{ fontFamily: 'monospace', color: TEXT_MUTED, whiteSpace: 'nowrap' }}>
                                                     {shortAddress(item.source_wallet)}
                                                 </td>
                                                 <td className="text-end" style={{ color: BRAND_GOLD, fontWeight: 'bold', whiteSpace: 'nowrap' }}>+${Number(item.amount).toFixed(2)}</td>
@@ -379,13 +369,13 @@ export default function AffiliatePage() {
                         {earnings.length > ITEMS_PER_PAGE && (
                             <div className="d-flex justify-content-end align-items-center gap-3 mt-3 px-2">
                                 <button className="btn-pagination" disabled={ledgerPage === 1} onClick={() => setLedgerPage(p => p - 1)}><i className="bi bi-chevron-left"></i></button>
-                                <span style={{ fontSize: '12px', color: '#666' }}>Page {ledgerPage}</span>
+                                <span style={{ fontSize: '12px', color: TEXT_MUTED }}>Page {ledgerPage}</span>
                                 <button className="btn-pagination" disabled={ledgerPage * ITEMS_PER_PAGE >= earnings.length} onClick={() => setLedgerPage(p => p + 1)}><i className="bi bi-chevron-right"></i></button>
                             </div>
                         )}
                     </div>
 
-                    {/* PAYOUT HISTORY TABLE (Optimized Headers) */}
+                    {/* PAYOUT HISTORY TABLE */}
                     <div className="chart-panel">
                         <div className="panel-header mb-3">
                             <h5 className="panel-title">Payout History</h5>
@@ -393,7 +383,6 @@ export default function AffiliatePage() {
                         <div className="table-responsive">
                             <table className="table">
                                 <thead>
-                                    {/* ✅ 1. الاختصارات العالمية */}
                                     <tr>
                                         <th>DATE</th>
                                         <th>TX ID</th>
@@ -409,16 +398,15 @@ export default function AffiliatePage() {
                                     ) : (
                                         currentPayouts.map((item, i) => (
                                             <tr key={item.id || i}>
-                                                <td style={{ color: '#666', fontSize: '11px', whiteSpace: 'nowrap' }}>
+                                                <td style={{ color: TEXT_MUTED, fontSize: '11px', whiteSpace: 'nowrap' }}>
                                                     {new Date(item.created_at).toLocaleDateString()}
                                                 </td>
-                                                {/* ✅ 2. استخدام دالة الاختصار لـ TX Hash */}
                                                 <td style={{ fontFamily: 'monospace', color: BRAND_GOLD, whiteSpace: 'nowrap' }}>
                                                     <a href={item.tx_hash ? `https://polygonscan.com/tx/${item.tx_hash}` : '#'} target="_blank" className="text-decoration-none" style={{ color: 'inherit' }}>
                                                         {shortAddress(item.tx_hash) || 'Processing'} <i className="bi bi-box-arrow-up-right ms-1" style={{ fontSize: '10px' }}></i>
                                                     </a>
                                                 </td>
-                                                <td className="text-end" style={{ color: '#fff', fontWeight: 'bold', whiteSpace: 'nowrap' }}>${Number(item.amount).toFixed(2)}</td>
+                                                <td className="text-end" style={{ color: TEXT_PRIMARY, fontWeight: 'bold', whiteSpace: 'nowrap' }}>${Number(item.amount).toFixed(2)}</td>
                                                 <td className="text-end"><span className="status-badge success">{item.status}</span></td>
                                             </tr>
                                         ))
@@ -429,7 +417,7 @@ export default function AffiliatePage() {
                         {payouts.length > ITEMS_PER_PAGE && (
                             <div className="d-flex justify-content-end align-items-center gap-3 mt-3 px-2">
                                 <button className="btn-pagination" disabled={payoutPage === 1} onClick={() => setPayoutPage(p => p - 1)}><i className="bi bi-chevron-left"></i></button>
-                                <span style={{ fontSize: '12px', color: '#666' }}>Page {payoutPage}</span>
+                                <span style={{ fontSize: '12px', color: TEXT_MUTED }}>Page {payoutPage}</span>
                                 <button className="btn-pagination" disabled={payoutPage * ITEMS_PER_PAGE >= payouts.length} onClick={() => setPayoutPage(p => p + 1)}><i className="bi bi-chevron-right"></i></button>
                             </div>
                         )}
@@ -508,10 +496,10 @@ export default function AffiliatePage() {
                 position: relative;
                 overflow: hidden;
             }
-            .stat-icon { color: #666; font-size: 20px; }
+            .stat-icon { color: ${TEXT_MUTED}; font-size: 20px; }
             .stat-count-badge { font-size: 11px; color: ${BRAND_GOLD}; background: rgba(252, 213, 53, 0.1); padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-            .stat-value { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 5px; font-family: 'Inter', sans-serif; }
-            .stat-label { font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 1px; }
+            .stat-value { font-size: 24px; font-weight: 700; color: ${TEXT_PRIMARY}; margin-bottom: 5px; font-family: 'Inter', sans-serif; }
+            .stat-label { font-size: 11px; text-transform: uppercase; color: ${TEXT_MUTED}; letter-spacing: 1px; }
             .trend-badge { font-size: 10px; color: #4caf50; background: rgba(76, 175, 80, 0.1); padding: 2px 6px; border-radius: 4px; }
             .status-dot { width: 8px; height: 8px; background: ${BRAND_GOLD}; border-radius: 50%; box-shadow: 0 0 10px ${BRAND_GOLD}; }
 
@@ -522,23 +510,22 @@ export default function AffiliatePage() {
                 padding: 20px;
             }
             .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid ${BORDER_COLOR}; padding-bottom: 15px; margin-bottom: 15px; }
-            .panel-title { font-size: 14px; color: #E0E0E0; margin: 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+            .panel-title { font-size: 14px; color: ${TEXT_PRIMARY}; margin: 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
             
             .table { margin: 0; }
-            /* ✅ Added white-space: nowrap to keep headers on one line */
-            .table th { background: transparent; color: #666; font-size: 10px; font-weight: 600; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 15px; white-space: nowrap; }
-            .table td { background: transparent; color: #E0E0E0; font-size: 13px; border-bottom: 1px solid #2E2E2E; padding: 15px 0; vertical-align: middle; }
+            .table th { background: transparent; color: ${TEXT_MUTED}; font-size: 10px; font-weight: 600; letter-spacing: 1px; border-bottom: 1px solid ${BORDER_COLOR}; padding-bottom: 15px; white-space: nowrap; }
+            .table td { background: transparent; color: ${TEXT_PRIMARY}; font-size: 13px; border-bottom: 1px solid ${BORDER_COLOR}; padding: 15px 0; vertical-align: middle; }
             .table tr:last-child td { border-bottom: none; }
             
-            .type-badge { font-size: 9px; padding: 3px 8px; border-radius: 4px; font-weight: bold; background: #222; color: #888; border: 1px solid #333; }
+            .type-badge { font-size: 9px; padding: 3px 8px; border-radius: 4px; font-weight: bold; background: #181A20; color: ${TEXT_MUTED}; border: 1px solid ${BORDER_COLOR}; }
             .status-badge { font-size: 9px; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
             .status-badge.success { color: #4caf50; background: rgba(76, 175, 80, 0.1); }
             .status-badge.pending { color: #ff9800; background: rgba(255, 152, 0, 0.1); }
 
-            .btn-icon { background: transparent; border: 1px solid #333; color: #888; border-radius: 4px; padding: 4px 10px; font-size: 11px; }
+            .btn-icon { background: transparent; border: 1px solid ${BORDER_COLOR}; color: ${TEXT_MUTED}; border-radius: 4px; padding: 4px 10px; font-size: 11px; }
             .btn-icon:hover { border-color: #666; color: #fff; }
 
-            .btn-pagination { background: transparent; border: 1px solid #333; color: #888; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+            .btn-pagination { background: transparent; border: 1px solid ${BORDER_COLOR}; color: ${TEXT_MUTED}; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
             .btn-pagination:hover:not(:disabled) { background: #333; color: #fff; }
             .btn-pagination:disabled { opacity: 0.3; cursor: not-allowed; }
 
