@@ -174,17 +174,22 @@ function Home() {
         return () => clearInterval(timer);
     }, [isPaused]); 
 
-const handleTouchStart = (e: React.TouchEvent) => setTouchStart(e.targetTouches[0].clientX);
+const handleTouchStart = (e: React.TouchEvent) => {
+    setIsPaused(true);
+    setTouchStart(e.targetTouches[0].clientX);
+};
 
 const handleTouchEnd = (e: React.TouchEvent) => {
     const touchEnd = e.changedTouches[0].clientX;
     const swipeDistance = touchStart - touchEnd;
 
-    if (swipeDistance > 50) { 
+    if (swipeDistance > 50) {
         setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-    } else if (swipeDistance < -50) { 
+    } else if (swipeDistance < -50) {
         setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
     }
+
+    setTimeout(() => setIsPaused(false), 1000);
 };
 
     const [isMobileCurrencyOpen, setIsMobileCurrencyOpen] = useState(false);
@@ -470,7 +475,7 @@ const handleTouchEnd = (e: React.TouchEvent) => {
                                         width: '100%',
                                         height: '100%',
                                         opacity: currentSlide === index ? 1 : 0,
-                                        transition: 'opacity 0.8s ease-in-out',
+                                        transition: 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                                         zIndex: currentSlide === index ? 2 : 1,
                                         cursor: 'pointer'
                                     }}
