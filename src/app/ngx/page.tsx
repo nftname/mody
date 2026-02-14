@@ -187,6 +187,18 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
             .mobile-label { display: block; font-size: 8px; margin-bottom: 4px !important; }
             .copy-btn { font-size: 8px; }
         }
+            .chart-responsive-wrapper {
+    transform: scale(0.96);
+    transform-origin: top center;
+    margin-bottom: -15px;
+}
+
+@media (max-width: 991px) {
+    .chart-responsive-wrapper {
+        transform: scale(1) !important;
+        margin-bottom: 0 !important;
+    }
+}
       `}</style>
     </div>
   );
@@ -288,7 +300,8 @@ export default function NGXPage() {
 
       <div className="container-fluid py-4 px-3 px-md-4" style={{ paddingBottom: '0' }}> 
         
-        <div className="content-container mb-4" style={{ transform: 'scale(0.96)', transformOrigin: 'top center', marginBottom: '-15px' }}>
+        <div className="content-container mb-4 chart-responsive-wrapper">
+
      <NGXLiveChart />
 </div>
 
