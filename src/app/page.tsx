@@ -97,6 +97,7 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                    }}>
                        <h3 style={{
                            fontFamily: '"Montserrat", sans-serif',
+                           transform: 'skewX(-10deg)', 
                            fontWeight: '700',
                            fontSize: '20px',
                            background: 'linear-gradient(180deg, #e6cf8b 0%, #c49938 50%, #9e7b2a 100%)',
