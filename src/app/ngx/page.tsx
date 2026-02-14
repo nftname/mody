@@ -41,14 +41,14 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
 
 const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: '#181A20', overflow: 'hidden' }}>
-        <svg viewBox="0 0 300 150" preserveAspectRatio="none" style={{ width: '100%', height: '100%', opacity: 0.8 }}>
+        <svg viewBox="0 0 300 150" preserveAspectRatio="none" style={{ width: '100%', height: '100%', opacity: 0.9 }}>
             <defs>
                 <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={LIME_COLOR} stopOpacity="0.3"/>
+                    <stop offset="0%" stopColor={LIME_COLOR} stopOpacity="0.4"/>
                     <stop offset="100%" stopColor={LIME_COLOR} stopOpacity="0"/>
                 </linearGradient>
                 <filter id="glow">
-                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
                     <feMerge>
                         <feMergeNode in="coloredBlur"/>
                         <feMergeNode in="SourceGraphic"/>
@@ -62,15 +62,15 @@ const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
             <line x1="0" y1="120" x2="300" y2="120" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
             
             <path 
-                d="M0,120 L30,110 L60,125 L90,95 L120,105 L150,70 L180,85 L210,50 L240,60 L270,25 L300,35" 
+                d="M0,130 C50,125 100,120 150,115 C170,112 190,80 210,50 C220,35 230,20 250,10 L300,15" 
                 fill="none" 
                 stroke={LIME_COLOR} 
-                strokeWidth="2" 
+                strokeWidth="2.5" 
                 filter="url(#glow)"
                 vectorEffect="non-scaling-stroke"
             />
             <path 
-                d="M0,120 L30,110 L60,125 L90,95 L120,105 L150,70 L180,85 L210,50 L240,60 L270,25 L300,35 V150 H0 Z" 
+                d="M0,130 C50,125 100,120 150,115 C170,112 190,80 210,50 C220,35 230,20 250,10 L300,15 V150 H0 Z" 
                 fill="url(#chartGradient)" 
                 stroke="none" 
             />
@@ -94,6 +94,7 @@ const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
         </div>
     </div>
 );
+
 
 const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any) => {
   const [copied, setCopied] = useState(false);
