@@ -307,9 +307,12 @@ export default function AffiliatePage() {
                                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                                 ))}
                                             </Pie>
-                                            <Tooltip 
-                                                contentStyle={{ backgroundColor: PANEL_BG, border: `1px solid ${BORDER_COLOR}`, borderRadius: '8px', color: TEXT_PRIMARY }}
-                                            />
+                                           <Tooltip 
+    contentStyle={{ backgroundColor: PANEL_BG, border: `1px solid ${BORDER_COLOR}`, borderRadius: '8px' }}
+    itemStyle={{ color: '#ffffff' }}
+    labelStyle={{ color: '#ffffff' }}
+    cursor={{ fill: 'transparent' }}
+/>
                                             <Legend verticalAlign="bottom" height={36} iconType="circle" />
                                         </PieChart>
                                     </ResponsiveContainer>
