@@ -356,36 +356,37 @@ const Navbar = () => {
                       </div>
                       
                       <ul className={`dropdown-menu shadow-lg ${isInsightsOpen ? 'show' : ''}`} 
-                          style={{ 
-                              position: 'absolute',
-                              top: '100%',
-                              left: '0',
-                              backgroundColor: dropdownColor, 
-                              border: `1px solid ${subtleBorder}`, 
-                              minWidth: '120px', 
-                              marginTop: '0px', 
-                              paddingTop: '8px', 
-                              paddingBottom: '8px',
-                              borderRadius: '8px'
-                          }}>
-                        {[
-                          { label: 'NGX', href: '/ngx' },
-  { label: 'Market Indices', href: '/market-indices' }
-].map((subItem, idx, arr) => (
-    <li key={subItem.label}>
-        <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href={subItem.href} 
-            style={{ 
-                fontSize: dropDownSmallFont, 
-                transition: '0.2s', 
-                color: offWhiteText,
-                borderBottom: idx !== arr.length - 1 ? `1px solid ${subtleBorder}` : 'none'
-            }} 
-        >
-            {subItem.label}
-        </Link>
-    </li>
-))}
-                      </ul>
+    style={{ 
+        position: 'absolute',
+        top: '100%',
+        left: '0',
+        backgroundColor: dropdownColor, 
+        border: `1px solid ${subtleBorder}`, 
+        minWidth: '120px', 
+        marginTop: '0px', 
+        paddingTop: '4px', 
+        paddingBottom: '4px',
+        borderRadius: '8px'
+    }}>
+  {[
+    { label: 'NGX', href: '/ngx' },
+    { label: 'Market Indices', href: '/market-indices' }
+  ].map((subItem, idx, arr) => (
+      <li key={subItem.label}>
+          <Link className="dropdown-item py-1 px-3 dropdown-link-custom" href={subItem.href} 
+              style={{ 
+                  fontSize: dropDownSmallFont, 
+                  transition: '0.2s', 
+                  color: offWhiteText,
+                  borderBottom: idx !== arr.length - 1 ? `1px solid ${subtleBorder}` : 'none'
+              }} 
+          >
+              {subItem.label}
+          </Link>
+      </li>
+  ))}
+</ul>
+                     
                     </li>
 
                     {/* Mint */}
