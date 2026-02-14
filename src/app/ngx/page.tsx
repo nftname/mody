@@ -8,23 +8,20 @@ import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 import NGXLiveChart from '@/components/NGXLiveChart';
 import MarketTicker from '@/components/MarketTicker';
 
-// --- إعدادات Supabase ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- الألوان والستايل ---
-const BACKGROUND_DARK = '#1E1E1E';
-const SURFACE_DARK = '#242424';
-const BORDER_COLOR = '#2E2E2E';
+const BACKGROUND_DARK = '#181A20';
+const SURFACE_DARK = '#1E2329';
+const BORDER_COLOR = '#2B3139';
 const TEXT_PRIMARY = '#E0E0E0';
 const TEXT_MUTED = '#B0B0B0';
 const GOLD_COLOR = '#FFB300';
 const GOLD_BASE = '#F0C420'; 
-const LIME_COLOR = '#C0D860'; // اللون الليموني
+const LIME_COLOR = '#C0D860';
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
-// --- أيقونة الذهب ---
 const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: boolean }) => {
     if (isCustomSVG) {
         return (
@@ -42,9 +39,8 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- الرسم البياني المصغر الثابت ---
 const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
-    <div style={{ width: '100%', height: '100%', position: 'relative', background: 'linear-gradient(180deg, rgba(30,30,30,0) 0%, rgba(192, 216, 96, 0.05) 100%)' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', background: 'linear-gradient(180deg, rgba(24,26,32,0) 0%, rgba(192, 216, 96, 0.05) 100%)' }}>
         <svg viewBox="0 0 300 150" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
             <path 
                 d="M0,100 C40,90 60,120 100,110 C150,90 180,60 220,50 C260,40 280,20 300,10" 
@@ -84,7 +80,6 @@ const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
     </div>
 );
 
-// --- كارت التضمين (Embed Card) ---
 const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any) => {
   const [copied, setCopied] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -108,16 +103,13 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // --- ضبط الارتفاعات (التوحيد) ---
-  // الهدف: في الكمبيوتر، يجب أن يكون ارتفاع الشريط والرسم البياني متطابقاً (70px مثلاً)
-  let previewHeight = '70px'; // الارتفاع الموحد للكمبيوتر
+  let previewHeight = '70px';
   
   if (isMobile) {
-      if (isChart) previewHeight = '120px'; // للجوال نتركه كبيراً وواضحاً
+      if (isChart) previewHeight = '120px';
       else if (isFullBar) previewHeight = '90px';
-      else previewHeight = '60px'; // للعناصر الصغيرة
+      else previewHeight = '60px';
   } else {
-      // للكمبيوتر: توحيد الارتفاع بين الشريط والرسم البياني
       if (isFullBar || isChart) previewHeight = '70px';
       else previewHeight = '60px';
   }
@@ -165,8 +157,6 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
         
         .widget-scale-wrapper { transform-origin: center; display: flex; justify-content: center; width: 100%; }
         
-        /* Desktop Defaults */
-        /* تعديل الاسكيل للشريط لملء الفراغ بشكل أفضل في العمود الجديد */
         .full-bar-scale { transform: scale(0.65); width: auto; } 
         .individual-scale { transform: scale(0.75); } 
         .chart-scale { width: 100%; height: 100%; } 
@@ -176,16 +166,9 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
 
         @media (max-width: 768px) {
             .embed-card { padding: 6px 4px; border: 1px solid rgba(255,255,255,0.05); min-height: 100px; }
-            
-            .full-bar-scale { 
-                transform: scale(0.63); 
-                width: auto; 
-                margin: 0 auto;
-            }
-            
+            .full-bar-scale { transform: scale(0.63); width: auto; margin: 0 auto; }
             .individual-scale { transform: scale(0.6); width: 100%; }
             .chart-scale { width: 100%; height: 100%; }
-            
             .mobile-label { display: block; font-size: 8px; margin-bottom: 4px !important; }
             .copy-btn { font-size: 8px; }
         }
@@ -268,7 +251,6 @@ export default function NGXPage() {
     <main className="ngx-page" style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', color: TEXT_PRIMARY }}>
       <MarketTicker />
 
-      {/* HEADER */}
       <div className="header-wrapper shadow-sm">
         <div className="container-fluid p-0"> 
             <div className="widgets-grid-container">
@@ -290,12 +272,10 @@ export default function NGXPage() {
 
       <div className="container-fluid py-4 px-3 px-md-4" style={{ paddingBottom: '0' }}> 
         
-        {/* LIVE CHART */}
         <div className="content-container mb-4">
              <NGXLiveChart />
         </div>
 
-        {/* --- ARTICLE SECTION --- */}
         <div className="content-container">
             <div className="article-wrapper">
                 <h2 className="unified-title mb-3">NFTs as a Market Infrastructure: From Digital Collectibles to Asset Class Architecture</h2>
@@ -332,7 +312,6 @@ export default function NGXPage() {
                   </p>
                 </div>
 
-                {/* --- LATEST NEWS SECTION --- */}
                 <div className="mt-5 pt-3 mb-4">
                      <div className="d-flex align-items-center mb-3 border-bottom border-secondary pb-2" style={{borderColor: 'rgba(255,255,255,0.1) !important'}}>
                          <div style={{ width: '6px', height: '6px', background: '#F6465D', borderRadius: '50%', marginRight: '10px' }}></div>
@@ -378,14 +357,12 @@ export default function NGXPage() {
                      )}
                 </div>
 
-                {/* --- DISCLAIMER --- */}
                 <div className="w-100 mt-2 border-top border-secondary" style={{ borderColor: '#333 !important', paddingTop: '8px' }}>
                     <p className="fst-italic mb-0 w-100" style={{ lineHeight: '1.2', fontSize: '9px', color: '#777', opacity: 0.9 }}>
                         This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
                     </p>
                 </div>
                 
-                {/* --- DEVELOPERS TOOLKIT (FINAL) --- */}
                 <div className="mt-5 pt-4">
                     <div className="d-flex align-items-center mb-3">
                          <div style={{ width: '30px', height: '2px', background: GOLD_COLOR, marginRight: '10px' }}></div>
@@ -393,8 +370,6 @@ export default function NGXPage() {
                     </div>
                     
                     <div className="row g-2 justify-content-center align-items-stretch">
-                        
-                        {/* 1. الشريط الكامل: يأخذ 8 أعمدة (الثلثين) لتقليل الهوامش */}
                         <div className="col-12 col-lg-8">
                              <EmbedCard 
                                 title="NGX Full Market Bar"
@@ -412,7 +387,6 @@ export default function NGXPage() {
                              />
                         </div>
 
-                        {/* 2. الرسم البياني: يأخذ 4 أعمدة (الثلث) ويجاور الشريط بارتفاع متطابق */}
                         <div className="col-12 col-lg-4"> 
                              <EmbedCard 
                                 title="Live Chart Widget"
@@ -422,7 +396,6 @@ export default function NGXPage() {
                              />
                         </div>
 
-                        {/* 3. الكبسولات الثلاث المنفصلة */}
                         <div className="col-4">
                             <EmbedCard 
                                 title="Sentiment" 
@@ -468,10 +441,9 @@ export default function NGXPage() {
 
       <div style={{ width: '100%', height: '2.5rem', background: 'transparent' }}></div>
 
-      {/* FOOTER STRIP */}
       <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" 
            style={{ 
-               borderColor: '#333 !important', 
+               borderColor: '#2B3139 !important', 
                backgroundColor: '#0b0e11', 
                maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', 
                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' 
@@ -494,32 +466,27 @@ export default function NGXPage() {
       <div style={{ width: '100%', height: '80px', background: 'transparent' }}></div>
 
       <style jsx global>{`
-        /* --- UNIFIED TYPOGRAPHY --- */
         .unified-title { font-size: 1.65rem; color: ${TEXT_PRIMARY}; letter-spacing: -0.5px; font-weight: 700; font-family: "Inter", "Segoe UI", sans-serif; line-height: 1.3; }
         .unified-text { font-size: 15px; color: ${TEXT_MUTED}; font-family: "Inter", "Segoe UI", sans-serif; font-weight: 400; line-height: 1.6; }
 
-        /* --- GENERAL --- */
         .header-wrapper { background: ${SURFACE_DARK}; border-bottom: 1px solid ${BORDER_COLOR}; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
         .content-container { max-width: 1050px; margin: 0 auto; }
         .widget-item { flex: 0 0 310px; }
         .article-wrapper { margin-left: 0; padding-left: 0; }
 
-        /* --- NEWS STYLES --- */
         .badge-category { font-size: 9px; font-weight: 700; color: ${GOLD_BASE}; text-transform: uppercase; letter-spacing: 1px; border: 1px solid ${GOLD_BASE}44; padding: 2px 6px; border-radius: 4px; }
         .text-date { font-size: 9px; color: #666; font-weight: 600; text-transform: uppercase; }
         .hover-gold:hover { color: ${GOLD_BASE} !important; }
         .news-summary { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .read-more-link { font-size: 10px; color: ${GOLD_BASE}; text-decoration: none; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
         .read-more-link:hover { text-decoration: underline; filter: brightness(1.2); }
-        .news-thumbnail { width: 140px; height: 90px; border-radius: 4px; overflow: hidden; border: 1px solid #333; cursor: pointer; }
+        .news-thumbnail { width: 140px; height: 90px; border-radius: 4px; overflow: hidden; border: 1px solid ${BORDER_COLOR}; cursor: pointer; }
         .news-thumbnail img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
         .news-card:hover .news-thumbnail img { transform: scale(1.05); }
 
-        /* --- CHART RESPONSIVE SIZE --- */
         .chart-wrapper-responsive { width: 80%; }
 
-        /* --- MOBILE ADJUSTMENTS --- */
         @media (max-width: 768px) {
             .header-wrapper { padding: 2px 0 !important; }
             .widgets-grid-container { display: flex !important; flex-wrap: nowrap !important; justify-content: space-between !important; gap: 2px !important; padding: 0 4px !important; max-width: 100% !important; overflow-x: hidden; }
@@ -529,8 +496,6 @@ export default function NGXPage() {
             .text-section { text-align: left !important; }
             .news-card { flex-direction: column-reverse !important; }
             .news-thumbnail { width: 100%; height: 160px; margin-bottom: 10px; }
-            
-            /* Chart Mobile: 80% width */
             .chart-wrapper-responsive { width: 80%; }
         }
 
