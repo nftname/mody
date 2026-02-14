@@ -40,26 +40,40 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
 };
 
 const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
-    <div style={{ width: '100%', height: '100%', position: 'relative', background: 'linear-gradient(180deg, rgba(24,26,32,0) 0%, rgba(192, 216, 96, 0.05) 100%)' }}>
-        <svg viewBox="0 0 300 150" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', background: '#181A20', overflow: 'hidden' }}>
+        <svg viewBox="0 0 300 150" preserveAspectRatio="none" style={{ width: '100%', height: '100%', opacity: 0.8 }}>
+            <defs>
+                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={LIME_COLOR} stopOpacity="0.3"/>
+                    <stop offset="100%" stopColor={LIME_COLOR} stopOpacity="0"/>
+                </linearGradient>
+                <filter id="glow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+            
+            <line x1="0" y1="30" x2="300" y2="30" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+            <line x1="0" y1="60" x2="300" y2="60" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+            <line x1="0" y1="90" x2="300" y2="90" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+            <line x1="0" y1="120" x2="300" y2="120" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+            
             <path 
-                d="M0,100 C40,90 60,120 100,110 C150,90 180,60 220,50 C260,40 280,20 300,10" 
+                d="M0,120 L30,110 L60,125 L90,95 L120,105 L150,70 L180,85 L210,50 L240,60 L270,25 L300,35" 
                 fill="none" 
                 stroke={LIME_COLOR} 
                 strokeWidth="2" 
+                filter="url(#glow)"
                 vectorEffect="non-scaling-stroke"
             />
-             <path 
-                d="M0,100 C40,90 60,120 100,110 C150,90 180,60 220,50 C260,40 280,20 300,10 V150 H0 Z" 
-                fill="url(#limeGradient)" 
+            <path 
+                d="M0,120 L30,110 L60,125 L90,95 L120,105 L150,70 L180,85 L210,50 L240,60 L270,25 L300,35 V150 H0 Z" 
+                fill="url(#chartGradient)" 
                 stroke="none" 
             />
-            <defs>
-                <linearGradient id="limeGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={LIME_COLOR} stopOpacity="0.2"/>
-                    <stop offset="100%" stopColor={LIME_COLOR} stopOpacity="0"/>
-                </linearGradient>
-            </defs>
         </svg>
         <div style={{ 
             position: 'absolute', 
@@ -67,13 +81,14 @@ const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
             left: '0', 
             width: '100%',
             textAlign: 'center',
-            fontSize: isMobile ? '8px' : '10px', 
+            fontSize: isMobile ? '7px' : '9px', 
             fontWeight: '900', 
             fontStyle: 'italic', 
-            color: 'rgba(255,255,255,0.3)',
+            color: 'rgba(255,255,255,0.15)',
             pointerEvents: 'none',
-            letterSpacing: '0.5px',
-            fontFamily: '"Inter", sans-serif'
+            letterSpacing: '1px',
+            fontFamily: '"Inter", sans-serif',
+            textTransform: 'uppercase'
         }}>
             NNM Protocol Register Blockchain
         </div>
