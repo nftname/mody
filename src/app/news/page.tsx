@@ -74,8 +74,8 @@ export default function NewsPage() {
       
       <MarketTicker />
 
-      <div className="header-wrapper" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, padding: '6px 0', backgroundColor: SURFACE_DARK }}>
-        <div className="container-fluid"> 
+      <div className="header-wrapper" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, padding: '8px 0', backgroundColor: SURFACE_DARK }}>
+        <div className="container-fluid p-0"> 
             <div className="widgets-grid-horizontal">
                 <div className="widget-capsule"> <NGXWidget theme="dark" /> </div>
                 <div className="widget-capsule"> <NGXCapWidget theme="dark" /> </div>
@@ -167,15 +167,13 @@ export default function NewsPage() {
             flex-direction: row;
             justify-content: space-between; 
             align-items: center; 
-            max-width: 1050px; 
+            width: 100%;
+            max-width: 100%; 
             margin: 0 auto; 
-            padding: 0 12px; 
-            gap: 20px; 
-            overflow-x: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
+            padding: 0 8px; 
+            gap: 8px; 
+            overflow-x: hidden;
         }
-        .widgets-grid-horizontal::-webkit-scrollbar { display: none; }
         
         .widget-capsule { 
             flex: 1; 
@@ -235,12 +233,8 @@ export default function NewsPage() {
 
         @media (max-width: 768px) {
             .widgets-grid-horizontal { 
-                padding: 0 10px; 
-                gap: 10px; 
-            }
-            .widget-capsule { 
-                flex: 1;
-                min-width: 30%;
+                padding: 0 6px; 
+                gap: 6px; 
             }
             .news-card { flex-direction: column-reverse !important; }
             .news-thumbnail { width: 100%; height: 180px; margin-bottom: 15px; }
