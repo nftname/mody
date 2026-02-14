@@ -370,21 +370,21 @@ const Navbar = () => {
                           }}>
                         {[
                           { label: 'NGX', href: '/ngx' },
-                          { label: 'Market Indices', href: '/market-indices' }
-                        ].map((subItem, idx, arr) => (
-                            <li key={subItem.label}>
-                                <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href={subItem.href} 
-                                    style={{ 
-                                        fontSize: navFontSize, 
-                                        transition: '0.2s', 
-                                        color: offWhiteText,
-                                        borderBottom: idx !== arr.length - 1 ? `1px solid ${subtleBorder}` : 'none'
-                                    }} 
-                                >
-                                    {subItem.label}
-                                </Link>
-                            </li>
-                        ))}
+  { label: 'Market Indices', href: '/market-indices' }
+].map((subItem, idx, arr) => (
+    <li key={subItem.label}>
+        <Link className="dropdown-item py-2 px-3 dropdown-link-custom" href={subItem.href} 
+            style={{ 
+                fontSize: dropDownSmallFont, 
+                transition: '0.2s', 
+                color: offWhiteText,
+                borderBottom: idx !== arr.length - 1 ? `1px solid ${subtleBorder}` : 'none'
+            }} 
+        >
+            {subItem.label}
+        </Link>
+    </li>
+))}
                       </ul>
                     </li>
 
