@@ -287,7 +287,7 @@ export default function NGXPage() {
 
       <div className="container-fluid py-4 px-3 px-md-4" style={{ paddingBottom: '0' }}> 
         
-        <div className="content-container mb-4" style={{ transform: 'scale(0.9)', transformOrigin: 'top center', marginBottom: '-40px' }}>
+        <div className="content-container mb-4" style={{ transform: 'scale(0.96)', transformOrigin: 'top center', marginBottom: '-15px' }}>
      <NGXLiveChart />
 </div>
 
