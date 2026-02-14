@@ -60,13 +60,14 @@ export default function MarketTicker() {
     const fetchGlobalChange = async () => {
         try {
             // Fetching only price_change_percentage_24h to be lightweight
-            const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,matic-network&vs_currencies=usd&include_24hr_change=true');
+            const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,polygon-ecosystem-token&vs_currencies=usd&include_24hr_change=true');
+
             const data = await res.json();
             
             setPrices(prev => ({
                 ...prev,
                 ethChange: data.ethereum?.usd_24h_change || 0,
-                polChange: data['matic-network']?.usd_24h_change || 0
+                polChange: data['polygon-ecosystem-token']?.usd_24h_change || 0
             }));
         } catch (e) { console.error("Global Change Fetch Error", e); }
     };
