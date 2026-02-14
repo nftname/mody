@@ -274,8 +274,9 @@ export default function NGXPage() {
                 <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
             </div>
             
-            <div className="row px-2 mt-3 text-section align-items-center">
-                <div className="col-lg-12">
+            <div className="content-container">
+    <div className="row px-2 mt-3 text-section align-items-center">
+
                     <h1 className="mb-2 unified-title">NGX NFT Index — The Global Benchmark</h1>
                     <p className="mb-0 unified-text">
                         The premier benchmark tracking the global NFT market, aggregating sentiment, liquidity, and rare digital name assets across all platforms.
@@ -484,7 +485,7 @@ export default function NGXPage() {
         .unified-title { font-size: 1.65rem; color: ${TEXT_PRIMARY}; letter-spacing: -0.5px; font-weight: 700; font-family: "Inter", "Segoe UI", sans-serif; line-height: 1.3; }
         .unified-text { font-size: 15px; color: ${TEXT_MUTED}; font-family: "Inter", "Segoe UI", sans-serif; font-weight: 400; line-height: 1.6; }
 
-        .header-wrapper { background: ${SURFACE_DARK}; border-bottom: 1px solid ${BORDER_COLOR}; padding: 4px 0; margin-top: 0; }
+        .header-wrapper { background: ${BACKGROUND_DARK}; border-bottom: 1px solid ${BORDER_COLOR}; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
         .content-container { max-width: 1050px; margin: 0 auto; }
         .widget-item { flex: 0 0 310px; }
