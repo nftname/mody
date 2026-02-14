@@ -95,16 +95,16 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                        zIndex: 10
                    }}>
                        <h3 style={{
-                           fontFamily: '"Playfair Display", serif',
-                           fontStyle: 'italic',
+                           fontFamily: '"Montserrat", sans-serif',
                            fontWeight: '700',
-                           fontSize: '28px',
+                           fontSize: '24px',
                            background: 'linear-gradient(180deg, #e6cf8b 0%, #c49938 50%, #9e7b2a 100%)',
                            WebkitBackgroundClip: 'text',
                            WebkitTextFillColor: 'transparent',
-                           filter: 'drop-shadow(0px 2px 3px rgba(0,0,0,0.9))',
+                           filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.5))',
                            margin: 0,
-                           letterSpacing: '1px'
+                           letterSpacing: '2px',
+                           textTransform: 'uppercase'
                        }}>
                            {item.name}
                        </h3>
@@ -398,7 +398,7 @@ function Home() {
     <main className="no-select" style={{ backgroundColor: '#181A20', minHeight: '100vh', paddingBottom: '0px', fontFamily: '"Inter", "Segoe UI", sans-serif', overflowX: 'hidden' }}>
       
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@400;700&display=swap');
       `}</style>
 
     
@@ -458,7 +458,8 @@ function Home() {
                                     src={src} 
                                     alt={`Hero Slide ${index + 1}`} 
                                     fill 
-                                    style={{ objectFit: 'cover' }}
+                                    style={{ objectFit: 'contain' }}
+
                                     priority={index === 0} 
                                 />
                                 {/* Optional: Overlay Gradient */}
@@ -607,7 +608,7 @@ function Home() {
         .binance-filter-group { border: 1px solid #2B3139; background: transparent; padding: 4px; border-radius: 4px; gap: 2px; } .binance-filter-btn { border-radius: 4px; padding: 6px 12px; transition: all 0.2s; } .active-time, .active-currency { background-color: #2B3139 !important; color: #FCD535 !important; }
         .table { --bs-table-bg: transparent; --bs-table-color: #EAECEF; } .table > :not(caption) > * > * { background-color: transparent !important; box-shadow: none !important; border-bottom-color: #2B3139; } .binance-row { transition: background-color 0.2s; cursor: pointer; } .binance-row:hover { background-color: #1E2329 !important; }
         @keyframes subtleShake { 0% { transform: translateX(0); } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 75% { transform: translateX(1px); } 100% { transform: translateX(0); } } .name-shake { display: inline-block; transition: color 0.3s; } .binance-row:hover .name-shake { animation: subtleShake 0.4s ease-in-out; color: #FCD535 !important; }
-        .view-all-btn { background-color: #1E2329; border: 1px solid #2B3139; } .view-all-btn:hover, .view-all-btn:active { background-color: #2B3139 !important; color: #FCD535 !important; border-color: #FCD535 !important; }
+        .view-all-btn { background-color: #1E2329; border: 1px solid #2B3139; } .view-all-btn:hover, .view-all-btn:active { background-color: #24292e !important; color: #fff !important; border-color: rgba(252, 213, 53, 0.3) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         
         /* --- NEW ASSET CARD STYLES --- */
         .asset-card-container {
@@ -619,9 +620,11 @@ function Home() {
         }
         
         .hover-lift:hover {
-            transform: translateY(-4px); /* Slight Lift */
-            border-color: #FCD535; 
+            transform: translateY(-5px); 
+            border-color: rgba(252, 213, 53, 0.2) !important; 
+            box-shadow: 0 12px 30px rgba(0,0,0,0.5) !important;
         }
+            a:focus, button:focus, div:focus { outline: none !important; box-shadow: none !important;
       `}</style>
     </main>
   );
