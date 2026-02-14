@@ -275,7 +275,8 @@ export default function NGXPage() {
             </div>
             
             <div className="content-container">
-    <div className="row px-2 mt-3 text-section align-items-center">
+    <div className="row ps-4 pe-2 mt-3 text-section align-items-center">
+
 
                     <h1 className="mb-2 unified-title">NGX NFT Index — The Global Benchmark</h1>
                     <p className="mb-0 unified-text">
