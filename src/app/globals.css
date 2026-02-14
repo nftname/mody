@@ -4,8 +4,8 @@
 
 :root {
   --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 11, 14, 17;
-  --background-end-rgb: 11, 14, 17;
+  --background-start-rgb: 24, 26, 32;
+  --background-end-rgb: 24, 26, 32;
 }
 
 *, *::before, *::after {
@@ -21,7 +21,7 @@ html, body {
   overflow-x: hidden;
   margin: 0;
   padding: 0;
-  background-color: #0b0e11;
+  background-color: #181A20;
   color: white;
   min-height: 100vh;
 }
@@ -31,7 +31,7 @@ html, body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b0e11; 
+  background: #181A20; 
 }
 
 ::-webkit-scrollbar-thumb {
