@@ -552,7 +552,7 @@ function Home() {
           <div style={{ marginTop: '5.25rem', marginBottom: '3rem' }}>
               <h3 className="fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px', color: '#EAECEF' }}>Just Listed</h3>
               {loading ? <div className="text-secondary text-center">Loading Listings...</div> :
-                            <div className="row g-4 d-none d-lg-flex" style={{ width: '80%' }}>
+                            <div className="row g-4 d-none d-lg-flex" style={{ width: '87%' }}>
                                     {newListingsItems.map((item) => (
                                         <div key={item.id} className="col-lg-4 col-xl-4">
                                             <AssetCard 
