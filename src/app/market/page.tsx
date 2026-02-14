@@ -91,7 +91,7 @@ const getRankStyle = (rank: number) => {
     if (rank === 1) return { ...baseStyle, color: '#FF9900', textShadow: '0 0 10px rgba(255, 153, 0, 0.4)' };
     if (rank === 2) return { ...baseStyle, color: '#FFC233', textShadow: '0 0 10px rgba(255, 194, 51, 0.3)' };
     if (rank === 3) return { ...baseStyle, color: '#FCD535', textShadow: '0 0 10px rgba(252, 213, 53, 0.2)' };
-    return { color: '#fff', fontWeight: '500', fontSize: '14px', fontStyle: 'normal' };
+    return { color: '#EAECEF', fontWeight: '500', fontSize: '14px', fontStyle: 'normal' };
 };
 
 const SortArrows = ({ active, direction, onClick }: any) => (
@@ -158,7 +158,7 @@ function MarketPage() {
   const [currencyFilter, setCurrencyFilter] = useState('All'); 
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); 
   
-  // --- ADDED SEARCH STATE HERE ---
+  // --- SEARCH STATE ---
   const [searchQuery, setSearchQuery] = useState('');
 
   const [realListings, setRealListings] = useState<any[]>([]);
@@ -170,15 +170,12 @@ function MarketPage() {
 
   const publicClient = usePublicClient();
 
-   // --- TWEAK 1: New Fast Price Engine (Internal API) ---
+   // --- Fast Price Engine ---
   useEffect(() => {
       const fetchPrices = async () => {
           try {
-              // الاتصال بالـ API الداخلي السريع بدلاً من كوين جيكو المباشر
               const res = await fetch('/api/prices');
               const data = await res.json();
-              
-              // البيانات تأتي جاهزة ومنظمة من السيرفر
               setExchangeRates({
                   pol: data.pol || 0, 
                   eth: data.eth || 0
@@ -188,7 +185,6 @@ function MarketPage() {
           }
       };
       fetchPrices();
-      // تحديث كل 60 ثانية لتقليل الضغط
       const interval = setInterval(fetchPrices, 60000); 
       return () => clearInterval(interval);
   }, []);
@@ -220,12 +216,11 @@ function MarketPage() {
       } catch (err) { }
   };
 
-// --- TWEAK 2: Turbo Data Engine (Supabase + Blockchain Mix) ---
+// --- Turbo Data Engine ---
   useEffect(() => {
     const fetchMarketData = async () => {
         if (!publicClient) return;
         try {
-            // A. قراءة البلوك تشين (للأسعار الحية والمالكين فقط)
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
@@ -235,29 +230,20 @@ function MarketPage() {
 
             if (tokenIds.length === 0) { setRealListings([]); setLoading(false); return; }
 
-            // تحويل المعرفات لنصوص للبحث في الداتا بيز
             const tokenIdsStr = tokenIds.map(id => id.toString());
 
-            // B. جلب كل البيانات دفعة واحدة من Supabase (بدلاً من IPFS)
             const [
                 { data: dbAssets },
                 { data: allActivities },
                 { data: offersData },
                 { data: votesData }
             ] = await Promise.all([
-                // 1. البيانات الوصفية (الاسم، الصورة، التاير) من جدولنا الجديد
                 supabase.from('assets_metadata').select('*').in('token_id', tokenIdsStr),
-                // 2. الأنشطة
                 supabase.from('activities').select('*').order('created_at', { ascending: false }),
-                // 3. العروض
                 supabase.from('offers').select('token_id').eq('status', 'active'),
-                // 4. التصويتات
                 supabase.from('conviction_votes').select('token_id')
             ]);
 
-            // C. تجهيز خرائط البيانات (Maps) للسرعة القصوى
-            
-            // خريطة الميتاداتا
             const assetsMap: Record<string, any> = {};
             if (dbAssets) {
                 dbAssets.forEach((asset: any) => {
@@ -265,7 +251,6 @@ function MarketPage() {
                 });
             }
 
-            // خريطة التصويت
             const votesMap: Record<string, number> = {};
             if (votesData) {
                 votesData.forEach((v: any) => {
@@ -274,7 +259,6 @@ function MarketPage() {
                 });
             }
 
-            // خريطة العروض
             const offersCountMap: Record<number, number> = {};
             if (offersData) {
                 offersData.forEach((o: any) => {
@@ -283,7 +267,6 @@ function MarketPage() {
                 });
             }
 
-            // خريطة الإحصائيات
             const statsMap: Record<number, any> = {}; 
             const now = Date.now();
 
@@ -312,19 +295,16 @@ function MarketPage() {
                 });
             }
 
-            // D. الدمج النهائي (بدون انتظار IPFS)
             const items = tokenIds.map((id, index) => {
                 const tid = Number(id); 
                 const idStr = id.toString();
                 
-                // هنا السرعة: نأخذ البيانات من الماب الجاهزة بدلاً من طلبها
                 const meta = assetsMap[idStr] || { name: `Asset #${id}`, tier: 'Common' };
                 
                 const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
                 const offersCount = offersCountMap[tid] || 0;
                 const conviction = votesMap[idStr] || 0;
                 
-                // حسابات الترتيب
                 const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
                 const pricePol = parseFloat(formatEther(prices[index]));
                 
@@ -335,9 +315,8 @@ function MarketPage() {
 
                 return {
                     id: tid,
-                    name: meta.name,          // من الداتا بيز
-                    tier: meta.tier,          // من الداتا بيز
-                    // image: meta.image_url, // (متاح لو أردت استخدامه مستقبلاً)
+                    name: meta.name,
+                    tier: meta.tier,
                     pricePol: pricePol, 
                     lastSale: stats.lastSale,
                     volume: stats.volume,
@@ -360,43 +339,34 @@ function MarketPage() {
 
   }, [publicClient, timeFilter]);  
 
-    // --- CORE FIX: Search Logic Priority (Exact Match > Starts With > Contains) ---
   const finalData = useMemo(() => {
       let processedData = [...realListings];
 
-      // 1. SEARCH LOGIC (Global Search on all 50+ pages content)
       if (searchQuery) {
           const query = searchQuery.trim().toLowerCase();
           
-          // First: Filter to get ONLY relevant items
           processedData = processedData.filter(item => 
               item.name && item.name.toLowerCase().includes(query)
           );
 
-          // Second: Sort by Relevance (The "Pro" Logic)
           processedData.sort((a, b) => {
               const nameA = a.name.toLowerCase();
               const nameB = b.name.toLowerCase();
 
-              // Priority 1: Exact Match (e.g. User types "ai", Item "ai" comes #1)
               if (nameA === query && nameB !== query) return -1;
               if (nameA !== query && nameB === query) return 1;
 
-              // Priority 2: Starts With (e.g. "air" comes before "kairo")
               const startsA = nameA.startsWith(query);
               const startsB = nameB.startsWith(query);
               if (startsA && !startsB) return -1;
               if (!startsA && startsB) return 1;
 
-              // Priority 3: Alphabetical Order for remaining items
               if (nameA < nameB) return -1;
               if (nameA > nameB) return 1;
               return 0;
           });
       } 
-      // 2. NORMAL FILTERS (Only apply if NOT searching to keep search results pure)
       else {
-          // Time Filter
           if (timeFilter !== 'All') {
               let limit = Infinity;
               const now = Date.now();
@@ -411,7 +381,6 @@ function MarketPage() {
               });
           }
 
-          // Section Sorting
           if (activeFilter === 'Top') { processedData.sort((a, b) => b.volume - a.volume); }
           else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
           else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
@@ -426,7 +395,6 @@ function MarketPage() {
           else { processedData.sort((a, b) => a.id - b.id); }
       }
 
-      // 3. MANUAL COLUMN SORT (Overrides everything if user explicitly clicks a column header)
       if (sortConfig) {
           processedData.sort((a: any, b: any) => {
               if (['volume', 'pricePol', 'lastSale', 'trendingScore', 'convictionScore'].includes(sortConfig.key)) {
@@ -436,7 +404,6 @@ function MarketPage() {
               }
               if (sortConfig.key === 'rank') {
                   const modifier = sortConfig.direction === 'asc' ? 1 : -1;
-                  // If searching, Rank is just 1,2,3...
                   if (searchQuery) return (a.id - b.id) * modifier;
                   
                   if (activeFilter === 'Trending') return (b.trendingScore - a.trendingScore) * modifier;
@@ -503,12 +470,12 @@ function MarketPage() {
   };
 
   return (
-    <main className="no-select" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', overflowX: 'hidden' }}>
+    <main className="no-select" style={{ backgroundColor: '#181A20', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', overflowX: 'hidden' }}>
       
       <MarketTicker />
 
       {/* HEADER */}
-      <div className="header-wrapper shadow-sm">
+      <div className="header-wrapper shadow-sm" style={{ backgroundColor: '#181A20', borderBottom: '1px solid #2B3139', paddingTop: '10px' }}>
         <div className="container-fluid p-0"> 
             <div className="widgets-grid-container">
                 <div className="widget-item"> <NGXWidget theme="dark" /> </div>
@@ -517,20 +484,20 @@ function MarketPage() {
             </div>
             <div className="row align-items-center px-3 mt-3 text-section desktop-only-text">
                 <div className="col-lg-12">
-                    <h1 className="fw-bold mb-2 main-title">Buy & Sell <span style={{ color: '#E0E0E0' }}>Nexus Rare</span> Digital Name Assets NFTs</h1>
-                    <p className="mb-0 main-desc">Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets.</p>
+                    <h1 className="fw-bold mb-2 main-title" style={{ color: '#EAECEF' }}>Buy & Sell <span style={{ color: '#EAECEF' }}>Nexus Rare</span> Digital Name Assets NFTs</h1>
+                    <p className="mb-0 main-desc" style={{ color: '#848E9C' }}>Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets.</p>
                 </div>
             </div>
             <div className="d-block d-md-none px-3 mt-3 mobile-only-text">
-                <h1 className="fw-bold text-white h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: '#E0E0E0' }}>Buy & Sell <span style={{ color: '#E0E0E0' }}>Nexus Rare</span> Digital Name Assets NFTs.</h1>
-                <p style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', fontSize: '15px', color: '#B0B0B0', marginTop: '8px', marginBottom: 0, lineHeight: '1.5' }}>Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets.</p>
+                <h1 className="fw-bold text-white h4 text-start m-0" style={{ letterSpacing: '-0.5px', lineHeight: '1.3', color: '#EAECEF' }}>Buy & Sell <span style={{ color: '#EAECEF' }}>Nexus Rare</span> Digital Name Assets NFTs.</h1>
+                <p style={{ fontFamily: '"Inter", "Segoe UI", sans-serif', fontSize: '15px', color: '#848E9C', marginTop: '8px', marginBottom: 0, lineHeight: '1.5' }}>Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets.</p>
             </div>
         </div>
       </div>
 
       {/* FILTERS */}
       <section className="market-content-wrapper mb-0 mt-4">
-          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" style={{ borderColor: '#222 !important', padding: '2px 0' }}>
+          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" style={{ borderColor: '#2B3139 !important', padding: '2px 0' }}>
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
                   <div onClick={() => { setActiveFilter('Watchlist'); setSortConfig(null); setCurrentPage(1); }} className={`cursor-pointer filter-item ${activeFilter === 'Watchlist' ? 'active' : 'text-header-gray'}`} style={{ fontSize: '13.5px', fontWeight: 'bold', paddingBottom: '4px' }}>Watchlist</div>
                   <div onClick={() => { setActiveFilter('Conviction'); setSortConfig(null); setCurrentPage(1); }} className={`cursor-pointer filter-item fw-bold ${activeFilter === 'Conviction' ? 'text-white active' : 'text-header-gray'} desktop-nowrap`} style={{ fontSize: '13.5px', whiteSpace: 'nowrap', position: 'relative', paddingBottom: '4px' }}>
@@ -555,10 +522,10 @@ function MarketPage() {
           </div>
       </section>
 
-      {/* --- REFINED SEARCH BAR (Width -30%, Height -20%, Faint Border) --- */}
+      {/* SEARCH BAR */}
       <section className="market-content-wrapper mt-3 mb-2">
         <div className="d-flex align-items-center position-relative" style={{ width: '100%', maxWidth: '265px' }}>
-            <i className="bi bi-search position-absolute text-secondary" style={{ left: '12px', fontSize: '13px', zIndex: 10 }}></i>
+            <i className="bi bi-search position-absolute text-secondary" style={{ left: '12px', fontSize: '13px', zIndex: 10, color: '#848E9C' }}></i>
             <input 
                 type="text" 
                 placeholder="Search..." 
@@ -570,12 +537,12 @@ function MarketPage() {
                 className="form-control"
                 style={{
                     backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                    border: '1px solid rgba(200, 200, 200, 0.15)', // Very faint gray border
+                    border: '1px solid #2B3139', 
                     borderRadius: '4px',
-                    color: '#fff',
+                    color: '#EAECEF',
                     paddingLeft: '35px',
-                    paddingTop: '4px', // Reduced Height
-                    paddingBottom: '4px', // Reduced Height
+                    paddingTop: '4px', 
+                    paddingBottom: '4px', 
                     fontSize: '13px',
                     boxShadow: 'none',
                     backdropFilter: 'blur(5px)'
@@ -592,25 +559,25 @@ function MarketPage() {
               ) : finalData.length === 0 ? ( <div className="text-center py-5 text-secondary">No items found matching your search.</div>
               ) : (
                   <table className="table align-middle mb-0" style={{ minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0' }}>
-                      <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#1E1E1E' }}>
-                          <tr style={{ borderBottom: '1px solid #333' }}>
-                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #333', width: '60px', cursor: 'pointer' }}>
+                      <thead style={{ position: 'sticky', top: '0', zIndex: 50, backgroundColor: '#181A20' }}>
+                          <tr style={{ borderBottom: '1px solid #2B3139' }}>
+                              <th onClick={() => handleSort('rank')} style={{ backgroundColor: '#181A20', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #2B3139', width: '60px', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Rank <SortArrows active={sortConfig?.key === 'rank'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #333', width: '20%', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('name')} style={{ backgroundColor: '#181A20', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #2B3139', width: '20%', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Asset Name <SortArrows active={sortConfig?.key === 'name'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 0', borderBottom: '1px solid #333', textAlign: 'left', width: '15%', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('pricePol')} style={{ backgroundColor: '#181A20', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 0', borderBottom: '1px solid #2B3139', textAlign: 'left', width: '15%', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Price <SortArrows active={sortConfig?.key === 'pricePol'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 40px', borderBottom: '1px solid #333', textAlign: 'left', width: '18%' }}>Last Sale</th>
-                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 60px', borderBottom: '1px solid #333', textAlign: 'left', width: '20%', cursor: 'pointer' }}>
+                              <th style={{ backgroundColor: '#181A20', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 40px', borderBottom: '1px solid #2B3139', textAlign: 'left', width: '18%' }}>Last Sale</th>
+                              <th onClick={() => handleSort('volume')} style={{ backgroundColor: '#181A20', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px 10px 10px 60px', borderBottom: '1px solid #2B3139', textAlign: 'left', width: '20%', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center">Volume <SortArrows active={sortConfig?.key === 'volume'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#1E1E1E', color: '#c0c0c0', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #333', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                              <th onClick={() => handleSort('convictionScore')} style={{ backgroundColor: '#181A20', color: '#848E9C', fontSize: '13.5px', fontWeight: '600', padding: '4px 10px', borderBottom: '1px solid #2B3139', textAlign: 'right', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                                   <div className="d-flex align-items-center justify-content-end">Conviction <SortArrows active={sortConfig?.key === 'convictionScore'} direction={sortConfig?.direction} /></div>
                               </th>
-                              <th style={{ backgroundColor: '#1E1E1E', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #333', textAlign: 'right', width: '100px' }}>Action</th>
+                              <th style={{ backgroundColor: '#181A20', color: '#848E9C', fontSize: '13px', fontWeight: '600', padding: '10px', borderBottom: '1px solid #2B3139', textAlign: 'right', width: '100px' }}>Action</th>
                           </tr>
                       </thead>
                       <tbody>
@@ -625,21 +592,21 @@ function MarketPage() {
 
                               return (
                                 <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
-                                    <td style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    <td style={{ padding: '14px 10px', borderBottom: '1px solid #2B3139', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center gap-3">
                                             <i className={`bi ${favoriteIds.has(item.id) ? 'bi-heart-fill text-white' : 'bi-heart text-secondary'} hover-gold cursor-pointer`} style={{ fontSize: '12px' }} onClick={(e) => handleToggleFavorite(e, item.id)}></i>
                                             <span style={getRankStyle(dynamicRank) as any}>{formatCompactNumber(dynamicRank)}</span>
                                         </div>
                                     </td>
-                                    <td style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    <td style={{ padding: '14px 10px', borderBottom: '1px solid #2B3139', backgroundColor: 'transparent' }}>
                                         <Link href={`/asset/${item.id}`} className="d-flex align-items-center gap-2 text-decoration-none group">
                                             <CoinIcon name={item.name} tier={item.tier} />
-                                            <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px', color: '#E0E0E0' }}>{item.name}</span>
+                                            <span className="text-white fw-bold name-hover name-shake" style={{ fontSize: '14px', letterSpacing: '0.5px', color: '#EAECEF' }}>{item.name}</span>
                                         </Link>
                                     </td>
-                                    <td className="text-start" style={{ padding: '14px 0', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    <td className="text-start" style={{ padding: '14px 0', borderBottom: '1px solid #2B3139', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center gap-2">
-                                            <span className="text-white fw-bold" style={{ fontSize: '14px', color: '#E0E0E0' }}>{formatPrice(item.pricePol)}</span>
+                                            <span className="text-white fw-bold" style={{ fontSize: '14px', color: '#EAECEF' }}>{formatPrice(item.pricePol)}</span>
                                             {item.change !== 0 && (
                                                 <span className="d-flex align-items-center" style={{ fontSize: '12px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : item.change < 0 ? '#ea3943' : '#B0B0B0' }}>
                                                     {item.change > 0 ? '+' : ''}{item.change.toFixed(0)}%
@@ -648,18 +615,18 @@ function MarketPage() {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="text-start" style={{ padding: '14px 10px 14px 40px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    <td className="text-start" style={{ padding: '14px 10px 14px 40px', borderBottom: '1px solid #2B3139', backgroundColor: 'transparent' }}>
                                         <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '400', color: '#B0B0B0' }}>{item.lastSale ? formatPrice(item.lastSale) : '---'}</span>
                                     </td>
-                                    <td className="text-start" style={{ padding: '14px 10px 14px 60px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    <td className="text-start" style={{ padding: '14px 10px 14px 60px', borderBottom: '1px solid #2B3139', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center justify-content-start gap-2">
-                                            <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#E0E0E0' }}>
+                                            <span className="text-white" style={{ fontSize: '13.5px', fontWeight: '500', color: '#EAECEF' }}>
                                                 {formatVolumeUSD(item.volume)}
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="text-start" style={{ padding: '12px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
-                                        <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#E0E0E0' }}>
+                                    <td className="text-start" style={{ padding: '12px 10px', borderBottom: '1px solid #2B3139', backgroundColor: 'transparent' }}>
+                                        <span className="text-white" style={{ fontSize: '13px', fontWeight: '400', color: '#EAECEF' }}>
                                             {item.convictionScore > 0 ? (
                                                 <div className="d-flex align-items-center justify-content-start gap-1">
                                                     <span>{formatCompactNumber(item.convictionScore)}</span>
@@ -670,7 +637,7 @@ function MarketPage() {
                                             )}
                                         </span>
                                     </td>
-                                    <td className="text-end" style={{ padding: '14px 10px', borderBottom: '1px solid #1c2128', backgroundColor: 'transparent' }}>
+                                    <td className="text-end" style={{ padding: '14px 10px', borderBottom: '1px solid #2B3139', backgroundColor: 'transparent' }}>
                                         <div className="d-flex justify-content-end">
                                             <Link href={`/asset/${item.id}`} className="text-decoration-none"><ActionButton /></Link>
                                         </div>
@@ -697,7 +664,7 @@ function MarketPage() {
           </div>
       </section>
 
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: '5rem', marginBottom: '40px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#2B3139 !important', marginTop: '5rem', marginBottom: '40px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
@@ -735,14 +702,14 @@ function MarketPage() {
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .market-row:hover td { background-color: rgba(255, 255, 255, 0.03) !important; }
+        .market-row:hover td { background-color: #1E2329 !important; }
         .name-hover:hover { color: #FCD535; text-decoration: none !important; }
         @keyframes subtleShake { 0% { transform: translateX(0); } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 75% { transform: translateX(1px); } 100% { transform: translateX(0); } }
         .market-row:hover .name-shake { animation: subtleShake 0.4s ease-in-out; color: #FCD535 !important; }
         .filter-item { border-bottom: 2px solid transparent; transition: all 0.2s; cursor: pointer; padding-bottom: 4px; }
         .filter-item:hover, .filter-item.active { color: #fff !important; border-bottom: 2px solid #FCD535; }
         .binance-filter-btn { border-radius: 2px; padding: 6px 12px; transition: all 0.2s; }
-        .binance-filter-group { border: 1px solid #333; background: transparent; padding: 4px; border-radius: 2px; gap: 2px; }
+        .binance-filter-group { border: 1px solid #2B3139; background: transparent; padding: 4px; border-radius: 2px; gap: 2px; }
         .active-time, .active-currency { background-color: #2B3139 !important; color: #FCD535 !important; }
         .text-header-gray { color: #848E9C !important; }
         .hover-gold-text:hover:not(.active-time):not(.active-currency) { color: #FCD535 !important; }
