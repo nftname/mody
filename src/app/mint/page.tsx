@@ -6,17 +6,15 @@ import dynamic from 'next/dynamic';
 import { useAccount, useWriteContract, useReadContract, usePublicClient } from "wagmi";
 import { parseAbi, keccak256, stringToBytes, formatEther } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { toBlob } from 'html-to-image'; // المكتبة المسؤولة عن التصوير
+import { toBlob } from 'html-to-image';
 import { CONTRACT_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
-import MintTemplate from '@/components/MintTemplate'; // استدعاء الاستوديو المخفي
+import MintTemplate from '@/components/MintTemplate';
 
-// --- BUTTON CONSTANTS ---
 const GOLD_BTN_PRIMARY = '#D4AF37';
 const GOLD_BTN_HIGHLIGHT = '#E6C76A';
 const GOLD_BTN_SHADOW = '#B8962E';
 
-// ABI for the NFT Registry Contract
 const CONTRACT_ABI = parseAbi([
   "function owner() view returns (address)",
   "function registeredNames(bytes32) view returns (bool)",
@@ -25,7 +23,6 @@ const CONTRACT_ABI = parseAbi([
   "function reserveName(string _name, uint8 _tier, string _tokenURI)"
 ]);
 
-// الوصف الطويل (تم الحفاظ عليه كاملاً كما طلبت)
 const LONG_DESCRIPTION = `GEN-0 Genesis — NNM Protocol Record
 
 A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.
@@ -37,10 +34,8 @@ const MintContent = () => {
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
   
-  // --- Refs for Snapshot Logic (الكاميرا) ---
   const templateRef = useRef<HTMLDivElement>(null);
 
-  // States
   const [searchTerm, setSearchTerm] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -53,7 +48,6 @@ const MintContent = () => {
   const [isMinting, setIsMinting] = useState(false);
   const [timer, setTimer] = useState(60);
 
-  // حالة جديدة: تجهيز البيانات للقالب قبل التصوير
   const [snapshotData, setSnapshotData] = useState({ name: '', tier: 'ELITE' });
 
   const { data: ownerAddress } = useReadContract({
@@ -68,33 +62,29 @@ const MintContent = () => {
     setMounted(true);
   }, []);
 
-  // --- دالة نظام المكافآت (تم نقلها للأعلى لاستخدامها في العملية الرئيسية) ---
-  const notifyRewardSystem = async (userWallet: any) => {
+  const notifyRewardSystem = async (userWallet: any, tierName: string) => {
     try {
         await fetch('/api/nnm/mint-hook', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ wallet: userWallet }),
+            body: JSON.stringify({ 
+                wallet: userWallet,
+                tier: tierName 
+            }),
         });
-        console.log('Reward point added!');
     } catch (error) {
-        console.error('Failed to add reward', error);
+        console.error(error);
     }
   };
 
-  // --- دالة التصوير (المحرك الجديد) ---
   const generateSnapshot = async (name: string, tier: string): Promise<Blob | null> => {
-    // 1. وضع البيانات في القالب المخفي
     setSnapshotData({ name, tier });
     
-    // 2. إعطاء مهلة بسيطة جداً (100ms) لضمان أن الرياكت قام بتحديث النص داخل القالب
     await new Promise(resolve => setTimeout(resolve, 100));
 
     if (templateRef.current) {
         try {
-            // 3. التقاط الصورة بجودة عالية وتحويلها لملف Blob
             const blob = await toBlob(templateRef.current, { cacheBust: true, pixelRatio: 1 }); 
-            // pixelRatio: 1 لأننا ضبطنا القالب على حجم كبير أصلاً (1080px)
             return blob;
         } catch (err) {
             console.error("Snapshot failed", err);
@@ -142,7 +132,6 @@ const MintContent = () => {
     }
   };
 
-  // Timer Logic
   useEffect(() => {
     let interval: any;
     if (showModal && modalType === 'process' && timer > 0) {
@@ -185,27 +174,21 @@ const MintContent = () => {
       setShowModal(true);
   };
 
-  // --- CORE MINT LOGIC (PRO VERSION - LINKED WITH NEW API) ---
   const handleMintProcess = async (tierName: string, tierIndex: number, priceDisplay: string) => {
       if (!searchTerm || !status || !publicClient) return;
       
       setIsMinting(true);
-      // تغيير الرسالة لتناسب العملية الجديدة
       setProcessStep("Generative Engine: Creating high-res asset...");
       setModalType('process');
       setShowModal(true);
 
       try {
-          // STEP A: Generate Snapshot (Client-Side)
-          // هنا يتم استدعاء القالب المخفي لتكوين الصورة
           const imageBlob = await generateSnapshot(searchTerm, tierName);
           
           if (!imageBlob) throw new Error("Failed to generate asset snapshot locally.");
 
-          // STEP B: Upload to API (The Postman)
           setProcessStep("Uploading: Securing asset on IPFS...");
           
-          // تجهيز البيانات كـ FormData لأننا نرسل ملفاً حقيقياً وليس مجرد نص
           const formData = new FormData();
           formData.append('file', imageBlob, `NNM-${searchTerm}.png`);
           formData.append('name', searchTerm);
@@ -213,7 +196,7 @@ const MintContent = () => {
 
           const apiResponse = await fetch('/api/generate-image', { 
               method: 'POST',
-              body: formData // إرسال الفورم داتا
+              body: formData 
           });
 
           if (!apiResponse.ok) {
@@ -222,16 +205,11 @@ const MintContent = () => {
           }
 
           const { gatewayUrl } = await apiResponse.json();
-          console.log("SUCCESS: Asset uploaded at", gatewayUrl);
 
-          // STEP C: Prepare Metadata (Full Data Preserved)
-          // --- 1. Calculate Dynamic Date ---
           const date = new Date();
           const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-          // This ensures the date is always the current month and year (e.g., "January 2026")
           const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 
-          // --- 2. Update Metadata Object ---
           const metadataObject = {
             name: searchTerm,
             description: LONG_DESCRIPTION,
@@ -242,7 +220,6 @@ const MintContent = () => {
               { trait_type: "Tier", value: tierName },
               { trait_type: "Platform", value: "NNM Registry" },
               { trait_type: "Collection", value: "Genesis - 001" },
-              // Use the dynamic variable here:
               { trait_type: "Mint Date", value: dynamicDate }
             ]
           };
@@ -250,7 +227,6 @@ const MintContent = () => {
           const jsonString = JSON.stringify(metadataObject);
           const tokenURI = `data:application/json;base64,${btoa(unescape(encodeURIComponent(jsonString)))}`;
 
-          // STEP D: Blockchain Transaction
           setProcessStep("Wallet: Please sign the transaction...");
 
           let hash;
@@ -262,7 +238,6 @@ const MintContent = () => {
               args: [searchTerm, tierIndex, tokenURI],
             });
           } else {
-            // الحسابات المالية كما هي
             const usdVal = tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5;
             const usdAmountWei = BigInt(usdVal) * BigInt(10**18);
             const costInMatic = await publicClient.readContract({
@@ -289,16 +264,10 @@ const MintContent = () => {
 
           const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
-          // STEP E: Finalize & Logging
           if (receipt.status === 'success') {
-             // حساب السعر الفعلي المدفوع بالـ POL
              let actualPriceInPOL = 0;
 
-             if (isAdmin) {
-                 // الأدمن لا يدفع شيء (فقط Gas)
-                 actualPriceInPOL = 0;
-             } else {
-                 // المستخدمين العاديين: نحول القيمة المدفوعة من Wei إلى POL
+             if (!isAdmin) {
                  const usdVal = tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5;
                  const usdAmountWei = BigInt(usdVal) * BigInt(10**18);
                  const costInMatic = await publicClient.readContract({
@@ -311,13 +280,11 @@ const MintContent = () => {
                  actualPriceInPOL = parseFloat(formatEther(valueToSend));
              }
 
-             // Supabase Logging & Secure Saving
              const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
              
              if (transferLog && transferLog.topics[3]) {
                  const mintedId = parseInt(transferLog.topics[3], 16);
 
-                 // 1. تسجيل النشاط (Activities) - اختياري، يمكن تركه للمتصفح أو نقله
                  await supabase.from('activities').insert([{
                      token_id: mintedId,
                      activity_type: 'Mint',
@@ -327,7 +294,6 @@ const MintContent = () => {
                      created_at: new Date().toISOString()
                  }]);
 
-                 // 2. 🚀 الحفظ الآمن في الجدول الرئيسي عبر الـ API
                  try {
                      await fetch('/api/save-asset', {
                          method: 'POST',
@@ -349,7 +315,7 @@ const MintContent = () => {
                  }
              }
 
-             if (address) notifyRewardSystem(address);
+             if (address) notifyRewardSystem(address, tierName);
 
           }
 
@@ -370,10 +336,6 @@ const MintContent = () => {
   return (
     <main dir="ltr" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
       
-      {/* === الاستوديو الخفي ===
-         هذا المكون موجود في الصفحة ولكن تم إخراجه من الشاشة
-         وظيفته: يتم وضع الاسم فيه، ثم تأخذ المكتبة صورة له وترسلها 
-      */}
       <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
         <MintTemplate 
             ref={templateRef} 
@@ -419,32 +381,26 @@ const MintContent = () => {
       <div className="container mt-0">
         <h5 className="text-white text-center mb-4 select-asset-title" style={{ letterSpacing: '2px', fontSize: '11px', textTransform: 'uppercase', color: '#888' }}>Select Asset Class</h5>
         <div className="row justify-content-center g-2 mobile-clean-stack"> 
-            {/* 1. IMMORTAL Button */}
             <LuxuryIngot 
                 label="IMMORTAL" 
                 price="$15" 
                 isAvailable={status === 'available'} 
-                // Correctly passing "IMMORTAL"
                 onMint={() => handleMintProcess("IMMORTAL", 0, "$15")} 
                 isMinting={isMinting} 
             />
 
-            {/* 2. ELITE Button */}
             <LuxuryIngot 
                 label="ELITE" 
                 price="$10" 
                 isAvailable={status === 'available'} 
-                // Correctly passing "ELITE"
                 onMint={() => handleMintProcess("ELITE", 1, "$10")} 
                 isMinting={isMinting} 
             />
 
-            {/* 3. FOUNDERS Button */}
             <LuxuryIngot 
                 label="FOUNDERS" 
                 price="$5" 
                 isAvailable={status === 'available'} 
-                // CRITICAL FIX: Pass "FOUNDER" (singular) to match the image key and image filename
                 onMint={() => handleMintProcess("FOUNDER", 2, "$5")} 
                 isMinting={isMinting} 
             />
@@ -540,8 +496,6 @@ const MintContent = () => {
   );
 }
 
-// --- Luxury Ingot Component (Simplified) ---
-// تم تخفيف هذا المكون ليصبح مجرد "زر عرض" ويستلم الأمر من الأب
 const LuxuryIngot = ({ label, price, isAvailable, onMint, isMinting }: any) => {
     
     const { isConnected } = useAccount(); 
@@ -571,7 +525,7 @@ const LuxuryIngot = ({ label, price, isAvailable, onMint, isMinting }: any) => {
                     </div>
                 ) : (
                     <button
-                        onClick={onMint} // يستدعي الدالة القادمة من الأب
+                        onClick={onMint} 
                         disabled={isMinting || !isAvailable}
                         className="btn-ingot"
                         style={{

@@ -681,8 +681,22 @@ export default function ChainFacePage() {
             chainId: chainId
         });
 
+        await fetch('/api/nnm/chainface-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tokenId: tokenId,
+                sender: address || 'Anonymous_Visitor',
+                receiver: profileData.owner,
+                coin: selectedPaymentCoin,
+                amount: amount
+            })
+        });
+
         setPaymentModalOpen(false);
         setShowVisitorBox(true);
+        fetchChainFaceData(); 
+
       } catch (e) {
         console.error(e);
       }

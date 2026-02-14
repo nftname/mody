@@ -461,41 +461,23 @@ export default function DashboardPage() {
       if (!address) return;
       setLoading(true);
       try {
-          // 1. Fetch History (The Source of Truth)
-          // Using ILIKE to ensure we catch ALL casing variations
+          const { data: wallet } = await supabase.from('nnm_wallets').select('wnnm_balance, nnm_balance').eq('wallet_address', address).maybeSingle();
+          
+          setWalletBalances({ 
+              wnnm: wallet ? Number(wallet.wnnm_balance) : 0, 
+              nnm: wallet ? Number(wallet.nnm_balance) : 0 
+          });
+
           const { data: mints } = await supabase.from('activities').select('*').match({ activity_type: 'Mint' }).ilike('to_address', address);
           const { data: sales } = await supabase.from('activities').select('*').match({ activity_type: 'Sale' }).ilike('to_address', address);
           const { data: votes } = await supabase.from('conviction_votes').select('*').ilike('supporter_address', address);
+          const { data: pays } = await supabase.from('activities').select('*').match({ activity_type: 'Pay' }).ilike('to_address', address);
 
-          // 2. Calculate Real Balance locally with NEW Multipliers
-          const earned = ((mints?.length || 0) * 300) + ((sales?.length || 0) * 100);
-          const spent = (votes?.length || 0) * 100; // Deduct 100 WNNM per vote
-          let finalWNNM = earned - spent;
-          if (finalWNNM < 0) finalWNNM = 0;
-
-          // 3. CRITICAL: Force-Sync this calculated balance to the DB
-          // This ensures the API sees the funds when the user clicks "Give Conviction"
-          const { data: wallet } = await supabase.from('nnm_wallets').select('nnm_balance').eq('wallet_address', address).maybeSingle();
-          
-          await supabase.from('nnm_wallets').upsert({
-              wallet_address: address,
-              wnnm_balance: finalWNNM, // <--- SYNC HERE
-              // Preserve existing NNM balance or default to 0
-              nnm_balance: wallet ? wallet.nnm_balance : 0, 
-              updated_at: new Date().toISOString()
-          }, { onConflict: 'wallet_address' });
-
-          // 4. Update UI State
-          setWalletBalances({ 
-              wnnm: finalWNNM, 
-              nnm: wallet ? parseFloat(wallet.nnm_balance) : 0 
-          });
-
-          // 5. Set Logs - Updated to reflect NEW multipliers
           const historyLogs = [
-              ...(mints?.map((m: any) => ({ type: 'Mint Reward', amount: 300, currency: 'WNNM', date: m.created_at })) || []),
+              ...(mints?.map((m: any) => ({ type: 'Mint Reward', amount: 0, currency: 'WNNM (Tiered)', date: m.created_at })) || []),
               ...(sales?.map((s: any) => ({ type: 'Market Reward', amount: 100, currency: 'WNNM', date: s.created_at })) || []),
-              ...(votes?.map((v: any) => ({ type: 'Support Given', amount: -100, currency: 'WNNM', date: v.created_at })) || [])
+              ...(votes?.map((v: any) => ({ type: 'Support Given', amount: -100, currency: 'WNNM', date: v.created_at })) || []),
+              ...(pays?.map((p: any) => ({ type: 'Payment Reward', amount: 100, currency: 'WNNM', date: p.created_at })) || [])
           ].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           
           setConvictionLogs(historyLogs);
