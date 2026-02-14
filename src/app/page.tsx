@@ -525,7 +525,7 @@ function Home() {
           <div className="mt-5 mb-5">
               <h3 className="fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px', color: '#EAECEF' }}>Top Performers</h3>
               {loading ? <div className="text-secondary text-center">Loading Assets...</div> :
-                            <div className="row g-4 d-none d-lg-flex" style={{ width: '80%' }}>
+                            <div className="row g-4 d-none d-lg-flex" style={{ width: '90%' }}>
                                     {featuredItems.map((item) => (
                                         <div key={item.id} className="col-lg-4 col-xl-4">
                                             <AssetCard 
@@ -552,7 +552,7 @@ function Home() {
           <div style={{ marginTop: '5.25rem', marginBottom: '3rem' }}>
               <h3 className="fw-bold mb-4" style={{ fontSize: '20px', letterSpacing: '-0.5px', color: '#EAECEF' }}>Just Listed</h3>
               {loading ? <div className="text-secondary text-center">Loading Listings...</div> :
-                            <div className="row g-4 d-none d-lg-flex" style={{ width: '87%' }}>
+                            <div className="row g-4 d-none d-lg-flex" style={{ width: '90%' }}>
                                     {newListingsItems.map((item) => (
                                         <div key={item.id} className="col-lg-4 col-xl-4">
                                             <AssetCard 
@@ -598,8 +598,8 @@ function Home() {
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 100%; margin: 0 auto; padding: 0 15px; }
         .widget-item { flex: 0 0 32%; }
         @media (max-width: 991px) {
-            .widgets-grid-container { display: flex !important; flex-wrap: nowrap !important; justify-content: space-between !important; gap: 8px !important; padding: 0 8px !important; overflow-x: auto; }
-            .widget-item { flex: 0 0 280px !important; }
+            .widgets-grid-container { display: flex !important; flex-wrap: nowrap !important; justify-content: space-between !important; gap: 4px !important; padding: 0 10px !important; overflow-x: hidden !important; width: 100% !important; }
+            .widget-item { flex: 1 1 0 !important; min-width: 0 !important; max-width: 33.33% !important; }
         }
         .fw-light { font-weight: 300 !important; } .text-header-gray { color: #848E9C !important; } .cursor-pointer { cursor: pointer; } .hover-bg-gray:hover { background-color: #2B3139; }
         .mobile-card-wrapper::-webkit-scrollbar { display: none; } .mobile-card-wrapper { -ms-overflow-style: none; scrollbar-width: none; scroll-snap-type: x mandatory; } .mobile-card-item { scroll-snap-align: start; }
