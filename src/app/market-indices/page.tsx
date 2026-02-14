@@ -1,17 +1,14 @@
 'use client';
 import Link from 'next/link';
 
-// --- IMPORTS FOR WIDGETS ---
 import NGXWidget from '@/components/NGXWidget';
 import NGXCapWidget from '@/components/NGXCapWidget';
 import NGXVolumeWidget from '@/components/NGXVolumeWidget';
 
-// --- CONSTANTS ---
-const GOLD_MEDIUM = '#FDB931';
-const GOLD_LIGHT = '#FFD700';
-const GOLD_DARK = '#B8860B';
+const GOLD_MEDIUM = '#FCD535';
+const GOLD_LIGHT = '#FCD535';
+const GOLD_DARK = '#B3882A';
 
-// --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
 const trustedBrands = [
@@ -49,17 +46,15 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
 
 export default function NGXWhitepaperPage() {
   return (
-    <main className="ngx-page" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <main className="ngx-page" style={{ backgroundColor: '#181A20', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column' }}>
       
-      {/* GLOBAL STYLES & OVERRIDES */}
       <style jsx global>{`
-        /* 1. TEXT STYLES */
         .ngx-page p,
         .ngx-page li,
         .ngx-page .text-body {
           font-family: "Inter", "Segoe UI", sans-serif;
           font-size: 15px;
-          color: #A0A0A0 !important; 
+          color: #848E9C !important; 
           line-height: 1.6;
           margin-bottom: 8px;
         }
@@ -68,7 +63,7 @@ export default function NGXWhitepaperPage() {
         .ngx-page h2,
         .ngx-page h3,
         .ngx-page .text-white {
-          color: #E0E0E0 !important;
+          color: #EAECEF !important;
         }
 
         .ngx-page ul {
@@ -81,7 +76,6 @@ export default function NGXWhitepaperPage() {
             margin-bottom: 6px;
         }
 
-        /* 2. DESKTOP WIDGET STYLE */
         .widget-box-style {
             padding: 12px;
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -110,7 +104,6 @@ export default function NGXWhitepaperPage() {
             }
         }
 
-        /* 3. MOBILE WIDGET STYLE (Adjusted Height & Transparency) */
         @media (max-width: 991px) {
             
             .widget-float-container {
@@ -124,15 +117,12 @@ export default function NGXWhitepaperPage() {
             
             .widget-box-style {
                 width: 100%; 
-                /* Changed opacity from 0.3 to 0.15 so it blends more with background */
                 background: rgba(0, 0, 0, 0.15); 
                 padding: 10px 0; 
-                /* Increased height from 120px to 135px for better vertical centering */
                 min-height: 135px; 
                 overflow: hidden;
             }
 
-            /* THE SCALER: Scale 1.8 */
             .widget-scaler {
                 transform: scale(1.8); 
                 transform-origin: center center;
@@ -142,7 +132,6 @@ export default function NGXWhitepaperPage() {
             }
         }
 
-        /* Ticker Animations */
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); }
         .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
@@ -160,12 +149,11 @@ export default function NGXWhitepaperPage() {
         <div className="row justify-content-center">
           <div className="col-12 col-lg-11">
 
-            {/* --- MAIN HEADER --- */}
             <header className="mb-4 pb-3 border-bottom border-secondary border-opacity-25 text-start">
               <h1 className="fw-bold mb-2" style={{ fontSize: '2.2rem', letterSpacing: '-1px', lineHeight: '1.2' }}>
                 NGX NFT Index <span style={{ color: GOLD_MEDIUM }}>Framework</span>
               </h1>
-              <h2 className="mb-3" style={{ fontSize: '1.2rem', fontWeight: '400', letterSpacing: '0.5px', color: '#E0E0E0' }}>
+              <h2 className="mb-3" style={{ fontSize: '1.2rem', fontWeight: '400', letterSpacing: '0.5px', color: '#EAECEF' }}>
                 Institutional Whitepaper
               </h2>
               
@@ -180,11 +168,9 @@ export default function NGXWhitepaperPage() {
               </div>
             </header>
 
-            {/* --- SECTION 1: SENTIMENT INDEX --- */}
             <section className="section-tight">
                 <div className="widget-float-container">
                     <div className="widget-box-style">
-                        {/* widget-scaler class controls the size/zoom */}
                         <div className="widget-scaler">
                             <NGXWidget theme="dark" title="NGX NFTs" />
                         </div>
@@ -215,7 +201,6 @@ export default function NGXWhitepaperPage() {
                 </div>
             </section>
 
-            {/* --- SECTION 2: MARKET CAPITALIZATION INDEX --- */}
             <section className="section-tight">
                 <div className="widget-float-container">
                     <div className="widget-box-style">
@@ -249,7 +234,6 @@ export default function NGXWhitepaperPage() {
                 </div>
             </section>
 
-            {/* --- SECTION 3: VOLUME INDEX --- */}
             <section className="section-tight">
                 <div className="widget-float-container">
                     <div className="widget-box-style">
@@ -283,7 +267,6 @@ export default function NGXWhitepaperPage() {
                 </div>
             </section>
 
-            {/* --- FRAMEWORK POSITIONING & CONCLUSION --- */}
             <section className="mb-5">
                 <div className="row">
                     <div className="col-12 text-start">
@@ -320,9 +303,8 @@ export default function NGXWhitepaperPage() {
                 </div>
             </section>
 
-            {/* FOOTER */}
-            <footer className="text-start" style={{ borderTop: '1px solid #2E2E2E', paddingTop: '20px', marginTop: '20px', marginBottom: '40px' }}>
-              <p style={{ fontSize: '11px', color: '#777', lineHeight: '1.5' }}>
+            <footer className="text-start" style={{ borderTop: '1px solid #2B3139', paddingTop: '20px', marginTop: '20px', marginBottom: '40px' }}>
+              <p style={{ fontSize: '11px', color: '#848E9C', lineHeight: '1.5' }}>
                 © 2026 NNM. All rights reserved. NGX Indices are powered by real-time on-chain data.
               </p>
             </footer>
@@ -331,8 +313,7 @@ export default function NGXWhitepaperPage() {
         </div>
       </div>
 
-      {/* --- BRAND TICKER (Sticky Bottom) --- */}
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '20px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#2B3139 !important', marginTop: 'auto', marginBottom: '20px', backgroundColor: '#181A20', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
