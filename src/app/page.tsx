@@ -458,8 +458,7 @@ function Home() {
                                     src={src} 
                                     alt={`Hero Slide ${index + 1}`} 
                                     fill 
-                                    style={{ objectFit: 'contain' }}
-
+                                    style={{ objectFit: 'cover' }}
                                     priority={index === 0} 
                                 />
                                 {/* Optional: Overlay Gradient */}
@@ -624,7 +623,7 @@ function Home() {
             border-color: rgba(252, 213, 53, 0.2) !important; 
             box-shadow: 0 12px 30px rgba(0,0,0,0.5) !important;
         }
-            a:focus, button:focus, div:focus { outline: none !important; box-shadow: none !important;
+             a:focus, button:focus, div:focus { outline: none !important; box-shadow: none !important;
       `}</style>
     </main>
   );
