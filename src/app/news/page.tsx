@@ -74,8 +74,8 @@ export default function NewsPage() {
       
       <MarketTicker />
 
-      <div className="header-wrapper" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, padding: '8px 0', backgroundColor: SURFACE_DARK }}>
-        <div className="container-fluid"> 
+      <div className="header-wrapper" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, padding: '4px 0', backgroundColor: SURFACE_DARK }}>
+        <div className="container-fluid px-2"> 
             <div className="widgets-grid-horizontal">
                 <div className="widget-capsule"> <NGXWidget theme="dark" /> </div>
                 <div className="widget-capsule"> <NGXCapWidget theme="dark" /> </div>
@@ -165,22 +165,24 @@ export default function NewsPage() {
         .widgets-grid-horizontal { 
             display: flex; 
             flex-direction: row;
-            justify-content: center; 
+            justify-content: space-between; 
             align-items: center; 
             max-width: 1050px; 
             margin: 0 auto; 
-            padding: 0 10px; 
-            gap: 8px; 
+            padding: 0; 
+            gap: 4px; 
             overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         .widgets-grid-horizontal::-webkit-scrollbar { display: none; }
         
         .widget-capsule { 
-            flex: 0 0 auto; 
-            min-width: 100px;
-            transform: scale(0.9);
-            transform-origin: center;
+            flex: 1; 
+            min-width: 0;
+            height: auto;
+            display: flex;
+            justify-content: center;
         }
         
         .news-item-wrapper { margin-bottom: 25px; }
@@ -234,10 +236,14 @@ export default function NewsPage() {
 
         @media (max-width: 768px) {
             .widgets-grid-horizontal { 
-                justify-content: flex-start;
-                padding: 5px 15px;
+                justify-content: space-between;
+                padding: 0 6px;
+                gap: 4px;
             }
-            .widget-capsule { transform: scale(0.85); margin: 0 -10px; }
+            .widget-capsule { 
+                flex: 1;
+                min-width: 32%;
+            }
             .news-card { flex-direction: column-reverse !important; }
             .news-thumbnail { width: 100%; height: 180px; margin-bottom: 15px; }
         }
