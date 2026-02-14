@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamicImport from 'next/dynamic';
-import MarketTicker from '@/components/MarketTicker';
 import NGXWidget from '@/components/NGXWidget';
 import NGXCapWidget from '@/components/NGXCapWidget';
 import NGXVolumeWidget from '@/components/NGXVolumeWidget';
@@ -402,7 +401,7 @@ function Home() {
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
       `}</style>
 
-      <MarketTicker />
+    
 
       <div className="header-wrapper shadow-sm" style={{ backgroundColor: '#181A20', borderBottom: '1px solid #2B3139', paddingTop: '10px' }}>
         <div className="container p-0"> 

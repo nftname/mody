@@ -22,59 +22,69 @@ const resolveIPFS = (uri: string) => {
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
 };
 
-interface TickerItem {
-  id: string;
-  label: string;
-  value: string;
-  change?: number;
-  isUp?: boolean;
-  link: string;
-  type: 'MARKET' | 'TOP' | 'NEW' | 'NGX';
-  sub?: string;
-}
-
 export default function MarketTicker() {
   const publicClient = usePublicClient(); 
   
   // States
+  // ETH & POL: Price from Internal API, Change from CoinGecko
   const [prices, setPrices] = useState({ eth: 0, ethChange: 0, pol: 0, polChange: 0 });
+  
   const [ngxIndex, setNgxIndex] = useState({ val: '84.2', change: 1.5 });
   const [ngxCap, setNgxCap] = useState({ val: '$2.54B', change: 4.88 });
   const [ngxVol, setNgxVol] = useState({ val: '2.4M', change: 0.86 });
   const [nnmVolChange, setNnmVolChange] = useState(0);
   
-  const [topItems, setTopItems] = useState<TickerItem[]>([]);
-  const [newItems, setNewItems] = useState<TickerItem[]>([]);
+  const [topItems, setTopItems] = useState<any[]>([]);
+  const [newItems, setNewItems] = useState<any[]>([]);
   const [lastFetchTime, setLastFetchTime] = useState(0);
 
-  // --- TWEAK 1: Fast Price Engine (Internal API) ---
-  // Replaces the old CoinGecko direct fetch
+  // --- 1. HYBRID PRICE ENGINE ---
+  // Speed: Internal API for Price
+  // Accuracy: CoinGecko for 24h Change
   useEffect(() => {
-    const fetchPrices = async () => {
+    
+    // A. Fetch Price form YOUR FAST API (Every 30 seconds)
+    const fetchInternalPrice = async () => {
       try {
-        // الاتصال بالـ API الداخلي السريع
         const res = await fetch('/api/prices');
         const data = await res.json();
-        
-        // البيانات تأتي جاهزة من السيرفر (بما في ذلك التغيير إن وجد، أو نفترض 0 مؤقتاً)
-        // ملاحظة: الـ API الحالي يرجع السعر فقط.
-        // لتحسين الدقة مستقبلاً، يمكن تعديل الـ API ليرجع نسبة التغيير أيضاً.
-        // حالياً سنستخدم السعر المحدث، ونفترض نسبة تغيير تقديرية أو 0 إذا لم تتوفر.
-        
-        setPrices({ 
-            eth: data.eth || 0, 
-            ethChange: 0, // أو يمكن جلبها من الـ API إذا طورناه
-            pol: data.pol || 0,
-            polChange: 0  // أو يمكن جلبها من الـ API إذا طورناه
-        });
-      } catch (e) { console.error("Internal Price API Error", e); }
+        setPrices(prev => ({
+            ...prev,
+            eth: data.eth || prev.eth,
+            pol: data.pol || prev.pol
+        }));
+      } catch (e) { console.error("Internal Price Error", e); }
     };
-    fetchPrices();
-    const interval = setInterval(fetchPrices, 60000); // تحديث كل دقيقة
-    return () => clearInterval(interval);
+
+    // B. Fetch 24h Change from CoinGecko (Every 2 minutes) - To match Global Market
+    const fetchGlobalChange = async () => {
+        try {
+            // Fetching only price_change_percentage_24h to be lightweight
+            const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,matic-network&vs_currencies=usd&include_24hr_change=true');
+            const data = await res.json();
+            
+            setPrices(prev => ({
+                ...prev,
+                ethChange: data.ethereum?.usd_24h_change || 0,
+                polChange: data['matic-network']?.usd_24h_change || 0
+            }));
+        } catch (e) { console.error("Global Change Fetch Error", e); }
+    };
+
+    // Initial Calls
+    fetchInternalPrice();
+    fetchGlobalChange();
+
+    const priceInterval = setInterval(fetchInternalPrice, 30000); // 30s for Price
+    const changeInterval = setInterval(fetchGlobalChange, 120000); // 2m for Change
+
+    return () => {
+        clearInterval(priceInterval);
+        clearInterval(changeInterval);
+    };
   }, []);
 
-  // 2. Fetch NGX Data
+  // --- 2. Fetch NGX Data ---
   useEffect(() => {
     const fetchNgxData = async () => {
       try {
@@ -89,25 +99,23 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. Hybrid Logic (Strict Just Listed)
+  // --- 3. Hybrid Logic (Strict Just Listed) ---
   useEffect(() => {
     const fetchHomeLogicData = async () => {
         const now = Date.now();
-        if (now - lastFetchTime < 120000 && lastFetchTime !== 0) return; // 2 min cache
+        if (now - lastFetchTime < 120000 && lastFetchTime !== 0) return; 
         if (!publicClient) return;
 
         try {
-            // A. Get Listings from Smart Contract (Source of Truth)
             const data = await publicClient.readContract({
                 address: MARKETPLACE_ADDRESS as `0x${string}`,
                 abi: MARKET_ABI,
                 functionName: 'getAllListings'
             });
-            const [tokenIds] = data; // We only need IDs to sort
+            const [tokenIds] = data; 
 
             if (tokenIds.length === 0) return;
 
-            // B. Get Activities from Supabase (Sale & List ONLY)
             const { data: activities } = await supabase
                 .from('activities')
                 .select('token_id, price, activity_type, created_at')
@@ -149,7 +157,6 @@ export default function MarketTicker() {
             
             setNnmVolChange(volYest === 0 ? (volToday > 0 ? 100 : 0) : ((volToday - volYest) / volYest) * 100);
 
-            // C. Helper to get Name
             const getRealName = async (tokenId: bigint) => {
                 try {
                     const uri = await publicClient.readContract({
@@ -164,14 +171,12 @@ export default function MarketTicker() {
                 } catch { return `Asset #${tokenId}`; }
             };
 
-            // D. Prepare Base List
             const allItems = tokenIds.map(id => ({
               id: Number(id),
               volume: volumeMap[Number(id)] || 0,
               listedAt: latestListTimeMap[Number(id)] || 0 
             }));
 
-            // --- LIST 1: JUST LISTED (Strict Sort by listedAt) ---
             const sortedNew = [...allItems]
               .filter(item => item.listedAt > 0) 
               .sort((a, b) => b.listedAt - a.listedAt) 
@@ -179,28 +184,14 @@ export default function MarketTicker() {
 
             const newItemsData = await Promise.all(sortedNew.map(async (item, i) => {
               const name = await getRealName(BigInt(item.id));
-              return {
-                id: `just-${i}`,
-                label: 'Just Listed',
-                value: name,
-                link: `/asset/${item.id}`,
-                type: 'NEW' as const
-              };
+              return { id: `just-${i}`, label: 'Just Listed', value: name, link: `/asset/${item.id}`, type: 'NEW' };
             }));
-            
             setNewItems(newItemsData);
 
-            // --- LIST 2: TOP PERFORMERS (Sort by Volume) ---
             const sortedTop = [...allItems].sort((a, b) => b.volume - a.volume).slice(0, 3);
             const topItemsData = await Promise.all(sortedTop.map(async (item, i) => {
                 const name = await getRealName(BigInt(item.id));
-                return {
-                    id: `top-${i}`,
-                    label: 'Top Assets',
-                    value: name,
-                    link: `/asset/${item.id}`,
-                    type: 'TOP' as const
-                };
+                return { id: `top-${i}`, label: 'Top Assets', value: name, link: `/asset/${item.id}`, type: 'TOP' };
             }));
             setTopItems(topItemsData);
 
@@ -216,24 +207,33 @@ export default function MarketTicker() {
 
   // --- Ticker Compilation ---
   const items = useMemo(() => {
-    const marketItems: TickerItem[] = [
-        { id: 'ngx', label: 'NGX INDEX', value: ngxIndex.val, change: ngxIndex.change, isUp: ngxIndex.change >= 0, link: '/ngx', type: 'NGX' },
-        { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: ngxCap.change, isUp: ngxCap.change >= 0, link: '/ngx', type: 'NGX' },
-        { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: ngxVol.change, isUp: ngxVol.change >= 0, link: '/ngx', type: 'NGX' },
+    // 1. Prepare Market Items
+    const marketItems = [
+        { id: 'ngx', label: 'NGX INDEX', value: ngxIndex.val, change: ngxIndex.change, link: '/ngx' },
+        { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: ngxCap.change, link: '/ngx' },
+        { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: ngxVol.change, link: '/ngx' },
         
-        { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: prices.ethChange, isUp: prices.ethChange >= 0, link: '/market', type: 'MARKET' },
-        { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: prices.polChange, isUp: prices.polChange >= 0, link: '/market', type: 'MARKET' },
+        { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: prices.ethChange, link: '/market' },
+        { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: prices.polChange, link: '/market' },
         
-        { id: 'nnm', label: 'NNM VOL', value: '', change: nnmVolChange, isUp: nnmVolChange >= 0, link: '/market', type: 'MARKET' },
+        { id: 'nnm', label: 'NNM VOL', value: '24H', change: nnmVolChange, link: '/market' },
     ];
 
+    // 2. Combine all
     const combined = [...marketItems, ...newItems, ...topItems];
     return [...combined, ...combined]; 
   }, [prices, ngxIndex, ngxCap, ngxVol, nnmVolChange, newItems, topItems]);
 
   return (
-    <div className="w-100 overflow-hidden position-relative" 
-         style={{ backgroundColor: '#0B0E11', height: '40px', zIndex: 40, borderBottom: '1px solid #222' }}>
+    // GLASSMORPHISM CONTAINER (UPDATED COLOR)
+    <div className="w-100 overflow-hidden position-relative border-bottom border-secondary border-opacity-25" 
+         style={{ 
+             backgroundColor: 'rgba(24, 26, 32, 0.7)', // Slightly transparent Binance Black (#181A20)
+             backdropFilter: 'blur(10px)',            // Glass Effect
+             height: '40px', 
+             zIndex: 40,
+             borderBottomColor: '#2B3139 !important' 
+         }}>
       
       <div className="d-flex align-items-center h-100 ticker-track">
         {items.map((item, index) => (
@@ -254,14 +254,14 @@ export default function MarketTicker() {
                     fontSize: '12px',
                     fontWeight: '500', 
                     fontFamily: '"Inter", sans-serif',
-                    color: '#FFFFFF' 
+                    color: '#EAECEF' 
                 }}>
                     {item.value}
-                    {item.sub && <span className="ms-2 text-secondary" style={{ fontSize: '11px' }}>({item.sub})</span>}
                 </span>
               )}
               
-              {item.change !== undefined && (
+              {/* CHANGE INDICATOR */}
+              {(item.change !== undefined && item.change !== 0) && (
                 <span style={{ 
                     color: item.change >= 0 ? '#0ecb81' : '#f6465d', 
                     fontSize: '10px', 
@@ -271,7 +271,8 @@ export default function MarketTicker() {
                 </span>
               )}
             </div>
-            <div style={{ width: '1px', height: '14px', backgroundColor: '#333' }}></div>
+            {/* SEPARATOR */}
+            <div style={{ width: '1px', height: '14px', backgroundColor: 'rgba(255,255,255,0.1)' }}></div>
           </Link>
         ))}
       </div>
@@ -288,7 +289,7 @@ export default function MarketTicker() {
             transition: background-color 0.2s;
         }
         .ticker-link:hover {
-            background-color: #1a1a1a;
+            background-color: rgba(255, 255, 255, 0.05); /* Subtle hover effect */
         }
         @keyframes scroll {
           0% { transform: translateX(0); } 100% { transform: translateX(-50%); }
