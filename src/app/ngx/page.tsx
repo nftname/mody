@@ -62,7 +62,7 @@ const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
             <line x1="0" y1="120" x2="300" y2="120" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
             
             <path 
-                d="M0,130 C50,125 100,120 150,115 C170,112 190,80 210,50 C220,35 230,20 250,10 L300,15" 
+                d="M0,135 C50,135 100,130 150,120 C200,110 240,80 270,40 C285,20 295,5 300,0" 
                 fill="none" 
                 stroke={LIME_COLOR} 
                 strokeWidth="2.5" 
@@ -70,7 +70,7 @@ const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
                 vectorEffect="non-scaling-stroke"
             />
             <path 
-                d="M0,130 C50,125 100,120 150,115 C170,112 190,80 210,50 C220,35 230,20 250,10 L300,15 V150 H0 Z" 
+                d="M0,135 C50,135 100,130 150,120 C200,110 240,80 270,40 C285,20 295,5 300,0 V150 H0 Z" 
                 fill="url(#chartGradient)" 
                 stroke="none" 
             />
@@ -94,7 +94,6 @@ const StaticMiniChart = ({ isMobile }: { isMobile: boolean }) => (
         </div>
     </div>
 );
-
 
 const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any) => {
   const [copied, setCopied] = useState(false);
@@ -288,9 +287,9 @@ export default function NGXPage() {
 
       <div className="container-fluid py-4 px-3 px-md-4" style={{ paddingBottom: '0' }}> 
         
-        <div className="content-container mb-4">
-             <NGXLiveChart />
-        </div>
+        <div className="content-container mb-4" style={{ transform: 'scale(0.9)', transformOrigin: 'top center', marginBottom: '-40px' }}>
+     <NGXLiveChart />
+</div>
 
         <div className="content-container">
             <div className="article-wrapper">
