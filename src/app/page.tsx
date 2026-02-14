@@ -161,6 +161,8 @@ function Home() {
     // --- SLIDER LOGIC ---
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
+    const [touchStart, setTouchStart] = useState(0);
+
     const heroImages = ["/hero-blue.jpg", "/hero-red.jpg", "/hero-black.jpg"];
     const heroLinks = ["/mint", "/chainface", "/market"];
 
@@ -170,7 +172,20 @@ function Home() {
             setCurrentSlide((prev) => (prev + 1) % heroImages.length);
         }, 3000); // 3 Seconds interval
         return () => clearInterval(timer);
-    }, [isPaused]);
+    }, [isPaused]); 
+
+const handleTouchStart = (e: React.TouchEvent) => setTouchStart(e.targetTouches[0].clientX);
+
+const handleTouchEnd = (e: React.TouchEvent) => {
+    const touchEnd = e.changedTouches[0].clientX;
+    const swipeDistance = touchStart - touchEnd;
+
+    if (swipeDistance > 50) { 
+        setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+    } else if (swipeDistance < -50) { 
+        setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
+    }
+};
 
     const [isMobileCurrencyOpen, setIsMobileCurrencyOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -441,6 +456,8 @@ function Home() {
                         }}
                         onMouseEnter={() => setIsPaused(true)}
                         onMouseLeave={() => setIsPaused(false)}
+                        onTouchStart={handleTouchStart}
+                        onTouchEnd={handleTouchEnd}
                     >
                         {heroImages.map((src, index) => (
                             <Link href={heroLinks[index]} key={index}>
