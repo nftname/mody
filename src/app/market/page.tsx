@@ -241,7 +241,7 @@ function MarketPage() {
                 supabase.from('assets_metadata').select('*').in('token_id', tokenIdsStr),
                 supabase.from('activities').select('*').order('created_at', { ascending: false }),
                 supabase.from('offers').select('token_id').eq('status', 'active'),
-                supabase.from('conviction_votes').select('token_id')
+                supabase.from('conviction_votes').select('token_id, amount')
             ]);
 
             const assetsMap: Record<string, any> = {};
@@ -255,9 +255,11 @@ function MarketPage() {
             if (votesData) {
                 votesData.forEach((v: any) => {
                     const idStr = String(v.token_id).trim();
-                    votesMap[idStr] = (votesMap[idStr] || 0) + 100;
+                    const points = v.amount ? v.amount : 100;
+                    votesMap[idStr] = (votesMap[idStr] || 0) + points;
                 });
             }
+
 
             const offersCountMap: Record<number, number> = {};
             if (offersData) {

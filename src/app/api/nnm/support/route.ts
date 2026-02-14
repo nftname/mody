@@ -11,7 +11,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { supporterWallet, assetId, assetOwner } = body;
 
-    // 1. التحقق من صحة البيانات
     if (!supporterWallet || !assetId || !assetOwner) {
       return NextResponse.json({ success: false, message: 'Missing data' }, { status: 400 });
     }
@@ -20,8 +19,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Cannot support your own asset.' }, { status: 403 });
     }
 
-    // 2. 🔒 SERVER-SIDE DUPLICATE VOTE PREVENTION
-    // Check if this wallet already voted for this asset
     const { data: existingVote } = await supabase
       .from('conviction_votes')
       .select('id')
@@ -36,7 +33,6 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // 3. التحقق من رصيد الداعم (WNNM)
     const { data: supporterData } = await supabase
       .from('nnm_wallets')
       .select('wnnm_balance, nnm_balance')
@@ -47,30 +43,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Insufficient WNNM balance.' }, { status: 400 });
     }
 
-    // 4. تنفيذ العملية (Atomic Execution):
-    
-    // أ. الداعم: يخصم 100 WNNM ويضيف 100 NNM (استرداد قيمة الدعم)
-    // ملاحظة: أنت طلبت سابقاً أن الدعم يضيف رصيداً للداعم أيضاً
     await supabase.from('nnm_wallets').update({
       wnnm_balance: supporterData.wnnm_balance - 100,
-      nnm_balance: parseFloat(supporterData.nnm_balance) + 100, // +100 NNM للداعم
+      nnm_balance: parseFloat(supporterData.nnm_balance) + 100, 
       updated_at: new Date().toISOString()
     }).eq('wallet_address', supporterWallet);
 
-    // ب. صاحب الأست (Asset Owner): يكسب 100 NNM مكافأة
     const { data: ownerData } = await supabase.from('nnm_wallets').select('nnm_balance').eq('wallet_address', assetOwner).single();
     const currentOwnerBalance = ownerData ? parseFloat(ownerData.nnm_balance) : 0;
     
     await supabase.from('nnm_wallets').upsert({
       wallet_address: assetOwner,
-      nnm_balance: currentOwnerBalance + 100, // +100 NNM للمالك
+      nnm_balance: currentOwnerBalance + 100, 
       updated_at: new Date().toISOString()
     }, { onConflict: 'wallet_address' });
 
-    // ج. تسجيل الحركة في السجلات
     await supabase.from('conviction_votes').insert({ 
       token_id: assetId.toString(), 
-      supporter_address: supporterWallet, 
+      supporter_address: supporterWallet,
+      amount: 100, 
       created_at: new Date().toISOString() 
     });
     

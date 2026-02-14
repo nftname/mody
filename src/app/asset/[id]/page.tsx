@@ -267,46 +267,26 @@ function AssetPage() {
     };
 
     // --- CONVICTION LOGIC START ---
-    useEffect(() => {
+   useEffect(() => {
         const fetchConvictionData = async () => {
             if (!tokenId) return;
-            const { count } = await supabase.from('conviction_votes').select('*', { count: 'exact', head: true }).eq('token_id', tokenId);
-            setConvictionCount(count || 0);
             
-            if (address) {
-                const { data } = await supabase.from('conviction_votes').select('id').match({ token_id: tokenId, supporter_address: address }).maybeSingle();
-                if (data) setHasConvicted(true);
+            const { data } = await supabase
+                .from('conviction_votes')
+                .select('amount, supporter_address')
+                .eq('token_id', tokenId);
+
+            const totalScore = data?.reduce((acc: number, curr: any) => acc + (curr.amount || 100), 0) || 0;
+            
+            setConvictionCount(totalScore);
+            
+            if (address && data) {
+                const hasVoted = data.some((vote: any) => vote.supporter_address === address);
+                if (hasVoted) setHasConvicted(true);
             }
         };
         fetchConvictionData();
-
-        // 🔴 REALTIME LISTENER DISABLED: Causing performance issues due to high-frequency bot updates
-        // const channel = supabase
-        //   .channel(`asset-${tokenId}-realtime`)
-        //   .on(
-        //     'postgres_changes',
-        //     { event: 'INSERT', schema: 'public', table: 'conviction_votes', filter: `token_id=eq.${tokenId}` },
-        //     (payload: any) => {
-        //       console.log('🔥 Realtime: New vote for asset', payload);
-        //       fetchConvictionData();
-        //       fetchAllData();
-        //     }
-        //   )
-        //   .on(
-        //     'postgres_changes',
-        //     { event: 'INSERT', schema: 'public', table: 'activities', filter: `token_id=eq.${tokenId}` },
-        //     (payload: any) => {
-        //       console.log('🔥 Realtime: New activity for asset', payload);
-        //       fetchAllData();
-        //     }
-        //   )
-        //   .subscribe();
-
-        // return () => {
-        //   supabase.removeChannel(channel);
-        // };
     }, [tokenId, address]);
-
     const handleGiveConviction = async () => {
         if (!address || hasConvicted || isOwner) return;
         
@@ -610,12 +590,39 @@ function AssetPage() {
         if (!listing) return;
         setIsPending(true);
         try {
-            const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'buyItem', args: [BigInt(tokenId)], value: parseEther(listing.price) });
+            const hash = await writeContractAsync({ 
+                address: MARKETPLACE_ADDRESS as `0x${string}`, 
+                abi: MARKETPLACE_ABI, 
+                functionName: 'buyItem', 
+                args: [BigInt(tokenId)], 
+                value: parseEther(listing.price) 
+            });
             await publicClient!.waitForTransactionReceipt({ hash });
-            await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: listing.seller, to_address: address, price: listing.price }]);
-            showModal('success', 'Bought!', 'Asset purchased.');
-        } catch(e) { setIsPending(false); }
+            
+            await supabase.from('activities').insert([{ 
+                token_id: tokenId, 
+                activity_type: 'Sale', 
+                from_address: listing.seller, 
+                to_address: address, 
+                price: listing.price 
+            }]);
+            
+            await fetch('/api/nnm/market-buy-hook', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    buyerWallet: address, 
+                    tokenId: tokenId, 
+                    price: listing.price 
+                })
+            });
+
+            showModal('success', 'Bought!', 'Asset purchased. +100 WNNM Added!');
+        } catch(e) { 
+            setIsPending(false); 
+        }
     };
+
 
     const handleAccept = async (offer: any) => {
         setIsPending(true);
@@ -1023,7 +1030,8 @@ function AssetPage() {
                                             <div className="d-flex flex-column align-items-center gap-2">
                                                 <div className="d-flex align-items-center gap-2" style={{ color: '#FCD535', fontSize: '20px', fontWeight: 'bold', textShadow: '0 0 10px rgba(252, 213, 53, 0.3)' }}>
                                                     <i className="bi bi-fire"></i>
-                                                    <span>{formatCompactNumber(convictionCount * 100)}</span>
+                                                    <span>{formatCompactNumber(convictionCount)}</span>
+
                                                 </div>
 
                                                 {hasConvicted ? (

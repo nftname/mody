@@ -548,7 +548,12 @@ export default function ChainFacePage() {
               if (meta.name) assetName = meta.name;
           }
 
-          const { count: convictionCount } = await supabase.from('conviction_votes').select('*', { count: 'exact', head: true }).eq('token_id', tokenId);
+          const { data: votesData } = await supabase
+              .from('conviction_votes')
+              .select('amount')
+              .eq('token_id', tokenId);
+
+          const totalConviction = votesData?.reduce((acc: number, curr: any) => acc + (curr.amount || 100), 0) || 0;
           const { data: walletVerification } = await supabase
               .from('chainface_wallet_verifications')
               .select('is_phone_verified, is_kyc_verified')
@@ -594,7 +599,7 @@ export default function ChainFacePage() {
                   matic: safeProfile?.matic_address || ''
               },
               stats: {
-                  conviction: (convictionCount || 0) * 100,
+                  conviction: totalConviction,
                   likes: safeProfile?.likes_count || 0,
                   dislikes: safeProfile?.dislikes_count || 0
               }
