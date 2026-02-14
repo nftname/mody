@@ -161,6 +161,7 @@ function Home() {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
     const heroImages = ["/hero-blue.jpg", "/hero-red.jpg", "/hero-black.jpg"];
+    const heroLinks = ["/mint", "/chainface", "/market"];
 
     useEffect(() => {
         if (isPaused) return; 
@@ -441,31 +442,31 @@ function Home() {
                         onMouseLeave={() => setIsPaused(false)}
                     >
                         {heroImages.map((src, index) => (
-                            <div 
-                                key={index}
-                                className="slider-item"
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    opacity: currentSlide === index ? 1 : 0,
-                                    transition: 'opacity 0.8s ease-in-out',
-                                    zIndex: currentSlide === index ? 2 : 1
-                                }}
-                            >
-                                <Image 
-                                    src={src} 
-                                    alt={`Hero Slide ${index + 1}`} 
-                                    fill 
-                                    style={{ objectFit: 'fill' }}
-
-                                    priority={index === 0} 
-                                />
-                                {/* Optional: Overlay Gradient */}
-                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(24,26,32,0.8) 100%)' }}></div>
-                            </div>
+                            <Link href={heroLinks[index]} key={index}>
+                                <div 
+                                    className="slider-item"
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        opacity: currentSlide === index ? 1 : 0,
+                                        transition: 'opacity 0.8s ease-in-out',
+                                        zIndex: currentSlide === index ? 2 : 1,
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <Image 
+                                        src={src} 
+                                        alt={`Hero Slide ${index + 1}`} 
+                                        fill 
+                                        style={{ objectFit: 'fill' }}
+                                        priority={index === 0} 
+                                    />
+                                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(24,26,32,0.8) 100%)' }}></div>
+                                </div>
+                            </Link>
                         ))}
                         
                         {/* Slider Indicators */}
