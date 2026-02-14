@@ -621,6 +621,10 @@ const handleTouchEnd = (e: React.TouchEvent) => {
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 100%; margin: 0 auto; padding: 0 15px; }
         .widget-item { flex: 0 0 32%; }
         @media (max-width: 991px) {
+        .main-title { 
+                        font-size: 1.37rem !important; 
+                        line-height: 1.3 !important;
+                    }
             .widgets-grid-container { display: flex !important; flex-wrap: nowrap !important; justify-content: space-between !important; gap: 4px !important; padding: 0 10px !important; overflow-x: hidden !important; width: 100% !important; }
             .widget-item { flex: 1 1 0 !important; min-width: 0 !important; max-width: 33.33% !important; }
         }
