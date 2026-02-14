@@ -2,8 +2,12 @@
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 
-// ✅ استخدام لون الهوية الرسمي (NNM Brand Gold)
 const BRAND_GOLD = '#FCD535'; 
+const BG_DARK = '#181A20';
+const PANEL_BG = '#1E2329';
+const BORDER_COLOR = '#2B3139';
+const TEXT_PRIMARY = '#EAECEF';
+const TEXT_MUTED = '#848E9C';
 const DARK_PLACEHOLDER = '#444444'; 
 
 export default function ContactPage() {
@@ -49,9 +53,9 @@ export default function ContactPage() {
   };
 
     const inputStyle = {
-        backgroundColor: '#1A1A1A',
-        border: '1px solid #333',
-        color: '#E0E0E0',
+        backgroundColor: BG_DARK,
+        border: `1px solid ${BORDER_COLOR}`,
+        color: TEXT_PRIMARY,
         width: '100%',
         padding: '14px 16px',
         borderRadius: '8px',
@@ -66,22 +70,22 @@ export default function ContactPage() {
         marginBottom: '8px',
         fontSize: '13px',
         fontWeight: '500',
-        color: '#777', 
+        color: TEXT_MUTED, 
         textTransform: 'uppercase' as const,
         letterSpacing: '0.5px'
     };
 
     return (
-        <main className="contact-page" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px' }}>
+        <main className="contact-page" style={{ backgroundColor: BG_DARK, minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px' }}>
       
       <div className="container pt-5">
         
         <div className="row justify-content-center mb-5">
             <div className="col-12 col-lg-8 text-center">
-                <h1 className="fw-bold text-white mb-3" style={{ fontSize: '2.2rem', letterSpacing: '-0.5px', color: '#E0E0E0' }}>
+                <h1 className="fw-bold mb-3" style={{ fontSize: '2.2rem', letterSpacing: '-1px', color: TEXT_PRIMARY }}>
                     Contact <span style={{ color: BRAND_GOLD }}>NNM</span>
                 </h1>
-                <p style={{ lineHeight: '1.6', color: '#888', fontSize: '15px' }}>
+                <p style={{ lineHeight: '1.6', color: TEXT_MUTED, fontSize: '15px' }}>
                     Select the appropriate channel below for assistance.
                 </p>
             </div>
@@ -89,17 +93,15 @@ export default function ContactPage() {
 
         <div className="row justify-content-center g-5">
             
-            {/* Left Column: Contact Info Cards */}
             <div className="col-12 col-lg-4">
                 <div className="d-flex flex-column gap-3">
                     
-                    {/* Card 1 */}
                     <div className="p-4 rounded-4 contact-card">
                         <div className="d-flex align-items-center gap-3 mb-3">
                             <div className="icon-box">
                                 <i className="bi bi-chat-text-fill"></i>
                             </div>
-                            <h3 className="h6 text-white m-0 fw-bold">General Inquiries</h3>
+                            <h3 className="h6 text-white m-0 fw-bold" style={{ color: TEXT_PRIMARY }}>General Inquiries</h3>
                         </div>
                         <p className="card-desc">
                             For platform assistance and general information.
@@ -109,13 +111,12 @@ export default function ContactPage() {
                         </a>
                     </div>
 
-                    {/* Card 2 */}
                     <div className="p-4 rounded-4 contact-card">
                         <div className="d-flex align-items-center gap-3 mb-3">
                             <div className="icon-box">
                                 <i className="bi bi-megaphone-fill"></i>
                             </div>
-                            <h3 className="h6 text-white m-0 fw-bold">Media & Partnerships</h3>
+                            <h3 className="h6 text-white m-0 fw-bold" style={{ color: TEXT_PRIMARY }}>Media & Partnerships</h3>
                         </div>
                         <p className="card-desc">
                             For press, partnerships, and brand assets.
@@ -125,13 +126,12 @@ export default function ContactPage() {
                         </a>
                     </div>
 
-                    {/* Card 3 */}
                     <div className="p-4 rounded-4 contact-card">
                         <div className="d-flex align-items-center gap-3 mb-3">
                             <div className="icon-box">
                                 <i className="bi bi-shield-fill-check"></i>
                             </div>
-                            <h3 className="h6 text-white m-0 fw-bold">Legal & Compliance</h3>
+                            <h3 className="h6 text-white m-0 fw-bold" style={{ color: TEXT_PRIMARY }}>Legal & Compliance</h3>
                         </div>
                         <p className="card-desc">
                             For verified institutional inquiries only.
@@ -144,11 +144,10 @@ export default function ContactPage() {
                 </div>
             </div>
 
-            {/* Right Column: Form */}
             <div className="col-12 col-lg-6">
                 <div className="p-4 p-md-5 rounded-4 form-container">
                     
-                    <h2 className="h4 text-white fw-bold mb-4">Send a message</h2>
+                    <h2 className="h4 fw-bold mb-4" style={{ color: TEXT_PRIMARY }}>Send a message</h2>
                     
                     <form onSubmit={handleSubmit}>
                         <div className="row g-3">
@@ -178,16 +177,15 @@ export default function ContactPage() {
                                 />
                             </div>
 
-                            {/* Custom Dropdown */}
                             <div className="col-12" ref={dropdownRef}>
                                 <label style={labelStyle}>Department</label>
                                 <div 
                                     className={`custom-select ${isDropdownOpen ? 'open' : ''}`} 
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    style={{...inputStyle, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}
+                                    style={{...inputStyle, backgroundColor: BG_DARK, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}
                                 >
                                     <span>{formData.category}</span>
-                                    <i className="bi bi-chevron-down" style={{ fontSize: '12px', color: '#666', transition: 'transform 0.3s', transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}></i>
+                                    <i className="bi bi-chevron-down" style={{ fontSize: '12px', color: TEXT_MUTED, transition: 'transform 0.3s', transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}></i>
                                     
                                     {isDropdownOpen && (
                                         <div className="dropdown-options">
@@ -244,31 +242,28 @@ export default function ContactPage() {
       </div>
 
             <style jsx>{`
-                /* Cards */
                 .contact-card {
-                    background-color: #242424;
-                    border: 1px solid #2E2E2E;
+                    background-color: ${PANEL_BG};
+                    border: 1px solid ${BORDER_COLOR};
                     transition: transform 0.2s;
                 }
                 .contact-card:hover { transform: translateY(-2px); }
                 
-                /* Brand Gold Icons */
                 .icon-box {
                     width: 36px; height: 36px;
                     border-radius: 50%;
-                    background-color: rgba(252, 213, 53, 0.1); /* Brand Gold Light BG */
+                    background-color: rgba(252, 213, 53, 0.1); 
                     color: ${BRAND_GOLD};
                     display: flex; align-items: center; justify-content: center;
                     font-size: 16px;
                 }
                 .card-desc {
-                    color: #999;
+                    color: ${TEXT_MUTED};
                     font-size: 14px;
                     margin-bottom: 12px;
                     line-height: 1.5;
                 }
                 
-                /* Email Links */
                 .contact-link {
                     text-decoration: none;
                     font-weight: 400; 
@@ -278,14 +273,12 @@ export default function ContactPage() {
                 }
                 .contact-link:hover { color: #fff; }
 
-                /* Form Container */
                 .form-container {
-                    background-color: #242424;
-                    border: 1px solid #2E2E2E;
+                    background-color: ${PANEL_BG};
+                    border: 1px solid ${BORDER_COLOR};
                     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
                 }
 
-                /* Inputs */
                 .contact-input::placeholder {
                     color: ${DARK_PLACEHOLDER}; 
                     font-weight: 400;
@@ -293,10 +286,9 @@ export default function ContactPage() {
                 }
                 .contact-input:focus {
                     border-color: ${BRAND_GOLD} !important;
-                    background-color: #1F1F1F !important;
+                    background-color: ${BG_DARK} !important;
                 }
 
-                /* Custom Dropdown */
                 .custom-select { position: relative; user-select: none; }
                 .custom-select.open { border-color: ${BRAND_GOLD} !important; }
                 
@@ -305,8 +297,8 @@ export default function ContactPage() {
                     top: 105%;
                     left: 0;
                     width: 100%;
-                    background-color: #222;
-                    border: 1px solid #333;
+                    background-color: ${BG_DARK};
+                    border: 1px solid ${BORDER_COLOR};
                     border-radius: 8px;
                     z-index: 100;
                     overflow: hidden;
@@ -314,7 +306,7 @@ export default function ContactPage() {
                 }
                 .dropdown-options .option {
                     padding: 12px 16px;
-                    color: #BBB;
+                    color: ${TEXT_MUTED};
                     font-size: 14px;
                     cursor: pointer;
                     transition: background 0.2s;
@@ -328,10 +320,9 @@ export default function ContactPage() {
                     color: ${BRAND_GOLD};
                 }
 
-                /* Minimalist Glass Button (Updated with Brand Gold) */
                 .minimalist-btn {
-                    background-color: rgba(255, 255, 255, 0.03) !important; /* 3% opacity */
-                    border: 1px solid rgba(252, 213, 53, 0.4) !important; /* إطار ذهبي (لون الهوية) باهت وشفاف */
+                    background-color: rgba(255, 255, 255, 0.03) !important;
+                    border: 1px solid rgba(252, 213, 53, 0.4) !important;
                     color: ${BRAND_GOLD} !important;
                     border-radius: 8px;
                     font-size: 15px;
