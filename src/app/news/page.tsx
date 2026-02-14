@@ -74,12 +74,12 @@ export default function NewsPage() {
       
       <MarketTicker />
 
-      <div className="header-wrapper" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, padding: '15px 0', backgroundColor: SURFACE_DARK }}>
-        <div className="container-fluid p-0"> 
-            <div className="widgets-grid-container">
-                <div className="widget-item"> <NGXWidget theme="dark" /> </div>
-                <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
-                <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
+      <div className="header-wrapper" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, padding: '8px 0', backgroundColor: SURFACE_DARK }}>
+        <div className="container-fluid"> 
+            <div className="widgets-grid-horizontal">
+                <div className="widget-capsule"> <NGXWidget theme="dark" /> </div>
+                <div className="widget-capsule"> <NGXCapWidget theme="dark" /> </div>
+                <div className="widget-capsule"> <NGXVolumeWidget theme="dark" /> </div>
             </div>
         </div>
       </div>
@@ -162,16 +162,26 @@ export default function NewsPage() {
       </div>
 
       <style jsx global>{`
-        .widgets-grid-container { 
+        .widgets-grid-horizontal { 
             display: flex; 
-            justify-content: space-between; 
+            flex-direction: row;
+            justify-content: center; 
             align-items: center; 
             max-width: 1050px; 
             margin: 0 auto; 
-            padding: 0 15px; 
-            gap: 15px; 
+            padding: 0 10px; 
+            gap: 8px; 
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
-        .widget-item { flex: 1; min-width: 0; }
+        .widgets-grid-horizontal::-webkit-scrollbar { display: none; }
+        
+        .widget-capsule { 
+            flex: 0 0 auto; 
+            min-width: 100px;
+            transform: scale(0.9);
+            transform-origin: center;
+        }
         
         .news-item-wrapper { margin-bottom: 25px; }
         .badge-category { font-size: 10px; font-weight: 700; color: ${GOLD_BASE}; text-transform: uppercase; letter-spacing: 1px; border: 1px solid rgba(252, 213, 53, 0.2); padding: 3px 8px; border-radius: 4px; }
@@ -198,7 +208,7 @@ export default function NewsPage() {
             background: ${BORDER_COLOR}; 
             margin-top: 30px; 
             margin-bottom: 30px; 
-            opacity: 0.5;
+            opacity: 0.4;
         }
         
         .btn-pagination {
@@ -223,11 +233,11 @@ export default function NewsPage() {
         .page-indicator { font-size: 13px; color: ${TEXT_MUTED}; font-weight: 500; letter-spacing: 0.5px; }
 
         @media (max-width: 768px) {
-            .widgets-grid-container { 
-                flex-direction: column; 
-                gap: 20px;
-                padding: 10px 20px;
+            .widgets-grid-horizontal { 
+                justify-content: flex-start;
+                padding: 5px 15px;
             }
+            .widget-capsule { transform: scale(0.85); margin: 0 -10px; }
             .news-card { flex-direction: column-reverse !important; }
             .news-thumbnail { width: 100%; height: 180px; margin-bottom: 15px; }
         }
