@@ -3,14 +3,14 @@ import Link from 'next/link';
 import MarketTicker from '@/components/MarketTicker';
 
 // --- CONSTANTS & STYLES ---
-const GOLD_BTN_PRIMARY = '#D4AF37';
-const GOLD_BTN_HIGHLIGHT = '#E6C76A';
-const GOLD_BTN_SHADOW = '#B8962E';
-const GOLD_LIGHT = '#FFD700';
-const GOLD_DARK = '#B8860B';
-const GOLD_MEDIUM = '#FDB931'; 
-const TEXT_BODY_COLOR = '#B0B0B0';
-const TEXT_OFF_WHITE = '#FFFFFF';
+const GOLD_BTN_PRIMARY = '#FCD535';
+const GOLD_BTN_HIGHLIGHT = '#FFF5CC';
+const GOLD_BTN_SHADOW = '#B3882A';
+const GOLD_LIGHT = '#FFF5CC';
+const GOLD_DARK = '#B3882A';
+const GOLD_MEDIUM = '#FCD535'; 
+const TEXT_BODY_COLOR = '#848E9C';
+const TEXT_OFF_WHITE = '#EAECEF';
 
 // --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
@@ -52,7 +52,7 @@ export default function NNMConceptPage() {
 
   return (
     <main className="concept-page" style={{ 
-      backgroundColor: '#1E1E1E', 
+      backgroundColor: '#181A20', 
       minHeight: '100vh', 
       paddingBottom: '0px', 
       fontFamily: '"Inter", "Segoe UI", sans-serif',
@@ -68,7 +68,7 @@ export default function NNMConceptPage() {
         
         /* Helpers */
         .text-gold-highlight { color: ${GOLD_MEDIUM} !important; }
-        .text-white { color: #FFFFFF !important; }
+        .text-white { color: ${TEXT_OFF_WHITE} !important; }
         .text-body-gray { color: ${TEXT_BODY_COLOR}; }
 
         /* Font Sizing */
@@ -85,7 +85,7 @@ export default function NNMConceptPage() {
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 1px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(252, 213, 53, 0.2);
             text-shadow: 0 1px 0 rgba(255,255,255,0.4);
             transition: filter 0.3s ease, transform 0.2s ease;
             padding: 10px 30px; 
@@ -135,7 +135,7 @@ export default function NNMConceptPage() {
         @media (max-width: 768px) { .section-spacer { margin-bottom: 50px; } }
         
         .img-container {
-            border: 1px solid #333;
+            border: 1px solid #2B3139;
             border-radius: 4px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -250,7 +250,6 @@ export default function NNMConceptPage() {
                   
                   {/* CTA AREA with DESKTOP SHIFT */}
                   <div className="text-center mt-4 cta-desktop-shift">
-                      {/* MODIFIED: Italic (fst-italic) and Single Line (Removed <br/>) */}
                       <p className="font-imperium mb-2 text-white fst-italic" style={{ fontSize: '0.85rem' }}>
                           The system provides structure. The market provides meaning.
                       </p>
@@ -267,9 +266,8 @@ export default function NNMConceptPage() {
       </section>
 
       {/* --- BRAND TICKER --- */}
-      {/* ADDED marginBottom: '50px' to create space from footer */}
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '50px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
-          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#2B3139 !important', marginTop: 'auto', marginBottom: '50px', backgroundColor: '#1E2329', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#848E9C' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
                   {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (
