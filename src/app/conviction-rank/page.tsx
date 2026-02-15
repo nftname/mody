@@ -1,17 +1,20 @@
 'use client';
 import Link from 'next/link';
 
-// --- COLOR CONSTANTS ---
+// --- COLOR CONSTANTS (Updated to New Theme) ---
 const GOLD_BASE = '#F0C420';
 const GOLD_LIGHT = '#FFD700';
 const GOLD_MEDIUM = '#FDB931'; 
 const GOLD_DARK = '#B8860B';
-const TEXT_OFF_WHITE = '#E0E0E0';
+const TEXT_OFF_WHITE = '#EAECEF';      // Updated
+const TEXT_BODY_COLOR = '#848E9C';     // Updated
+const BG_DEEP = '#181A20';             // Updated
+const BORDER_MAIN = '#2B3139';         // Updated
 
-// --- BUTTON SPECIFIC CONSTANTS ---
-const GOLD_BTN_PRIMARY = '#D4AF37';
-const GOLD_BTN_HIGHLIGHT = '#E6C76A';
-const GOLD_BTN_SHADOW = '#B8962E';
+// --- BUTTON SPECIFIC CONSTANTS (Calm Gold) ---
+const GOLD_BTN_PRIMARY = '#D4AF37';    // Updated
+const GOLD_BTN_HIGHLIGHT = '#E6C76A';  // Updated
+const GOLD_BTN_SHADOW = '#B8962E';     // Updated
 
 // --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
@@ -52,7 +55,7 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
 // --- MAIN PAGE COMPONENT ---
 export default function ConvictionRankPage() {
   return (
-    <main className="conviction-page" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <main className="conviction-page" style={{ backgroundColor: BG_DEEP, minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column' }}>
       
       {/* CSS STYLES & FONTS */}
       <style jsx global>{`
@@ -67,7 +70,7 @@ export default function ConvictionRankPage() {
         .conviction-page label {
           font-family: "Inter", "Segoe UI", sans-serif;
           font-size: 15px;
-          color: #B0B0B0;
+          color: ${TEXT_BODY_COLOR};
           line-height: 1.45;
           margin-bottom: 10px; 
         }
@@ -78,10 +81,10 @@ export default function ConvictionRankPage() {
         .conviction-page h2,
         .conviction-page h3,
         .conviction-page .text-white {
-          color: #E0E0E0 !important;
+          color: ${TEXT_OFF_WHITE} !important;
         }
 
-        /* GOLD BUTTON STYLES (THE INGOT) */
+        /* GOLD BUTTON STYLES (THE INGOT - CALM) */
         .btn-ingot {
             background: linear-gradient(180deg, ${GOLD_BTN_HIGHLIGHT} 0%, ${GOLD_BTN_PRIMARY} 40%, ${GOLD_BTN_SHADOW} 100%);
             border: 1px solid ${GOLD_BTN_SHADOW};
@@ -131,7 +134,7 @@ export default function ConvictionRankPage() {
           <div className="col-12 col-lg-11"> 
 
             {/* --- HEADER SECTION --- */}
-            <header className="mb-5 pb-4 border-bottom border-secondary border-opacity-25">
+            <header className="mb-5 pb-4" style={{ borderBottom: `1px solid ${BORDER_MAIN}` }}>
               <div className="row align-items-center">
                 
                 {/* LEFT COLUMN: SQUARE IMAGE */}
@@ -140,7 +143,7 @@ export default function ConvictionRankPage() {
                         style={{ 
                             aspectRatio: '1/1',
                             maxWidth: '500px',
-                            border: '1px solid #333',
+                            border: `1px solid ${BORDER_MAIN}`,
                             boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
                         }}>
                         <img 
@@ -158,17 +161,17 @@ export default function ConvictionRankPage() {
                           fontSize: '2.2rem', 
                           letterSpacing: '-1px', 
                           lineHeight: '1.2',
-                          color: '#E0E0E0'
+                          color: TEXT_OFF_WHITE
                       }}>
                     Conviction <span style={{ color: GOLD_MEDIUM }}>Rank</span>
                   </h1>
                   
-                  <div style={{ maxWidth: '100%', color: '#B0B0B0' }}>
+                  <div style={{ maxWidth: '100%', color: TEXT_BODY_COLOR }}>
                     <p className="intro-text">In today's NFT marketplaces, value is often misunderstood.</p>
                     <p className="intro-text">Prices rise. Prices fall. Charts fluctuate. Volumes spike.</p>
                     <p className="intro-text">But none of this answers the core question serious participants care about:</p>
                     
-                    <p className="fw-bold text-white my-4" style={{ fontSize: '1.2rem' }}>
+                    <p className="fw-bold text-white my-4" style={{ fontSize: '1.2rem', color: TEXT_OFF_WHITE }}>
                         Which assets do people genuinely believe in?
                     </p>
 
@@ -183,7 +186,7 @@ export default function ConvictionRankPage() {
             {/* --- CONTENT SECTIONS --- */}
             
             <section className="mb-4 ps-lg-3">
-              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 Beyond Price: Why Conviction Matters More Than Liquidity
               </h2>
               <p>In traditional markets, professional investors don’t build portfolios based on likes, hype, or short-term attention. They build them based on conviction.</p>
@@ -193,7 +196,7 @@ export default function ConvictionRankPage() {
             </section>
 
             <section className="mb-4 ps-lg-3">
-              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 What Is Conviction Rank?
               </h2>
               <p>Conviction Rank is not a popularity contest. It is not voting. It is not social engagement.</p>
@@ -208,7 +211,7 @@ export default function ConvictionRankPage() {
             </section>
 
             <section className="mb-4 ps-lg-3">
-              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 How Conviction Changes Market Behavior
               </h2>
               <p>Visible conviction changes market dynamics. Assets with strong conviction tend to:</p>
@@ -221,7 +224,7 @@ export default function ConvictionRankPage() {
             </section>
 
             <section className="mb-4 ps-lg-3">
-              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 The Psychology Behind Conviction
               </h2>
               <p>Humans follow confidence—not charts. When traders see a name backed by hundreds of verified holders, trust forms naturally:</p>
@@ -230,7 +233,7 @@ export default function ConvictionRankPage() {
             </section>
 
             <section className="mb-4 ps-lg-3">
-              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 WNNM Credits: Reputation, Not Speculation
               </h2>
               <p>Conviction within NNM accumulates <strong style={{ color: GOLD_MEDIUM }}>WNNM Credits</strong>.</p>
@@ -244,7 +247,7 @@ export default function ConvictionRankPage() {
             </section>
 
             <section className="mb-4 ps-lg-3">
-              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 Why Conviction Rank Favors Early Supporters
               </h2>
               <p>Early conviction has disproportionate value. Supporting a name before it becomes popular compounds reputation.</p>
@@ -253,7 +256,7 @@ export default function ConvictionRankPage() {
             </section>
 
             <section className="ps-lg-3">
-              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 A Market That Remembers
               </h2>
               <p>Most marketplaces forget intent. NNM records it.</p>
@@ -267,7 +270,6 @@ export default function ConvictionRankPage() {
             </section>
 
             {/* --- GOLD BUTTON SECTION --- */}
-            {/* Logic: mt-5 (Space above ~48px) | mb-5 + pb-5 (Space below ~96px [Double]) */}
             <div className="text-center mt-5 mb-5 pb-4">
                 <Link href="/mint" className="btn btn-ingot rounded-1 text-decoration-none">
                     CLAIM YOUR NEXUS NAME
@@ -275,7 +277,7 @@ export default function ConvictionRankPage() {
             </div>
 
             {/* FOOTER TEXT */}
-            <footer className="ps-lg-3" style={{ borderTop: '1px solid #2E2E2E', paddingTop: '20px', marginTop: '20px', marginBottom: '40px' }}>
+            <footer className="ps-lg-3" style={{ borderTop: `1px solid ${BORDER_MAIN}`, paddingTop: '20px', marginTop: '20px', marginBottom: '40px' }}>
               <p style={{ fontSize: '11px', color: '#777', lineHeight: '1.5' }}>
                 NNM is a decentralized discovery and exchange platform. All content is provided for informational purposes only.
               </p>
@@ -285,7 +287,7 @@ export default function ConvictionRankPage() {
         </div>
       </div>
 
-      {/* --- BRAND TICKER (Sticky Bottom) --- */}
+      {/* --- BRAND TICKER (UNCHANGED as requested) --- */}
       <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '20px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
