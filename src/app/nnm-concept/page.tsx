@@ -15,6 +15,7 @@ const GOLD_DARK = '#B8860B';
 const TEXT_BODY_COLOR = '#848E9C';
 const TEXT_HEADER_GRAY = '#848E9C';
 const TEXT_OFF_WHITE = '#EAECEF';
+const BORDER_MAIN = '#2B3139'; // Added for consistency
 
 // --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
@@ -99,7 +100,7 @@ export default function NNMConceptPage() {
                   backgroundColor: 'rgba(0,0,0,0.95)',
                   titleColor: GOLD_BASE,
                   bodyColor: '#fff',
-                  borderColor: '#aaa',
+                  borderColor: '#333', // Fixed: darkened border
                   borderWidth: 1,
                   padding: 10,
                   displayColors: false
@@ -145,7 +146,7 @@ export default function NNMConceptPage() {
         /* Static Cards */
         .info-card-static {
           background-color: #1E2329; 
-          border: 1px solid #aaa;
+          border: 1px solid ${BORDER_MAIN};
           border-radius: 8px;
           padding: 24px;
         }
@@ -373,9 +374,9 @@ export default function NNMConceptPage() {
       </section>
       </div>
 
-      {/* --- BRAND TICKER --- */}
-      <div className="w-100 py-3 border-top position-relative" style={{ borderColor: '#aaa !important', marginTop: 'auto', marginBottom: '80px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
-          <div className="text-center mb-2"><span className="text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#848E9C' }}>Built for Web3</span></div>
+      {/* --- BRAND TICKER (Corrected to #333 with border-secondary) --- */}
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '80px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
                   {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (
