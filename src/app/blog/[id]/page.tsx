@@ -7,10 +7,10 @@ import { supabase } from '@/lib/supabase';
 import MarketTicker from '@/components/MarketTicker';
 import DOMPurify from 'isomorphic-dompurify';
 
-const BACKGROUND_MAIN = '#1E1E1E';
-const TEXT_OFF_WHITE = '#E0E0E0';
-const TEXT_BODY = '#B0B0B0';
-const GOLD_BASE = '#F0C420';
+const BACKGROUND_MAIN = '#181A20';
+const TEXT_OFF_WHITE = '#EAECEF';
+const TEXT_BODY = '#848E9C';
+const GOLD_BASE = '#FCD535';
 
 export default function BlogPost() {
   const params = useParams();
@@ -30,7 +30,7 @@ export default function BlogPost() {
         if (error) throw error;
         if (data) setPost(data);
       } catch (err) {
-        console.error('System Error:', err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -41,7 +41,7 @@ export default function BlogPost() {
 
   if (loading) return (
       <div className="d-flex flex-column justify-content-center align-items-center" style={{backgroundColor: BACKGROUND_MAIN, minHeight:'100vh', color: TEXT_BODY}}>
-          <div className="spinner-border text-secondary mb-3" role="status"></div>
+          <div className="spinner-border text-secondary mb-3" role="status" style={{color: TEXT_BODY}}></div>
           <span style={{fontSize:'11px', letterSpacing:'2px', fontFamily: 'monospace'}}>RETRIEVING INTEL...</span>
       </div>
   );
@@ -62,15 +62,14 @@ export default function BlogPost() {
         
         .font-imperium { font-family: 'Cinzel', serif; }
         
-        /* UPDATED INGOT BUTTON (50% WIDTH, CENTERED) */
         .btn-ingot {
-            background: linear-gradient(180deg, #E6C76A 0%, #D4AF37 40%, #B8962E 100%);
-            border: 1px solid #B8962E;
+            background: linear-gradient(180deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%);
+            border: 1px solid #B3882A;
             color: #2b1d00;
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 1px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(252, 213, 53, 0.1);
             text-shadow: 0 1px 0 rgba(255,255,255,0.4);
             transition: filter 0.3s ease, transform 0.2s ease;
             padding: 10px 0; 
@@ -79,7 +78,7 @@ export default function BlogPost() {
             text-decoration: none;
             display: block;
             border-radius: 2px;
-            width: 50%; /* 👈 50% WIDTH */
+            width: 50%;
             margin: 0 auto;
         }
         .btn-ingot:hover {
@@ -88,10 +87,9 @@ export default function BlogPost() {
             color: #1a1100;
         }
 
-        /* SCALED DOWN TEXT SIZES */
         .article-content {
             color: ${TEXT_BODY};
-            font-size: 0.9rem; /* Reduced from 1.1rem (~14px) */
+            font-size: 0.9rem;
             line-height: 1.7;
         }
         .article-content h2, .article-content h3 {
@@ -100,20 +98,20 @@ export default function BlogPost() {
             margin-top: 2rem;
             margin-bottom: 0.8rem;
             letter-spacing: -0.5px;
-            font-size: 1.4rem; /* Reduced */
+            font-size: 1.4rem;
         }
         .article-content p {
             margin-bottom: 1.2rem;
         }
         
         .note-box {
-          background-color: rgba(240, 196, 32, 0.05);
+          background-color: rgba(30, 35, 41, 0.4);
           border-left: 3px solid ${GOLD_BASE};
-          border-top: 1px solid rgba(240, 196, 32, 0.18);
-          border-right: 1px solid rgba(240, 196, 32, 0.12);
-          border-bottom: 1px solid rgba(240, 196, 32, 0.12);
+          border-top: 1px solid #2B3139;
+          border-right: 1px solid #2B3139;
+          border-bottom: 1px solid #2B3139;
           padding: 15px;
-          font-size: 12px; /* Reduced from 15px */
+          font-size: 12px;
           color: ${TEXT_BODY};
           border-radius: 0 4px 4px 0;
           margin-top: 40px;
@@ -133,12 +131,11 @@ export default function BlogPost() {
                     </Link>
                 </div>
 
-                <header className="mb-4 border-bottom border-secondary pb-3" style={{borderColor: 'rgba(255,255,255,0.1) !important'}}>
-                    <span className="d-inline-block mb-3" style={{color: GOLD_BASE, border: `1px solid rgba(240, 196, 32, 0.3)`, padding: '3px 8px', fontSize: '10px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase'}}>
+                <header className="mb-4 border-bottom pb-3" style={{borderColor: '#2B3139'}}>
+                    <span className="d-inline-block mb-3" style={{color: GOLD_BASE, border: `1px solid rgba(252, 213, 53, 0.2)`, padding: '3px 8px', fontSize: '10px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase'}}>
                         {post.category}
                     </span>
                     
-                    {/* SCALED DOWN H1 (approx 2rem) */}
                     <h1 className="fw-bold mb-3 font-imperium" style={{color: TEXT_OFF_WHITE, lineHeight: '1.2', fontSize: '2rem'}}>
                         {post.title}
                     </h1>
@@ -153,7 +150,7 @@ export default function BlogPost() {
                 </header>
 
                 {post.image_url && (
-                    <div className="w-100 rounded-2 mb-5 overflow-hidden shadow-sm" style={{border: '1px solid #2E2E2E'}}>
+                    <div className="w-100 rounded-2 mb-5 overflow-hidden shadow-sm" style={{border: '1px solid #2B3139'}}>
                          <img src={post.image_url} alt="Cover" style={{width:'100%', height:'auto', display:'block'}} />
                     </div>
                 )}
@@ -173,10 +170,9 @@ export default function BlogPost() {
                    <span className="fw-bold" style={{color: TEXT_OFF_WHITE}}>Disclaimer:</span> This content is for informational purposes only. "Digital Name Assets" are a sovereign asset class on the Polygon network. Invest responsibly.
                 </div>
 
-                {/* --- CENTERED CTA SECTION --- */}
                 <div className="mt-5 pt-5 pb-5 text-center"> 
                     <h4 className="mb-3 font-imperium" style={{color: TEXT_OFF_WHITE, fontSize: '1.2rem'}}>Ready to claim your legacy?</h4>
-                    <p className="text-secondary mb-4" style={{fontSize: '12px'}}>Secure your unique Digital Name Asset before the registry closes.</p>
+                    <p style={{fontSize: '12px', color: TEXT_BODY, marginBottom: '24px'}}>Secure your unique Digital Name Asset before the registry closes.</p>
                     
                     <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                         <Link href="/mint" className="btn-ingot rounded-1">
@@ -191,3 +187,4 @@ export default function BlogPost() {
     </main>
   );
 }
+
