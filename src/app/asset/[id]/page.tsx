@@ -22,8 +22,8 @@ const CONTRACT_ADDR = "0x264D75F04b135e58E2d5cC8A6B9c1371dAc3ad81";
 const BACKGROUND_DARK = '#181A20'; 
 const SURFACE_DARK = '#181A20';    
 const BORDER_COLOR = 'rgba(255, 255, 255, 0.08)'; 
-const TEXT_PRIMARY = '#FFFFFF';
-const TEXT_MUTED = '#B0B0B0';
+const TEXT_PRIMARY = '#EAECEF';
+const TEXT_MUTED = '#848E9C';
 const OPENSEA_DESC_COLOR = '#E5E8EB'; 
 const GOLD_SOLID = '#F0C420';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%)';
@@ -200,6 +200,23 @@ function AssetPage() {
     const rawId = params?.id;
     const tokenId = Array.isArray(rawId) ? rawId[0] : rawId;
     const inputRef = useRef<HTMLInputElement>(null);
+    const galleryRef = useRef<HTMLDivElement>(null); 
+const scrollGallery = (direction: 'left' | 'right') => {
+    if (galleryRef.current) {
+        const scrollAmount = 240;
+        galleryRef.current.scrollBy({ 
+            left: direction === 'left' ? -scrollAmount : scrollAmount, 
+            behavior: 'smooth' 
+        });
+    }
+};
+
+const formatPriceDisplay = (price: string) => {
+    if (!price) return '0';
+    const num = parseFloat(price);
+    if (Number.isInteger(num)) return num.toString();
+    return num.toFixed(3).replace(/\.?0+$/, ""); 
+};
 
     useEffect(() => {
         if (isOfferMode && offerStep === 'input' && inputRef.current) {
@@ -497,7 +514,7 @@ function AssetPage() {
     const fetchMoreAssets = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         const startId = BigInt(tokenId) + BigInt(1);
-        const batchIds = [startId, startId + BigInt(1), startId + BigInt(2)];
+        const batchIds = Array.from({ length: 8 }, (_, i) => startId + BigInt(i));
         const loadedAssets: any[] = [];
         for (const nextId of batchIds) {
             try {
@@ -793,7 +810,7 @@ function AssetPage() {
                             {/* FAVORITE BUTTON (MAIN IMAGE) */}
                             <div className="d-flex align-items-center justify-content-end p-3 position-absolute top-0 w-100" style={{ zIndex: 2 }}>
                                 <button onClick={(e) => { e.stopPropagation(); handleToggleFavorite(e, asset.id); }} className="btn p-0 border-0">
-                                    <i className={`bi ${isMainFav ? 'bi-heart-fill' : 'bi-heart'}`} style={{ fontSize: '19px', color: isMainFav ? '#FFFFFF' : '#FFFFFF', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}></i>
+                                    <i className={`bi ${isMainFav ? 'bi-heart-fill' : 'bi-heart'}`} style={{ fontSize: '19px', color: isMainFav ? '#EAECEF' : '#EAECEF', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}></i>
                                 </button>
                             </div>
                             <img src={asset.image} alt={asset.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -977,41 +994,96 @@ function AssetPage() {
                                         </Accordion>
 
                                         <Accordion title="More from this collection" icon="bi-collection">
-                                            <div className="d-flex gap-3 overflow-auto pb-3 px-3" style={{ scrollbarWidth: 'none' }}>
-                                                {moreAssets.length > 0 ? moreAssets.map(item => {
-                                                    const isItemFav = favoriteIds.has(item.id);
-                                                    return (
-                                                        <Link key={item.id} href={`/asset/${item.id}`} className="text-decoration-none">
-                                                            <div className="h-100 d-flex flex-column" style={{ width: '220px', backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
-                                                                <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
-                                                                    {/* FAVORITE BUTTON (MORE ASSETS) */}
-                                                                    <button 
-                                                                        onClick={(e) => handleToggleFavorite(e, item.id)} 
-                                                                        className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" 
-                                                                        style={{ zIndex: 10 }}
-                                                                    >
-                                                                        <i className={`bi ${isItemFav ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isItemFav ? '#FFFFFF' : 'white', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
-                                                                    </button>
-                                                                    {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
-                                                                </div>
-                                                                <div className="p-3 d-flex flex-column flex-grow-1">
-                                                                    <div className="d-flex justify-content-between align-items-start mb-1">
-                                                                        <div className="text-white fw-bold text-truncate" style={{ fontSize: '14px', maxWidth: '80%' }}>{item.name}</div>
-                                                                        <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
-                                                                    </div>
-                                                                    <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
-                                                                    <div className="mt-auto">
-                                                                        <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Not Listed</span>}</div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </Link>
-                                                    );
-                                                }) : (
-                                                    <div className="text-muted text-center w-100 py-3">Loading more assets...</div>
-                                                )}
-                                            </div>
-                                        </Accordion>
+    <div className="position-relative px-2">
+        {}
+        <button 
+            onClick={() => scrollGallery('left')}
+            className="d-none d-md-flex position-absolute start-0 top-50 translate-middle-y align-items-center justify-content-center"
+            style={{ 
+                zIndex: 10, 
+                width: '40px', 
+                height: '40px', 
+                borderRadius: '50%', 
+                backgroundColor: '#181A20', 
+                border: '1px solid #2B3139',
+                color: '#FCD535', 
+                boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+                cursor: 'pointer',
+                left: '10px'
+            }}
+        >
+            <i className="bi bi-chevron-left" style={{ fontSize: '20px' }}></i>
+        </button>
+
+        {/* حاوية الصور (Scroll Container) */}
+        <div 
+            ref={galleryRef}
+            className="d-flex gap-3 overflow-auto pb-3 px-3 scroll-smooth" 
+            style={{ scrollbarWidth: 'none', scrollBehavior: 'smooth' }}
+        >
+            {moreAssets.length > 0 ? moreAssets.map(item => {
+                const isItemFav = favoriteIds.has(item.id);
+                return (
+                    <Link key={item.id} href={`/asset/${item.id}`} className="text-decoration-none">
+                        <div className="h-100 d-flex flex-column" style={{ minWidth: '220px', width: '220px', backgroundColor: '#181A20', borderRadius: '12px', border: '1px solid #2B3139', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
+                            <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
+                                {}
+                                <button 
+                                    onClick={(e) => handleToggleFavorite(e, item.id)} 
+                                    className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" 
+                                    style={{ zIndex: 10 }}
+                                >
+                                    <i className={`bi ${isItemFav ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isItemFav ? '#EAECEF' : '#EAECEF', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
+                                </button>
+                                {item.image ? (
+                                    <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    <div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>
+                                )}
+                            </div>
+                            <div className="p-3 d-flex flex-column flex-grow-1">
+                                <div className="d-flex justify-content-between align-items-start mb-1">
+                                    <div style={{ color: '#EAECEF', fontWeight: 'bold', fontSize: '14px', maxWidth: '80%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
+                                    <div style={{ fontSize: '12px', color: '#848E9C' }}>#{item.id}</div>
+                                </div>
+                                <div className="mb-2" style={{ fontSize: '13px', fontWeight: '500', color: '#848E9C' }}>NNM Registry</div>
+                                <div className="mt-auto">
+                                    <div style={{ color: '#FCD535', fontWeight: 'bold', fontSize: '14px' }}>
+                                        {}
+                                        {item.isListed ? `${formatPriceDisplay(item.price)} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#848E9C' }}>Not Listed</span>}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+                );
+            }) : (
+                <div className="text-center w-100 py-3" style={{ color: '#848E9C' }}>Loading more assets...</div>
+            )}
+        </div>
+
+        {}
+        <button 
+            onClick={() => scrollGallery('right')}
+            className="d-none d-md-flex position-absolute end-0 top-50 translate-middle-y align-items-center justify-content-center"
+            style={{ 
+                zIndex: 10, 
+                width: '40px', 
+                height: '40px', 
+                borderRadius: '50%', 
+                backgroundColor: '#181A20', 
+                border: '1px solid #2B3139',
+                color: '#FCD535',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+                cursor: 'pointer',
+                right: '5px' 
+            }}
+        >
+            <i className="bi bi-chevron-right" style={{ fontSize: '20px' }}></i>
+        </button>
+    </div>
+</Accordion>
+
                                     </div>
                                 )}
 
@@ -1272,7 +1344,7 @@ function AssetPage() {
                                 <button 
                                     onClick={() => setIsUsdMode(!isUsdMode)}
                                     className="btn p-0 border-0 d-flex align-items-center justify-content-center"
-                                    style={{ color: '#FFFFFF', fontSize: '12px', background: 'transparent' }}
+                                    style={{ color: '#EAECEF', fontSize: '12px', background: 'transparent' }}
                                 >
                                     <i className="bi bi-currency-dollar" style={{ fontSize: '16px' }}></i>
                                 </button>
@@ -1381,7 +1453,7 @@ function AssetPage() {
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid rgba(255,255,255,0.1)`, borderRadius: '16px', padding: '18px', width: '90%', maxWidth: '320px', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', position: 'relative', color: TEXT_PRIMARY }}>
                         <button onClick={resetUI} style={{ position: 'absolute', top: '8px', right: '12px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '18px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
-                        <h4 className="fw-bold mb-3 text-center" style={{ color: '#FFFFFF', fontStyle: 'italic', fontWeight: '500', fontSize: '15px' }}>{offerStep === 'select' ? 'What would you like to do?' : 'Make an offer'}</h4>
+                        <h4 className="fw-bold mb-3 text-center" style={{ color: '#EAECEF', fontStyle: 'italic', fontWeight: '500', fontSize: '15px' }}>{offerStep === 'select' ? 'What would you like to do?' : 'Make an offer'}</h4>
 
                         {offerStep === 'select' && (
                             <div className="d-flex flex-column gap-2">
