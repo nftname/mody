@@ -744,8 +744,8 @@ export default function DashboardPage() {
 
                 
                  {/* --- SECRET ADMIN BUTTON --- */}
-                {isAdmin && (
-    <div className="d-flex align-items-center gap-2 ms-md-3 hide-scrollbar" style={{ overflowX: 'auto' }}>
+           {isAdmin && (
+    <div className="d-flex align-items-center gap-2 ms-2 ms-md-3 hide-scrollbar" style={{ overflowX: 'auto', flexWrap: 'nowrap', flexShrink: 1, minWidth: 0 }}>
                         {/* Existing Admin Control Button */}
                         <Link href="/admin" className="text-decoration-none">
                             <div 
@@ -757,7 +757,7 @@ export default function DashboardPage() {
                                     border: '1px solid #FCD535', 
                                     borderRadius: '6px',
                                     cursor: 'pointer',
-                                    transition: '0.2s'
+                                    flexShrink: 0
                                 }}
                                 title="Control Unit"
                             >
@@ -770,15 +770,16 @@ export default function DashboardPage() {
                             <div 
                                 className="d-flex align-items-center justify-content-center" 
                                 style={{ 
-                                    width: '32px', 
-                                    height: '32px', 
-                                    background: 'linear-gradient(135deg, #004d40 0%, #002b36 100%)', 
-                                    border: '1px solid #004d40', 
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    transition: '0.2s',
-                                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
-                                }}
+    width: '32px', 
+    height: '32px', 
+    background: 'linear-gradient(135deg, #004d40 0%, #002b36 100%)', 
+    border: '1px solid #004d40', 
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: '0.2s',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+    flexShrink: 0
+}}
                                 title="Market Monitor"
                             >
                                 <i className="bi bi-activity" style={{ fontSize: '14px', color: '#4db6ac' }}></i>
