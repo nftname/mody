@@ -694,15 +694,15 @@ export default function DashboardPage() {
                             fontWeight: '600',
                             transition: 'all 0.2s',
                             whiteSpace: 'nowrap',
-                            minWidth: '0',       
                             width: 'auto',        
-                            padding: '0 10px'     
+                            padding: '0 12px',    
+                            flexShrink: 0        
                         }}
                     >
-                        <span className="d-none d-sm-inline">ChainFace</span>
-                        <span className="d-inline d-sm-none">CF</span>
+                        <span>ChainFace</span>     {}
                         <i className={`bi bi-chevron-${openDropdown === 'chainface' ? 'up' : 'down'} ms-1`} style={{ fontSize: '10px' }}></i>
                     </button>
+
 
                     {/* --- DROPDOWN MENU --- */}
                     {openDropdown === 'chainface' && (
