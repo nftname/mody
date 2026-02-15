@@ -19,8 +19,8 @@ const OPENSEA_BASE_URL = "https://opensea.io/assets/matic/";
 const CONTRACT_ADDR = "0x264D75F04b135e58E2d5cC8A6B9c1371dAc3ad81";
 
 // --- THEME & STYLES ---
-const BACKGROUND_DARK = '#1E1E1E'; 
-const SURFACE_DARK = '#262626';    
+const BACKGROUND_DARK = '#181A20'; 
+const SURFACE_DARK = '#181A20';    
 const BORDER_COLOR = 'rgba(255, 255, 255, 0.08)'; 
 const TEXT_PRIMARY = '#FFFFFF';
 const TEXT_MUTED = '#B0B0B0';
@@ -93,28 +93,28 @@ const getOfferStatus = (status: string, expiration: number, isOutdated: boolean)
 
 const CustomModal = ({ isOpen, type, title, message, onClose, onSwap }: any) => {
     if (!isOpen) return null;
-    let icon = <div className="spinner-border" style={{ color: GOLD_SOLID }} role="status"></div>;
+    let icon = <div className="spinner-border" style={{ color: GOLD_SOLID, width: '3rem', height: '3rem' }} role="status"></div>;
     let iconColor = GOLD_SOLID;
     
     if (type === 'success') {
         icon = (
             <div style={{ 
-                width: '80px', height: '80px', borderRadius: '50%', 
+                width: '60px', height: '60px', borderRadius: '50%', 
                 background: 'transparent',
                 border: '1px solid #FCD535',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto',
                 boxShadow: '0 0 15px rgba(252, 213, 53, 0.1)'
             }}>
-                <i className="bi bi-check-lg" style={{ fontSize: '40px', color: '#FCD535' }}></i>
+                <i className="bi bi-check-lg" style={{ fontSize: '28px', color: '#FCD535' }}></i>
             </div>
         );
         iconColor = 'transparent'; 
     }
-    else if (type === 'error') { icon = <i className="bi bi-exclamation-triangle" style={{ fontSize: '40px', color: '#FCD535' }}></i>; iconColor = '#FCD535'; }
+    else if (type === 'error') { icon = <i className="bi bi-exclamation-triangle" style={{ fontSize: '28px', color: '#FCD535' }}></i>; iconColor = '#FCD535'; }
     else if (type === 'swap') { icon = <i className="bi bi-wallet2" style={{ fontSize: '40px', color: GOLD_SOLID }}></i>; }
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${iconColor}`, borderRadius: '16px', padding: '25px', width: '90%', maxWidth: '380px', textAlign: 'center', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
+            <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid ${iconColor}`, borderRadius: '16px', padding: '20px', width: '90%', maxWidth: '320px', textAlign: 'center', boxShadow: '0 0 40px rgba(0,0,0,0.6)', position: 'relative', color: TEXT_PRIMARY }}>
                 <button onClick={onClose} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '20px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
                 <div className="mb-3">{icon}</div>
                 <h4 className="fw-bold mb-2" style={{ color: TEXT_PRIMARY }}>{title}</h4>
@@ -946,7 +946,7 @@ function AssetPage() {
                                                     <AreaChart data={getDynamicChartData()}>
                                                         <defs><linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#d4f936" stopOpacity={0.2}/><stop offset="95%" stopColor="#d4f936" stopOpacity={0}/></linearGradient></defs>
                                                         <CartesianGrid strokeDasharray="3 3" stroke={BORDER_COLOR} vertical={false} />
-                                                        <Tooltip contentStyle={{ backgroundColor: '#1E1E1E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} formatter={(value: any) => [`${value} POL`, 'Price']} />
+                                                        <Tooltip contentStyle={{ backgroundColor: '#181A20', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} formatter={(value: any) => [`${value} POL`, 'Price']} />
                                                         <Area type="monotone" dataKey="price" stroke="#d4f936" strokeWidth={2} fill="url(#colorPrice)" />
                                                     </AreaChart>
                                                 </ResponsiveContainer>
@@ -1064,7 +1064,7 @@ function AssetPage() {
                                                     Sort by <i className="bi bi-chevron-down" style={{ fontSize: '11px' }}></i>
                                                 </button>
                                                 {openDropdown === 'offerSort' && (
-                                                    <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
+                                                    <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#181A20', border: '1px solid #333', zIndex: 100 }}>
                                                         {['Newest', 'High Price', 'Low Price'].map(sort => (<button key={sort} onClick={() => { setOfferSort(sort); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: offerSort === sort ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{sort}</button>))}
                                                     </div>
                                                 )}
@@ -1235,7 +1235,7 @@ function AssetPage() {
             </div>
 
             {/* MOBILE FIXED BOTTOM BAR (Hidden on Desktop) */}
-            <div className="fixed-bottom p-2 d-lg-none" style={{ backgroundColor: '#1E1E1E', borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100 }}>
+            <div className="fixed-bottom p-2 d-lg-none" style={{ backgroundColor: '#181A20', borderTop: `1px solid ${BORDER_COLOR}`, zIndex: 100 }}>
                 <div className="container d-flex justify-content-center" style={{ maxWidth: '1200px' }}>
                     <RenderActionButtons mobile={true} />
                 </div>
