@@ -627,14 +627,7 @@ export default function DemoProfilePage() {
                   Payments are peer-to-peer. ChainFace never holds funds.
               </p>
 
-              <div style={{ marginTop: '40px', marginBottom: '14px' }}>
-                <h2 className="thank-you-title">
-                      Thank you for stepping into my ChainFace.
-                  </h2>
-                  <p className="thank-you-subtitle">
-                      Your trust means everything.
-                  </p>
-              </div>
+
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
                   <i 
