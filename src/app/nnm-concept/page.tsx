@@ -99,7 +99,7 @@ export default function NNMConceptPage() {
                   backgroundColor: 'rgba(0,0,0,0.95)',
                   titleColor: GOLD_BASE,
                   bodyColor: '#fff',
-                  borderColor: '#2B3139',
+                  borderColor: '#333',
                   borderWidth: 1,
                   padding: 10,
                   displayColors: false
@@ -374,7 +374,7 @@ export default function NNMConceptPage() {
       </div>
 
       {/* --- BRAND TICKER --- */}
-      <div className="w-100 py-3 border-top position-relative" style={{ borderColor: '#2B3139 !important', marginTop: 'auto', marginBottom: '80px', backgroundColor: '#1E2329', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+      <div className="w-100 py-3 border-top position-relative" style={{ borderColor: '#2B3139 !important', marginTop: 'auto', marginBottom: '80px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#848E9C' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
