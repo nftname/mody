@@ -12,9 +12,9 @@ const GOLD_BASE = '#F0C420';
 const GOLD_LIGHT = '#FFD700';
 const GOLD_MEDIUM = '#FDB931';
 const GOLD_DARK = '#B8860B';
-const TEXT_BODY_COLOR = '#B0B0B0';
-const TEXT_HEADER_GRAY = '#B0B0B0';
-const TEXT_OFF_WHITE = '#E0E0E0';
+const TEXT_BODY_COLOR = '#848E9C';
+const TEXT_HEADER_GRAY = '#848E9C';
+const TEXT_OFF_WHITE = '#EAECEF';
 
 // --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
@@ -99,7 +99,7 @@ export default function NNMConceptPage() {
                   backgroundColor: 'rgba(0,0,0,0.95)',
                   titleColor: GOLD_BASE,
                   bodyColor: '#fff',
-                  borderColor: '#333',
+                  borderColor: '#2B3139',
                   borderWidth: 1,
                   padding: 10,
                   displayColors: false
@@ -127,7 +127,7 @@ export default function NNMConceptPage() {
 
   return (
     <main className="concept-page" style={{ 
-      backgroundColor: '#1E1E1E', 
+      backgroundColor: '#181A20', 
       minHeight: '100vh', 
       paddingBottom: '0px', 
       fontFamily: '"Inter", "Segoe UI", sans-serif',
@@ -144,8 +144,8 @@ export default function NNMConceptPage() {
         
         /* Static Cards */
         .info-card-static {
-          background-color: #242424; 
-          border: 1px solid #2E2E2E;
+          background-color: #1E2329; 
+          border: 1px solid #2B3139;
           border-radius: 8px;
           padding: 24px;
         }
@@ -213,7 +213,7 @@ export default function NNMConceptPage() {
         .concept-shell label {
           font-family: "Inter", "Segoe UI", sans-serif;
           font-size: 15px;
-          color: #B0B0B0;
+          color: #848E9C;
         }
         .concept-shell h1,
         .concept-shell h2,
@@ -222,7 +222,7 @@ export default function NNMConceptPage() {
         .concept-shell h5,
         .concept-shell h6,
         .concept-shell .text-white {
-          color: #E0E0E0 !important;
+          color: #EAECEF !important;
         }
         .concept-shell .text-gold,
         .concept-shell .gold,
@@ -244,7 +244,6 @@ export default function NNMConceptPage() {
       {/* --- HEADER SECTION --- */}
       <section className="container-fluid px-0 pt-5" style={{ paddingBottom: '60px' }}>
           <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
-              {/* ✅ ALIGNMENT CHANGE: text-start instead of text-center */}
               <div className="text-start mx-auto">
                   
                   {/* Main Title */}
@@ -266,7 +265,6 @@ export default function NNMConceptPage() {
                       marginBottom: 0,
                       maxWidth: '900px',
                       lineHeight: '1.6',
-                      // ✅ ALIGNMENT CHANGE: Removed auto margins for left alignment
                     }}>
                       The <span className="fw-bold" style={{ color: TEXT_OFF_WHITE }}>Nexus Asset</span> represents the ultimate tier of digital name ownership, far beyond standard tokens. Each <span className="fw-bold" style={{ color: TEXT_OFF_WHITE }}>Nexus Name</span> establishes immutable priority within the Web3 ecosystem, securing a permanent place in digital history. As we approach 2026, these assets are poised to become the cornerstone of digital identity and value.
                   </p>
@@ -346,7 +344,6 @@ export default function NNMConceptPage() {
                         Historical trends are presented for contextual reference only. Projections are illustrative and hypothetical and do not imply guaranteed outcomes.
                     </p>
 
-                    {/* ✅ NEW SECTION: ChainFace Integration */}
                     <div className="mt-5 mb-4 pt-4 border-top border-secondary border-opacity-25">
                         <h3 className="text-white h5 mb-3 font-imperium fw-bold" style={{ color: TEXT_OFF_WHITE }}>
                             Your <span style={{ color: '#fff', fontWeight: '800' }}>ChainFace</span> Identity
@@ -376,9 +373,9 @@ export default function NNMConceptPage() {
       </section>
       </div>
 
-      {/* --- BRAND TICKER (Spacing Increased) --- */}
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '80px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
-          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
+      {/* --- BRAND TICKER --- */}
+      <div className="w-100 py-3 border-top position-relative" style={{ borderColor: '#2B3139 !important', marginTop: 'auto', marginBottom: '80px', backgroundColor: '#1E2329', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+          <div className="text-center mb-2"><span className="text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#848E9C' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
                   {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (
