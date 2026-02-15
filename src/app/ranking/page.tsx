@@ -135,7 +135,7 @@ export default function NNMConceptPage() {
         @media (max-width: 768px) { .section-spacer { margin-bottom: 50px; } }
         
         .img-container {
-            border: 1px solid #2B3139;
+            border: 1px solid #aaa;
             border-radius: 4px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -265,8 +265,8 @@ export default function NNMConceptPage() {
           </div>
       </section>
 
-      {/* --- BRAND TICKER (Color Adjusted: Border #2B3139) --- */}
-      <div className="w-100 py-3 border-top border-bottom position-relative" style={{ borderColor: '#2B3139 !important', marginTop: 'auto', marginBottom: '50px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+      {/* --- BRAND TICKER (Color Adjusted: Border #aaa) --- */}
+      <div className="w-100 py-3 border-top border-bottom position-relative" style={{ borderColor: '#aaa !important', marginTop: 'auto', marginBottom: '50px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
