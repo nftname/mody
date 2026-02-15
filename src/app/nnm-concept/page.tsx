@@ -99,7 +99,7 @@ export default function NNMConceptPage() {
                   backgroundColor: 'rgba(0,0,0,0.95)',
                   titleColor: GOLD_BASE,
                   bodyColor: '#fff',
-                  borderColor: '#333',
+                  borderColor: '#2B3139',
                   borderWidth: 1,
                   padding: 10,
                   displayColors: false
