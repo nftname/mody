@@ -6,7 +6,7 @@ import { useState } from 'react';
 const GOLD_BTN_PRIMARY = '#D4AF37';
 const GOLD_BTN_HIGHLIGHT = '#E6C76A';
 const GOLD_BTN_SHADOW = '#B8962E';
-const GOLD_BASE = '#F0C420'; // Keeping base gold for specific accents if needed, or mapping to new system
+const GOLD_BASE = '#F0C420'; 
 const GOLD_LIGHT = '#FFD700';
 const GOLD_MEDIUM = '#FDB931';
 const GOLD_DARK = '#B8860B';
@@ -53,15 +53,15 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- 1. THE DIAGRAM COMPONENT (Updated Colors) ---
+// --- 1. THE DIAGRAM COMPONENT ---
 const OwnershipFlowDiagram = () => {
   return (
     <div className="w-100 overflow-hidden rounded-4 p-0 position-relative" 
        style={{ 
-         backgroundColor: BG_PANEL, // Updated
-         border: `1px solid ${BORDER_MAIN}`, // Updated
+         backgroundColor: BG_PANEL, 
+         border: `1px solid ${BORDER_MAIN}`, 
          boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
-         background: `linear-gradient(180deg, ${BG_PANEL} 0%, ${BG_DEEP} 100%)` // Updated Gradient
+         background: `linear-gradient(180deg, ${BG_PANEL} 0%, ${BG_DEEP} 100%)` 
        }}>
       
       <div style={{
@@ -94,7 +94,7 @@ const OwnershipFlowDiagram = () => {
         </circle>
 
         <g transform="translate(100, 150)">
-            <rect x="-80" y="-50" width="160" height="100" rx="20" fill="#1E2329" stroke="#2B3139" strokeWidth="1" fillOpacity="0.9" /> {/* Updated Colors */}
+            <rect x="-80" y="-50" width="160" height="100" rx="20" fill="#1E2329" stroke="#2B3139" strokeWidth="1" fillOpacity="0.9" />
             <circle cx="0" cy="-15" r="22" fill="none" stroke={GOLD_BASE} strokeWidth="1.5" />
             <path d="M-10 -10 H10 V10 H-10 Z" fill="none" stroke={GOLD_BASE} strokeWidth="1.5" />
             <text y="25" textAnchor="middle" fill={TEXT_OFF_WHITE} fontSize="14" fontWeight="600" fontFamily="Inter, sans-serif">Your Wallet</text>
@@ -102,7 +102,7 @@ const OwnershipFlowDiagram = () => {
         </g>
 
         <g transform="translate(450, 150)">
-            <rect x="-70" y="-50" width="140" height="100" rx="20" fill="#1E2329" stroke="#2B3139" strokeWidth="1" fillOpacity="0.9" /> {/* Updated Colors */}
+            <rect x="-70" y="-50" width="140" height="100" rx="20" fill="#1E2329" stroke="#2B3139" strokeWidth="1" fillOpacity="0.9" />
             <path d="M0 -35 L0 -5" stroke="url(#premiumGold)" strokeWidth="1" opacity="0.6" />
             <circle cx="0" cy="-20" r="25" fill="#181A20" stroke="url(#premiumGold)" strokeWidth="1.5" />
             <text y="25" textAnchor="middle" fill={TEXT_OFF_WHITE} fontSize="14" fontWeight="600" fontFamily="Inter, sans-serif">NNM Market</text>
@@ -113,7 +113,7 @@ const OwnershipFlowDiagram = () => {
             <circle r="50" fill="url(#premiumGold)" opacity="0.05" filter="url(#appleGlow)">
                  <animate attributeName="opacity" values="0.05;0.15;0.05" dur="3s" repeatCount="indefinite" />
             </circle>
-            <rect x="-80" y="-50" width="160" height="100" rx="20" fill="#1E2329" stroke={GOLD_BASE} strokeWidth="1.5" fillOpacity="0.9" /> {/* Updated Colors */}
+            <rect x="-80" y="-50" width="160" height="100" rx="20" fill="#1E2329" stroke={GOLD_BASE} strokeWidth="1.5" fillOpacity="0.9" />
             <path d="M0 -25 L-15 -15 V5 C-15 15 0 25 0 25 C0 25 15 15 15 5 V-15 Z" fill="none" stroke={GOLD_BASE} strokeWidth="2" />
             <path d="M-5 0 L0 5 L5 -5" fill="none" stroke={GOLD_BASE} strokeWidth="2" />
             <text y="25" textAnchor="middle" fill={TEXT_OFF_WHITE} fontSize="14" fontWeight="600" fontFamily="Inter, sans-serif">Sovereign Asset</text>
@@ -172,7 +172,7 @@ const faqItems = [
     }
 ];
 
-// --- 3. FAQ ACCORDION COMPONENT (Updated Colors) ---
+// --- 3. FAQ ACCORDION COMPONENT ---
 const FAQSection = () => {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
@@ -187,7 +187,7 @@ const FAQSection = () => {
                 {faqItems.map((item, index) => (
                     <div key={index} 
                          className="rounded-3 overflow-hidden" 
-               style={{ backgroundColor: BG_PANEL, border: `1px solid ${BORDER_MAIN}` }}> {/* Updated Colors */}
+               style={{ backgroundColor: BG_PANEL, border: `1px solid ${BORDER_MAIN}` }}> 
                         <button 
                             onClick={() => toggleFAQ(index)}
                             className="w-100 d-flex justify-content-between align-items-center p-3 text-start bg-transparent border-0"
@@ -391,8 +391,8 @@ export default function HowItWorksPage() {
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
       `}</style>
 
-      {/* --- BRAND TICKER (Strict Compliance: Dark BG + AAA Border/Text) --- */}
-      <div className="w-100 py-3 border-top border-bottom position-relative" style={{ borderColor: '#aaa !important', marginTop: 'auto', marginBottom: '10px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+      {/* --- BRAND TICKER (Corrected to #333) --- */}
+      <div className="w-100 py-3 border-top border-bottom position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '10px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
