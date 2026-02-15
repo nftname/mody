@@ -745,8 +745,7 @@ export default function DashboardPage() {
                 
                  {/* --- SECRET ADMIN BUTTON --- */}
                 {isAdmin && (
-    <div className="d-flex align-items-center gap-2 ms-md-3" style={{ overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        <style jsx>{`div::-webkit-scrollbar { display: none; }`}</style>
+    <div className="d-flex align-items-center gap-2 ms-md-3 hide-scrollbar" style={{ overflowX: 'auto' }}>
                         {/* Existing Admin Control Button */}
                         <Link href="/admin" className="text-decoration-none">
                             <div 
@@ -1210,6 +1209,9 @@ export default function DashboardPage() {
       <style jsx global>{`
         .listing-row:hover td { background-color: rgba(255, 255, 255, 0.03) !important; }
         table, th, td, tr, .table { background-color: transparent !important; }
+        hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+
 
         /* --- Default Styles (Desktop) --- */
         .balance-label { font-size: 12px; white-space: nowrap; }
