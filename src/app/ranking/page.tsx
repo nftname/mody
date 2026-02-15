@@ -2,13 +2,13 @@
 import Link from 'next/link';
 import MarketTicker from '@/components/MarketTicker';
 
-// --- CONSTANTS & STYLES ---
-const GOLD_BTN_PRIMARY = '#FCD535';
-const GOLD_BTN_HIGHLIGHT = '#FFF5CC';
-const GOLD_BTN_SHADOW = '#B3882A';
-const GOLD_LIGHT = '#FFF5CC';
-const GOLD_DARK = '#B3882A';
-const GOLD_MEDIUM = '#FCD535'; 
+// --- CONSTANTS & STYLES (Extracted from Reference) ---
+const GOLD_BTN_PRIMARY = '#D4AF37';    // الذهبي الهادئ (الأساسي)
+const GOLD_BTN_HIGHLIGHT = '#E6C76A';  // الإضاءة العلوية (مخففة)
+const GOLD_BTN_SHADOW = '#B8962E';     // الظل
+const GOLD_LIGHT = '#FFD700';
+const GOLD_DARK = '#B8860B';
+const GOLD_MEDIUM = '#FDB931'; 
 const TEXT_BODY_COLOR = '#848E9C';
 const TEXT_OFF_WHITE = '#EAECEF';
 
@@ -77,7 +77,7 @@ export default function NNMConceptPage() {
             line-height: 1.6;
         }
 
-        /* Ingot Button Style */
+        /* Ingot Button Style (Updated to Calm Gold) */
         .btn-ingot {
             background: linear-gradient(180deg, ${GOLD_BTN_HIGHLIGHT} 0%, ${GOLD_BTN_PRIMARY} 40%, ${GOLD_BTN_SHADOW} 100%);
             border: 1px solid ${GOLD_BTN_SHADOW};
@@ -85,7 +85,7 @@ export default function NNMConceptPage() {
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 1px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(252, 213, 53, 0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
             text-shadow: 0 1px 0 rgba(255,255,255,0.4);
             transition: filter 0.3s ease, transform 0.2s ease;
             padding: 10px 30px; 
@@ -265,9 +265,9 @@ export default function NNMConceptPage() {
           </div>
       </section>
 
-      {/* --- BRAND TICKER --- */}
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#2B3139 !important', marginTop: 'auto', marginBottom: '50px', backgroundColor: '#1E2329', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
-          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#848E9C' }}>Built for Web3</span></div>
+      {/* --- BRAND TICKER (Color Adjusted: Border #2B3139) --- */}
+      <div className="w-100 py-3 border-top border-bottom position-relative" style={{ borderColor: '#2B3139 !important', marginTop: 'auto', marginBottom: '50px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
                   {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (
