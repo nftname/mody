@@ -670,7 +670,8 @@ export default function DashboardPage() {
                 </div>
             </div>
             
-            <div className="d-flex align-items-center gap-2">
+            <div className="d-flex align-items-center gap-2 flex-nowrap hide-scrollbar" style={{ overflowX: 'auto', width: '100%', paddingBottom: '5px' }}>
+
                 <Link href={`/profile/${address}`} className="text-decoration-none">
                     <span className="fw-normal" style={{ fontSize: '18px', fontFamily: 'monospace', color: GOLD_COLOR, cursor: 'pointer' }}>
                         {address ? `${address.slice(0,6)}...${address.slice(-4)}` : ''}
@@ -681,7 +682,7 @@ export default function DashboardPage() {
                 </button>  
                      {/* --- CHAINFACE DROPDOWN BUTTON --- */}
                 <div className="position-relative dropdown-container ms-3">
-                                        <button 
+                                            <button 
                         onClick={() => toggleDropdown('chainface')} 
                         className="btn d-flex align-items-center justify-content-center"
                         style={{ 
@@ -694,12 +695,12 @@ export default function DashboardPage() {
                             fontWeight: '600',
                             transition: 'all 0.2s',
                             whiteSpace: 'nowrap',
-                            width: 'auto',        
-                            padding: '0 12px',    
-                            flexShrink: 0        
+                            width: 'auto',
+                            padding: '0 12px',
+                            flexShrink: 0
                         }}
                     >
-                        <span>ChainFace</span>     {}
+                        <span>ChainFace</span>
                         <i className={`bi bi-chevron-${openDropdown === 'chainface' ? 'up' : 'down'} ms-1`} style={{ fontSize: '10px' }}></i>
                     </button>
 
