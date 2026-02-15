@@ -11,10 +11,6 @@ import { CONTRACT_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 import MintTemplate from '@/components/MintTemplate';
 
-const GOLD_BTN_PRIMARY = '#D4AF37';
-const GOLD_BTN_HIGHLIGHT = '#E6C76A';
-const GOLD_BTN_SHADOW = '#B8962E';
-
 const CONTRACT_ABI = parseAbi([
   "function owner() view returns (address)",
   "function registeredNames(bytes32) view returns (bool)",
@@ -78,7 +74,7 @@ const MintContent = () => {
     }
   };
 
-  const generateSnapshot = async (name: string, tier: string): Promise<Blob | null> => {
+  const generateSnapshot = async (name: string, tier: string) => {
     setSnapshotData({ name, tier });
     
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -125,7 +121,7 @@ const MintContent = () => {
         if (isRegistered) setStatus('taken');
         else setStatus('available');
 
-    } catch (err: any) {
+    } catch (err) {
         console.error("Check Error:", err);
         setStatus('available'); 
     } finally {
@@ -134,7 +130,7 @@ const MintContent = () => {
   };
 
   useEffect(() => {
-    let interval: any;
+    let interval: NodeJS.Timeout;
     if (showModal && modalType === 'process' && timer > 0) {
         interval = setInterval(() => setTimer(prev => prev - 1), 1000);
     } else if (timer === 0 && modalType === 'process') {
@@ -315,7 +311,6 @@ const MintContent = () => {
                      console.error("❌ Failed to save metadata:", e);
                  }
                  
-                 // التعديل: تمرير الـ ID لربط النقاط به
                  if (address) notifyRewardSystem(address, tierName, mintedId);
              }
           }
@@ -330,12 +325,12 @@ const MintContent = () => {
       }
   };
 
-  const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
+  const GOLD_GRADIENT_DIAGONAL = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
   if (!mounted) return null;
 
   return (
-    <main dir="ltr" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
+    <main dir="ltr" style={{ backgroundColor: '#181A20', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
       
       <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
         <MintTemplate 
@@ -346,10 +341,10 @@ const MintContent = () => {
       </div>
 
       <div className="container hero-container text-center">
-        <h1 className="text-white fw-bold mb-2" style={{ fontSize: '32px', fontFamily: 'serif', letterSpacing: '1px', color: '#E0E0E0' }}>
-          Claim Your Nexus <span style={{ background: 'linear-gradient(180deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Digital Name</span> Assets
+        <h1 className="fw-bold mb-2" style={{ fontSize: '32px', fontFamily: 'serif', letterSpacing: '1px', color: '#EAECEF' }}>
+          Claim Your Nexus <span style={{ background: GOLD_GRADIENT_DIAGONAL, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Digital Name</span> Assets
         </h1>
-        <p className="mx-auto" style={{ maxWidth: '600px', fontFamily: '"Inter", "Segoe UI", sans-serif', fontSize: '15px', lineHeight: '1.6', color: '#B0B0B0' }}>
+        <p className="mx-auto" style={{ maxWidth: '600px', fontFamily: '"Inter", "Segoe UI", sans-serif', fontSize: '15px', lineHeight: '1.6', color: '#848E9C' }}>
           Mint your visual Nexus Name asset on the Polygon network. First-come, first-served. Immutable. Global. Yours forever.
         </p>
       </div>
@@ -359,28 +354,28 @@ const MintContent = () => {
           <form onSubmit={checkAvailability} className="position-relative">
             <input 
               type="text" 
-              className="form-control text-white text-center" 
+              className="form-control text-center" 
               placeholder="Enter name to check ..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={handleInputFocus} 
-              style={{ backgroundColor: '#161b22', border: status === 'available' ? '1px solid #0ecb81' : (status === 'taken' ? '1px solid #f6465d' : '1px solid rgba(252, 213, 53, 0.6)'), borderRadius: '50px', height: '52px', fontSize: '20px', fontWeight: '300', boxShadow: '0 0 30px rgba(0,0,0,0.5)', color: '#fff', caretColor: '#FCD535' }}
+              style={{ backgroundColor: '#1E2329', border: status === 'available' ? '1px solid #0ecb81' : (status === 'taken' ? '1px solid #f6465d' : '1px solid #2B3139'), borderRadius: '50px', height: '52px', fontSize: '20px', fontWeight: '300', boxShadow: '0 0 30px rgba(0,0,0,0.5)', color: '#EAECEF', caretColor: '#FCD535' }}
             />
-            <button type="submit" className="btn position-absolute top-50 start-0 translate-middle-y ms-1 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '42px', height: '42px', background: GOLD_GRADIENT, border: 'none', transition: 'all 0.3s', right: '5px' }}>
+            <button type="submit" className="btn position-absolute top-50 start-0 translate-middle-y ms-1 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '42px', height: '42px', background: GOLD_GRADIENT_DIAGONAL, border: 'none', transition: 'all 0.3s', right: '5px' }}>
                 {isSearching ? <div className="spinner-border text-dark" style={{ width: '18px', height: '18px' }} role="status"></div> : <i className="bi bi-search text-dark" style={{ fontSize: '20px' }}></i>}
             </button>
           </form>
 
           <div style={{ height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '6px', marginBottom: '0px' }}>
-            {status === 'available' && <div className="d-inline-flex align-items-center gap-2 px-4 py-1 rounded-pill fade-in" style={{ backgroundColor: 'rgba(14, 203, 129, 0.1)', border: '1px solid #0ecb81' }}><i className="bi bi-check-circle-fill" style={{ color: '#0ecb81', fontSize: '14px' }}></i><span className="text-white fw-bold" style={{ fontSize: '13px' }}>Available! You can mint now.</span></div>}
-            {status === 'taken' && <div className="d-inline-flex align-items-center gap-2 px-4 py-1 rounded-pill fade-in" style={{ backgroundColor: 'rgba(246, 70, 93, 0.1)', border: '1px solid #f6465d' }}><i className="bi bi-x-circle-fill" style={{ color: '#f6465d', fontSize: '14px' }}></i><span className="text-white fw-bold" style={{ fontSize: '13px' }}>Taken! Please choose another.</span></div>}
-            {status === 'too_short' && <div className="d-inline-flex align-items-center gap-2 px-4 py-1 rounded-pill fade-in" style={{ backgroundColor: 'rgba(246, 70, 93, 0.1)', border: '1px solid #f6465d' }}><i className="bi bi-exclamation-circle-fill" style={{ color: '#f6465d', fontSize: '14px' }}></i><span className="text-white fw-bold" style={{ fontSize: '13px' }}>Min. 2 characters required!</span></div>}
+            {status === 'available' && <div className="d-inline-flex align-items-center gap-2 px-4 py-1 rounded-pill fade-in" style={{ backgroundColor: 'rgba(14, 203, 129, 0.1)', border: '1px solid #0ecb81' }}><i className="bi bi-check-circle-fill" style={{ color: '#0ecb81', fontSize: '14px' }}></i><span className="fw-bold" style={{ fontSize: '13px', color: '#EAECEF' }}>Available! You can mint now.</span></div>}
+            {status === 'taken' && <div className="d-inline-flex align-items-center gap-2 px-4 py-1 rounded-pill fade-in" style={{ backgroundColor: 'rgba(246, 70, 93, 0.1)', border: '1px solid #f6465d' }}><i className="bi bi-x-circle-fill" style={{ color: '#f6465d', fontSize: '14px' }}></i><span className="fw-bold" style={{ fontSize: '13px', color: '#EAECEF' }}>Taken! Please choose another.</span></div>}
+            {status === 'too_short' && <div className="d-inline-flex align-items-center gap-2 px-4 py-1 rounded-pill fade-in" style={{ backgroundColor: 'rgba(246, 70, 93, 0.1)', border: '1px solid #f6465d' }}><i className="bi bi-exclamation-circle-fill" style={{ color: '#f6465d', fontSize: '14px' }}></i><span className="fw-bold" style={{ fontSize: '13px', color: '#EAECEF' }}>Min. 2 characters required!</span></div>}
           </div>
         </div>
       </div>
 
       <div className="container mt-0">
-        <h5 className="text-white text-center mb-4 select-asset-title" style={{ letterSpacing: '2px', fontSize: '11px', textTransform: 'uppercase', color: '#888' }}>Select Asset Class</h5>
+        <h5 className="text-center mb-4 select-asset-title" style={{ letterSpacing: '2px', fontSize: '11px', textTransform: 'uppercase', color: '#848E9C' }}>Select Asset Class</h5>
         <div className="row justify-content-center g-2 mobile-clean-stack"> 
             <LuxuryIngot 
                 label="IMMORTAL" 
@@ -410,18 +405,18 @@ const MintContent = () => {
 
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ width: '100%', maxWidth: '420px', backgroundColor: '#161b22', border: '1px solid #333', borderRadius: '20px', padding: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative' }}>
-                <button onClick={handleCloseModal} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#666', fontSize: '24px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
+            <div style={{ width: '100%', maxWidth: '420px', backgroundColor: '#1E2329', border: '1px solid #2B3139', borderRadius: '20px', padding: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative' }}>
+                <button onClick={handleCloseModal} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#848E9C', fontSize: '24px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
 
                 {modalType === 'success' && (
                    <div className="fade-in">
-                     <div className="mb-3"><i className="bi bi-check-circle-fill text-success" style={{fontSize: '3.5rem'}}></i></div>
-                     <h3 className="text-white fw-bold mb-2">History Made!</h3>
-                     <p className="text-secondary mb-4">The name <span style={{color: '#FCD535'}}>{searchTerm}</span> is now your eternal digital asset.</p>
+                     <div className="mb-3"><i className="bi bi-check-circle-fill" style={{fontSize: '3.5rem', color: '#0ecb81'}}></i></div>
+                     <h3 className="fw-bold mb-2" style={{ color: '#EAECEF' }}>History Made!</h3>
+                     <p className="mb-4" style={{ color: '#848E9C' }}>The name <span style={{color: '#FCD535'}}>{searchTerm}</span> is now your eternal digital asset.</p>
                      <Link href={`/dashboard`} passHref>
-                        <button className="btn w-100 fw-bold py-3" style={{ background: GOLD_GRADIENT, border: 'none', color: '#000', fontSize: '16px', borderRadius: '8px' }}>View Your New Asset <i className="bi bi-arrow-right ms-2"></i></button>
+                        <button className="btn w-100 fw-bold py-3" style={{ background: GOLD_GRADIENT_DIAGONAL, border: 'none', color: '#181A20', fontSize: '16px', borderRadius: '8px' }}>View Your New Asset <i className="bi bi-arrow-right ms-2"></i></button>
                      </Link>
-                     <div className="mt-3"><button onClick={handleCloseModal} className="btn btn-link text-secondary text-decoration-none" style={{fontSize: '12px'}}>Mint Another</button></div>
+                     <div className="mt-3"><button onClick={handleCloseModal} className="btn btn-link text-decoration-none" style={{fontSize: '12px', color: '#848E9C'}}>Mint Another</button></div>
                    </div>
                 )}
 
@@ -429,21 +424,21 @@ const MintContent = () => {
                    <div className="fade-in">
                      <div className="mb-4 position-relative d-inline-block">
                         <div className="spinner-border" style={{ color: '#FCD535', width: '4rem', height: '4rem', borderWidth: '0.25em' }} role="status"></div>
-                        <div className="position-absolute top-50 start-50 translate-middle text-white fw-bold" style={{ fontSize: '14px' }}>{timer}</div>
+                        <div className="position-absolute top-50 start-50 translate-middle fw-bold" style={{ fontSize: '14px', color: '#EAECEF' }}>{timer}</div>
                      </div>
-                     <h4 className="text-white fw-bold mb-2">Processing...</h4>
-                     <p className="text-warning mb-2 fw-bold" style={{ fontSize: '14px' }}>{processStep}</p>
-                     <p className="text-secondary mb-4" style={{ fontSize: '13px' }}>Do not close this window. Auto-reset in {timer}s.</p>
-                     <button onClick={handleCloseModal} className="btn btn-link text-muted text-decoration-none" style={{fontSize: '12px'}}>Cancel & Reset UI</button>
+                     <h4 className="fw-bold mb-2" style={{ color: '#EAECEF' }}>Processing...</h4>
+                     <p className="mb-2 fw-bold" style={{ fontSize: '14px', color: '#FCD535' }}>{processStep}</p>
+                     <p className="mb-4" style={{ fontSize: '13px', color: '#848E9C' }}>Do not close this window. Auto-reset in {timer}s.</p>
+                     <button onClick={handleCloseModal} className="btn btn-link text-decoration-none" style={{fontSize: '12px', color: '#848E9C'}}>Cancel & Reset UI</button>
                    </div>
                 )}
 
                 {modalType === 'error' && (
                     <div className="fade-in">
-                        <i className="bi bi-info-circle-fill mb-3" style={{ fontSize: '3rem', color: '#E6C76A' }}></i>
-                        <h5 className="text-white fw-bold mb-3">{errorTitle || "Notice"}</h5>
-                        <p className="text-secondary mb-4" style={{ fontSize: '14px' }}>{errorMessage}</p>
-                        <button onClick={handleCloseModal} className="btn w-100 fw-bold" style={{ backgroundColor: 'transparent', color: '#fff', border: '1px solid #666' }}>Close & Retry</button>
+                        <i className="bi bi-info-circle-fill mb-3" style={{ fontSize: '3rem', color: '#FCD535' }}></i>
+                        <h5 className="fw-bold mb-3" style={{ color: '#EAECEF' }}>{errorTitle || "Notice"}</h5>
+                        <p className="mb-4" style={{ fontSize: '14px', color: '#848E9C' }}>{errorMessage}</p>
+                        <button onClick={handleCloseModal} className="btn w-100 fw-bold" style={{ backgroundColor: 'transparent', color: '#EAECEF', border: '1px solid #848E9C' }}>Close & Retry</button>
                     </div>
                 )}
             </div>
@@ -455,19 +450,19 @@ const MintContent = () => {
         .force-ltr { direction: ltr !important; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .form-control::placeholder { color: #444; font-weight: 300; }
-        .form-control:focus { background-color: #0d1117 !important; color: #fff !important; border-color: #FCD535 !important; }
+        .form-control::placeholder { color: #848E9C; font-weight: 300; }
+        .form-control:focus { background-color: #1E2329 !important; color: #EAECEF !important; border-color: #FCD535 !important; }
         
         .btn-ingot {
-            background: linear-gradient(180deg, ${GOLD_BTN_HIGHLIGHT} 0%, ${GOLD_BTN_PRIMARY} 40%, ${GOLD_BTN_SHADOW} 100%);
-            border: 1px solid ${GOLD_BTN_SHADOW};
-            color: #2b1d00;
+            background: linear-gradient(180deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%);
+            border: 1px solid #B3882A;
+            color: #181A20;
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 1px;
             font-size: 1rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
-            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(252, 213, 53, 0.2);
+            text-shadow: none;
             transition: filter 0.3s ease, transform 0.2s ease;
             white-space: nowrap;
             display: flex;
@@ -476,7 +471,7 @@ const MintContent = () => {
             border-radius: 4px;
         }
 
-        .btn-ingot:hover { filter: brightness(1.08); transform: translateY(-1px); color: #1a1100; }
+        .btn-ingot:hover { filter: brightness(1.08); transform: translateY(-1px); color: #000000; }
         .btn-ingot:disabled { opacity: 0.7; cursor: not-allowed; filter: grayscale(0.5); }
         .hero-container { padding-top: 20px; padding-bottom: 0px; }
         .select-asset-title { margin-bottom: 2rem !important; }
@@ -497,13 +492,21 @@ const MintContent = () => {
   );
 }
 
-const LuxuryIngot = ({ label, price, isAvailable, onMint, isMinting }: any) => {
+interface LuxuryIngotProps {
+    label: string;
+    price: string;
+    isAvailable: boolean;
+    onMint: () => void;
+    isMinting: boolean;
+}
+
+const LuxuryIngot = ({ label, price, isAvailable, onMint, isMinting }: LuxuryIngotProps) => {
     
     const { isConnected } = useAccount(); 
     
     return (
         <div className="col-12 col-md-4 d-flex flex-column align-items-center ingot-wrapper">
-            <div className="mb-2 d-flex justify-content-center align-items-baseline gap-2 price-top-container"><span className="text-white fw-bold" style={{ fontSize: '16px', fontFamily: 'sans-serif' }}>{price}</span></div>
+            <div className="mb-2 d-flex justify-content-center align-items-baseline gap-2 price-top-container"><span className="fw-bold" style={{ fontSize: '16px', fontFamily: 'sans-serif', color: '#EAECEF' }}>{price}</span></div>
             <div className="luxury-btn-container" style={{ width: '100%' }}>
                 
                 {!isConnected ? (
@@ -541,7 +544,7 @@ const LuxuryIngot = ({ label, price, isAvailable, onMint, isMinting }: any) => {
                 )}
                 
             </div>
-            <div className="mobile-price-display" style={{ display: 'none' }}><span style={{ display: 'block', fontSize: '16px', fontWeight: '700', color: '#fff' }}>{price}</span></div>
+            <div className="mobile-price-display" style={{ display: 'none' }}><span style={{ display: 'block', fontSize: '16px', fontWeight: '700', color: '#EAECEF' }}>{price}</span></div>
         </div>
     );
 };
