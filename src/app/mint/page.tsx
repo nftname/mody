@@ -405,40 +405,44 @@ const MintContent = () => {
 
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ width: '100%', maxWidth: '420px', backgroundColor: '#1E2329', border: '1px solid #2B3139', borderRadius: '20px', padding: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative' }}>
-                <button onClick={handleCloseModal} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#848E9C', fontSize: '24px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
+            {/* تم تصغير الحجم بنسبة 25% (320px بدلاً من 420px) وتغيير الخلفية لنفس لون الموقع */}
+            <div style={{ width: '100%', maxWidth: '320px', backgroundColor: '#181A20', border: '1px solid #2B3139', borderRadius: '15px', padding: '24px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative' }}>
+                <button onClick={handleCloseModal} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: '#848E9C', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
 
                 {modalType === 'success' && (
                    <div className="fade-in">
-                     <div className="mb-3"><i className="bi bi-check-circle-fill" style={{fontSize: '3.5rem', color: '#0ecb81'}}></i></div>
-                     <h3 className="fw-bold mb-2" style={{ color: '#EAECEF' }}>History Made!</h3>
-                     <p className="mb-4" style={{ color: '#848E9C' }}>The name <span style={{color: '#FCD535'}}>{searchTerm}</span> is now your eternal digital asset.</p>
+                     {/* تم تغيير اللون إلى الذهبي وتصغير الحجم */}
+                     <div className="mb-3"><i className="bi bi-check-circle-fill" style={{fontSize: '2.6rem', color: '#FCD535'}}></i></div>
+                     <h3 className="fw-bold mb-2" style={{ color: '#EAECEF', fontSize: '1.4rem' }}>History Made!</h3>
+                     <p className="mb-3" style={{ color: '#848E9C', fontSize: '13px' }}>The name <span style={{color: '#FCD535'}}>{searchTerm}</span> is now your eternal digital asset.</p>
                      <Link href={`/dashboard`} passHref>
-                        <button className="btn w-100 fw-bold py-3" style={{ background: GOLD_GRADIENT_DIAGONAL, border: 'none', color: '#181A20', fontSize: '16px', borderRadius: '8px' }}>View Your New Asset <i className="bi bi-arrow-right ms-2"></i></button>
+                        <button className="btn w-100 fw-bold py-2" style={{ background: GOLD_GRADIENT_DIAGONAL, border: 'none', color: '#181A20', fontSize: '14px', borderRadius: '8px' }}>View Your New Asset <i className="bi bi-arrow-right ms-2"></i></button>
                      </Link>
-                     <div className="mt-3"><button onClick={handleCloseModal} className="btn btn-link text-decoration-none" style={{fontSize: '12px', color: '#848E9C'}}>Mint Another</button></div>
+                     <div className="mt-3"><button onClick={handleCloseModal} className="btn btn-link text-decoration-none" style={{fontSize: '11px', color: '#848E9C'}}>Mint Another</button></div>
                    </div>
                 )}
 
                 {modalType === 'process' && (
                    <div className="fade-in">
-                     <div className="mb-4 position-relative d-inline-block">
-                        <div className="spinner-border" style={{ color: '#FCD535', width: '4rem', height: '4rem', borderWidth: '0.25em' }} role="status"></div>
-                        <div className="position-absolute top-50 start-50 translate-middle fw-bold" style={{ fontSize: '14px', color: '#EAECEF' }}>{timer}</div>
+                     <div className="mb-3 position-relative d-inline-block">
+                        {/* تم تصغير حجم العداد */}
+                        <div className="spinner-border" style={{ color: '#FCD535', width: '3rem', height: '3rem', borderWidth: '0.2em' }} role="status"></div>
+                        <div className="position-absolute top-50 start-50 translate-middle fw-bold" style={{ fontSize: '12px', color: '#EAECEF' }}>{timer}</div>
                      </div>
-                     <h4 className="fw-bold mb-2" style={{ color: '#EAECEF' }}>Processing...</h4>
-                     <p className="mb-2 fw-bold" style={{ fontSize: '14px', color: '#FCD535' }}>{processStep}</p>
-                     <p className="mb-4" style={{ fontSize: '13px', color: '#848E9C' }}>Do not close this window. Auto-reset in {timer}s.</p>
-                     <button onClick={handleCloseModal} className="btn btn-link text-decoration-none" style={{fontSize: '12px', color: '#848E9C'}}>Cancel & Reset UI</button>
+                     <h4 className="fw-bold mb-2" style={{ color: '#EAECEF', fontSize: '1.2rem' }}>Processing...</h4>
+                     <p className="mb-2 fw-bold" style={{ fontSize: '12px', color: '#FCD535' }}>{processStep}</p>
+                     <p className="mb-3" style={{ fontSize: '11px', color: '#848E9C' }}>Do not close this window. Auto-reset in {timer}s.</p>
+                     <button onClick={handleCloseModal} className="btn btn-link text-decoration-none" style={{fontSize: '11px', color: '#848E9C'}}>Cancel & Reset UI</button>
                    </div>
                 )}
 
                 {modalType === 'error' && (
                     <div className="fade-in">
-                        <i className="bi bi-info-circle-fill mb-3" style={{ fontSize: '3rem', color: '#FCD535' }}></i>
-                        <h5 className="fw-bold mb-3" style={{ color: '#EAECEF' }}>{errorTitle || "Notice"}</h5>
-                        <p className="mb-4" style={{ fontSize: '14px', color: '#848E9C' }}>{errorMessage}</p>
-                        <button onClick={handleCloseModal} className="btn w-100 fw-bold" style={{ backgroundColor: 'transparent', color: '#EAECEF', border: '1px solid #848E9C' }}>Close & Retry</button>
+                        {/* تم تصغير حجم أيقونة الخطأ */}
+                        <i className="bi bi-info-circle-fill mb-3" style={{ fontSize: '2.2rem', color: '#FCD535' }}></i>
+                        <h5 className="fw-bold mb-2" style={{ color: '#EAECEF', fontSize: '1.1rem' }}>{errorTitle || "Notice"}</h5>
+                        <p className="mb-3" style={{ fontSize: '12px', color: '#848E9C' }}>{errorMessage}</p>
+                        <button onClick={handleCloseModal} className="btn w-100 fw-bold py-2" style={{ backgroundColor: 'transparent', color: '#EAECEF', border: '1px solid #848E9C', fontSize: '13px' }}>Close & Retry</button>
                     </div>
                 )}
             </div>
