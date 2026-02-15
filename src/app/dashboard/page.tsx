@@ -745,7 +745,8 @@ export default function DashboardPage() {
                 
                  {/* --- SECRET ADMIN BUTTON --- */}
                 {isAdmin && (
-                    <div className="d-flex align-items-center gap-2 ms-3">
+    <div className="d-flex align-items-center gap-2 ms-md-3" style={{ overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <style jsx>{`div::-webkit-scrollbar { display: none; }`}</style>
                         {/* Existing Admin Control Button */}
                         <Link href="/admin" className="text-decoration-none">
                             <div 
