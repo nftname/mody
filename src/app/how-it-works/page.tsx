@@ -2,11 +2,20 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-const GOLD_BASE = '#F0C420';
+// --- CONSTANTS & STYLES (Unified Theme) ---
+const GOLD_BTN_PRIMARY = '#D4AF37';
+const GOLD_BTN_HIGHLIGHT = '#E6C76A';
+const GOLD_BTN_SHADOW = '#B8962E';
+const GOLD_BASE = '#F0C420'; // Keeping base gold for specific accents if needed, or mapping to new system
 const GOLD_LIGHT = '#FFD700';
 const GOLD_MEDIUM = '#FDB931';
 const GOLD_DARK = '#B8860B';
-const TEXT_OFF_WHITE = '#E0E0E0';
+
+const TEXT_BODY_COLOR = '#848E9C';
+const TEXT_OFF_WHITE = '#EAECEF';
+const BG_DEEP = '#181A20';
+const BG_PANEL = '#1E2329';
+const BORDER_MAIN = '#2B3139';
 
 // --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
@@ -44,15 +53,15 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- 1. THE DIAGRAM COMPONENT ---
+// --- 1. THE DIAGRAM COMPONENT (Updated Colors) ---
 const OwnershipFlowDiagram = () => {
   return (
     <div className="w-100 overflow-hidden rounded-4 p-0 position-relative" 
        style={{ 
-         backgroundColor: '#1E1E1E',
-         border: `1px solid ${GOLD_BASE}22`,
+         backgroundColor: BG_PANEL, // Updated
+         border: `1px solid ${BORDER_MAIN}`, // Updated
          boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
-         background: 'linear-gradient(180deg, rgba(36, 36, 36, 0.7) 0%, rgba(30, 30, 30, 1) 100%)'
+         background: `linear-gradient(180deg, ${BG_PANEL} 0%, ${BG_DEEP} 100%)` // Updated Gradient
        }}>
       
       <div style={{
@@ -85,29 +94,29 @@ const OwnershipFlowDiagram = () => {
         </circle>
 
         <g transform="translate(100, 150)">
-            <rect x="-80" y="-50" width="160" height="100" rx="20" fill="#242424" stroke="#2E2E2E" strokeWidth="1" fillOpacity="0.9" />
+            <rect x="-80" y="-50" width="160" height="100" rx="20" fill="#1E2329" stroke="#2B3139" strokeWidth="1" fillOpacity="0.9" /> {/* Updated Colors */}
             <circle cx="0" cy="-15" r="22" fill="none" stroke={GOLD_BASE} strokeWidth="1.5" />
             <path d="M-10 -10 H10 V10 H-10 Z" fill="none" stroke={GOLD_BASE} strokeWidth="1.5" />
-            <text y="25" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="600" fontFamily="Inter, sans-serif">Your Wallet</text>
-            <text y="42" textAnchor="middle" fill="#B0B0B0" fontSize="11" fontFamily="Inter, sans-serif">Connect</text>
+            <text y="25" textAnchor="middle" fill={TEXT_OFF_WHITE} fontSize="14" fontWeight="600" fontFamily="Inter, sans-serif">Your Wallet</text>
+            <text y="42" textAnchor="middle" fill={TEXT_BODY_COLOR} fontSize="11" fontFamily="Inter, sans-serif">Connect</text>
         </g>
 
         <g transform="translate(450, 150)">
-            <rect x="-70" y="-50" width="140" height="100" rx="20" fill="#242424" stroke="#2E2E2E" strokeWidth="1" fillOpacity="0.9" />
+            <rect x="-70" y="-50" width="140" height="100" rx="20" fill="#1E2329" stroke="#2B3139" strokeWidth="1" fillOpacity="0.9" /> {/* Updated Colors */}
             <path d="M0 -35 L0 -5" stroke="url(#premiumGold)" strokeWidth="1" opacity="0.6" />
-            <circle cx="0" cy="-20" r="25" fill="#1E2329" stroke="url(#premiumGold)" strokeWidth="1.5" />
-            <text y="25" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="600" fontFamily="Inter, sans-serif">NNM Market</text>
-            <text y="42" textAnchor="middle" fill="#B0B0B0" fontSize="11" fontFamily="Inter, sans-serif">Mint & Trade</text>
+            <circle cx="0" cy="-20" r="25" fill="#181A20" stroke="url(#premiumGold)" strokeWidth="1.5" />
+            <text y="25" textAnchor="middle" fill={TEXT_OFF_WHITE} fontSize="14" fontWeight="600" fontFamily="Inter, sans-serif">NNM Market</text>
+            <text y="42" textAnchor="middle" fill={TEXT_BODY_COLOR} fontSize="11" fontFamily="Inter, sans-serif">Mint & Trade</text>
         </g>
 
         <g transform="translate(850, 150)">
             <circle r="50" fill="url(#premiumGold)" opacity="0.05" filter="url(#appleGlow)">
                  <animate attributeName="opacity" values="0.05;0.15;0.05" dur="3s" repeatCount="indefinite" />
             </circle>
-            <rect x="-80" y="-50" width="160" height="100" rx="20" fill="#242424" stroke={GOLD_BASE} strokeWidth="1.5" fillOpacity="0.9" />
+            <rect x="-80" y="-50" width="160" height="100" rx="20" fill="#1E2329" stroke={GOLD_BASE} strokeWidth="1.5" fillOpacity="0.9" /> {/* Updated Colors */}
             <path d="M0 -25 L-15 -15 V5 C-15 15 0 25 0 25 C0 25 15 15 15 5 V-15 Z" fill="none" stroke={GOLD_BASE} strokeWidth="2" />
             <path d="M-5 0 L0 5 L5 -5" fill="none" stroke={GOLD_BASE} strokeWidth="2" />
-            <text y="25" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="600" fontFamily="Inter, sans-serif">Sovereign Asset</text>
+            <text y="25" textAnchor="middle" fill={TEXT_OFF_WHITE} fontSize="14" fontWeight="600" fontFamily="Inter, sans-serif">Sovereign Asset</text>
             <text y="42" textAnchor="middle" fill={GOLD_BASE} fontSize="11" fontFamily="Inter, sans-serif" fontWeight="500">100% Owned</text>
         </g>
       </svg>
@@ -163,7 +172,7 @@ const faqItems = [
     }
 ];
 
-// --- 3. FAQ ACCORDION COMPONENT ---
+// --- 3. FAQ ACCORDION COMPONENT (Updated Colors) ---
 const FAQSection = () => {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
@@ -172,24 +181,24 @@ const FAQSection = () => {
     };
 
     return (
-        <div className="mt-5 pt-4 border-top border-secondary border-opacity-25">
-        <h2 className="fw-bold text-white mb-4" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>Important Notes & Common Questions</h2>
+        <div className="mt-5 pt-4" style={{ borderTop: `1px solid ${BORDER_MAIN}` }}>
+        <h2 className="fw-bold text-white mb-4" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>Important Notes & Common Questions</h2>
             <div className="d-flex flex-column gap-3">
                 {faqItems.map((item, index) => (
                     <div key={index} 
                          className="rounded-3 overflow-hidden" 
-               style={{ backgroundColor: '#242424', border: '1px solid #2E2E2E' }}>
+               style={{ backgroundColor: BG_PANEL, border: `1px solid ${BORDER_MAIN}` }}> {/* Updated Colors */}
                         <button 
                             onClick={() => toggleFAQ(index)}
                             className="w-100 d-flex justify-content-between align-items-center p-3 text-start bg-transparent border-0"
                             style={{ cursor: 'pointer', outline: 'none' }}
                         >
-                <span className="fw-semibold" style={{ color: openIndex === index ? GOLD_BASE : '#E0E0E0', fontSize: '15px' }}>
+                <span className="fw-semibold" style={{ color: openIndex === index ? GOLD_BASE : TEXT_OFF_WHITE, fontSize: '15px' }}>
                                 {item.q}
                             </span>
                             <i className={`bi bi-chevron-down`} 
                                style={{ 
-                     color: '#B0B0B0', 
+                     color: TEXT_BODY_COLOR, 
                                    transition: 'transform 0.3s',
                                    transform: openIndex === index ? 'rotate(180deg)' : 'rotate(0deg)'
                                }}></i>
@@ -200,7 +209,7 @@ const FAQSection = () => {
                                 overflow: 'hidden', 
                                 transition: 'max-height 0.3s ease-in-out'
                             }}>
-                            <div className="p-3 pt-0" style={{ fontSize: '15px', lineHeight: '1.6' }}>
+                            <div className="p-3 pt-0" style={{ fontSize: '15px', lineHeight: '1.6', color: TEXT_BODY_COLOR }}>
                                 {item.a}
                             </div>
                         </div>
@@ -214,7 +223,7 @@ const FAQSection = () => {
 // --- 4. MAIN PAGE ---
 export default function HowItWorksPage() {
   return (
-    <main className="how-page" style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px' }}>
+    <main className="how-page" style={{ backgroundColor: BG_DEEP, minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px' }}>
       
       <div className="container pt-5">
         <div className="row justify-content-center">
@@ -228,28 +237,29 @@ export default function HowItWorksPage() {
                       fontSize: '1.53rem', 
                       letterSpacing: '-1px', 
                       lineHeight: '1.2',
-                      color: '#E0E0E0'
+                      color: TEXT_OFF_WHITE
                   }}>
                 How <span style={{ color: GOLD_MEDIUM }}>NNM</span> Works
               </h1>
               <p style={{ 
                   lineHeight: '1.6',
                   marginTop: '15px',
-                  maxWidth: '900px' 
+                  maxWidth: '900px',
+                  color: TEXT_BODY_COLOR
               }}>
-                NNM is a Web3 marketplace for <strong className="text-white">Digital Name Assets</strong> — a new class of scarce, blockchain-native assets designed for long-term digital ownership, discovery, and exchange.
+                NNM is a Web3 marketplace for <strong className="text-white" style={{ color: TEXT_OFF_WHITE }}>Digital Name Assets</strong> — a new class of scarce, blockchain-native assets designed for long-term digital ownership, discovery, and exchange.
               </p>
             </header>
 
             {/* SECTIONS */}
             <section className="mb-5 ps-lg-3">
-              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 What Are <span style={{ color: GOLD_MEDIUM }}>Digital Name Assets</span>?
               </h2>
-              <p style={{ lineHeight: '1.6', marginBottom: '14px' }}>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
                 Digital Name Assets are unique, non-fungible blockchain assets that represent rare digital identifiers. They are not identities, domains, or credentials. They are collectible, ownable digital assets secured by decentralized networks and verifiable on-chain.
               </p>
-              <p style={{ lineHeight: '1.6' }}>
+              <p style={{ lineHeight: '1.6', color: TEXT_BODY_COLOR }}>
                 Each asset is defined by scarcity, provenance, and permanence. Ownership is recorded transparently on the blockchain, allowing users to hold, trade, or transfer assets without intermediaries. 
                 <span className="ms-1">
                    For insights into asset structuring and tiered classification, refer to the <Link href="/ranking" className="text-decoration-none" style={{ color: GOLD_MEDIUM, borderBottom: `1px solid ${GOLD_MEDIUM}` }}>Ranking Registry</Link>.
@@ -257,14 +267,14 @@ export default function HowItWorksPage() {
               </p>
             </section>
 
-             {/* --- Conviction Rank Section (Updated with Inline Link) --- */}
+             {/* --- Conviction Rank Section --- */}
             <section className="mb-5 ps-lg-3">
-              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 Conviction Rank — Measuring Belief, Not Hype
               </h2>
-              <p style={{ lineHeight: '1.6', marginBottom: '14px' }}>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
                 Most NFT marketplaces focus on price and volume. But Conviction Rank shows which digital names are truly backed by verified supporters. Each supporter signals real belief, creating a transparent layer of trust across the market. Conviction Rank explains why price moves before it moves and highlights assets with lasting confidence.
-                <Link href="/conviction-rank" className="text-decoration-none fw-bold ms-2" style={{ color: '#FDB931', borderBottom: '1px solid #FDB931' }}>
+                <Link href="/conviction-rank" className="text-decoration-none fw-bold ms-2" style={{ color: GOLD_MEDIUM, borderBottom: `1px solid ${GOLD_MEDIUM}` }}>
                       Learn more about Conviction Rank →
                 </Link>
               </p>
@@ -272,15 +282,15 @@ export default function HowItWorksPage() {
 
              {/* --- NEW SECTION: ChainFace --- */}
              <section className="mb-5 ps-lg-3">
-              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 ChainFace — Your <span style={{ color: GOLD_MEDIUM }}>Personal Blockchain Identity</span>
               </h2>
-              <p style={{ lineHeight: '1.6', marginBottom: '14px' }}>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
                 By claiming your unique name in the NNM Registry, you instantly gain lifetime membership in ChainFace — your personal blockchain identity visible to the world, complete with 100,000 Confet points, five stars, and free verification.
               </p>
-              <p style={{ lineHeight: '1.6' }}>
+              <p style={{ lineHeight: '1.6', color: TEXT_BODY_COLOR }}>
                 Being present on the internet is no longer a luxury — it is essential for your future. Secure your place now and establish your identity in the blockchain era.
-                <Link href="/chainface" className="text-decoration-none fw-bold ms-2" style={{ color: '#FDB931', borderBottom: '1px solid #FDB931' }}>
+                <Link href="/chainface" className="text-decoration-none fw-bold ms-2" style={{ color: GOLD_MEDIUM, borderBottom: `1px solid ${GOLD_MEDIUM}` }}>
                     Learn more about ChainFace →
                 </Link>
               </p>
@@ -288,31 +298,31 @@ export default function HowItWorksPage() {
             {/* --- END NEW SECTION --- */}
 
             <section className="mb-5 ps-lg-3">
-              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 The <span style={{ color: GOLD_MEDIUM }}>NNM Marketplace</span>
               </h2>
-              <p style={{ lineHeight: '1.6', marginBottom: '14px' }}>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
                 NNM operates as an open marketplace where users can discover, list, and exchange Digital Name Assets directly with one another. The platform does not act as a broker, advisor, or custodian.
               </p>
-              <p style={{ lineHeight: '1.6' }}>
+              <p style={{ lineHeight: '1.6', color: TEXT_BODY_COLOR }}>
                 All transactions occur through user-connected wallets. NNM does not hold user funds, does not guarantee liquidity, and does not participate in pricing decisions.
               </p>
             </section>
 
             <section className="mb-5 ps-lg-3">
-              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 NGX Index: Market Intelligence
               </h2>
-              <p style={{ lineHeight: '1.6', marginBottom: '14px' }}>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
                 NGX is a global NFT market indicator developed to observe ecosystem-wide activity. It reflects aggregated market signals across NFT sectors, including Digital Name Assets, without providing financial predictions or investment advice.
               </p>
-              <p style={{ lineHeight: '1.6' }}>
+              <p style={{ lineHeight: '1.6', color: TEXT_BODY_COLOR }}>
                 NNM is one of several data contributors to NGX. The index is informational only and does not represent performance guarantees.
               </p>
             </section>
 
             <section className="mb-5 ps-lg-3">
-              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 Sovereign Ownership Flow
               </h2>
               <div className="mt-4">
@@ -321,13 +331,13 @@ export default function HowItWorksPage() {
             </section>
 
             <section className="mb-5 ps-lg-3">
-              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: '#E0E0E0' }}>
+              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
                 Ownership & Responsibility
               </h2>
-              <p style={{ lineHeight: '1.6', marginBottom: '14px' }}>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
                 Users are solely responsible for their actions on the platform. NNM does not provide investment advice, does not assess asset value, and does not guarantee outcomes.
               </p>
-              <p style={{ lineHeight: '1.6' }}>
+              <p style={{ lineHeight: '1.6', color: TEXT_BODY_COLOR }}>
                 Digital Name Assets are not securities, identities, or financial instruments. Participation is voluntary and subject to user discretion.
               </p>
             </section>
@@ -338,7 +348,7 @@ export default function HowItWorksPage() {
             </section>
 
             {/* FOOTER */}
-            <footer className="ps-lg-3" style={{ borderTop: '1px solid #2E2E2E', paddingTop: '20px', marginTop: '40px', marginBottom: '60px' }}>
+            <footer className="ps-lg-3" style={{ borderTop: `1px solid ${BORDER_MAIN}`, paddingTop: '20px', marginTop: '40px', marginBottom: '60px' }}>
               <p style={{ fontSize: '11px', color: '#777', lineHeight: '1.5' }}>
                 NNM is a decentralized discovery and exchange platform. All content is provided for informational purposes only.
               </p>
@@ -355,7 +365,7 @@ export default function HowItWorksPage() {
         .how-page label {
           font-family: "Inter", "Segoe UI", sans-serif;
           font-size: 15px;
-          color: #B0B0B0;
+          color: ${TEXT_BODY_COLOR};
         }
         .how-page h1,
         .how-page h2,
@@ -364,7 +374,7 @@ export default function HowItWorksPage() {
         .how-page h5,
         .how-page h6,
         .how-page .text-white {
-          color: #E0E0E0 !important;
+          color: ${TEXT_OFF_WHITE} !important;
         }
         .how-page .text-gold,
         .how-page .gold,
@@ -381,8 +391,8 @@ export default function HowItWorksPage() {
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
       `}</style>
 
-      {/* --- BRAND TICKER --- */}
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '10px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+      {/* --- BRAND TICKER (Strict Compliance: Dark BG + AAA Border/Text) --- */}
+      <div className="w-100 py-3 border-top border-bottom position-relative" style={{ borderColor: '#aaa !important', marginTop: 'auto', marginBottom: '10px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
