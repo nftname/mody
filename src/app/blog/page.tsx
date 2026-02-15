@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import MarketTicker from '@/components/MarketTicker';
 
-const BACKGROUND_MAIN = '#1E1E1E';
-const CARD_BG = '#242424';
-const CARD_BORDER = '#2E2E2E';
-const TEXT_OFF_WHITE = '#E0E0E0'; 
-const TEXT_BODY = '#B0B0B0';      
-const GOLD_BASE = '#F0C420';      
-const GOLD_MEDIUM = '#FDB931';    
+const BACKGROUND_MAIN = '#181A20';
+const CARD_BG = '#1E2329';
+const CARD_BORDER = '#2B3139';
+const TEXT_OFF_WHITE = '#EAECEF'; 
+const TEXT_BODY = '#848E9C';      
+const GOLD_BASE = '#FCD535';      
+const GOLD_MEDIUM = '#FCD535';    
 
 export default function BlogLibrary() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -46,29 +46,24 @@ export default function BlogLibrary() {
         
         .font-imperium { font-family: 'Cinzel', serif; }
         
-        /* --- FIXED INGOT BUTTON --- */
         .btn-ingot {
-            background: linear-gradient(180deg, #E6C76A 0%, #D4AF37 40%, #B8962E 100%);
-            border: 1px solid #B8962E;
+            background: linear-gradient(180deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%);
+            border: 1px solid #B3882A;
             color: #2b1d00;
             font-family: 'Cinzel', serif;
             font-weight: 700;
-            letter-spacing: 0.5px; /* Reduced spacing to fit text */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(252, 213, 53, 0.1);
             text-shadow: 0 1px 0 rgba(255,255,255,0.4);
             transition: filter 0.3s ease, transform 0.2s ease;
-            
-            /* SIZING & POSITIONING */
-            width: 50%;           /* 50% of parent width */
-            margin: 0 auto;       /* Centered */
+            width: 50%;
+            margin: 0 auto;
             display: block;
             text-align: center;
-            
-            /* TEXT FITTING */
-            padding: 14px 10px;   /* Comfortable padding */
-            font-size: 0.85rem;   /* Adjusted size */
-            white-space: normal;  /* Allow text to wrap if needed */
-            line-height: 1.2;     /* Good spacing for wrapped text */
+            padding: 14px 10px;
+            font-size: 0.85rem;
+            white-space: normal;
+            line-height: 1.2;
             text-decoration: none;
             border-radius: 2px;
         }
@@ -78,7 +73,6 @@ export default function BlogLibrary() {
             color: #1a1100;
         }
 
-        /* CARD STYLES */
         .archive-card {
             background-color: ${CARD_BG};
             border: 1px solid ${CARD_BORDER};
@@ -92,7 +86,7 @@ export default function BlogLibrary() {
         .archive-card:hover {
             transform: translateY(-5px);
             border-color: ${GOLD_BASE};
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
         
         .card-img-wrapper {
@@ -107,7 +101,7 @@ export default function BlogLibrary() {
             height: 100%;
             object-fit: cover;
             transition: transform 0.5s ease;
-            opacity: 0.9;
+            opacity: 0.8;
         }
         
         .archive-card:hover .card-img {
@@ -119,10 +113,9 @@ export default function BlogLibrary() {
         .text-off-white { color: ${TEXT_OFF_WHITE} !important; }
         .text-body-gray { color: ${TEXT_BODY} !important; }
         
-        /* MOBILE ADJUSTMENTS */
         @media (max-width: 768px) {
             .btn-ingot { 
-                width: 60%; /* Slightly wider on mobile to fit text comfortably, visually looks like 50% */
+                width: 60%;
                 font-size: 0.75rem; 
             }
         }
@@ -130,7 +123,6 @@ export default function BlogLibrary() {
 
       <MarketTicker />
 
-      {/* --- PAGE HEADER --- */}
       <section className="container pt-5 pb-5">
         <div className="row">
             <div className="col-12 text-start">
@@ -148,7 +140,7 @@ export default function BlogLibrary() {
       <section className="container pb-5">
         {loading ? (
             <div className="d-flex flex-column justify-content-center align-items-center py-5" style={{ minHeight: '300px' }}>
-                 <div className="spinner-border text-secondary mb-3" role="status"></div>
+                 <div className="spinner-border text-secondary mb-3" role="status" style={{ color: TEXT_BODY }}></div>
                  <span style={{ fontSize:'11px', letterSpacing:'2px', color: TEXT_BODY, fontFamily: 'monospace' }}>ACCESSING ARCHIVES...</span>
             </div>
         ) : (
@@ -171,7 +163,7 @@ export default function BlogLibrary() {
                                                     <i className="bi bi-image" style={{ fontSize: '2rem' }}></i>
                                                 </div>
                                             )}
-                                            <div style={{ position: 'absolute', top: '15px', left: '15px', backgroundColor: 'rgba(0,0,0,0.8)', padding: '3px 8px', borderRadius: '4px', border: `1px solid ${GOLD_BASE}44` }}>
+                                            <div style={{ position: 'absolute', top: '15px', left: '15px', backgroundColor: 'rgba(24, 26, 32, 0.9)', padding: '3px 8px', borderRadius: '4px', border: `1px solid ${GOLD_BASE}44` }}>
                                                 <span style={{ color: GOLD_BASE, fontSize: '9px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>
                                                     {post.category}
                                                 </span>
@@ -180,7 +172,7 @@ export default function BlogLibrary() {
                                         
                                         <div className="p-4 flex-grow-1 d-flex flex-column">
                                             <div className="mb-2">
-                                                <span style={{ fontSize:'10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>
+                                                <span style={{ fontSize:'10px', color: TEXT_BODY, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>
                                                     {new Date(post.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                                                 </span>
                                             </div>
@@ -193,7 +185,7 @@ export default function BlogLibrary() {
                                                 {post.summary || "Click to read full report..."}
                                             </p>
 
-                                            <div className="mt-auto pt-3 border-top border-secondary" style={{ borderColor: 'rgba(255,255,255,0.05) !important' }}>
+                                            <div className="mt-auto pt-3 border-top" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
                                                 <span className="text-gold" style={{ fontSize:'10px', fontWeight:'700', letterSpacing:'1px', textTransform: 'uppercase' }}>
                                                     READ REPORT <i className="bi bi-arrow-right ms-1"></i>
                                                 </span>
@@ -206,7 +198,6 @@ export default function BlogLibrary() {
                     )}
                 </div>
 
-                {/* --- BOTTOM CTA --- */}
                 <div className="row mt-5 pt-5 mb-5">
                     <div className="col-12 text-center"> 
                         <div className="p-4 rounded-3" style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}`, maxWidth: '100%', margin: '0 auto' }}>
@@ -215,7 +206,6 @@ export default function BlogLibrary() {
                                 The registry is open. Secure your Nexus Name before the era of permanence begins.
                             </p>
                             
-                            {/* Centered Button Container */}
                             <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                                 <Link href="/mint" className="btn-ingot rounded-1">
                                     CLAIM NEXUS NAME
@@ -230,3 +220,4 @@ export default function BlogLibrary() {
     </main>
   );
 }
+
