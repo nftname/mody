@@ -621,7 +621,7 @@ export default function DashboardPage() {
                   <i className="bi bi-chevron-left"></i>
               </button>
               
-              <span style={{ color: '#8a939b', fontSize: '14px' }}>
+              <span style={{ color: '#848E9C', fontSize: '14px' }}>
                   Page {currentPage} of {totalPages}
               </span>
 
@@ -646,7 +646,7 @@ export default function DashboardPage() {
 
   if (!isConnected) {
     return (
-        <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+        <main style={{ backgroundColor: '#181A20', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
             <div className="text-center">
                 <h2 className="text-white mb-3">Connect Wallet to View Profile</h2>
                 <p className="text-secondary mb-4">Please connect your wallet to see your NNM assets.</p>
@@ -656,16 +656,16 @@ export default function DashboardPage() {
   }
 
   return (
-    <main style={{ backgroundColor: '#1E1E1E', minHeight: '100vh', width: '100%', overflowX: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
+    <main style={{ backgroundColor: '#181A20', minHeight: '100vh', width: '100%', overflowX: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
       
-      <div style={{ width: '100%', height: '180px', background: 'linear-gradient(180deg, #2b2b2b 0%, #1E1E1E 100%)', position: 'relative', borderBottom: '1px solid #2d2d2d' }}></div>
+      <div style={{ width: '100%', height: '180px', background: 'linear-gradient(180deg, #2B3139 0%, #181A20 100%)', position: 'relative', borderBottom: '1px solid #2B3139' }}></div>
 
       <div className="container mx-auto px-3" style={{ marginTop: '-90px', position: 'relative', zIndex: 10 }}>
         
         {/* Profile Header */}
         <div className="d-flex flex-column gap-1 mb-2">
-            <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #1E1E1E', background: '#161b22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
-                <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: '#1E1E1E' }}>
+            <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #181A20', background: '#181A20', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
+                <div style={{ width: '100%', height: '100%', background: GOLD_GRADIENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: '#181A20' }}>
                     {address ? address.slice(2,4).toUpperCase() : ''}
                 </div>
             </div>
@@ -676,7 +676,7 @@ export default function DashboardPage() {
                         {address ? `${address.slice(0,6)}...${address.slice(-4)}` : ''}
                     </span>
                 </Link>
-                <button onClick={copyToClipboard} className="btn p-0 border-0" style={{ color: '#8a939b' }}>
+                <button onClick={copyToClipboard} className="btn p-0 border-0" style={{ color: '#848E9C' }}>
                     {isCopied ? <i className="bi bi-check-lg text-success"></i> : <i className="bi bi-copy"></i>}
                 </button>  
                      {/* --- CHAINFACE DROPDOWN BUTTON --- */}
@@ -703,9 +703,9 @@ export default function DashboardPage() {
 
                     {/* --- DROPDOWN MENU --- */}
                     {openDropdown === 'chainface' && (
-                        <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg fade-in" style={{ top: '100%', left: 0, minWidth: '220px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 1000 }}>
+                        <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg fade-in" style={{ top: '100%', left: 0, minWidth: '220px', backgroundColor: '#181A20', border: '1px solid #2B3139', zIndex: 1000 }}>
                             
-                            <div style={{ padding: '8px 10px', borderBottom: '1px solid #333', marginBottom: '6px' }}>
+                            <div style={{ padding: '8px 10px', borderBottom: '1px solid #2B3139', marginBottom: '6px' }}>
                                 <span style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>Select Asset to Edit</span>
                             </div>
 
@@ -720,7 +720,7 @@ export default function DashboardPage() {
                                                 {/* Asset Name */}
                                                 <div className="d-flex flex-column">
                                                     <span style={{ color: '#fff', fontSize: '13px', fontWeight: '500' }}>{asset.name}</span>
-                                                    <span style={{ color: '#666', fontSize: '10px' }}>#{asset.id}</span>
+                                                    <span style={{ color: '#848E9C', fontSize: '10px' }}>#{asset.id}</span>
                                                 </div>
                                                 
                                                 {/* Arrow Icon */}
@@ -730,7 +730,7 @@ export default function DashboardPage() {
                                     ))
                                 ) : (
                                     <div className="text-center py-3">
-                                        <span style={{ color: '#666', fontSize: '12px' }}>No names owned yet.</span>
+                                        <span style={{ color: '#848E9C', fontSize: '12px' }}>No names owned yet.</span>
                                     </div>
                                 )}
                             </div>
@@ -788,20 +788,20 @@ export default function DashboardPage() {
 
             <div className="d-flex gap-5 mt-2 px-2">
                 <div className="d-flex flex-column align-items-start">
-                    <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Balance</div>
+                    <div style={{ color: '#848E9C', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Balance</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>
-                         <span style={{ fontSize: '13px', color: '#FFFFFF', marginRight: '4px' }}>POL</span>
+                         <span style={{ fontSize: '13px', color: '#EAECEF', marginRight: '4px' }}>POL</span>
                          {balanceData ? formatCompactNumber(parseFloat(balanceData.formatted)) : '0.00'}
                     </div>
                 </div>
                 <div className="d-flex flex-column align-items-start">
-                    <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Assets</div>
+                    <div style={{ color: '#848E9C', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Assets</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>{myAssets.length}</div>
                 </div>
                 <div className="d-flex flex-column align-items-start">
-                    <div style={{ color: '#8a939b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Total value</div>
+                    <div style={{ color: '#848E9C', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Total value</div>
                     <div className="text-white" style={{ fontSize: '15px', fontWeight: '600' }}>
-                        <span style={{ fontSize: '13px', color: '#FFFFFF', marginRight: '4px' }}>POL</span>
+                        <span style={{ fontSize: '13px', color: '#EAECEF', marginRight: '4px' }}>POL</span>
                         {formatCompactNumber(totalAssetValue)}
                     </div>
                 </div>
@@ -816,7 +816,7 @@ export default function DashboardPage() {
                     onClick={() => setActiveSection(tab)} 
                     className="btn px-0 position-relative pb-2"
                     style={{ 
-                        color: activeSection === tab ? '#FFFFFF' : '#8a939b', 
+                        color: activeSection === tab ? '#EAECEF' : '#848E9C', 
                         background: 'transparent', 
                         border: 'none', 
                         fontSize: '15px', 
@@ -840,24 +840,24 @@ export default function DashboardPage() {
                     <div className="col-12 col-lg-6">
                         <div className="d-flex align-items-center gap-2 position-relative">
                             <div className="position-relative dropdown-container">
-                                <button onClick={() => toggleDropdown('filter')} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
+                                <button onClick={() => toggleDropdown('filter')} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#2B3139', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6H20" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/><path d="M7 12H17" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/><path d="M10 18H14" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/></svg>
                                 </button>
                                 {openDropdown === 'filter' && (
-                                    <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
-                                        <div style={{ fontSize: '10px', color: '#8a939b', padding: '4px 8px', textTransform: 'uppercase' }}>Filter by Category</div>
+                                    <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#181A20', border: '1px solid #2B3139', zIndex: 100 }}>
+                                        <div style={{ fontSize: '10px', color: '#848E9C', padding: '4px 8px', textTransform: 'uppercase' }}>Filter by Category</div>
                                         {/* Updated Filter Options with Favorites at the end */}
                                         {['ALL', 'IMMORTAL', 'ELITE', 'FOUNDERS', 'FAVORITES'].map(tier => (
-                                            <button key={tier} onClick={() => { setSelectedTier(tier); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: selectedTier === tier ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{tier}</button>
+                                            <button key={tier} onClick={() => { setSelectedTier(tier); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: selectedTier === tier ? '#2B3139' : 'transparent', fontSize: '13px' }}>{tier}</button>
                                         ))}
                                     </div>
                                 )}
                             </div>
                             <div className="position-relative flex-grow-1">
-                                <i className="bi bi-search position-absolute" style={{ top: '8px', left: '10px', fontSize: '14px', color: '#b0b0b0' }}></i>
-                                <input type="search" placeholder="Search by name" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="form-control bg-transparent text-white border-secondary ps-5" style={{ borderRadius: '8px', borderColor: '#333', fontSize: '14px', height: '32px' }} />
+                                <i className="bi bi-search position-absolute" style={{ top: '8px', left: '10px', fontSize: '14px', color: '#848E9C' }}></i>
+                                <input type="search" placeholder="Search by name" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="form-control bg-transparent text-white border-secondary ps-5" style={{ borderRadius: '8px', borderColor: '#2B3139', fontSize: '14px', height: '32px' }} />
                             </div>
-                            <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
+                            <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#2B3139', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
                                 {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '16px' }}></i>}
                                 {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '16px' }}></i>}
                                 {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '20px' }}></i>}
@@ -884,24 +884,24 @@ export default function DashboardPage() {
             <div className="pb-5 mt-4">
                 {loading ? <div className="text-center py-5"><div className="spinner-border text-secondary" role="status"></div></div> : listedAssets.length === 0 ? (
                     <div className="table-responsive">
-                        <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff' }}><thead><tr><th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%' }}>ASSET</th></tr></thead><tbody><tr><td style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>No active listings found</td></tr></tbody></table>
+                        <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff' }}><thead><tr><th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '45%' }}>ASSET</th></tr></thead><tbody><tr><td style={{ backgroundColor: 'transparent', color: '#848E9C', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2B3139', fontSize: '14px' }}>No active listings found</td></tr></tbody></table>
                     </div>
                 ) : (
                     <>
                         <div className="table-responsive">
                             <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
                                 <thead><tr>
-                                    <th onClick={() => setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest')} style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}>ASSET <i className={`bi ${sortOrder === 'newest' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'} ms-2`} style={{ fontSize: '11px' }}></i></th>
-                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>POL</th>
-                                    <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>Exp</th>
-                                    <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '10%' }}></th> 
+                                    <th onClick={() => setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest')} style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '45%', cursor: 'pointer' }}>ASSET <i className={`bi ${sortOrder === 'newest' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'} ms-2`} style={{ fontSize: '11px' }}></i></th>
+                                    <th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '25%' }}>POL</th>
+                                    <th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '20%' }}>Exp</th>
+                                    <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2B3139', width: '10%' }}></th> 
                                 </tr></thead>
                                 <tbody>{paginatedListings.map((asset) => (
                                     <tr key={asset.id} className="align-middle listing-row">
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>{asset.name}</td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{formatCompactNumber(parseFloat(asset.price))}</td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>Active</td>
-                                        <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}><Link href={`/asset/${asset.id}`}><i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i></Link></td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2B3139', fontStyle: 'italic' }}>{asset.name}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2B3139', fontWeight: '700' }}>{formatCompactNumber(parseFloat(asset.price))}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2B3139', fontSize: '14px' }}>Active</td>
+                                        <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2B3139', textAlign: 'right' }}><Link href={`/asset/${asset.id}`}><i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i></Link></td>
                                     </tr>
                                 ))}</tbody>
                             </table>
@@ -917,20 +917,20 @@ export default function DashboardPage() {
             <div className="mt-4">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <div className="position-relative dropdown-container">
-                        <button onClick={() => toggleDropdown('offerSort')} className="btn border border-secondary d-flex flex-column align-items-center justify-content-center gap-1" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
+                        <button onClick={() => toggleDropdown('offerSort')} className="btn border border-secondary d-flex flex-column align-items-center justify-content-center gap-1" style={{ borderRadius: '8px', borderColor: '#2B3139', width: '32px', height: '32px', padding: '0', backgroundColor: 'transparent' }}>
                             <div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div><div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div><div style={{ width: '16px', height: '2px', backgroundColor: '#FFF', borderRadius: '1px' }}></div>
                         </button>
                         {openDropdown === 'offerSort' && (
-                            <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
-                                {['Newest', 'Ending Soon', 'High Price', 'Low Price'].map(sort => (<button key={sort} onClick={() => { setOfferSort(sort); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: offerSort === sort ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{sort}</button>))}
+                            <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#181A20', border: '1px solid #2B3139', zIndex: 100 }}>
+                                {['Newest', 'Ending Soon', 'High Price', 'Low Price'].map(sort => (<button key={sort} onClick={() => { setOfferSort(sort); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: offerSort === sort ? '#2B3139' : 'transparent', fontSize: '13px' }}>{sort}</button>))}
                             </div>
                         )}
                     </div>
                     <div className="position-relative dropdown-container">
-                        <button onClick={() => toggleDropdown('offerType')} className="btn d-flex align-items-center gap-2 px-3" style={{ border: '1px solid #333', borderRadius: '8px', color: '#fff', fontSize: '13px', height: '32px', backgroundColor: 'transparent' }}>{offerType} Offers <i className="bi bi-chevron-down" style={{ fontSize: '10px' }}></i></button>
+                        <button onClick={() => toggleDropdown('offerType')} className="btn d-flex align-items-center gap-2 px-3" style={{ border: '1px solid #2B3139', borderRadius: '8px', color: '#fff', fontSize: '13px', height: '32px', backgroundColor: 'transparent' }}>{offerType} Offers <i className="bi bi-chevron-down" style={{ fontSize: '10px' }}></i></button>
                         {openDropdown === 'offerType' && (
-                            <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', right: 0, width: '160px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
-                                {['All', 'Received', 'Made', 'Expired'].map(type => (<button key={type} onClick={() => { setOfferType(type); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: offerType === type ? '#2d2d2d' : 'transparent', fontSize: '13px' }}>{type} Offers</button>))}
+                            <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', right: 0, width: '160px', backgroundColor: '#181A20', border: '1px solid #2B3139', zIndex: 100 }}>
+                                {['All', 'Received', 'Made', 'Expired'].map(type => (<button key={type} onClick={() => { setOfferType(type); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: offerType === type ? '#2B3139' : 'transparent', fontSize: '13px' }}>{type} Offers</button>))}
                             </div>
                         )}
                     </div>
@@ -938,21 +938,21 @@ export default function DashboardPage() {
                 <div className="table-responsive">
                     <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0' }}>
                         <thead><tr>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '35%' }}>ASSET</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '20%' }}>WPOL</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>{offerType === 'Made' ? 'TO' : 'FROM'}</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '15%' }}>EXP</th>
-                            <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2d2d2d', width: '5%', padding: '0 20px 10px 0' }}></th> 
+                            <th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '35%' }}>ASSET</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '20%' }}>WPOL</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '25%' }}>{offerType === 'Made' ? 'TO' : 'FROM'}</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '15%' }}>EXP</th>
+                            <th style={{ backgroundColor: 'transparent', borderBottom: '1px solid #2B3139', width: '5%', padding: '0 20px 10px 0' }}></th> 
                         </tr></thead>
                         <tbody>
-                            {loading ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d' }}><div className="spinner-border text-secondary" role="status"></div></td></tr> : offersData.length === 0 ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>No offers found</td></tr> : (
+                            {loading ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#848E9C', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2B3139' }}><div className="spinner-border text-secondary" role="status"></div></td></tr> : offersData.length === 0 ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#848E9C', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2B3139', fontSize: '14px' }}>No offers found</td></tr> : (
                                 paginatedOffers.map((offer) => (
                                     <tr key={offer.id} className="align-middle listing-row">
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontStyle: 'italic' }}>{offer.assetName}</td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '700' }}>{parseFloat(offer.formattedPrice).toFixed(2)}</td>
-                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>{offerType === 'Made' ? 'Owner' : (offer.bidder_address ? <Link href={`/profile/${offer.bidder_address}`} className="text-decoration-none"><span style={{ color: GOLD_COLOR, cursor: 'pointer' }}>{`${offer.bidder_address.slice(0,4)}...${offer.bidder_address.slice(-4)}`}</span></Link> : '-')}</td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '13px' }}>{offer.timeLeft}</td>
-                                        <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2d2d2d', textAlign: 'right' }}><Link href={`/asset/${offer.token_id}`}><i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i></Link></td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2B3139', fontStyle: 'italic' }}>{offer.assetName}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2B3139', fontWeight: '700' }}>{parseFloat(offer.formattedPrice).toFixed(2)}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2B3139', fontSize: '13px' }}>{offerType === 'Made' ? 'Owner' : (offer.bidder_address ? <Link href={`/profile/${offer.bidder_address}`} className="text-decoration-none"><span style={{ color: GOLD_COLOR, cursor: 'pointer' }}>{`${offer.bidder_address.slice(0,4)}...${offer.bidder_address.slice(-4)}`}</span></Link> : '-')}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2B3139', fontSize: '13px' }}>{offer.timeLeft}</td>
+                                        <td style={{ backgroundColor: 'transparent', padding: '12px 20px 12px 0', borderBottom: '1px solid #2B3139', textAlign: 'right' }}><Link href={`/asset/${offer.token_id}`}><i className="bi bi-gear-fill text-white" style={{ cursor: 'pointer', fontSize: '16px' }}></i></Link></td>
                                     </tr>
                                 ))
                             )}
@@ -976,7 +976,7 @@ export default function DashboardPage() {
                                 Sort by <i className="bi bi-chevron-down" style={{ fontSize: '11px' }}></i>
                             </button>
                             {openDropdown === 'createdSort' && (
-                                <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
+                                <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#181A20', border: '1px solid #2B3139', zIndex: 100 }}>
                                     {['Newest', 'Oldest'].map(sort => (<button key={sort} onClick={() => { setSortOrder(sort === 'Newest' ? 'newest' : 'oldest'); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: 'transparent', fontSize: '13px' }}>Minted {sort}</button>))}
                                 </div>
                             )}
@@ -984,7 +984,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="col-lg-3"></div>
                     <div className="col-lg-3 text-end">
-                        <button onClick={toggleViewMode} className="btn border border-secondary d-inline-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
+                        <button onClick={toggleViewMode} className="btn border border-secondary d-inline-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#2B3139', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
                             {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '16px' }}></i>}
                             {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '16px' }}></i>}
                             {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '20px' }}></i>}
@@ -1002,14 +1002,14 @@ export default function DashboardPage() {
                                         Sort by <i className="bi bi-chevron-down" style={{ fontSize: '11px' }}></i>
                                     </button>
                                     {openDropdown === 'createdSort' && (
-                                        <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#1E1E1E', border: '1px solid #333', zIndex: 100 }}>
+                                        <div className="position-absolute mt-2 p-2 rounded-3 shadow-lg" style={{ top: '100%', left: 0, width: '180px', backgroundColor: '#181A20', border: '1px solid #2B3139', zIndex: 100 }}>
                                             {['Newest', 'Oldest'].map(sort => (<button key={sort} onClick={() => { setSortOrder(sort === 'Newest' ? 'newest' : 'oldest'); setOpenDropdown(null); }} className="btn w-100 text-start btn-sm text-white" style={{ backgroundColor: 'transparent', fontSize: '13px' }}>Minted {sort}</button>))}
                                         </div>
                                     )}
                                 </div>
                             </div>
                             <div className="ms-auto">
-                                <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#333', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
+                                <button onClick={toggleViewMode} className="btn border border-secondary d-flex align-items-center justify-content-center" style={{ borderRadius: '8px', borderColor: '#2B3139', width: '32px', height: '32px', color: '#FFF', padding: 0, backgroundColor: 'transparent' }}>
                                     {currentViewMode === 'grid' && <i className="bi bi-grid-fill" style={{ fontSize: '16px' }}></i>}
                                     {currentViewMode === 'large' && <i className="bi bi-square-fill" style={{ fontSize: '16px' }}></i>}
                                     {currentViewMode === 'list' && <i className="bi bi-list-ul" style={{ fontSize: '20px' }}></i>}
@@ -1038,38 +1038,38 @@ export default function DashboardPage() {
                 <div className="table-responsive">
                     <table className="table mb-0" style={{ backgroundColor: 'transparent', color: '#fff', borderCollapse: 'separate', borderSpacing: '0', fontSize: '11px' }}>
                         <thead><tr>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '12%' }}>Event</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '18%' }}>W/POL</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>From</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '25%' }}>To</th>
-                            <th style={{ backgroundColor: 'transparent', color: '#8a939b', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2d2d2d', padding: '0 0 10px 0', width: '10%', textAlign: 'right' }}>Date</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '12%' }}>Event</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '18%' }}>W/POL</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '25%' }}>From</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '25%' }}>To</th>
+                            <th style={{ backgroundColor: 'transparent', color: '#848E9C', fontWeight: 'normal', fontSize: '13px', borderBottom: '1px solid #2B3139', padding: '0 0 10px 0', width: '10%', textAlign: 'right' }}>Date</th>
                         </tr></thead>
                         <tbody>
-                            {loading ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d' }}><div className="spinner-border text-secondary" role="status"></div></td></tr> : activityData.length === 0 ? (
-                                <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#8a939b', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2d2d2d', fontSize: '14px' }}>No recent activity found</td></tr>
+                            {loading ? <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#848E9C', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2B3139' }}><div className="spinner-border text-secondary" role="status"></div></td></tr> : activityData.length === 0 ? (
+                                <tr><td colSpan={5} style={{ backgroundColor: 'transparent', color: '#848E9C', textAlign: 'center', padding: '60px 0', borderBottom: '1px solid #2B3139', fontSize: '14px' }}>No recent activity found</td></tr>
                             ) : (
                                 paginatedActivity.map((activity, index) => (
                                     <tr key={index} className="align-middle listing-row" style={{ cursor: 'pointer' }} onClick={() => window.location.href = `/asset/${activity.tokenId}`}>
-                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '11px' }}>
+                                        <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2B3139', fontSize: '11px' }}>
                                             <span>{activity.type}</span>
                                         </td>
                                         {(() => {
                                             const val = getActivityValue(activity.type, activity.price);
                                             return (
-                                                <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontWeight: '600' }}>
+                                                <td style={{ backgroundColor: 'transparent', color: '#fff', padding: '12px 0', borderBottom: '1px solid #2B3139', fontWeight: '600' }}>
                                                     {/* Display Number ONLY - Off-White Color (#E0E0E0) - No Suffix */}
                                                     <span style={{ color: '#E0E0E0' }}>{val.label}</span>
                                                 </td>
                                             );
                                         })()}
-                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>
+                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2B3139', fontSize: '12px' }}>
                                             {activity.from === '0x0000000000000000000000000000000000000000' ? 'NullAddress' : (
                                                 <a href={`https://polygonscan.com/address/${activity.from}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>
                                                     {activity.from.toLowerCase() === address?.toLowerCase() ? 'You' : `${activity.from.slice(0,4)}...${activity.from.slice(-4)}`}
                                                 </a>
                                             )}
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '12px' }}>
+                                        <td style={{ backgroundColor: 'transparent', color: GOLD_COLOR, padding: '12px 0', borderBottom: '1px solid #2B3139', fontSize: '12px' }}>
                                             {activity.to === 'Market' ? (
                                                 <a href={`https://polygonscan.com/address/${MARKETPLACE_ADDRESS}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: GOLD_COLOR, textDecoration: 'none' }}>Market</a>
                                             ) : (
@@ -1078,7 +1078,7 @@ export default function DashboardPage() {
                                                 </a>
                                             )}
                                         </td>
-                                        <td style={{ backgroundColor: 'transparent', color: '#8a939b', padding: '12px 0', borderBottom: '1px solid #2d2d2d', fontSize: '11px', textAlign: 'right' }}>{formatShortTime(activity.date)}</td>
+                                        <td style={{ backgroundColor: 'transparent', color: '#848E9C', padding: '12px 0', borderBottom: '1px solid #2B3139', fontSize: '11px', textAlign: 'right' }}>{formatShortTime(activity.date)}</td>
                                     </tr>
                                 ))
                             )}
@@ -1093,19 +1093,19 @@ export default function DashboardPage() {
         {activeSection === 'Conviction' && (
             <div className="mt-4 pb-5 fade-in">
                     {/* Header: Balances */}
-                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 p-4 rounded-4" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d' }}>
+                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 p-4 rounded-4" style={{ backgroundColor: '#181A20', border: '1px solid #2B3139' }}>
                     <div className="d-flex gap-5">
                         <div className="d-flex flex-column">
                             {/* WNNM Balance */}
-                            <span className="balance-label" style={{ color: '#8a939b', textTransform: 'uppercase', letterSpacing: '1px' }}>WNNM Balance</span>
+                            <span className="balance-label" style={{ color: '#848E9C', textTransform: 'uppercase', letterSpacing: '1px' }}>WNNM Balance</span>
                             <span className="text-white fw-bold d-flex align-items-baseline gap-1">
                                 <span className="balance-number" style={{ fontFamily: 'monospace' }}>{walletBalances.wnnm}</span>
                                 <span className="balance-unit" style={{ color: '#FCD535' }}>WNNM</span>
                             </span>
                         </div>
-                        <div className="d-flex flex-column" style={{ borderLeft: '1px solid #333', paddingLeft: '20px' }}>
+                        <div className="d-flex flex-column" style={{ borderLeft: '1px solid #2B3139', paddingLeft: '20px' }}>
                             {/* NNM Balance */}
-                            <span className="balance-label" style={{ color: '#8a939b', textTransform: 'uppercase', letterSpacing: '1px' }}>NNM Balance</span>
+                            <span className="balance-label" style={{ color: '#848E9C', textTransform: 'uppercase', letterSpacing: '1px' }}>NNM Balance</span>
                             <span className="text-white fw-bold d-flex align-items-baseline gap-1">
                                 <span className="balance-number" style={{ fontFamily: 'monospace' }}>{walletBalances.nnm}</span>
                                 <span className="balance-unit" style={{ color: '#FCD535' }}>NNM</span>
@@ -1123,14 +1123,14 @@ export default function DashboardPage() {
 
                     return (
                         <>
-                            <div className="table-responsive rounded-3" style={{ border: '1px solid #2d2d2d' }}>
-                                <table className="table mb-0" style={{ backgroundColor: '#161b22', color: '#fff', fontSize: '13px' }}>
-                                    <thead style={{ backgroundColor: '#1E1E1E' }}>
+                            <div className="table-responsive rounded-3" style={{ border: '1px solid #2B3139' }}>
+                                <table className="table mb-0" style={{ backgroundColor: '#181A20', color: '#fff', fontSize: '13px' }}>
+                                    <thead style={{ backgroundColor: '#181A20' }}>
                                         <tr>
-                                            <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Type</th>
-                                            <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Currency</th>
-                                            <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px' }}>Amount</th>
-                                            <th style={{ color: '#8a939b', fontWeight: 'normal', borderBottom: '1px solid #2d2d2d', padding: '15px', textAlign: 'right' }}>Date</th>
+                                            <th style={{ color: '#848E9C', fontWeight: 'normal', borderBottom: '1px solid #2B3139', padding: '15px' }}>Type</th>
+                                            <th style={{ color: '#848E9C', fontWeight: 'normal', borderBottom: '1px solid #2B3139', padding: '15px' }}>Currency</th>
+                                            <th style={{ color: '#848E9C', fontWeight: 'normal', borderBottom: '1px solid #2B3139', padding: '15px' }}>Amount</th>
+                                            <th style={{ color: '#848E9C', fontWeight: 'normal', borderBottom: '1px solid #2B3139', padding: '15px', textAlign: 'right' }}>Date</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1140,13 +1140,13 @@ export default function DashboardPage() {
                                             <tr><td colSpan={4} className="text-center py-5 text-secondary">No conviction history found.</td></tr>
                                         ) : (
                                             currentLogs.map((log, idx) => (
-                                                <tr key={idx} className="align-middle" style={{ borderBottom: '1px solid #2d2d2d' }}>
+                                                <tr key={idx} className="align-middle" style={{ borderBottom: '1px solid #2B3139' }}>
                                                     <td style={{ padding: '15px', color: '#fff' }}>{log.type}</td>
-                                                    <td style={{ padding: '15px', color: '#8a939b' }}>{log.currency}</td>
+                                                    <td style={{ padding: '15px', color: '#848E9C' }}>{log.currency}</td>
                                                     <td style={{ padding: '15px', fontWeight: 'bold', color: log.amount > 0 ? '#0ecb81' : '#f6465d' }}>
                                                         {log.amount > 0 ? '+' : ''}{log.amount}
                                                     </td>
-                                                    <td style={{ padding: '15px', textAlign: 'right', color: '#8a939b' }}>
+                                                    <td style={{ padding: '15px', textAlign: 'right', color: '#848E9C' }}>
                                                         {new Date(log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                     </td>
                                                 </tr>
@@ -1164,9 +1164,9 @@ export default function DashboardPage() {
                                         disabled={currentPage === 1}
                                         className="btn btn-sm"
                                         style={{
-                                            border: '1px solid #2d2d2d',
-                                            backgroundColor: currentPage === 1 ? '#0d0d0d' : '#161b22',
-                                            color: currentPage === 1 ? '#666' : '#fff',
+                                            border: '1px solid #2B3139',
+                                            backgroundColor: currentPage === 1 ? '#0d0d0d' : '#181A20',
+                                            color: currentPage === 1 ? '#848E9C' : '#fff',
                                             cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
                                             borderRadius: '6px',
                                             padding: '8px 16px',
@@ -1183,9 +1183,9 @@ export default function DashboardPage() {
                                         disabled={currentPage === totalPages}
                                         className="btn btn-sm"
                                         style={{
-                                            border: '1px solid #2d2d2d',
-                                            backgroundColor: currentPage === totalPages ? '#0d0d0d' : '#161b22',
-                                            color: currentPage === totalPages ? '#666' : '#fff',
+                                            border: '1px solid #2B3139',
+                                            backgroundColor: currentPage === totalPages ? '#0d0d0d' : '#181A20',
+                                            color: currentPage === totalPages ? '#848E9C' : '#fff',
                                             cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
                                             borderRadius: '6px',
                                             padding: '8px 16px',
@@ -1234,7 +1234,7 @@ export default function DashboardPage() {
 
       {showClaimModal && (
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="bg-dark rounded-4 p-4 text-center position-relative border border-secondary" style={{ width: '90%', maxWidth: '400px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+                <div className="rounded-4 p-4 text-center position-relative" style={{ backgroundColor: '#181A20', border: '1px solid #2B3139', width: '90%', maxWidth: '400px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
                     <button onClick={() => setShowClaimModal(false)} className="btn btn-link position-absolute top-0 end-0 text-secondary text-decoration-none fs-4"><i className="bi bi-x"></i></button>
                     
                     {claimStep === 'audit' && (
@@ -1295,19 +1295,19 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
         return (
             <div className={colClass}>
                 <Link href={`/asset/${item.id}`} className="text-decoration-none">
-                    <div className="d-flex align-items-center gap-3 p-2 rounded-3 position-relative" style={{ backgroundColor: '#161b22', border: '1px solid #2d2d2d', transition: '0.2s' }}>
+                    <div className="d-flex align-items-center gap-3 p-2 rounded-3 position-relative" style={{ backgroundColor: '#181A20', border: '1px solid #2B3139', transition: '0.2s' }}>
                         <div style={{ width: '48px', height: '48px', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
                              {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#333' }}></div>)}
                         </div>
                         <div className="flex-grow-1">
-                            <div className="text-white" style={{ fontSize: '14px', fontWeight: '600' }}>{item.name}</div>
-                            <div className="text-white" style={{ fontSize: '12px', fontWeight: '500' }}>NNM Registry</div>
+                            <div style={{ fontSize: '14px', fontWeight: '600', color: '#EAECEF' }}>{item.name}</div>
+                            <div style={{ fontSize: '12px', fontWeight: '500', color: '#848E9C' }}>NNM Registry</div>
                         </div>
                         <div className="text-end pe-4">
-                             <div className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#cccccc' }}>Not listed</span>}</div>
+                             <div style={{ fontSize: '13px', fontWeight: '600', color: '#EAECEF' }}>{item.isListed ? `${item.price} POL` : <span style={{ color: '#848E9C' }}>Not listed</span>}</div>
                         </div>
                         <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute end-0 me-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
-                             <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : '#8a939b', fontSize: '16px' }}></i>
+                             <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#EAECEF' : '#848E9C', fontSize: '16px' }}></i>
                         </button>
                     </div>
                 </Link>
@@ -1316,30 +1316,30 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
     }
     return (
       <div className={colClass}>
-          <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#161b22', borderRadius: '10px', border: '1px solid #2d2d2d', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
+          <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#181A20', borderRadius: '10px', border: '1px solid #2B3139', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
               <Link href={`/asset/${item.id}`} className="text-decoration-none h-100 d-flex flex-column">
                   <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
                        {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="asset-img" />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
                        <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
-                            <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : 'white', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
+                            <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#EAECEF' : '#EAECEF', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
                        </button>
                   </div>
                   <div className="p-3 d-flex flex-column flex-grow-1">
                       <div className="d-flex justify-content-between align-items-start mb-1">
-                          <div className="text-white fw-bold text-truncate" style={{ fontSize: '14px', maxWidth: '80%' }}>{item.name}</div>
-                          <div style={{ fontSize: '12px', color: '#cccccc' }}>#{item.id}</div>
+                          <div className="text-truncate" style={{ fontSize: '14px', fontWeight: 'bold', maxWidth: '80%', color: '#EAECEF' }}>{item.name}</div>
+                          <div style={{ fontSize: '12px', color: '#848E9C' }}>#{item.id}</div>
                       </div>
-                      <div className="text-white mb-2" style={{ fontSize: '13px', fontWeight: '500' }}>NNM Registry</div>
-                      {item.mintDate && <div className="text-white mb-2" style={{ fontSize: '11px', color: '#888' }}>Minted: {formatDate(item.mintDate)}</div>}
+                      <div className="mb-2" style={{ fontSize: '13px', fontWeight: '500', color: '#848E9C' }}>NNM Registry</div>
+                      {item.mintDate && <div className="mb-2" style={{ fontSize: '11px', color: '#848E9C' }}>Minted: {formatDate(item.mintDate)}</div>}
                       <div className="mt-auto">
-                           <div className="text-white fw-bold" style={{ fontSize: '14px' }}>{item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#cccccc' }}>Last Sale</span>}</div>
-                           {item.isListed && <div style={{ fontSize: '11px', color: '#cccccc' }}>Price</div>}
+                           <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#EAECEF' }}>{item.isListed ? `${item.price} POL` : <span className="fw-normal" style={{ fontSize: '12px', color: '#848E9C' }}>Last Sale</span>}</div>
+                           {item.isListed && <div style={{ fontSize: '11px', color: '#848E9C' }}>Price</div>}
                       </div>
                   </div>
               </Link>
           </div>
           <style jsx>{`
-            .h-100:hover { border-color: #888 !important; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+            .h-100:hover { border-color: #848E9C !important; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
             .h-100:hover .asset-img { transform: scale(1.05); }
           `}</style>
       </div>
