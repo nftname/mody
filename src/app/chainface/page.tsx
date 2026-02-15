@@ -3,11 +3,11 @@ import Link from 'next/link';
 import React from 'react';
 
 // --- CONSTANTS & STYLES ---
-const GOLD_BASE = '#F0C420';
-const GOLD_LIGHT = '#FFD700';
-const GOLD_DARK = '#B8860B';
-const TEXT_OFF_WHITE = '#E0E0E0';
-const TEXT_BODY_COLOR = '#B0B0B0';
+const GOLD_BASE = '#FCD535';
+const GOLD_LIGHT = '#FFF5CC';
+const GOLD_DARK = '#B3882A';
+const TEXT_OFF_WHITE = '#EAECEF';
+const TEXT_BODY_COLOR = '#848E9C';
 
 // --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
@@ -45,18 +45,15 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-// --- NEW: Golden Circle Check Badge (Extracted & Converted to SVG) ---
 const GoldenCheckBadge = () => (
-    <svg width="12" height="12" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '15px', filter: 'drop-shadow(0 0 2px rgba(255, 215, 0, 0.3))' }}>
+    <svg width="12" height="12" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '15px', filter: `drop-shadow(0 0 2px ${GOLD_LIGHT}44)` }}>
         <defs>
             <linearGradient id="goldBadgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#FFD700" />
-                <stop offset="100%" stopColor="#FFA500" />
+                <stop offset="0%" stopColor={GOLD_LIGHT} />
+                <stop offset="100%" stopColor={GOLD_BASE} />
             </linearGradient>
         </defs>
-        {/* الدائرة الذهبية مع الإطار الأبيض */}
         <circle cx="21" cy="21" r="20" fill="url(#goldBadgeGradient)" stroke="#ffffff" strokeWidth="2"/>
-        {/* علامة الصح السوداء */}
         <path d="M12 21l6 6 12-12" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
     </svg>
 );
@@ -64,7 +61,7 @@ const GoldenCheckBadge = () => (
 export default function ChainFacePage() {
   return (
     <main className="chainface-page" style={{ 
-      backgroundColor: '#1E1E1E', 
+      backgroundColor: '#181A20', 
       minHeight: '100vh', 
       paddingBottom: '0px', 
       fontFamily: '"Inter", "Segoe UI", sans-serif',
@@ -101,24 +98,18 @@ export default function ChainFacePage() {
             padding-bottom: 20px;
         }
 
-        /* --- FINAL SIGNATURE BUTTON STYLE (LOCKED DIMENSIONS) --- */
         .signature-btn {
             display: flex;
             align-items: center;
             justify-content: flex-start;
-            
-            /* أبعاد ثابتة غير قابلة للتغيير نهائياً */
             width: 190px !important; 
             min-width: 190px !important;
             max-width: 190px !important;
             height: 55px !important;
             min-height: 55px !important;
             max-height: 55px !important;
-            
-            /* منع الانكماش */
             flex-shrink: 0 !important;
             flex-grow: 0 !important;
-            
             background: linear-gradient(110deg, #5e1139 0%, #240b36 50%, #020c1b 100%);
             border-radius: 30px;
             padding: 0 12px;
@@ -170,13 +161,12 @@ export default function ChainFacePage() {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: flex-start; /* هذا السطر سيضبط المحاذاة */
+            align-items: flex-start;
             flex-grow: 1;
             padding-right: 5px; 
             overflow: hidden; 
         }
         
-        /* حاوية للسطر العلوي (الكلمة + الشارة) */
         .sig-top-row {
             display: flex;
             align-items: center;
@@ -196,19 +186,14 @@ export default function ChainFacePage() {
          .sig-name {
             font-family: 'Satoshi', sans-serif;
             font-weight: 900;
-            
-        
             font-size: 15px; 
-            
             text-transform: uppercase;
-            background: linear-gradient(to bottom, #ffffff 40%, #b0b0b0 100%);
+            background: linear-gradient(to bottom, #ffffff 40%, #848E9C 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: 0.2px;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
             display: block;
-            
-        
             white-space: nowrap;       
             overflow: hidden;         
             text-overflow: ellipsis;   
@@ -221,11 +206,9 @@ export default function ChainFacePage() {
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
       `}</style>
 
-      {/* --- HERO SECTION --- */}
       <section className="container pt-5 pb-5">
           <div className="row g-5 align-items-start">
               
-              {/* LEFT: Text Area */}
               <div className="col-12 col-lg-6 pt-2">
                   <h1 className="fw-bold mb-2" 
                       style={{ 
@@ -255,9 +238,7 @@ export default function ChainFacePage() {
                   </p>
               </div>
 
-              {/* RIGHT: Image Area & CTA BOX */}
               <div className="col-12 col-lg-6 d-flex flex-column align-items-center align-items-lg-start ps-lg-5">
-                  {/* Top Image */}
                   <div style={{ 
                       width: '100%', 
                       maxWidth: '420px', 
@@ -276,19 +257,17 @@ export default function ChainFacePage() {
                       />
                   </div>
 
-                  {/* UPPER CTA BOX */}
                   <div className="d-flex flex-column align-items-center justify-content-center rounded-3" 
                        style={{ 
                            width: '100%',
                            maxWidth: '600px', 
-                           backgroundColor: 'rgba(36, 36, 36, 0.4)', 
+                           backgroundColor: 'rgba(30, 35, 41, 0.4)', 
                            border: '1px solid rgba(255, 255, 255, 0.05)',
                            gap: '15px', 
                            textAlign: 'center',
                            padding: '15px 0' 
                        }}>
                       
-                      {/* Text */}
                       <div>
                           <p className="cf-text mb-1" style={{ fontSize: '14px', letterSpacing: '0.3px' }}>
                             Future is not about an address. It is about a <span className="text-white fw-bold">ChainFace</span>.
@@ -298,11 +277,9 @@ export default function ChainFacePage() {
                           </p>
                       </div>
 
-                      {/* Button (Top) */}
                       <Link href="/demopage" className="signature-btn" title="View Example Profile">
                           <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
-                              {/* السطر العلوي: الكلمة + الشارة */}
                               <div className="sig-top-row">
                                   <span className="sig-label">ChainFace</span>
                                   <GoldenCheckBadge />
@@ -317,11 +294,9 @@ export default function ChainFacePage() {
           </div>
       </section>
 
-      {/* --- SPLIT CONTENT LAYOUT --- */}
       <section className="container pb-5 mt-4">
           <div className="row g-5">
               
-              {/* LEFT COLUMN */}
               <div className="col-12 col-md-6 pe-md-4" style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
                   <div className="content-block">
                       <h3 className="cf-header">What Is ChainFace?</h3>
@@ -358,7 +333,6 @@ export default function ChainFacePage() {
                   </div>
               </div>
 
-              {/* RIGHT COLUMN */}
               <div className="col-12 col-md-6 ps-md-4">
                   <div className="content-block">
                       <h3 className="cf-header">Why Digital Names Matter</h3>
@@ -400,17 +374,15 @@ export default function ChainFacePage() {
               </div>
           </div>
 
-          {/* FINAL THOUGHT & SIGNATURE (BOTTOM) */}
           <div className="row justify-content-center mt-5">
               <div className="col-12 col-md-11">
                   <div className="d-flex flex-column flex-md-row align-items-center justify-content-center p-4 rounded-3" 
                        style={{ 
-                           backgroundColor: '#242424', 
-                           border: '1px solid #333',
+                           backgroundColor: '#1E2329', 
+                           border: '1px solid #2B3139',
                            gap: '25px'
                        }}>
                       
-                      {/* Text */}
                       <div className="text-center text-md-end">
                           <p className="cf-text mb-0" style={{ fontSize: '15px', letterSpacing: '0.3px' }}>
                             Future is not about an address. It is about a <span className="text-white fw-bold">ChainFace</span>.
@@ -420,12 +392,10 @@ export default function ChainFacePage() {
                           </p>
                       </div>
 
-                      {/* Button (Bottom) */}
                       <Link href="/demopage" className="signature-btn" style={{ minWidth: '190px', width: '190px', flex: 'none' }} title="View Example Profile">
 
                           <div className="sig-qr-container"><div className="sig-qr-code"></div></div>
                           <div className="sig-content">
-                              {/* السطر العلوي: الكلمة + الشارة */}
                               <div className="sig-top-row">
                                   <span className="sig-label">ChainFace</span>
                                   <GoldenCheckBadge />
@@ -439,9 +409,8 @@ export default function ChainFacePage() {
           </div>
       </section>
 
-      {/* --- BRAND TICKER --- */}
-      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#333 !important', marginTop: 'auto', marginBottom: '10px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
-          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
+      <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#2B3139 !important', marginTop: 'auto', marginBottom: '10px', backgroundColor: '#181A20', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
+          <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#848E9C' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
               <div className="marquee-track d-flex align-items-center">
                   {[...trustedBrands, ...trustedBrands, ...trustedBrands].map((brand, index) => (

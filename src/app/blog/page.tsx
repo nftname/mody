@@ -85,7 +85,7 @@ export default function BlogLibrary() {
         }
         .archive-card:hover {
             transform: translateY(-5px);
-            border-color: ${GOLD_BASE};
+            border-color: #444;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
         
@@ -163,8 +163,8 @@ export default function BlogLibrary() {
                                                     <i className="bi bi-image" style={{ fontSize: '2rem' }}></i>
                                                 </div>
                                             )}
-                                            <div style={{ position: 'absolute', top: '15px', left: '15px', backgroundColor: 'rgba(24, 26, 32, 0.9)', padding: '3px 8px', borderRadius: '4px', border: `1px solid ${GOLD_BASE}44` }}>
-                                                <span style={{ color: GOLD_BASE, fontSize: '9px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                                            <div style={{ position: 'absolute', top: '15px', left: '15px', backgroundColor: 'rgba(24, 26, 32, 0.9)', padding: '3px 8px', borderRadius: '4px', border: `1px solid #444` }}>
+                                                <span style={{ color: TEXT_BODY, fontSize: '9px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>
                                                     {post.category}
                                                 </span>
                                             </div>
@@ -220,4 +220,3 @@ export default function BlogLibrary() {
     </main>
   );
 }
-
