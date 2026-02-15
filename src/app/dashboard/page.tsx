@@ -683,23 +683,24 @@ export default function DashboardPage() {
                 <div className="position-relative dropdown-container ms-3">
                                         <button 
                         onClick={() => toggleDropdown('chainface')} 
-                        className="btn d-flex align-items-center justify-content-center px-2 px-md-3 chainface-btn" // Added chainface-btn class
+                        className="btn d-flex align-items-center justify-content-center"
                         style={{ 
                             background: 'rgba(255, 255, 255, 0.05)', 
                             border: '1px solid rgba(255, 255, 255, 0.1)', 
                             borderRadius: '6px', 
-                            color: '#FCD535',
+                            color: '#FCD535', 
                             fontSize: '13px', 
                             height: '32px', 
                             fontWeight: '600',
                             transition: 'all 0.2s',
-                            whiteSpace: 'nowrap', 
-                            minWidth: '0' 
+                            whiteSpace: 'nowrap',
+                            minWidth: '0',       
+                            width: 'auto',        
+                            padding: '0 10px'     
                         }}
                     >
-                        {}
-                        <span className="d-none d-sm-inline">ChainFace</span> {}
-                        <span className="d-inline d-sm-none">CF</span>       {}
+                        <span className="d-none d-sm-inline">ChainFace</span>
+                        <span className="d-inline d-sm-none">CF</span>
                         <i className={`bi bi-chevron-${openDropdown === 'chainface' ? 'up' : 'down'} ms-1`} style={{ fontSize: '10px' }}></i>
                     </button>
 
