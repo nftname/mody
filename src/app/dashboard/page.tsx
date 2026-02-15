@@ -670,8 +670,7 @@ export default function DashboardPage() {
                 </div>
             </div>
             
-            <div className="d-flex align-items-center gap-2" style={{ overflowX: 'auto', whiteSpace: 'nowrap', scrollbarWidth: 'none', msOverflowStyle: 'none', width: '100%', paddingRight: '15px' }}>
-    <style jsx>{`div::-webkit-scrollbar { display: none; }`}</style>
+            <div className="d-flex align-items-center gap-2">
                 <Link href={`/profile/${address}`} className="text-decoration-none">
                     <span className="fw-normal" style={{ fontSize: '18px', fontFamily: 'monospace', color: GOLD_COLOR, cursor: 'pointer' }}>
                         {address ? `${address.slice(0,6)}...${address.slice(-4)}` : ''}
