@@ -1417,7 +1417,7 @@ const formatPriceDisplay = (price: string) => {
                             right: '20px', 
                             background: 'rgba(255,255,255,0.1)', 
                             border: 'none', 
-                            color: '#fff', 
+                            color: '#848E9C',  
                             fontSize: '24px', 
                             width: '40px', 
                             height: '40px', 
@@ -1438,16 +1438,18 @@ const formatPriceDisplay = (price: string) => {
                         src={asset.image} 
                         alt={asset.name} 
                         style={{ 
-                            maxWidth: '70%', 
-                            maxHeight: '70%', 
-                            objectFit: 'contain',
+                            width: '70vw',        
+                            height: '70vh',       
+                            objectFit: 'contain', 
                             borderRadius: '12px',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                            zIndex: 10002
                         }} 
                         onClick={(e) => e.stopPropagation()}
                     />
                 </div>
             )}
+
 
             {isOfferMode && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
