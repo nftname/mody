@@ -681,24 +681,26 @@ export default function DashboardPage() {
                 </button>  
                      {/* --- CHAINFACE DROPDOWN BUTTON --- */}
                 <div className="position-relative dropdown-container ms-3">
-                    <button 
+                                        <button 
                         onClick={() => toggleDropdown('chainface')} 
-                        className="btn d-flex align-items-center gap-2 px-3" 
+                        className="btn d-flex align-items-center justify-content-center px-2 px-md-3 chainface-btn" // Added chainface-btn class
                         style={{ 
-                            background: 'rgba(252, 213, 53, 0.08)', 
-                            border: '1px solid #FCD535', 
-                            borderRadius: '8px', 
-                            color: '#FCD535', 
+                            background: 'rgba(255, 255, 255, 0.05)', 
+                            border: '1px solid rgba(255, 255, 255, 0.1)', 
+                            borderRadius: '6px', 
+                            color: '#FCD535',
                             fontSize: '13px', 
                             height: '32px', 
                             fontWeight: '600',
                             transition: 'all 0.2s',
-                            boxShadow: '0 0 10px rgba(252, 213, 53, 0.1)'
+                            whiteSpace: 'nowrap', 
+                            minWidth: '0' 
                         }}
                     >
-                        <i className="bi bi-person-vcard-fill"></i>
-                        Your ChainFace
-                        <i className={`bi bi-chevron-${openDropdown === 'chainface' ? 'up' : 'down'}`} style={{ fontSize: '10px', marginLeft: '2px' }}></i>
+                        {}
+                        <span className="d-none d-sm-inline">ChainFace</span> {}
+                        <span className="d-inline d-sm-none">CF</span>       {}
+                        <i className={`bi bi-chevron-${openDropdown === 'chainface' ? 'up' : 'down'} ms-1`} style={{ fontSize: '10px' }}></i>
                     </button>
 
                     {/* --- DROPDOWN MENU --- */}
