@@ -970,19 +970,20 @@ const formatPriceDisplay = (price: string) => {
                                             </div>
                                         </Accordion>
 
-                                        <Accordion title={`About ${asset.name}`} icon="bi-text-left">
-                                            <div className="px-3" style={{ color: OPENSEA_DESC_COLOR, fontSize: '16px', lineHeight: '1.6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
+                                                                                <Accordion title={`About ${asset.name}`} icon="bi-text-left">
+                                            <div className="px-3" style={{ color: '#848E9C', fontSize: '16px', lineHeight: '1.6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
                                                 <div className="mb-4" style={{ fontSize: '16px', fontWeight: '600', color: '#848E9C' }}>
                                                     GEN-0 Genesis — NNM Protocol Record
                                                 </div>
-                                                <p className="mb-4">
+                                                <p className="mb-4" style={{ color: '#848E9C' }}>
                                                     A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.
                                                 </p>
-                                                <p className="mb-0">
+                                                <p className="mb-0" style={{ color: '#848E9C' }}>
                                                     It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol — a permanent, time-anchored digital inscription preserved on the blockchain.
                                                 </p>
                                             </div>
                                         </Accordion>
+
 
                                         <Accordion title="Blockchain details" icon="bi-grid">
                                             <div className="px-3">
