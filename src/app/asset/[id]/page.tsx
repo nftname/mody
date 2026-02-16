@@ -972,7 +972,7 @@ const formatPriceDisplay = (price: string) => {
 
                                         <Accordion title={`About ${asset.name}`} icon="bi-text-left">
                                             <div className="px-3" style={{ color: OPENSEA_DESC_COLOR, fontSize: '16px', lineHeight: '1.6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
-                                                <div className="mb-4" style={{ fontSize: '16px', fontWeight: '600', color: OPENSEA_DESC_COLOR }}>
+                                                <div className="mb-4" style={{ fontSize: '16px', fontWeight: '600', color: '#848E9C' }}>
                                                     GEN-0 Genesis — NNM Protocol Record
                                                 </div>
                                                 <p className="mb-4">
@@ -1507,7 +1507,7 @@ const formatPriceDisplay = (price: string) => {
                 .fade-in { animation: fadeIn 0.3s; }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 
-                /* إخفاء أسهم input number */
+                
                 input::-webkit-outer-spin-button,
                 input::-webkit-inner-spin-button {
                     -webkit-appearance: none;
@@ -1517,7 +1517,7 @@ const formatPriceDisplay = (price: string) => {
                     -moz-appearance: textfield;
                 }
                 
-                /* إزالة outline والتركيز على حد ذهبي خفيف */
+            
                 .listing-price-input:focus {
                     outline: none !important;
                     box-shadow: none !important;
