@@ -12,7 +12,6 @@ export default function PWAInstallBanner() {
       e.preventDefault();
       setDeferredPrompt(e);
       
-      // عرض البانر بعد 3 ثواني من تحميل الصفحة
       setTimeout(() => {
         setShowBanner(true);
       }, 3000);
@@ -62,7 +61,7 @@ export default function PWAInstallBanner() {
         }
       `}</style>
       
-      <div className="bg-[#1a1a1a] shadow-lg border-b border-gray-800">
+      <div className="bg-[#181A20] shadow-lg border-b border-[#2B3139]">
         <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between flex-wrap">
             <div className="flex items-center flex-1">
