@@ -286,7 +286,7 @@ export default function HowItWorksPage() {
                 ChainFace — Your <span style={{ color: GOLD_MEDIUM }}>Personal Blockchain Identity</span>
               </h2>
               <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
-                By claiming your unique name in the NNM Registry, you instantly gain lifetime membership in ChainFace — your personal blockchain identity visible to the world, complete with 100,000 Confet points, five stars, and free verification.
+                By claiming your unique name in the NNM Registry, you instantly gain lifetime membership in ChainFace — your personal blockchain identity visible to the world, complete with 100,000 Conviction points, five stars, and free verification.
               </p>
               <p style={{ lineHeight: '1.6', color: TEXT_BODY_COLOR }}>
                 Being present on the internet is no longer a luxury — it is essential for your future. Secure your place now and establish your identity in the blockchain era.
