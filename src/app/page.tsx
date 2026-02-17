@@ -487,10 +487,11 @@ const handleTouchEnd = (e: React.TouchEvent) => {
                                         style={{ objectFit: 'fill' }}
                                         priority={index === 0} 
                                     />
-                                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(24,26,32,0.8) 100%)' }}></div>
+                                    {}
                                 </div>
                             </Link>
                         ))}
+
                         
                         {/* Slider Indicators */}
                         <div style={{ position: 'absolute', bottom: '15px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', gap: '8px' }}>
