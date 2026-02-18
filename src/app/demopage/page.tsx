@@ -609,12 +609,12 @@ export default function DemoProfilePage() {
         display: 'block', 
         fontSize: '12px', 
         fontWeight: '700', 
-        letterSpacing: '4px', 
+        letterSpacing: '3px', 
         textTransform: 'uppercase', 
         color: '#64748B',
-        marginBottom: '12px',
+        marginBottom: '8px',
         fontFamily: '"Inter", sans-serif',
-        opacity: '0.9'
+        opacity: '0.8'
     }}>
         Conviction
     </span>
@@ -623,12 +623,12 @@ export default function DemoProfilePage() {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        gap: '15px'
+        gap: '12px' 
     }}>
         <span style={{ 
             color: '#0F172A',
             fontSize: '28px', 
-            fontWeight: '600', 
+            fontWeight: '700', 
             fontFamily: '"Satoshi", sans-serif',
             letterSpacing: '-0.5px',
             lineHeight: '1'
@@ -636,16 +636,15 @@ export default function DemoProfilePage() {
             1,000,000
         </span>
 
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 2px 4px rgba(212, 175, 55, 0.25))' }}>
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.08))' }}>
             <defs>
-                <linearGradient id="sovereignGold" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#D4AF37" />
-                    <stop offset="45%" stopColor="#F7931A" />
-                    <stop offset="100%" stopColor="#AA771C" />
+                <linearGradient id="wealthTokenGradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#FCD535" /> 
+                    <stop offset="100%" stopColor="#F7931A" />
                 </linearGradient>
             </defs>
-            <path d="M12 2L14.4 5.2L18.2 5.6L19.4 9.4L23 11.2L21.8 15L23 18.8L19.4 20.6L18.2 24.4L14.4 22.8L12 26L9.6 22.8L5.8 24.4L4.6 20.6L1 18.8L2.2 15L1 11.2L4.6 9.4L5.8 5.6L9.6 5.2L12 2Z" fill="url(#sovereignGold)" transform="scale(0.8) translate(3,3)" />
-            <path d="M12 8L13.17 11.16L16.5 11.33L13.92 13.44L14.77 16.67L12 14.86L9.23 16.67L10.08 13.44L7.5 11.33L10.83 11.16L12 8Z" fill="#FFF" transform="scale(0.85) translate(2,2)"/>
+            <circle cx="16" cy="16" r="16" fill="url(#wealthTokenGradient)" />
+            <path d="M16 8L23 16L16 24L9 16L16 8Z" fill="#ffffff" />
         </svg>
     </div>
 </div>
