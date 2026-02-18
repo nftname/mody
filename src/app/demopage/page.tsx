@@ -604,13 +604,52 @@ export default function DemoProfilePage() {
               <FiveStars />
           </div>
 
-          <div className="conviction-box">
-              <span className="conviction-label">Conviction</span>
-              <div className="conviction-number-wrapper">
-                  <span className="conviction-number">1000,000</span>
-                  <span className="conviction-currency">NNM</span>
-              </div>
-          </div>
+<div style={{ position: 'relative', textAlign: 'center', marginTop: '25px', marginBottom: '40px' }}>
+    <span style={{ 
+        display: 'block', 
+        fontSize: '12px', 
+        fontWeight: '700', 
+        letterSpacing: '4px', 
+        textTransform: 'uppercase', 
+        color: '#64748B',
+        marginBottom: '12px',
+        fontFamily: '"Inter", sans-serif',
+        opacity: '0.9'
+    }}>
+        Conviction
+    </span>
+    
+    <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        gap: '15px'
+    }}>
+        <span style={{ 
+            color: '#0F172A',
+            fontSize: '38px', 
+            fontWeight: '600', 
+            fontFamily: '"Satoshi", sans-serif',
+            letterSpacing: '-0.5px',
+            lineHeight: '1'
+        }}>
+            1,000,000
+        </span>
+
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 2px 4px rgba(212, 175, 55, 0.25))' }}>
+            <defs>
+                <linearGradient id="sovereignGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#D4AF37" />
+                    <stop offset="45%" stopColor="#F7931A" />
+                    <stop offset="100%" stopColor="#AA771C" />
+                </linearGradient>
+            </defs>
+            <path d="M12 2L14.4 5.2L18.2 5.6L19.4 9.4L23 11.2L21.8 15L23 18.8L19.4 20.6L18.2 24.4L14.4 22.8L12 26L9.6 22.8L5.8 24.4L4.6 20.6L1 18.8L2.2 15L1 11.2L4.6 9.4L5.8 5.6L9.6 5.2L12 2Z" fill="url(#sovereignGold)" transform="scale(0.8) translate(3,3)" />
+            <path d="M12 8L13.17 11.16L16.5 11.33L13.92 13.44L14.77 16.67L12 14.86L9.23 16.67L10.08 13.44L7.5 11.33L10.83 11.16L12 8Z" fill="#FFF" transform="scale(0.85) translate(2,2)"/>
+        </svg>
+    </div>
+</div>
+
 
           <div style={{ maxWidth: '800px', margin: '20px auto', textAlign: 'center', padding: '0 20px' }}>
               
