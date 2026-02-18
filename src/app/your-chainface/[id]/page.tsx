@@ -1389,8 +1389,8 @@ export default function ChainFacePage() {
                   <img 
                       src="https://cdn-icons-png.flaticon.com/512/3557/3557840.png" 
                       alt="Royal Blue Diamond" 
-                      width="20" 
-                      height="20" 
+                      width="17" 
+                      height="17" 
                       style={{ 
                           objectFit: 'contain',
                           filter: 'drop-shadow(0 2px 4px rgba(0, 150, 255, 0.2))'
