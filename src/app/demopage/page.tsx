@@ -637,7 +637,8 @@ export default function DemoProfilePage() {
         </span>
 
         {/* رمز الأسد السيادي - رمز القوة والثروة البنكية */}
-<img src="https://cryptologos.cc/logos/lisk-lsk-logo.svg?v=026" alt="Blue Crystal" width="28" height="28" style={{ objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }} />
+git add . ; git commit -m "Update fixed viewport and Alayout fixes" --no-verify ; git push origin main
+
     </div>
 </div>
 
