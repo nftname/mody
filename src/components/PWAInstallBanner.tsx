@@ -68,7 +68,7 @@ export default function PWAInstallBanner() {
               {/* Logo */}
               <div className="flex-shrink-0">
                 <Image
-                  src="/icons/icon-192-v2.png"
+                  src="/icons/icon-512-v1.png"
                   alt="NNM"
                   width={48}
                   height={48}
