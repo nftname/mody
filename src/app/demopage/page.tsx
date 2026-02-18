@@ -612,7 +612,7 @@ export default function DemoProfilePage() {
         letterSpacing: '3px', 
         textTransform: 'uppercase', 
         color: '#64748B',
-        marginBottom: '8px',
+        marginBottom: '10px',
         fontFamily: '"Inter", sans-serif',
         opacity: '0.8'
     }}>
@@ -623,7 +623,7 @@ export default function DemoProfilePage() {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        gap: '12px' 
+        gap: '10px' 
     }}>
         <span style={{ 
             color: '#0F172A',
@@ -636,16 +636,16 @@ export default function DemoProfilePage() {
             1,000,000
         </span>
 
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.08))' }}>
-            <defs>
-                <linearGradient id="wealthTokenGradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#FCD535" /> 
-                    <stop offset="100%" stopColor="#F7931A" />
-                </linearGradient>
-            </defs>
-            <circle cx="16" cy="16" r="16" fill="url(#wealthTokenGradient)" />
-            <path d="M16 8L23 16L16 24L9 16L16 8Z" fill="#ffffff" />
-        </svg>
+        <img 
+            src="https://cryptologos.cc/logos/pax-gold-paxg-logo.svg?v=026" 
+            alt="Gold Reserve" 
+            width="30" 
+            height="30" 
+            style={{ 
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' 
+            }}
+        />
     </div>
 </div>
 
