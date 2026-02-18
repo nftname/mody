@@ -609,10 +609,10 @@ export default function DemoProfilePage() {
         display: 'block', 
         fontSize: '11px', 
         fontWeight: '700', 
-        letterSpacing: '3px', 
+        letterSpacing: '4px', 
         textTransform: 'uppercase', 
         color: '#64748B',
-        marginBottom: '8px',
+        marginBottom: '12px',
         fontFamily: '"Inter", sans-serif',
         opacity: '0.9'
     }}>
@@ -623,28 +623,29 @@ export default function DemoProfilePage() {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        gap: '8px' 
+        gap: '12px' 
     }}>
         <span style={{ 
             color: '#0F172A',
-            fontSize: '26px', 
+            fontSize: '32px', 
             fontWeight: '700', 
             fontFamily: '"Satoshi", sans-serif',
-            letterSpacing: '-0.3px',
+            letterSpacing: '-1px',
             lineHeight: '1'
         }}>
             1,000,000
         </span>
 
+        {/* رمز الأسد السيادي - رمز القوة والثروة البنكية */}
         <img 
-            src="https://cryptologos.cc/logos/tether-gold-xaut-logo.svg?v=026" 
-            alt="Sovereign Wealth Seal" 
-            width="22" 
-            height="22" 
+            src="https://cryptologos.cc/logos/unus-sed-leo-leo-logo.svg?v=026" 
+            alt="Sovereign Lion Seal" 
+            width="40" 
+            height="40" 
             style={{ 
                 objectFit: 'contain',
-                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
-                opacity: '0.95'
+                filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
+                opacity: '1'
             }}
         />
     </div>
