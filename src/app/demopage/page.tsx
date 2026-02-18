@@ -637,7 +637,7 @@ export default function DemoProfilePage() {
         </span>
 
         {/* رمز الأسد السيادي - رمز القوة والثروة البنكية */}
-<img src="https://img.icons8.com/fluency/48/diamond.png" alt="Blue Diamond" width="30" height="30" style={{ objectFit: 'contain', filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.2))' }} />
+<img src="https://img.icons8.com/fluency/48/topaz.png" alt="Gold Gem" width="30" height="30" style={{ objectFit: 'contain', filter: 'drop-shadow(0 2px 5px rgba(212, 175, 55, 0.3))' }} />
     </div>
 </div>
 
