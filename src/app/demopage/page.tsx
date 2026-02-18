@@ -627,7 +627,7 @@ export default function DemoProfilePage() {
     }}>
         <span style={{ 
             color: '#0F172A',
-            fontSize: '38px', 
+            fontSize: '28px', 
             fontWeight: '600', 
             fontFamily: '"Satoshi", sans-serif',
             letterSpacing: '-0.5px',
