@@ -607,14 +607,14 @@ export default function DemoProfilePage() {
 <div style={{ position: 'relative', textAlign: 'center', marginTop: '25px', marginBottom: '40px' }}>
     <span style={{ 
         display: 'block', 
-        fontSize: '12px', 
+        fontSize: '11px', 
         fontWeight: '700', 
         letterSpacing: '3px', 
         textTransform: 'uppercase', 
         color: '#64748B',
-        marginBottom: '10px',
+        marginBottom: '8px',
         fontFamily: '"Inter", sans-serif',
-        opacity: '0.8'
+        opacity: '0.9'
     }}>
         Conviction
     </span>
@@ -623,27 +623,28 @@ export default function DemoProfilePage() {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        gap: '12px' 
+        gap: '8px' 
     }}>
         <span style={{ 
             color: '#0F172A',
-            fontSize: '30px', 
-            fontWeight: '800', 
+            fontSize: '26px', 
+            fontWeight: '700', 
             fontFamily: '"Satoshi", sans-serif',
-            letterSpacing: '-0.5px',
+            letterSpacing: '-0.3px',
             lineHeight: '1'
         }}>
             1,000,000
         </span>
 
         <img 
-            src="https://cryptologos.cc/logos/binance-usd-busd-logo.svg?v=026" 
-            alt="Sovereign Asset" 
-            width="34" 
-            height="34" 
+            src="https://cryptologos.cc/logos/tether-gold-xaut-logo.svg?v=026" 
+            alt="Sovereign Wealth Seal" 
+            width="22" 
+            height="22" 
             style={{ 
                 objectFit: 'contain',
-                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' 
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
+                opacity: '0.95'
             }}
         />
     </div>
