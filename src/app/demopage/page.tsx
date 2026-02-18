@@ -604,15 +604,15 @@ export default function DemoProfilePage() {
               <FiveStars />
           </div>
 
-<div style={{ position: 'relative', textAlign: 'center', marginTop: '25px', marginBottom: '40px' }}>
+<div style={{ position: 'relative', textAlign: 'center', marginTop: '20px', marginBottom: '30px' }}>
     <span style={{ 
         display: 'block', 
-        fontSize: '11px', 
+        fontSize: '9px', 
         fontWeight: '700', 
-        letterSpacing: '4px', 
+        letterSpacing: '3px', 
         textTransform: 'uppercase', 
         color: '#64748B',
-        marginBottom: '10px',
+        marginBottom: '6px',
         fontFamily: '"Inter", sans-serif',
         opacity: '0.9'
     }}>
@@ -623,16 +623,16 @@ export default function DemoProfilePage() {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        gap: '12px' 
+        gap: '8px' 
     }}>
         <span style={{ 
             color: '#0F172A',
-            fontSize: '28px', 
+            fontSize: '22px', 
             fontWeight: '700', 
             fontFamily: '"Satoshi", sans-serif',
-            letterSpacing: '-0.5px',
+            letterSpacing: '-0.3px',
             lineHeight: '1',
-            paddingTop: '3px'
+            paddingTop: '2px'
         }}>
             1,000,000
         </span>
@@ -640,11 +640,11 @@ export default function DemoProfilePage() {
         <img 
             src="https://cdn-icons-png.flaticon.com/512/3557/3557840.png" 
             alt="Royal Blue Diamond" 
-            width="30" 
-            height="30" 
+            width="24" 
+            height="24" 
             style={{ 
                 objectFit: 'contain',
-                filter: 'drop-shadow(0 4px 8px rgba(0, 150, 255, 0.25))'
+                filter: 'drop-shadow(0 3px 6px rgba(0, 150, 255, 0.2))'
             }}
         />
     </div>
