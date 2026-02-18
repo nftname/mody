@@ -636,18 +636,8 @@ export default function DemoProfilePage() {
             1,000,000
         </span>
 
-        {/* رمز الأسد السيادي - رمز القوة والثروة البنكية */}
-        <img 
-            src="https://cryptologos.cc/logos/unus-sed-leo-leo-logo.svg?v=026" 
-            alt="Sovereign Lion Seal" 
-            width="40" 
-            height="40" 
-            style={{ 
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
-                opacity: '1'
-            }}
-        />
+       {}
+<img src="https://cryptologos.cc/logos/kucoin-token-kcs-logo.svg?v=026" alt="Architectural Diamond" width="28" height="28" style={{ objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }} />
     </div>
 </div>
 
