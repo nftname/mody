@@ -1351,7 +1351,7 @@ export default function ChainFacePage() {
           )}
 
 
-                    <div style={{ position: 'relative', textAlign: 'center', marginTop: '15px', marginBottom: '25px' }}>
+                    <div style={{ position: 'relative', textAlign: 'center', marginTop: '30px', marginBottom: '45px' }}>
               <span style={{ 
                   display: 'block', 
                   fontSize: '8px', 

@@ -287,8 +287,8 @@ export default function DemoProfilePage() {
         .pay-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            max-width: 800px;
+            gap: 12px;
+            max-width: 600px;
             margin: 0 auto;
         }
 
@@ -296,11 +296,11 @@ export default function DemoProfilePage() {
             background: #FFFFFF;
             border: 1px solid #E5E7EB;
             border-radius: 16px;
-            height: 72px;
+            height: 54px;
             width: 100%;
             cursor: pointer;
             transition: all 0.2s ease;
-            padding: 0 16px;
+            padding: 0 10px;
             display: flex;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
@@ -321,13 +321,13 @@ export default function DemoProfilePage() {
         }
 
         .logo-wrapper {
-            width: 32px; 
-            height: 32px;
-            min-width: 32px;
+            width: 24px; 
+            height: 24px;
+            min-width: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 14px;
+            margin-right: 10px;
         }
         
         .coin-logo {
@@ -347,13 +347,13 @@ export default function DemoProfilePage() {
         .token-name {
             font-family: 'Inter', sans-serif;
             font-weight: 700;
-            font-size: 15px;
+            font-size: 12px;
             color: #111827;
             line-height: 1.2;
         }
 
         .action-text {
-            font-size: 11px;
+            font-size: 9px;
             font-weight: 600;
             color: #6B7280;
             text-transform: uppercase;
@@ -604,7 +604,7 @@ export default function DemoProfilePage() {
               <FiveStars />
           </div>
 
-<div style={{ position: 'relative', textAlign: 'center', marginTop: '15px', marginBottom: '25px' }}>
+<div style={{ position: 'relative', textAlign: 'center', marginTop: '30px', marginBottom: '45px' }}>
     <span style={{ 
         display: 'block', 
         fontSize: '8px', 
@@ -700,3 +700,4 @@ export default function DemoProfilePage() {
     </main>
   );
 }
+
