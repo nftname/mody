@@ -623,12 +623,12 @@ export default function DemoProfilePage() {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        gap: '10px' 
+        gap: '12px' 
     }}>
         <span style={{ 
             color: '#0F172A',
-            fontSize: '28px', 
-            fontWeight: '700', 
+            fontSize: '30px', 
+            fontWeight: '800', 
             fontFamily: '"Satoshi", sans-serif',
             letterSpacing: '-0.5px',
             lineHeight: '1'
@@ -637,13 +637,13 @@ export default function DemoProfilePage() {
         </span>
 
         <img 
-            src="https://cryptologos.cc/logos/pax-gold-paxg-logo.svg?v=026" 
-            alt="Gold Reserve" 
-            width="30" 
-            height="30" 
+            src="https://cryptologos.cc/logos/binance-usd-busd-logo.svg?v=026" 
+            alt="Sovereign Asset" 
+            width="34" 
+            height="34" 
             style={{ 
                 objectFit: 'contain',
-                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' 
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' 
             }}
         />
     </div>
