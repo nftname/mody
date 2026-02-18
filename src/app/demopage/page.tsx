@@ -637,8 +637,7 @@ export default function DemoProfilePage() {
         </span>
 
         {/* رمز الأسد السيادي - رمز القوة والثروة البنكية */}
-git add . ; git commit -m "Update fixed viewport and Alayout fixes" --no-verify ; git push origin main
-
+<img src="https://cryptologos.cc/logos/waves-waves-logo.svg?v=026" alt="Black Diamond" width="28" height="28" style={{ objectFit: 'contain', filter: 'grayscale(100%) drop-shadow(0 2px 4px rgba(0,0,0,0.2))', opacity: '0.9' }} />
     </div>
 </div>
 
