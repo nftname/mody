@@ -170,7 +170,7 @@ function Home() {
         if (isPaused) return; 
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-        }, 3000); // 3 Seconds interval
+        }, 2000); // 3 Seconds interval
         return () => clearInterval(timer);
     }, [isPaused]); 
 
