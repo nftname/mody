@@ -637,7 +637,7 @@ export default function DemoProfilePage() {
         </span>
 
         {/* رمز الأسد السيادي - رمز القوة والثروة البنكية */}
-<img src="https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.svg?v=026" alt="Golden Asset" width="28" height="28" style={{ objectFit: 'contain', filter: 'drop-shadow(0 2px 3px rgba(212, 175, 55, 0.3))' }} />
+<img src="https://cryptologos.cc/logos/lisk-lsk-logo.svg?v=026" alt="Blue Crystal" width="28" height="28" style={{ objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }} />
     </div>
 </div>
 
