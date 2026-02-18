@@ -30,7 +30,6 @@ const COIN_LOGOS: any = {
     SOL: "https://cryptologos.cc/logos/solana-sol-logo.svg?v=026",
     BNB: "https://cryptologos.cc/logos/bnb-bnb-logo.svg?v=026",
     USDT: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=026",
-    // زر عام في حالة عدم تحديد شبكة
     WALLET: "https://cdn-icons-png.flaticon.com/512/60/60484.png" 
 };
 
@@ -1352,16 +1351,54 @@ export default function ChainFacePage() {
           )}
 
 
-          <div className="conviction-box">
-              <span className="conviction-label">Conviction</span>
-              <div className="conviction-number-wrapper">
-                  {/* Dynamic Conviction Score */}
-                  <span className="conviction-number">
-                    {new Intl.NumberFormat('en-US').format(profileData.stats.conviction)}
+                    <div style={{ position: 'relative', textAlign: 'center', marginTop: '15px', marginBottom: '25px' }}>
+              <span style={{ 
+                  display: 'block', 
+                  fontSize: '8px', 
+                  fontWeight: '700', 
+                  letterSpacing: '2px', 
+                  textTransform: 'uppercase', 
+                  color: '#64748B',
+                  marginBottom: '4px',
+                  fontFamily: '"Inter", sans-serif',
+                  opacity: '0.85'
+              }}>
+                  Conviction
+              </span>
+              
+              <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  gap: '6px' 
+              }}>
+                  {/* Dynamic Conviction Score with New Styling */}
+                  <span style={{ 
+                      color: '#0F172A',
+                      fontSize: '19px', 
+                      fontWeight: '700', 
+                      fontFamily: '"Satoshi", sans-serif',
+                      letterSpacing: '-0.2px',
+                      lineHeight: '1',
+                      paddingTop: '2px'
+                  }}>
+                      {new Intl.NumberFormat('en-US').format(profileData.stats.conviction)}
                   </span>
-                  <span className="conviction-currency">NNM</span>
+
+                  {/* Royal Blue Diamond Icon */}
+                  <img 
+                      src="https://cdn-icons-png.flaticon.com/512/3557/3557840.png" 
+                      alt="Royal Blue Diamond" 
+                      width="20" 
+                      height="20" 
+                      style={{ 
+                          objectFit: 'contain',
+                          filter: 'drop-shadow(0 2px 4px rgba(0, 150, 255, 0.2))'
+                      }}
+                  />
               </div>
           </div>
+
 
           <div style={{ maxWidth: '800px', margin: '20px auto', textAlign: 'center', padding: '0 20px' }}>
               
