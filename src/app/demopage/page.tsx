@@ -612,7 +612,7 @@ export default function DemoProfilePage() {
         letterSpacing: '4px', 
         textTransform: 'uppercase', 
         color: '#64748B',
-        marginBottom: '12px',
+        marginBottom: '10px',
         fontFamily: '"Inter", sans-serif',
         opacity: '0.9'
     }}>
@@ -627,19 +627,29 @@ export default function DemoProfilePage() {
     }}>
         <span style={{ 
             color: '#0F172A',
-            fontSize: '32px', 
+            fontSize: '28px', 
             fontWeight: '700', 
             fontFamily: '"Satoshi", sans-serif',
-            letterSpacing: '-1px',
-            lineHeight: '1'
+            letterSpacing: '-0.5px',
+            lineHeight: '1',
+            paddingTop: '3px'
         }}>
             1,000,000
         </span>
 
-        {/* رمز الأسد السيادي - رمز القوة والثروة البنكية */}
-<img src="https://img.icons8.com/fluency/48/topaz.png" alt="Gold Gem" width="30" height="30" style={{ objectFit: 'contain', filter: 'drop-shadow(0 2px 5px rgba(212, 175, 55, 0.3))' }} />
+        <img 
+            src="https://cdn-icons-png.flaticon.com/512/3557/3557840.png" 
+            alt="Royal Blue Diamond" 
+            width="30" 
+            height="30" 
+            style={{ 
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 4px 8px rgba(0, 150, 255, 0.25))'
+            }}
+        />
     </div>
 </div>
+
 
 
           <div style={{ maxWidth: '800px', margin: '20px auto', textAlign: 'center', padding: '0 20px' }}>
