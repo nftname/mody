@@ -4,15 +4,16 @@ import { useState, useEffect, useMemo } from 'react';
 import { createPublicClient, http, parseAbi, formatEther } from 'viem';
 import { polygon } from 'viem/chains';
 import { supabase } from '@/lib/supabase';
-import { MARKETPLACE_ADDRESS, RPC_URL } from '@/data/config';
+import { MARKETPLACE_ADDRESS } from '@/data/config';
 
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
+// نستخدم الرابط الجديد المباشر هنا لضمان العمل فوراً
 const publicClient = createPublicClient({
     chain: polygon,
-    transport: http(RPC_URL)
+    transport: http("https://polygon-bor.publicnode.com")
 });
 
 export function useMarketData(timeFilter: string = 'All') {
@@ -24,9 +25,14 @@ export function useMarketData(timeFilter: string = 'All') {
         const fetchPrices = async () => {
             try {
                 const res = await fetch('/api/prices');
+                if (!res.ok) throw new Error('Price API failed');
                 const data = await res.json();
                 setExchangeRates({ pol: data.pol || 0, eth: data.eth || 0 });
-            } catch (e) { console.error(e); }
+            } catch (e) { 
+                // في حال فشل الـ API الخاص بك، نضع قيماً افتراضية لكي لا يتوقف الموقع
+                console.error("Price fetch error:", e);
+                setExchangeRates({ pol: 0.40, eth: 3000 }); 
+            }
         };
         fetchPrices();
         const interval = setInterval(fetchPrices, 60000);
@@ -37,6 +43,7 @@ export function useMarketData(timeFilter: string = 'All') {
         const fetchMarketData = async () => {
             setLoading(true);
             try {
+                // 1. جلب البيانات من البلوكشين عبر الرابط الجديد
                 const data = await publicClient.readContract({
                     address: MARKETPLACE_ADDRESS as `0x${string}`,
                     abi: MARKET_ABI,
@@ -52,6 +59,7 @@ export function useMarketData(timeFilter: string = 'All') {
 
                 const tokenIdsStr = tokenIds.map(id => id.toString());
 
+                // 2. جلب البيانات من قاعدة البيانات
                 const [
                     { data: dbAssets },
                     { data: allActivities },
@@ -108,7 +116,9 @@ export function useMarketData(timeFilter: string = 'All') {
                     const tid = Number(id);
                     const idStr = id.toString();
                     
+                    // إذا لم نجد الاسم في الداتا بيز، نضع اسماً افتراضياً مؤقتاً
                     const meta = assetsMap[idStr] || { name: `Asset #${id}`, tier: 'Common' };
+                    
                     const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0, mintTime: 0 };
                     const offersCount = offersCountMap[tid] || 0;
                     
@@ -152,7 +162,12 @@ export function useMarketData(timeFilter: string = 'All') {
                 });
                 
                 setListings(items);
-            } catch (error) { console.error("Market Data Error:", error); } finally { setLoading(false); }
+            } catch (error) { 
+                console.error("Market Data Error:", error); 
+                setLoading(false);
+            } finally { 
+                setLoading(false); 
+            }
         };
         fetchMarketData();
     }, []);
