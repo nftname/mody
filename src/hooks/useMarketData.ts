@@ -1,15 +1,17 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { createPublicClient, http, parseAbi, formatEther } from 'viem';
 import { polygon } from 'viem/chains';
 import { supabase } from '@/lib/supabase';
-import { MARKETPLACE_ADDRESS, RPC_URL } from '@/data/config';
+import { MARKETPLACE_ADDRESS } from '@/data/config';
 
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
+// استخدام رابط RPC قوي ومستقر ومجاني لضمان عدم توقف الموقع
 const publicClient = createPublicClient({
     chain: polygon,
     transport: http("https://polygon-bor.publicnode.com")
@@ -29,6 +31,7 @@ export function useMarketData(timeFilter: string = 'All') {
                 setExchangeRates({ pol: data.pol || 0, eth: data.eth || 0 });
             } catch (e) { 
                 console.error("Price fetch error:", e);
+                // قيم افتراضية لضمان عدم انهيار الواجهة في حال فشل الـ API
                 setExchangeRates({ pol: 0.40, eth: 3000 }); 
             }
         };
@@ -56,6 +59,7 @@ export function useMarketData(timeFilter: string = 'All') {
 
                 const tokenIdsStr = tokenIds.map(id => id.toString());
 
+                // جلب البيانات بشكل متوازي لسرعة الأداء
                 const [
                     { data: dbMetadata },
                     { data: dbAssets },
@@ -64,17 +68,19 @@ export function useMarketData(timeFilter: string = 'All') {
                     { data: votesData }
                 ] = await Promise.all([
                     supabase.from('assets_metadata').select('*').in('token_id', tokenIdsStr),
-                    supabase.from('assets').select('token_id, tier, name').in('token_id', tokenIdsStr), // محاولة جلب الاسم من جدول الأصول الرئيسي أيضاً
+                    supabase.from('assets').select('token_id, tier, name').in('token_id', tokenIdsStr),
                     supabase.from('activities').select('*').order('created_at', { ascending: false }),
                     supabase.from('offers').select('token_id').eq('status', 'active'),
                     supabase.from('conviction_votes').select('token_id, amount')
                 ]);
 
-             
+                // دمج البيانات من المصادر المختلفة
                 const assetsMap: Record<string, any> = {};
                 
-               
+                // الأولوية للجدول الرئيسي
                 if (dbAssets) dbAssets.forEach((a: any) => assetsMap[a.token_id.toString()] = a);
+                
+                // ملء البيانات الناقصة من جدول الميتاداتا
                 if (dbMetadata) {
                     dbMetadata.forEach((a: any) => {
                         const id = a.token_id.toString();
@@ -127,19 +133,15 @@ export function useMarketData(timeFilter: string = 'All') {
                     const tid = Number(id);
                     const idStr = id.toString();
                     
-                   
                     const dbRecord = assetsMap[idStr];
                     
-                    
-                    let finalName = `Asset #${id}`;
-                    let finalTier = 'Common';
-
-                    if (dbRecord) {
-                      
-                        if (dbRecord.tier) finalTier = dbRecord.tier;
-                       
-                        if (dbRecord.name && dbRecord.name.trim() !== "") finalName = dbRecord.name;
+                    // --- الفلتر الأمني: إذا لم يوجد الأصل في قاعدة البيانات، يتم تجاهله ---
+                    if (!dbRecord || !dbRecord.name) {
+                        return null; 
                     }
+
+                    const finalName = dbRecord.name;
+                    const finalTier = dbRecord.tier || 'Common';
                     
                     const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0, mintTime: 0 };
                     const offersCount = offersCountMap[tid] || 0;
@@ -181,7 +183,7 @@ export function useMarketData(timeFilter: string = 'All') {
                         change: change,
                         currencySymbol: 'POL'
                     };
-                });
+                }).filter(item => item !== null); // هذا السطر يحذف الأصول "الأشباح" من القائمة النهائية
                 
                 setListings(items);
             } catch (error) { 
@@ -223,3 +225,4 @@ export function useMarketData(timeFilter: string = 'All') {
         getNewListings
     };
 }
+
