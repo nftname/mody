@@ -1,21 +1,24 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { usePublicClient } from "wagmi";
-import { parseAbi, formatEther } from 'viem';
+import { createPublicClient, http, parseAbi, formatEther } from 'viem';
+import { polygon } from 'viem/chains';
 import { supabase } from '@/lib/supabase';
-import { MARKETPLACE_ADDRESS } from '@/data/config';
+import { MARKETPLACE_ADDRESS, RPC_URL } from '@/data/config';
 
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
+const publicClient = createPublicClient({
+    chain: polygon,
+    transport: http(RPC_URL)
+});
+
 export function useMarketData(timeFilter: string = 'All') {
     const [listings, setListings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
-    const publicClient = usePublicClient();
 
     useEffect(() => {
         const fetchPrices = async () => {
@@ -32,7 +35,7 @@ export function useMarketData(timeFilter: string = 'All') {
 
     useEffect(() => {
         const fetchMarketData = async () => {
-            if (!publicClient) return;
+            setLoading(true);
             try {
                 const data = await publicClient.readContract({
                     address: MARKETPLACE_ADDRESS as `0x${string}`,
@@ -41,7 +44,7 @@ export function useMarketData(timeFilter: string = 'All') {
                 });
                 const [tokenIds, prices] = data;
                 
-                if (tokenIds.length === 0) { 
+                if (!tokenIds || tokenIds.length === 0) { 
                     setListings([]); 
                     setLoading(false); 
                     return; 
@@ -149,10 +152,10 @@ export function useMarketData(timeFilter: string = 'All') {
                 });
                 
                 setListings(items);
-            } catch (error) { console.error(error); } finally { setLoading(false); }
+            } catch (error) { console.error("Market Data Error:", error); } finally { setLoading(false); }
         };
         fetchMarketData();
-    }, [publicClient]);
+    }, []);
 
     const filteredData = useMemo(() => {
         let data = [...listings];
