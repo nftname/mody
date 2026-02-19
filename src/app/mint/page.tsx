@@ -186,10 +186,16 @@ const MintContent = () => {
 
           setProcessStep("Uploading: Securing asset on IPFS...");
           
+          const date = new Date();
+          const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+          const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+
           const formData = new FormData();
           formData.append('file', imageBlob, `NNM-${searchTerm}.png`);
           formData.append('name', searchTerm);
           formData.append('tier', tierName);
+          formData.append('description', LONG_DESCRIPTION);
+          formData.append('dynamicDate', dynamicDate);
 
           const apiResponse = await fetch('/api/generate-image', { 
               method: 'POST',
@@ -201,11 +207,7 @@ const MintContent = () => {
               throw new Error(errorData.error || "Upload Failed");
           }
 
-          const { gatewayUrl } = await apiResponse.json();
-
-          const date = new Date();
-          const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-          const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+          const { gatewayUrl, tokenURI } = await apiResponse.json();
 
           const metadataObject = {
             name: searchTerm,
@@ -221,8 +223,6 @@ const MintContent = () => {
             ]
           };
 
-          const jsonString = JSON.stringify(metadataObject);
-          const tokenURI = `data:application/json;base64,${btoa(unescape(encodeURIComponent(jsonString)))}`;
 
           setProcessStep("Wallet: Please sign the transaction...");
 
@@ -554,3 +554,4 @@ const LuxuryIngot = ({ label, price, isAvailable, onMint, isMinting }: LuxuryIng
 };
 
 export default dynamic(() => Promise.resolve(MintContent), { ssr: false });
+

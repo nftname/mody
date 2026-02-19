@@ -1,83 +1,107 @@
 import { NextResponse } from 'next/server';
 
-// نستخدم هذا التوجيه لضمان عدم تخزين النسخ المؤقتة، نريد معالجة فورية لكل طلب
 export const dynamic = 'force-dynamic';
+
+const LONG_DESCRIPTION = `GEN-0 Genesis — NNM Protocol Record
+
+A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.
+
+It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol — a permanent, time-anchored digital inscription preserved on the blockchain.`;
 
 export async function POST(req: Request) {
   try {
-    // 1. استلام البيانات من الطلب القادم من الصفحة
     const formData = await req.formData();
     
     const file = formData.get('file') as File;
     const name = formData.get('name') as string;
     const tier = formData.get('tier') as string;
 
-    // 2. التحقق الأمني: هل البيانات كاملة؟
     if (!file || !name || !tier) {
-      console.error("Missing Data: File, Name, or Tier is missing.");
       return NextResponse.json(
-        { error: 'Missing required data (file, name, or tier)' }, 
+        { error: 'Missing required data' }, 
         { status: 400 }
       );
     }
 
-    console.log(`[API] Received snapshot for Name: ${name}, Tier: ${tier}`);
-
-    // 3. تجهيز البيانات للإرسال إلى Pinata (بدقة عالية كما طلبت)
     const pinataFormData = new FormData();
-    
-    // إرفاق ملف الصورة المستلم
     pinataFormData.append('file', file);
-
-    // إعداد الميتاداتا الخاصة بـ Pinata (لترتيب الملفات في حسابك)
-    // نستخدم نفس المنطق الموجود في ملفك القديم لضمان عدم ضياع التنسيق
+    
     const pinataMetadata = JSON.stringify({
-      name: `NNM Asset: ${name} (${tier})`, // اسم الملف كما سيظهر في لوحة تحكم بيناتا
-      keyvalues: {
-        tier: tier,
-        name: name,
-        generatedAt: new Date().toISOString(),
-        source: "Client-Snapshot-Engine", // تمييز أن هذا الملف جاء من النظام الجديد
-        project: "NNM-Gen0"
-      }
+      name: `NNM Asset: ${name} (${tier})`, 
+      keyvalues: { tier: tier, name: name, type: "image" }
     });
     pinataFormData.append('pinataMetadata', pinataMetadata);
-
-    // إعداد خيارات بيناتا (CID Version 1)
-    const pinataOptions = JSON.stringify({ cidVersion: 1 });
-    pinataFormData.append('pinataOptions', pinataOptions);
-
-    // 4. تنفيذ عملية الرفع (الاتصال بسيرفرات بيناتا)
-    console.log('[API] Uploading to Pinata IPFS...');
+    pinataFormData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
     
     const uploadRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.PINATA_JWT}`, // المفتاح السري
-      },
+      headers: { Authorization: `Bearer ${process.env.PINATA_JWT}` },
       body: pinataFormData,
     });
 
-    // 5. التحقق من استجابة بيناتا
     if (!uploadRes.ok) {
       const errorData = await uploadRes.json();
-      console.error('[API] Pinata Upload Error:', errorData);
-      throw new Error(errorData.error?.details || 'Failed to upload to Pinata');
+      throw new Error(errorData.error?.details || 'Failed to upload image to Pinata');
     }
 
-    const pinataData = await uploadRes.json();
-    console.log('[API] Upload Success. Hash:', pinataData.IpfsHash);
+    const imagePinataData = await uploadRes.json();
+    const imageUrl = `https://gateway.pinata.cloud/ipfs/${imagePinataData.IpfsHash}`;
 
-    // 6. الرد النهائي للعميل بالرابط الجديد
+    const date = new Date();
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+
+    const metadataObj = {
+      name: name,
+      description: LONG_DESCRIPTION,
+      image: imageUrl,
+      attributes: [
+        { trait_type: "Asset Type", value: "Digital Name" },
+        { trait_type: "Generation", value: "Gen-0" },
+        { trait_type: "Tier", value: tier },
+        { trait_type: "Platform", value: "NNM Registry" },
+        { trait_type: "Collection", value: "Genesis - 001" },
+        { trait_type: "Mint Date", value: dynamicDate }
+      ]
+    };
+
+    const metadataString = JSON.stringify(metadataObj);
+    const metadataBlob = new Blob([metadataString], { type: 'application/json' });
+    
+    const metaFormData = new FormData();
+    metaFormData.append('file', metadataBlob, `NNM-${name}.json`);
+    
+    const metaPinataMetadata = JSON.stringify({
+      name: `NNM JSON: ${name}`, 
+      keyvalues: { tier: tier, name: name, type: "metadata" }
+    });
+    metaFormData.append('pinataMetadata', metaPinataMetadata);
+    metaFormData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
+
+    const metaRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.PINATA_JWT}` },
+      body: metaFormData,
+    });
+
+    if (!metaRes.ok) {
+      const errorData = await metaRes.json();
+      throw new Error(errorData.error?.details || 'Failed to upload metadata to Pinata');
+    }
+
+    const metaPinataData = await metaRes.json();
+    const metadataUri = `https://gateway.pinata.cloud/ipfs/${metaPinataData.IpfsHash}`;
+
     return NextResponse.json({ 
       success: true,
-      ipfsHash: pinataData.IpfsHash,
-      gatewayUrl: `https://gateway.pinata.cloud/ipfs/${pinataData.IpfsHash}` 
+      ipfsHash: metaPinataData.IpfsHash,
+      gatewayUrl: imageUrl,
+      metadataUri: metadataUri,
+      attributes: metadataObj.attributes,
+      dynamicDate: dynamicDate
     });
 
   } catch (error: any) {
-    // صيد أي خطأ غير متوقع وطباعته بوضوح
-    console.error('[API] Critical Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
