@@ -11,6 +11,7 @@ import { usePublicClient } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
+import { useMarketData } from '@/hooks/useMarketData';
 
 // --- CONSTANTS ---
 const MARKET_ABI = parseAbi([
@@ -194,183 +195,23 @@ const handleTouchEnd = (e: React.TouchEvent) => {
 
     const [isMobileCurrencyOpen, setIsMobileCurrencyOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const [realListings, setRealListings] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
     const publicClient = usePublicClient();
 
-    // --- Fast Price Engine ---
-    useEffect(() => {
-        const fetchPrices = async () => {
-            try {
-                const res = await fetch('/api/prices');
-                const data = await res.json();
-                setExchangeRates({ pol: data.pol || 0, eth: data.eth || 0 });
-            } catch (e) { console.error("Internal Price API Error", e); }
-        };
-        fetchPrices();
-        const interval = setInterval(fetchPrices, 60000);
-        return () => clearInterval(interval);
-    }, []);
+    const { loading, exchangeRates, getTrendingItems, getTopItems, getNewListings } = useMarketData(timeFilter);
 
-    // --- Data Engine ---
-    useEffect(() => {
-        const fetchMarketData = async () => {
-            if (!publicClient) return;
-            try {
-                const data = await publicClient.readContract({
-                    address: MARKETPLACE_ADDRESS as `0x${string}`,
-                    abi: MARKET_ABI,
-                    functionName: 'getAllListings'
-                });
-                const [tokenIds, prices] = data;
-                if (tokenIds.length === 0) { setRealListings([]); setLoading(false); return; }
-
-                const tokenIdsStr = tokenIds.map(id => id.toString());
-
-                const [
-                    { data: dbAssets },
-                    { data: allActivities },
-                    { data: offersData },
-                    { data: votesData }
-                ] = await Promise.all([
-                    supabase.from('assets_metadata').select('*').in('token_id', tokenIdsStr),
-                    supabase.from('activities').select('*').order('created_at', { ascending: false }),
-                    supabase.from('offers').select('token_id').eq('status', 'active'),
-                    supabase.from('conviction_votes').select('token_id')
-                ]);
-
-                const assetsMap: Record<string, any> = {};
-                if (dbAssets) {
-                    dbAssets.forEach((asset: any) => {
-                        assetsMap[asset.token_id.toString()] = asset;
-                    });
-                }
-
-                const votesMap: Record<string, number> = {};
-                if (votesData) {
-                    votesData.forEach((v: any) => {
-                        const idStr = String(v.token_id).trim();
-                        votesMap[idStr] = (votesMap[idStr] || 0) + 100;
-                    });
-                }
-
-                const statsMap: Record<number, any> = {};
-                
-                if (allActivities) {
-                    allActivities.forEach((act: any) => {
-                        const tid = Number(act.token_id);
-                        const price = Number(act.price) || 0;
-                        let actTime = new Date(act.created_at).getTime();
-
-                        if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0, mintTime: 0 };
-                        
-                        if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
-
-                        if (act.activity_type === 'Mint') {
-                            statsMap[tid].mintTime = actTime;
-                        }
-
-                        if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
-                            statsMap[tid].lastSale = price;
-                        }
-
-                        if (act.activity_type === 'Sale') {
-                            statsMap[tid].volume += price;
-                            statsMap[tid].sales += 1;
-                        }
-
-                        if (act.activity_type === 'List') {
-                            if (actTime > statsMap[tid].listedTime) {
-                                statsMap[tid].listedTime = actTime;
-                            }
-                        }
-                    });
-                }
-
-                const offersCountMap: any = {};
-                if (offersData) offersData.forEach((o: any) => {
-                    const tid = Number(o.token_id);
-                    offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
-                });
-
-                const items = tokenIds.map((id, index) => {
-                    const tid = Number(id);
-                    const idStr = id.toString();
-                    
-                    const meta = assetsMap[idStr] || { name: `Asset #${id}`, tier: 'Common' };
-                    
-                    const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0, mintTime: 0 };
-                    const offersCount = offersCountMap[tid] || 0;
-                    const conviction = votesMap[idStr] || 0;
-                    
-                    const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
-                    const pricePol = parseFloat(formatEther(prices[index]));
-                    
-                    let change = 0;
-                    if (stats.lastSale > 0) {
-                        change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
-                    }
-
-                    const mintYear = stats.mintTime > 0 ? new Date(stats.mintTime).getFullYear() : 2026;
-
-                    return {
-                        id: tid,
-                        name: meta.name,
-                        tier: meta.tier,
-                        pricePol: pricePol,
-                        lastSale: stats.lastSale,
-                        volume: stats.volume,
-                        listedTime: stats.listedTime,
-                        lastActive: stats.lastActive,
-                        mintYear: mintYear,
-                        trendingScore: trendingScore,
-                        offersCount: offersCount,
-                        convictionScore: conviction,
-                        change: change,
-                        currencySymbol: 'POL'
-                    };
-                });
-                
-                setRealListings(items);
-            } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
-        };
-        fetchMarketData();
-    }, [publicClient, timeFilter]);
-
-    // --- TABLE DATA ---
     const tableData = useMemo(() => {
-        let data = [...realListings];
-        if (timeFilter !== 'All') {
-            let timeLimit = Infinity;
-            if (timeFilter === '1H') timeLimit = 3600 * 1000;
-            else if (timeFilter === '6H') timeLimit = 3600 * 6 * 1000;
-            else if (timeFilter === '24H') timeLimit = 3600 * 24 * 1000;
-            else if (timeFilter === '7D') timeLimit = 3600 * 24 * 7 * 1000;
-            const now = Date.now();
-            data = data.filter(item => (now - (item.lastActive || 0)) <= timeLimit);
-        }
-        if (activeTab === 'top') {
-            data.sort((a, b) => b.volume - a.volume);
-        } else {
-            data.sort((a, b) => b.trendingScore - a.trendingScore);
-        }
-        return data.map((item, index) => ({ ...item, rank: index + 1 }));
-    }, [realListings, activeTab, timeFilter]);
+        let data = activeTab === 'top' ? getTopItems() : getTrendingItems();
+        return data.slice(0, 10).map((item, index) => ({ ...item, rank: index + 1 }));
+    }, [activeTab, getTrendingItems, getTopItems]);
 
-    // --- GALLERIES ---
     const featuredItems = useMemo(() => {
-        return [...realListings]
-            .sort((a, b) => b.volume - a.volume)
-            .slice(0, 3);
-    }, [realListings]);
+        return getTopItems().slice(0, 3);
+    }, [getTopItems]);
 
     const newListingsItems = useMemo(() => {
-        return [...realListings]
-            .filter(item => typeof item.listedTime === 'number' && item.listedTime > 0)
-            .sort((a, b) => (b.listedTime || 0) - (a.listedTime || 0))
-            .slice(0, 3);
-    }, [realListings]);
+        return getNewListings().slice(0, 3);
+    }, [getNewListings]);
+
 
     const desktopLeftData = tableData.slice(0, 5);
     const desktopRightData = tableData.slice(5, 10);

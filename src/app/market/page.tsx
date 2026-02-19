@@ -11,6 +11,7 @@ import { usePublicClient, useAccount } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
+import { useMarketData } from '@/hooks/useMarketData';
 
 // --- ABIs ---
 const MARKET_ABI = parseAbi([
@@ -161,33 +162,13 @@ function MarketPage() {
   // --- SEARCH STATE ---
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [realListings, setRealListings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
+  const { allListings, loading, exchangeRates } = useMarketData(timeFilter);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const publicClient = usePublicClient();
 
-   // --- Fast Price Engine ---
-  useEffect(() => {
-      const fetchPrices = async () => {
-          try {
-              const res = await fetch('/api/prices');
-              const data = await res.json();
-              setExchangeRates({
-                  pol: data.pol || 0, 
-                  eth: data.eth || 0
-              });
-          } catch (e) { 
-              console.error("Internal Price API Error", e); 
-          }
-      };
-      fetchPrices();
-      const interval = setInterval(fetchPrices, 60000); 
-      return () => clearInterval(interval);
-  }, []);
 
   // --- FAVORITES LOGIC ---
   useEffect(() => {
@@ -216,133 +197,9 @@ function MarketPage() {
       } catch (err) { }
   };
 
-// --- Turbo Data Engine ---
-  useEffect(() => {
-    const fetchMarketData = async () => {
-        if (!publicClient) return;
-        try {
-            const data = await publicClient.readContract({
-                address: MARKETPLACE_ADDRESS as `0x${string}`,
-                abi: MARKET_ABI,
-                functionName: 'getAllListings'
-            });
-            const [tokenIds, prices] = data;
-
-            if (tokenIds.length === 0) { setRealListings([]); setLoading(false); return; }
-
-            const tokenIdsStr = tokenIds.map(id => id.toString());
-
-            const [
-                { data: dbAssets },
-                { data: allActivities },
-                { data: offersData },
-                { data: votesData }
-            ] = await Promise.all([
-                supabase.from('assets_metadata').select('*').in('token_id', tokenIdsStr),
-                supabase.from('activities').select('*').order('created_at', { ascending: false }),
-                supabase.from('offers').select('token_id').eq('status', 'active'),
-                supabase.from('conviction_votes').select('token_id, amount')
-            ]);
-
-            const assetsMap: Record<string, any> = {};
-            if (dbAssets) {
-                dbAssets.forEach((asset: any) => {
-                    assetsMap[asset.token_id.toString()] = asset;
-                });
-            }
-
-            const votesMap: Record<string, number> = {};
-            if (votesData) {
-                votesData.forEach((v: any) => {
-                    const idStr = String(v.token_id).trim();
-                    const points = v.amount ? v.amount : 100;
-                    votesMap[idStr] = (votesMap[idStr] || 0) + points;
-                });
-            }
-
-
-            const offersCountMap: Record<number, number> = {};
-            if (offersData) {
-                offersData.forEach((o: any) => {
-                    const tid = Number(o.token_id);
-                    offersCountMap[tid] = (offersCountMap[tid] || 0) + 1;
-                });
-            }
-
-            const statsMap: Record<number, any> = {}; 
-            const now = Date.now();
-
-            if (allActivities) {
-                allActivities.forEach((act: any) => {
-                    const tid = Number(act.token_id);
-                    const price = Number(act.price) || 0;
-                    let actTime = new Date(act.created_at).getTime();
-                
-                    if (!statsMap[tid]) statsMap[tid] = { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0 };
-
-                    if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
-
-                    if ((act.activity_type === 'Sale' || act.activity_type === 'Mint') && statsMap[tid].lastSale === 0) {
-                         statsMap[tid].lastSale = price; 
-                    }
-
-                    if (act.activity_type === 'Sale') {
-                        statsMap[tid].volume += price;
-                        statsMap[tid].sales += 1;
-                    }
-
-                    if ((act.activity_type === 'List' || act.activity_type === 'Mint')) {
-                        if (actTime > statsMap[tid].listedTime) statsMap[tid].listedTime = actTime;
-                    }
-                });
-            }
-
-            const items = tokenIds.map((id, index) => {
-                const tid = Number(id); 
-                const idStr = id.toString();
-                
-                const meta = assetsMap[idStr] || { name: `Asset #${id}`, tier: 'Common' };
-                
-                const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0 };
-                const offersCount = offersCountMap[tid] || 0;
-                const conviction = votesMap[idStr] || 0;
-                
-                const trendingScore = (stats.sales * 20) + (offersCount * 5) + (conviction * 0.2);
-                const pricePol = parseFloat(formatEther(prices[index]));
-                
-                let change = 0;
-                if (stats.lastSale > 0) {
-                    change = ((pricePol - stats.lastSale) / stats.lastSale) * 100;
-                }
-
-                return {
-                    id: tid,
-                    name: meta.name,
-                    tier: meta.tier,
-                    pricePol: pricePol, 
-                    lastSale: stats.lastSale,
-                    volume: stats.volume,
-                    listedTime: stats.listedTime,
-                    lastActive: stats.lastActive,
-                    trendingScore: trendingScore,
-                    offersCount: offersCount,
-                    convictionScore: conviction,
-                    listed: 'Now', 
-                    change: change,
-                    currencySymbol: 'POL'
-                };
-            });
-
-            setRealListings(items);
-        } catch (error) { console.error("Fetch error", error); } finally { setLoading(false); }
-    };
-
-    fetchMarketData();
-
-  }, [publicClient, timeFilter]);  
-
+  // --- Data Logic (New Hook Integration) ---
   const finalData = useMemo(() => {
-      let processedData = [...realListings];
+      let processedData = [...allListings];
 
       if (searchQuery) {
           const query = searchQuery.trim().toLowerCase();
@@ -354,18 +211,13 @@ function MarketPage() {
           processedData.sort((a, b) => {
               const nameA = a.name.toLowerCase();
               const nameB = b.name.toLowerCase();
-
               if (nameA === query && nameB !== query) return -1;
               if (nameA !== query && nameB === query) return 1;
-
               const startsA = nameA.startsWith(query);
               const startsB = nameB.startsWith(query);
               if (startsA && !startsB) return -1;
               if (!startsA && startsB) return 1;
-
-              if (nameA < nameB) return -1;
-              if (nameA > nameB) return 1;
-              return 0;
+              return nameA.localeCompare(nameB);
           });
       } 
       else {
@@ -423,7 +275,7 @@ function MarketPage() {
           });
       }
       return processedData;
-  }, [activeFilter, favoriteIds, sortConfig, realListings, timeFilter, searchQuery]);
+  }, [allListings, activeFilter, favoriteIds, sortConfig, timeFilter, searchQuery]);
 
   const totalPages = Math.ceil(finalData.length / ITEMS_PER_PAGE);
   const currentTableData = finalData.slice(
