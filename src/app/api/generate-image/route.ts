@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import FormData from 'form-data';
+import axios from 'axios';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,11 +12,11 @@ It represents a Gen-0 registered digital asset and exists solely as a transferab
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
+    const reqFormData = await req.formData();
     
-    const file = formData.get('file') as File;
-    const name = formData.get('name') as string;
-    const tier = formData.get('tier') as string;
+    const file = reqFormData.get('file') as File;
+    const name = reqFormData.get('name') as string;
+    const tier = reqFormData.get('tier') as string;
 
     if (!file || !name || !tier) {
       return NextResponse.json(
@@ -23,81 +25,75 @@ export async function POST(req: Request) {
       );
     }
 
-    const pinataFormData = new FormData();
-    pinataFormData.append('file', file);
-    
-    const pinataMetadata = JSON.stringify({
-      name: `NNM Asset: ${name} (${tier})`, 
-      keyvalues: { tier: tier, name: name, type: "image" }
-    });
-    pinataFormData.append('pinataMetadata', pinataMetadata);
-    pinataFormData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
-    
-    const uploadRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.PINATA_JWT}` },
-      body: pinataFormData,
-    });
+    const arrayBuffer = await file.arrayBuffer();
+    const imageBuffer = Buffer.from(arrayBuffer);
 
-    if (!uploadRes.ok) {
-      const errorData = await uploadRes.json();
-      throw new Error(errorData.error?.details || 'Failed to upload image to Pinata');
-    }
+    const imgData = new FormData();
+    imgData.append('file', imageBuffer, { filename: `NNM-${name}.png` });
+    
+    const imgMetadata = JSON.stringify({
+        name: `NNM IMG: ${name}`,
+        keyvalues: { tier, name, type: "image" }
+    });
+    imgData.append('pinataMetadata', imgMetadata);
+    imgData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
 
-    const imagePinataData = await uploadRes.json();
-    const imageUrl = `https://gateway.pinata.cloud/ipfs/${imagePinataData.IpfsHash}`;
+    const imgRes = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', imgData, {
+        headers: { 
+            'Authorization': `Bearer ${process.env.PINATA_JWT}`, 
+            ...imgData.getHeaders() 
+        },
+        maxBodyLength: Infinity
+    });
+    
+    const imageUrl = `https://gateway.pinata.cloud/ipfs/${imgRes.data.IpfsHash}`;
 
     const date = new Date();
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 
     const metadataObj = {
-      name: name,
-      description: LONG_DESCRIPTION,
-      image: imageUrl,
-      attributes: [
-        { trait_type: "Asset Type", value: "Digital Name" },
-        { trait_type: "Generation", value: "Gen-0" },
-        { trait_type: "Tier", value: tier },
-        { trait_type: "Platform", value: "NNM Registry" },
-        { trait_type: "Collection", value: "Genesis - 001" },
-        { trait_type: "Mint Date", value: dynamicDate }
-      ]
-    };
-    const pinataJSONBody = {
-      pinataContent: metadataObj,
-      pinataMetadata: {
-        name: `NNM JSON: ${name}`, 
-        keyvalues: { tier: tier, name: name, type: "metadata" }
-      },
-      pinataOptions: { cidVersion: 1 }
+        name: name,
+        description: LONG_DESCRIPTION,
+        image: imageUrl,
+        attributes: [
+            { trait_type: "Asset Type", value: "Digital Name" },
+            { trait_type: "Generation", value: "Gen-0" },
+            { trait_type: "Tier", value: tier },
+            { trait_type: "Platform", value: "NNM Registry" },
+            { trait_type: "Collection", value: "Genesis - 001" },
+            { trait_type: "Mint Date", value: dynamicDate }
+        ]
     };
 
-    const metaRes = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.PINATA_JWT}` 
-      },
-      body: JSON.stringify(pinataJSONBody),
+    const metadataString = JSON.stringify(metadataObj);
+    
+    const metaFormData = new FormData();
+    metaFormData.append('file', Buffer.from(metadataString), { filename: `NNM-${name}.json` });
+
+    const metaPinataMetadata = JSON.stringify({
+        name: `NNM JSON: ${name}`,
+        keyvalues: { name, type: "metadata" }
+    });
+    metaFormData.append('pinataMetadata', metaPinataMetadata);
+    metaFormData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
+
+    const metaRes = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', metaFormData, {
+        headers: { 
+            'Authorization': `Bearer ${process.env.PINATA_JWT}`, 
+            ...metaFormData.getHeaders() 
+        },
+        maxBodyLength: Infinity
     });
 
-    if (!metaRes.ok) {
-      const errorData = await metaRes.json();
-      throw new Error(errorData.error?.details || 'Failed to upload metadata to Pinata');
-    }
-
-    const metaPinataData = await metaRes.json();
-    const metadataUri = `https://gateway.pinata.cloud/ipfs/${metaPinataData.IpfsHash}`;
-
+    const metadataUri = `https://gateway.pinata.cloud/ipfs/${metaRes.data.IpfsHash}`;
 
     return NextResponse.json({ 
-      success: true,
-      ipfsHash: metaPinataData.IpfsHash,
-      gatewayUrl: imageUrl,
-      metadataUri: metadataUri,
-      attributes: metadataObj.attributes,
-      dynamicDate: dynamicDate
+        success: true,
+        gatewayUrl: imageUrl,
+        metadataUri: metadataUri,
+        attributes: metadataObj.attributes,
+        dynamicDate: dynamicDate
     });
 
   } catch (error: any) {
