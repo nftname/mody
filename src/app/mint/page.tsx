@@ -207,7 +207,8 @@ const MintContent = () => {
               throw new Error(errorData.error || "Upload Failed");
           }
 
-          const { gatewayUrl, tokenURI } = await apiResponse.json();
+          const { gatewayUrl, metadataUri } = await apiResponse.json();
+          const tokenURI = metadataUri;
 
           const metadataObject = {
             name: searchTerm,
