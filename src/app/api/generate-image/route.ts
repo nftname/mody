@@ -64,24 +64,22 @@ export async function POST(req: Request) {
         { trait_type: "Mint Date", value: dynamicDate }
       ]
     };
+    const pinataJSONBody = {
+      pinataContent: metadataObj,
+      pinataMetadata: {
+        name: `NNM JSON: ${name}`, 
+        keyvalues: { tier: tier, name: name, type: "metadata" }
+      },
+      pinataOptions: { cidVersion: 1 }
+    };
 
-    const metadataString = JSON.stringify(metadataObj);
-    const metadataBlob = new Blob([metadataString], { type: 'application/json' });
-    
-    const metaFormData = new FormData();
-    metaFormData.append('file', metadataBlob, `NNM-${name}.json`);
-    
-    const metaPinataMetadata = JSON.stringify({
-      name: `NNM JSON: ${name}`, 
-      keyvalues: { tier: tier, name: name, type: "metadata" }
-    });
-    metaFormData.append('pinataMetadata', metaPinataMetadata);
-    metaFormData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
-
-    const metaRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+    const metaRes = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.PINATA_JWT}` },
-      body: metaFormData,
+      headers: { 
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.PINATA_JWT}` 
+      },
+      body: JSON.stringify(pinataJSONBody),
     });
 
     if (!metaRes.ok) {
@@ -91,6 +89,7 @@ export async function POST(req: Request) {
 
     const metaPinataData = await metaRes.json();
     const metadataUri = `https://gateway.pinata.cloud/ipfs/${metaPinataData.IpfsHash}`;
+
 
     return NextResponse.json({ 
       success: true,
