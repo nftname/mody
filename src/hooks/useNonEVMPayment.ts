@@ -1,4 +1,3 @@
-
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export const useNonEVMPayment = () => {
@@ -7,6 +6,7 @@ export const useNonEVMPayment = () => {
 
     if (lowerCoin === 'btc') {
       if (typeof window !== 'undefined' && (window as any).unisat) {
+        await (window as any).unisat.requestAccounts();
         const satoshis = Math.floor(parseFloat(amount) * 100000000);
         return await (window as any).unisat.sendBitcoin(address, satoshis);
       }
@@ -18,7 +18,7 @@ export const useNonEVMPayment = () => {
         const provider = (window as any).solana;
         await provider.connect();
         
-        const connection = new Connection("https://api.mainnet-beta.solana.com");
+        const connection = new Connection("https://solana-rpc.publicnode.com");
         const fromPubkey = provider.publicKey;
         const toPubkey = new PublicKey(address);
         
