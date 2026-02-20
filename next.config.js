@@ -51,7 +51,7 @@ const nextConfig = {
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
       font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:;
       img-src 'self' blob: data: https://gateway.pinata.cloud https://ipfs.io https://cloudflare-ipfs.com https://raw.githubusercontent.com https://cryptologos.cc https://cdn-icons-png.flaticon.com https://api.qrserver.com;
-      connect-src 'self' https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org https://*.infura.io https://*.alchemyapi.io https://cloudflare-eth.com https://*.supabase.co https://api.web3modal.org https://*.llamarpc.com https://rpc.ankr.com https://bsc-dataseed.binance.org https://api.coingecko.com https://polygon-bor.publicnode.com https://cdn.jsdelivr.net;
+      connect-src 'self' https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org https://*.infura.io https://*.alchemyapi.io https://cloudflare-eth.com https://*.supabase.co https://api.web3modal.org https://*.llamarpc.com https://rpc.ankr.com https://bsc-dataseed.binance.org https://api.coingecko.com https://polygon-bor.publicnode.com https://cdn.jsdelivr.net https://*.drpc.org https://*.maticvigil.com https://*.builder0x69.com https://*.defibit.io;
       frame-src 'self' https://verify.didit.me https://app.uniswap.org https://*.walletconnect.com https://*.walletconnect.org https://*.coinbase.com;
       object-src 'none';
       base-uri 'self';
