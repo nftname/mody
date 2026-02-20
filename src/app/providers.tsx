@@ -22,17 +22,24 @@ const config = getDefaultConfig({
   chains: [polygon, mainnet, bsc],
   transports: {
     [polygon.id]: fallback([
-      http("https://polygon-bor.publicnode.com"),
+      http("https://polygon.drpc.org"),
+      http("https://rpc-mainnet.maticvigil.com"),
       http("https://polygon-rpc.com"),
+      http("https://polygon-bor.publicnode.com"),
       http("https://rpc.ankr.com/polygon")
     ]),
     [mainnet.id]: fallback([
+      http("https://cloudflare-eth.com"),
+      http("https://eth.drpc.org"),
+      http("https://rpc.builder0x69.com"),
       http("https://eth.llamarpc.com"),
       http("https://rpc.ankr.com/eth")
     ]),
     [bsc.id]: fallback([
-      http("https://binance.llamarpc.com"),
-      http("https://bsc-dataseed.binance.org")
+      http("https://bsc-dataseed1.defibit.io"),
+      http("https://bsc-dataseed2.defibit.io"),
+      http("https://bsc-dataseed.binance.org"),
+      http("https://binance.llamarpc.com")
     ]),
   },
   ssr: true,
