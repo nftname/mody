@@ -491,11 +491,13 @@ export default function ChainFacePage() {
               .eq('token_id', Number(tokenId));
 
           if (error) {
-              console.error("Supabase Save Error:", error);
-              throw error;
+              const { error: insertError } = await supabase
+                  .from('chainface_profiles')
+                  .upsert({ token_id: Number(tokenId), ...updates }, { onConflict: 'token_id' });
+              if (insertError) throw insertError;
           }
-          const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
 
+          const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
           setProfileData((prev: any) => ({
               ...prev, 
               wallets: { ...prev.wallets, [stateKey]: walletAddr }
@@ -671,41 +673,48 @@ export default function ChainFacePage() {
 
       try {
         const lowerCoin = selectedPaymentCoin.toLowerCase();
-        let chainId;
+        let txHash;
         
-        if (lowerCoin === 'eth' || lowerCoin === 'usdt') chainId = 1;
-        else if (lowerCoin === 'polygon' || lowerCoin === 'matic') chainId = 137;
-        else if (lowerCoin === 'bnb') chainId = 56;
+        if (lowerCoin === 'usdt') {
+            const usdtAmount = BigInt(Math.floor(parseFloat(amount) * 1000000));
+            txHash = await writeContractAsync({
+                address: USDT_POLYGON_ADDRESS,
+                abi: ERC20_ABI,
+                functionName: 'transfer',
+                args: [selectedPaymentAddress as `0x${string}`, usdtAmount],
+            });
+        } else {
+            let chainId = lowerCoin === 'eth' ? 1 : lowerCoin === 'bnb' ? 56 : 137;
+            txHash = await sendTransactionAsync({ 
+                to: selectedPaymentAddress as `0x${string}`,
+                value: parseEther(amount),
+                chainId: chainId
+            });
+        }
 
-        const txHash = await sendTransactionAsync({ 
-            to: selectedPaymentAddress as `0x${string}`,
-            value: parseEther(amount),
-            chainId: chainId
-        });
+        if (txHash) {
+            await fetch('/api/nnm/chainface-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tokenId: tokenId,
+                    sender: address || 'Anonymous_Visitor',
+                    receiver: profileData.owner,
+                    coin: selectedPaymentCoin,
+                    amount: amount,
+                    txHash: txHash
+                })
+            });
 
-        await fetch('/api/nnm/chainface-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                tokenId: tokenId,
-                sender: address || 'Anonymous_Visitor',
-                receiver: profileData.owner,
-                coin: selectedPaymentCoin,
-                amount: amount,
-                txHash: txHash 
-            })
-        });
-
-        setPaymentModalOpen(false);
-        setShowVisitorBox(true);
-        fetchChainFaceData(); 
+            setPaymentModalOpen(false);
+            setShowVisitorBox(true);
+            fetchChainFaceData(); 
+        }
 
       } catch (e) {
         console.error("Payment rejected or failed:", e);
       }
   };
-
-
 
   const handleSupportClick = async (type: 'like' | 'dislike') => {
       setFeedback(type);
