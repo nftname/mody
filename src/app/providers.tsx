@@ -26,8 +26,14 @@ const config = getDefaultConfig({
       http("https://polygon-rpc.com"),
       http("https://rpc.ankr.com/polygon")
     ]),
-    [mainnet.id]: http(),
-    [bsc.id]: http(),
+    [mainnet.id]: fallback([
+      http("https://eth.llamarpc.com"),
+      http("https://rpc.ankr.com/eth")
+    ]),
+    [bsc.id]: fallback([
+      http("https://binance.llamarpc.com"),
+      http("https://bsc-dataseed.binance.org")
+    ]),
   },
   ssr: true,
 });

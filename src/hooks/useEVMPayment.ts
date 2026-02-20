@@ -11,11 +11,12 @@ export const useEVMPayment = () => {
 
   const processEVMPayment = async (coin: string, address: string, amount: string) => {
     const lowerCoin = coin.toLowerCase();
+    const cleanAddress = address.trim() as `0x${string}`;
 
     if (lowerCoin === 'eth') {
       if (switchChainAsync) await switchChainAsync({ chainId: 1 });
       return await sendTransactionAsync({
-        to: address as `0x${string}`,
+        to: cleanAddress,
         value: parseEther(amount)
       });
     }
@@ -23,7 +24,7 @@ export const useEVMPayment = () => {
     if (lowerCoin === 'bnb') {
       if (switchChainAsync) await switchChainAsync({ chainId: 56 });
       return await sendTransactionAsync({
-        to: address as `0x${string}`,
+        to: cleanAddress,
         value: parseEther(amount)
       });
     }
@@ -35,14 +36,14 @@ export const useEVMPayment = () => {
         address: USDT_POLYGON_ADDRESS,
         abi: ERC20_ABI,
         functionName: 'transfer',
-        args: [address as `0x${string}`, usdtAmount],
+        args: [cleanAddress, usdtAmount],
       });
     } 
     
     if (lowerCoin === 'polygon' || lowerCoin === 'matic') {
       if (switchChainAsync) await switchChainAsync({ chainId: 137 });
       return await sendTransactionAsync({
-        to: address as `0x${string}`,
+        to: cleanAddress,
         value: parseEther(amount)
       });
     }
