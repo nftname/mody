@@ -382,7 +382,8 @@ export default function ChainFacePage() {
   const tokenId = params?.id as string;
   
   const { address } = useAccount();
-  const { sendTransaction } = useSendTransaction();
+  const { sendTransactionAsync } = useSendTransaction();
+
 
    // --- VERIFICATION PAYMENT LOGIC ---
   const { writeContractAsync } = useWriteContract();
@@ -477,16 +478,17 @@ export default function ChainFacePage() {
       };
 
       try {
-         
           const updates: any = { 
-              token_id: Number(tokenId),
               owner_address: address, 
               updated_at: new Date().toISOString() 
           };
           
           updates[columnMap[coin]] = walletAddr; 
 
-          const { error } = await supabase.from('chainface_profiles').upsert(updates, { onConflict: 'token_id' });
+          const { error } = await supabase
+              .from('chainface_profiles')
+              .update(updates)
+              .eq('token_id', Number(tokenId));
 
           if (error) {
               console.error("Supabase Save Error:", error);
@@ -494,19 +496,15 @@ export default function ChainFacePage() {
           }
           const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
 
-      
           setProfileData((prev: any) => ({
               ...prev, 
               wallets: { ...prev.wallets, [stateKey]: walletAddr }
-
           }));
 
       } catch (e) { 
           console.error("Save execution failed", e); 
       }
   };
-
-
 
   // --- BLOCKCHAIN HOOKS ---
   const { data: realOwnerAddress } = useReadContract({
@@ -679,7 +677,7 @@ export default function ChainFacePage() {
         else if (lowerCoin === 'polygon' || lowerCoin === 'matic') chainId = 137;
         else if (lowerCoin === 'bnb') chainId = 56;
 
-        sendTransaction({ 
+        const txHash = await sendTransactionAsync({ 
             to: selectedPaymentAddress as `0x${string}`,
             value: parseEther(amount),
             chainId: chainId
@@ -693,7 +691,8 @@ export default function ChainFacePage() {
                 sender: address || 'Anonymous_Visitor',
                 receiver: profileData.owner,
                 coin: selectedPaymentCoin,
-                amount: amount
+                amount: amount,
+                txHash: txHash 
             })
         });
 
@@ -702,7 +701,7 @@ export default function ChainFacePage() {
         fetchChainFaceData(); 
 
       } catch (e) {
-        console.error(e);
+        console.error("Payment rejected or failed:", e);
       }
   };
 
