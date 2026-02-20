@@ -1,3 +1,4 @@
+
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export const useNonEVMPayment = () => {
@@ -9,8 +10,11 @@ export const useNonEVMPayment = () => {
         await (window as any).unisat.requestAccounts();
         const satoshis = Math.floor(parseFloat(amount) * 100000000);
         return await (window as any).unisat.sendBitcoin(address, satoshis);
+      } else {
+        await navigator.clipboard.writeText(address);
+        alert(`Unisat wallet not found. The Bitcoin address ${address} has been copied to your clipboard.`);
+        return true;
       }
-      throw new Error("Unisat wallet not found");
     }
 
     if (lowerCoin === 'sol') {
@@ -36,8 +40,11 @@ export const useNonEVMPayment = () => {
         
         const { signature } = await provider.signAndSendTransaction(transaction);
         return signature;
+      } else {
+        await navigator.clipboard.writeText(address);
+        alert(`Phantom wallet not found. The Solana address ${address} has been copied to your clipboard.`);
+        return true;
       }
-      throw new Error("Phantom wallet not found");
     }
 
     return null;
