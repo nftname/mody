@@ -268,20 +268,37 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
 const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
     const [amount, setAmount] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [walletError, setWalletError] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
             setAmount('');
             setIsProcessing(false);
+            setCopied(false);
+            setWalletError(false);
         }
     }, [isOpen]);
 
     if (!isOpen) return null;
 
+    const handleCopy = () => {
+        navigator.clipboard.writeText(address);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
     const handlePay = async () => {
         if (!amount || parseFloat(amount) <= 0) return;
         setIsProcessing(true);
-        await onConfirm(amount);
+        setWalletError(false);
+        try {
+            await onConfirm(amount);
+        } catch (error: any) {
+            if (error.message === "WALLET_NOT_FOUND") {
+                setWalletError(true);
+            }
+        }
         setIsProcessing(false);
     };
 
@@ -290,6 +307,7 @@ const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
     };
 
     const deepPurple = '#2E1A47';
+    const shortAddress = address ? `${address.slice(0, 4)}...${address.slice(-4)}` : '';
 
     return (
         <div onClick={handleBackgroundClick} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(46, 26, 71, 0.6)', backdropFilter: 'blur(4px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -306,31 +324,32 @@ const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     
-                    {}
-                    <div style={{ background: '#f8f9fa', padding: '8px 10px', borderRadius: '8px', border: '1px solid #e9ecef', width: '100%', overflow: 'hidden' }}>
-                        <span style={{ fontWeight: '600', display: 'block', marginBottom: '1px', color: '#888', fontSize: '9px', textTransform: 'uppercase' }}>Recipient:</span>
-                        <div style={{ 
-                            fontSize: '10px', 
-                            color: '#555', 
-                            whiteSpace: 'nowrap',       
-                            overflow: 'hidden',         
-                            textOverflow: 'ellipsis',   
-                            fontFamily: 'monospace'
-                        }}>
-                            {address}
+                    <div style={{ background: '#f8f9fa', padding: '10px', borderRadius: '8px', border: '1px solid #e9ecef', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <span style={{ fontWeight: '600', display: 'block', marginBottom: '2px', color: '#888', fontSize: '9px', textTransform: 'uppercase' }}>Recipient Address:</span>
+                            <div style={{ fontSize: '12px', color: '#333', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                                {shortAddress}
+                            </div>
                         </div>
+                        <button onClick={handleCopy} style={{ background: '#e5e7eb', border: 'none', padding: '6px 8px', borderRadius: '6px', cursor: 'pointer', color: '#4b5563', transition: '0.2s', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {copied ? <><i className="bi bi-check2"></i> <span style={{fontSize:'9px', fontWeight:'bold'}}>Copied</span></> : <i className="bi bi-copy"></i>}
+                        </button>
                     </div>
+
+                    {walletError && (
+                        <div style={{ fontSize: '10px', color: '#dc2626', background: '#fee2e2', padding: '8px', borderRadius: '6px', textAlign: 'center', fontWeight: '600' }}>
+                            Wallet not found. Please copy the address and pay manually.
+                        </div>
+                    )}
 
                     <div>
                         <label style={{ display: 'block', marginBottom: '4px', fontSize: '11px', fontWeight: '600', color: '#333' }}>Amount</label>
                         <div style={{ position: 'relative' }}>
-                            {}
                             <input 
                                 type="text" 
                                 inputMode="decimal"
                                 value={amount} 
                                 onChange={(e) => {
-                            
                                     const val = e.target.value;
                                     if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
                                         setAmount(val);
@@ -712,9 +731,9 @@ const handleConfirmPayment = async (amount: string) => {
             setShowVisitorBox(true);
             fetchChainFaceData(false);
         }
-    } catch (e) {
+    } catch (e: any) {
         console.error(e);
-        setPaymentModalOpen(false);
+        throw e;
     }
 };
 

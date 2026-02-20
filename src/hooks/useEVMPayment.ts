@@ -13,19 +13,28 @@ export const useEVMPayment = () => {
     const lowerCoin = coin.toLowerCase();
 
     if (lowerCoin === 'eth' || lowerCoin === 'bnb') {
-      if (typeof window !== 'undefined' && (window as any).ethereum) {
-        const provider = (window as any).ethereum;
+      let provider = (window as any).ethereum;
+      
+      if (provider?.providers) {
+        provider = provider.providers.find((p: any) => p.isMetaMask) || provider;
+      }
+
+      if (provider && provider.isMetaMask) {
         const chainId = lowerCoin === 'eth' ? '0x1' : '0x38';
         
         await provider.request({ method: 'eth_requestAccounts' });
         
-        try {
-          await provider.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId }],
-          });
-        } catch (switchError: any) {
-          throw switchError;
+        const currentChainId = await provider.request({ method: 'eth_chainId' });
+        
+        if (currentChainId !== chainId) {
+          try {
+            await provider.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId }],
+            });
+          } catch (error: any) {
+            throw error;
+          }
         }
 
         const accounts = await provider.request({ method: 'eth_accounts' });
@@ -39,11 +48,11 @@ export const useEVMPayment = () => {
         });
         return txHash;
       }
-      throw new Error("MetaMask not found");
+      throw new Error("WALLET_NOT_FOUND");
     }
 
     if (lowerCoin === 'usdt') {
-      if (switchChainAsync) await switchChainAsync({ chainId: 137 });
+      if (switchChainAsync) await switchChainAsync({ chainId: 137 }).catch(() => {});
       const usdtAmount = BigInt(Math.floor(parseFloat(amount) * 1000000));
       return await writeContractAsync({
         address: USDT_POLYGON_ADDRESS,
@@ -53,7 +62,7 @@ export const useEVMPayment = () => {
       });
     } 
     
-    if (switchChainAsync) await switchChainAsync({ chainId: 137 });
+    if (switchChainAsync) await switchChainAsync({ chainId: 137 }).catch(() => {});
     return await sendTransactionAsync({
       to: address as `0x${string}`,
       value: parseEther(amount)
@@ -63,5 +72,4 @@ export const useEVMPayment = () => {
 
   return { processEVMPayment };
 };
-
 

@@ -10,15 +10,12 @@ export const useNonEVMPayment = () => {
         await (window as any).unisat.requestAccounts();
         const satoshis = Math.floor(parseFloat(amount) * 100000000);
         return await (window as any).unisat.sendBitcoin(address, satoshis);
-      } else {
-        await navigator.clipboard.writeText(address);
-        alert(`Unisat wallet not found. The Bitcoin address ${address} has been copied to your clipboard.`);
-        return true;
       }
+      throw new Error("WALLET_NOT_FOUND");
     }
 
     if (lowerCoin === 'sol') {
-      if (typeof window !== 'undefined' && (window as any).solana) {
+      if (typeof window !== 'undefined' && (window as any).solana && (window as any).solana.isPhantom) {
         const provider = (window as any).solana;
         await provider.connect();
         
@@ -40,11 +37,8 @@ export const useNonEVMPayment = () => {
         
         const { signature } = await provider.signAndSendTransaction(transaction);
         return signature;
-      } else {
-        await navigator.clipboard.writeText(address);
-        alert(`Phantom wallet not found. The Solana address ${address} has been copied to your clipboard.`);
-        return true;
       }
+      throw new Error("WALLET_NOT_FOUND");
     }
 
     return null;
@@ -52,3 +46,6 @@ export const useNonEVMPayment = () => {
 
   return { processNonEVMPayment };
 };
+
+
+
