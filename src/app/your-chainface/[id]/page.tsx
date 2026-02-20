@@ -266,21 +266,32 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
 const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
     const [amount, setAmount] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
             setAmount('');
             setIsProcessing(false);
+            setCopied(false);
         }
     }, [isOpen]);
 
     if (!isOpen) return null;
 
+    const isManualCopy = coin === 'BTC' || coin === 'SOL';
+    const shortAddress = address ? `${address.slice(0, 6)}...` : '';
+
     const handlePay = async () => {
-        if (!amount || parseFloat(amount) <= 0) return;
+        if (!isManualCopy && (!amount || parseFloat(amount) <= 0)) return;
         setIsProcessing(true);
         await onConfirm(amount);
         setIsProcessing(false);
+    };
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(address);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
     const handleBackgroundClick = (e: any) => {
@@ -292,86 +303,62 @@ const PaymentModal = ({ isOpen, onClose, coin, address, onConfirm }: any) => {
     return (
         <div onClick={handleBackgroundClick} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(46, 26, 71, 0.6)', backdropFilter: 'blur(4px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="fade-in" style={{ width: '85%', maxWidth: '300px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '18px', boxShadow: '0 15px 40px rgba(46, 26, 71, 0.2)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                
                 <button onClick={onClose} style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: '#999', fontSize: '16px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
-                
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
                     <img src={COIN_LOGOS[coin] || COIN_LOGOS.WALLET} width="20" height="20" alt={coin} style={{ objectFit: 'contain' }} />
                     <h3 style={{ margin: 0, color: deepPurple, fontSize: '15px', fontFamily: 'Outfit, sans-serif', fontWeight: '700' }}>
                         Send {coin}
                     </h3>
                 </div>
-
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    
-                    {}
-                    <div style={{ background: '#f8f9fa', padding: '8px 10px', borderRadius: '8px', border: '1px solid #e9ecef', width: '100%', overflow: 'hidden' }}>
-                        <span style={{ fontWeight: '600', display: 'block', marginBottom: '1px', color: '#888', fontSize: '9px', textTransform: 'uppercase' }}>Recipient:</span>
-                        <div style={{ 
-                            fontSize: '10px', 
-                            color: '#555', 
-                            whiteSpace: 'nowrap',       
-                            overflow: 'hidden',         
-                            textOverflow: 'ellipsis',   
-                            fontFamily: 'monospace'
-                        }}>
-                            {address}
+                    {isManualCopy ? (
+                        <div style={{ textAlign: 'center', marginTop: '5px' }}>
+                            <p style={{ fontSize: '13px', color: '#666', marginBottom: '15px', fontWeight: '600' }}>
+                                Please copy this address to transfer from your wallet
+                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8f9fa', padding: '10px 15px', borderRadius: '8px', border: '1px solid #e9ecef', marginBottom: '15px' }}>
+                                <span style={{ fontSize: '15px', fontFamily: 'monospace', color: '#333', fontWeight: 'bold' }}>{shortAddress}</span>
+                                <button onClick={handleCopy} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: copied ? '#10B981' : deepPurple, fontSize: '20px' }}>
+                                    <i className={copied ? "bi bi-check2-all" : "bi bi-copy"}></i>
+                                </button>
+                            </div>
+                            <button onClick={handlePay} disabled={isProcessing} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', color: '#fff', fontWeight: '600', fontSize: '13px', background: deepPurple, cursor: isProcessing ? 'default' : 'pointer', opacity: isProcessing ? 0.7 : 1, transition: '0.2s' }}>
+                                {isProcessing ? '...' : 'Open Wallet'}
+                            </button>
                         </div>
-                    </div>
-
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '11px', fontWeight: '600', color: '#333' }}>Amount</label>
-                        <div style={{ position: 'relative' }}>
-                            {}
-                            <input 
-                                type="text" 
-                                inputMode="decimal"
-                                value={amount} 
-                                onChange={(e) => {
-                            
-                                    const val = e.target.value;
-                                    if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
-                                        setAmount(val);
-                                    }
-                                }} 
-                                placeholder="0.00" 
-                                style={{ width: '100%', padding: '8px 35px 8px 10px', borderRadius: '8px', background: '#fff', border: '1px solid #d1d5db', color: '#333', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif', fontWeight: '500' }} 
-                                autoFocus 
-                            />
-                            <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontWeight: '600', color: '#888', fontSize: '11px', pointerEvents: 'none' }}>
-                                {coin}
-                            </span>
-                        </div>
-                    </div>
-
-                    <button 
-                        onClick={handlePay} 
-                        disabled={isProcessing || !amount} 
-                        style={{ 
-                            marginTop: '4px',
-                            width: '100%', 
-                            padding: '10px', 
-                            borderRadius: '8px', 
-                            border: 'none', 
-                            color: '#fff', 
-                            fontWeight: '600',
-                            fontSize: '13px',
-                            background: deepPurple, 
-                            cursor: (isProcessing || !amount) ? 'default' : 'pointer',
-                            opacity: (isProcessing || !amount) ? 0.7 : 1,
-                            transition: '0.2s',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '6px'
-                        }}>
-                        {isProcessing ? 'Processing...' : (
-                            <>
-                                <span>Pay Now</span>
-                                <img src={COIN_LOGOS[coin]} width="14" height="14" style={{ filter: 'brightness(0) invert(1)' }} alt="" />
-                            </>
-                        )}
-                    </button>
+                    ) : (
+                        <>
+                            <div style={{ background: '#f8f9fa', padding: '8px 10px', borderRadius: '8px', border: '1px solid #e9ecef', width: '100%', overflow: 'hidden' }}>
+                                <span style={{ fontWeight: '600', display: 'block', marginBottom: '1px', color: '#888', fontSize: '9px', textTransform: 'uppercase' }}>Recipient:</span>
+                                <div style={{ fontSize: '10px', color: '#555', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'monospace' }}>
+                                    {address}
+                                </div>
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '11px', fontWeight: '600', color: '#333' }}>Amount</label>
+                                <div style={{ position: 'relative' }}>
+                                    <input 
+                                        type="text" 
+                                        inputMode="decimal"
+                                        value={amount} 
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) { setAmount(val); }
+                                        }} 
+                                        placeholder="0.00" 
+                                        style={{ width: '100%', padding: '8px 35px 8px 10px', borderRadius: '8px', background: '#fff', border: '1px solid #d1d5db', color: '#333', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif', fontWeight: '500' }} 
+                                        autoFocus 
+                                    />
+                                    <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontWeight: '600', color: '#888', fontSize: '11px', pointerEvents: 'none' }}>
+                                        {coin}
+                                    </span>
+                                </div>
+                            </div>
+                            <button onClick={handlePay} disabled={isProcessing || !amount} style={{ marginTop: '4px', width: '100%', padding: '10px', borderRadius: '8px', border: 'none', color: '#fff', fontWeight: '600', fontSize: '13px', background: deepPurple, cursor: (isProcessing || !amount) ? 'default' : 'pointer', opacity: (isProcessing || !amount) ? 0.7 : 1, transition: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                {isProcessing ? '...' : <><span>Pay Now</span><img src={COIN_LOGOS[coin]} width="14" height="14" style={{ filter: 'brightness(0) invert(1)' }} alt="" /></>}
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
@@ -681,28 +668,14 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
     try {
         const lowerCoin = selectedPaymentCoin.toLowerCase();
         let txHash;
-        
+
         if (lowerCoin === 'btc' || lowerCoin === 'sol') {
-            navigator.clipboard.writeText(selectedPaymentAddress);
-            
-            if (lowerCoin === 'sol' && typeof window !== 'undefined' && (window as any).solana && (window as any).solana.isPhantom) {
-                try {
-                    await (window as any).solana.connect();
-                } catch (err) {}
+            if (lowerCoin === 'sol' && typeof window !== 'undefined' && (window as any).solana) {
+                try { await (window as any).solana.connect(); } catch (e) {}
             }
             if (lowerCoin === 'btc' && typeof window !== 'undefined' && (window as any).unisat) {
-                try {
-                    await (window as any).unisat.requestAccounts();
-                } catch (err) {}
+                try { await (window as any).unisat.requestAccounts(); } catch (e) {}
             }
-
-            const protocol = lowerCoin === 'btc' ? 'bitcoin:' : 'solana:';
-            const link = document.createElement('a');
-            link.href = `${protocol}${selectedPaymentAddress}?amount=${amount}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
             setPaymentModalOpen(false);
             setShowVisitorBox(true);
             return;
