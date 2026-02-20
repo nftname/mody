@@ -562,9 +562,10 @@ export default function ChainFacePage() {
           const currentOwnerStr = String(realOwnerAddress).toLowerCase();
           
           const urlParams = new URLSearchParams(window.location.search);
-          const ownerInLink = urlParams.get('owner')?.toLowerCase();
+          const refInLink = urlParams.get('ref')?.toLowerCase();
+          const oldOwnerInLink = urlParams.get('owner')?.toLowerCase(); // لدعم الروابط القديمة إن وجدت
           
-          if (ownerInLink && ownerInLink !== currentOwnerStr) {
+          if ((refInLink && !currentOwnerStr.includes(refInLink)) || (oldOwnerInLink && oldOwnerInLink !== currentOwnerStr)) {
               setIsLinkExpired(true);
           }
 
@@ -781,7 +782,10 @@ const handleConfirmPayment = async (amount: string) => {
 
   const getSecureUrl = () => {
     const url = new URL(window.location.origin + window.location.pathname);
-    if (profileData.owner) url.searchParams.set('owner', profileData.owner);
+    if (profileData.owner) {
+        const securityRef = profileData.owner.slice(2, 8).toLowerCase();
+        url.searchParams.set('ref', securityRef);
+    }
     return url.toString();
   };
 
