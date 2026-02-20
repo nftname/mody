@@ -167,7 +167,7 @@ const Navbar = () => {
     return (
       <div style={{ position: 'relative', height: height, minWidth: minWidth, display: 'inline-block' }}>
         <ConnectButton.Custom>
-          {({ account, chain, openAccountModal, openConnectModal, authenticationStatus, mounted }) => {
+          {({ account, chain, openAccountModal, openChainModal, openConnectModal, authenticationStatus, mounted }) => {
             const ready = mounted && authenticationStatus !== 'loading';
             const connected = ready && account && chain && (!authenticationStatus || authenticationStatus === 'authenticated');
             return (
@@ -177,7 +177,7 @@ const Navbar = () => {
                     return ( <div onClick={openConnectModal} style={customDisconnectStyle} className="hover-effect-btn"> {btnText} </div> );
                   }
                   if (chain.unsupported) {
-                    return ( <div onClick={openConnectModal} style={{...customDisconnectStyle, borderColor: '#ff4d4d', color: '#ff4d4d'}}> Wrong Net </div> );
+                    return ( <div onClick={openChainModal} style={{...customDisconnectStyle, borderColor: '#ff4d4d', color: '#ff4d4d', backgroundColor: 'rgba(255, 77, 77, 0.1)'}}> Fix Network </div> );
                   }
                   return (
                     <div onClick={openAccountModal} style={{...customConnectStyle, fontSize}}>
@@ -193,6 +193,7 @@ const Navbar = () => {
       </div>
     );
   };
+
   // --- END WALLET LOGIC ---
 
   const portfolioBtnStyle = {
