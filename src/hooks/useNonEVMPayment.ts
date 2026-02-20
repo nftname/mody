@@ -1,14 +1,47 @@
 
+import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+
 export const useNonEVMPayment = () => {
   const processNonEVMPayment = async (coin: string, address: string, amount: string) => {
     const lowerCoin = coin.toLowerCase();
-    await navigator.clipboard.writeText(address);
-    const protocol = lowerCoin === 'btc' ? 'bitcoin:' : 'solana:';
-    window.location.href = `${protocol}${address}?amount=${amount}`;
-    return true; 
+
+    if (lowerCoin === 'btc') {
+      if (typeof window !== 'undefined' && (window as any).unisat) {
+        const satoshis = Math.floor(parseFloat(amount) * 100000000);
+        return await (window as any).unisat.sendBitcoin(address, satoshis);
+      }
+      throw new Error("Unisat wallet not found");
+    }
+
+    if (lowerCoin === 'sol') {
+      if (typeof window !== 'undefined' && (window as any).solana) {
+        const provider = (window as any).solana;
+        await provider.connect();
+        
+        const connection = new Connection("https://api.mainnet-beta.solana.com");
+        const fromPubkey = provider.publicKey;
+        const toPubkey = new PublicKey(address);
+        
+        const transaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey,
+            toPubkey,
+            lamports: parseFloat(amount) * LAMPORTS_PER_SOL,
+          })
+        );
+        
+        const { blockhash } = await connection.getLatestBlockhash();
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = fromPubkey;
+        
+        const { signature } = await provider.signAndSendTransaction(transaction);
+        return signature;
+      }
+      throw new Error("Phantom wallet not found");
+    }
+
+    return null;
   };
 
   return { processNonEVMPayment };
 };
-
-
