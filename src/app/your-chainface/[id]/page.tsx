@@ -471,47 +471,47 @@ export default function ChainFacePage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const handleSaveWallet = async (coin: string, walletAddr: string) => {
-      if (!isOwner) return;
-      
-      const columnMap: any = { 
-          'BTC': 'btc_address', 
-          'ETH': 'eth_address', 
-          'SOL': 'sol_address', 
-          'BNB': 'bnb_address', 
-          'USDT': 'usdt_address', 
-          'POLYGON': 'matic_address' 
-      };
+    if (!isOwner) return;
+    
+    const columnMap: any = { 
+        'BTC': 'btc_address', 
+        'ETH': 'eth_address', 
+        'SOL': 'sol_address', 
+        'BNB': 'bnb_address', 
+        'USDT': 'usdt_address', 
+        'POLYGON': 'matic_address' 
+    };
 
-      try {
-          const updates: any = { 
-              owner_address: address, 
-              updated_at: new Date().toISOString() 
-          };
-          
-          updates[columnMap[coin]] = walletAddr; 
+    try {
+        const updates: any = { 
+            owner_address: address, 
+            updated_at: new Date().toISOString() 
+        };
+        
+        updates[columnMap[coin]] = walletAddr === '' ? null : walletAddr; 
 
-          const { error } = await supabase
-              .from('chainface_profiles')
-              .update(updates)
-              .eq('token_id', Number(tokenId));
+        const { error } = await supabase
+            .from('chainface_profiles')
+            .update(updates)
+            .eq('token_id', Number(tokenId));
 
-          if (error) {
-              const { error: insertError } = await supabase
-                  .from('chainface_profiles')
-                  .upsert({ token_id: Number(tokenId), ...updates }, { onConflict: 'token_id' });
-              if (insertError) throw insertError;
-          }
+        if (error) {
+            const { error: insertError } = await supabase
+                .from('chainface_profiles')
+                .upsert({ token_id: Number(tokenId), ...updates }, { onConflict: 'token_id' });
+            if (insertError) throw insertError;
+        }
 
-          const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
-          setProfileData((prev: any) => ({
-              ...prev, 
-              wallets: { ...prev.wallets, [stateKey]: walletAddr }
-          }));
+        const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
+        setProfileData((prev: any) => ({
+            ...prev, 
+            wallets: { ...prev.wallets, [stateKey]: walletAddr }
+        }));
 
-      } catch (e) { 
-          console.error("Save execution failed", e); 
-      }
-  };
+    } catch (e) { 
+        console.error("Save execution failed", e); 
+    }
+};
 
   // --- BLOCKCHAIN HOOKS ---
   const { data: realOwnerAddress } = useReadContract({
@@ -684,8 +684,25 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
         
         if (lowerCoin === 'btc' || lowerCoin === 'sol') {
             navigator.clipboard.writeText(selectedPaymentAddress);
+            
+            if (lowerCoin === 'sol' && typeof window !== 'undefined' && (window as any).solana && (window as any).solana.isPhantom) {
+                try {
+                    await (window as any).solana.connect();
+                } catch (err) {}
+            }
+            if (lowerCoin === 'btc' && typeof window !== 'undefined' && (window as any).unisat) {
+                try {
+                    await (window as any).unisat.requestAccounts();
+                } catch (err) {}
+            }
+
             const protocol = lowerCoin === 'btc' ? 'bitcoin:' : 'solana:';
-            window.location.href = `${protocol}${selectedPaymentAddress}?amount=${amount}`;
+            const link = document.createElement('a');
+            link.href = `${protocol}${selectedPaymentAddress}?amount=${amount}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
             setPaymentModalOpen(false);
             setShowVisitorBox(true);
             return;
@@ -693,7 +710,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
 
         if (lowerCoin === 'usdt') {
             if (switchChainAsync) {
-                try { await switchChainAsync({ chainId: 137 }); } catch (e) { console.log('Network switch ignored or failed'); }
+                await switchChainAsync({ chainId: 137 });
             }
             const usdtAmount = BigInt(Math.floor(parseFloat(amount) * 1000000));
             txHash = await writeContractAsync({
@@ -705,7 +722,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
         } else {
             let targetChainId = lowerCoin === 'eth' ? 1 : lowerCoin === 'bnb' ? 56 : 137;
             if (switchChainAsync) {
-                try { await switchChainAsync({ chainId: targetChainId }); } catch (e) { console.log('Network switch ignored or failed'); }
+                await switchChainAsync({ chainId: targetChainId });
             }
             txHash = await sendTransactionAsync({ 
                 to: selectedPaymentAddress as `0x${string}`,
@@ -731,7 +748,6 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
             fetchChainFaceData(false); 
         }
     } catch (e) {
-        console.error(e);
         setPaymentModalOpen(false);
     }
 };
