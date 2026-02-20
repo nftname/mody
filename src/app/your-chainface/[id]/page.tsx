@@ -507,22 +507,27 @@ export default function ChainFacePage() {
 
       try {
           const updates: any = { 
-              owner_address: address, 
+              owner_address: address?.toLowerCase(), 
               updated_at: new Date().toISOString() 
           };
           
           updates[columnMap[coin]] = walletAddr; 
 
-          const { error } = await supabase
+          const { data: existingProfile } = await supabase
               .from('chainface_profiles')
-              .update(updates)
-              .eq('token_id', Number(tokenId));
+              .select('id')
+              .eq('token_id', Number(tokenId))
+              .maybeSingle();
 
-          if (error) {
-              const { error: insertError } = await supabase
+          if (existingProfile) {
+              await supabase
                   .from('chainface_profiles')
-                  .upsert({ token_id: Number(tokenId), ...updates }, { onConflict: 'token_id' });
-              if (insertError) throw insertError;
+                  .update(updates)
+                  .eq('token_id', Number(tokenId));
+          } else {
+              await supabase
+                  .from('chainface_profiles')
+                  .insert({ token_id: Number(tokenId), ...updates });
           }
 
           const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
@@ -535,6 +540,7 @@ export default function ChainFacePage() {
           console.error("Save execution failed", e); 
       }
   };
+
 
   // --- BLOCKCHAIN HOOKS ---
   const { data: realOwnerAddress } = useReadContract({
@@ -842,7 +848,7 @@ const handleConfirmPayment = async (amount: string) => {
         await navigator.share({
           files: [file],
           title: `ChainFace: ${profileData.name}`,
-          text: `My Secure ChainFace Identity:\n${getSecureUrl()}`,
+          text: `My Verified Web3 Profile\n${getSecureUrl()}`,
         });
       } else {
         setShowShareMenu(!showShareMenu);
