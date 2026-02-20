@@ -52,8 +52,8 @@ const nextConfig = {
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
       font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:;
       img-src 'self' blob: data: https://gateway.pinata.cloud https://ipfs.io https://cloudflare-ipfs.com https://raw.githubusercontent.com https://cryptologos.cc https://cdn-icons-png.flaticon.com https://api.qrserver.com;
-      connect-src 'self' https://gateway.pinata.cloud https://ipfs.io https://cloudflare-ipfs.com https://raw.githubusercontent.com https://polygon-bor.publicnode.com https://polygon-bor-rpc.publicnode.com https://polygon-rpc.com https://rpc.ankr.com https://api.coingecko.com https://api.pinata.cloud https://verify.didit.me https://data-api.binance.vision https://cigztdxswhkkyootcywr.supabase.co wss://*.walletconnect.com wss://*.walletconnect.org https://*.walletconnect.com https://*.walletconnect.org wss://*.supabase.co;
-      frame-src 'self' https://verify.didit.me https://app.uniswap.org;
+      connect-src 'self' https: wss: data:;
+      frame-src 'self' https://verify.didit.me https://app.uniswap.org https://*.walletconnect.com https://*.walletconnect.org https://*.coinbase.com;
       object-src 'none';
       base-uri 'self';
       form-action 'self';
