@@ -8,7 +8,7 @@ import {
   darkTheme,
 } from '@rainbow-me/rainbowkit';
 import { WagmiProvider, http, fallback } from 'wagmi';
-import { polygon, mainnet, bsc } from 'viem/chains';
+import { polygon } from 'viem/chains';
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 const origin = typeof window !== 'undefined' ? window.location.origin : 'https://Nftnnm.com';
@@ -19,23 +19,13 @@ const config = getDefaultConfig({
   appUrl: origin,
   appIcon: `${origin}/icons/icon.svg`,
   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '9e2e602f47e436db24b660ee7f01f141',
-  chains: [polygon, mainnet, bsc],
+  chains: [polygon],
   transports: {
     [polygon.id]: fallback([
       http("https://polygon-bor.publicnode.com"),
       http("https://polygon-rpc.com"),
       http("https://rpc.ankr.com/polygon")
     ]),
-    [mainnet.id]: fallback([
-      http("https://eth.llamarpc.com"),
-      http("https://rpc.ankr.com/eth"),
-      http("https://cloudflare-eth.com")
-    ]),
-    [bsc.id]: fallback([
-      http("https://binance.llamarpc.com"),
-      http("https://bsc-dataseed.binance.org"),
-      http("https://rpc.ankr.com/bsc")
-    ])
   },
   ssr: true,
 });
