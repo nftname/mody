@@ -1,4 +1,3 @@
-
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export const useNonEVMPayment = () => {
@@ -6,12 +5,28 @@ export const useNonEVMPayment = () => {
     const lowerCoin = coin.toLowerCase();
 
     if (lowerCoin === 'btc') {
+      const satoshis = Math.floor(parseFloat(amount) * 100000000);
+
       if (typeof window !== 'undefined' && (window as any).unisat) {
         await (window as any).unisat.requestAccounts();
-        const satoshis = Math.floor(parseFloat(amount) * 100000000);
         return await (window as any).unisat.sendBitcoin(address, satoshis);
+      } 
+      else if (typeof window !== 'undefined' && (window as any).okxwallet && (window as any).okxwallet.bitcoin) {
+        await (window as any).okxwallet.bitcoin.connect();
+        return await (window as any).okxwallet.bitcoin.sendBitcoin(address, satoshis);
       }
-      throw new Error("WALLET_NOT_FOUND");
+      else if (typeof window !== 'undefined' && (window as any).LeatherProvider) {
+        const leather = (window as any).LeatherProvider;
+        const response = await leather.request('sendTransfer', {
+          address: address,
+          amount: satoshis.toString()
+        });
+        return response.txid;
+      }
+      else {
+        await navigator.clipboard.writeText(address);
+        throw new Error("WALLET_NOT_FOUND");
+      }
     }
 
     if (lowerCoin === 'sol') {
@@ -46,6 +61,3 @@ export const useNonEVMPayment = () => {
 
   return { processNonEVMPayment };
 };
-
-
-

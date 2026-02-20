@@ -696,6 +696,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
     setSelectedPaymentCoin(coin);
     setSelectedPaymentAddress(walletAddr);
     setPaymentModalOpen(true);
+    setShowVisitorBox(true);
 };
 
 const handleConfirmPayment = async (amount: string) => {
@@ -1633,7 +1634,16 @@ const handleConfirmPayment = async (amount: string) => {
                           {messages.slice((currentPage - 1) * 10, currentPage * 10).map(m => (
                               <div key={m.id} style={{ padding: '15px', background: '#fff', borderRadius: '15px', border: '1px solid #f0f0f0' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '700', color: '#a855f7' }}>
-                                      <span>{m.sender_wallet.slice(0,6)}...</span>
+                                      <a 
+                                        href={`https://polygonscan.com/address/${m.sender_wallet}`} 
+                                         target="_blank" 
+                                         rel="noopener noreferrer"
+                                   style={{ color: '#a855f7', textDecoration: 'underline', cursor: 'pointer' }}
+                                         title="View on Explorer"
+                                             >
+                                       {m.sender_wallet.slice(0, 6)}...{m.sender_wallet.slice(-4)}
+                                       </a>
+
                                       <span style={{ color: '#aaa' }}>{new Date(m.created_at).toLocaleDateString()}</span>
                                   </div>
                                   <p style={{ margin: '5px 0 0', fontSize: '13px', color: '#2E1A47' }}>{m.message_text}</p>
