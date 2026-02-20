@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useAccount, useReadContract, useSendTransaction, useWriteContract } from 'wagmi';
+import { useAccount, useReadContract, useSendTransaction, useWriteContract, useSwitchChain } from 'wagmi';
 import { parseAbi, parseEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS } from '@/data/config'; 
 import { supabase } from '@/lib/supabase';
@@ -225,13 +225,17 @@ const WalletEditorModal = ({ isOpen, onClose, wallets, onSave }: any) => {
 
                 {!selectedCoin ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                        {['BTC', 'ETH', 'SOL', 'BNB', 'USDT', 'POLYGON'].map(coin => (
-                            <button key={coin} onClick={() => { setSelectedCoin(coin); setAddressInput(wallets[coin.toLowerCase()] || ''); }} 
-                                style={{ background: '#f8f9fa', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '15px', color: deepPurple, display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', transition: '0.2s' }}>
-                                <img src={COIN_LOGOS[coin]} width="28" height="28" alt={coin} />
-                                <span style={{fontSize: '14px', fontWeight: '700'}}>{coin}</span>
-                            </button>
-                        ))}
+                        
+              {['BTC', 'ETH', 'SOL', 'BNB', 'USDT', 'POLYGON'].map(coin => {
+                   const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
+                   return (
+                <button key={coin} onClick={() => { setSelectedCoin(coin); setAddressInput(wallets[stateKey] || ''); }} 
+                    style={{ background: '#f8f9fa', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '15px', color: deepPurple, display: 'flex', alignItems:                'center', gap: '10px', cursor: 'pointer', transition: '0.2s' }}>
+                     <img src={COIN_LOGOS[coin]} width="28" height="28" alt={coin} />
+                    <span style={{fontSize: '14px', fontWeight: '700'}}>{coin}</span>
+                 </button>
+               );
+            })}
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', flex: 1 }}>
@@ -383,6 +387,7 @@ export default function ChainFacePage() {
   
   const { address } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
+  const { switchChainAsync } = useSwitchChain();
 
 
    // --- VERIFICATION PAYMENT LOGIC ---
@@ -526,9 +531,9 @@ export default function ChainFacePage() {
   });
 
   // --- DATA FETCHING (TRIGGER ACTIVATOR) ---
-  const fetchChainFaceData = useCallback(async () => {
-      if (!tokenId || !realOwnerAddress) return;
-      setLoading(true);
+  const fetchChainFaceData = useCallback(async (isInitialLoad = false) => {
+    if (!tokenId || !realOwnerAddress) return;
+    if (isInitialLoad) setLoading(true);
 
       try {
           const currentOwnerStr = String(realOwnerAddress).toLowerCase();
@@ -573,9 +578,21 @@ export default function ChainFacePage() {
               console.log("New Owner Detected! Updating DB to trigger auto-wipe...");
 
               await supabase.from('chainface_profiles').update({
-                  owner_address: currentOwnerStr,
-                  updated_at: new Date().toISOString()
-              }).eq('token_id', tokenId);
+    owner_address: currentOwnerStr,
+    btc_address: null,
+    eth_address: null,
+    sol_address: null,
+    bnb_address: null,
+    usdt_address: null,
+    matic_address: null,
+    updated_at: new Date().toISOString()
+}).eq('token_id', tokenId);
+
+await supabase.from('chainface_wallet_verifications').update({
+    is_phone_verified: false,
+    is_kyc_verified: false
+}).eq('wallet_address', currentOwnerStr);
+;
 
               safeProfile = null;
               setMessages([]); 
@@ -628,11 +645,11 @@ export default function ChainFacePage() {
   }, [tokenId, isOwner, sortOrder]);
 
    useEffect(() => {
-      fetchChainFaceData();
-      const handleFocus = () => fetchChainFaceData();
-      window.addEventListener('focus', handleFocus);
-      return () => window.removeEventListener('focus', handleFocus);
-  }, [fetchChainFaceData]);
+    fetchChainFaceData(true);
+    const handleFocus = () => fetchChainFaceData(false);
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+}, [fetchChainFaceData]);
 
 
   useEffect(() => {
@@ -651,31 +668,33 @@ export default function ChainFacePage() {
   };
 
   
-  const handleWalletAction = (walletAddr: string, coin: string) => {
+const handleWalletAction = (walletAddr: string, coin: string) => {
     if (!walletAddr || isLinkExpired) return;
-    
-    const lowerCoin = coin.toLowerCase();
-    
-    if (lowerCoin === 'btc' || lowerCoin === 'sol') {
-        navigator.clipboard.writeText(walletAddr);
-        window.location.href = lowerCoin === 'btc' ? `bitcoin:${walletAddr}` : `solana:${walletAddr}`;
-        setShowVisitorBox(true);
-        return;
-    }
-
     setSelectedPaymentCoin(coin);
     setSelectedPaymentAddress(walletAddr);
     setPaymentModalOpen(true);
-  };
+};
+
 
   const handleConfirmPayment = async (amount: string) => {
-      if (!selectedPaymentCoin || !selectedPaymentAddress) return;
-
-      try {
+    if (!selectedPaymentCoin || !selectedPaymentAddress) return;
+    try {
         const lowerCoin = selectedPaymentCoin.toLowerCase();
         let txHash;
         
+        if (lowerCoin === 'btc' || lowerCoin === 'sol') {
+            navigator.clipboard.writeText(selectedPaymentAddress);
+            const protocol = lowerCoin === 'btc' ? 'bitcoin:' : 'solana:';
+            window.location.href = `${protocol}${selectedPaymentAddress}?amount=${amount}`;
+            setPaymentModalOpen(false);
+            setShowVisitorBox(true);
+            return;
+        }
+
         if (lowerCoin === 'usdt') {
+            if (switchChainAsync) {
+                try { await switchChainAsync({ chainId: 137 }); } catch (e) { console.log('Network switch ignored or failed'); }
+            }
             const usdtAmount = BigInt(Math.floor(parseFloat(amount) * 1000000));
             txHash = await writeContractAsync({
                 address: USDT_POLYGON_ADDRESS,
@@ -684,11 +703,13 @@ export default function ChainFacePage() {
                 args: [selectedPaymentAddress as `0x${string}`, usdtAmount],
             });
         } else {
-            let chainId = lowerCoin === 'eth' ? 1 : lowerCoin === 'bnb' ? 56 : 137;
+            let targetChainId = lowerCoin === 'eth' ? 1 : lowerCoin === 'bnb' ? 56 : 137;
+            if (switchChainAsync) {
+                try { await switchChainAsync({ chainId: targetChainId }); } catch (e) { console.log('Network switch ignored or failed'); }
+            }
             txHash = await sendTransactionAsync({ 
                 to: selectedPaymentAddress as `0x${string}`,
-                value: parseEther(amount),
-                chainId: chainId
+                value: parseEther(amount)
             });
         }
 
@@ -705,16 +726,15 @@ export default function ChainFacePage() {
                     txHash: txHash
                 })
             });
-
             setPaymentModalOpen(false);
             setShowVisitorBox(true);
-            fetchChainFaceData(); 
+            fetchChainFaceData(false); 
         }
-
-      } catch (e) {
-        console.error("Payment rejected or failed:", e);
-      }
-  };
+    } catch (e) {
+        console.error(e);
+        setPaymentModalOpen(false);
+    }
+};
 
   const handleSupportClick = async (type: 'like' | 'dislike') => {
       setFeedback(type);
