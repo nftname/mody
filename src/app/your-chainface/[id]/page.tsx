@@ -30,7 +30,6 @@ const COIN_LOGOS: any = {
     SOL: "https://cryptologos.cc/logos/solana-sol-logo.svg?v=026",
     BNB: "https://cryptologos.cc/logos/bnb-bnb-logo.svg?v=026",
     USDT: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=026",
-    // زر عام في حالة عدم تحديد شبكة
     WALLET: "https://cdn-icons-png.flaticon.com/512/60/60484.png" 
 };
 
@@ -383,7 +382,8 @@ export default function ChainFacePage() {
   const tokenId = params?.id as string;
   
   const { address } = useAccount();
-  const { sendTransaction } = useSendTransaction();
+  const { sendTransactionAsync } = useSendTransaction();
+
 
    // --- VERIFICATION PAYMENT LOGIC ---
   const { writeContractAsync } = useWriteContract();
@@ -478,36 +478,35 @@ export default function ChainFacePage() {
       };
 
       try {
-         
           const updates: any = { 
-              token_id: Number(tokenId),
               owner_address: address, 
               updated_at: new Date().toISOString() 
           };
           
           updates[columnMap[coin]] = walletAddr; 
 
-          const { error } = await supabase.from('chainface_profiles').upsert(updates, { onConflict: 'token_id' });
+          const { error } = await supabase
+              .from('chainface_profiles')
+              .update(updates)
+              .eq('token_id', Number(tokenId));
 
           if (error) {
-              console.error("Supabase Save Error:", error);
-              throw error;
+              const { error: insertError } = await supabase
+                  .from('chainface_profiles')
+                  .upsert({ token_id: Number(tokenId), ...updates }, { onConflict: 'token_id' });
+              if (insertError) throw insertError;
           }
-          const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
 
-      
+          const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
           setProfileData((prev: any) => ({
               ...prev, 
               wallets: { ...prev.wallets, [stateKey]: walletAddr }
-
           }));
 
       } catch (e) { 
           console.error("Save execution failed", e); 
       }
   };
-
-
 
   // --- BLOCKCHAIN HOOKS ---
   const { data: realOwnerAddress } = useReadContract({
@@ -548,7 +547,12 @@ export default function ChainFacePage() {
               if (meta.name) assetName = meta.name;
           }
 
-          const { count: convictionCount } = await supabase.from('conviction_votes').select('*', { count: 'exact', head: true }).eq('token_id', tokenId);
+          const { data: votesData } = await supabase
+              .from('conviction_votes')
+              .select('amount')
+              .eq('token_id', tokenId);
+
+          const totalConviction = votesData?.reduce((acc: number, curr: any) => acc + (curr.amount || 100), 0) || 0;
           const { data: walletVerification } = await supabase
               .from('chainface_wallet_verifications')
               .select('is_phone_verified, is_kyc_verified')
@@ -594,7 +598,7 @@ export default function ChainFacePage() {
                   matic: safeProfile?.matic_address || ''
               },
               stats: {
-                  conviction: (convictionCount || 0) * 100,
+                  conviction: totalConviction,
                   likes: safeProfile?.likes_count || 0,
                   dislikes: safeProfile?.dislikes_count || 0
               }
@@ -669,26 +673,48 @@ export default function ChainFacePage() {
 
       try {
         const lowerCoin = selectedPaymentCoin.toLowerCase();
-        let chainId;
+        let txHash;
         
-        if (lowerCoin === 'eth' || lowerCoin === 'usdt') chainId = 1;
-        else if (lowerCoin === 'polygon' || lowerCoin === 'matic') chainId = 137;
-        else if (lowerCoin === 'bnb') chainId = 56;
+        if (lowerCoin === 'usdt') {
+            const usdtAmount = BigInt(Math.floor(parseFloat(amount) * 1000000));
+            txHash = await writeContractAsync({
+                address: USDT_POLYGON_ADDRESS,
+                abi: ERC20_ABI,
+                functionName: 'transfer',
+                args: [selectedPaymentAddress as `0x${string}`, usdtAmount],
+            });
+        } else {
+            let chainId = lowerCoin === 'eth' ? 1 : lowerCoin === 'bnb' ? 56 : 137;
+            txHash = await sendTransactionAsync({ 
+                to: selectedPaymentAddress as `0x${string}`,
+                value: parseEther(amount),
+                chainId: chainId
+            });
+        }
 
-        sendTransaction({ 
-            to: selectedPaymentAddress as `0x${string}`,
-            value: parseEther(amount),
-            chainId: chainId
-        });
+        if (txHash) {
+            await fetch('/api/nnm/chainface-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tokenId: tokenId,
+                    sender: address || 'Anonymous_Visitor',
+                    receiver: profileData.owner,
+                    coin: selectedPaymentCoin,
+                    amount: amount,
+                    txHash: txHash
+                })
+            });
 
-        setPaymentModalOpen(false);
-        setShowVisitorBox(true);
+            setPaymentModalOpen(false);
+            setShowVisitorBox(true);
+            fetchChainFaceData(); 
+        }
+
       } catch (e) {
-        console.error(e);
+        console.error("Payment rejected or failed:", e);
       }
   };
-
-
 
   const handleSupportClick = async (type: 'like' | 'dislike') => {
       setFeedback(type);
@@ -1333,16 +1359,54 @@ export default function ChainFacePage() {
           )}
 
 
-          <div className="conviction-box">
-              <span className="conviction-label">Conviction</span>
-              <div className="conviction-number-wrapper">
-                  {/* Dynamic Conviction Score */}
-                  <span className="conviction-number">
-                    {new Intl.NumberFormat('en-US').format(profileData.stats.conviction)}
+                    <div style={{ position: 'relative', textAlign: 'center', marginTop: '30px', marginBottom: '45px' }}>
+              <span style={{ 
+                  display: 'block', 
+                  fontSize: '8px', 
+                  fontWeight: '700', 
+                  letterSpacing: '2px', 
+                  textTransform: 'uppercase', 
+                  color: '#64748B',
+                  marginBottom: '4px',
+                  fontFamily: '"Inter", sans-serif',
+                  opacity: '0.85'
+              }}>
+                  Conviction
+              </span>
+              
+              <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  gap: '6px' 
+              }}>
+                  {/* Dynamic Conviction Score with New Styling */}
+                  <span style={{ 
+                      color: '#0F172A',
+                      fontSize: '19px', 
+                      fontWeight: '700', 
+                      fontFamily: '"Satoshi", sans-serif',
+                      letterSpacing: '-0.2px',
+                      lineHeight: '1',
+                      paddingTop: '2px'
+                  }}>
+                      {new Intl.NumberFormat('en-US').format(profileData.stats.conviction)}
                   </span>
-                  <span className="conviction-currency">NNM</span>
+
+                  {/* Royal Blue Diamond Icon */}
+                  <img 
+                      src="https://cdn-icons-png.flaticon.com/512/3557/3557840.png" 
+                      alt="Royal Blue Diamond" 
+                      width="17" 
+                      height="17" 
+                      style={{ 
+                          objectFit: 'contain',
+                          filter: 'drop-shadow(0 2px 4px rgba(0, 150, 255, 0.2))'
+                      }}
+                  />
               </div>
           </div>
+
 
           <div style={{ maxWidth: '800px', margin: '20px auto', textAlign: 'center', padding: '0 20px' }}>
               
