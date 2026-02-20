@@ -2,13 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
 
-  // --- [تحديث البرو]: إعدادات المكتبات الخارجية لبيئة السيرفر ---
-  // هذا الجزء هو المفتاح لعمل مكتبة sharp وكتابة الأسماء على الصور في Vercel/Serverless
   experimental: {
     serverComponentsExternalPackages: ['sharp'],
   },
 
-  // 1. إعدادات الصور (للسماح بجلب الصور من بيناتا)
   images: {
     remotePatterns: [
       {
@@ -28,21 +25,15 @@ const nextConfig = {
         hostname: 'raw.githubusercontent.com',
       },
     ],
-    // احتياطياً للدعم القديم لضمان عدم تعطل عرض أي NFT
     domains: ['gateway.pinata.cloud', 'ipfs.io', 'cloudflare-ipfs.com', 'raw.githubusercontent.com'],
   },
 
-  // 2. إصلاحات الويب 3 (المنطق الجوهري لربط المحافظ ومنع تعارض المكتبات)
   webpack: (config) => {
-    // Ignore React Native Async Storage (Fixes the warning)
-    // هذا الجزء يمنع التحذيرات المزعجة عند بناء المشروع
     config.resolve.alias = {
       ...config.resolve.alias,
       '@react-native-async-storage/async-storage': false, 
     };
 
-    // Ignore standard node modules for browser (Standard Web3 fix)
-    // إعدادات ضرورية لعمل مكتبات مثل viem و wagmi داخل المتصفح
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
@@ -54,8 +45,21 @@ const nextConfig = {
     return config;
   },
 
-  // 3. الحصن الرقمي (Security Headers) - الأسطر التي تحمي موقعك من الهجمات
   async headers() {
+    const cspHeader = `
+      default-src 'self';
+      script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+      font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:;
+      img-src 'self' blob: data: https://gateway.pinata.cloud https://ipfs.io https://cloudflare-ipfs.com https://raw.githubusercontent.com https://cryptologos.cc https://cdn-icons-png.flaticon.com https://api.qrserver.com;
+      connect-src 'self' https: wss: data:;
+      frame-src 'self' https://verify.didit.me https://app.uniswap.org https://*.walletconnect.com https://*.walletconnect.org https://*.coinbase.com;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      upgrade-insecure-requests;
+    `.replace(/\s{2,}/g, ' ').trim();
+
     return [
       {
         source: '/:path*',
@@ -83,6 +87,10 @@ const nextConfig = {
           {
             key: 'X-XSS-Protection',
             value: '1; mode=block'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: cspHeader
           }
         ]
       }
