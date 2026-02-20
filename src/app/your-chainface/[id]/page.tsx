@@ -507,27 +507,22 @@ export default function ChainFacePage() {
 
       try {
           const updates: any = { 
-              owner_address: address?.toLowerCase(), 
+              owner_address: address, 
               updated_at: new Date().toISOString() 
           };
           
           updates[columnMap[coin]] = walletAddr; 
 
-          const { data: existingProfile } = await supabase
+          const { error } = await supabase
               .from('chainface_profiles')
-              .select('id')
-              .eq('token_id', Number(tokenId))
-              .maybeSingle();
+              .update(updates)
+              .eq('token_id', Number(tokenId));
 
-          if (existingProfile) {
-              await supabase
+          if (error) {
+              const { error: insertError } = await supabase
                   .from('chainface_profiles')
-                  .update(updates)
-                  .eq('token_id', Number(tokenId));
-          } else {
-              await supabase
-                  .from('chainface_profiles')
-                  .insert({ token_id: Number(tokenId), ...updates });
+                  .upsert({ token_id: Number(tokenId), ...updates }, { onConflict: 'token_id' });
+              if (insertError) throw insertError;
           }
 
           const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
@@ -540,7 +535,6 @@ export default function ChainFacePage() {
           console.error("Save execution failed", e); 
       }
   };
-
 
   // --- BLOCKCHAIN HOOKS ---
   const { data: realOwnerAddress } = useReadContract({
@@ -568,10 +562,9 @@ export default function ChainFacePage() {
           const currentOwnerStr = String(realOwnerAddress).toLowerCase();
           
           const urlParams = new URLSearchParams(window.location.search);
-          const refInLink = urlParams.get('ref')?.toLowerCase();
-          const oldOwnerInLink = urlParams.get('owner')?.toLowerCase(); // لدعم الروابط القديمة إن وجدت
+          const ownerInLink = urlParams.get('owner')?.toLowerCase();
           
-          if ((refInLink && !currentOwnerStr.includes(refInLink)) || (oldOwnerInLink && oldOwnerInLink !== currentOwnerStr)) {
+          if (ownerInLink && ownerInLink !== currentOwnerStr) {
               setIsLinkExpired(true);
           }
 
@@ -788,10 +781,7 @@ const handleConfirmPayment = async (amount: string) => {
 
   const getSecureUrl = () => {
     const url = new URL(window.location.origin + window.location.pathname);
-    if (profileData.owner) {
-        const securityRef = profileData.owner.slice(2, 8).toLowerCase();
-        url.searchParams.set('ref', securityRef);
-    }
+    if (profileData.owner) url.searchParams.set('owner', profileData.owner);
     return url.toString();
   };
 
@@ -848,7 +838,7 @@ const handleConfirmPayment = async (amount: string) => {
         await navigator.share({
           files: [file],
           title: `ChainFace: ${profileData.name}`,
-          text: `My Verified Web3 Profile\n${getSecureUrl()}`,
+          text: `My Secure ChainFace Identity:\n${getSecureUrl()}`,
         });
       } else {
         setShowShareMenu(!showShareMenu);
