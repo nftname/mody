@@ -6,6 +6,8 @@ import { useAccount, useReadContract, useSendTransaction, useWriteContract, useS
 import { parseAbi, parseEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS } from '@/data/config'; 
 import { supabase } from '@/lib/supabase';
+import { useEVMPayment } from '@/hooks/useEVMPayment';
+import { useNonEVMPayment } from '@/hooks/useNonEVMPayment';
 
 // --- PAYMENT CONFIG ---
 const TREASURY_ADDRESS = "0x8B0251c2Ce9836A3867adb9a371802AdfFaaC824"; // محفظتك
@@ -460,6 +462,8 @@ export default function ChainFacePage() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedPaymentCoin, setSelectedPaymentCoin] = useState<string | null>(null);
   const [selectedPaymentAddress, setSelectedPaymentAddress] = useState<string>('');
+  const { processEVMPayment } = useEVMPayment();
+  const { processNonEVMPayment } = useNonEVMPayment();
 
   
   const [messages, setMessages] = useState<any[]>([]);
@@ -675,43 +679,21 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
     setPaymentModalOpen(true);
 };
 
-
-  const handleConfirmPayment = async (amount: string) => {
+const handleConfirmPayment = async (amount: string) => {
     if (!selectedPaymentCoin || !selectedPaymentAddress) return;
+    
     try {
         const lowerCoin = selectedPaymentCoin.toLowerCase();
         let txHash;
-        
+
         if (lowerCoin === 'btc' || lowerCoin === 'sol') {
-            navigator.clipboard.writeText(selectedPaymentAddress);
-            const protocol = lowerCoin === 'btc' ? 'bitcoin:' : 'solana:';
-            window.location.href = `${protocol}${selectedPaymentAddress}?amount=${amount}`;
+            await processNonEVMPayment(selectedPaymentCoin, selectedPaymentAddress, amount);
             setPaymentModalOpen(false);
             setShowVisitorBox(true);
             return;
         }
 
-        if (lowerCoin === 'usdt') {
-            if (switchChainAsync) {
-                try { await switchChainAsync({ chainId: 137 }); } catch (e) { console.log('Network switch ignored or failed'); }
-            }
-            const usdtAmount = BigInt(Math.floor(parseFloat(amount) * 1000000));
-            txHash = await writeContractAsync({
-                address: USDT_POLYGON_ADDRESS,
-                abi: ERC20_ABI,
-                functionName: 'transfer',
-                args: [selectedPaymentAddress as `0x${string}`, usdtAmount],
-            });
-        } else {
-            let targetChainId = lowerCoin === 'eth' ? 1 : lowerCoin === 'bnb' ? 56 : 137;
-            if (switchChainAsync) {
-                try { await switchChainAsync({ chainId: targetChainId }); } catch (e) { console.log('Network switch ignored or failed'); }
-            }
-            txHash = await sendTransactionAsync({ 
-                to: selectedPaymentAddress as `0x${string}`,
-                value: parseEther(amount)
-            });
-        }
+        txHash = await processEVMPayment(selectedPaymentCoin, selectedPaymentAddress, amount);
 
         if (txHash) {
             await fetch('/api/nnm/chainface-payment', {
@@ -728,7 +710,7 @@ const handleWalletAction = (walletAddr: string, coin: string) => {
             });
             setPaymentModalOpen(false);
             setShowVisitorBox(true);
-            fetchChainFaceData(false); 
+            fetchChainFaceData(false);
         }
     } catch (e) {
         console.error(e);
