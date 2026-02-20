@@ -838,7 +838,7 @@ const handleConfirmPayment = async (amount: string) => {
         await navigator.share({
           files: [file],
           title: `ChainFace: ${profileData.name}`,
-          text: `My Secure ChainFace Identity:\n${getSecureUrl()}`,
+          text: `My Verified Web3 Profile\n${getSecureUrl()}`,
         });
       } else {
         setShowShareMenu(!showShareMenu);
