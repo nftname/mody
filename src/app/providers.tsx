@@ -27,12 +27,14 @@ const config = getDefaultConfig({
       http("https://rpc.ankr.com/polygon")
     ]),
     [mainnet.id]: fallback([
-      http("https://cloudflare-eth.com"),
-      http()
+      http("https://eth.llamarpc.com"),
+      http("https://rpc.ankr.com/eth"),
+      http("https://cloudflare-eth.com")
     ]),
     [bsc.id]: fallback([
+      http("https://binance.llamarpc.com"),
       http("https://bsc-dataseed.binance.org"),
-      http()
+      http("https://rpc.ankr.com/bsc")
     ])
   },
   ssr: true,
