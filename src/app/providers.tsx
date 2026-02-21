@@ -11,7 +11,7 @@ import { WagmiProvider, http, fallback } from 'wagmi';
 import { polygon, mainnet, bsc } from 'viem/chains';
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
-const origin = typeof window !== 'undefined' ? window.location.origin : 'https://Nftnnm.com';
+const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nftnnm.com';
 
 const config = getDefaultConfig({
   appName: 'NNM Market',
