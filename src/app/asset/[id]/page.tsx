@@ -685,9 +685,18 @@ const formatPriceDisplay = (price: string) => {
 
     const handleCancelOffer = async (id: any) => {
         try {
-            await supabase.from('offers').update({ status: 'cancelled' }).eq('id', id);
+            await fetch('/api/nnm/submit-offer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'cancel',
+                    offerId: id
+                })
+            });
             fetchAllData();
-        } catch(e){}
+        } catch(e) {
+            console.error(e);
+        }
     };
 
     const handleApproveNft = async () => { setIsPending(true); try { const hash = await writeContractAsync({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'setApprovalForAll', args: [MARKETPLACE_ADDRESS as `0x${string}`, true] }); await publicClient!.waitForTransactionReceipt({ hash }); setIsApproved(true); } catch (err) { console.error(err); } finally { setIsPending(false); } };

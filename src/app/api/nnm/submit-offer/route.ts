@@ -35,6 +35,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: true });
         }
 
+        if (action === 'cancel') {
+             const { error: cancelError } = await supabaseAdmin
+                .from('offers')
+                .update({ status: 'cancelled' })
+                .eq('id', offerId);
+
+            if (cancelError) throw cancelError;
+            return NextResponse.json({ success: true });
+        }
+
         const { error } = await supabaseAdmin
             .from('offers')
             .insert([{ 
@@ -53,3 +63,4 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
