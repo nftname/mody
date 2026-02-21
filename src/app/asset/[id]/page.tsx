@@ -630,13 +630,17 @@ const formatPriceDisplay = (price: string) => {
             });
             await publicClient!.waitForTransactionReceipt({ hash });
             
-            await supabase.from('activities').insert([{ 
-                token_id: tokenId, 
-                activity_type: 'Sale', 
-                from_address: listing.seller, 
-                to_address: address, 
-                price: listing.price 
-            }]);
+            await fetch('/api/nnm/record-activity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tokenId: tokenId,
+                    activityType: 'Sale',
+                    fromAddress: listing.seller,
+                    toAddress: address,
+                    price: listing.price
+                })
+            });
             
             await fetch('/api/nnm/market-buy-hook', {
                 method: 'POST',
@@ -660,11 +664,24 @@ const formatPriceDisplay = (price: string) => {
         try {
             const hash = await writeContractAsync({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'acceptOffChainOffer', args: [BigInt(tokenId), offer.bidder_address, parseEther(offer.price.toString()), BigInt(offer.expiration), offer.signature] });
             await publicClient!.waitForTransactionReceipt({ hash });
-            await supabase.from('offers').update({ status: 'accepted' }).eq('id', offer.id);
-            await supabase.from('activities').insert([{ token_id: tokenId, activity_type: 'Sale', from_address: address, to_address: offer.bidder_address, price: offer.price }]);
+            
+            await fetch('/api/nnm/submit-offer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'accept',
+                    offerId: offer.id,
+                    tokenId: tokenId,
+                    bidderAddress: offer.bidder_address,
+                    ownerAddress: address,
+                    price: offer.price
+                })
+            });
+            
             showModal('success', 'Sold!', 'Offer accepted.');
         } catch(e) { setIsPending(false); }
     };
+
 
     const handleCancelOffer = async (id: any) => {
         try {
@@ -690,16 +707,17 @@ const formatPriceDisplay = (price: string) => {
             }); 
             await publicClient!.waitForTransactionReceipt({ hash });
             
-            await supabase.from('activities').insert([
-                {
-                    token_id: tokenId,
-                    activity_type: 'List',
-                    from_address: address,
-                    to_address: MARKETPLACE_ADDRESS,
-                    price: parseFloat(polPrice),
-                    created_at: new Date().toISOString()
-                }
-            ]);
+            await fetch('/api/nnm/record-activity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tokenId: tokenId,
+                    activityType: 'List',
+                    fromAddress: address,
+                    toAddress: MARKETPLACE_ADDRESS,
+                    price: parseFloat(polPrice)
+                })
+            });
 
             await fetchAllData(); 
             setIsListingMode(false); 

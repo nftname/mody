@@ -9,7 +9,31 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { tokenId, bidderAddress, price, expiration, signature } = body;
+        const { action, offerId, tokenId, bidderAddress, ownerAddress, price, expiration, signature } = body;
+
+        if (action === 'accept') {
+            const { error: updateError } = await supabaseAdmin
+                .from('offers')
+                .update({ status: 'accepted' })
+                .eq('id', offerId);
+            
+            if (updateError) throw updateError;
+
+            const { error: activityError } = await supabaseAdmin
+                .from('activities')
+                .insert([{
+                    token_id: Number(tokenId),
+                    activity_type: 'Sale',
+                    from_address: ownerAddress,
+                    to_address: bidderAddress,
+                    price: Number(price),
+                    created_at: new Date().toISOString()
+                }]);
+
+            if (activityError) throw activityError;
+
+            return NextResponse.json({ success: true });
+        }
 
         const { error } = await supabaseAdmin
             .from('offers')
