@@ -7,6 +7,12 @@ import {
   RainbowKitProvider,
   darkTheme,
 } from '@rainbow-me/rainbowkit';
+import { 
+  trustWallet, 
+  metaMaskWallet, 
+  uniswapWallet, 
+  phantomWallet 
+} from '@rainbow-me/rainbowkit/wallets';
 import { WagmiProvider, http, fallback } from 'wagmi';
 import { polygon, mainnet, bsc } from 'viem/chains';
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
@@ -19,6 +25,12 @@ const config = getDefaultConfig({
   appUrl: origin,
   appIcon: `${origin}/icons/icon.svg`,
   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '9e2e602f47e436db24b660ee7f01f141',
+  wallets: [
+    {
+      groupName: 'Recommended',
+      wallets: [trustWallet, metaMaskWallet, uniswapWallet, phantomWallet],
+    },
+  ],
   chains: [polygon, mainnet, bsc],
   transports: {
     [polygon.id]: fallback([
@@ -45,9 +57,9 @@ const config = getDefaultConfig({
   ssr: true,
 });
 
-const queryClient = new QueryClient();
-
 export function Providers({ children }: { children: React.ReactNode }) {
+  const [queryClient] = React.useState(() => new QueryClient());
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
