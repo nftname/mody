@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
@@ -15,6 +14,7 @@ export async function POST(request: Request) {
     const { error: voteError } = await supabase.from('conviction_votes').insert({
         token_id: tokenId.toString(),
         supporter_address: sender || 'visitor_payment',
+        amount: 100,
         created_at: new Date().toISOString()
     });
 
@@ -35,5 +35,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
-
-
