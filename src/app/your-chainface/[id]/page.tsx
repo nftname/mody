@@ -497,38 +497,25 @@ const handleSaveWallet = async (coin: string, walletAddr: string) => {
       if (!isOwner) return;
       
       const columnMap: any = { 
-          'BTC': 'btc_address', 
-          'ETH': 'eth_address', 
-          'SOL': 'sol_address', 
-          'BNB': 'bnb_address', 
-          'USDT': 'usdt_address', 
-          'POLYGON': 'matic_address' 
+          'BTC': 'btc_address', 'ETH': 'eth_address', 'SOL': 'sol_address', 
+          'BNB': 'bnb_address', 'USDT': 'usdt_address', 'POLYGON': 'matic_address' 
       };
 
       try {
-          const updates: any = { 
-              owner_address: address, 
-              updated_at: new Date().toISOString() 
-          };
-          
-          updates[columnMap[coin]] = walletAddr; 
-
-          const { data: existingProfile } = await supabase
-              .from('chainface_profiles')
-              .select('token_id')
-              .eq('token_id', Number(tokenId))
-              .maybeSingle();
-
-          if (existingProfile) {
-              await supabase
-                  .from('chainface_profiles')
-                  .update(updates)
-                  .eq('token_id', Number(tokenId));
-          } else {
-              await supabase
-                  .from('chainface_profiles')
-                  .insert({ token_id: Number(tokenId), ...updates });
-          }
+          await fetch('/api/nnm/chainface-actions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  action: 'update_wallet',
+                  payload: {
+                      tokenId: tokenId,
+                      ownerAddress: address,
+                      columnMap: columnMap,
+                      coin: coin,
+                      walletAddr: walletAddr
+                  }
+              })
+          });
 
           const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
           setProfileData((prev: any) => ({
@@ -537,9 +524,10 @@ const handleSaveWallet = async (coin: string, walletAddr: string) => {
           }));
 
       } catch (e) { 
-          console.error("Save execution failed", e); 
+          console.error(e); 
       }
   };
+
 
   // --- BLOCKCHAIN HOOKS ---
   const { data: realOwnerAddress } = useReadContract({
@@ -627,6 +615,7 @@ await supabase.from('chainface_wallet_verifications').update({
               safeProfile = null;
               setMessages([]); 
           }
+
           // ============================================================
 
           setProfileData({
@@ -689,12 +678,27 @@ await supabase.from('chainface_wallet_verifications').update({
   const handleSendMessage = async () => {
     if (!visitorMessage.trim()) return;
     setIsSending(true);
-    await supabase.from('chainface_messages').insert([
-      { token_id: Number(tokenId), message_text: visitorMessage, sender_wallet: address || 'Anonymous' }
-    ]);
-    setVisitorMessage('');
-    setShowVisitorBox(false);
-    setIsSending(false);
+    
+    try {
+        await fetch('/api/nnm/chainface-actions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'send_message',
+                payload: {
+                    tokenId: tokenId,
+                    messageText: visitorMessage,
+                    senderWallet: address || 'Anonymous'
+                }
+            })
+        });
+        setVisitorMessage('');
+        setShowVisitorBox(false);
+    } catch (error) {
+        console.error(error);
+    } finally {
+        setIsSending(false);
+    }
   };
 
   
