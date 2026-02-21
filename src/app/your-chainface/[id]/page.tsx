@@ -585,7 +585,8 @@ const handleSaveWallet = async (coin: string, walletAddr: string) => {
               .select('amount')
               .eq('token_id', tokenId);
 
-          const totalConviction = votesData?.reduce((acc: number, curr: any) => acc + (curr.amount || 100), 0) || 0;
+          const totalConviction = votesData?.reduce((acc: number, curr: any) => acc + 100, 0) || 0;
+
           const { data: walletVerification } = await supabase
               .from('chainface_wallet_verifications')
               .select('is_phone_verified, is_kyc_verified')
@@ -856,7 +857,8 @@ const handleConfirmPayment = async (amount: string) => {
 
   const deepPurpleColor = '#2E1A47'; 
 
-  if (loading) return <div style={{ minHeight: '100vh', background: '#F0EDF2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading ChainFace...</div>;
+  if (loading) return <div style={{ minHeight: '100vh', background: '#F0EDF2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000000' }}>Loading ChainFace...</div>;
+
 
   return (
     <main style={{ backgroundColor: '#F0EDF2', minHeight: '100vh', fontFamily: '"Inter", sans-serif', position: 'relative', zIndex: 1000 }}>
