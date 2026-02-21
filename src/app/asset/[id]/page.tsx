@@ -1573,3 +1573,4 @@ const formatPriceDisplay = (price: string) => {
 }
 
 export default dynamicImport(() => Promise.resolve(AssetPage), { ssr: false });
+
