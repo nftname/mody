@@ -597,10 +597,24 @@ const formatPriceDisplay = (price: string) => {
             const priceInWei = parseEther(offerPrice);
             const expiration = BigInt(Math.floor(Date.now() / 1000) + OFFER_DURATION);
             const signature = await signTypedDataAsync({ domain, types, primaryType: 'Offer', message: { bidder: address, tokenId: BigInt(tokenId), price: priceInWei, expiration } });
-            await supabase.from('offers').insert([{ token_id: tokenId, bidder_address: address, price: parseFloat(offerPrice), expiration: Number(expiration), status: 'active', signature }]);
+            
+            await fetch('/api/nnm/submit-offer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tokenId: tokenId,
+                    bidderAddress: address,
+                    price: parseFloat(offerPrice),
+                    expiration: Number(expiration),
+                    signature: signature
+                })
+            });
+
             setIsOfferMode(false); 
             showModal('success', 'Offer Submitted', 'Signed successfully.');
-        } catch(e) { setIsPending(false); }
+        } catch(e) { 
+            setIsPending(false); 
+        }
     };
 
     const handleBuy = async () => {
