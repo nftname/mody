@@ -493,7 +493,7 @@ export default function ChainFacePage() {
   const [isLinkExpired, setIsLinkExpired] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const handleSaveWallet = async (coin: string, walletAddr: string) => {
+const handleSaveWallet = async (coin: string, walletAddr: string) => {
       if (!isOwner) return;
       
       const columnMap: any = { 
@@ -513,16 +513,21 @@ export default function ChainFacePage() {
           
           updates[columnMap[coin]] = walletAddr; 
 
-          const { error } = await supabase
+          const { data: existingProfile } = await supabase
               .from('chainface_profiles')
-              .update(updates)
-              .eq('token_id', Number(tokenId));
+              .select('token_id')
+              .eq('token_id', Number(tokenId))
+              .maybeSingle();
 
-          if (error) {
-              const { error: insertError } = await supabase
+          if (existingProfile) {
+              await supabase
                   .from('chainface_profiles')
-                  .upsert({ token_id: Number(tokenId), ...updates }, { onConflict: 'token_id' });
-              if (insertError) throw insertError;
+                  .update(updates)
+                  .eq('token_id', Number(tokenId));
+          } else {
+              await supabase
+                  .from('chainface_profiles')
+                  .insert({ token_id: Number(tokenId), ...updates });
           }
 
           const stateKey = coin === 'POLYGON' ? 'matic' : coin.toLowerCase();
