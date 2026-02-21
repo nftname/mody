@@ -25,7 +25,7 @@ const MARKETPLACE_ABI = parseAbi([
 
 const publicClient = createPublicClient({
   chain: polygon,
-  transport: http() 
+  transport: http("https://polygon-bor.publicnode.com") 
 });
 
 // ✅ Helper: Format numbers to max 2 decimals to prevent table breakage

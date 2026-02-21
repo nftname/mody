@@ -27,10 +27,8 @@ export default function MaintenanceGuardWrapper({ children }: { children: React.
 
     try {
       const { data: settings } = await supabase
-        .from('app_settings')
-        .select('is_maintenance_mode, announcement_text')
-        .eq('id', 1)
-        .single();
+        .from('app_settings').select('is_maintenance_mode, announcement_text').eq('id', 1).maybeSingle();
+
 
       if (settings) {
         setIsMaintenance(settings.is_maintenance_mode);
@@ -53,10 +51,8 @@ export default function MaintenanceGuardWrapper({ children }: { children: React.
       if (isConnected && address) {
         try {
           const { data: banned } = await supabase
-            .from('banned_wallets')
-            .select('id')
-            .eq('wallet_address', address.toLowerCase())
-            .single();
+            .from('banned_wallets').select('id').eq('wallet_address', address.toLowerCase()).maybeSingle();
+
           
           if (banned) {
             window.location.href = '/403';

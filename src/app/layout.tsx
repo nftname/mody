@@ -74,7 +74,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             // Register Service Worker only
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/service-worker.js?v=3')
+                navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' })
+
                   .then(function(registration) {
                     console.log('✅ PWA ServiceWorker registered');
                   })
