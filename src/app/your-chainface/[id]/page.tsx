@@ -585,7 +585,8 @@ const handleSaveWallet = async (coin: string, walletAddr: string) => {
               .select('amount')
               .eq('token_id', tokenId);
 
-          const totalConviction = votesData?.reduce((acc: number, curr: any) => acc + 100, 0) || 0;
+          const totalConviction = votesData?.reduce((acc: number, curr: any) => acc + (curr.amount || 100), 0) || 0;
+
 
           const { data: walletVerification } = await supabase
               .from('chainface_wallet_verifications')
