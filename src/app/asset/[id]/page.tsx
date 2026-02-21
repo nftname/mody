@@ -62,7 +62,7 @@ const MARKETPLACE_ABI = parseAbi([
     "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
-const domain = { name: 'NNMMarketplace', version: '11', chainId: 137, verifyingContract: MARKETPLACE_ADDRESS as `0x${string}` } as const;
+const domain = { name: 'NNMMarketplace', version: '1', chainId: 137, verifyingContract: MARKETPLACE_ADDRESS as `0x${string}` } as const;
 const types = { Offer: [{ name: 'bidder', type: 'address' }, { name: 'tokenId', type: 'uint256' }, { name: 'price', type: 'uint256' }, { name: 'expiration', type: 'uint256' }] } as const;
 
 const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
