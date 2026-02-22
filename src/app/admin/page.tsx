@@ -49,21 +49,21 @@ const CustomDatePicker = ({ value, onChange, placeholder, style }: any) => {
 
   return (
     <div ref={ref} style={{ position: 'relative', width: style?.width || '100%' }}>
-      <div onClick={() => setIsOpen(!isOpen)} className="date-input-trigger" style={style}>
+      <div onClick={() => setIsOpen(!isOpen)} style={{ background: '#181A20', color: '#EAECEF', border: '1px solid #2B3139', padding: '8px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', boxSizing: 'border-box', textAlign: 'left', ...style }}>
         {value ? value : placeholder}
       </div>
       {isOpen && (
-        <div className="custom-calendar-popup">
-          <div className="cal-header">
-            <button onClick={(e) => changeMonth(-1, e)}>&lt;</button>
+        <div style={{ position: 'absolute', top: '100%', left: 0, background: '#1E2329', border: '1px solid #2B3139', borderRadius: '6px', padding: '10px', zIndex: 9999, width: '250px', marginTop: '5px', boxShadow: '0 4px 15px rgba(0,0,0,0.8)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', color: '#FCD535', fontWeight: 'bold', fontSize: '14px' }}>
+            <button onClick={(e) => changeMonth(-1, e)} style={{ background: 'transparent', border: 'none', color: '#EAECEF', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold' }}>&lt;</button>
             <span>{viewDate.toLocaleString('en-US', { month: 'short', year: 'numeric' })}</span>
-            <button onClick={(e) => changeMonth(1, e)}>&gt;</button>
+            <button onClick={(e) => changeMonth(1, e)} style={{ background: 'transparent', border: 'none', color: '#EAECEF', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold' }}>&gt;</button>
           </div>
-          <div className="cal-grid">
-            {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => <div key={d} className="cal-day-name">{d}</div>)}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '5px', textAlign: 'center', fontSize: '12px' }}>
+            {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => <div key={d} style={{ color: '#848E9C', fontWeight: 'bold', marginBottom: '5px' }}>{d}</div>)}
             {Array.from({ length: firstDay }).map((_, i) => <div key={`empty-${i}`} />)}
             {Array.from({ length: daysInMonth }).map((_, i) => (
-              <div key={i + 1} className="cal-day" onClick={(e) => selectDate(i + 1, e)}>{i + 1}</div>
+              <div key={i + 1} onClick={(e) => selectDate(i + 1, e)} style={{ padding: '8px 0', cursor: 'pointer', borderRadius: '4px', color: '#EAECEF', transition: 'all 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#FCD535'; e.currentTarget.style.color = '#000'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#EAECEF'; }}>{i + 1}</div>
             ))}
           </div>
         </div>
@@ -294,10 +294,11 @@ export default function AdminPage() {
     activities.forEach(act => {
       const price = Number(act.price || 0);
       if (act.activity_type === 'Mint') {
-        const tier = act.tier || '';
+        const tier = (act.tier || '').trim().toUpperCase();
         if (tier === 'IMMORTAL') { immortalCount++; immortalVol += price; }
         else if (tier === 'ELITE') { eliteCount++; eliteVol += price; }
         else if (tier === 'FOUNDER') { founderCount++; founderVol += price; }
+
         total += price;
       } else if (act.activity_type === 'MarketSale') {
         marketCount++;
@@ -393,7 +394,8 @@ export default function AdminPage() {
         <button className="glass-btn" onClick={handleUpdateAnnouncement}>UPDATE MSG</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '15px', marginBottom: '30px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '15px', marginBottom: '30px' }}>
+
         <div className="stat-box"><div>IMMORTAL</div><div className="stat-split"><span>{formatNumber(stats.immortalCount)}</span><span>${stats.immortalVol.toFixed(2)}</span></div></div>
         <div className="stat-box"><div>ELITE</div><div className="stat-split"><span>{formatNumber(stats.eliteCount)}</span><span>${stats.eliteVol.toFixed(2)}</span></div></div>
         <div className="stat-box"><div>FOUNDER</div><div className="stat-split"><span>{formatNumber(stats.founderCount)}</span><span>${stats.founderVol.toFixed(2)}</span></div></div>
@@ -535,7 +537,10 @@ export default function AdminPage() {
         .admin-table td { padding: 12px 15px; border-bottom: 1px solid ${BORDER_COLOR}; color: ${TEXT_PRIMARY}; }
         .admin-table tr:last-child td { border-bottom: none; }
         
-        .dark-select { background: ${PANEL_BG}; color: ${TEXT_PRIMARY}; border: 1px solid ${BORDER_COLOR}; outline: none; margin-top: 5px; cursor: pointer; width: 100%; padding: 8px; border-radius: 4px; }
+        .dark-select { background: ${PANEL_BG}; color: ${TEXT_PRIMARY}; border: 1px solid ${BORDER_COLOR}; outline: none; margin-top: 5px; cursor: pointer; width: 100%; padding: 8px; border-radius: 4px; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23848E9C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 10px center; background-size: 14px; }
+        .dark-select option { background: ${BG_DARK}; color: ${TEXT_PRIMARY}; padding: 10px; }
+        .dark-select:focus { border-color: ${BRAND_GOLD}; }
+
         .stat-split { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 5px; }
         
         .date-input-trigger { background: ${BG_DARK}; color: ${TEXT_PRIMARY}; border: 1px solid ${BORDER_COLOR}; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; box-sizing: border-box; text-align: left; }
