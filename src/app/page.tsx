@@ -271,9 +271,10 @@ const handleTouchEnd = (e: React.TouchEvent) => {
     
 
       <div className="header-wrapper shadow-sm" style={{ backgroundColor: '#181A20', borderBottom: '1px solid #2B3139', paddingTop: '10px' }}>
-        <div className="container p-0"> 
-            {/* Top Widgets */}
-            <div className="widgets-grid-container mb-4">
+        <div className="container px-2 px-md-0">  
+             {/* Top Widgets */}
+            <div className="widgets-grid-container mb-4" style={{ minHeight: '64px' }}>
+
                 <div className="widget-item"> <NGXWidget theme="dark" /> </div>
                 <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
                 <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
