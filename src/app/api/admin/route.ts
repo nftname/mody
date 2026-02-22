@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
   const [
     { data: settings },
-    { data: activities },
+    { data: activitiesData },
     { data: pendingPayouts },
     { data: payoutHistory },
     { data: bans }
@@ -41,9 +41,38 @@ export async function GET(request: Request) {
     supabase.from('banned_wallets').select('*').order('created_at', { ascending: false })
   ]);
 
+  let activities = activitiesData || [];
+
+  const tokenIds = activities.map(a => a.token_id).filter(Boolean);
+  
+  if (tokenIds.length > 0) {
+    const { data: metadata } = await supabase
+      .from('assets_metadata')
+      .select('token_id, tier')
+      .in('token_id', tokenIds);
+
+    if (metadata) {
+      const metadataMap: Record<string, string> = {};
+      metadata.forEach(m => {
+        metadataMap[m.token_id] = m.tier?.toUpperCase();
+      });
+
+      activities = activities.map(act => {
+        let resolvedTier = metadataMap[act.token_id];
+        if (!resolvedTier) {
+          const price = Number(act.price || 0);
+          if (price >= 15) resolvedTier = 'IMMORTAL';
+          else if (price >= 10) resolvedTier = 'ELITE';
+          else if (price >= 5) resolvedTier = 'FOUNDER';
+        }
+        return { ...act, tier: resolvedTier || 'UNKNOWN' };
+      });
+    }
+  }
+
   return NextResponse.json({
     settings: settings || {},
-    activities: activities || [],
+    activities,
     pendingPayouts: pendingPayouts || [],
     payoutHistory: payoutHistory || [],
     bans: bans || []
@@ -68,5 +97,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: true });
 }
-
-
