@@ -271,7 +271,7 @@ const handleTouchEnd = (e: React.TouchEvent) => {
     
 
       <div className="header-wrapper shadow-sm" style={{ backgroundColor: '#181A20', borderBottom: '1px solid #2B3139', paddingTop: '10px' }}>
-        <div className="container px-2 px-md-0">  
+        <div className="container p-0"> 
              {/* Top Widgets */}
             <div className="widgets-grid-container mb-4" style={{ minHeight: '64px' }}>
 
@@ -281,7 +281,7 @@ const handleTouchEnd = (e: React.TouchEvent) => {
             </div>
             
             {/* HERO SECTION SPLIT (TEXT LEFT / SLIDER RIGHT) */}
-            <div className="row align-items-center px-3 px-lg-0 pb-4">
+            <div className="row align-items-center px-3 px-lg-4 pb-4">
                 
                 {/* LEFT: TEXT CONTENT */}
                 <div className="col-lg-6 mb-4 mb-lg-0">
