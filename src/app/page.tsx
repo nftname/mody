@@ -84,7 +84,10 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                         src="/cart.jpg" 
                         alt={item.name} 
                         fill 
-                        style={{ objectFit: 'fill', objectPosition: 'center' }} 
+                        style={{ objectFit: 'fill', objectPosition: 'center' }}
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                        quality={60}
+                        loading="lazy"
                    />
                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.1)' }}></div>
                    <div style={{
@@ -326,7 +329,9 @@ const handleTouchEnd = (e: React.TouchEvent) => {
                                         alt={`Hero Slide ${index + 1}`} 
                                         fill 
                                         style={{ objectFit: 'fill' }}
-                                        priority={index === 0} 
+                                        priority={index === 0}
+                                        sizes="(max-width: 768px) 100vw, 50vw"
+                                        quality={75}
                                     />
                                     {}
                                 </div>

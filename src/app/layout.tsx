@@ -38,6 +38,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <link rel="preload" href="/hero-blue.jpg" as="image" type="image/jpeg" fetchPriority="high" />
+        
         <link rel="preconnect" href="https://cigztdxswhkkyootcywr.supabase.co" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://pulse.walletconnect.org" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://api.web3modal.org" crossOrigin="anonymous" />
@@ -63,12 +65,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="afterInteractive" />
         <Script id="sw-unregister" strategy="afterInteractive">
           {`
-            // Unregister old buggy Service Worker first
             if ('serviceWorker' in navigator) {
               navigator.serviceWorker.getRegistrations().then(function(registrations) {
                 for(let registration of registrations) {
                   registration.unregister();
-                  console.log('🗑️ Old ServiceWorker unregistered');
+                  console.log('Old ServiceWorker unregistered');
                 }
               });
             }
@@ -76,21 +77,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
         <Script id="pwa-register" strategy="afterInteractive">
           {`
-            // Register Service Worker only
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' })
                   .then(function(registration) {
-                    console.log('✅ PWA ServiceWorker registered');
+                    console.log('PWA ServiceWorker registered');
                   })
                   .catch(function(err) {
-                    console.log('❌ PWA ServiceWorker failed:', err);
+                    console.log('PWA ServiceWorker failed:', err);
                   });
               });
             }
 
             window.addEventListener('appinstalled', () => {
-              console.log('✅ PWA installed!');
+              console.log('PWA installed!');
             });
           `}
         </Script>
