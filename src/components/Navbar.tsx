@@ -158,6 +158,41 @@ const Navbar = () => {
     padding: '0 8px'
   };
 
+  const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
+    const height = isMobile ? '28px' : elementHeight; 
+    const minWidth = isMobile ? '80px' : '110px'; 
+    const fontSize = isMobile ? '11px' : elementFontSize;
+    const btnText = isMobile ? 'Connect' : 'Connect Wallet'; 
+
+    return (
+      <div style={{ position: 'relative', height: height, minWidth: minWidth, display: 'inline-block' }}>
+        <ConnectButton.Custom>
+          {({ account, chain, openAccountModal, openConnectModal, authenticationStatus, mounted }) => {
+            const ready = mounted && authenticationStatus !== 'loading';
+            const connected = ready && account && chain && (!authenticationStatus || authenticationStatus === 'authenticated');
+            return (
+              <div {...(!ready && { 'aria-hidden': true, 'style': { opacity: 0, pointerEvents: 'none', userSelect: 'none' } })} style={{ width: '100%', height: '100%' }}>
+                {(() => {
+                  if (!connected) {
+                    return ( <div onClick={openConnectModal} style={customDisconnectStyle} className="hover-effect-btn"> {btnText} </div> );
+                  }
+                  if (chain.unsupported) {
+                    return ( <div onClick={openConnectModal} style={{...customDisconnectStyle, borderColor: '#ff4d4d', color: '#ff4d4d'}}> Wrong Net </div> );
+                  }
+                  return (
+                    <div onClick={openAccountModal} style={{...customConnectStyle, fontSize}}>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#27ae60', boxShadow: '0 0 8px rgba(39, 174, 96, 0.6)', flexShrink: 0 }}></div>
+                        <span style={{ fontFamily: 'monospace', letterSpacing: '0.5px' }}> {account.displayName} </span>
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          }}
+        </ConnectButton.Custom>
+      </div>
+    );
+  };
   // --- END WALLET LOGIC ---
 
   const portfolioBtnStyle = {
@@ -274,13 +309,7 @@ const Navbar = () => {
                 <ChicProfileIcon size={24} color={metallicGoldHex} />
             </button>
 
-            <CustomWalletTrigger 
-  isMobile={true} 
-  elementHeight={elementHeight} 
-  elementFontSize={elementFontSize} 
-  customDisconnectStyle={customDisconnectStyle} 
-  customConnectStyle={customConnectStyle} 
-/>
+            <CustomWalletTrigger isMobile={true} />
         </div>
 
         {/* DESKTOP CONTENT */}
@@ -468,13 +497,7 @@ const Navbar = () => {
                     <ChicProfileIcon size={26} color={metallicGoldHex} />
                 </button>
 
-                <CustomWalletTrigger 
-  isMobile={false} 
-  elementHeight={elementHeight} 
-  elementFontSize={elementFontSize} 
-  customDisconnectStyle={customDisconnectStyle} 
-  customConnectStyle={customConnectStyle} 
-/>
+                <CustomWalletTrigger isMobile={false} />
             </div>
         </div>
       </div>
@@ -689,55 +712,6 @@ const Navbar = () => {
     
     <div style={{ height: '64px' }}></div>
     </>
-  );
-};
-
-const CustomWalletTrigger = ({ isMobile, elementHeight, elementFontSize, customDisconnectStyle, customConnectStyle }: any) => {
-  const height = isMobile ? '28px' : elementHeight; 
-  const minWidth = isMobile ? '80px' : '110px'; 
-  const fontSize = isMobile ? '11px' : elementFontSize;
-  const btnText = isMobile ? 'Connect' : 'Connect Wallet'; 
-
-  return (
-    <div style={{ position: 'relative', height: height, minWidth: minWidth, display: 'inline-block' }}>
-      <ConnectButton.Custom>
-        {({ account, chain, openAccountModal, openChainModal, openConnectModal, authenticationStatus, mounted }) => {
-          const ready = mounted && authenticationStatus !== 'loading';
-          const connected = ready && account && chain && (!authenticationStatus || authenticationStatus === 'authenticated');
-          
-          if (!ready) return <div style={{ opacity: 0, pointerEvents: 'none' }} aria-hidden="true" />;
-
-          return (
-            <div style={{ width: '100%', height: '100%' }}>
-              {(() => {
-                if (!connected) {
-                  return (
-                    <div onClick={openConnectModal} style={customDisconnectStyle} className="hover-effect-btn">
-                      {btnText}
-                    </div>
-                  );
-                }
-                if (chain.unsupported) {
-                  return (
-                    <div onClick={openChainModal} style={{...customDisconnectStyle, borderColor: '#ff4d4d', color: '#ff4d4d'}}>
-                      Wrong Net
-                    </div>
-                  );
-                }
-                return (
-                  <div onClick={openAccountModal} style={{...customConnectStyle, fontSize}}>
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#27ae60', boxShadow: '0 0 8px rgba(39, 174, 96, 0.6)', flexShrink: 0 }}></div>
-                    <span style={{ fontFamily: 'monospace', letterSpacing: '0.5px' }}>
-                      {account.displayName}
-                    </span>
-                  </div>
-                );
-              })()}
-            </div>
-          );
-        }}
-      </ConnectButton.Custom>
-    </div>
   );
 };
 
