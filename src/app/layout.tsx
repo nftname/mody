@@ -38,6 +38,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <link rel="preconnect" href="https://cigztdxswhkkyootcywr.supabase.co" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://pulse.walletconnect.org" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://api.web3modal.org" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://polygon-bor.publicnode.com" crossOrigin="anonymous" />
+        
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
         <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
@@ -55,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-TileImage" content="/icons/icon-192x192.png" />
       </head>
       <body className={inter.className}>
-        <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="beforeInteractive" />
+        <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="afterInteractive" />
         <Script id="sw-unregister" strategy="afterInteractive">
           {`
             // Unregister old buggy Service Worker first
@@ -75,7 +80,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' })
-
                   .then(function(registration) {
                     console.log('✅ PWA ServiceWorker registered');
                   })
