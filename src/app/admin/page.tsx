@@ -461,11 +461,45 @@ export default function AdminPage() {
 
       {}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', marginBottom: '30px' }}>
-        <div className="stat-box"><div>IMMORTAL</div><div className="stat-split"><span>{formatNumber(stats.immortalCount)}</span><span>${stats.immortalVol.toFixed(2)}</span></div></div>
-        <div className="stat-box"><div>ELITE</div><div className="stat-split"><span>{formatNumber(stats.eliteCount)}</span><span>${stats.eliteVol.toFixed(2)}</span></div></div>
-        <div className="stat-box"><div>FOUNDER</div><div className="stat-split"><span>{formatNumber(stats.founderCount)}</span><span>${stats.founderVol.toFixed(2)}</span></div></div>
-        <div className="stat-box"><div>MARKET VOL</div><div className="stat-split"><span>{formatNumber(stats.marketCount)}</span><span>${stats.marketVol.toFixed(2)}</span></div></div>
-        <div className="stat-box"><div>GRAND TOTAL</div><div className="stat-split" style={{ justifyContent: 'center' }}><span style={{ color: BRAND_GOLD }}>${stats.total.toFixed(2)}</span></div></div>
+        {/* IMMORTAL */}
+        <div className="stat-box" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '80px' }}>
+            <div style={{ textAlign: 'left', width: '100%' }}>IMMORTAL</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%', marginTop: 'auto' }}>
+                <span style={{ fontSize: '18px', textAlign: 'left', fontWeight: 'bold' }}>{formatNumber(stats.immortalCount)}</span>
+                <span style={{ fontSize: '18px', textAlign: 'right', fontWeight: 'bold', color: '#EAECEF' }}>${stats.immortalVol.toFixed(2)}</span>
+            </div>
+        </div>
+        {/* ELITE */}
+        <div className="stat-box" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '80px' }}>
+            <div style={{ textAlign: 'left', width: '100%' }}>ELITE</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%', marginTop: 'auto' }}>
+                <span style={{ fontSize: '18px', textAlign: 'left', fontWeight: 'bold' }}>{formatNumber(stats.eliteCount)}</span>
+                <span style={{ fontSize: '18px', textAlign: 'right', fontWeight: 'bold', color: '#EAECEF' }}>${stats.eliteVol.toFixed(2)}</span>
+            </div>
+        </div>
+        {/* FOUNDER */}
+        <div className="stat-box" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '80px' }}>
+            <div style={{ textAlign: 'left', width: '100%' }}>FOUNDER</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%', marginTop: 'auto' }}>
+                <span style={{ fontSize: '18px', textAlign: 'left', fontWeight: 'bold' }}>{formatNumber(stats.founderCount)}</span>
+                <span style={{ fontSize: '18px', textAlign: 'right', fontWeight: 'bold', color: '#EAECEF' }}>${stats.founderVol.toFixed(2)}</span>
+            </div>
+        </div>
+        {}
+        <div className="stat-box" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '80px' }}>
+            <div style={{ textAlign: 'left', width: '100%' }}>MARKET VOL</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%', marginTop: 'auto' }}>
+                <span style={{ fontSize: '18px', textAlign: 'left', fontWeight: 'bold', color: TEXT_MUTED }} title="Transactions">{formatNumber(stats.marketCount)}</span>
+                <span style={{ fontSize: '18px', textAlign: 'right', fontWeight: 'bold', color: '#EAECEF' }}>${stats.marketVol.toFixed(2)}</span>
+            </div>
+        </div>
+        {}
+        <div className="stat-box" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '80px' }}>
+            <div style={{ textAlign: 'left', width: '100%' }}>GRAND TOTAL</div>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', marginTop: 'auto', flexGrow: 1 }}>
+                <span style={{ color: BRAND_GOLD, fontSize: '22px', fontWeight: 'bold' }}>${stats.total.toFixed(2)}</span>
+            </div>
+        </div>
       </div>
 
 
