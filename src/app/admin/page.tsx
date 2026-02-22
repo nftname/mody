@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAccount, useWriteContract, usePublicClient, useSendTransaction } from 'wagmi';
 import { parseAbi, formatEther, parseEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS } from '@/data/config';
@@ -50,6 +50,22 @@ export default function AdminPage() {
   const [affWallet, setAffWallet] = useState('');
 
   const [toast, setToast] = useState({ show: false, msg: '', type: 'success' });
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return num.toString();
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setShowCustomDate(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (isConnected && address && address.toLowerCase() === OWNER_WALLET) {
@@ -216,22 +232,27 @@ export default function AdminPage() {
   }, [activities]);
 
   const stats = useMemo(() => {
-    let immortal = 0, elite = 0, founder = 0, market = 0, total = 0;
+    let immortalCount = 0, immortalVol = 0;
+    let eliteCount = 0, eliteVol = 0;
+    let founderCount = 0, founderVol = 0;
+    let marketCount = 0, marketVol = 0;
+    let total = 0;
 
     activities.forEach(act => {
       const price = Number(act.price || 0);
       if (act.activity_type === 'Mint') {
-        if (price >= 15) immortal++;
-        else if (price >= 10) elite++;
-        else if (price >= 5) founder++;
+        if (price >= 15) { immortalCount++; immortalVol += price; }
+        else if (price >= 10) { eliteCount++; eliteVol += price; }
+        else if (price >= 5) { founderCount++; founderVol += price; }
         total += price;
       } else if (act.activity_type === 'MarketSale') {
-        market += price;
+        marketCount++;
+        marketVol += price;
         total += price;
       }
     });
 
-    return { immortal, elite, founder, market, total };
+    return { immortalCount, immortalVol, eliteCount, eliteVol, founderCount, founderVol, marketCount, marketVol, total };
   }, [activities]);
 
   const affiliateStats = useMemo(() => {
@@ -319,13 +340,13 @@ export default function AdminPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '15px', marginBottom: '30px' }}>
-        <div className="stat-box"><div>IMMORTAL</div><span>{stats.immortal}</span></div>
-        <div className="stat-box"><div>ELITE</div><span>{stats.elite}</span></div>
-        <div className="stat-box"><div>FOUNDER</div><span>{stats.founder}</span></div>
-        <div className="stat-box"><div>MARKET VOL</div><span>${stats.market.toFixed(2)}</span></div>
-        <div className="stat-box"><div>GRAND TOTAL</div><span style={{ color: BRAND_GOLD }}>${stats.total.toFixed(2)}</span></div>
+        <div className="stat-box"><div>IMMORTAL</div><div className="stat-split"><span>{formatNumber(stats.immortalCount)}</span><span>${stats.immortalVol.toFixed(2)}</span></div></div>
+        <div className="stat-box"><div>ELITE</div><div className="stat-split"><span>{formatNumber(stats.eliteCount)}</span><span>${stats.eliteVol.toFixed(2)}</span></div></div>
+        <div className="stat-box"><div>FOUNDER</div><div className="stat-split"><span>{formatNumber(stats.founderCount)}</span><span>${stats.founderVol.toFixed(2)}</span></div></div>
+        <div className="stat-box"><div>MARKET VOL</div><div className="stat-split"><span>{formatNumber(stats.marketCount)}</span><span>${stats.marketVol.toFixed(2)}</span></div></div>
+        <div className="stat-box"><div>GRAND TOTAL</div><div className="stat-split" style={{ justifyContent: 'center' }}><span style={{ color: BRAND_GOLD }}>${stats.total.toFixed(2)}</span></div></div>
         
-        <div className="stat-box" style={{ position: 'relative' }}>
+        <div className="stat-box" style={{ position: 'relative' }} ref={filterRef}>
           <div>FILTER</div>
           <select 
             value={filterType} 
@@ -342,8 +363,8 @@ export default function AdminPage() {
 
           {showCustomDate && (
             <div style={{ position: 'absolute', top: '100%', right: 0, background: PANEL_BG, border: `1px solid ${BORDER_COLOR}`, padding: '10px', zIndex: 10, marginTop: '5px', borderRadius: '4px', width: '200px' }}>
-              <input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)} className="dark-date"/>
-              <input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)} className="dark-date" style={{ marginBottom: '10px' }}/>
+              <input lang="en" type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)} className="dark-date"/>
+              <input lang="en" type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)} className="dark-date" style={{ marginBottom: '10px' }}/>
               <button className="glass-btn" style={{ width:'100%', padding:'5px' }} onClick={applyCustomFilter}>APPLY</button>
             </div>
           )}
@@ -388,9 +409,9 @@ export default function AdminPage() {
         </div>
         
         <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', alignItems: 'center' }}>
-          <input type="date" value={affStart} onChange={e=>setAffStart(e.target.value)} className="dark-date" style={{ width: 'auto' }} />
+          <input lang="en" type="date" value={affStart} onChange={e=>setAffStart(e.target.value)} className="dark-date" style={{ width: 'auto' }} />
           <span style={{ color: TEXT_MUTED }}>-</span>
-          <input type="date" value={affEnd} onChange={e=>setAffEnd(e.target.value)} className="dark-date" style={{ width: 'auto' }} />
+          <input lang="en" type="date" value={affEnd} onChange={e=>setAffEnd(e.target.value)} className="dark-date" style={{ width: 'auto' }} />
           <input type="text" value={affWallet} onChange={e=>setAffWallet(e.target.value)} placeholder="Filter by Wallet..." className="price-input" style={{ maxWidth: '300px' }} />
           <button className="glass-btn" onClick={() => { setAffStart(''); setAffEnd(''); setAffWallet(''); }}>CLEAR</button>
         </div>
@@ -462,6 +483,8 @@ export default function AdminPage() {
         
         .dark-select { background: transparent; color: ${TEXT_PRIMARY}; border: none; outline: none; margin-top: 5px; cursor: pointer; width: 100%; color-scheme: dark; }
         .dark-date { display: block; margin-bottom: 5px; background: ${BG_DARK}; color: ${TEXT_PRIMARY}; border: 1px solid ${BORDER_COLOR}; padding: 8px; width: 100%; color-scheme: dark; border-radius: 4px; outline: none; }
+        .dark-date::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        .stat-split { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 5px; }
         
         .toast-notification { position: fixed; top: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; font-size: 13px; font-weight: bold; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.5); animation: slideIn 0.3s ease-out; }
         .toast-notification.success { background: rgba(0, 200, 81, 0.9); color: #fff; border: 1px solid #00C851; }
