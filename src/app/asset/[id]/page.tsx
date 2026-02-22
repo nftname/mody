@@ -179,6 +179,7 @@ function AssetPage() {
     const [sellPrice, setSellPrice] = useState('');
     const [isTransferMode, setIsTransferMode] = useState(false);
     const [transferAddress, setTransferAddress] = useState('');
+    const [copiedItem, setCopiedItem] = useState<string | null>(null);
     const [isOfferMode, setIsOfferMode] = useState(false);
     const [offerStep, setOfferStep] = useState<'select' | 'input'>('select');
     const [offerPrice, setOfferPrice] = useState('');
@@ -766,9 +767,10 @@ const formatPriceDisplay = (price: string) => {
         } catch (e) { console.error(e); } finally { setIsPending(false); }
     };
 
-    const handleCopy = (text: string) => {
+    const handleCopy = (text: string, itemType: string) => {
         navigator.clipboard.writeText(text);
-        showModal('success', 'Copied!', '');
+        setCopiedItem(itemType);
+        setTimeout(() => setCopiedItem(null), 2000);
     };
 
     const handleTransfer = async () => {
@@ -1075,27 +1077,31 @@ const formatPriceDisplay = (price: string) => {
                                         </Accordion>
 
 
-                                        <Accordion title="Blockchain details" icon="bi-grid">
+                                                                                <Accordion title="Blockchain details" icon="bi-grid">
                                             <div className="px-3">
                                                 <div className="d-flex justify-content-between align-items-center py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}>
                                                     <span>Contract Address</span>
                                                     <div className="d-flex align-items-center gap-2">
                                                         <a href={`https://polygonscan.com/address/${NFT_COLLECTION_ADDRESS}`} target="_blank" className="text-decoration-none" style={{ color: '#2081e2' }}>{NFT_COLLECTION_ADDRESS.slice(0,6)}...{NFT_COLLECTION_ADDRESS.slice(-4)}</a>
-                                                        <button onClick={() => handleCopy(NFT_COLLECTION_ADDRESS)} className="btn p-0 border-0" style={{ color: '#848E9C' }}><i className="bi bi-copy"></i></button>
+                                                        <button onClick={() => handleCopy(NFT_COLLECTION_ADDRESS, 'contract')} className="btn p-0 border-0 d-flex align-items-center gap-1" style={{ color: copiedItem === 'contract' ? '#0ecb81' : '#848E9C', fontSize: '13px' }}>
+                                                            {copiedItem === 'contract' ? <><i className="bi bi-check2"></i> Copied</> : <i className="bi bi-copy"></i>}
+                                                        </button>
                                                     </div>
                                                 </div>
                                                 <div className="d-flex justify-content-between align-items-center py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}>
                                                     <span>Token ID</span>
                                                     <div className="d-flex align-items-center gap-2">
                                                         <span style={{ color: TEXT_PRIMARY }}>{tokenId}</span>
-                                                        <button onClick={() => handleCopy(tokenId.toString())} className="btn p-0 border-0" style={{ color: '#848E9C' }}><i className="bi bi-copy"></i></button>
+                                                        <button onClick={() => handleCopy(tokenId.toString(), 'token')} className="btn p-0 border-0 d-flex align-items-center gap-1" style={{ color: copiedItem === 'token' ? '#0ecb81' : '#848E9C', fontSize: '13px' }}>
+                                                            {copiedItem === 'token' ? <><i className="bi bi-check2"></i> Copied</> : <i className="bi bi-copy"></i>}
+                                                        </button>
                                                     </div>
                                                 </div>
-
                                                 <div className="d-flex justify-content-between py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}><span>Token Standard</span><span style={{ color: TEXT_PRIMARY }}>ERC-721</span></div>
                                                 <div className="d-flex justify-content-between py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}><span>Chain</span><span style={{ color: TEXT_PRIMARY }}>Polygon</span></div>
                                             </div>
                                         </Accordion>
+
 
                                         <Accordion title="More from this collection" icon="bi-collection">
     <div className="position-relative px-2">
