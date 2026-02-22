@@ -10,29 +10,42 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const start = searchParams.get('start');
   const end = searchParams.get('end');
+  const affStart = searchParams.get('affStart');
+  const affEnd = searchParams.get('affEnd');
+  const affWallet = searchParams.get('affWallet');
 
   let activitiesQuery = supabase.from('activities').select('*').order('created_at', { ascending: false });
-  
   if (start && end) {
     activitiesQuery = activitiesQuery.gte('created_at', start).lte('created_at', end);
+  }
+
+  let historyQuery = supabase.from('affiliate_payouts').select('*').neq('status', 'PENDING').order('created_at', { ascending: false });
+  if (affStart && affEnd) {
+    historyQuery = historyQuery.gte('created_at', affStart).lte('created_at', affEnd);
+  }
+  if (affWallet) {
+    historyQuery = historyQuery.ilike('wallet_address', `%${affWallet}%`);
   }
 
   const [
     { data: settings },
     { data: activities },
-    { data: payouts },
+    { data: pendingPayouts },
+    { data: payoutHistory },
     { data: bans }
   ] = await Promise.all([
     supabase.from('app_settings').select('*').single(),
     activitiesQuery,
     supabase.from('affiliate_payouts').select('*').eq('status', 'PENDING').order('created_at', { ascending: false }),
+    historyQuery,
     supabase.from('banned_wallets').select('*').order('created_at', { ascending: false })
   ]);
 
   return NextResponse.json({
     settings: settings || {},
     activities: activities || [],
-    payouts: payouts || [],
+    pendingPayouts: pendingPayouts || [],
+    payoutHistory: payoutHistory || [],
     bans: bans || []
   });
 }
@@ -45,6 +58,8 @@ export async function POST(request: Request) {
     await supabase.from('app_settings').update(payload).eq('id', 1);
   } else if (action === 'mark_paid') {
     await supabase.from('affiliate_payouts').update({ status: 'PAID', tx_hash: payload.hash }).eq('id', payload.id);
+  } else if (action === 'delete_payout') {
+    await supabase.from('affiliate_payouts').delete().eq('id', payload.id);
   } else if (action === 'ban_wallet') {
     await supabase.from('banned_wallets').insert([{ wallet_address: payload.wallet.toLowerCase() }]);
   } else if (action === 'unban_wallet') {
@@ -53,3 +68,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: true });
 }
+
+

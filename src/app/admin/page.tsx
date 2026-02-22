@@ -30,7 +30,8 @@ export default function AdminPage() {
   const [contractBalance, setContractBalance] = useState('0');
   
   const [activities, setActivities] = useState<any[]>([]);
-  const [payouts, setPayouts] = useState<any[]>([]);
+  const [pendingPayouts, setPendingPayouts] = useState<any[]>([]);
+  const [payoutHistory, setPayoutHistory] = useState<any[]>([]);
   const [bans, setBans] = useState<any[]>([]);
   
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -44,6 +45,12 @@ export default function AdminPage() {
   const [customEnd, setCustomEnd] = useState('');
   const [showCustomDate, setShowCustomDate] = useState(false);
 
+  const [affStart, setAffStart] = useState('');
+  const [affEnd, setAffEnd] = useState('');
+  const [affWallet, setAffWallet] = useState('');
+
+  const [toast, setToast] = useState({ show: false, msg: '', type: 'success' });
+
   useEffect(() => {
     if (isConnected && address && address.toLowerCase() === OWNER_WALLET) {
       setIsAdmin(true);
@@ -53,49 +60,56 @@ export default function AdminPage() {
       setIsAdmin(false);
       setLoading(false);
     }
-  }, [address, isConnected, filterType]);
+  }, [address, isConnected, filterType, affStart, affEnd, affWallet]);
+
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    setToast({ show: true, msg, type });
+    setTimeout(() => setToast({ show: false, msg: '', type: 'success' }), 4000);
+  };
 
   const fetchContractData = async () => {
     if (!publicClient) return;
     try {
       const bal = await publicClient.getBalance({ address: NFT_COLLECTION_ADDRESS as `0x${string}` });
       setContractBalance(formatEther(bal));
-    } catch (e) {
-      console.error("Failed to fetch balance", e);
-    }
+    } catch (e) {}
   };
 
   const fetchDashboardData = async () => {
-    let url = '/api/admin';
+    let url = '/api/admin?';
     
     if (filterType === '24H') {
       const start = new Date(Date.now() - 86400000).toISOString();
-      url += `?start=${start}`;
+      url += `start=${start}&`;
     } else if (filterType === 'CUSTOM' && customStart && customEnd) {
       const start = new Date(customStart).toISOString();
       const end = new Date(customEnd).setHours(23, 59, 59);
-      url += `?start=${start}&end=${new Date(end).toISOString()}`;
+      url += `start=${start}&end=${new Date(end).toISOString()}&`;
+    }
+
+    if (affStart && affEnd) {
+      const aStart = new Date(affStart).toISOString();
+      const aEnd = new Date(affEnd).setHours(23, 59, 59);
+      url += `affStart=${aStart}&affEnd=${new Date(aEnd).toISOString()}&`;
+    }
+    if (affWallet) {
+      url += `affWallet=${affWallet}&`;
     }
 
     try {
       const res = await fetch(url);
       const data = await res.json();
       
-      setSettings(data.settings);
+      if (data.settings) {
+        setMaintenanceMode(data.settings.is_maintenance_mode);
+        setAnnouncement(data.settings.announcement_text || '');
+      }
       setActivities(data.activities);
-      setPayouts(data.payouts);
+      setPendingPayouts(data.pendingPayouts);
+      setPayoutHistory(data.payoutHistory);
       setBans(data.bans);
-    } catch (e) {
-      console.error("Failed to fetch dashboard data", e);
-    }
+    } catch (e) {}
     setLoading(false);
-  };
-
-  const setSettings = (settings: any) => {
-    if (settings) {
-      setMaintenanceMode(settings.is_maintenance_mode);
-      setAnnouncement(settings.announcement_text || '');
-    }
   };
 
   const execPost = async (action: string, payload: any) => {
@@ -107,12 +121,29 @@ export default function AdminPage() {
     fetchDashboardData();
   };
 
-  const handleUpdateAnnouncement = () => execPost('update_settings', { announcement_text: announcement });
-  const handleToggleSite = (status: boolean) => execPost('update_settings', { is_maintenance_mode: status });
-  const handleBan = () => { if (banInput) { execPost('ban_wallet', { wallet: banInput }); setBanInput(''); } };
-  const handleUnban = (wallet: string) => execPost('unban_wallet', { wallet });
+  const handleUpdateAnnouncement = () => {
+    execPost('update_settings', { announcement_text: announcement });
+    showToast('Announcement updated');
+  };
 
-  // دالة سحب الرصيد من العقد الذكي
+  const handleToggleSite = (status: boolean) => {
+    execPost('update_settings', { is_maintenance_mode: status });
+    showToast(status ? 'Site is now CLOSED' : 'Site is now LIVE');
+  };
+
+  const handleBan = () => { 
+    if (banInput) { 
+      execPost('ban_wallet', { wallet: banInput }); 
+      setBanInput(''); 
+      showToast('Wallet banned');
+    } 
+  };
+
+  const handleUnban = (wallet: string) => {
+    execPost('unban_wallet', { wallet });
+    showToast('Wallet unbanned');
+  };
+
   const handleWithdraw = async () => {
     try {
       await writeContractAsync({
@@ -120,9 +151,9 @@ export default function AdminPage() {
         abi: REGISTRY_ABI,
         functionName: 'withdraw'
       });
-      alert("Withdrawal transaction sent! Check your wallet.");
+      showToast('Withdrawal transaction sent');
     } catch (e: any) {
-      alert("Withdrawal failed: " + (e.shortMessage || e.message));
+      showToast(e.shortMessage || 'Withdrawal failed', 'error');
     }
   };
 
@@ -135,30 +166,34 @@ export default function AdminPage() {
         functionName: 'setPrices',
         args: [parseEther(mintPrices.immortal), parseEther(mintPrices.elite), parseEther(mintPrices.founder)]
       });
-      alert("Prices update transaction sent!");
+      showToast('Prices update sent');
     } catch (e: any) {
-      alert("Update failed: " + (e.shortMessage || e.message));
+      showToast(e.shortMessage || 'Update failed', 'error');
     }
   };
 
-  // دالة الدفع للمسوقين بعد تصحيحها
   const handlePayAffiliate = async (payoutId: number, wallet: string, amount: string) => {
     try {
-      if (!address) return alert("Please connect your admin wallet first.");
-      
+      if (!address) {
+        showToast('Please connect admin wallet', 'error');
+        return;
+      }
       const hash = await sendTransactionAsync({
         to: wallet as `0x${string}`,
-        value: parseEther(amount.toString()) // تمرير المبلغ بشكل صحيح
+        value: parseEther(amount.toString())
       });
-      
       if (hash) {
-        alert("Transaction sent! Updating database...");
         await execPost('mark_paid', { id: payoutId, hash });
+        showToast('Payment successful');
       }
     } catch (e: any) {
-      console.error("Payment Error:", e);
-      alert("Payment failed: " + (e.shortMessage || e.message)); // إظهار سبب الفشل الحقيقي
+      showToast(e.shortMessage || 'Payment failed', 'error');
     }
+  };
+
+  const handleDeletePayout = (payoutId: number) => {
+    execPost('delete_payout', { id: payoutId });
+    showToast('Payout deleted', 'error');
   };
 
   const visitors = useMemo(() => {
@@ -170,19 +205,14 @@ export default function AdminPage() {
     activities.forEach(act => {
       const addr = act.from_address;
       if (!addr) {
-        uniqueOff.add(act.id); // تنبيه: هذا يعتمد على عدد الصفوف، وليس المتصفحات الفريدة
+        uniqueOff.add(act.id);
       } else {
         uniqueOn.add(addr);
       }
       if (new Date(act.created_at).getTime() > oneDayAgo) count24++;
     });
 
-    return {
-      off: uniqueOff.size,
-      on: uniqueOn.size,
-      total: uniqueOff.size + uniqueOn.size,
-      last24: count24
-    };
+    return { off: uniqueOff.size, on: uniqueOn.size, total: uniqueOff.size + uniqueOn.size, last24: count24 };
   }, [activities]);
 
   const stats = useMemo(() => {
@@ -191,9 +221,9 @@ export default function AdminPage() {
     activities.forEach(act => {
       const price = Number(act.price || 0);
       if (act.activity_type === 'Mint') {
-        if (price >= 50) immortal++;
-        else if (price >= 30) elite++;
-        else if (price > 0) founder++;
+        if (price >= 15) immortal++;
+        else if (price >= 10) elite++;
+        else if (price >= 5) founder++;
         total += price;
       } else if (act.activity_type === 'MarketSale') {
         market += price;
@@ -203,6 +233,14 @@ export default function AdminPage() {
 
     return { immortal, elite, founder, market, total };
   }, [activities]);
+
+  const affiliateStats = useMemo(() => {
+    let totalPaid = 0;
+    payoutHistory.forEach(p => {
+      if (p.status === 'PAID') totalPaid += Number(p.amount || 0);
+    });
+    return { totalPaid };
+  }, [payoutHistory]);
 
   const whales = useMemo(() => {
     const w: Record<string, any> = {};
@@ -231,6 +269,12 @@ export default function AdminPage() {
   return (
     <div style={{ background: BG_DARK, color: TEXT_PRIMARY, minHeight: '100vh', padding: '100px 20px 40px', fontFamily: 'sans-serif' }}>
       
+      {toast.show && (
+        <div className={`toast-notification ${toast.type}`}>
+          {toast.msg}
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${BORDER_COLOR}`, paddingBottom: '15px', marginBottom: '20px', fontSize: '13px' }}>
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '5px' }}>
@@ -246,7 +290,6 @@ export default function AdminPage() {
             </button>
           </div>
           
-          {/* قسم رصيد العقد وزر السحب الجديد */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: PANEL_BG, padding: '4px 10px', borderRadius: '6px', border: `1px solid ${BORDER_COLOR}` }}>
              <span style={{ color: BRAND_GOLD, fontWeight: 'bold' }}>{contractBalance} POL</span>
              <button 
@@ -290,17 +333,17 @@ export default function AdminPage() {
               if(e.target.value === 'CUSTOM') setShowCustomDate(true);
               else { setShowCustomDate(false); setFilterType(e.target.value); }
             }}
-            style={{ background: 'transparent', color: TEXT_PRIMARY, border: 'none', outline: 'none', marginTop: '5px', cursor: 'pointer', width: '100%' }}
+            className="dark-select"
           >
-            <option value="ALL" style={{background: PANEL_BG}}>ALL TIME</option>
-            <option value="24H" style={{background: PANEL_BG}}>DAILY (24H)</option>
-            <option value="CUSTOM" style={{background: PANEL_BG}}>CUSTOM...</option>
+            <option value="ALL">ALL TIME</option>
+            <option value="24H">DAILY (24H)</option>
+            <option value="CUSTOM">CUSTOM...</option>
           </select>
 
           {showCustomDate && (
             <div style={{ position: 'absolute', top: '100%', right: 0, background: PANEL_BG, border: `1px solid ${BORDER_COLOR}`, padding: '10px', zIndex: 10, marginTop: '5px', borderRadius: '4px', width: '200px' }}>
-              <input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)} style={{ display:'block', marginBottom:'5px', background: BG_DARK, color: TEXT_PRIMARY, border:'none', padding:'5px', width: '100%' }}/>
-              <input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)} style={{ display:'block', marginBottom:'10px', background: BG_DARK, color: TEXT_PRIMARY, border:'none', padding:'5px', width: '100%' }}/>
+              <input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)} className="dark-date"/>
+              <input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)} className="dark-date" style={{ marginBottom: '10px' }}/>
               <button className="glass-btn" style={{ width:'100%', padding:'5px' }} onClick={applyCustomFilter}>APPLY</button>
             </div>
           )}
@@ -315,18 +358,55 @@ export default function AdminPage() {
       </div>
 
       <div style={{ marginBottom: '40px' }}>
-        <h4 style={{ color: TEXT_MUTED, fontSize: '12px', marginBottom: '10px', textTransform: 'uppercase' }}>Affiliate Payouts</h4>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h4 style={{ color: TEXT_MUTED, fontSize: '12px', textTransform: 'uppercase', margin: 0 }}>Pending Affiliate Payouts</h4>
+        </div>
         <table className="admin-table">
           <thead><tr><th>WALLET</th><th>AMOUNT</th><th>ACTION</th></tr></thead>
           <tbody>
-            {payouts.map(p => (
+            {pendingPayouts.map(p => (
               <tr key={p.id}>
                 <td style={{ fontFamily: 'monospace' }}>{p.wallet_address}</td>
                 <td style={{ color: '#00C851', fontWeight: 'bold' }}>${p.amount}</td>
-                <td><button className="glass-btn" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => handlePayAffiliate(p.id, p.wallet_address, p.amount)}>PAY NOW</button></td>
+                <td>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button className="glass-btn" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => handlePayAffiliate(p.id, p.wallet_address, p.amount)}>PAY NOW</button>
+                    <button className="glass-btn" style={{ padding: '4px 10px', fontSize: '11px', color: '#ff4444', borderColor: 'rgba(255,68,68,0.3)' }} onClick={() => handleDeletePayout(p.id)}>✕</button>
+                  </div>
+                </td>
               </tr>
             ))}
-            {payouts.length === 0 && <tr><td colSpan={3} style={{ textAlign: 'center', padding: '20px' }}>No pending payouts</td></tr>}
+            {pendingPayouts.length === 0 && <tr><td colSpan={3} style={{ textAlign: 'center', padding: '20px' }}>No pending payouts</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ marginBottom: '40px', padding: '20px', background: PANEL_BG, borderRadius: '6px', border: `1px solid ${BORDER_COLOR}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+          <h4 style={{ color: TEXT_MUTED, fontSize: '12px', textTransform: 'uppercase', margin: 0 }}>Affiliate History & Analysis</h4>
+          <span style={{ color: BRAND_GOLD, fontSize: '14px', fontWeight: 'bold' }}>Total Paid: ${affiliateStats.totalPaid.toFixed(2)}</span>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', alignItems: 'center' }}>
+          <input type="date" value={affStart} onChange={e=>setAffStart(e.target.value)} className="dark-date" style={{ width: 'auto' }} />
+          <span style={{ color: TEXT_MUTED }}>-</span>
+          <input type="date" value={affEnd} onChange={e=>setAffEnd(e.target.value)} className="dark-date" style={{ width: 'auto' }} />
+          <input type="text" value={affWallet} onChange={e=>setAffWallet(e.target.value)} placeholder="Filter by Wallet..." className="price-input" style={{ maxWidth: '300px' }} />
+          <button className="glass-btn" onClick={() => { setAffStart(''); setAffEnd(''); setAffWallet(''); }}>CLEAR</button>
+        </div>
+
+        <table className="admin-table" style={{ background: BG_DARK }}>
+          <thead><tr><th>WALLET</th><th>DATE</th><th>AMOUNT</th><th>STATUS</th></tr></thead>
+          <tbody>
+            {payoutHistory.map(p => (
+              <tr key={p.id}>
+                <td style={{ fontFamily: 'monospace' }}>{p.wallet_address}</td>
+                <td>{new Date(p.created_at).toLocaleDateString()}</td>
+                <td style={{ color: BRAND_GOLD }}>${p.amount}</td>
+                <td><span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(0, 200, 81, 0.1)', color: '#00C851' }}>{p.status}</span></td>
+              </tr>
+            ))}
+            {payoutHistory.length === 0 && <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px' }}>No records found</td></tr>}
           </tbody>
         </table>
       </div>
@@ -379,6 +459,15 @@ export default function AdminPage() {
         .admin-table th { text-align: left; padding: 12px 15px; color: ${TEXT_MUTED}; border-bottom: 1px solid ${BORDER_COLOR}; font-weight: bold; }
         .admin-table td { padding: 12px 15px; border-bottom: 1px solid ${BORDER_COLOR}; color: ${TEXT_PRIMARY}; }
         .admin-table tr:last-child td { border-bottom: none; }
+        
+        .dark-select { background: transparent; color: ${TEXT_PRIMARY}; border: none; outline: none; margin-top: 5px; cursor: pointer; width: 100%; color-scheme: dark; }
+        .dark-date { display: block; margin-bottom: 5px; background: ${BG_DARK}; color: ${TEXT_PRIMARY}; border: 1px solid ${BORDER_COLOR}; padding: 8px; width: 100%; color-scheme: dark; border-radius: 4px; outline: none; }
+        
+        .toast-notification { position: fixed; top: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; font-size: 13px; font-weight: bold; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.5); animation: slideIn 0.3s ease-out; }
+        .toast-notification.success { background: rgba(0, 200, 81, 0.9); color: #fff; border: 1px solid #00C851; }
+        .toast-notification.error { background: rgba(255, 68, 68, 0.9); color: #fff; border: 1px solid #ff4444; }
+        
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
       `}</style>
     </div>
   );
