@@ -12,6 +12,13 @@ const REGISTRY_ABI = parseAbi([
   "function withdraw() external"
 ]);
 
+const BG_DARK = '#181A20';
+const PANEL_BG = '#1E2329';
+const BORDER_COLOR = '#2B3139';
+const BRAND_GOLD = '#FCD535';
+const TEXT_PRIMARY = '#EAECEF';
+const TEXT_MUTED = '#848E9C';
+
 export default function AdminPage() {
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
@@ -193,18 +200,29 @@ export default function AdminPage() {
   if (!isAdmin) return null;
 
   return (
-    <div style={{ background: '#0a0a0a', color: '#e0e0e0', minHeight: '100vh', padding: '100px 20px 40px', fontFamily: 'sans-serif' }}>
+    <div style={{ background: BG_DARK, color: TEXT_PRIMARY, minHeight: '100vh', padding: '100px 20px 40px', fontFamily: 'sans-serif' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #222', paddingBottom: '15px', marginBottom: '20px', fontSize: '13px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${BORDER_COLOR}`, paddingBottom: '15px', marginBottom: '20px', fontSize: '13px' }}>
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <span style={{ color: maintenanceMode ? '#ff4444' : '#00C851' }}>{maintenanceMode ? 'CLOSED' : 'LIVE'}</span>
-          <span style={{ color: '#FCD535' }}>{contractBalance} POL</span>
+          <div style={{ display: 'flex', gap: '5px' }}>
+            <button 
+                onClick={() => handleToggleSite(false)} 
+                style={{ background: !maintenanceMode ? '#00C851' : 'transparent', color: !maintenanceMode ? '#000' : TEXT_MUTED, border: `1px solid ${!maintenanceMode ? '#00C851' : BORDER_COLOR}`, padding: '4px 12px', borderRadius: '15px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
+                LIVE
+            </button>
+            <button 
+                onClick={() => handleToggleSite(true)} 
+                style={{ background: maintenanceMode ? '#ff4444' : 'transparent', color: maintenanceMode ? '#fff' : TEXT_MUTED, border: `1px solid ${maintenanceMode ? '#ff4444' : BORDER_COLOR}`, padding: '4px 12px', borderRadius: '15px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
+                CLOSED
+            </button>
+          </div>
+          <span style={{ color: BRAND_GOLD, fontWeight: 'bold' }}>{contractBalance} POL</span>
         </div>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <span>OFF: {visitors.off}</span>
-          <span>ON: {visitors.on}</span>
-          <span>TOTAL: {visitors.total}</span>
-          <span>24H: {visitors.last24}</span>
+        <div style={{ display: 'flex', gap: '20px', color: TEXT_MUTED }}>
+          <span>OFF: <strong style={{color: TEXT_PRIMARY}}>{visitors.off}</strong></span>
+          <span>ON: <strong style={{color: TEXT_PRIMARY}}>{visitors.on}</strong></span>
+          <span>TOTAL: <strong style={{color: TEXT_PRIMARY}}>{visitors.total}</strong></span>
+          <span>24H: <strong style={{color: TEXT_PRIMARY}}>{visitors.last24}</strong></span>
         </div>
       </div>
 
@@ -213,7 +231,7 @@ export default function AdminPage() {
           value={announcement} 
           onChange={e => setAnnouncement(e.target.value)} 
           placeholder="System Announcement..." 
-          style={{ flexGrow: 1, background: '#111', border: '1px solid #222', color: '#fff', padding: '10px', outline: 'none' }} 
+          style={{ flexGrow: 1, background: PANEL_BG, border: `1px solid ${BORDER_COLOR}`, color: TEXT_PRIMARY, padding: '10px', outline: 'none', borderRadius: '4px' }} 
         />
         <button className="glass-btn" onClick={handleUpdateAnnouncement}>UPDATE MSG</button>
       </div>
@@ -223,7 +241,7 @@ export default function AdminPage() {
         <div className="stat-box"><div>ELITE</div><span>{stats.elite}</span></div>
         <div className="stat-box"><div>FOUNDER</div><span>{stats.founder}</span></div>
         <div className="stat-box"><div>MARKET VOL</div><span>${stats.market.toFixed(2)}</span></div>
-        <div className="stat-box"><div>GRAND TOTAL</div><span style={{ color: '#FCD535' }}>${stats.total.toFixed(2)}</span></div>
+        <div className="stat-box"><div>GRAND TOTAL</div><span style={{ color: BRAND_GOLD }}>${stats.total.toFixed(2)}</span></div>
         
         <div className="stat-box" style={{ position: 'relative' }}>
           <div>FILTER</div>
@@ -233,17 +251,17 @@ export default function AdminPage() {
               if(e.target.value === 'CUSTOM') setShowCustomDate(true);
               else { setShowCustomDate(false); setFilterType(e.target.value); }
             }}
-            style={{ background: 'transparent', color: '#fff', border: 'none', outline: 'none', marginTop: '5px', cursor: 'pointer' }}
+            style={{ background: 'transparent', color: TEXT_PRIMARY, border: 'none', outline: 'none', marginTop: '5px', cursor: 'pointer', width: '100%' }}
           >
-            <option value="ALL" style={{background:'#111'}}>ALL TIME</option>
-            <option value="24H" style={{background:'#111'}}>DAILY (24H)</option>
-            <option value="CUSTOM" style={{background:'#111'}}>CUSTOM...</option>
+            <option value="ALL" style={{background: PANEL_BG}}>ALL TIME</option>
+            <option value="24H" style={{background: PANEL_BG}}>DAILY (24H)</option>
+            <option value="CUSTOM" style={{background: PANEL_BG}}>CUSTOM...</option>
           </select>
 
           {showCustomDate && (
-            <div style={{ position: 'absolute', top: '100%', right: 0, background: '#111', border: '1px solid #333', padding: '10px', zIndex: 10, marginTop: '5px' }}>
-              <input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)} style={{ display:'block', marginBottom:'5px', background:'#222', color:'#fff', border:'none', padding:'5px' }}/>
-              <input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)} style={{ display:'block', marginBottom:'10px', background:'#222', color:'#fff', border:'none', padding:'5px' }}/>
+            <div style={{ position: 'absolute', top: '100%', right: 0, background: PANEL_BG, border: `1px solid ${BORDER_COLOR}`, padding: '10px', zIndex: 10, marginTop: '5px', borderRadius: '4px', width: '200px' }}>
+              <input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)} style={{ display:'block', marginBottom:'5px', background: BG_DARK, color: TEXT_PRIMARY, border:'none', padding:'5px', width: '100%' }}/>
+              <input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)} style={{ display:'block', marginBottom:'10px', background: BG_DARK, color: TEXT_PRIMARY, border:'none', padding:'5px', width: '100%' }}/>
               <button className="glass-btn" style={{ width:'100%', padding:'5px' }} onClick={applyCustomFilter}>APPLY</button>
             </div>
           )}
@@ -258,24 +276,24 @@ export default function AdminPage() {
       </div>
 
       <div style={{ marginBottom: '40px' }}>
-        <h4 style={{ color: '#666', fontSize: '12px', marginBottom: '10px', textTransform: 'uppercase' }}>Affiliate Payouts</h4>
+        <h4 style={{ color: TEXT_MUTED, fontSize: '12px', marginBottom: '10px', textTransform: 'uppercase' }}>Affiliate Payouts</h4>
         <table className="admin-table">
           <thead><tr><th>WALLET</th><th>AMOUNT</th><th>ACTION</th></tr></thead>
           <tbody>
             {payouts.map(p => (
               <tr key={p.id}>
                 <td style={{ fontFamily: 'monospace' }}>{p.wallet_address}</td>
-                <td style={{ color: '#00C851' }}>${p.amount}</td>
+                <td style={{ color: '#00C851', fontWeight: 'bold' }}>${p.amount}</td>
                 <td><button className="glass-btn" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => handlePayAffiliate(p.id, p.wallet_address, p.amount)}>PAY NOW</button></td>
               </tr>
             ))}
-            {payouts.length === 0 && <tr><td colSpan={3} style={{ textAlign: 'center' }}>No pending payouts</td></tr>}
+            {payouts.length === 0 && <tr><td colSpan={3} style={{ textAlign: 'center', padding: '20px' }}>No pending payouts</td></tr>}
           </tbody>
         </table>
       </div>
 
       <div style={{ marginBottom: '40px' }}>
-        <h4 style={{ color: '#666', fontSize: '12px', marginBottom: '10px', textTransform: 'uppercase' }}>Banned Wallets</h4>
+        <h4 style={{ color: TEXT_MUTED, fontSize: '12px', marginBottom: '10px', textTransform: 'uppercase' }}>Banned Wallets</h4>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
           <input value={banInput} onChange={e=>setBanInput(e.target.value)} placeholder="0x..." className="price-input" style={{ maxWidth: '300px' }} />
           <button className="glass-btn" onClick={handleBan}>BAN WALLET</button>
@@ -287,7 +305,7 @@ export default function AdminPage() {
               <tr key={b.id}>
                 <td style={{ fontFamily: 'monospace' }}>{b.wallet_address}</td>
                 <td>{new Date(b.created_at).toLocaleDateString()}</td>
-                <td><button className="glass-btn" style={{ padding: '4px 10px', fontSize: '11px', color: '#ff4444' }} onClick={() => handleUnban(b.wallet_address)}>UNBAN</button></td>
+                <td><button className="glass-btn" style={{ padding: '4px 10px', fontSize: '11px', color: '#ff4444', borderColor: 'rgba(255,68,68,0.3)' }} onClick={() => handleUnban(b.wallet_address)}>UNBAN</button></td>
               </tr>
             ))}
           </tbody>
@@ -295,14 +313,14 @@ export default function AdminPage() {
       </div>
 
       <div>
-        <h4 style={{ color: '#666', fontSize: '12px', marginBottom: '10px', textTransform: 'uppercase' }}>Whale Tracker</h4>
+        <h4 style={{ color: TEXT_MUTED, fontSize: '12px', marginBottom: '10px', textTransform: 'uppercase' }}>Whale Tracker</h4>
         <table className="admin-table">
           <thead><tr><th>WALLET</th><th>TOTAL SPENT</th><th>TX COUNT</th><th>LAST ACTIVE</th></tr></thead>
           <tbody>
             {whales.map((w, i) => (
               <tr key={i}>
                 <td style={{ fontFamily: 'monospace' }}>{w.address}</td>
-                <td style={{ color: '#FCD535' }}>${w.vol.toFixed(2)}</td>
+                <td style={{ color: BRAND_GOLD, fontWeight: 'bold' }}>${w.vol.toFixed(2)}</td>
                 <td>{w.tx}</td>
                 <td>{new Date(w.last).toLocaleDateString()}</td>
               </tr>
@@ -312,15 +330,16 @@ export default function AdminPage() {
       </div>
 
       <style jsx>{`
-        .glass-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: #ccc; padding: 10px 20px; cursor: pointer; transition: 0.2s; font-size: 12px; }
+        .glass-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: ${TEXT_PRIMARY}; padding: 10px 20px; cursor: pointer; transition: 0.2s; font-size: 12px; border-radius: 4px; }
         .glass-btn:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-        .stat-box { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); padding: 15px; text-align: center; }
-        .stat-box div { font-size: 10px; color: #666; margin-bottom: 5px; }
-        .stat-box span { font-size: 18px; color: #fff; }
-        .price-input { flex-grow: 1; background: transparent; border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 10px; outline: none; text-align: center; }
-        .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .admin-table th { text-align: left; padding: 10px; color: #666; border-bottom: 1px solid #222; font-weight: normal; }
-        .admin-table td { padding: 10px; border-bottom: 1px solid #1a1a1a; color: #aaa; }
+        .stat-box { background: ${PANEL_BG}; border: 1px solid ${BORDER_COLOR}; padding: 15px; text-align: center; border-radius: 6px; }
+        .stat-box div { font-size: 10px; color: ${TEXT_MUTED}; margin-bottom: 5px; font-weight: bold; }
+        .stat-box span { font-size: 18px; color: ${TEXT_PRIMARY}; font-weight: bold; }
+        .price-input { flex-grow: 1; background: ${PANEL_BG}; border: 1px solid ${BORDER_COLOR}; color: ${TEXT_PRIMARY}; padding: 10px; outline: none; text-align: center; border-radius: 4px; }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; background: ${PANEL_BG}; border-radius: 6px; overflow: hidden; }
+        .admin-table th { text-align: left; padding: 12px 15px; color: ${TEXT_MUTED}; border-bottom: 1px solid ${BORDER_COLOR}; font-weight: bold; }
+        .admin-table td { padding: 12px 15px; border-bottom: 1px solid ${BORDER_COLOR}; color: ${TEXT_PRIMARY}; }
+        .admin-table tr:last-child td { border-bottom: none; }
       `}</style>
     </div>
   );
