@@ -60,7 +60,9 @@ export default function AdminPage() {
     try {
       const bal = await publicClient.getBalance({ address: NFT_COLLECTION_ADDRESS as `0x${string}` });
       setContractBalance(formatEther(bal));
-    } catch (e) {}
+    } catch (e) {
+      console.error("Failed to fetch balance", e);
+    }
   };
 
   const fetchDashboardData = async () => {
@@ -83,7 +85,9 @@ export default function AdminPage() {
       setActivities(data.activities);
       setPayouts(data.payouts);
       setBans(data.bans);
-    } catch (e) {}
+    } catch (e) {
+      console.error("Failed to fetch dashboard data", e);
+    }
     setLoading(false);
   };
 
@@ -108,6 +112,20 @@ export default function AdminPage() {
   const handleBan = () => { if (banInput) { execPost('ban_wallet', { wallet: banInput }); setBanInput(''); } };
   const handleUnban = (wallet: string) => execPost('unban_wallet', { wallet });
 
+  // دالة سحب الرصيد من العقد الذكي
+  const handleWithdraw = async () => {
+    try {
+      await writeContractAsync({
+        address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+        abi: REGISTRY_ABI,
+        functionName: 'withdraw'
+      });
+      alert("Withdrawal transaction sent! Check your wallet.");
+    } catch (e: any) {
+      alert("Withdrawal failed: " + (e.shortMessage || e.message));
+    }
+  };
+
   const handleUpdatePrices = async () => {
     if (!mintPrices.immortal || !mintPrices.elite || !mintPrices.founder) return;
     try {
@@ -117,19 +135,30 @@ export default function AdminPage() {
         functionName: 'setPrices',
         args: [parseEther(mintPrices.immortal), parseEther(mintPrices.elite), parseEther(mintPrices.founder)]
       });
-    } catch (e) {}
+      alert("Prices update transaction sent!");
+    } catch (e: any) {
+      alert("Update failed: " + (e.shortMessage || e.message));
+    }
   };
 
+  // دالة الدفع للمسوقين بعد تصحيحها
   const handlePayAffiliate = async (payoutId: number, wallet: string, amount: string) => {
     try {
+      if (!address) return alert("Please connect your admin wallet first.");
+      
       const hash = await sendTransactionAsync({
         to: wallet as `0x${string}`,
-        value: parseEther(amount.toString())
+        value: parseEther(amount.toString()) // تمرير المبلغ بشكل صحيح
       });
+      
       if (hash) {
+        alert("Transaction sent! Updating database...");
         await execPost('mark_paid', { id: payoutId, hash });
       }
-    } catch (e) {}
+    } catch (e: any) {
+      console.error("Payment Error:", e);
+      alert("Payment failed: " + (e.shortMessage || e.message)); // إظهار سبب الفشل الحقيقي
+    }
   };
 
   const visitors = useMemo(() => {
@@ -141,7 +170,7 @@ export default function AdminPage() {
     activities.forEach(act => {
       const addr = act.from_address;
       if (!addr) {
-        uniqueOff.add(act.id);
+        uniqueOff.add(act.id); // تنبيه: هذا يعتمد على عدد الصفوف، وليس المتصفحات الفريدة
       } else {
         uniqueOn.add(addr);
       }
@@ -216,8 +245,18 @@ export default function AdminPage() {
                 CLOSED
             </button>
           </div>
-          <span style={{ color: BRAND_GOLD, fontWeight: 'bold' }}>{contractBalance} POL</span>
+          
+          {/* قسم رصيد العقد وزر السحب الجديد */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: PANEL_BG, padding: '4px 10px', borderRadius: '6px', border: `1px solid ${BORDER_COLOR}` }}>
+             <span style={{ color: BRAND_GOLD, fontWeight: 'bold' }}>{contractBalance} POL</span>
+             <button 
+                onClick={handleWithdraw}
+                style={{ background: 'transparent', border: `1px solid ${BRAND_GOLD}`, color: BRAND_GOLD, padding: '2px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}>
+                WITHDRAW
+             </button>
+          </div>
         </div>
+
         <div style={{ display: 'flex', gap: '20px', color: TEXT_MUTED }}>
           <span>OFF: <strong style={{color: TEXT_PRIMARY}}>{visitors.off}</strong></span>
           <span>ON: <strong style={{color: TEXT_PRIMARY}}>{visitors.on}</strong></span>
