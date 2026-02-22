@@ -177,6 +177,8 @@ function AssetPage() {
     const [isPending, setIsPending] = useState(false);
     const [isListingMode, setIsListingMode] = useState(false);
     const [sellPrice, setSellPrice] = useState('');
+    const [isTransferMode, setIsTransferMode] = useState(false);
+    const [transferAddress, setTransferAddress] = useState('');
     const [isOfferMode, setIsOfferMode] = useState(false);
     const [offerStep, setOfferStep] = useState<'select' | 'input'>('select');
     const [offerPrice, setOfferPrice] = useState('');
@@ -741,6 +743,8 @@ const formatPriceDisplay = (price: string) => {
     const resetUI = () => {
         setIsListingMode(false);
         setIsOfferMode(false);
+        setIsTransferMode(false);
+        setTransferAddress('');
         setIsPending(false);
         setOfferStep(listing ? 'select' : 'input');
         setOfferPrice('');
@@ -760,6 +764,46 @@ const formatPriceDisplay = (price: string) => {
             await publicClient!.waitForTransactionReceipt({ hash });
             fetchAllData();
         } catch (e) { console.error(e); } finally { setIsPending(false); }
+    };
+
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        showModal('success', 'Copied!', '');
+    };
+
+    const handleTransfer = async () => {
+        if (!transferAddress || !address) return;
+        setIsPending(true);
+        try {
+            const hash = await writeContractAsync({
+                address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                abi: erc721Abi,
+                functionName: 'safeTransferFrom',
+                args: [address, transferAddress as `0x${string}`, BigInt(tokenId)]
+            });
+            await publicClient!.waitForTransactionReceipt({ hash });
+            
+            await fetch('/api/nnm/record-activity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tokenId: tokenId,
+                    activityType: 'Transfer',
+                    fromAddress: address,
+                    toAddress: transferAddress,
+                    price: 0
+                })
+            });
+
+            setIsTransferMode(false);
+            setTransferAddress('');
+            fetchAllData();
+            showModal('success', 'Transferred!', `${transferAddress.slice(0,6)}...`);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsPending(false);
+        }
     };
 
     const openOfferModal = () => {
@@ -793,12 +837,17 @@ const formatPriceDisplay = (price: string) => {
         }
 
         if (isOwner) {
-            // If already listed, show Cancel Listing
             if (listing) {
                 return <button onClick={handleCancelListing} disabled={isPending} className={btnClass} style={{ ...OUTLINE_BTN_STYLE, borderRadius: '12px', width: mobile ? '65%' : '100%', maxWidth: mobile ? '500px' : 'none', fontSize: '16px' }}>Cancel Listing</button>;
             }
-            // If not listed, show "List for Sale" which triggers the Modal
-            return <button onClick={() => setIsListingMode(true)} className={btnClass} style={{ ...GLASS_BTN_STYLE, borderRadius: '12px', width: mobile ? '65%' : '100%', maxWidth: mobile ? '500px' : 'none', fontSize: '16px' }}>List for Sale</button>;
+            return (
+                <div className="d-flex gap-2" style={{ width: mobile ? '65%' : '100%', maxWidth: mobile ? '500px' : 'none' }}>
+                    <button onClick={() => setIsListingMode(true)} className={btnClass} style={{ ...GLASS_BTN_STYLE, borderRadius: '12px', flex: 1, padding: mobile ? '8px' : '12px', fontSize: '15px' }}>List for Sale</button>
+                    <button onClick={() => setIsTransferMode(true)} className={btnClass} style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid #848E9C', color: '#EAECEF', borderRadius: '12px', flex: 1, padding: mobile ? '8px' : '12px', fontSize: '15px' }}>
+                        <i className="bi bi-send me-1"></i> Transfer
+                    </button>
+                </div>
+            );
         }
 
         return (
@@ -1028,8 +1077,21 @@ const formatPriceDisplay = (price: string) => {
 
                                         <Accordion title="Blockchain details" icon="bi-grid">
                                             <div className="px-3">
-                                                <div className="d-flex justify-content-between py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}><span>Contract Address</span><a href={`https://polygonscan.com/address/${NFT_COLLECTION_ADDRESS}`} target="_blank" className="text-decoration-none" style={{ color: '#2081e2' }}>{NFT_COLLECTION_ADDRESS.slice(0,6)}...{NFT_COLLECTION_ADDRESS.slice(-4)}</a></div>
-                                                <div className="d-flex justify-content-between py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}><span>Token ID</span><span style={{ color: TEXT_PRIMARY }}>{tokenId}</span></div>
+                                                <div className="d-flex justify-content-between align-items-center py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}>
+                                                    <span>Contract Address</span>
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <a href={`https://polygonscan.com/address/${NFT_COLLECTION_ADDRESS}`} target="_blank" className="text-decoration-none" style={{ color: '#2081e2' }}>{NFT_COLLECTION_ADDRESS.slice(0,6)}...{NFT_COLLECTION_ADDRESS.slice(-4)}</a>
+                                                        <button onClick={() => handleCopy(NFT_COLLECTION_ADDRESS)} className="btn p-0 border-0" style={{ color: '#848E9C' }}><i className="bi bi-copy"></i></button>
+                                                    </div>
+                                                </div>
+                                                <div className="d-flex justify-content-between align-items-center py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}>
+                                                    <span>Token ID</span>
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <span style={{ color: TEXT_PRIMARY }}>{tokenId}</span>
+                                                        <button onClick={() => handleCopy(tokenId.toString())} className="btn p-0 border-0" style={{ color: '#848E9C' }}><i className="bi bi-copy"></i></button>
+                                                    </div>
+                                                </div>
+
                                                 <div className="d-flex justify-content-between py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}><span>Token Standard</span><span style={{ color: TEXT_PRIMARY }}>ERC-721</span></div>
                                                 <div className="d-flex justify-content-between py-2" style={{ color: TEXT_MUTED, fontSize: '14px' }}><span>Chain</span><span style={{ color: TEXT_PRIMARY }}>Polygon</span></div>
                                             </div>
@@ -1354,6 +1416,45 @@ const formatPriceDisplay = (price: string) => {
                     <RenderActionButtons mobile={true} />
                 </div>
             </div>
+
+             {/* --- TRANSFER MODAL --- */}
+            {isTransferMode && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="fade-in" style={{ backgroundColor: SURFACE_DARK, border: `1px solid rgba(255,255,255,0.1)`, borderRadius: '16px', padding: '18px', width: '90%', maxWidth: '320px', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', position: 'relative', color: TEXT_PRIMARY }}>
+                        <button onClick={resetUI} style={{ position: 'absolute', top: '8px', right: '12px', background: 'transparent', border: 'none', color: TEXT_MUTED, fontSize: '18px', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
+                        
+                        <h4 className="fw-bold mb-3 text-center" style={{ color: TEXT_PRIMARY, fontSize: '15px' }}>Transfer NFT</h4>
+
+                        <div className="mb-3">
+                            <div style={{ color: TEXT_MUTED, fontSize: '11px', marginBottom: '8px', textAlign: 'center' }}>
+                                Enter destination wallet address
+                            </div>
+                            <input 
+                                autoFocus
+                                type="text" 
+                                className="form-control bg-transparent text-white text-center" 
+                                style={{ border: `1px solid ${BORDER_COLOR}`, fontSize: '13px', borderRadius: '8px', boxShadow: 'none', outline: 'none' }} 
+                                placeholder="0x..." 
+                                value={transferAddress} 
+                                onChange={(e) => setTransferAddress(e.target.value)} 
+                            />
+                        </div>
+
+                        <div className="d-flex flex-column gap-2 mt-2">
+                            <button onClick={handleTransfer} disabled={isPending || !transferAddress.startsWith('0x') || transferAddress.length !== 42} className="btn w-100 py-2 fw-bold" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', borderRadius: '10px', fontSize: '13px' }}>
+                                {isPending ? (
+                                    <span className="d-flex align-items-center justify-content-center gap-2">
+                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        Transferring...
+                                    </span>
+                                ) : 'Confirm Transfer'}
+                            </button>
+                            <button onClick={resetUI} className="btn btn-link text-secondary text-decoration-none" style={{ fontSize: '11px' }}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {/* --- NEW LISTING MODAL --- */}
             {isListingMode && (
