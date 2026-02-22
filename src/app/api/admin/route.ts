@@ -14,12 +14,12 @@ export async function GET(request: Request) {
   const affEnd = searchParams.get('affEnd');
   const affWallet = searchParams.get('affWallet');
 
-  let activitiesQuery = supabase.from('activities').select('*').order('created_at', { ascending: false });
+  let activitiesQuery = supabase.from('activities').select('*').order('created_at', { ascending: false }).limit(50000);
   if (start && end) {
     activitiesQuery = activitiesQuery.gte('created_at', start).lte('created_at', end);
   }
 
-  let historyQuery = supabase.from('affiliate_payouts').select('*').neq('status', 'PENDING').order('created_at', { ascending: false });
+  let historyQuery = supabase.from('affiliate_payouts').select('*').neq('status', 'PENDING').order('created_at', { ascending: false }).limit(10000);
   if (affStart && affEnd) {
     historyQuery = historyQuery.gte('created_at', affStart).lte('created_at', affEnd);
   }
@@ -32,42 +32,38 @@ export async function GET(request: Request) {
     { data: activitiesData },
     { data: pendingPayouts },
     { data: payoutHistory },
-    { data: bans }
+    { data: bans },
+    { data: allMetadata } 
   ] = await Promise.all([
     supabase.from('app_settings').select('*').single(),
     activitiesQuery,
     supabase.from('affiliate_payouts').select('*').eq('status', 'PENDING').order('created_at', { ascending: false }),
     historyQuery,
-    supabase.from('banned_wallets').select('*').order('created_at', { ascending: false })
+    supabase.from('banned_wallets').select('*').order('created_at', { ascending: false }),
+    supabase.from('assets_metadata').select('token_id, tier').limit(50000)
   ]);
 
   let activities = activitiesData || [];
 
-  const tokenIds = activities.map(a => a.token_id).filter(Boolean);
-  
-  if (tokenIds.length > 0) {
-    const { data: metadata } = await supabase
-      .from('assets_metadata')
-      .select('token_id, tier')
-      .in('token_id', tokenIds);
-
-     if (metadata) {
-      const metadataMap: Record<string, string> = {};
-      metadata.forEach(m => {
+  if (allMetadata) {
+    const metadataMap: Record<string, string> = {};
+    allMetadata.forEach(m => {
+      if (m.token_id) {
         metadataMap[String(m.token_id)] = m.tier?.toUpperCase().trim();
-      });
+      }
+    });
 
-      activities = activities.map(act => {
-        let resolvedTier = metadataMap[String(act.token_id)];
-        if (!resolvedTier) {
-          const price = Number(act.price || 0);
-          if (price >= 15) resolvedTier = 'IMMORTAL';
-          else if (price >= 10) resolvedTier = 'ELITE';
-          else if (price >= 5) resolvedTier = 'FOUNDER';
-        }
-        return { ...act, tier: resolvedTier || 'UNKNOWN' };
-      });
-    }
+    activities = activities.map(act => {
+      let resolvedTier = metadataMap[String(act.token_id)];
+      
+      if (!resolvedTier) {
+        const price = Number(act.price || 0);
+        if (price >= 15) resolvedTier = 'IMMORTAL';
+        else if (price >= 10) resolvedTier = 'ELITE';
+        else if (price >= 5) resolvedTier = 'FOUNDER';
+      }
+      return { ...act, tier: resolvedTier || 'UNKNOWN' };
+    });
   }
 
   return NextResponse.json({
