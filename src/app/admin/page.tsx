@@ -72,6 +72,45 @@ const CustomDatePicker = ({ value, onChange, placeholder, style }: any) => {
   );
 };
 
+const CustomSelect = ({ value, onChange, options, style }: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, []);
+
+  const selectedOption = options.find((o: any) => o.value === value);
+
+  return (
+    <div ref={ref} style={{ position: 'relative', width: '200px', ...style }}>
+      <div onClick={() => setIsOpen(!isOpen)} style={{ background: '#1E2329', color: '#EAECEF', border: '1px solid #2B3139', padding: '10px 15px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {selectedOption?.label}
+        <span style={{ fontSize: '10px', color: '#848E9C' }}>▼</span>
+      </div>
+      {isOpen && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1E2329', border: '1px solid #2B3139', borderRadius: '4px', zIndex: 100, marginTop: '5px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.5)' }}>
+          {options.map((opt: any) => (
+            <div 
+              key={opt.value} 
+              onClick={() => { onChange(opt.value); setIsOpen(false); }} 
+              style={{ padding: '10px 15px', cursor: 'pointer', fontSize: '12px', color: value === opt.value ? '#FCD535' : '#EAECEF', background: value === opt.value ? 'rgba(252, 213, 53, 0.1)' : 'transparent', transition: 'background 0.2s' }} 
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} 
+              onMouseLeave={(e) => e.currentTarget.style.background = value === opt.value ? 'rgba(252, 213, 53, 0.1)' : 'transparent'}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function AdminPage() {
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
@@ -394,38 +433,41 @@ export default function AdminPage() {
         <button className="glass-btn" onClick={handleUpdateAnnouncement}>UPDATE MSG</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '15px', marginBottom: '30px' }}>
+      <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', alignItems: 'center', background: PANEL_BG, padding: '15px', borderRadius: '6px', border: `1px solid ${BORDER_COLOR}`, flexWrap: 'wrap' }}>
+        <h4 style={{ color: TEXT_MUTED, fontSize: '12px', textTransform: 'uppercase', margin: 0 }}>Dashboard Filter</h4>
+        
+        <CustomSelect
+          value={filterType}
+          onChange={(val: string) => {
+            setFilterType(val);
+            setShowCustomDate(val === 'CUSTOM');
+          }}
+          options={[
+            { value: 'ALL', label: 'ALL TIME' },
+            { value: '24H', label: 'DAILY (24H)' },
+            { value: 'CUSTOM', label: 'CUSTOM...' }
+          ]}
+        />
 
+        {showCustomDate && (
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <CustomDatePicker value={customStart} onChange={setCustomStart} placeholder="Start Date" style={{ width: '130px' }} />
+            <span style={{ color: TEXT_MUTED }}>-</span>
+            <CustomDatePicker value={customEnd} onChange={setCustomEnd} placeholder="End Date" style={{ width: '130px' }} />
+            <button className="glass-btn" onClick={applyCustomFilter}>APPLY</button>
+          </div>
+        )}
+      </div>
+
+      {}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', marginBottom: '30px' }}>
         <div className="stat-box"><div>IMMORTAL</div><div className="stat-split"><span>{formatNumber(stats.immortalCount)}</span><span>${stats.immortalVol.toFixed(2)}</span></div></div>
         <div className="stat-box"><div>ELITE</div><div className="stat-split"><span>{formatNumber(stats.eliteCount)}</span><span>${stats.eliteVol.toFixed(2)}</span></div></div>
         <div className="stat-box"><div>FOUNDER</div><div className="stat-split"><span>{formatNumber(stats.founderCount)}</span><span>${stats.founderVol.toFixed(2)}</span></div></div>
         <div className="stat-box"><div>MARKET VOL</div><div className="stat-split"><span>{formatNumber(stats.marketCount)}</span><span>${stats.marketVol.toFixed(2)}</span></div></div>
         <div className="stat-box"><div>GRAND TOTAL</div><div className="stat-split" style={{ justifyContent: 'center' }}><span style={{ color: BRAND_GOLD }}>${stats.total.toFixed(2)}</span></div></div>
-        
-        <div className="stat-box" style={{ position: 'relative' }} ref={filterRef}>
-          <div>FILTER</div>
-          <select 
-            value={filterType} 
-            onChange={(e) => {
-              if(e.target.value === 'CUSTOM') setShowCustomDate(true);
-              else { setShowCustomDate(false); setFilterType(e.target.value); }
-            }}
-            className="dark-select"
-          >
-            <option value="ALL">ALL TIME</option>
-            <option value="24H">DAILY (24H)</option>
-            <option value="CUSTOM">CUSTOM...</option>
-          </select>
-
-          {showCustomDate && (
-            <div style={{ position: 'absolute', top: '100%', right: 0, background: PANEL_BG, border: `1px solid ${BORDER_COLOR}`, padding: '10px', zIndex: 10, marginTop: '5px', borderRadius: '4px', width: '220px' }}>
-              <CustomDatePicker value={customStart} onChange={setCustomStart} placeholder="Start Date" style={{ marginBottom: '10px' }} />
-              <CustomDatePicker value={customEnd} onChange={setCustomEnd} placeholder="End Date" style={{ marginBottom: '10px' }} />
-              <button className="glass-btn" style={{ width:'100%', padding:'5px' }} onClick={applyCustomFilter}>APPLY</button>
-            </div>
-          )}
-        </div>
       </div>
+
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '40px' }}>
         <input type="number" placeholder="Immortal $" onChange={e=>setMintPrices({...mintPrices, immortal: e.target.value})} className="price-input" />

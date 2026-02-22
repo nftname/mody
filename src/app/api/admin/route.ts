@@ -51,14 +51,14 @@ export async function GET(request: Request) {
       .select('token_id, tier')
       .in('token_id', tokenIds);
 
-    if (metadata) {
+     if (metadata) {
       const metadataMap: Record<string, string> = {};
       metadata.forEach(m => {
-        metadataMap[m.token_id] = m.tier?.toUpperCase();
+        metadataMap[String(m.token_id)] = m.tier?.toUpperCase().trim();
       });
 
       activities = activities.map(act => {
-        let resolvedTier = metadataMap[act.token_id];
+        let resolvedTier = metadataMap[String(act.token_id)];
         if (!resolvedTier) {
           const price = Number(act.price || 0);
           if (price >= 15) resolvedTier = 'IMMORTAL';
