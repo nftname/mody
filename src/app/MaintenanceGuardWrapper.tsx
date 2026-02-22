@@ -65,9 +65,7 @@ export default function MaintenanceGuardWrapper({ children }: { children: React.
 
   const isOwner = isConnected && address?.toLowerCase() === OWNER_WALLET;
 
-  if (loading) {
-    return <div style={{background:'#F9F9F7', height:'100vh'}} />;
-  }
+
 
   if (isMaintenance && !isOwner) {
     return (
