@@ -3,15 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useAccount, useBalance } from "wagmi";
-import { createPublicClient, http, parseAbi, formatEther } from 'viem';
-import { polygon } from 'viem/chains';
+import { useAccount, useBalance, usePublicClient } from "wagmi";
+import { parseAbi, formatEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
-import { supabase } from '@/lib/supabase';
 
 const GOLD_COLOR = '#FCD535';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
-const ITEMS_PER_PAGE = 10; // ✅ Fix: Limit items to 10 per page
+const ITEMS_PER_PAGE = 10; 
 
 const CONTRACT_ABI = parseAbi([
   "function balanceOf(address) view returns (uint256)",
@@ -22,11 +20,6 @@ const CONTRACT_ABI = parseAbi([
 const MARKETPLACE_ABI = parseAbi([
   "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
-
-const publicClient = createPublicClient({
-  chain: polygon,
-  transport: http("https://polygon-bor.publicnode.com") 
-});
 
 // ✅ Helper: Format numbers to max 2 decimals to prevent table breakage
 const formatDecimal = (val: string | number) => {
@@ -41,6 +34,7 @@ export default function ProfilePage() {
   const targetAddress = params?.address as `0x${string}`; 
   const { address: connectedAddress } = useAccount(); 
   const { data: balanceData } = useBalance({ address: targetAddress });
+  const publicClient = usePublicClient();
   
   const isOwner = connectedAddress && targetAddress ? connectedAddress.toLowerCase() === targetAddress.toLowerCase() : false;
 
@@ -136,22 +130,17 @@ export default function ProfilePage() {
   const fetchFavorites = async () => {
     if (!connectedAddress) return;
     try {
-        const { data, error } = await supabase
-            .from('favorites')
-            .select('token_id')
-            .eq('wallet_address', connectedAddress);
-        
+        const res = await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getFavorites', address: connectedAddress }) });
+        const { data, error } = await res.json();
         if (error) throw error;
-        if (data) {
-            setFavoriteIds(new Set(data.map((item: any) => item.token_id)));
-        }
-    } catch (e) { console.error("Error fetching favorites", e); }
+        if (data) setFavoriteIds(new Set(data.map((item: any) => item.token_id)));
+    } catch (e) { }
   };
 
   const handleToggleFavorite = async (e: React.MouseEvent, tokenId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!connectedAddress) return; 
+    if (!connectedAddress) return;
 
     const newFavs = new Set(favoriteIds);
     const isFav = newFavs.has(tokenId);
@@ -161,23 +150,18 @@ export default function ProfilePage() {
 
     setFavoriteIds(newFavs);
 
-    try {
-        if (isFav) {
-            await supabase.from('favorites').delete().match({ wallet_address: connectedAddress, token_id: tokenId });
-        } else {
-            await supabase.from('favorites').insert({ wallet_address: connectedAddress, token_id: tokenId });
-        }
+     try {
+        await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'toggleFavorite', address: connectedAddress, tokenId, isFav }) });
     } catch (error) {
-        console.error("Error toggling favorite", error);
         fetchFavorites();
     }
   };
 
   const fetchAssets = async () => {
-    if (!targetAddress) return;
+    if (!targetAddress || !publicClient) return;
     setLoading(true);
     try {
-      const balanceBigInt = await publicClient.readContract({
+      const balanceBigInt = await publicClient!.readContract({
         address: NFT_COLLECTION_ADDRESS as `0x${string}`,
         abi: CONTRACT_ABI,
         functionName: 'balanceOf',
@@ -187,9 +171,9 @@ export default function ProfilePage() {
       const count = Number(balanceBigInt);
       if (!count) { setMyAssets([]); setLoading(false); return; }
 
-      const tokenIds = await Promise.all(
+       const tokenIds = await Promise.all(
         Array.from({ length: count }, (_, i) => 
-            publicClient.readContract({
+            publicClient!.readContract({
                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                 abi: CONTRACT_ABI,
                 functionName: 'tokenOfOwnerByIndex',
@@ -205,7 +189,7 @@ export default function ProfilePage() {
         const batchResults = await Promise.all(
           batch.map(async (tokenId: any) => {
             try {
-              const tokenURI = await publicClient.readContract({
+              const tokenURI = await publicClient!.readContract({
                   address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                   abi: CONTRACT_ABI,
                   functionName: 'tokenURI',
@@ -218,12 +202,13 @@ export default function ProfilePage() {
               let isListed = false;
               let listingPrice = '0';
               try {
-                  const listingData = await publicClient.readContract({
+                  const listingData = await publicClient!.readContract({
                       address: MARKETPLACE_ADDRESS as `0x${string}`,
                       abi: MARKETPLACE_ABI,
                       functionName: 'listings',
                       args: [tokenId]
                   });
+
                   if (listingData[2] === true) {
                       isListed = true;
                       listingPrice = formatEther(listingData[1]);
@@ -248,38 +233,30 @@ export default function ProfilePage() {
   };
 
   const fetchOffers = async () => {
-      if (!targetAddress || !isOwner) return; 
+      if (!targetAddress || !isOwner || !publicClient) return; 
       setLoading(true);
       try {
-          let query = supabase.from('offers').select('*');
           const now = Math.floor(Date.now() / 1000);
           const myTokenIds = myAssets.map(a => a.id);
-          const idsString = myTokenIds.length > 0 ? myTokenIds.join(',') : '';
-
-          if (offerType === 'All') {
-              if (idsString) {
-                query = query.or(`bidder_address.ilike.${targetAddress},token_id.in.(${idsString})`).gt('expiration', now).neq('status', 'cancelled');
-              } else {
-                query = query.ilike('bidder_address', targetAddress).gt('expiration', now).neq('status', 'cancelled');
-              }
-          } else if (offerType === 'Received') {
-              if (myTokenIds.length > 0) {
-                  query = query.in('token_id', myTokenIds).gt('expiration', now).neq('status', 'cancelled');
-              } else {
-                  setOffersData([]); setLoading(false); return;
-              }
-          } else if (offerType === 'Made') {
-              query = query.ilike('bidder_address', targetAddress).gt('expiration', now).neq('status', 'cancelled');
-          } else if (offerType === 'Expired') {
-              if (idsString) {
-                query = query.or(`bidder_address.ilike.${targetAddress},token_id.in.(${idsString})`).lte('expiration', now);
-              } else {
-                query = query.ilike('bidder_address', targetAddress).lte('expiration', now);
-              }
+          
+          if (offerType === 'Received' && myTokenIds.length === 0) {
+              setOffersData([]); setLoading(false); return;
           }
 
-          const { data, error } = await query;
+          const res = await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getOffers', address: targetAddress, tokenIds: myTokenIds }) });
+          const { data, error } = await res.json();
           if (error) throw error;
+
+          let filteredData = data || [];
+          if (offerType === 'All') {
+              filteredData = filteredData.filter((o: any) => o.expiration > now && o.status !== 'cancelled');
+          } else if (offerType === 'Received') {
+              filteredData = filteredData.filter((o: any) => myTokenIds.includes(o.token_id.toString()) && o.expiration > now && o.status !== 'cancelled');
+          } else if (offerType === 'Made') {
+              filteredData = filteredData.filter((o: any) => o.bidder_address.toLowerCase() === targetAddress.toLowerCase() && o.expiration > now && o.status !== 'cancelled');
+          } else if (offerType === 'Expired') {
+              filteredData = filteredData.filter((o: any) => o.expiration <= now);
+          }
 
           const enrichedOffers = await Promise.all((data || []).map(async (offer: any) => {
               const knownAsset = myAssets.find(a => a.id === offer.token_id.toString());
@@ -287,7 +264,7 @@ export default function ProfilePage() {
 
               if (!knownAsset) {
                   try {
-                      const tokenURI = await publicClient.readContract({
+                      const tokenURI = await publicClient!.readContract({
                           address: NFT_COLLECTION_ADDRESS as `0x${string}`,
                           abi: CONTRACT_ABI,
                           functionName: 'tokenURI',
@@ -317,14 +294,11 @@ export default function ProfilePage() {
   };
 
   const fetchCreated = async () => {
-      if (!targetAddress) return;
+      if (!targetAddress || !publicClient) return;
       setLoading(true);
       try {
-          const { data, error } = await supabase
-            .from('activities')
-            .select('token_id, created_at')
-            .ilike('to_address', targetAddress) 
-            .eq('activity_type', 'Mint');
+          const res = await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getCreated', address: targetAddress }) });
+          const { data, error } = await res.json();
 
           if (error) throw error;
           
@@ -334,56 +308,56 @@ export default function ProfilePage() {
               return;
           }
 
-          const dateMap: Record<string, string> = {};
-          data.forEach((item: any) => { dateMap[item.token_id] = item.created_at; });
+          const uniqueItems = Array.from(new Map(data.map((item: any) => [item.token_id, item])).values());
 
-          const tokenIds = [...new Set(data.map((item: any) => item.token_id))];
-          const batches = chunk(tokenIds, 4); 
-          const loadedCreated: any[] = [];
-
-          for (const batch of batches) {
-              const batchResults = await Promise.all(batch.map(async (tokenId: any) => {
-                  try {
-                      const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'tokenURI', args: [BigInt(tokenId)] });
-                      const metaRes = await fetch(resolveIPFS(tokenURI));
-                      const meta = metaRes.ok ? await metaRes.json() : {};
+          const loadedAssets = await Promise.all(uniqueItems.map(async (item: any) => {
+              try {
+                  const tokenURI = await publicClient!.readContract({ 
+                      address: NFT_COLLECTION_ADDRESS as `0x${string}`, 
+                      abi: CONTRACT_ABI, 
+                      functionName: 'tokenURI', 
+                      args: [BigInt(item.token_id)] 
+                  });
+                  const metaRes = await fetch(resolveIPFS(tokenURI));
+                  if (metaRes.ok) {
+                      const meta = await metaRes.json();
                       return {
-                          id: tokenId.toString(),
-                          name: meta.name || `NNM #${tokenId.toString()}`,
+                          id: item.token_id.toString(),
+                          name: meta.name || `NNM #${item.token_id}`,
                           image: resolveIPFS(meta.image) || '',
                           tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founders',
-                          price: meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0',
-                          mintDate: dateMap[tokenId]
+                          price: item.price,
+                          mintDate: item.created_at
                       };
-                  } catch { return null; }
-              }));
-              loadedCreated.push(...(batchResults.filter(Boolean) as any[]));
-              setCreatedAssets([...loadedCreated]); 
-          }
+                  }
+                  throw new Error("Contract fetch failed");
+              } catch (e) {
+                  return {
+                      id: item.token_id.toString(),
+                      name: `NNM #${item.token_id}`,
+                      image: '',
+                      tier: 'archived',
+                      price: item.price,
+                      mintDate: item.created_at
+                  };
+              }
+          }));
+
+          setCreatedAssets(loadedAssets);
+          
       } catch (e) { 
           console.error("Created Fetch Error:", e); 
       } finally { setLoading(false); }
-  };
+  }
 
   const fetchActivity = async () => {
       if (!targetAddress) return;
       setLoading(true);
       try {
-          const { data: activityData, error: actError } = await supabase
-            .from('activities')
-            .select('*')
-            .or(`from_address.ilike.${targetAddress},to_address.ilike.${targetAddress}`)
-            .order('created_at', { ascending: false });
+          const res = await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getActivity', address: targetAddress }) });
+          const { activities: activityData, offers: offersData, error } = await res.json();
 
-          if (actError) throw actError;
-
-          const { data: offersData, error: offError } = await supabase
-             .from('offers')
-             .select('*')
-             .ilike('bidder_address', targetAddress)
-             .order('created_at', { ascending: false });
-
-          if (offError) throw offError;
+          if (error) throw error;
 
           // ✅ Fix: Robust null checks for addresses to prevent toLowerCase() crash
           const formattedActivities = (activityData || []).map((item: any) => ({

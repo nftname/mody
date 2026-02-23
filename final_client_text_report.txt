@@ -122,42 +122,15 @@ How to buy?
 Connect your wallet and click buy. Ownership is recorded on-chain, and assets are transferred directly between users.
 
 --------------------
-Admin Page
---------------------
-Title: Admin Dashboard
-This page is for authorized admin users only. It provides:
-- Site status controls (LIVE/CLOSED)
-- Contract balance and withdrawal
-- System announcements
-- Dashboard filters (ALL TIME, DAILY, CUSTOM)
-- Minting statistics (Immortal, Elite, Founder)
-- Market volume and grand total
-- Affiliate payouts and history
-- Banned wallets management
-- Whale tracker (top spenders)
-
---------------------
 Affiliate Program Page
 --------------------
 Title: NNM Alliance — Institutional Partner Program
 Build a sustainable revenue stream. Earn 30% instant commission on mints, plus 10% lifetime royalties.
 Total Referred Users: [dynamic number]
 
-Connect Wallet to Access Dashboard
-Your Exclusive Link: [dynamic referral link]
 
-Stats:
-- Lifetime Revenue
-- Royalty Earnings (10%)
-- Mint Commission (30%)
-- Unpaid Balance
 
-Revenue Overview (chart)
-Earnings Source (pie chart)
-Transaction Ledger (table)
-Payout History (table)
 
---------------------
 Legal & Terms Page
 --------------------
 Title: Legal & Terms
