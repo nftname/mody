@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useAccount, useBalance, usePublicClient } from "wagmi";
 import { parseAbi, formatEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
-import { supabase } from '@/lib/supabase';
 
 const GOLD_COLOR = '#FCD535';
 const GOLD_GRADIENT = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
@@ -154,16 +153,11 @@ export default function DashboardPage() {
   const fetchFavorites = async () => {
     if (!address) return;
     try {
-        const { data, error } = await supabase
-            .from('favorites')
-            .select('token_id')
-            .eq('wallet_address', address);
-        
+        const res = await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getFavorites', address }) });
+        const { data, error } = await res.json();
         if (error) throw error;
-        if (data) {
-            setFavoriteIds(new Set(data.map((item: any) => item.token_id)));
-        }
-    } catch (e) { console.error("Error fetching favorites", e); }
+        if (data) setFavoriteIds(new Set(data.map((item: any) => item.token_id)));
+    } catch (e) { }
   };
 
   const handleToggleFavorite = async (e: React.MouseEvent, tokenId: string) => {
@@ -179,15 +173,10 @@ export default function DashboardPage() {
 
     setFavoriteIds(newFavs);
 
-    try {
-        if (isFav) {
-            await supabase.from('favorites').delete().match({ wallet_address: address, token_id: tokenId });
-        } else {
-            await supabase.from('favorites').insert({ wallet_address: address, token_id: tokenId });
-        }
+     try {
+        await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'toggleFavorite', address, tokenId, isFav }) });
     } catch (error) {
-        console.error("Error toggling favorite", error);
-        fetchFavorites(); // Revert
+        fetchFavorites();
     }
   };
 
@@ -271,35 +260,27 @@ export default function DashboardPage() {
       if (!address || !publicClient) return;
       setLoading(true);
       try {
-          let query = supabase.from('offers').select('*');
           const now = Math.floor(Date.now() / 1000);
           const myTokenIds = myAssets.map(a => a.id);
-          const idsString = myTokenIds.length > 0 ? myTokenIds.join(',') : '';
-
-          if (offerType === 'All') {
-              if (idsString) {
-                query = query.or(`bidder_address.ilike.${address},token_id.in.(${idsString})`).gt('expiration', now).neq('status', 'cancelled');
-              } else {
-                query = query.ilike('bidder_address', address).gt('expiration', now).neq('status', 'cancelled');
-              }
-          } else if (offerType === 'Received') {
-              if (myTokenIds.length > 0) {
-                  query = query.in('token_id', myTokenIds).gt('expiration', now).neq('status', 'cancelled');
-              } else {
-                  setOffersData([]); setLoading(false); return;
-              }
-          } else if (offerType === 'Made') {
-              query = query.ilike('bidder_address', address).gt('expiration', now).neq('status', 'cancelled');
-          } else if (offerType === 'Expired') {
-              if (idsString) {
-                query = query.or(`bidder_address.ilike.${address},token_id.in.(${idsString})`).lte('expiration', now);
-              } else {
-                query = query.ilike('bidder_address', address).lte('expiration', now);
-              }
+          
+          if (offerType === 'Received' && myTokenIds.length === 0) {
+              setOffersData([]); setLoading(false); return;
           }
 
-          const { data, error } = await query;
+          const res = await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getOffers', address, tokenIds: myTokenIds }) });
+          const { data, error } = await res.json();
           if (error) throw error;
+
+          let filteredData = data || [];
+          if (offerType === 'All') {
+              filteredData = filteredData.filter((o: any) => o.expiration > now && o.status !== 'cancelled');
+          } else if (offerType === 'Received') {
+              filteredData = filteredData.filter((o: any) => myTokenIds.includes(o.token_id.toString()) && o.expiration > now && o.status !== 'cancelled');
+          } else if (offerType === 'Made') {
+              filteredData = filteredData.filter((o: any) => o.bidder_address.toLowerCase() === address.toLowerCase() && o.expiration > now && o.status !== 'cancelled');
+          } else if (offerType === 'Expired') {
+              filteredData = filteredData.filter((o: any) => o.expiration <= now);
+          }
 
           const enrichedOffers = await Promise.all((data || []).map(async (offer: any) => {
               const knownAsset = myAssets.find(a => a.id === offer.token_id.toString());
@@ -341,12 +322,8 @@ export default function DashboardPage() {
       if (!address) return; // Removed publicClient check to allow DB-only fetch if needed
       setLoading(true);
       try {
-          // 1. Get ALL Mint actions by this user (Robust Query)
-          const { data, error } = await supabase
-            .from('activities')
-            .select('*') // Select all fields to have backup metadata
-            .eq('activity_type', 'Mint')
-            .or(`to_address.ilike.${address},from_address.ilike.${address}`); // Check BOTH sides
+          const res = await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getCreated', address }) });
+          const { data, error } = await res.json();
 
           if (error) throw error;
           
@@ -410,23 +387,11 @@ export default function DashboardPage() {
       if (!address) return;
       setLoading(true);
       try {
-          // History
-          const { data: activityData, error: actError } = await supabase
-            .from('activities')
-            .select('*')
-            .or(`from_address.ilike.${address},to_address.ilike.${address}`)
-            .order('created_at', { ascending: false });
 
-          if (actError) throw actError;
+          const res = await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getActivity', address }) });
+          const { activities: activityData, offers: offersData, error } = await res.json();
 
-          // Offers
-          const { data: offersData, error: offError } = await supabase
-             .from('offers')
-             .select('*')
-             .ilike('bidder_address', address)
-             .order('created_at', { ascending: false });
-
-          if (offError) throw offError;
+          if (error) throw error;
 
           const formattedActivities = (activityData || []).map((item: any) => ({
               type: item.activity_type,
@@ -461,17 +426,14 @@ export default function DashboardPage() {
       if (!address) return;
       setLoading(true);
       try {
-          const { data: wallet } = await supabase.from('nnm_wallets').select('wnnm_balance, nnm_balance').eq('wallet_address', address).maybeSingle();
-          
+          const res = await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getConviction', address }) });
+          const { wallet, mints, sales, votes, pays, error } = await res.json();
+          if (error) throw error;
+
           setWalletBalances({ 
               wnnm: wallet ? Number(wallet.wnnm_balance) : 0, 
               nnm: wallet ? Number(wallet.nnm_balance) : 0 
           });
-
-          const { data: mints } = await supabase.from('activities').select('*').match({ activity_type: 'Mint' }).ilike('to_address', address);
-          const { data: sales } = await supabase.from('activities').select('*').match({ activity_type: 'Sale' }).ilike('to_address', address);
-          const { data: votes } = await supabase.from('conviction_votes').select('*').ilike('supporter_address', address);
-          const { data: pays } = await supabase.from('activities').select('*').match({ activity_type: 'Pay' }).ilike('to_address', address);
 
           const historyLogs = [
               ...(mints?.map((m: any) => ({ type: 'Mint Reward', amount: 0, currency: 'WNNM (Tiered)', date: m.created_at })) || []),

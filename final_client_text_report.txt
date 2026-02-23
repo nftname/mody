@@ -1,0 +1,376 @@
+Home Page
+--------------------
+Title: NNM — The Global Market for Nexus Rare Digital Name NFTs
+Where Nexus Digital Name NFTs gain real financial value and global liquidity. Trade with confidence on the premier decentralized marketplace.
+
+Trending | Top
+All | ETH | POL
+1H | 6H | 24H | 7D | All
+View All Markets
+Top Performers
+
+--------------------
+Market Page
+--------------------
+Title: Buy & Sell Nexus Rare Digital Name Assets NFTs
+Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets.
+Watchlist | Conviction | Trending | Top | Most Offers
+All | ETH | POL
+Built for Web3
+
+--------------------
+NGX Index Page
+--------------------
+Title: NGX NFT Index — The Global Benchmark
+The premier benchmark tracking the global NFT market, aggregating sentiment, liquidity, and rare digital name assets across all platforms.
+
+NFTs as a Market Infrastructure: From Digital Collectibles to Asset Class Architecture
+Since their emergence in the late 2010s, Non-Fungible Tokens (NFTs) have undergone a fundamental transformation. What began as a niche experiment in digital ownership has evolved into a multi-layered market infrastructure spanning art, gaming, identity, finance, and cultural capital.
+
+The Evolution of NFT Market Structure
+As NFT ecosystems expanded, a clear hierarchy of asset types began to emerge. Art NFTs continued to function as cultural and collectible instruments. Utility NFTs enabled access mechanisms across platforms and communities. Gaming NFTs introduced interactive value, while domain-based NFTs bridged identity and digital real estate.
+
+Why Market Indexing Matters in NFTs
+In traditional financial markets, indices serve as neutral observatories—tools that reflect market structure rather than predict outcomes. As NFTs mature, similar indexing frameworks are beginning to surface, not to forecast prices, but to contextualize market evolution.
+
+NFTs as a Recognized Asset Class
+By 2024–2025, NFTs had firmly entered institutional, corporate, and cultural conversations. Major brands, gaming studios, and digital platforms adopted NFTs not as speculative instruments, but as ownership layers embedded within larger systems.
+
+Looking Ahead: 2026 and Beyond
+As regulatory clarity improves and technical standards stabilize, NFTs are expected to transition further into infrastructure assets—integrated seamlessly into digital economies rather than existing as standalone products.
+
+--------------------
+Conviction Rank Page
+--------------------
+Title: Conviction Rank
+In today's NFT marketplaces, value is often misunderstood.
+Which assets do people genuinely believe in?
+This is exactly what Conviction Rank was built to measure.
+
+Beyond Price: Why Conviction Matters More Than Liquidity
+Conviction separates noise from signal. It’s the difference between a trade and a thesis.
+
+What Is Conviction Rank?
+Conviction Rank measures how many verified NFT holders are willing to publicly support a specific digital name.
+Every supporter:
+- Owns a registered NNM name
+- Has real involvement in the ecosystem
+- Signals belief consciously and irreversibly
+No anonymous votes. No bots. No free clicks. Each act of conviction carries real weight because it comes from active, verified participants.
+
+How Conviction Changes Market Behavior
+Visible conviction changes market dynamics. Assets with strong conviction tend to:
+- Trade with resilience
+- Recover faster from downturns
+- Attract long-term holders rather than short-term flippers
+
+The Psychology Behind Conviction
+Humans follow confidence—not charts. When traders see a name backed by hundreds of verified holders, trust forms naturally.
+
+WNNM Credits: Reputation, Not Speculation
+Conviction within NNM accumulates WNNM Credits.
+These credits are not tokens, are not tradable, and do not represent financial instruments.
+
+Why Conviction Rank Favors Early Supporters
+Early conviction has disproportionate value. Supporting a name before it becomes popular compounds reputation.
+
+A Market That Remembers
+Conviction Rank ensures belief is visible. Trust leaves a footprint. Commitment has memory.
+Conviction is no longer silent. It’s ranked.
+
+--------------------
+How it Works Page
+--------------------
+Title: How NNM Works
+NNM is a Web3 marketplace for Digital Name Assets — a new class of scarce, blockchain-native assets designed for long-term digital ownership, discovery, and exchange.
+
+What Are Digital Name Assets?
+Digital Name Assets are unique, non-fungible blockchain assets that represent rare digital identifiers. They are not identities, domains, or credentials. They are collectible, ownable digital assets secured by decentralized networks and verifiable on-chain.
+Each asset is defined by scarcity, provenance, and permanence. Ownership is recorded transparently on the blockchain, allowing users to hold, trade, or transfer assets without intermediaries.
+
+Conviction Rank — Measuring Belief, Not Hype
+Most NFT marketplaces focus on price and volume. But Conviction Rank shows which digital names are truly backed by verified supporters. Each supporter signals real belief, creating a transparent layer of trust across the market. Conviction Rank explains why price moves before it moves and highlights assets with lasting confidence.
+
+ChainFace — Your Personal Blockchain Identity
+By claiming your unique name in the NNM Registry, you instantly gain lifetime membership in ChainFace — your personal blockchain identity visible to the world, complete with 100,000 Conviction points, five stars, and free verification.
+Being present on the internet is no longer a luxury — it is essential for your future. Secure your place now and establish your identity in the blockchain era.
+
+The NNM Marketplace
+NNM operates as an open marketplace where users can discover, list, and exchange Digital Name Assets directly with one another. The platform does not act as a broker, advisor, or custodian.
+All transactions occur through user-connected wallets. NNM does not hold user funds, does not guarantee liquidity, and does not participate in pricing decisions.
+
+NGX Index: Market Intelligence
+NGX is a global NFT market indicator developed to observe ecosystem-wide activity. It reflects aggregated market signals across NFT sectors, including Digital Name Assets, without providing financial predictions or investment advice.
+NNM is one of several data contributors to NGX. The index is informational only and does not represent performance guarantees.
+
+Sovereign Ownership Flow
+Ownership & Responsibility
+Users are solely responsible for their actions on the platform. NNM does not provide investment advice, does not assess asset value, and does not guarantee outcomes.
+Digital Name Assets are not securities, identities, or financial instruments. Participation is voluntary and subject to user discretion.
+
+--------------------
+About Page
+--------------------
+Title: About NNM
+NNM is the premier marketplace for sovereign digital name assets. NNM is a decentralized marketplace for rare digital name NFTs, offering transparent ownership, open trading, and secure blockchain verification.
+
+Common Questions
+What is NNM?
+NNM is a decentralized marketplace for digital name assets, enabling users to mint, buy, and sell unique blockchain-based identifiers.
+
+How to buy?
+Connect your wallet and click buy. Ownership is recorded on-chain, and assets are transferred directly between users.
+
+--------------------
+Admin Page
+--------------------
+Title: Admin Dashboard
+This page is for authorized admin users only. It provides:
+- Site status controls (LIVE/CLOSED)
+- Contract balance and withdrawal
+- System announcements
+- Dashboard filters (ALL TIME, DAILY, CUSTOM)
+- Minting statistics (Immortal, Elite, Founder)
+- Market volume and grand total
+- Affiliate payouts and history
+- Banned wallets management
+- Whale tracker (top spenders)
+
+--------------------
+Affiliate Program Page
+--------------------
+Title: NNM Alliance — Institutional Partner Program
+Build a sustainable revenue stream. Earn 30% instant commission on mints, plus 10% lifetime royalties.
+Total Referred Users: [dynamic number]
+
+Connect Wallet to Access Dashboard
+Your Exclusive Link: [dynamic referral link]
+
+Stats:
+- Lifetime Revenue
+- Royalty Earnings (10%)
+- Mint Commission (30%)
+- Unpaid Balance
+
+Revenue Overview (chart)
+Earnings Source (pie chart)
+Transaction Ledger (table)
+Payout History (table)
+
+--------------------
+Legal & Terms Page
+--------------------
+Title: Legal & Terms
+NOTICE: By connecting your wallet, you confirm you have read and accepted these terms.
+
+1. Protocol Overview
+NNM is a decentralized protocol for minting, trading, and displaying Digital Identity Assets (NFT Names).
+
+2. User Agreement
+By using NNM, you agree to abide by these Terms and all applicable laws.
+
+3. Marketplace Function
+NNM does not act as a broker, advisor, or custodian. All transactions are peer-to-peer.
+
+4. Asset Ownership
+Ownership is recorded on-chain. NNM does not guarantee exclusivity, enforceability, or financial appreciation.
+
+5. Digital Asset Classification
+NFT Names and related digital items (“Digital Identity Assets”) are:
+- Purely visual identity assets.
+- Not securities, equities, or investment contracts.
+- Not granting trademark, publicity, or commercial rights outside the blockchain.
+- Not guaranteeing exclusivity, enforceability, or financial appreciation.
+- Users acknowledge that minting does not imply ownership rights beyond blockchain metadata.
+
+6. Market Activity & Admin/Operational Wallets
+NNM may operate an Initial Market Testing Phase for up to ninety (90) days using authorized Operational and Admin Wallets:
+- Such wallets are used for technical testing, initial liquidity, educational evaluation of market activity, and trading indicator assessments.
+- Trades via Operational/Admin Wallets do not constitute financial advice, investment recommendation, or market guarantees.
+- Users acknowledge that any observed market activity during this period is experimental and not indicative of future results.
+- NNM provides no warranty regarding price, volume, liquidity, or outcomes during testing.
+- After the 90-day testing period, Operational/Admin Wallets cease experimental activities, and the marketplace operates fully user-driven.
+
+7. ChainFace Service
+ChainFace provides decentralized identity display linked to NFT ownership.
+- NNM does not custody funds or process payments.
+- NNM does not verify legality of user transactions or mediate disputes.
+- Users fully control all interactions via ChainFace; all activities are peer-to-peer.
+- Users accept complete autonomy and privacy, with zero liability on NNM’s part.
+
+8. Conviction Points System
+Conviction Rank points (WNNM → NNM Points):
+- Are symbolic, non-monetary, and purely internal to the platform.
+- Are not a currency, token, security, or tradable asset.
+- Are fully controlled by NNM and may be modified, suspended, or terminated at any time without notice.
+- Users acknowledge that points carry no claim to future tokens, coins, or tradable rights.
+
+9. User Responsibility
+Users are fully responsible for:
+- Content minted, listed, or displayed on the Protocol.
+- Compliance with intellectual property, trademark, publicity rights, and third-party rights.
+- Wallet security, transaction approvals, and tax obligations.
+- Any actions, messages, or interactions via ChainFace or NFT assets.
+- Users acknowledge that NNM does not monitor or verify user content; all on-chain activity is solely the user’s responsibility.
+
+10. Prohibited Activities
+Users agree not to use NNM for:
+- Money laundering, terrorist financing, or sanctions violations.
+- Market manipulation (including wash trading) or automated bot activity.
+- Fraudulent, deceptive, or illegal conduct.
+NNM reserves the right to restrict access to wallets suspected of prohibited activities or violation of these Terms.
+
+11. Prohibited Content, Third-Party Rights & Right to Burn
+To maintain protocol integrity and compliance, users must NOT mint or display Digital Identity Assets that:
+- Violate trademarks, copyrights, or publicity rights of celebrities, public figures, or corporations.
+- Contain hate speech, slurs, explicit violence, pornography, or illegal content.
+- Are identified as “high-risk” names for misuse or infringement.
+NNM reserves the strict right, at its sole discretion, to block, delist, or burn (permanently destroy) any Digital Identity Asset:
+- In response to valid legal claims.
+- If an asset violates the community standards or high-risk policies.
+- If the asset is involved in misuse, unauthorized commercial exploitation, or regulatory concerns.
+NO REFUNDS: In the event an asset is blocked, delisted, or burned, the user forfeits all access and is not entitled to any refund, compensation, or reimbursement for minting or gas fees.
+
+12. Name Burn Authorization
+NNM may, at its sole discretion, burn or remove Digital Identity Assets under circumstances including but not limited to:
+- Verified legal claims or court orders.
+- Misuse, impersonation, or infringement of third-party rights.
+- Detection of fraudulent, malicious, or harmful activity.
+- Any activity that threatens the integrity or security of the Protocol.
+
+13. Limitation of Liability – “AS IS”
+The Protocol is provided “AS IS” and “AS AVAILABLE.” NNM shall not be liable for:
+- Bugs, exploits, or vulnerabilities in smart contracts.
+- Network failures, latency, high gas fees, or congestion on the Polygon blockchain.
+- Loss of funds or assets.
+- Unauthorized wallet access.
+- Market volatility or trading losses.
+- Regulatory or legal consequences arising from user activity.
+Maximum liability, if any, is strictly limited to amounts directly paid to NNM for services.
+
+14. Indemnification
+Users agree to indemnify, defend, and hold harmless NNM, affiliates, and associated entities from any claims, losses, or damages arising from:
+- Violation of laws or third-party rights.
+- Unauthorized transactions.
+- Misuse of NFT Names, ChainFace, or Digital Identity Assets.
+
+15. Intellectual Property
+- All platform branding, analytics, NGX NFT Index, sub-indices, and proprietary tools remain exclusive property of NNM.
+- On-chain assets are fully controlled by individual wallet holders.
+- Reproduction, copying, or unauthorized use of proprietary data, indices, or methodology is strictly prohibited.
+
+16. Privacy Policy
+NNM follows a Zero-PII policy:
+- No collection of personal data (names, emails, IP addresses).
+- No account registration required.
+- Blockchain transactions remain inherently public.
+- Users acknowledge that all on-chain activity is public by nature and at their own discretion.
+
+17. Modifications
+NNM may update these Terms at any time; continued use constitutes acceptance of the updated Terms.
+
+18. Governing Law & Arbitration
+- All disputes are resolved via individual binding arbitration.
+- Class actions are waived.
+- Governing law: Singapore law and internationally recognized arbitration standards.
+
+19. Miscellaneous
+- Users agree that NNM is a neutral interface only, providing no financial, legal, or custodial functions.
+- Acceptance of these Terms constitutes full waiver of claims against NNM for user-generated actions, misuse, or regulatory consequences.
+- These Terms fully cover all liabilities, including name minting, NFT ownership, ChainFace use, and high-risk content control.
+
+AGREEMENT: By connecting your wallet, you confirm you have read and accepted these terms.
+
+--------------------
+Contact Page
+--------------------
+Title: Contact NNM
+Select the appropriate channel below for assistance.
+
+General Inquiries
+For platform assistance and general information.
+contact@nftnnm.com
+
+Media & Partnerships
+For press, partnerships, and brand assets.
+media@nftnnm.com
+
+Legal & Compliance
+For verified institutional inquiries only.
+legal@nftnnm.com
+
+Send a message
+Name
+Email
+Department
+Message
+Send Message
+
+NNM support will never ask for your private keys.
+
+--------------------
+Registry Rank Page
+--------------------
+Title: The Three Tiers of Digital Naming
+Choice, Positioning, and Intent
+
+In every mature market, structure matters. Not all assets are created equal, and not all participants approach ownership with the same intent. As digital naming evolves into functional infrastructure, differentiation becomes a matter of clarity rather than hierarchy.
+
+At NNM, digital names are minted across three clearly defined tiers. These tiers do not determine future market value, do not imply performance, and do not create expectations. They exist to provide structural context and optional positioning at the moment of minting.
+
+What follows is not a ranking system. It is a framework of choice.
+
+Tier 1: Immortals
+Some names are inherently scarce. Short character strings, culturally resonant words, and timeless identifiers often attract attention simply by their nature.
+The Immortals Tier is designed for such names.
+Names minted under this tier carry a higher minting fee, not as a signal of guaranteed value, but as a reflection of personal intent. The protocol does not assign worth to the name. The registrant does.
+Minting within the Immortals Tier does not ensure visibility, demand, liquidity, or market activity. It represents a deliberate decision at the point of creation, nothing more.
+
+Tier 2: Elite
+Between exclusivity and accessibility lies balance.
+The Elite Tier is intended for names that are meaningful, strategically chosen, or identity-driven, without requiring extreme scarcity.
+This tier reflects a pragmatic approach to digital naming. Participants often use it for personal identifiers, brand-aligned names, or emerging use cases that may evolve over time.
+As with all tiers, post-mint behavior is entirely market-driven. Activity and relevance emerge from use and demand, not from classification.
+
+Tier 3: Founders
+Every ecosystem begins with early participants. Not because outcomes are certain, but because exploration and belief in open systems come first.
+The Founders Tier is designed to be accessible by design.
+It allows participants to mint digital names with minimal friction, serving as a natural entry point into the naming ecosystem. Some names minted at this tier may later gain relevance through adoption or integration. Others may remain purely personal identifiers.
+Origin does not define outcome. In open markets, value is shaped by interaction, not initial cost.
+
+What These Tiers Do and Do Not Represent
+These tiers do not predict future value, influence secondary market performance, or grant ranking, priority, or algorithmic advantage.
+They do provide clarity at minting, enable optional identity signaling, and reflect intent at the moment of creation.
+A name minted at the Founders Tier may later circulate widely. A name minted at the Immortals Tier may never trade. Both outcomes are valid and entirely market-driven.
+
+The system provides structure. The market provides meaning.
+CLAIM YOUR NEXUS NAME
+
+--------------------
+Footer Sections
+--------------------
+Community
+- Twitter
+- Discord
+- Medium
+- Facebook
+- Instagram
+Marketplace
+- Market
+- Analysis (NGX)
+- Conviction Rank
+- Registry Rank
+Resources
+- News & Updates
+- Market Indices
+- How it Works
+- Blog
+Company
+- NNM Concept
+- Affiliate Program
+- Legal & Terms
+- Contact
+
+© 2025 NNM Digital Name Assets Market. All rights reserved.
+© 2026 NNM. All rights reserved. NGX Indices are powered by real-time on-chain data.
+NNM is a decentralized discovery and exchange platform. All content is provided for informational purposes only.
