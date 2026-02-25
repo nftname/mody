@@ -10,7 +10,6 @@ const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
-
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -62,40 +61,57 @@ export function useMarketData(timeFilter: string = 'All') {
 
                 const tokenIdsStr = tokenIds.map(id => id.toString());
 
-               
                 const CHUNK_SIZE = 150;
-                const chunks = [];
+                const chunks: string[][] = [];
                 for (let i = 0; i < tokenIdsStr.length; i += CHUNK_SIZE) {
                     chunks.push(tokenIdsStr.slice(i, i + CHUNK_SIZE));
                 }
+
+                const fetchAllRecords = async (tableName: string, selectQuery: string, targetChunks: string[][], orderBy?: string) => {
+                    let allResults: any[] = [];
+                    for (const chunk of targetChunks) {
+                        let from = 0;
+                        const limit = 1000;
+                        let fetchMore = true;
+                        while (fetchMore) {
+                            let query = supabase.from(tableName).select(selectQuery).in('token_id', chunk).range(from, from + limit - 1);
+                            if (orderBy) query = query.order(orderBy, { ascending: false });
+                            
+                            const { data, error } = await query;
+                            if (error) {
+                                console.error(`Error fetching ${tableName}:`, error);
+                                fetchMore = false;
+                                break;
+                            }
+                            if (data && data.length > 0) {
+                                allResults.push(...data);
+                                from += limit;
+                                if (data.length < limit) fetchMore = false;
+                            } else {
+                                fetchMore = false;
+                            }
+                        }
+                    }
+                    return allResults;
+                };
 
                 const metadataPromises = chunks.map(chunk => 
                     supabase.from('assets_metadata').select('*').in('token_id', chunk)
                 );
 
-                const votesPromises = chunks.map(chunk => 
-                    supabase.from('conviction_votes').select('token_id, amount').in('token_id', chunk)
-                );
-
-                const activitiesPromises = chunks.map(chunk => 
-                    supabase.from('activities').select('*').in('token_id', chunk).order('created_at', { ascending: false })
-                );
-
                 const [
                     metadataResults,
-                    votesResults,
-                    activitiesResults,
+                    votesData,
+                    allActivities,
                     { data: offersData }
                 ] = await Promise.all([
                     Promise.all(metadataPromises),
-                    Promise.all(votesPromises),
-                    Promise.all(activitiesPromises),
+                    fetchAllRecords('conviction_votes', 'token_id, amount', chunks),
+                    fetchAllRecords('activities', '*', chunks, 'created_at'),
                     supabase.from('offers').select('token_id').eq('status', 'active')
                 ]);
 
                 const dbMetadata = metadataResults.flatMap(res => res.data || []);
-                const votesData = votesResults.flatMap(res => res.data || []);
-                const allActivities = activitiesResults.flatMap(res => res.data || []);
 
                 const assetsMap: Record<string, any> = {};
                 
@@ -197,7 +213,6 @@ export function useMarketData(timeFilter: string = 'All') {
                     };
                 }); 
                 
-                // 
                 const itemsMissingNames = items.filter(item => item.name.startsWith('Asset #'));
                 if (itemsMissingNames.length > 0) {
                     await Promise.all(itemsMissingNames.map(async (item) => {
@@ -244,7 +259,11 @@ export function useMarketData(timeFilter: string = 'All') {
         return data;
     }, [listings, timeFilter]);
 
-    const getTrendingItems = () => [...filteredData].sort((a, b) => b.trendingScore - a.trendingScore);
+    const getTrendingItems = () => [...filteredData].sort((a, b) => {
+        if (b.trendingScore !== a.trendingScore) return b.trendingScore - a.trendingScore;
+        if (b.volume !== a.volume) return b.volume - a.volume;
+        return b.id - a.id;
+    });
     const getTopItems = () => [...filteredData].sort((a, b) => b.volume - a.volume);
     const getNewListings = () => [...listings].filter(i => i.listedTime > 0).sort((a, b) => b.listedTime - a.listedTime);
 
