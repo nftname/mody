@@ -216,7 +216,14 @@ function MarketPage() {
       }
 
       if (activeFilter === 'Top') { processedData.sort((a, b) => b.volume - a.volume); }
-      else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
+      else if (activeFilter === 'Trending') { 
+          processedData.sort((a, b) => {
+              if (b.trendingScore !== a.trendingScore) return b.trendingScore - a.trendingScore;
+              if (b.volume !== a.volume) return b.volume - a.volume;
+              return b.id - a.id;
+          }); 
+      }
+
       else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
       else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
       else if (activeFilter === 'Conviction') {

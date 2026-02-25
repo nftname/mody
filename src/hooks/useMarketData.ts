@@ -77,20 +77,25 @@ export function useMarketData(timeFilter: string = 'All') {
                     supabase.from('conviction_votes').select('token_id, amount').in('token_id', chunk)
                 );
 
+                const activitiesPromises = chunks.map(chunk => 
+                    supabase.from('activities').select('*').in('token_id', chunk).order('created_at', { ascending: false })
+                );
+
                 const [
                     metadataResults,
                     votesResults,
-                    { data: allActivities },
+                    activitiesResults,
                     { data: offersData }
                 ] = await Promise.all([
                     Promise.all(metadataPromises),
                     Promise.all(votesPromises),
-                    supabase.from('activities').select('*').order('created_at', { ascending: false }),
+                    Promise.all(activitiesPromises),
                     supabase.from('offers').select('token_id').eq('status', 'active')
                 ]);
 
                 const dbMetadata = metadataResults.flatMap(res => res.data || []);
                 const votesData = votesResults.flatMap(res => res.data || []);
+                const allActivities = activitiesResults.flatMap(res => res.data || []);
 
                 const assetsMap: Record<string, any> = {};
                 
