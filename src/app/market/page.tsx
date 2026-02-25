@@ -201,53 +201,32 @@ function MarketPage() {
   const finalData = useMemo(() => {
       let processedData = [...allListings];
 
-      if (searchQuery) {
-          const query = searchQuery.trim().toLowerCase();
-          
-          processedData = processedData.filter(item => 
-              item.name && item.name.toLowerCase().includes(query)
-          );
+      if (timeFilter !== 'All') {
+          let limit = Infinity;
+          const now = Date.now();
+          if (timeFilter === '1H') limit = 3600 * 1000;
+          else if (timeFilter === '6H') limit = 3600 * 6 * 1000;
+          else if (timeFilter === '24H') limit = 3600 * 24 * 1000;
+          else if (timeFilter === '7D') limit = 3600 * 24 * 7 * 1000;
 
-          processedData.sort((a, b) => {
-              const nameA = a.name.toLowerCase();
-              const nameB = b.name.toLowerCase();
-              if (nameA === query && nameB !== query) return -1;
-              if (nameA !== query && nameB === query) return 1;
-              const startsA = nameA.startsWith(query);
-              const startsB = nameB.startsWith(query);
-              if (startsA && !startsB) return -1;
-              if (!startsA && startsB) return 1;
-              return nameA.localeCompare(nameB);
+          processedData = processedData.filter(item => {
+              const timeDiff = now - (item.lastActive || 0); 
+              return timeDiff <= limit;
           });
-      } 
-      else {
-          if (timeFilter !== 'All') {
-              let limit = Infinity;
-              const now = Date.now();
-              if (timeFilter === '1H') limit = 3600 * 1000;
-              else if (timeFilter === '6H') limit = 3600 * 6 * 1000;
-              else if (timeFilter === '24H') limit = 3600 * 24 * 1000;
-              else if (timeFilter === '7D') limit = 3600 * 24 * 7 * 1000;
-
-              processedData = processedData.filter(item => {
-                  const timeDiff = now - (item.lastActive || 0); 
-                  return timeDiff <= limit;
-              });
-          }
-
-          if (activeFilter === 'Top') { processedData.sort((a, b) => b.volume - a.volume); }
-          else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
-          else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
-          else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
-          else if (activeFilter === 'Conviction') {
-              processedData.sort((a, b) => {
-                  const scoreDiff = (Number(b.convictionScore) || 0) - (Number(a.convictionScore) || 0);
-                  if (scoreDiff !== 0) return scoreDiff;
-                  return (Number(b.volume) || 0) - (Number(a.volume) || 0);
-              });
-          }
-          else { processedData.sort((a, b) => a.id - b.id); }
       }
+
+      if (activeFilter === 'Top') { processedData.sort((a, b) => b.volume - a.volume); }
+      else if (activeFilter === 'Trending') { processedData.sort((a, b) => b.trendingScore - a.trendingScore); }
+      else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
+      else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
+      else if (activeFilter === 'Conviction') {
+          processedData.sort((a, b) => {
+              const scoreDiff = (Number(b.convictionScore) || 0) - (Number(a.convictionScore) || 0);
+              if (scoreDiff !== 0) return scoreDiff;
+              return (Number(b.volume) || 0) - (Number(a.volume) || 0);
+          });
+      }
+      else { processedData.sort((a, b) => a.id - b.id); }
 
       if (sortConfig) {
           processedData.sort((a: any, b: any) => {
@@ -258,8 +237,6 @@ function MarketPage() {
               }
               if (sortConfig.key === 'rank') {
                   const modifier = sortConfig.direction === 'asc' ? 1 : -1;
-                  if (searchQuery) return (a.id - b.id) * modifier;
-                  
                   if (activeFilter === 'Trending') return (b.trendingScore - a.trendingScore) * modifier;
                   if (activeFilter === 'Top') return (b.volume - a.volume) * modifier;
                   if (activeFilter === 'Most Offers') return (b.offersCount - a.offersCount) * modifier;
@@ -274,8 +251,22 @@ function MarketPage() {
               return 0;
           });
       }
+
+      processedData = processedData.map((item, index) => ({
+          ...item,
+          trueRank: index + 1
+      }));
+
+      if (searchQuery) {
+          const query = searchQuery.trim().toLowerCase();
+          processedData = processedData.filter(item => 
+              item.name && item.name.toLowerCase().includes(query)
+          );
+      }
+
       return processedData;
   }, [allListings, activeFilter, favoriteIds, sortConfig, timeFilter, searchQuery]);
+
 
   const totalPages = Math.ceil(finalData.length / ITEMS_PER_PAGE);
   const currentTableData = finalData.slice(
