@@ -198,7 +198,7 @@ function MarketPage() {
   };
 
   // --- Data Logic (New Hook Integration) ---
-  const finalData = useMemo(() => {
+ const finalData = useMemo(() => {
       let processedData = [...allListings];
 
       if (timeFilter !== 'All') {
@@ -228,43 +228,36 @@ function MarketPage() {
       }
       else { processedData.sort((a, b) => a.id - b.id); }
 
-      if (sortConfig) {
-          processedData.sort((a: any, b: any) => {
-              if (['volume', 'pricePol', 'lastSale', 'trendingScore', 'convictionScore'].includes(sortConfig.key)) {
-                  const numA = Number(a[sortConfig.key]) || 0;
-                  const numB = Number(b[sortConfig.key]) || 0;
-                  return sortConfig.direction === 'asc' ? numB - numA : numA - numB;
-              }
-              if (sortConfig.key === 'rank') {
-                  const modifier = sortConfig.direction === 'asc' ? 1 : -1;
-                  if (activeFilter === 'Trending') return (b.trendingScore - a.trendingScore) * modifier;
-                  if (activeFilter === 'Top') return (b.volume - a.volume) * modifier;
-                  if (activeFilter === 'Most Offers') return (b.offersCount - a.offersCount) * modifier;
-                  if (activeFilter === 'Conviction') return (b.convictionScore - a.convictionScore) * modifier;
-                  return (a.id - b.id) * modifier; 
-              }
-              if (sortConfig.key === 'name') {
-                  if (a.name < b.name) return sortConfig.direction === 'asc' ? -1 : 1;
-                  if (a.name > b.name) return sortConfig.direction === 'asc' ? 1 : -1;
-                  return 0;
-              }
-              return 0;
-          });
-      }
-
-      processedData = processedData.map((item, index) => ({
+      let rankedData = processedData.map((item, index) => ({
           ...item,
           trueRank: index + 1
       }));
 
       if (searchQuery) {
           const query = searchQuery.trim().toLowerCase();
-          processedData = processedData.filter(item => 
+          rankedData = rankedData.filter(item => 
               item.name && item.name.toLowerCase().includes(query)
           );
       }
 
-      return processedData;
+      if (sortConfig) {
+          rankedData.sort((a, b) => {
+              if (['volume', 'pricePol', 'lastSale', 'trendingScore', 'convictionScore'].includes(sortConfig.key)) {
+                  const numA = Number(a[sortConfig.key]) || 0;
+                  const numB = Number(b[sortConfig.key]) || 0;
+                  return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
+              }
+              if (sortConfig.key === 'rank') {
+                  return sortConfig.direction === 'asc' ? a.trueRank - b.trueRank : b.trueRank - a.trueRank;
+              }
+              if (sortConfig.key === 'name') {
+                  return sortConfig.direction === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+              }
+              return 0;
+          });
+      }
+
+      return rankedData;
   }, [allListings, activeFilter, favoriteIds, sortConfig, timeFilter, searchQuery]);
 
 
@@ -426,16 +419,10 @@ function MarketPage() {
                           </tr>
                       </thead>
                       <tbody>
-                          {currentTableData.map((item: any, index: number) => {
-                              const globalIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-                              const totalCount = finalData.length;
-                              let dynamicRank = globalIndex + 1; 
+                         {currentTableData.map((item: any) => {
+                            const dynamicRank = item.trueRank;
 
-                              if (sortConfig && sortConfig.key === 'rank' && sortConfig.direction === 'desc') {
-                                  dynamicRank = totalCount - globalIndex; 
-                              }
-
-                              return (
+                                 return (
                                 <tr key={item.id} className="market-row" style={{ transition: 'background-color 0.2s' }}>
                                     <td style={{ padding: '14px 10px', borderBottom: '1px solid #2B3139', backgroundColor: 'transparent' }}>
                                         <div className="d-flex align-items-center gap-3">
