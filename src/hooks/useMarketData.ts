@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -42,6 +41,7 @@ export function useMarketData(timeFilter: string = 'All') {
         const fetchMarketData = async () => {
             setLoading(true);
             try {
+                // 1. قراءة البلوكتشين
                 const data = await publicClient.readContract({
                     address: MARKETPLACE_ADDRESS as `0x${string}`,
                     abi: MARKET_ABI,
@@ -57,20 +57,35 @@ export function useMarketData(timeFilter: string = 'All') {
 
                 const tokenIdsStr = tokenIds.map(id => id.toString());
 
+                // 🌟 الحل الذكي: تقسيم المصفوفة إلى دفعات (كل دفعة 150 أصل) لتجنب كسر الرابط
+                const CHUNK_SIZE = 150;
+                const chunks = [];
+                for (let i = 0; i < tokenIdsStr.length; i += CHUNK_SIZE) {
+                    chunks.push(tokenIdsStr.slice(i, i + CHUNK_SIZE));
+                }
+
+                // تجهيز طلبات الدفعات لإرسالها في نفس اللحظة
+                const metadataPromises = chunks.map(chunk => 
+                    supabase.from('assets_metadata').select('*').in('token_id', chunk)
+                );
+
+                // 2. إرسال جميع الطلبات (الدفعات + الأنشطة + العروض + الأصوات) بالتوازي وبنفس اللحظة
                 const [
-                    { data: dbMetadata },
+                    metadataResults, // نتيجة الدفعات
                     { data: allActivities },
                     { data: offersData },
                     { data: votesData }
                 ] = await Promise.all([
-                    supabase.from('assets_metadata').select('*').in('token_id', tokenIdsStr),
+                    Promise.all(metadataPromises), // تنفيذ جميع دفعات الميتا داتا معاً
                     supabase.from('activities').select('*').order('created_at', { ascending: false }),
                     supabase.from('offers').select('token_id').eq('status', 'active'),
                     supabase.from('conviction_votes').select('token_id, amount')
                 ]);
 
+                // تجميع الأسماء من جميع الدفعات في مصفوفة واحدة
+                const dbMetadata = metadataResults.flatMap(res => res.data || []);
+
                 const assetsMap: Record<string, any> = {};
-                
                 
                 if (dbMetadata) {
                     dbMetadata.forEach((a: any) => {
@@ -120,17 +135,13 @@ export function useMarketData(timeFilter: string = 'All') {
                     });
                 }
 
+                // 3. بناء المصفوفة النهائية
                 const items = tokenIds.map((id, index) => {
                     const tid = Number(id);
                     const idStr = id.toString();
                     
-                    const dbRecord = assetsMap[idStr];
-                    
-                    if (!dbRecord || !dbRecord.name) {
-                        return null; 
-                    }
-
-                    const finalName = dbRecord.name;
+                    const dbRecord = assetsMap[idStr] || {};
+                    const finalName = dbRecord.name || `Asset #${tid}`;
                     const finalTier = dbRecord.tier || 'Common';
                     
                     const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0, mintTime: 0 };
@@ -173,7 +184,7 @@ export function useMarketData(timeFilter: string = 'All') {
                         change: change,
                         currencySymbol: 'POL'
                     };
-                }).filter(item => item !== null); 
+                }); 
                 
                 setListings(items);
             } catch (error) { 
@@ -215,4 +226,3 @@ export function useMarketData(timeFilter: string = 'All') {
         getNewListings
     };
 }
-
