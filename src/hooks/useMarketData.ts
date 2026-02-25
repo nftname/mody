@@ -4,11 +4,18 @@ import { useState, useEffect, useMemo } from 'react';
 import { createPublicClient, http, parseAbi, formatEther } from 'viem';
 import { polygon } from 'viem/chains';
 import { supabase } from '@/lib/supabase';
-import { MARKETPLACE_ADDRESS } from '@/data/config';
+// ✅ تم إضافة استدعاء عنوان عقد الـ NFT
+import { MARKETPLACE_ADDRESS, NFT_COLLECTION_ADDRESS } from '@/data/config'; 
 
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
+
+// ✅ تم إضافة دالة فك تشفير IPFS من شريط الأخبار
+const resolveIPFS = (uri: string) => {
+    if (!uri) return '';
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
+};
 
 const publicClient = createPublicClient({
     chain: polygon,
@@ -41,7 +48,6 @@ export function useMarketData(timeFilter: string = 'All') {
         const fetchMarketData = async () => {
             setLoading(true);
             try {
-                // 1. قراءة البلوكتشين
                 const data = await publicClient.readContract({
                     address: MARKETPLACE_ADDRESS as `0x${string}`,
                     abi: MARKET_ABI,
@@ -57,32 +63,29 @@ export function useMarketData(timeFilter: string = 'All') {
 
                 const tokenIdsStr = tokenIds.map(id => id.toString());
 
-                // 🌟 الحل الذكي: تقسيم المصفوفة إلى دفعات (كل دفعة 150 أصل) لتجنب كسر الرابط
+                // التقسيم (Batching) لحماية الرابط
                 const CHUNK_SIZE = 150;
                 const chunks = [];
                 for (let i = 0; i < tokenIdsStr.length; i += CHUNK_SIZE) {
                     chunks.push(tokenIdsStr.slice(i, i + CHUNK_SIZE));
                 }
 
-                // تجهيز طلبات الدفعات لإرسالها في نفس اللحظة
                 const metadataPromises = chunks.map(chunk => 
                     supabase.from('assets_metadata').select('*').in('token_id', chunk)
                 );
 
-                // 2. إرسال جميع الطلبات (الدفعات + الأنشطة + العروض + الأصوات) بالتوازي وبنفس اللحظة
                 const [
-                    metadataResults, // نتيجة الدفعات
+                    metadataResults,
                     { data: allActivities },
                     { data: offersData },
                     { data: votesData }
                 ] = await Promise.all([
-                    Promise.all(metadataPromises), // تنفيذ جميع دفعات الميتا داتا معاً
+                    Promise.all(metadataPromises),
                     supabase.from('activities').select('*').order('created_at', { ascending: false }),
                     supabase.from('offers').select('token_id').eq('status', 'active'),
                     supabase.from('conviction_votes').select('token_id, amount')
                 ]);
 
-                // تجميع الأسماء من جميع الدفعات في مصفوفة واحدة
                 const dbMetadata = metadataResults.flatMap(res => res.data || []);
 
                 const assetsMap: Record<string, any> = {};
@@ -135,7 +138,6 @@ export function useMarketData(timeFilter: string = 'All') {
                     });
                 }
 
-                // 3. بناء المصفوفة النهائية
                 const items = tokenIds.map((id, index) => {
                     const tid = Number(id);
                     const idStr = id.toString();
@@ -186,6 +188,27 @@ export function useMarketData(timeFilter: string = 'All') {
                     };
                 }); 
                 
+                // 🌟 السحر الحقيقي: البحث عن الأسماء المفقودة في البلوكتشين (IPFS)
+                const itemsMissingNames = items.filter(item => item.name.startsWith('Asset #'));
+                if (itemsMissingNames.length > 0) {
+                    await Promise.all(itemsMissingNames.map(async (item) => {
+                        try {
+                            const uri = await publicClient.readContract({
+                                address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                                abi: parseAbi(["function tokenURI(uint256) view returns (string)"]),
+                                functionName: 'tokenURI',
+                                args: [BigInt(item.id)]
+                            });
+                            const metaRes = await fetch(resolveIPFS(uri as string));
+                            const meta = await metaRes.json();
+                            if (meta.name) {
+                                item.name = meta.name; // استرجاع الاسم الحقيقي!
+                                item.tier = meta.attributes?.find((a:any) => a.trait_type === 'Tier')?.value || item.tier;
+                            }
+                        } catch (e) { } // تجاهل الخطأ في حالة فشل IPFS لكي لا تتعطل الصفحة
+                    }));
+                }
+
                 setListings(items);
             } catch (error) { 
                 console.error("Market Data Error:", error); 
