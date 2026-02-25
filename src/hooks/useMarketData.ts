@@ -4,14 +4,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { createPublicClient, http, parseAbi, formatEther } from 'viem';
 import { polygon } from 'viem/chains';
 import { supabase } from '@/lib/supabase';
-// ✅ تم إضافة استدعاء عنوان عقد الـ NFT
 import { MARKETPLACE_ADDRESS, NFT_COLLECTION_ADDRESS } from '@/data/config'; 
 
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
-// ✅ تم إضافة دالة فك تشفير IPFS من شريط الأخبار
+
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
@@ -63,7 +62,7 @@ export function useMarketData(timeFilter: string = 'All') {
 
                 const tokenIdsStr = tokenIds.map(id => id.toString());
 
-                // التقسيم (Batching) لحماية الرابط
+               
                 const CHUNK_SIZE = 150;
                 const chunks = [];
                 for (let i = 0; i < tokenIdsStr.length; i += CHUNK_SIZE) {
@@ -74,19 +73,24 @@ export function useMarketData(timeFilter: string = 'All') {
                     supabase.from('assets_metadata').select('*').in('token_id', chunk)
                 );
 
+                const votesPromises = chunks.map(chunk => 
+                    supabase.from('conviction_votes').select('token_id, amount').in('token_id', chunk)
+                );
+
                 const [
                     metadataResults,
+                    votesResults,
                     { data: allActivities },
-                    { data: offersData },
-                    { data: votesData }
+                    { data: offersData }
                 ] = await Promise.all([
                     Promise.all(metadataPromises),
+                    Promise.all(votesPromises),
                     supabase.from('activities').select('*').order('created_at', { ascending: false }),
-                    supabase.from('offers').select('token_id').eq('status', 'active'),
-                    supabase.from('conviction_votes').select('token_id, amount')
+                    supabase.from('offers').select('token_id').eq('status', 'active')
                 ]);
 
                 const dbMetadata = metadataResults.flatMap(res => res.data || []);
+                const votesData = votesResults.flatMap(res => res.data || []);
 
                 const assetsMap: Record<string, any> = {};
                 
@@ -105,7 +109,7 @@ export function useMarketData(timeFilter: string = 'All') {
                 if (votesData) {
                     votesData.forEach((v: any) => {
                         const idStr = String(v.token_id).trim();
-                        votesMap[idStr] = (votesMap[idStr] || 0) + (Number(v.amount) || 0);
+                        votesMap[idStr] = (votesMap[idStr] || 0) + (Number(v.amount) || 100);
                     });
                 }
 
@@ -188,7 +192,7 @@ export function useMarketData(timeFilter: string = 'All') {
                     };
                 }); 
                 
-                // 🌟 السحر الحقيقي: البحث عن الأسماء المفقودة في البلوكتشين (IPFS)
+                // 
                 const itemsMissingNames = items.filter(item => item.name.startsWith('Asset #'));
                 if (itemsMissingNames.length > 0) {
                     await Promise.all(itemsMissingNames.map(async (item) => {
@@ -202,10 +206,10 @@ export function useMarketData(timeFilter: string = 'All') {
                             const metaRes = await fetch(resolveIPFS(uri as string));
                             const meta = await metaRes.json();
                             if (meta.name) {
-                                item.name = meta.name; // استرجاع الاسم الحقيقي!
+                                item.name = meta.name; 
                                 item.tier = meta.attributes?.find((a:any) => a.trait_type === 'Tier')?.value || item.tier;
                             }
-                        } catch (e) { } // تجاهل الخطأ في حالة فشل IPFS لكي لا تتعطل الصفحة
+                        } catch (e) { } 
                     }));
                 }
 
