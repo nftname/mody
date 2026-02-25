@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useRef, useState, useEffect } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useMarketData } from '@/hooks/useMarketData';
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -24,6 +25,8 @@ const Navbar = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+  
+  const { allListings } = useMarketData('All');
 
   useEffect(() => {
     if (isMobileSearchOpen && mobileSearchInputRef.current) {
@@ -77,8 +80,17 @@ const Navbar = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/market?search=${encodeURIComponent(searchQuery.trim())}`);
+    const query = searchQuery.trim().toLowerCase();
+    
+    if (query) {
+      const foundAsset = allListings.find(item => item.name && item.name.toLowerCase() === query);
+      
+      if (foundAsset) {
+        router.push(`/asset/${foundAsset.id}`);
+      } else {
+        router.push('/market');
+      }
+      
       setIsMobileSearchOpen(false);
     }
   };
