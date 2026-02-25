@@ -60,61 +60,41 @@ export function useMarketData(timeFilter: string = 'All') {
                 }
 
                 const tokenIdsStr = tokenIds.map(id => id.toString());
-
                 const CHUNK_SIZE = 150;
                 const chunks: string[][] = [];
                 for (let i = 0; i < tokenIdsStr.length; i += CHUNK_SIZE) {
                     chunks.push(tokenIdsStr.slice(i, i + CHUNK_SIZE));
                 }
 
-                const fetchAllRecords = async (tableName: string, selectQuery: string, targetChunks: string[][], orderBy?: string) => {
-                    let allResults: any[] = [];
-                    for (const chunk of targetChunks) {
-                        let from = 0;
-                        const limit = 1000;
-                        let fetchMore = true;
-                        while (fetchMore) {
-                            let query = supabase.from(tableName).select(selectQuery).in('token_id', chunk).range(from, from + limit - 1);
-                            if (orderBy) query = query.order(orderBy, { ascending: false });
-                            
-                            const { data, error } = await query;
-                            if (error) {
-                                console.error(`Error fetching ${tableName}:`, error);
-                                fetchMore = false;
-                                break;
-                            }
-                            if (data && data.length > 0) {
-                                allResults.push(...data);
-                                from += limit;
-                                if (data.length < limit) fetchMore = false;
-                            } else {
-                                fetchMore = false;
-                            }
-                        }
-                    }
-                    return allResults;
-                };
-
                 const metadataPromises = chunks.map(chunk => 
                     supabase.from('assets_metadata').select('*').in('token_id', chunk)
                 );
 
+                const votesPromises = chunks.map(chunk => 
+                    supabase.from('conviction_votes').select('token_id, amount').in('token_id', chunk)
+                );
+
+                const activitiesPromises = chunks.map(chunk => 
+                    supabase.from('activities').select('*').in('token_id', chunk).order('created_at', { ascending: false }).limit(1000)
+                );
+
                 const [
                     metadataResults,
-                    votesData,
-                    allActivities,
+                    votesResults,
+                    activitiesResults,
                     { data: offersData }
                 ] = await Promise.all([
                     Promise.all(metadataPromises),
-                    fetchAllRecords('conviction_votes', 'token_id, amount', chunks),
-                    fetchAllRecords('activities', '*', chunks, 'created_at'),
+                    Promise.all(votesPromises),
+                    Promise.all(activitiesPromises),
                     supabase.from('offers').select('token_id').eq('status', 'active')
                 ]);
 
                 const dbMetadata = metadataResults.flatMap(res => res.data || []);
+                const votesData = votesResults.flatMap(res => res.data || []);
+                const allActivities = activitiesResults.flatMap(res => res.data || []);
 
                 const assetsMap: Record<string, any> = {};
-                
                 if (dbMetadata) {
                     dbMetadata.forEach((a: any) => {
                         const id = a.token_id.toString();
@@ -148,11 +128,7 @@ export function useMarketData(timeFilter: string = 'All') {
                         
                         if (actTime > statsMap[tid].lastActive) statsMap[tid].lastActive = actTime;
                         if (act.activity_type === 'Mint') statsMap[tid].mintTime = actTime;
-                        
-                        if (act.activity_type === 'List') {
-                            if (actTime > statsMap[tid].listedTime) statsMap[tid].listedTime = actTime;
-                        }
-
+                        if (act.activity_type === 'List' && actTime > statsMap[tid].listedTime) statsMap[tid].listedTime = actTime;
                         if (act.activity_type === 'Sale') {
                             statsMap[tid].volume += price;
                             statsMap[tid].sales += 1;
@@ -173,11 +149,10 @@ export function useMarketData(timeFilter: string = 'All') {
                     
                     const stats = statsMap[tid] || { volume: 0, sales: 0, lastSale: 0, listedTime: 0, lastActive: 0, mintTime: 0 };
                     const offersCount = offersCountMap[tid] || 0;
-                    
                     const rawVotes = votesMap[idStr] || 0;
+                    
                     let baseDeduction = 0;
                     const tierLower = finalTier.toLowerCase().trim();
-                    
                     if (tierLower === 'immortal') baseDeduction = 300000;
                     else if (tierLower === 'elite') baseDeduction = 200000;
                     else if (tierLower.includes('founder')) baseDeduction = 100000;
@@ -264,7 +239,12 @@ export function useMarketData(timeFilter: string = 'All') {
         if (b.volume !== a.volume) return b.volume - a.volume;
         return b.id - a.id;
     });
-    const getTopItems = () => [...filteredData].sort((a, b) => b.volume - a.volume);
+    
+    const getTopItems = () => [...filteredData].sort((a, b) => {
+        if (b.volume !== a.volume) return b.volume - a.volume;
+        return b.id - a.id;
+    });
+
     const getNewListings = () => [...listings].filter(i => i.listedTime > 0).sort((a, b) => b.listedTime - a.listedTime);
 
     return {
