@@ -88,7 +88,18 @@ export default function DashboardPage() {
   // --- Helpers ---
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
-    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
+    const MY_GATEWAY = 'Bronze-sophisticated-moth-471.mypinata.cloud';
+    
+    if (uri.startsWith('ipfs://')) {
+      return `https://${MY_GATEWAY}/ipfs/${uri.replace('ipfs://', '')}`;
+    }
+    if (uri.includes('gateway.pinata.cloud/ipfs/')) {
+      return uri.replace('gateway.pinata.cloud', MY_GATEWAY);
+    }
+    if (uri.includes('ipfs.io/ipfs/')) {
+       return uri.replace('ipfs.io', MY_GATEWAY);
+    }
+    return uri;
   };
 
   const chunk = <T,>(arr: T[], size: number) => {
