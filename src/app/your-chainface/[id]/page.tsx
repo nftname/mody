@@ -586,7 +586,7 @@ const handleSaveWallet = async (coin: string, walletAddr: string) => {
           const { data: walletVerification } = await supabase
               .from('chainface_wallet_verifications')
               .select('is_phone_verified, is_kyc_verified, has_paid_fee')
-              .eq('wallet_address', currentOwnerStr)
+              .eq('wallet_address', currentOwnerStr.toLowerCase())
               .maybeSingle();
 
           const { data: profile } = await supabase
@@ -629,9 +629,9 @@ await supabase.from('chainface_wallet_verifications').update({
               name: assetName,
               owner: currentOwnerStr,
               customMessage: safeProfile?.custom_message || '',
-              isPhoneVerified: walletVerification?.is_phone_verified || false,
-              isKycVerified: walletVerification?.is_kyc_verified || false,
-              hasPaidFee: walletVerification?.has_paid_fee || false,
+              isPhoneVerified: !!walletVerification?.is_phone_verified,
+              isKycVerified: !!walletVerification?.is_kyc_verified,
+              hasPaidFee: !!walletVerification?.has_paid_fee,
 
               wallets: {
                   btc: safeProfile?.btc_address || '',
