@@ -3,9 +3,9 @@ import Link from 'next/link';
 import MarketTicker from '@/components/MarketTicker';
 
 // --- CONSTANTS & STYLES (Extracted from Reference) ---
-const GOLD_BTN_PRIMARY = '#D4AF37';    // الذهبي الهادئ (الأساسي)
-const GOLD_BTN_HIGHLIGHT = '#E6C76A';  // الإضاءة العلوية (مخففة)
-const GOLD_BTN_SHADOW = '#B8962E';     // الظل
+const GOLD_BTN_PRIMARY = '#D4AF37';   
+const GOLD_BTN_HIGHLIGHT = '#E6C76A';  
+const GOLD_BTN_SHADOW = '#B8962E';     
 const GOLD_LIGHT = '#FFD700';
 const GOLD_DARK = '#B8860B';
 const GOLD_MEDIUM = '#FDB931'; 
