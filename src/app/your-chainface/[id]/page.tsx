@@ -446,7 +446,9 @@ export default function ChainFacePage() {
                   has_paid_fee: true
               }, { onConflict: 'wallet_address' });
               
-              if (!error) {
+              if (error) {
+                  alert("Supabase Error: " + error.message + " | Code: " + error.code);
+              } else {
                   setProfileData((prev: any) => ({ ...prev, hasPaidFee: true }));
               }
           }
