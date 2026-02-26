@@ -396,9 +396,17 @@ const MintContent = () => {
 
             <LuxuryIngot 
                 label="FOUNDERS" 
-                price="$5" 
+                price={
+                    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.2' }}>
+                        <div>
+                            <span style={{ textDecoration: 'line-through', color: '#848E9C', marginRight: '6px', fontSize: '14px' }}>$5</span>
+                            <span style={{ color: '#0ecb81', fontWeight: 'bold' }}>FREE</span>
+                        </div>
+                        <span style={{ fontSize: '10px', color: '#0ecb81', marginTop: '4px' }}>15 Days</span>
+                    </div>
+                }
                 isAvailable={status === 'available'} 
-                onMint={() => handleMintProcess("FOUNDER", 2, "$5")} 
+                onMint={() => handleMintProcess("FOUNDER", 2, "FREE")} 
                 isMinting={isMinting} 
             />
         </div>
@@ -499,7 +507,7 @@ const MintContent = () => {
 
 interface LuxuryIngotProps {
     label: string;
-    price: string;
+    price: any;
     isAvailable: boolean;
     onMint: () => void;
     isMinting: boolean;
