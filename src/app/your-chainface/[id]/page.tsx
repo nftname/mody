@@ -448,16 +448,11 @@ export default function ChainFacePage() {
           setVerifyStep('confirm'); 
       }
   };
-  const openSumsubWindow = () => {
-      const baseUrl = "https://verify.didit.me/u/Tsy0RqfeTfGJVuQBAb5h7A";
-      const walletParam = address || 'unknown';
-      const finalUrl = `${baseUrl}?client_user_id=${walletParam}&vendor_data=${walletParam}`;
-      
-      window.open(finalUrl, '_blank');
-      
-      setVerifyStep('idle');
-      setTargetVerifyType(null);
-  };
+const openSumsubWindow = () => {
+  window.open("https://verify.didit.me/u/1Ceen2u-RwCj7dI0_Zw1Tw", '_blank');
+  setVerifyStep('idle');
+  setTargetVerifyType(null);
+};
 
 
   // --- STATE ---
