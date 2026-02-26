@@ -87,7 +87,7 @@ export default function ProfilePage() {
 
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
-    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://ipfs.io/ipfs/') : uri;
   };
 
   const chunk = <T,>(arr: T[], size: number) => {
@@ -755,13 +755,15 @@ export default function ProfilePage() {
 }
 
 const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any, mode: string, isFavorite: boolean, onToggleFavorite: (e: React.MouseEvent, id: string) => void }) => {
+    const [imgSrc, setImgSrc] = useState(item.image);
+    
+    const fallbackImage = '/images-mint/IMMORTAL.jpg';
+
     const colClass = mode === 'list' ? 'col-12' : mode === 'large' ? 'col-12 col-md-6 col-lg-5 mx-auto' : 'col-6 col-md-4 col-lg-3';
     
-    // دالة حماية لتنسيق السعر تمنع الانهيار
     const safePrice = () => {
         try {
             if (!item.isListed || !item.price) return '';
-            // تأكد من وجود دالة formatDecimal في الملف، وإلا اعرض السعر كما هو
             return typeof formatDecimal === 'function' ? `${formatDecimal(item.price)} POL` : `${item.price} POL`;
         } catch (e) { return '0 POL'; }
     };
@@ -774,13 +776,23 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
 
     const displayPrice = safePrice();
 
+    const handleImageError = () => {
+        if (imgSrc !== fallbackImage) {
+            setImgSrc(fallbackImage);
+        }
+    };
+
     if (mode === 'list') {
         return (
             <div className={colClass}>
                 <Link href={`/asset/${item.id}`} className="text-decoration-none">
                     <div className="d-flex align-items-center gap-3 p-2 rounded-3 position-relative" style={{ backgroundColor: '#1E2329', border: '1px solid #2B3139', transition: '0.2s' }}>
                         <div style={{ width: '48px', height: '48px', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
-                             {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#2B3139' }}></div>)}
+                             {imgSrc ? (
+                                 <img src={imgSrc} alt={item.name} onError={handleImageError} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                             ) : (
+                                 <div style={{ width: '100%', height: '100%', background: '#2B3139' }}></div>
+                             )}
                         </div>
                         <div className="flex-grow-1">
                             <div className="text-white" style={{ fontSize: '14px', fontWeight: '600' }}>{item.name || `NNM #${item.id}`}</div>
@@ -803,7 +815,13 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
           <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#1E2329', borderRadius: '10px', border: '1px solid #2B3139', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
               <Link href={`/asset/${item.id}`} className="text-decoration-none h-100 d-flex flex-column">
                   <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
-                       {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="asset-img" />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
+                       {imgSrc ? (
+                           <img src={imgSrc} alt={item.name} onError={handleImageError} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="asset-img" />
+                       ) : (
+                           <div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                               <i className="bi bi-image text-secondary"></i>
+                           </div>
+                       )}
                        <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
                             <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#FFFFFF' : 'white', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
                        </button>
@@ -829,4 +847,5 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
       </div>
     );
 };
+
 
