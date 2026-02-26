@@ -460,8 +460,6 @@ export default function ChainFacePage() {
   };
 
 
-
-
   // --- STATE ---
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>({
