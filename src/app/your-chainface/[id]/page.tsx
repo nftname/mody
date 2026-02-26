@@ -419,19 +419,20 @@ export default function ChainFacePage() {
 
   const handleVerificationRequest = (type: 'phone' | 'kyc') => {
       setTargetVerifyType(type);
-      setVerifyStep('confirm'); // Open Modal
+      if (profileData.hasPaidFee) {
+          setVerifyStep('success');
+      } else {
+          setVerifyStep('confirm');
+      }
   };
 
   
- 
-     const executeVerificationPayment = async () => {
+  const executeVerificationPayment = async () => {
       if (!targetVerifyType) return;
       
-      // 1. Show processing state inside the modal
       setVerifyStep('paying');
 
       try {
-          // 2. Execute Payment (Wallet Popup Only)
           const hash = await writeContractAsync({
               address: USDT_POLYGON_ADDRESS,
               abi: ERC20_ABI,
@@ -439,34 +440,43 @@ export default function ChainFacePage() {
               args: [TREASURY_ADDRESS, BigInt(VERIFICATION_COST_USDT)], 
           });
 
-          // 3. Success! Update UI instantly to Green Step (No Browser Alert)
+          if (address) {
+              const { error } = await supabase.from('chainface_wallet_verifications').upsert({
+                  wallet_address: address.toLowerCase(),
+                  has_paid_fee: true
+              }, { onConflict: 'wallet_address' });
+              
+              if (!error) {
+                  setProfileData((prev: any) => ({ ...prev, hasPaidFee: true }));
+              }
+          }
+
           setVerifyStep('success');
           
       } catch (error: any) {
-          console.error("Payment Failed:", error);
-          // If failed, just go back to confirm button silently or show red border
+          console.error(error);
           setVerifyStep('confirm'); 
       }
   };
-const openSumsubWindow = () => {
-  window.open("https://verify.didit.me/u/1Ceen2u-RwCj7dI0_Zw1Tw", '_blank');
-  setVerifyStep('idle');
-  setTargetVerifyType(null);
-};
+  const openSumsubWindow = () => {
+      window.open("https://verify.didit.me/u/1Ceen2u-RwCj7dI0_Zw1Tw", '_blank');
+      setVerifyStep('idle');
+      setTargetVerifyType(null);
+  };
 
 
   // --- STATE ---
   const [loading, setLoading] = useState(true);
-  const [profileData, setProfileData] = useState<any>({
-      name: '',
-      owner: '',
-      customMessage: '',
-     isPhoneVerified: false,
-      isKycVerified: false,
-
-      wallets: { btc: '', eth: '', sol: '', bnb: '', usdt: '', matic: '' },
-      stats: { conviction: 0, likes: 0, dislikes: 0 }
-  });
+const [profileData, setProfileData] = useState<any>({
+    name: '',
+    owner: '',
+    customMessage: '',
+    isPhoneVerified: false,
+    isKycVerified: false,
+    hasPaidFee: false,
+    wallets: { btc: '', eth: '', sol: '', bnb: '', usdt: '', matic: '' },
+    stats: { conviction: 0, likes: 0, dislikes: 0 }
+});
   const [isOwner, setIsOwner] = useState(false);
     const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -571,7 +581,7 @@ const handleSaveWallet = async (coin: string, walletAddr: string) => {
 
           const { data: walletVerification } = await supabase
               .from('chainface_wallet_verifications')
-              .select('is_phone_verified, is_kyc_verified')
+              .select('is_phone_verified, is_kyc_verified, has_paid_fee')
               .eq('wallet_address', currentOwnerStr)
               .maybeSingle();
 
@@ -617,6 +627,7 @@ await supabase.from('chainface_wallet_verifications').update({
               customMessage: safeProfile?.custom_message || '',
               isPhoneVerified: walletVerification?.is_phone_verified || false,
               isKycVerified: walletVerification?.is_kyc_verified || false,
+              hasPaidFee: walletVerification?.has_paid_fee || false,
 
               wallets: {
                   btc: safeProfile?.btc_address || '',
