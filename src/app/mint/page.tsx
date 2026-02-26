@@ -15,6 +15,9 @@ const CONTRACT_ABI = parseAbi([
   "function owner() view returns (address)",
   "function registeredNames(bytes32) view returns (bool)",
   "function getMaticCost(uint256 usdAmount) view returns (uint256)",
+  "function priceImmortal() view returns (uint256)",
+  "function priceElite() view returns (uint256)",
+  "function priceFounder() view returns (uint256)",
   "function mintPublic(string _name, uint8 _tier, string _tokenURI) payable",
   "function reserveName(string _name, uint8 _tier, string _tokenURI)"
 ]);
@@ -224,7 +227,6 @@ const MintContent = () => {
             ]
           };
 
-
           setProcessStep("Wallet: Please sign the transaction...");
 
           let hash;
@@ -236,17 +238,29 @@ const MintContent = () => {
               args: [searchTerm, tierIndex, tokenURI],
             });
           } else {
-            const usdVal = tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5;
-            const usdAmountWei = BigInt(usdVal) * BigInt(10**18);
-            const costInMatic = await publicClient.readContract({
-               address: CONTRACT_ADDRESS as `0x${string}`,
-               abi: CONTRACT_ABI,
-               functionName: 'getMaticCost',
-               args: [usdAmountWei]
-            });
-            const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
+            let usdAmountWei;
+            
+            if (tierName === "IMMORTAL") {
+                usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceImmortal' });
+            } else if (tierName === "ELITE") {
+                usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceElite' });
+            } else {
+                usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceFounder' });
+            }
 
-            if (address) {
+            let valueToSend = BigInt(0);
+
+            if (usdAmountWei > BigInt(0)) {
+                const costInMatic = await publicClient.readContract({
+                   address: CONTRACT_ADDRESS as `0x${string}`,
+                   abi: CONTRACT_ABI,
+                   functionName: 'getMaticCost',
+                   args: [usdAmountWei]
+                });
+                valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
+            }
+
+            if (address && valueToSend > BigInt(0)) {
                 const balance = await publicClient.getBalance({ address });
                 if (balance < valueToSend) throw new Error("Insufficient funds (Pre-flight check): Low POL balance.");
             }
@@ -266,16 +280,25 @@ const MintContent = () => {
              let actualPriceInPOL = 0;
 
              if (!isAdmin) {
-                 const usdVal = tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5;
-                 const usdAmountWei = BigInt(usdVal) * BigInt(10**18);
-                 const costInMatic = await publicClient.readContract({
-                    address: CONTRACT_ADDRESS as `0x${string}`,
-                    abi: CONTRACT_ABI,
-                    functionName: 'getMaticCost',
-                    args: [usdAmountWei]
-                 });
-                 const valueToSend = (costInMatic * BigInt(101)) / BigInt(100);
-                 actualPriceInPOL = parseFloat(formatEther(valueToSend));
+                 let usdAmountWei;
+                 if (tierName === "IMMORTAL") {
+                     usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceImmortal' });
+                 } else if (tierName === "ELITE") {
+                     usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceElite' });
+                 } else {
+                     usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceFounder' });
+                 }
+
+                 if (usdAmountWei > BigInt(0)) {
+                     const costInMatic = await publicClient.readContract({
+                        address: CONTRACT_ADDRESS as `0x${string}`,
+                        abi: CONTRACT_ABI,
+                        functionName: 'getMaticCost',
+                        args: [usdAmountWei]
+                     });
+                     const valueToSend = (costInMatic * BigInt(101)) / BigInt(100);
+                     actualPriceInPOL = parseFloat(formatEther(valueToSend));
+                 }
              }
 
              const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
@@ -307,9 +330,8 @@ const MintContent = () => {
                              metadata_uri: tokenURI
                          })
                      });
-                     console.log("✅ Asset Metadata Saved via Secure API");
                  } catch (e) {
-                     console.error("❌ Failed to save metadata:", e);
+                     console.error(e);
                  }
                  
                  if (address) notifyRewardSystem(address, tierName, mintedId);
@@ -325,6 +347,7 @@ const MintContent = () => {
           setIsMinting(false);
       }
   };
+
 
   const GOLD_GRADIENT_DIAGONAL = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
@@ -396,11 +419,26 @@ const MintContent = () => {
 
             <LuxuryIngot 
                 label="FOUNDERS" 
-                price="$5" 
+                price={
+                    <div className="position-relative d-flex flex-column align-items-center align-items-md-start">
+                        <span style={{ textDecoration: 'line-through', color: '#848E9C', fontSize: '16px' }}>$5</span>
+                        
+                        <div className="d-none d-md-flex align-items-baseline position-absolute" style={{ left: '100%', bottom: '0', paddingLeft: '8px' }}>
+                            <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px', marginRight: '5px' }}>FREE</span>
+                            <span style={{ fontSize: '12px', color: '#0ecb81', whiteSpace: 'nowrap' }}>15 Days</span>
+                        </div>
+
+                        <div className="d-flex d-md-none flex-column align-items-end mt-1">
+                            <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px', lineHeight: '1' }}>FREE</span>
+                            <span style={{ fontSize: '11px', color: '#0ecb81', lineHeight: '1', marginTop: '2px' }}>15 Days</span>
+                        </div>
+                    </div>
+                }
                 isAvailable={status === 'available'} 
-                onMint={() => handleMintProcess("FOUNDER", 2, "$5")} 
+                onMint={() => handleMintProcess("FOUNDER", 2, "FREE")} 
                 isMinting={isMinting} 
             />
+
         </div>
       </div>
 
@@ -459,15 +497,15 @@ const MintContent = () => {
         .form-control:focus { background-color: #1E2329 !important; color: #EAECEF !important; border-color: #FCD535 !important; }
         
         .btn-ingot {
-            background: linear-gradient(180deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%);
-            border: 1px solid #B3882A;
-            color: #181A20;
+            background: linear-gradient(180deg, #E6C76A 0%, #D4AF37 40%, #B8962E 100%);
+            border: 1px solid #B8962E;
+            color: #2b1d00 !important;
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 1px;
             font-size: 1rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(252, 213, 53, 0.2);
-            text-shadow: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
+            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
             transition: filter 0.3s ease, transform 0.2s ease;
             white-space: nowrap;
             display: flex;
@@ -476,7 +514,7 @@ const MintContent = () => {
             border-radius: 4px;
         }
 
-        .btn-ingot:hover { filter: brightness(1.08); transform: translateY(-1px); color: #000000; }
+        .btn-ingot:hover { filter: brightness(1.08); transform: translateY(-1px); color: #2b1d00 !important; }
         .btn-ingot:disabled { opacity: 0.7; cursor: not-allowed; filter: grayscale(0.5); }
         .hero-container { padding-top: 20px; padding-bottom: 0px; }
         .select-asset-title { margin-bottom: 2rem !important; }
@@ -499,7 +537,7 @@ const MintContent = () => {
 
 interface LuxuryIngotProps {
     label: string;
-    price: string;
+    price: any;
     isAvailable: boolean;
     onMint: () => void;
     isMinting: boolean;
