@@ -12,7 +12,7 @@ const MARKET_ABI = parseAbi([
 
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
-    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://ipfs.io/ipfs/') : uri;
 };
 
 const publicClient = createPublicClient({
