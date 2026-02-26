@@ -417,23 +417,13 @@ export default function ChainFacePage() {
 
   const [targetVerifyType, setTargetVerifyType] = useState<'phone' | 'kyc' | null>(null);
 
-  const handleVerificationRequest = async (type: 'phone' | 'kyc') => {
+  const handleVerificationRequest = (type: 'phone' | 'kyc') => {
       setTargetVerifyType(type);
-      
-      if (address) {
-          const { data } = await supabase
-              .from('chainface_wallet_verifications')
-              .select('has_paid_fee')
-              .eq('wallet_address', address.toLowerCase())
-              .maybeSingle();
-
-          if (data?.has_paid_fee) {
-              setProfileData((prev: any) => ({ ...prev, hasPaidFee: true }));
-              setVerifyStep('success');
-              return;
-          }
+      if (profileData.hasPaidFee) {
+          setVerifyStep('success');
+      } else {
+          setVerifyStep('confirm');
       }
-      setVerifyStep('confirm');
   };
 
   
@@ -593,11 +583,17 @@ const handleSaveWallet = async (coin: string, walletAddr: string) => {
           const totalConviction = votesData?.reduce((acc: number, curr: any) => acc + (curr.amount || 100), 0) || 0;
 
 
-          const { data: walletVerification } = await supabase
-              .from('chainface_wallet_verifications')
-              .select('is_phone_verified, is_kyc_verified, has_paid_fee')
-              .eq('wallet_address', currentOwnerStr.toLowerCase())
-              .maybeSingle();
+          const verificationRes = await fetch('/api/nnm/chainface-actions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  action: 'check_verification',
+                  payload: { walletAddress: currentOwnerStr.toLowerCase() }
+              })
+          });
+          
+          const verificationData = await verificationRes.json();
+          const walletVerification = verificationData.success ? verificationData.data : null;
 
           const { data: profile } = await supabase
               .from('chainface_profiles')

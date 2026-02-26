@@ -69,6 +69,18 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: true });
         }
 
+        else if (action === 'check_verification') {
+            const { walletAddress } = payload;
+            const { data, error } = await supabaseAdmin
+                .from('chainface_wallet_verifications')
+                .select('is_phone_verified, is_kyc_verified, has_paid_fee')
+                .eq('wallet_address', walletAddress.toLowerCase())
+                .maybeSingle();
+
+            if (error) throw error;
+            return NextResponse.json({ success: true, data: data });
+        }
+
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 
     } catch (error: any) {
