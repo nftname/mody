@@ -56,6 +56,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: true });
         }
 
+        else if (action === 'mark_fee_paid') {
+            const { walletAddress } = payload;
+            const { error } = await supabaseAdmin
+                .from('chainface_wallet_verifications')
+                .upsert({
+                    wallet_address: walletAddress.toLowerCase(),
+                    has_paid_fee: true
+                }, { onConflict: 'wallet_address' });
+
+            if (error) throw error;
+            return NextResponse.json({ success: true });
+        }
+
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 
     } catch (error: any) {

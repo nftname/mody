@@ -441,14 +441,16 @@ export default function ChainFacePage() {
           });
 
           if (address) {
-              const { error } = await supabase.from('chainface_wallet_verifications').upsert({
-                  wallet_address: address.toLowerCase(),
-                  has_paid_fee: true
-              }, { onConflict: 'wallet_address' });
+              const res = await fetch('/api/nnm/chainface-actions', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      action: 'mark_fee_paid',
+                      payload: { walletAddress: address }
+                  })
+              });
               
-              if (error) {
-                  alert("Supabase Error: " + error.message + " | Code: " + error.code);
-              } else {
+              if (res.ok) {
                   setProfileData((prev: any) => ({ ...prev, hasPaidFee: true }));
               }
           }
