@@ -397,18 +397,25 @@ const MintContent = () => {
             <LuxuryIngot 
                 label="FOUNDERS" 
                 price={
-                    <div className="d-flex flex-column flex-md-row align-items-end align-items-md-baseline gap-1 gap-md-2" style={{ lineHeight: '1.2' }}>
-                        <div>
-                            <span style={{ textDecoration: 'line-through', color: '#EAECEF', fontSize: '16px', fontWeight: 'bold', marginRight: '6px' }}>$5</span>
-                            <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px' }}>FREE</span>
+                    <div className="position-relative d-flex flex-column align-items-center align-items-md-start">
+                        <span style={{ textDecoration: 'line-through', color: '#848E9C', fontSize: '16px' }}>$5</span>
+                        
+                        <div className="d-none d-md-flex align-items-baseline position-absolute" style={{ left: '100%', bottom: '0', paddingLeft: '8px' }}>
+                            <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px', marginRight: '5px' }}>FREE</span>
+                            <span style={{ fontSize: '12px', color: '#0ecb81', whiteSpace: 'nowrap' }}>15 Days</span>
                         </div>
-                        <span style={{ fontSize: '12px', color: '#0ecb81' }}>15 Days</span>
+
+                        <div className="d-flex d-md-none flex-column align-items-end mt-1">
+                            <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px', lineHeight: '1' }}>FREE</span>
+                            <span style={{ fontSize: '11px', color: '#0ecb81', lineHeight: '1', marginTop: '2px' }}>15 Days</span>
+                        </div>
                     </div>
                 }
                 isAvailable={status === 'available'} 
                 onMint={() => handleMintProcess("FOUNDER", 2, "FREE")} 
                 isMinting={isMinting} 
             />
+
         </div>
       </div>
 
