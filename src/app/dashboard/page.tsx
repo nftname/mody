@@ -19,36 +19,6 @@ const MARKETPLACE_ABI = parseAbi([
   "function listings(uint256 tokenId) view returns (address seller, uint256 price, bool exists)"
 ]);
 
-const IPFSImage = ({ src, alt, className, style }: { src: string, alt: string, className?: string, style?: React.CSSProperties }) => {
-  const [imgSrc, setImgSrc] = useState(src);
-  const [fallbackIndex, setFallbackIndex] = useState(0);
-
-  const gateways = [
-    'https://cloudflare-ipfs.com/ipfs/',
-    'https://dweb.link/ipfs/',
-    'https://ipfs.io/ipfs/'
-  ];
-
-  const handleError = () => {
-     const cidMatch = src.match(/\/ipfs\/(.*)/);
-     const cid = cidMatch ? cidMatch[1] : src.replace('ipfs://', '');
-     
-     if (cid && fallbackIndex < gateways.length - 1) {
-        const nextIndex = fallbackIndex + 1;
-        setFallbackIndex(nextIndex);
-        setImgSrc(`${gateways[nextIndex]}${cid}`);
-     } else {
-        setImgSrc(''); 
-     }
-  };
-
-  if (!imgSrc) {
-     return <div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>;
-  }
-
-  return <img src={imgSrc} alt={alt} className={className} style={style} onError={handleError} />;
-};
-
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
@@ -118,12 +88,7 @@ export default function DashboardPage() {
   // --- Helpers ---
   const resolveIPFS = (uri: string) => {
     if (!uri) return '';
-    const cidMatch = uri.match(/ipfs:\/\/(.*)/) || uri.match(/\/ipfs\/(.*)/);
-    const cid = cidMatch ? cidMatch[1] : uri;
-    if (cid.startsWith('Qm') || cid.startsWith('bafy') || cid.startsWith('bafk')) {
-      return `https://cloudflare-ipfs.com/ipfs/${cid}`;
-    }
-    return uri;
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
   };
 
   const chunk = <T,>(arr: T[], size: number) => {
@@ -1301,7 +1266,7 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
                 <Link href={`/asset/${item.id}`} className="text-decoration-none">
                     <div className="d-flex align-items-center gap-3 p-2 rounded-3 position-relative" style={{ backgroundColor: '#181A20', border: '1px solid #2B3139', transition: '0.2s' }}>
                         <div style={{ width: '48px', height: '48px', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
-                             {item.image ? (<IPFSImage src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#333' }}></div>)}
+                             {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<div style={{ width: '100%', height: '100%', background: '#333' }}></div>)}
                         </div>
                         <div className="flex-grow-1">
                             <div style={{ fontSize: '14px', fontWeight: '600', color: '#EAECEF' }}>{item.name}</div>
@@ -1323,7 +1288,7 @@ const AssetRenderer = ({ item, mode, isFavorite, onToggleFavorite }: { item: any
           <div className="h-100 d-flex flex-column" style={{ backgroundColor: '#181A20', borderRadius: '10px', border: '1px solid #2B3139', overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}>
               <Link href={`/asset/${item.id}`} className="text-decoration-none h-100 d-flex flex-column">
                   <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', overflow: 'hidden' }}>
-                       {item.image ? (<IPFSImage src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="asset-img" />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
+                       {item.image ? (<img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="asset-img" />) : (<div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="bi bi-image text-secondary"></i></div>)}
                        <button onClick={(e) => onToggleFavorite(e, item.id)} className="btn position-absolute top-0 end-0 m-2 p-0 border-0 bg-transparent" style={{ zIndex: 10 }}>
                             <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} style={{ color: isFavorite ? '#EAECEF' : '#EAECEF', fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}></i>
                        </button>
