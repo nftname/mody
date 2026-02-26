@@ -15,6 +15,9 @@ const CONTRACT_ABI = parseAbi([
   "function owner() view returns (address)",
   "function registeredNames(bytes32) view returns (bool)",
   "function getMaticCost(uint256 usdAmount) view returns (uint256)",
+  "function priceImmortal() view returns (uint256)",
+  "function priceElite() view returns (uint256)",
+  "function priceFounder() view returns (uint256)",
   "function mintPublic(string _name, uint8 _tier, string _tokenURI) payable",
   "function reserveName(string _name, uint8 _tier, string _tokenURI)"
 ]);
@@ -224,7 +227,6 @@ const MintContent = () => {
             ]
           };
 
-
           setProcessStep("Wallet: Please sign the transaction...");
 
           let hash;
@@ -236,17 +238,29 @@ const MintContent = () => {
               args: [searchTerm, tierIndex, tokenURI],
             });
           } else {
-            const usdVal = tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5;
-            const usdAmountWei = BigInt(usdVal) * BigInt(10**18);
-            const costInMatic = await publicClient.readContract({
-               address: CONTRACT_ADDRESS as `0x${string}`,
-               abi: CONTRACT_ABI,
-               functionName: 'getMaticCost',
-               args: [usdAmountWei]
-            });
-            const valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
+            let usdAmountWei;
+            
+            if (tierName === "IMMORTAL") {
+                usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceImmortal' });
+            } else if (tierName === "ELITE") {
+                usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceElite' });
+            } else {
+                usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceFounder' });
+            }
 
-            if (address) {
+            let valueToSend = BigInt(0);
+
+            if (usdAmountWei > BigInt(0)) {
+                const costInMatic = await publicClient.readContract({
+                   address: CONTRACT_ADDRESS as `0x${string}`,
+                   abi: CONTRACT_ABI,
+                   functionName: 'getMaticCost',
+                   args: [usdAmountWei]
+                });
+                valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
+            }
+
+            if (address && valueToSend > BigInt(0)) {
                 const balance = await publicClient.getBalance({ address });
                 if (balance < valueToSend) throw new Error("Insufficient funds (Pre-flight check): Low POL balance.");
             }
@@ -266,16 +280,25 @@ const MintContent = () => {
              let actualPriceInPOL = 0;
 
              if (!isAdmin) {
-                 const usdVal = tierName === "IMMORTAL" ? 15 : tierName === "ELITE" ? 10 : 5;
-                 const usdAmountWei = BigInt(usdVal) * BigInt(10**18);
-                 const costInMatic = await publicClient.readContract({
-                    address: CONTRACT_ADDRESS as `0x${string}`,
-                    abi: CONTRACT_ABI,
-                    functionName: 'getMaticCost',
-                    args: [usdAmountWei]
-                 });
-                 const valueToSend = (costInMatic * BigInt(101)) / BigInt(100);
-                 actualPriceInPOL = parseFloat(formatEther(valueToSend));
+                 let usdAmountWei;
+                 if (tierName === "IMMORTAL") {
+                     usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceImmortal' });
+                 } else if (tierName === "ELITE") {
+                     usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceElite' });
+                 } else {
+                     usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceFounder' });
+                 }
+
+                 if (usdAmountWei > BigInt(0)) {
+                     const costInMatic = await publicClient.readContract({
+                        address: CONTRACT_ADDRESS as `0x${string}`,
+                        abi: CONTRACT_ABI,
+                        functionName: 'getMaticCost',
+                        args: [usdAmountWei]
+                     });
+                     const valueToSend = (costInMatic * BigInt(101)) / BigInt(100);
+                     actualPriceInPOL = parseFloat(formatEther(valueToSend));
+                 }
              }
 
              const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
@@ -307,9 +330,8 @@ const MintContent = () => {
                              metadata_uri: tokenURI
                          })
                      });
-                     console.log("✅ Asset Metadata Saved via Secure API");
                  } catch (e) {
-                     console.error("❌ Failed to save metadata:", e);
+                     console.error(e);
                  }
                  
                  if (address) notifyRewardSystem(address, tierName, mintedId);
@@ -325,6 +347,7 @@ const MintContent = () => {
           setIsMinting(false);
       }
   };
+
 
   const GOLD_GRADIENT_DIAGONAL = 'linear-gradient(135deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%)';
 
