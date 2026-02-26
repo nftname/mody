@@ -396,26 +396,11 @@ const MintContent = () => {
 
             <LuxuryIngot 
                 label="FOUNDERS" 
-                price={
-                    <div className="position-relative d-flex flex-column align-items-center align-items-md-start">
-                        <span style={{ textDecoration: 'line-through', color: '#848E9C', fontSize: '16px' }}>$5</span>
-                        
-                        <div className="d-none d-md-flex align-items-baseline position-absolute" style={{ left: '100%', bottom: '0', paddingLeft: '8px' }}>
-                            <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px', marginRight: '5px' }}>FREE</span>
-                            <span style={{ fontSize: '12px', color: '#0ecb81', whiteSpace: 'nowrap' }}>15 Days</span>
-                        </div>
-
-                        <div className="d-flex d-md-none flex-column align-items-end mt-1">
-                            <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px', lineHeight: '1' }}>FREE</span>
-                            <span style={{ fontSize: '11px', color: '#0ecb81', lineHeight: '1', marginTop: '2px' }}>15 Days</span>
-                        </div>
-                    </div>
-                }
+                price="$5" 
                 isAvailable={status === 'available'} 
-                onMint={() => handleMintProcess("FOUNDER", 2, "FREE")} 
+                onMint={() => handleMintProcess("FOUNDER", 2, "$5")} 
                 isMinting={isMinting} 
             />
-
         </div>
       </div>
 
@@ -474,15 +459,15 @@ const MintContent = () => {
         .form-control:focus { background-color: #1E2329 !important; color: #EAECEF !important; border-color: #FCD535 !important; }
         
         .btn-ingot {
-            background: linear-gradient(180deg, #E6C76A 0%, #D4AF37 40%, #B8962E 100%);
-            border: 1px solid #B8962E;
-            color: #2b1d00 !important;
+            background: linear-gradient(180deg, #FFF5CC 0%, #FCD535 40%, #B3882A 100%);
+            border: 1px solid #B3882A;
+            color: #181A20;
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 1px;
             font-size: 1rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(212, 175, 55, 0.1);
-            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 15px rgba(252, 213, 53, 0.2);
+            text-shadow: none;
             transition: filter 0.3s ease, transform 0.2s ease;
             white-space: nowrap;
             display: flex;
@@ -491,7 +476,7 @@ const MintContent = () => {
             border-radius: 4px;
         }
 
-        .btn-ingot:hover { filter: brightness(1.08); transform: translateY(-1px); color: #2b1d00 !important; }
+        .btn-ingot:hover { filter: brightness(1.08); transform: translateY(-1px); color: #000000; }
         .btn-ingot:disabled { opacity: 0.7; cursor: not-allowed; filter: grayscale(0.5); }
         .hero-container { padding-top: 20px; padding-bottom: 0px; }
         .select-asset-title { margin-bottom: 2rem !important; }
@@ -514,7 +499,7 @@ const MintContent = () => {
 
 interface LuxuryIngotProps {
     label: string;
-    price: any;
+    price: string;
     isAvailable: boolean;
     onMint: () => void;
     isMinting: boolean;
