@@ -417,13 +417,23 @@ export default function ChainFacePage() {
 
   const [targetVerifyType, setTargetVerifyType] = useState<'phone' | 'kyc' | null>(null);
 
-  const handleVerificationRequest = (type: 'phone' | 'kyc') => {
+  const handleVerificationRequest = async (type: 'phone' | 'kyc') => {
       setTargetVerifyType(type);
-      if (profileData.hasPaidFee) {
-          setVerifyStep('success');
-      } else {
-          setVerifyStep('confirm');
+      
+      if (address) {
+          const { data } = await supabase
+              .from('chainface_wallet_verifications')
+              .select('has_paid_fee')
+              .eq('wallet_address', address.toLowerCase())
+              .maybeSingle();
+
+          if (data?.has_paid_fee) {
+              setProfileData((prev: any) => ({ ...prev, hasPaidFee: true }));
+              setVerifyStep('success');
+              return;
+          }
       }
+      setVerifyStep('confirm');
   };
 
   
