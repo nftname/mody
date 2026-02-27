@@ -186,7 +186,7 @@ const Navbar = () => {
               <div style={{ width: '100%', height: '100%' }}>
                 {(() => {
                   if (!ready) {
-                    return ( <div style={customDisconnectStyle} className="hover-effect-btn"> {btnText} </div> );
+                    return ( <div style={{ background: '#1E2329', border: '1px solid transparent', borderRadius: '6px', width: '100%', height: '100%', cursor: 'default' }} aria-hidden="true"></div> );
                   }
                   if (!connected) {
                     return ( <div onClick={openConnectModal} style={customDisconnectStyle} className="hover-effect-btn"> {btnText} </div> );
