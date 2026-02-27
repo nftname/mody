@@ -53,7 +53,7 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
 
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
-    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri;
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://ipfs.io/ipfs/') : uri;
 };
 
 const CoinIcon = ({ name, tier }: { name: string, tier: string }) => {
@@ -199,8 +199,11 @@ function MarketPage() {
       setFavoriteIds(nextFavs); 
       if (!isConnected || !address) return; 
       try {
-          if (favoriteIds.has(id)) await supabase.from('favorites').delete().match({ wallet_address: address, token_id: id.toString() });
-          else await supabase.from('favorites').insert({ wallet_address: address, token_id: id.toString() });
+          if (favoriteIds.has(id)) {
+              await supabase.from('favorites').delete().match({ wallet_address: address, token_id: id.toString() });
+          } else {
+              await supabase.from('favorites').insert({ wallet_address: address, token_id: id.toString() } as any);
+          }
       } catch (err) { }
   };
 
