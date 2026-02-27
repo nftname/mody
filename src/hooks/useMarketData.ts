@@ -106,7 +106,7 @@ export function useMarketData(timeFilter: string = 'All') {
                     else if (tierLower.includes('founder')) baseDeduction = 100000;
 
                     const organicVotes = Math.max(0, rawVotes - baseDeduction);
-                    const organicPoints = (organicVotes / 100);
+                    const organicPoints = (organicVotes / 1000);
 
                     const salesCount = Number(dbRecord.sales) || 0;
                     const offersCount = Number(dbRecord.offerscount) || 0;
