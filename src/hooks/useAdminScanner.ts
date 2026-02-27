@@ -1,21 +1,29 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
+import { parseAbi } from 'viem';
+import { usePublicClient } from 'wagmi';
 import { supabase } from '@/lib/supabase';
+import { MARKETPLACE_ADDRESS } from '@/data/config';
+
+const MARKET_ABI = parseAbi([
+    "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
+]);
 
 export function useAdminScanner() {
-    const [inventory, setInventory] = useState({ founder: [], elite: [], immortal: [] });
-    const [activity, setActivity] = useState({ sales: [], offers: [] });
+    const publicClient = usePublicClient();
+    const [inventory, setInventory] = useState<{ founder: any[], elite: any[], immortal: any[] }>({ founder: [], elite: [], immortal: [] });
+    const [activity, setActivity] = useState<{ sales: any[], offers: any[] }>({ sales: [], offers: [] });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let isMounted = true;
 
         const fetchAdminData = async () => {
+            if (!publicClient) return;
+            if (isMounted) setLoading(true);
+
             try {
-                setLoading(true);
-                
                 const res = await fetch('/api/admin-scripts');
                 if (!res.ok) throw new Error();
                 const apiData = await res.json();
@@ -25,13 +33,50 @@ export function useAdminScanner() {
                     return;
                 }
 
-                const { adminTokenIds, adminTokenMap, sales, offers } = apiData;
+                const { adminWallets, sales, allOffers } = apiData;
+                const adminWalletsSet = new Set(adminWallets);
 
-                if (isMounted) {
-                    setActivity({ sales, offers });
+                const marketData = await publicClient.readContract({
+                    address: MARKETPLACE_ADDRESS as `0x${string}`,
+                    abi: MARKET_ABI,
+                    functionName: 'getAllListings'
+                });
+
+                const [tokenIds, prices, sellers] = marketData as [bigint[], bigint[], `0x${string}`[]];
+
+                const adminTokenIds: string[] = [];
+                const adminTokenMap: Record<string, string> = {}; 
+
+                for (let i = 0; i < tokenIds.length; i++) {
+                    const seller = sellers[i].toLowerCase();
+                    if (adminWalletsSet.has(seller)) {
+                        const idStr = tokenIds[i].toString();
+                        adminTokenIds.push(idStr);
+                        adminTokenMap[idStr] = seller;
+                    }
                 }
 
-                if (!adminTokenIds || adminTokenIds.length === 0) {
+                const adminOwnedSet = new Set(adminTokenIds);
+                const filteredOffers: any[] = [];
+                
+                for (const offer of allOffers) {
+                    const bidder = offer.bidder_address?.toLowerCase();
+                    if (adminOwnedSet.has(offer.token_id.toString()) && bidder && !adminWalletsSet.has(bidder)) {
+                        filteredOffers.push({
+                            id: offer.token_id,
+                            name: `NNM #${offer.token_id}`,
+                            price: offer.price,
+                            wallet: bidder,
+                            expiry: new Date(offer.expiration * 1000).toLocaleDateString()
+                        });
+                    }
+                }
+
+                if (isMounted) {
+                    setActivity({ sales, offers: filteredOffers });
+                }
+
+                if (adminTokenIds.length === 0) {
                     if (isMounted) setLoading(false);
                     return;
                 }
@@ -59,8 +104,7 @@ export function useAdminScanner() {
                 };
 
                 const dbStats = await fetchStats(chunks);
-                
-                const newInventory: any = { founder: [], elite: [], immortal: [] };
+                const newInventory: { founder: any[], elite: any[], immortal: any[] } = { founder: [], elite: [], immortal: [] };
 
                 dbStats.forEach((stat: any) => {
                     const idStr = stat.token_id.toString();
@@ -91,7 +135,7 @@ export function useAdminScanner() {
         return () => {
             isMounted = false;
         };
-    }, []);
+    }, [publicClient]);
 
     return {
         inventory,
@@ -99,4 +143,3 @@ export function useAdminScanner() {
         loading
     };
 }
-
