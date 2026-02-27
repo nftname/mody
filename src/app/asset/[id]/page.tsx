@@ -404,36 +404,43 @@ const formatPriceDisplay = (price: string) => {
     const fetchAllData = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         try {
-            const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [BigInt(tokenId)] });
-            const metaRes = await fetch(resolveIPFS(tokenURI));
+            const [tokenURI, owner, listingData] = await Promise.all([
+                publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [BigInt(tokenId)] }).catch(() => ''),
+                publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'ownerOf', args: [BigInt(tokenId)] }).catch(() => ''),
+                publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] }).catch(() => [null, BigInt(0), false] as const)
+            ]);
+
+            const metaRes = tokenURI ? await fetch(resolveIPFS(tokenURI as string)).catch(() => ({ ok: false, json: async () => ({}) })) : { ok: false, json: async () => ({}) };
             const meta = metaRes.ok ? await metaRes.json() : {};
-            const owner = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'ownerOf', args: [BigInt(tokenId)] });
-            const listingData = await publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [BigInt(tokenId)] });
 
             setAsset({
                 id: tokenId,
                 name: meta.name || `NNM #${tokenId}`,
                 description: meta.description || "",
                 tier: meta.attributes?.find((a: any) => a.trait_type === 'Tier')?.value?.toLowerCase() || 'founder',
-                price: listingData[2] ? formatEther(listingData[1]) : (meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'),
+                price: listingData[2] ? formatEther(listingData[1] as bigint) : (meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0'),
                 owner: owner,
                 image: resolveIPFS(meta.image),
                 mintDate: meta.attributes?.find((a: any) => a.trait_type === 'Mint Date')?.value
             });
 
-            if (listingData[2]) setListing({ price: formatEther(listingData[1]), seller: listingData[0] });
+            if (listingData[2]) setListing({ price: formatEther(listingData[1] as bigint), seller: listingData[0] });
             else setListing(null);
 
-            setIsOwner(address?.toLowerCase() === owner.toLowerCase());
-            if (address && owner.toLowerCase() === address.toLowerCase()) {
-                const approvedStatus = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'isApprovedForAll', args: [address, MARKETPLACE_ADDRESS as `0x${string}`] });
-                setIsApproved(approvedStatus);
+            setIsOwner(address?.toLowerCase() === (owner as string).toLowerCase());
+            if (address && (owner as string).toLowerCase() === address.toLowerCase()) {
+                const approvedStatus = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'isApprovedForAll', args: [address, MARKETPLACE_ADDRESS as `0x${string}`] }).catch(() => false);
+                setIsApproved(approvedStatus as boolean);
             }
             
-            // Fetch activities to check for last sale date
-            const { data: actData } = await supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false });
+            const [actDataRes, offersRes] = await Promise.all([
+                supabase.from('activities').select('*').eq('token_id', tokenId).order('created_at', { ascending: false }),
+                supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled').order('created_at', { ascending: false })
+            ]);
+
+            const actData = actDataRes.data;
+            const offers = offersRes.data;
             
-            // Find the most recent 'Sale' activity timestamp
             let lastSaleTimestamp: number | null = null;
             if (actData) {
                 const lastSaleActivity = actData.find((act: any) => act.activity_type === 'Sale');
@@ -450,10 +457,8 @@ const formatPriceDisplay = (price: string) => {
                 }
             }
             
-            const { data: offers } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled');
             if (offers) {
                 let enrichedOffers = offers.map((offer: any) => {
-                    // Parse offer creation date
                     let offerCreatedAt: number;
                     try {
                         const dateStr = offer.created_at.includes('Z') ? offer.created_at : offer.created_at + 'Z';
@@ -465,7 +470,6 @@ const formatPriceDisplay = (price: string) => {
                         offerCreatedAt = new Date(offer.created_at).getTime();
                     }
                     
-                    // Check if offer is outdated (created before last sale)
                     const isOutdated = lastSaleTimestamp !== null && offerCreatedAt < lastSaleTimestamp;
                     
                     return {
@@ -481,14 +485,12 @@ const formatPriceDisplay = (price: string) => {
                         isOutdated: isOutdated
                     };
                 });
-                // ✅ Surgical Fix 2: Added (a: any, b: any) to all sorts to prevent implicit any errors
+                
                 if (offerSort === 'Newest') enrichedOffers.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 if (offerSort === 'High Price') enrichedOffers.sort((a: any, b: any) => b.price - a.price);
                 if (offerSort === 'Low Price') enrichedOffers.sort((a: any, b: any) => a.price - b.price);
                 setOffersList(enrichedOffers);
             }
-
-            const { data: offerActData } = await supabase.from('offers').select('*').eq('token_id', tokenId).neq('status', 'cancelled').order('created_at', { ascending: false });
 
             const formattedActs = (actData || []).map((item: any) => ({
                 type: item.activity_type,
@@ -499,7 +501,7 @@ const formatPriceDisplay = (price: string) => {
                 rawDate: new Date(item.created_at).getTime()
             }));
 
-            const formattedOffers = (offerActData || []).map((item: any) => ({
+            const formattedOffers = (offers || []).map((item: any) => ({
                 type: 'Offer',
                 price: item.price,
                 from: item.bidder_address,
@@ -508,39 +510,49 @@ const formatPriceDisplay = (price: string) => {
                 rawDate: new Date(item.created_at).getTime()
             }));
 
-            const mergedActivity = [...formattedActs, ...formattedOffers].sort((a, b) => b.rawDate - a.rawDate);
+            const mergedActivity = [...formattedActs, ...formattedOffers].sort((a: any, b: any) => b.rawDate - a.rawDate);
             setActivityList(mergedActivity);
 
-        } catch (e) { console.error(e); } finally { setLoading(false); }
+        } catch (e) { } finally { setLoading(false); }
     }, [tokenId, address, publicClient, offerSort]);
 
     const fetchMoreAssets = useCallback(async () => {
         if (!tokenId || !publicClient) return;
         const startId = BigInt(tokenId) + BigInt(1);
         const batchIds = Array.from({ length: 8 }, (_, i) => startId + BigInt(i));
-        const loadedAssets: any[] = [];
-        for (const nextId of batchIds) {
+        
+        const promises = batchIds.map(async (nextId) => {
             try {
-                const tokenURI = await publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [nextId] });
-                const metaRes = await fetch(resolveIPFS(tokenURI));
+                const [tokenURI, listingData] = await Promise.all([
+                    publicClient.readContract({ address: NFT_COLLECTION_ADDRESS as `0x${string}`, abi: erc721Abi, functionName: 'tokenURI', args: [nextId] }).catch(() => ''),
+                    publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [nextId] }).catch(() => [null, BigInt(0), false] as const)
+                ]);
+                
+                const metaRes = tokenURI ? await fetch(resolveIPFS(tokenURI as string)).catch(() => ({ ok: false, json: async () => ({}) })) : { ok: false, json: async () => ({}) };
                 const meta = metaRes.ok ? await metaRes.json() : {};
+                
                 let isListed = false;
                 let price = meta.attributes?.find((a: any) => a.trait_type === 'Price')?.value || '0';
-                try {
-                    const listingData = await publicClient.readContract({ address: MARKETPLACE_ADDRESS as `0x${string}`, abi: MARKETPLACE_ABI, functionName: 'listings', args: [nextId] });
-                    if (listingData[2]) { isListed = true; price = formatEther(listingData[1]); }
-                } catch (e) {}
-                loadedAssets.push({
+                
+                if (listingData[2]) { 
+                    isListed = true; 
+                    price = formatEther(listingData[1] as bigint); 
+                }
+                
+                return {
                     id: nextId.toString(),
                     name: meta.name || `NNM #${nextId}`,
                     image: resolveIPFS(meta.image) || '',
                     price: price,
                     isListed: isListed
-                });
-            } catch (e) {}
-        }
-        setMoreAssets(loadedAssets);
+                };
+            } catch (e) { return null; }
+        });
+        
+        const loadedAssets = await Promise.all(promises);
+        setMoreAssets(loadedAssets.filter(Boolean));
     }, [tokenId, publicClient]);
+
 
     const refreshWpolData = useCallback(async () => {
         if (address && publicClient) {
