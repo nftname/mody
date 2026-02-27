@@ -67,17 +67,20 @@ export function useMarketData(timeFilter: string = 'All') {
                 }
 
                 const fetchStats = async (targetChunks: string[][]) => {
-                    let allResults: any[] = [];
-                    for (const chunk of targetChunks) {
+                    const promises = targetChunks.map(async (chunk) => {
                         try {
-                            const { data, error } = await supabase
+                            const { data } = await supabase
                                 .from('market_stats_view')
                                 .select('*')
                                 .in('token_id', chunk);
-                            if (data) allResults.push(...data);
-                        } catch (e) {}
-                    }
-                    return allResults;
+                            return data || [];
+                        } catch (e) {
+                            return [];
+                        }
+                    });
+                    
+                    const results = await Promise.all(promises);
+                    return results.flat();
                 };
 
                 const dbStats = await fetchStats(chunks);
