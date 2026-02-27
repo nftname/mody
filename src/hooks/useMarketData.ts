@@ -137,9 +137,14 @@ export function useMarketData(timeFilter: string = 'All') {
                     };
                 });
                 
+                if (isMounted) {
+                    setListings(items);
+                    setLoading(false); 
+                }
+
                 const itemsMissingNames = items.filter(item => item.name.startsWith('Asset #'));
                 if (itemsMissingNames.length > 0) {
-                    await Promise.allSettled(itemsMissingNames.map(async (item) => {
+                    itemsMissingNames.forEach(async (item) => {
                         try {
                             const uri = await publicClient.readContract({
                                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
@@ -149,17 +154,18 @@ export function useMarketData(timeFilter: string = 'All') {
                             });
                             const metaRes = await fetch(resolveIPFS(uri as string));
                             const meta = await metaRes.json();
-                            if (meta.name) {
-                                item.name = meta.name;
-                                item.tier = meta.attributes?.find((a:any) => a.trait_type === 'Tier')?.value || item.tier;
+                            if (meta.name && isMounted) {
+                                setListings(prev => prev.map(p => 
+                                    p.id === item.id 
+                                        ? { ...p, name: meta.name, tier: meta.attributes?.find((a:any) => a.trait_type === 'Tier')?.value || p.tier } 
+                                        : p
+                                ));
                             }
                         } catch (e) {}
-                    }));
+                    });
                 }
 
-                if (isMounted) setListings(items);
             } catch (error) {
-            } finally {
                 if (isMounted) setLoading(false);
             }
         };
