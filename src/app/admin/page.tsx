@@ -394,8 +394,8 @@ export default function AdminPage() {
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${BORDER_COLOR}`, paddingBottom: '15px', marginBottom: '20px', fontSize: '13px' }}>
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${BORDER_COLOR}`, paddingBottom: '15px', marginBottom: '20px', fontSize: '13px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexShrink: 0 }}>
           <div style={{ display: 'flex', gap: '5px' }}>
             <button 
                 onClick={() => handleToggleSite(false)} 
@@ -408,7 +408,6 @@ export default function AdminPage() {
                 CLOSED
             </button>
           </div>
-          
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: PANEL_BG, padding: '4px 10px', borderRadius: '6px', border: `1px solid ${BORDER_COLOR}` }}>
              <span style={{ color: BRAND_GOLD, fontWeight: 'bold' }}>{contractBalance} POL</span>
              <button 
@@ -419,76 +418,62 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '35px', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '22px', fontWeight: '900', color: '#EAECEF' }}>{liveStats.anonymous}</div>
-            <div style={{ fontSize: '10px', color: '#848E9C', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Visitors</div>
-          </div>
-          <div style={{ width: '1px', height: '30px', backgroundColor: '#2B3139' }}></div>
-          <div style={{ textAlign: 'center', position: 'relative' }} ref={walletsDropdownRef}>
-            <div 
-              onClick={() => setShowWalletsDropdown(!showWalletsDropdown)}
-              style={{ fontSize: '22px', fontWeight: '900', color: '#00C851', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-            >
-              {liveStats.connected}
-              <i className="bi bi-chevron-down" style={{ fontSize: '12px', color: '#848E9C' }}></i>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '65%', display: 'flex', justifyContent: 'flex-end', msOverflowStyle: 'none', scrollbarWidth: 'none' }} className="no-scrollbar">
+          <style>{`.no-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+          <div style={{ display: 'flex', gap: '30px', alignItems: 'center', minWidth: 'max-content', paddingLeft: '20px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '20px', fontWeight: '900', color: '#EAECEF' }}>{liveStats.anonymous}</div>
+              <div style={{ fontSize: '9px', color: '#848E9C', textTransform: 'uppercase', letterSpacing: '1px' }}>Visitors</div>
             </div>
-            <div style={{ fontSize: '10px', color: '#848E9C', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Connected Wallets</div>
-
-            {showWalletsDropdown && (
-              <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', background: '#1E2329', border: '1px solid #2B3139', borderRadius: '6px', padding: '12px', zIndex: 9999, width: '220px', marginTop: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.8)' }}>
-                <input 
-                  type="text" 
-                  placeholder="Search Wallet..." 
-                  value={walletSearch}
-                  onChange={(e) => { setWalletSearch(e.target.value); setWalletPage(1); }}
-                  style={{ width: '100%', background: '#181A20', border: '1px solid #2B3139', color: '#EAECEF', padding: '6px 10px', borderRadius: '4px', fontSize: '11px', outline: 'none', marginBottom: '10px' }}
-                />
-                
-                {liveStats.wallets && liveStats.wallets.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {liveStats.wallets.map((item: any, i: number) => {
-                      const w = item.wallet;
-                      const t = new Date(item.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                      return (
-                        <Link href={`/profile/${w}`} key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#EAECEF', background: '#181A20', padding: '6px 8px', borderRadius: '4px', textDecoration: 'none', border: '1px solid #2B3139' }}>
-                          <span style={{ fontFamily: 'monospace', color: '#FCD535' }}>{w ? `${w.slice(0, 6)}...${w.slice(-4)}` : ''}</span>
-                          <span style={{ fontSize: '9px', color: '#848E9C' }}>{t}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '11px', color: '#848E9C', textAlign: 'center', padding: '10px 0' }}>No Wallets Found</div>
-                )}
-
-                {liveStats.totalPages > 1 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #2B3139' }}>
-                    <button 
-                      onClick={() => setWalletPage(p => Math.max(1, p - 1))}
-                      disabled={walletPage === 1}
-                      style={{ background: 'transparent', border: 'none', color: walletPage === 1 ? '#444' : '#FCD535', cursor: walletPage === 1 ? 'default' : 'pointer', fontSize: '16px' }}
-                    >&#8592;</button>
-                    <span style={{ fontSize: '10px', color: '#848E9C' }}>{walletPage} / {liveStats.totalPages}</span>
-                    <button 
-                      onClick={() => setWalletPage(p => Math.min(liveStats.totalPages, p + 1))}
-                      disabled={walletPage === liveStats.totalPages}
-                      style={{ background: 'transparent', border: 'none', color: walletPage === liveStats.totalPages ? '#444' : '#FCD535', cursor: walletPage === liveStats.totalPages ? 'default' : 'pointer', fontSize: '16px' }}
-                    >&#8594;</button>
-                  </div>
-                )}
+            <div style={{ width: '1px', height: '25px', backgroundColor: '#2B3139' }}></div>
+            <div style={{ textAlign: 'center', position: 'relative' }} ref={walletsDropdownRef}>
+              <div 
+                onClick={() => setShowWalletsDropdown(!showWalletsDropdown)}
+                style={{ fontSize: '20px', fontWeight: '900', color: '#00C851', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+              >
+                {liveStats.connected}
+                <i className="bi bi-chevron-down" style={{ fontSize: '10px', color: '#848E9C' }}></i>
               </div>
-            )}
-          </div>
-
-          <div style={{ width: '1px', height: '30px', backgroundColor: '#2B3139' }}></div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '22px', fontWeight: '900', color: '#FCD535' }}>{liveStats.total}</div>
-            <div style={{ fontSize: '10px', color: '#848E9C', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Total Online</div>
+              <div style={{ fontSize: '9px', color: '#848E9C', textTransform: 'uppercase', letterSpacing: '1px' }}>Wallets</div>
+              {showWalletsDropdown && (
+                <div style={{ position: 'absolute', top: '100%', right: '0', background: '#1E2329', border: '1px solid #2B3139', borderRadius: '6px', padding: '12px', zIndex: 9999, width: '220px', marginTop: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.8)' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Search Wallet..." 
+                    value={walletSearch}
+                    onChange={(e) => { setWalletSearch(e.target.value); setWalletPage(1); }}
+                    style={{ width: '100%', background: '#181A20', border: '1px solid #2B3139', color: '#EAECEF', padding: '6px 10px', borderRadius: '4px', fontSize: '11px', outline: 'none', marginBottom: '10px' }}
+                  />
+                  {liveStats.wallets && liveStats.wallets.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {liveStats.wallets.map((item: any, i: number) => (
+                        <Link href={`/profile/${item.wallet}`} key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#EAECEF', background: '#181A20', padding: '6px 8px', borderRadius: '4px', textDecoration: 'none', border: '1px solid #2B3139' }}>
+                          <span style={{ fontFamily: 'monospace', color: '#FCD535' }}>{item.wallet ? `${item.wallet.slice(0, 6)}...${item.wallet.slice(-4)}` : ''}</span>
+                          <span style={{ fontSize: '9px', color: '#848E9C' }}>{new Date(item.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '11px', color: '#848E9C', textAlign: 'center', padding: '10px 0' }}>No Wallets</div>
+                  )}
+                  {liveStats.totalPages > 1 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #2B3139' }}>
+                      <button onClick={() => setWalletPage(p => Math.max(1, p - 1))} disabled={walletPage === 1} style={{ background: 'transparent', border: 'none', color: walletPage === 1 ? '#444' : '#FCD535', cursor: walletPage === 1 ? 'default' : 'pointer', fontSize: '16px' }}>&#8592;</button>
+                      <span style={{ fontSize: '10px', color: '#848E9C' }}>{walletPage} / {liveStats.totalPages}</span>
+                      <button onClick={() => setWalletPage(p => Math.min(liveStats.totalPages, p + 1))} disabled={walletPage === liveStats.totalPages} style={{ background: 'transparent', border: 'none', color: walletPage === liveStats.totalPages ? '#444' : '#FCD535', cursor: walletPage === liveStats.totalPages ? 'default' : 'pointer', fontSize: '16px' }}>&#8594;</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div style={{ width: '1px', height: '25px', backgroundColor: '#2B3139' }}></div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '20px', fontWeight: '900', color: '#FCD535' }}>{liveStats.total}</div>
+              <div style={{ fontSize: '9px', color: '#848E9C', textTransform: 'uppercase', letterSpacing: '1px' }}>Total</div>
+            </div>
           </div>
         </div>
       </div>
-
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '30px' }}>
         <input 
