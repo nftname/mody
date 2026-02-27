@@ -66,7 +66,10 @@ const domain = { name: 'NNMMarketplace', version: '1', chainId: 137, verifyingCo
 const types = { Offer: [{ name: 'bidder', type: 'address' }, { name: 'tokenId', type: 'uint256' }, { name: 'price', type: 'uint256' }, { name: 'expiration', type: 'uint256' }] } as const;
 
 const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
-const resolveIPFS = (uri: string) => uri?.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/') : uri || '';
+const resolveIPFS = (uri: string) => {
+    if (!uri) return '';
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://ipfs.io/ipfs/') : uri;
+};
 const formatShortTime = (date: string) => {
     const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
     if (diff < 60) return `${diff}s`; if (diff < 3600) return `${Math.floor(diff / 60)}m`; if (diff < 86400) return `${Math.floor(diff / 3600)}h`; return `${Math.floor(diff / 86400)}d`;
@@ -241,14 +244,14 @@ const formatPriceDisplay = (price: string) => {
     useEffect(() => {
         const fetchPrices = async () => {
             try {
-                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token,matic-network,ethereum&vs_currencies=usd');
+                const res = await fetch('/api/prices');
+                if (!res.ok) throw new Error();
                 const data = await res.json();
-
-                const polPrice = data['polygon-ecosystem-token']?.usd || data['matic-network']?.usd || 0;
-                const ethPrice = data['ethereum']?.usd || 0;
-
-                setExchangeRates({ pol: polPrice, eth: ethPrice });
-            } catch (e) { console.error("Price API Error", e); }
+                setExchangeRates({ pol: data.pol || 0, eth: data.eth || 0 });
+            } catch (e) { 
+                console.error("Internal Price API Error", e); 
+                setExchangeRates(prev => prev.pol === 0 ? { pol: 0.40, eth: 3000 } : prev);
+            }
         };
         fetchPrices();
         const interval = setInterval(fetchPrices, 60000);
