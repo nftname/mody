@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, Component, ReactNode } from 'react';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import MarketTicker from '@/components/MarketTicker';
@@ -13,7 +13,20 @@ import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 import { useMarketData } from '@/hooks/useMarketData';
 
-// --- ABIs ---
+class SafeWidget extends Component<{children: ReactNode}, {hasError: boolean}> {
+    constructor(props: any) {
+        super(props);
+        this.state = { hasError: false };
+    }
+    static getDerivedStateFromError() {
+        return { hasError: true };
+    }
+    render() {
+        if (this.state.hasError) return <div style={{display: 'none'}}></div>;
+        return this.props.children;
+    }
+}
+
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
@@ -21,7 +34,6 @@ const MARKET_ABI = parseAbi([
 const ITEMS_PER_PAGE = 30;
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
-// --- Components ---
 const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: boolean }) => {
     if (isCustomSVG) {
         return (
@@ -153,13 +165,10 @@ function MarketPage() {
     { name: "OPTIMISM", icon: "bi-graph-up-arrow", isCustom: false }
   ];
 
-  // Default filter: 'Trending'
   const [activeFilter, setActiveFilter] = useState('Trending');
   const [timeFilter, setTimeFilter] = useState('All');
   const [currencyFilter, setCurrencyFilter] = useState('All'); 
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set()); 
-  
-  // --- SEARCH STATE ---
   const [searchQuery, setSearchQuery] = useState('');
 
   const { allListings, loading, exchangeRates } = useMarketData(timeFilter);
@@ -169,8 +178,6 @@ function MarketPage() {
 
   const publicClient = usePublicClient();
 
-
-  // --- FAVORITES LOGIC ---
   useEffect(() => {
     if (isConnected && address) {
         const fetchFavorites = async () => {
@@ -179,7 +186,7 @@ function MarketPage() {
                 if (data) {
                     setFavoriteIds(new Set(data.map((i: any) => Number(i.token_id))));
                 }
-            } catch (e) { console.error("Fav fetch error", e); }
+            } catch (e) {}
         };
         fetchFavorites();
     }
@@ -197,7 +204,6 @@ function MarketPage() {
       } catch (err) { }
   };
 
-  // --- Data Logic (New Hook Integration) ---
  const finalData = useMemo(() => {
       let processedData = [...allListings];
 
@@ -223,7 +229,6 @@ function MarketPage() {
               return b.id - a.id;
           }); 
       }
-
       else if (activeFilter === 'Most Offers') { processedData.sort((a, b) => b.offersCount - a.offersCount); }
       else if (activeFilter === 'Watchlist') { processedData = processedData.filter(item => favoriteIds.has(item.id)); }
       else if (activeFilter === 'Conviction') {
@@ -317,15 +322,22 @@ function MarketPage() {
   return (
     <main className="no-select" style={{ backgroundColor: '#181A20', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '50px', overflowX: 'hidden' }}>
       
-      <MarketTicker />
+      <SafeWidget>
+          <MarketTicker />
+      </SafeWidget>
 
-      {/* HEADER */}
       <div className="header-wrapper shadow-sm" style={{ backgroundColor: '#181A20', borderBottom: '1px solid #2B3139', paddingTop: '10px' }}>
         <div className="container-fluid p-0"> 
             <div className="widgets-grid-container">
-                <div className="widget-item"> <NGXWidget theme="dark" /> </div>
-                <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
-                <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
+                <SafeWidget>
+                    <div className="widget-item"> <NGXWidget theme="dark" /> </div>
+                </SafeWidget>
+                <SafeWidget>
+                    <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
+                </SafeWidget>
+                <SafeWidget>
+                    <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
+                </SafeWidget>
             </div>
             <div className="row align-items-center px-3 mt-3 text-section desktop-only-text">
                 <div className="col-lg-12">
@@ -340,7 +352,6 @@ function MarketPage() {
         </div>
       </div>
 
-      {/* FILTERS */}
       <section className="market-content-wrapper mb-0 mt-4">
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 border-top border-bottom border-secondary" style={{ borderColor: '#2B3139 !important', padding: '2px 0' }}>
               <div className="d-flex gap-4 overflow-auto no-scrollbar w-100 w-lg-auto align-items-center justify-content-start" style={{ paddingTop: '2px' }}>
@@ -367,7 +378,6 @@ function MarketPage() {
           </div>
       </section>
 
-      {/* SEARCH BAR */}
       <section className="market-content-wrapper mt-3 mb-2">
         <div className="d-flex align-items-center position-relative" style={{ width: '100%', maxWidth: '265px' }}>
             <i className="bi bi-search position-absolute text-secondary" style={{ left: '12px', fontSize: '13px', zIndex: 10, color: '#848E9C' }}></i>
@@ -396,7 +406,6 @@ function MarketPage() {
         </div>
       </section>
 
-      {/* TABLE */}
       <section className="market-content-wrapper mt-2 pt-0">
           <div className="table-responsive no-scrollbar">
               {loading ? ( <div className="text-center py-5 text-secondary">Loading Marketplace Data...</div>
@@ -523,10 +532,7 @@ function MarketPage() {
         .no-select { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
         .header-wrapper { background: #242424; border-bottom: 1px solid #2E2E2E; padding: 4px 0; margin-top: 0; }
         .widgets-grid-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; max-width: 1050px; margin: 0 auto; padding: 0 15px; }
-        
-        /* New Wrapper Class for matching desktop width */
         .market-content-wrapper { max-width: 1050px; margin: 0 auto; padding: 0 15px; }
-
         .widget-item { flex: 0 0 310px; }
         .main-title { font-size: 1.53rem; color: #E0E0E0; letter-spacing: -1px; }
         .main-desc { font-size: 15px; color: #B0B0B0; max-width: 650px; }
@@ -534,7 +540,6 @@ function MarketPage() {
         @media (max-width: 768px) {
             .header-wrapper { padding: 2px 0 !important; }
             .widgets-grid-container { display: flex !important; flex-wrap: nowrap !important; justify-content: space-between !important; gap: 2px !important; padding: 0 4px !important; max-width: 100% !important; overflow-x: hidden; }
-            /* Ensure wrapper is full width on mobile just in case */
             .market-content-wrapper { max-width: 100% !important; }
             .widget-item { flex: 1 1 auto !important; min-width: 0 !important; max-width: 33% !important; }
             .desktop-only-text { display: none !important; }
@@ -561,18 +566,8 @@ function MarketPage() {
         .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
-        
-        /* Focus style for search input */
-        .form-control:focus {
-            background-color: rgba(255, 255, 255, 0.1) !important;
-            border-color: rgba(255, 255, 255, 0.3) !important;
-            color: white !important;
-            box-shadow: none !important;
-        }
-        .form-control::placeholder {
-            color: #848E9C;
-            opacity: 0.8;
-        }
+        .form-control:focus { background-color: rgba(255, 255, 255, 0.1) !important; border-color: rgba(255, 255, 255, 0.3) !important; color: white !important; box-shadow: none !important; }
+        .form-control::placeholder { color: #848E9C; opacity: 0.8; }
       `}</style>
     </main>
   );

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { createPublicClient, http, parseAbi, formatEther } from 'viem';
 import { polygon } from 'viem/chains';
 import { supabase } from '@/lib/supabase';
-import { MARKETPLACE_ADDRESS, NFT_COLLECTION_ADDRESS } from '@/data/config'; 
+import { MARKETPLACE_ADDRESS, NFT_COLLECTION_ADDRESS } from '@/data/config';
 
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
@@ -29,11 +29,11 @@ export function useMarketData(timeFilter: string = 'All') {
         const fetchPrices = async () => {
             try {
                 const res = await fetch('/api/prices');
-                if (!res.ok) throw new Error('Price API failed');
+                if (!res.ok) throw new Error();
                 const data = await res.json();
                 setExchangeRates({ pol: data.pol || 0, eth: data.eth || 0 });
-            } catch (e) { 
-                setExchangeRates({ pol: 0.40, eth: 3000 }); 
+            } catch (e) {
+                setExchangeRates(prev => prev.pol === 0 ? { pol: 0.40, eth: 3000 } : prev);
             }
         };
         fetchPrices();
@@ -42,8 +42,10 @@ export function useMarketData(timeFilter: string = 'All') {
     }, []);
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchMarketData = async () => {
-            setLoading(true);
+            if (isMounted) setLoading(true);
             try {
                 const data = await publicClient.readContract({
                     address: MARKETPLACE_ADDRESS as `0x${string}`,
@@ -52,14 +54,15 @@ export function useMarketData(timeFilter: string = 'All') {
                 });
                 const [tokenIds, prices] = data;
                 
-                if (!tokenIds || tokenIds.length === 0) { 
-                    setListings([]); 
-                    setLoading(false); 
-                    return; 
+                if (!tokenIds || tokenIds.length === 0) {
+                    if (isMounted) {
+                        setListings([]);
+                        setLoading(false);
+                    }
+                    return;
                 }
 
                 const tokenIdsStr = tokenIds.map(id => id.toString());
-
                 const CHUNK_SIZE = 150;
                 const chunks: string[][] = [];
                 for (let i = 0; i < tokenIdsStr.length; i += CHUNK_SIZE) {
@@ -69,12 +72,13 @@ export function useMarketData(timeFilter: string = 'All') {
                 const fetchStats = async (targetChunks: string[][]) => {
                     let allResults: any[] = [];
                     for (const chunk of targetChunks) {
-                        const { data, error } = await supabase
-                            .from('market_stats_view')
-                            .select('*')
-                            .in('token_id', chunk);
-                        
-                        if (data) allResults.push(...data);
+                        try {
+                            const { data, error } = await supabase
+                                .from('market_stats_view')
+                                .select('*')
+                                .in('token_id', chunk);
+                            if (data) allResults.push(...data);
+                        } catch (e) {}
                     }
                     return allResults;
                 };
@@ -102,7 +106,7 @@ export function useMarketData(timeFilter: string = 'All') {
                     else if (tierLower.includes('founder')) baseDeduction = 100000;
 
                     const organicVotes = Math.max(0, rawVotes - baseDeduction);
-                    const organicPoints = (organicVotes / 100); 
+                    const organicPoints = (organicVotes / 100);
 
                     const salesCount = Number(dbRecord.sales) || 0;
                     const offersCount = Number(dbRecord.offerscount) || 0;
@@ -134,11 +138,11 @@ export function useMarketData(timeFilter: string = 'All') {
                         change: change,
                         currencySymbol: 'POL'
                     };
-                }); 
+                });
                 
                 const itemsMissingNames = items.filter(item => item.name.startsWith('Asset #'));
                 if (itemsMissingNames.length > 0) {
-                    await Promise.all(itemsMissingNames.map(async (item) => {
+                    await Promise.allSettled(itemsMissingNames.map(async (item) => {
                         try {
                             const uri = await publicClient.readContract({
                                 address: NFT_COLLECTION_ADDRESS as `0x${string}`,
@@ -149,21 +153,24 @@ export function useMarketData(timeFilter: string = 'All') {
                             const metaRes = await fetch(resolveIPFS(uri as string));
                             const meta = await metaRes.json();
                             if (meta.name) {
-                                item.name = meta.name; 
+                                item.name = meta.name;
                                 item.tier = meta.attributes?.find((a:any) => a.trait_type === 'Tier')?.value || item.tier;
                             }
-                        } catch (e) { } 
+                        } catch (e) {}
                     }));
                 }
 
-                setListings(items);
-            } catch (error) { 
-                setLoading(false);
-            } finally { 
-                setLoading(false); 
+                if (isMounted) setListings(items);
+            } catch (error) {
+            } finally {
+                if (isMounted) setLoading(false);
             }
         };
         fetchMarketData();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const filteredData = useMemo(() => {
