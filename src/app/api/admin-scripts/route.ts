@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { createPublicClient, http, parseAbi } from 'viem';
 import { polygon } from 'viem/chains';
 import { MARKETPLACE_ADDRESS } from '@/data/config';
+import adminWalletsData from '../../../../data/new_100_wallets_secret.json';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -19,16 +18,9 @@ const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
-const getAdminWallets = () => {
-    const walletsPath = path.join(process.cwd(), 'data', 'new_100_wallets_secret.json');
-    if (!fs.existsSync(walletsPath)) return [];
-    const data = JSON.parse(fs.readFileSync(walletsPath, 'utf8'));
-    return data.map((w: any) => w.address.toLowerCase());
-};
-
 export async function GET(req: Request) {
     try {
-        const adminWalletsArray = getAdminWallets();
+        const adminWalletsArray = adminWalletsData.map((w: any) => w.address.toLowerCase());
         const adminWallets = new Set(adminWalletsArray);
 
         const marketData = await publicClient.readContract({
