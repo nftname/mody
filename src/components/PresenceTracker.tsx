@@ -6,20 +6,10 @@ import { useAccount } from 'wagmi';
 
 export default function PresenceTracker() {
   const { address, isConnected } = useAccount();
-  const sessionId = useRef('');
+  const sessionId = useRef(crypto.randomUUID());
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      let sId = sessionStorage.getItem('nnm_session_id');
-      if (!sId) {
-        sId = crypto.randomUUID();
-        sessionStorage.setItem('nnm_session_id', sId);
-      }
-      sessionId.current = sId;
-    }
-
     const ping = async () => {
-
       try {
         await fetch('/api/presence', {
           method: 'POST',
