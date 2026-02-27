@@ -183,8 +183,11 @@ const Navbar = () => {
             const ready = mounted && authenticationStatus !== 'loading';
             const connected = ready && account && chain && (!authenticationStatus || authenticationStatus === 'authenticated');
             return (
-              <div {...(!ready && { 'aria-hidden': true, 'style': { opacity: 0, pointerEvents: 'none', userSelect: 'none' } })} style={{ width: '100%', height: '100%' }}>
+              <div style={{ width: '100%', height: '100%' }}>
                 {(() => {
+                  if (!ready) {
+                    return ( <div style={customDisconnectStyle} className="hover-effect-btn"> {btnText} </div> );
+                  }
                   if (!connected) {
                     return ( <div onClick={openConnectModal} style={customDisconnectStyle} className="hover-effect-btn"> {btnText} </div> );
                   }
@@ -498,7 +501,7 @@ const Navbar = () => {
                 <form onSubmit={handleSearch} className="position-relative" style={{ width: '240px', height: elementHeight }}>
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." 
                         value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '34px', border: `1px solid ${subtleBorder}`, caretColor: metallicGoldHex }} 
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '34px', border: `1px solid ${subtleBorder}`, caretColor: metallicGoldHex }} 
                    />
                    <button type="submit" className="btn p-0 position-absolute" style={{top: '50%', transform: 'translateY(-50%)', left: '10px', border:'none', background:'transparent'}}>
                         <i className="bi bi-search" style={{fontSize: '13px', color: metallicGoldHex}}></i>

@@ -111,7 +111,7 @@ export function useMarketData(timeFilter: string = 'All') {
                     const salesCount = Number(dbRecord.sales) || 0;
                     const offersCount = Number(dbRecord.offerscount) || 0;
                     
-                    const trendingScore = (salesCount * 40) + (offersCount * 10) + organicPoints;
+                    const trendingScore = (salesCount * 40) + (offersCount * 2) + organicPoints;
                     const pricePol = parseFloat(formatEther(prices[index]));
                     const lastSale = Number(dbRecord.lastsale) || 0;
                     
