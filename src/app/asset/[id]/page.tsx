@@ -68,7 +68,7 @@ const types = { Offer: [{ name: 'bidder', type: 'address' }, { name: 'tokenId', 
 const formatCompactNumber = (num: number) => Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
 const resolveIPFS = (uri: string) => {
     if (!uri) return '';
-    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://ipfs.io/ipfs/') : uri;
+    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://cloudflare-ipfs.com/ipfs/') : uri;
 };
 const formatShortTime = (date: string) => {
     const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -920,7 +920,14 @@ const formatPriceDisplay = (price: string) => {
                                     <i className={`bi ${isMainFav ? 'bi-heart-fill' : 'bi-heart'}`} style={{ fontSize: '19px', color: isMainFav ? '#EAECEF' : '#EAECEF', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}></i>
                                 </button>
                             </div>
-                            <img src={asset.image} alt={asset.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img 
+                                src={asset.image} 
+                                 alt={asset.name} 
+                                loading="eager" 
+                                fetchPriority="high"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                             />
+
                         </div>
                         {/* DESKTOP BUTTON LOCATION (Left Column, Under Image) */}
                         <div className="d-none d-lg-block mt-4">
