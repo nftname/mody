@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useAdminScanner } from '@/hooks/useAdminScanner';
 
 const BACKGROUND_DARK = '#181A20';
 const SURFACE_DARK = '#181A20';
@@ -105,7 +106,7 @@ const DropdownTable = ({ title, data, columns, type }: any) => {
                             {filteredData.slice((page - 1) * 10, page * 10).map((row: any, i: number) => (
                                 <tr key={i}>
                                     <td style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>
-                                        <Link href={`/asset/${row.id}`} style={{ color: GOLD_SOLID, textDecoration: 'none' }}>{row.name}</Link>
+                                        <Link href={`/asset/${row.id}`} style={{ color: GOLD_SOLID, textDecoration: 'none' }}>{row.name || `NNM #${row.id}`}</Link>
                                     </td>
                                     {type === 'owned' && (
                                         <td style={{ borderBottom: `1px solid ${BORDER_COLOR}` }}>
@@ -149,8 +150,7 @@ const DropdownTable = ({ title, data, columns, type }: any) => {
 
 export default function AdminScanner() {
     const [openScript, setOpenScript] = useState<string | null>(null);
-    const [inventory, setInventory] = useState({ founder: [], elite: [], immortal: [] });
-    const [activity, setActivity] = useState({ sales: [], offers: [] });
+    const { inventory, activity, loading } = useAdminScanner();
 
     const scripts = [
         "Market Maker Final",
@@ -160,21 +160,6 @@ export default function AdminScanner() {
         "Execute Sovereign Listings",
         "Expert Admin Minter"
     ];
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const invRes = await fetch('/api/admin-scripts?type=inventory');
-                const invData = await invRes.json();
-                if (invData.success) setInventory(invData.inventory);
-
-                const actRes = await fetch('/api/admin-scripts?type=external_activity');
-                const actData = await actRes.json();
-                if (actData.success) setActivity({ sales: actData.sales, offers: actData.offers });
-            } catch (e) { }
-        };
-        fetchData();
-    }, []);
 
     return (
         <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
@@ -215,6 +200,8 @@ export default function AdminScanner() {
             `}</style>
             
             <div className="container-fluid" style={{ maxWidth: '1280px' }}>
+                {loading && <div style={{ color: GOLD_SOLID, textAlign: 'center', marginBottom: '20px' }}>Loading Admin Data...</div>}
+                
                 <div className="row mb-4">
                     <div className="col-12">
                         <h4 style={{ color: GOLD_SOLID, marginBottom: '15px' }}>Owned Names</h4>

@@ -27,9 +27,6 @@ const getAdminWallets = () => {
 };
 
 export async function GET(req: Request) {
-    const { searchParams } = new URL(req.url);
-    const type = searchParams.get('type');
-
     try {
         const adminWalletsArray = getAdminWallets();
         const adminWallets = new Set(adminWalletsArray);
@@ -54,94 +51,63 @@ export async function GET(req: Request) {
             }
         }
 
-        if (type === 'inventory') {
-            const inventory: Record<string, any[]> = { founder: [], elite: [], immortal: [] };
+        const { data: salesData } = await supabase
+            .from('activities')
+            .select('token_id, price, from_address, to_address, created_at')
+            .eq('activity_type', 'Sale')
+            .order('created_at', { ascending: false })
+            .limit(500);
 
-            if (adminTokenIds.length > 0) {
-                const CHUNK_SIZE = 150;
-                for (let i = 0; i < adminTokenIds.length; i += CHUNK_SIZE) {
-                    const chunk = adminTokenIds.slice(i, i + CHUNK_SIZE);
-                    const { data } = await supabase
-                        .from('market_stats_view')
-                        .select('token_id, name, tier')
-                        .in('token_id', chunk);
-
-                    if (data) {
-                        data.forEach((stat: any) => {
-                            const idStr = stat.token_id.toString();
-                            const tier = (stat.tier || 'founder').toLowerCase();
-                            const item = {
-                                id: idStr,
-                                name: stat.name || `NNM #${idStr}`,
-                                wallet: adminTokenMap[idStr]
-                            };
-
-                            if (tier.includes('immortal')) inventory.immortal.push(item);
-                            else if (tier.includes('elite')) inventory.elite.push(item);
-                            else inventory.founder.push(item);
-                        });
-                    }
+        const sales = [];
+        if (salesData) {
+            for (const sale of salesData) {
+                const seller = sale.from_address?.toLowerCase();
+                const buyer = sale.to_address?.toLowerCase();
+                if (seller && adminWallets.has(seller) && (!buyer || !adminWallets.has(buyer))) {
+                    sales.push({
+                        id: sale.token_id,
+                        name: `NNM #${sale.token_id}`,
+                        price: sale.price,
+                        buyer: buyer || '',
+                        seller: seller,
+                        date: sale.created_at
+                    });
                 }
             }
-            return NextResponse.json({ success: true, inventory });
         }
 
-        if (type === 'external_activity') {
-            const { data: salesData } = await supabase
-                .from('activities')
-                .select('*')
-                .eq('activity_type', 'Sale')
-                .order('created_at', { ascending: false })
-                .limit(500);
+        const { data: offersData } = await supabase
+            .from('offers')
+            .select('token_id, price, bidder_address, expiration')
+            .neq('status', 'cancelled')
+            .order('created_at', { ascending: false })
+            .limit(500);
 
-            const sales = [];
-            if (salesData) {
-                for (const sale of salesData) {
-                    const seller = sale.from_address?.toLowerCase();
-                    const buyer = sale.to_address?.toLowerCase();
-                    if (seller && adminWallets.has(seller) && (!buyer || !adminWallets.has(buyer))) {
-                        sales.push({
-                            id: sale.token_id,
-                            name: `NNM #${sale.token_id}`,
-                            price: sale.price,
-                            buyer: buyer || '',
-                            seller: seller,
-                            date: sale.created_at
-                        });
-                    }
+        const offers = [];
+        if (offersData) {
+            const adminOwnedSet = new Set(adminTokenIds);
+            for (const offer of offersData) {
+                const bidder = offer.bidder_address?.toLowerCase();
+                if (adminOwnedSet.has(offer.token_id.toString()) && bidder && !adminWallets.has(bidder)) {
+                    offers.push({
+                        id: offer.token_id,
+                        name: `NNM #${offer.token_id}`,
+                        price: offer.price,
+                        wallet: bidder,
+                        expiry: new Date(offer.expiration * 1000).toLocaleDateString()
+                    });
                 }
             }
-
-            const { data: offersData } = await supabase
-                .from('offers')
-                .select('*')
-                .neq('status', 'cancelled')
-                .order('created_at', { ascending: false })
-                .limit(500);
-
-            const offers = [];
-            if (offersData) {
-                const adminOwnedSet = new Set(adminTokenIds);
-                for (const offer of offersData) {
-                    const bidder = offer.bidder_address?.toLowerCase();
-                    if (adminOwnedSet.has(offer.token_id.toString()) && bidder && !adminWallets.has(bidder)) {
-                        offers.push({
-                            id: offer.token_id,
-                            name: `NNM #${offer.token_id}`,
-                            price: offer.price,
-                            wallet: bidder,
-                            expiry: new Date(offer.expiration * 1000).toLocaleDateString()
-                        });
-                    }
-                }
-            }
-
-            return NextResponse.json({ success: true, sales, offers });
         }
 
-        return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+        return NextResponse.json({ 
+            success: true, 
+            adminTokenIds, 
+            adminTokenMap,
+            sales,
+            offers
+        });
     } catch (error: any) {
-        console.error("API Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -150,11 +116,9 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
         const { action } = body;
-        
         if (action === 'start' || action === 'stop') {
             return NextResponse.json({ success: true });
         }
-
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
