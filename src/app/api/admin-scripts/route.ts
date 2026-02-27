@@ -3,7 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 import { createPublicClient, http, parseAbi } from 'viem';
 import { polygon } from 'viem/chains';
 import { MARKETPLACE_ADDRESS } from '@/data/config';
-import adminWalletsData from '../../../../data/new_100_wallets_secret.json';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -20,7 +19,13 @@ const MARKET_ABI = parseAbi([
 
 export async function GET(req: Request) {
     try {
-        const adminWalletsArray = adminWalletsData.map((w: any) => w.address.toLowerCase());
+        const { data: walletsData, error: walletsError } = await supabase
+            .from('admin_wallets')
+            .select('address');
+
+        if (walletsError) throw walletsError;
+
+        const adminWalletsArray = walletsData.map((w: any) => w.address?.toLowerCase());
         const adminWallets = new Set(adminWalletsArray);
 
         const marketData = await publicClient.readContract({
