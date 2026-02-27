@@ -4,6 +4,8 @@ import { createPublicClient, http, parseAbi } from 'viem';
 import { polygon } from 'viem/chains';
 import { MARKETPLACE_ADDRESS } from '@/data/config';
 
+export const dynamic = 'force-dynamic';
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -17,13 +19,17 @@ const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
-export async function GET(req: Request) {
+export async function GET() {
     try {
         const { data: walletsData, error: walletsError } = await supabase
             .from('admin_wallets')
             .select('address');
 
         if (walletsError) throw walletsError;
+        
+        if (!walletsData || walletsData.length === 0) {
+            return NextResponse.json({ success: true, adminTokenIds: [], adminTokenMap: {}, sales: [], offers: [] });
+        }
 
         const adminWalletsArray = walletsData.map((w: any) => w.address?.toLowerCase());
         const adminWallets = new Set(adminWalletsArray);
