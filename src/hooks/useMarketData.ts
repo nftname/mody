@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { createPublicClient, http, parseAbi, formatEther } from 'viem';
-import { polygon } from 'viem/chains';
+import { parseAbi, formatEther } from 'viem';
+import { usePublicClient } from 'wagmi';
 import { supabase } from '@/lib/supabase';
 import { MARKETPLACE_ADDRESS, NFT_COLLECTION_ADDRESS } from '@/data/config';
 
@@ -15,12 +15,8 @@ const resolveIPFS = (uri: string) => {
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://ipfs.io/ipfs/') : uri;
 };
 
-const publicClient = createPublicClient({
-    chain: polygon,
-    transport: http("https://polygon-bor.publicnode.com")
-});
-
 export function useMarketData(timeFilter: string = 'All') {
+    const publicClient = usePublicClient();
     const [listings, setListings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [exchangeRates, setExchangeRates] = useState({ pol: 0, eth: 0 });
@@ -45,6 +41,7 @@ export function useMarketData(timeFilter: string = 'All') {
         let isMounted = true;
 
         const fetchMarketData = async () => {
+            if (!publicClient) return;
             if (isMounted) setLoading(true);
             try {
                 const data = await publicClient.readContract({
@@ -52,7 +49,7 @@ export function useMarketData(timeFilter: string = 'All') {
                     abi: MARKET_ABI,
                     functionName: 'getAllListings'
                 });
-                const [tokenIds, prices] = data;
+                const [tokenIds, prices] = data as [bigint[], bigint[], `0x${string}`[]];
                 
                 if (!tokenIds || tokenIds.length === 0) {
                     if (isMounted) {
@@ -171,7 +168,7 @@ export function useMarketData(timeFilter: string = 'All') {
         return () => {
             isMounted = false;
         };
-    }, []);
+    }, [publicClient]);
 
     const filteredData = useMemo(() => {
         let data = [...listings];
