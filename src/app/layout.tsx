@@ -5,6 +5,7 @@ import "./globals.css";
 import { Providers } from "@/app/providers";
 import MaintenanceGuardWrapper from "./MaintenanceGuardWrapper";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
+import PresenceTracker from "@/components/PresenceTracker";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -96,6 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
         <PWAInstallBanner />
         <Providers>
+            <PresenceTracker />
             <MaintenanceGuardWrapper>
                 {children}
             </MaintenanceGuardWrapper>

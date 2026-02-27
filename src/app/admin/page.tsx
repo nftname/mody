@@ -133,6 +133,7 @@ export default function AdminPage() {
   const [mintPrices, setMintPrices] = useState({ immortal: '', elite: '', founder: '' });
 
   const [filterType, setFilterType] = useState('ALL');
+  const [liveStats, setLiveStats] = useState({ total: 0, connected: 0, anonymous: 0 });
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [showCustomDate, setShowCustomDate] = useState(false);
@@ -169,6 +170,20 @@ export default function AdminPage() {
       setLoading(false);
     }
   }, [address, isConnected, filterType, affStart, affEnd, affWallet]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchLiveStats = async () => {
+      try {
+        const res = await fetch('/api/presence');
+        const data = await res.json();
+        setLiveStats(data);
+      } catch (e) {}
+    };
+    fetchLiveStats();
+    const interval = setInterval(fetchLiveStats, 10000);
+    return () => clearInterval(interval);
+  }, [isAdmin]);
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ show: true, msg, type });
@@ -304,24 +319,6 @@ export default function AdminPage() {
     showToast('Payout deleted', 'error');
   };
 
-  const visitors = useMemo(() => {
-    const oneDayAgo = Date.now() - 86400000;
-    const uniqueOff = new Set();
-    const uniqueOn = new Set();
-    let count24 = 0;
-
-    activities.forEach(act => {
-      const addr = act.from_address;
-      if (!addr) {
-        uniqueOff.add(act.id);
-      } else {
-        uniqueOn.add(addr);
-      }
-      if (new Date(act.created_at).getTime() > oneDayAgo) count24++;
-    });
-
-    return { off: uniqueOff.size, on: uniqueOn.size, total: uniqueOff.size + uniqueOn.size, last24: count24 };
-  }, [activities]);
 
   const stats = useMemo(() => {
     let immortalCount = 0, immortalVol = 0;
@@ -415,13 +412,24 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '20px', color: TEXT_MUTED }}>
-          <span>OFF: <strong style={{color: TEXT_PRIMARY}}>{visitors.off}</strong></span>
-          <span>ON: <strong style={{color: TEXT_PRIMARY}}>{visitors.on}</strong></span>
-          <span>TOTAL: <strong style={{color: TEXT_PRIMARY}}>{visitors.total}</strong></span>
-          <span>24H: <strong style={{color: TEXT_PRIMARY}}>{visitors.last24}</strong></span>
+        <div style={{ display: 'flex', gap: '35px', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '22px', fontWeight: '900', color: '#EAECEF' }}>{liveStats.anonymous}</div>
+            <div style={{ fontSize: '10px', color: '#848E9C', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Visitors</div>
+          </div>
+          <div style={{ width: '1px', height: '30px', backgroundColor: '#2B3139' }}></div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '22px', fontWeight: '900', color: '#00C851' }}>{liveStats.connected}</div>
+            <div style={{ fontSize: '10px', color: '#848E9C', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Connected Wallets</div>
+          </div>
+          <div style={{ width: '1px', height: '30px', backgroundColor: '#2B3139' }}></div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '22px', fontWeight: '900', color: '#FCD535' }}>{liveStats.total}</div>
+            <div style={{ fontSize: '10px', color: '#848E9C', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Total Online</div>
+          </div>
         </div>
       </div>
+
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '30px' }}>
         <input 
