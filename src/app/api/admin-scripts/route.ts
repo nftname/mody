@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { createPublicClient, http, parseAbi } from 'viem';
 import { polygon } from 'viem/chains';
@@ -17,16 +19,21 @@ const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
 
+const getAdminWallets = () => {
+    const walletsPath = path.join(process.cwd(), 'data', 'new_100_wallets_secret.json');
+    if (!fs.existsSync(walletsPath)) return [];
+    const data = JSON.parse(fs.readFileSync(walletsPath, 'utf8'));
+    return data.map((w: any) => w.address.toLowerCase());
+};
+
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get('type');
 
     try {
-        // 1. جلب المحافظ الإدارية من قاعدة البيانات
-        const { data: adminWalletsData } = await supabase.from('admin_wallets').select('wallet_address');
-        const adminWallets = new Set(adminWalletsData?.map(w => w.wallet_address.toLowerCase()) || []);
+        const adminWalletsArray = getAdminWallets();
+        const adminWallets = new Set(adminWalletsArray);
 
-        // 2. جلب الأصول مباشرة من العقد الذكي على البلوكتشين (مثل صفحة السوق تماماً)
         const marketData = await publicClient.readContract({
             address: MARKETPLACE_ADDRESS as `0x${string}`,
             abi: MARKET_ABI,
@@ -35,7 +42,6 @@ export async function GET(req: Request) {
         
         const [tokenIds, prices, sellers] = marketData as [bigint[], bigint[], string[]];
 
-        // 3. تصفية الأصول لتشمل فقط ما تملكه المحافظ الإدارية
         const adminTokenIds: string[] = [];
         const adminTokenMap: Record<string, string> = {}; 
 
@@ -52,7 +58,6 @@ export async function GET(req: Request) {
             const inventory: Record<string, any[]> = { founder: [], elite: [], immortal: [] };
 
             if (adminTokenIds.length > 0) {
-                // جلب الأسماء والرتب من نفس الـ View الذي يستخدمه السوق
                 const CHUNK_SIZE = 150;
                 for (let i = 0; i < adminTokenIds.length; i += CHUNK_SIZE) {
                     const chunk = adminTokenIds.slice(i, i + CHUNK_SIZE);
@@ -82,7 +87,6 @@ export async function GET(req: Request) {
         }
 
         if (type === 'external_activity') {
-            // جلب المبيعات الخارجية 
             const { data: salesData } = await supabase
                 .from('activities')
                 .select('*')
@@ -108,7 +112,6 @@ export async function GET(req: Request) {
                 }
             }
 
-            // جلب العروض الخارجية
             const { data: offersData } = await supabase
                 .from('offers')
                 .select('*')
@@ -138,6 +141,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json({ error: "Invalid type" }, { status: 400 });
     } catch (error: any) {
+        console.error("API Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
