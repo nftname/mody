@@ -1,31 +1,26 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const walletsPath = path.join(process.cwd(), 'data', 'new_100_wallets_secret.json');
-
-const getAdminWallets = () => {
-    if (!fs.existsSync(walletsPath)) return [];
-    const data = JSON.parse(fs.readFileSync(walletsPath, 'utf8'));
-    return data.map((w: any) => w.address.toLowerCase());
-};
+async function getAdminWallets() {
+    const { data } = await supabase.from('admin_wallets').select('wallet_address');
+    if (!data) return [];
+    return data.map((w: any) => w.wallet_address.toLowerCase());
+}
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get('type');
-    const adminWallets = getAdminWallets();
+    
+    const adminWallets = await getAdminWallets();
 
     if (type === 'inventory') {
         const inventory: Record<string, any[]> = { founder: [], elite: [], immortal: [] };
 
-        const { data: assets } = await supabase
-            .from('my_assets')
-            .select('*');
+        const { data: assets } = await supabase.from('my_assets').select('*');
 
         if (assets) {
             for (const asset of assets) {
@@ -44,9 +39,7 @@ export async function GET(req: Request) {
     }
 
     if (type === 'external_activity') {
-        const { data: assets } = await supabase
-            .from('my_assets')
-            .select('id, owner_wallet');
+        const { data: assets } = await supabase.from('my_assets').select('id, owner_wallet');
         
         const ownedIds = new Set<string>();
         if (assets) {
@@ -69,12 +62,12 @@ export async function GET(req: Request) {
             for (const sale of salesData) {
                 const seller = sale.from_address?.toLowerCase();
                 const buyer = sale.to_address?.toLowerCase();
-                if (adminWallets.includes(seller) && !adminWallets.includes(buyer)) {
+                if (seller && adminWallets.includes(seller) && (!buyer || !adminWallets.includes(buyer))) {
                     sales.push({
                         id: sale.token_id,
                         name: `NNM #${sale.token_id}`,
                         price: sale.price,
-                        buyer: buyer,
+                        buyer: buyer || '',
                         seller: seller,
                         date: sale.created_at
                     });
@@ -93,7 +86,7 @@ export async function GET(req: Request) {
         if (offersData) {
             for (const offer of offersData) {
                 const bidder = offer.bidder_address?.toLowerCase();
-                if (ownedIds.has(offer.token_id.toString()) && !adminWallets.includes(bidder)) {
+                if (ownedIds.has(offer.token_id.toString()) && bidder && !adminWallets.includes(bidder)) {
                     offers.push({
                         id: offer.token_id,
                         name: `NNM #${offer.token_id}`,
@@ -114,7 +107,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { action, scriptName, assetId } = body;
+        const { action, assetId } = body;
 
         if (action === 'remove_from_cache' && assetId) {
             const { error } = await supabase
