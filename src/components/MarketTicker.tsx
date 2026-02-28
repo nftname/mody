@@ -102,7 +102,7 @@ export default function MarketTicker() {
             let volYest = 0;
             const oneDay = 24 * 60 * 60 * 1000;
 
-            if (activities) {
+             if (activities) {
                 activities.forEach((act: any) => {
                     const tid = Number(act.token_id);
                     const actTime = new Date(act.created_at).getTime();
@@ -113,8 +113,12 @@ export default function MarketTicker() {
                         const price = Number(act.price) || 0;
                         volumeMap[tid] = (volumeMap[tid] || 0) + price;
 
-                        if (now - actTime <= oneDay) volToday += price;
-                        else if (now - actTime <= 2 * oneDay) volYest += price;
+                        const diff = now - actTime;
+                        if (diff >= 0 && diff <= oneDay) {
+                            volToday += price;
+                        } else if (diff > oneDay && diff <= 2 * oneDay) {
+                            volYest += price;
+                        }
                     }
 
                     if (act.activity_type === 'List') {
@@ -126,15 +130,15 @@ export default function MarketTicker() {
             }
             
             if (isMounted) {
-                let changePercent = 0;
+                let finalChange = 0;
                 if (volYest > 0) {
-                    changePercent = ((volToday - volYest) / volYest) * 100;
+                    finalChange = ((volToday - volYest) / volYest) * 100;
                 } else if (volToday > 0) {
-                    changePercent = 100;
+                    finalChange = 100;
+                    finalChange = 0;
                 }
-                setNnmVolChange(Number(changePercent.toFixed(2)));
+                setNnmVolChange(finalChange);
             }
-
             const getRealName = async (tokenId: bigint) => {
                 try {
                     const uri = await publicClient.readContract({
