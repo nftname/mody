@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,42 +8,18 @@ import {
   RainbowKitProvider,
   darkTheme,
 } from '@rainbow-me/rainbowkit';
-import {
-  metaMaskWallet,
-  trustWallet,
-  walletConnectWallet,
-  binanceWallet,
-  safepalWallet,
-  okxWallet,
-  bitgetWallet,
-} from '@rainbow-me/rainbowkit/wallets';
 import { WagmiProvider, http, fallback } from 'wagmi';
 import { polygon, mainnet, bsc } from 'viem/chains';
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nftnnm.com';
-const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '9e2e602f47e436db24b660ee7f01f141';
 
 const config = getDefaultConfig({
   appName: 'NNM Market',
   appDescription: 'Nexus Digital Name NFTs Market',
   appUrl: origin,
   appIcon: `${origin}/icons/icon.svg`,
-  projectId: projectId,
-  wallets: [
-    {
-      groupName: 'Recommended',
-      wallets: [
-        metaMaskWallet,
-        trustWallet,
-        walletConnectWallet,
-        binanceWallet,
-        safepalWallet,
-        okxWallet,
-        bitgetWallet,
-      ],
-    },
-  ],
+  projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '9e2e602f47e436db24b660ee7f01f141',
   chains: [polygon, mainnet, bsc],
   transports: {
     [polygon.id]: fallback([
@@ -69,16 +46,9 @@ const config = getDefaultConfig({
   ssr: true,
 });
 
-export function Providers({ children }: { children: React.ReactNode }) {
-  // إنشاء QueryClient داخل المكون لضمان استقرار الحالة عند العودة من المحفظة
-  const [queryClient] = React.useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        refetchOnWindowFocus: true, // لإعادة جلب الحالة فور العودة للمتصفح
-      },
-    },
-  }));
+const queryClient = new QueryClient();
 
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
