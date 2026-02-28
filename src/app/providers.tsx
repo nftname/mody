@@ -21,7 +21,6 @@ import { polygon, mainnet, bsc } from 'viem/chains';
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nftnnm.com';
-
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '9e2e602f47e436db24b660ee7f01f141';
 
 const config = getDefaultConfig({
@@ -70,9 +69,16 @@ const config = getDefaultConfig({
   ssr: true,
 });
 
-const queryClient = new QueryClient();
-
 export function Providers({ children }: { children: React.ReactNode }) {
+  // إنشاء QueryClient داخل المكون لضمان استقرار الحالة عند العودة من المحفظة
+  const [queryClient] = React.useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: true, // لإعادة جلب الحالة فور العودة للمتصفح
+      },
+    },
+  }));
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
