@@ -5,7 +5,98 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useRef, useState, useEffect } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useMarketData } from '@/hooks/useMarketData';
+  // --- NEW THEME COLORS ---
+  const exactDarkColor = '#181A20'; 
+  const drawerBgColor = '#181A20'; 
+  
+  const dropdownColor = '#1E2329'; 
+  const metallicGoldHex = '#FCD535'; 
+  const subtleBorder = '#2B3139'; 
+  const offWhiteText = '#EAECEF';
+  const matteGoldIcon = '#FCD535';
+  const mutedText = '#848E9C';
 
+  const elementHeight = '29px'; 
+  const elementFontSize = '11px';
+  const navFontSize = '11.7px'; 
+  const dropDownSmallFont = '10.5px';
+
+  // --- START WALLET LOGIC ---
+  const customDisconnectStyle = {
+    background: 'transparent',
+    color: metallicGoldHex,
+    border: `1px solid ${metallicGoldHex}`,
+    fontWeight: '600' as const,
+    fontSize: elementFontSize,
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+    cursor: 'pointer',
+    padding: '0 8px',
+    transition: 'all 0.2s ease',
+    letterSpacing: '0.5px',
+    whiteSpace: 'nowrap' as const
+  };
+
+  const customConnectStyle = {
+    background: '#1E2329', 
+    color: offWhiteText, 
+    border: `1px solid ${subtleBorder}`, 
+    fontWeight: '500' as const,
+    fontSize: elementFontSize,
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+    cursor: 'pointer',
+    gap: '6px',
+    padding: '0 8px'
+  };
+
+  const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
+    const height = isMobile ? '28px' : elementHeight; 
+    const minWidth = isMobile ? '80px' : '110px'; 
+    const fontSize = isMobile ? '11px' : elementFontSize;
+    const btnText = isMobile ? 'Connect' : 'Connect Wallet'; 
+
+    return (
+      <div style={{ position: 'relative', height: height, minWidth: minWidth, display: 'inline-block' }}>
+        <ConnectButton.Custom>
+          {({ account, chain, openAccountModal, openConnectModal, authenticationStatus, mounted }) => {
+            const ready = mounted && authenticationStatus !== 'loading';
+            const connected = ready && account && chain && (!authenticationStatus || authenticationStatus === 'authenticated');
+            return (
+              <div style={{ width: '100%', height: '100%' }}>
+                {(() => {
+                  if (!ready) {
+                    return ( <div style={{ background: '#1E2329', border: '1px solid transparent', borderRadius: '6px', width: '100%', height: '100%', cursor: 'default' }} aria-hidden="true"></div> );
+                  }
+                  if (!connected) {
+                    return ( <div onClick={openConnectModal} style={customDisconnectStyle} className="hover-effect-btn"> {btnText} </div> );
+                  }
+                  if (chain.unsupported) {
+                    return ( <div onClick={openConnectModal} style={{...customDisconnectStyle, borderColor: '#ff4d4d', color: '#ff4d4d'}}> Wrong Net </div> );
+                  }
+                  return (
+                    <div onClick={openAccountModal} style={{...customConnectStyle, fontSize}}>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#27ae60', boxShadow: '0 0 8px rgba(39, 174, 96, 0.6)', flexShrink: 0 }}></div>
+                        <span style={{ fontFamily: 'monospace', letterSpacing: '0.5px' }}> {account.displayName} </span>
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          }}
+        </ConnectButton.Custom>
+      </div>
+    );
+  };
+  // --- END WALLET LOGIC ---
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -117,98 +208,7 @@ const Navbar = () => {
     setTouchStart(null); setTouchEnd(null);
   };
 
-  // --- NEW THEME COLORS ---
-  const exactDarkColor = '#181A20'; 
-  const drawerBgColor = '#181A20'; 
-  
-  const dropdownColor = '#1E2329'; 
-  const metallicGoldHex = '#FCD535'; 
-  const subtleBorder = '#2B3139'; 
-  const offWhiteText = '#EAECEF';
-  const matteGoldIcon = '#FCD535';
-  const mutedText = '#848E9C';
 
-  const elementHeight = '29px'; 
-  const elementFontSize = '11px';
-  const navFontSize = '11.7px'; 
-  const dropDownSmallFont = '10.5px';
-
-  // --- START WALLET LOGIC ---
-  const customDisconnectStyle = {
-    background: 'transparent',
-    color: metallicGoldHex,
-    border: `1px solid ${metallicGoldHex}`,
-    fontWeight: '600' as const,
-    fontSize: elementFontSize,
-    borderRadius: '6px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-    cursor: 'pointer',
-    padding: '0 8px',
-    transition: 'all 0.2s ease',
-    letterSpacing: '0.5px',
-    whiteSpace: 'nowrap' as const
-  };
-
-  const customConnectStyle = {
-    background: '#1E2329', 
-    color: offWhiteText, 
-    border: `1px solid ${subtleBorder}`, 
-    fontWeight: '500' as const,
-    fontSize: elementFontSize,
-    borderRadius: '6px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-    cursor: 'pointer',
-    gap: '6px',
-    padding: '0 8px'
-  };
-
-  const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
-    const height = isMobile ? '28px' : '29px'; 
-    const width = isMobile ? '80px' : '110px'; 
-    const fontSize = isMobile ? '11px' : '11px';
-    const btnText = isMobile ? 'Connect' : 'Connect Wallet'; 
-
-    return (
-      <div style={{ position: 'relative', height: height, width: width, flexShrink: 0 }}>
-        <ConnectButton.Custom>
-          {({ account, chain, openAccountModal, openConnectModal, authenticationStatus, mounted }) => {
-            const ready = mounted && authenticationStatus !== 'loading';
-            const connected = ready && account && chain && (!authenticationStatus || authenticationStatus === 'authenticated');
-            return (
-              <div style={{ width: '100%', height: '100%' }}>
-                {(() => {
-                  if (!ready) {
-                    return ( <div style={{ background: '#1E2329', border: '1px solid transparent', borderRadius: '6px', width: '100%', height: '100%', cursor: 'default' }} aria-hidden="true"></div> );
-                  }
-                  if (!connected) {
-                    return ( <div onClick={openConnectModal} style={customDisconnectStyle} className="hover-effect-btn"> {btnText} </div> );
-                  }
-                  if (chain.unsupported) {
-                    return ( <div onClick={openConnectModal} style={{...customDisconnectStyle, borderColor: '#ff4d4d', color: '#ff4d4d'}}> Wrong Net </div> );
-                  }
-                  return (
-                    <div onClick={openAccountModal} style={{...customConnectStyle, fontSize}}>
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#27ae60', boxShadow: '0 0 8px rgba(39, 174, 96, 0.6)', flexShrink: 0 }}></div>
-                        <span style={{ fontFamily: 'monospace', letterSpacing: '0.5px' }}> {account.displayName} </span>
-                    </div>
-                  );
-                })()}
-              </div>
-            );
-          }}
-        </ConnectButton.Custom>
-      </div>
-    );
-  };
-  // --- END WALLET LOGIC ---
 
   const portfolioBtnStyle = {
     color: metallicGoldHex, 
