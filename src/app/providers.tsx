@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -8,6 +7,15 @@ import {
   RainbowKitProvider,
   darkTheme,
 } from '@rainbow-me/rainbowkit';
+import {
+  metaMaskWallet,
+  trustWallet,
+  walletConnectWallet,
+  binanceWallet,
+  safepalWallet,
+  okxWallet,
+  bitgetWallet,
+} from '@rainbow-me/rainbowkit/wallets';
 import { WagmiProvider, http, fallback } from 'wagmi';
 import { polygon, mainnet, bsc } from 'viem/chains';
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
@@ -20,6 +28,20 @@ const config = getDefaultConfig({
   appUrl: origin,
   appIcon: `${origin}/icons/icon.svg`,
   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '9e2e602f47e436db24b660ee7f01f141',
+  wallets: [
+    {
+      groupName: 'Recommended',
+      wallets: [
+        metaMaskWallet,
+        trustWallet,
+        walletConnectWallet,
+        binanceWallet,
+        safepalWallet,
+        okxWallet,
+        bitgetWallet,
+      ],
+    },
+  ],
   chains: [polygon, mainnet, bsc],
   transports: {
     [polygon.id]: fallback([
