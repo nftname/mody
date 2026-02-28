@@ -102,23 +102,22 @@ export default function MarketTicker() {
             let volYest = 0;
             const oneDay = 24 * 60 * 60 * 1000;
 
-             if (activities) {
+            if (activities) {
                 activities.forEach((act: any) => {
                     const tid = Number(act.token_id);
-                    const actTime = new Date(act.created_at).getTime();
-                    
-                    if (isNaN(actTime)) return;
+                    let actTime: number;
+                    try {
+                        const dateStr = act.created_at.includes('Z') ? act.created_at : act.created_at + 'Z';
+                        actTime = new Date(dateStr).getTime();
+                        if (isNaN(actTime)) actTime = new Date(act.created_at).getTime();
+                    } catch { actTime = new Date(act.created_at).getTime(); }
 
                     if (act.activity_type === 'Sale') {
                         const price = Number(act.price) || 0;
                         volumeMap[tid] = (volumeMap[tid] || 0) + price;
 
-                        const diff = now - actTime;
-                        if (diff >= 0 && diff <= oneDay) {
-                            volToday += price;
-                        } else if (diff > oneDay && diff <= 2 * oneDay) {
-                            volYest += price;
-                        }
+                        if (now - actTime <= oneDay) volToday += price;
+                        else if (now - actTime <= 2 * oneDay) volYest += price;
                     }
 
                     if (act.activity_type === 'List') {
@@ -130,15 +129,9 @@ export default function MarketTicker() {
             }
             
             if (isMounted) {
-                let finalChange = 0;
-                if (volYest > 0) {
-                    finalChange = ((volToday - volYest) / volYest) * 100;
-                } else if (volToday > 0) {
-                    finalChange = 100;
-                    finalChange = 0;
-                }
-                setNnmVolChange(finalChange);
+                setNnmVolChange(volYest === 0 ? (volToday > 0 ? 100 : 0) : ((volToday - volYest) / volYest) * 100);
             }
+
             const getRealName = async (tokenId: bigint) => {
                 try {
                     const uri = await publicClient.readContract({
@@ -204,16 +197,15 @@ export default function MarketTicker() {
 
   const items = useMemo(() => {
     const marketItems = [
-        { id: 'ngx', label: 'NGX INDEX', value: ngxIndex.val, change: Number(ngxIndex.change), link: '/ngx' },
-        { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: Number(ngxCap.change), link: '/ngx' },
-        { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: Number(ngxVol.change), link: '/ngx' },
+        { id: 'ngx', label: 'NGX INDEX', value: ngxIndex.val, change: ngxIndex.change, link: '/ngx' },
+        { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: ngxCap.change, link: '/ngx' },
+        { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: ngxVol.change, link: '/ngx' },
         
-        { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2})}`, change: Number(prices.ethChange.toFixed(2)), link: '/market' },
-        { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: Number(prices.polChange.toFixed(2)), link: '/market' },
+        { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: prices.ethChange, link: '/market' },
+        { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: prices.polChange, link: '/market' },
         
         { id: 'nnm', label: 'NNM VOL', value: '24H', change: nnmVolChange, link: '/market' },
     ];
-
 
     const combined = [...marketItems, ...newItems, ...topItems];
     return [...combined, ...combined]; 
@@ -254,13 +246,13 @@ export default function MarketTicker() {
                 </span>
               )}
               
-              {item.change !== undefined && (
+              {(item.change !== undefined && item.change !== 0) && (
                 <span style={{ 
                     color: item.change >= 0 ? '#0ecb81' : '#f6465d', 
                     fontSize: '10px', 
                     fontWeight: '600'
                 }}>
-                  {item.change > 0 ? '▲' : item.change < 0 ? '▼' : '▲'} {Math.abs(item.change).toFixed(2)}%
+                  {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change).toFixed(2)}%
                 </span>
               )}
             </div>
