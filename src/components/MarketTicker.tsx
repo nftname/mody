@@ -129,7 +129,9 @@ export default function MarketTicker() {
             }
             
             if (isMounted) {
-                setNnmVolChange(volYest === 0 ? (volToday > 0 ? 100 : 0) : ((volToday - volYest) / volYest) * 100);
+                let rawChange = volYest === 0 ? (volToday > 0 ? 100 : 0) : ((volToday - volYest) / volYest) * 100;
+                let clampedChange = Math.min(Math.max(rawChange, -5), 30);
+                setNnmVolChange(clampedChange);
             }
 
             const getRealName = async (tokenId: bigint) => {
@@ -246,7 +248,7 @@ export default function MarketTicker() {
                 </span>
               )}
               
-              {(item.change !== undefined && item.change !== 0) && (
+              {(item.change !== undefined) && (
                 <span style={{ 
                     color: item.change >= 0 ? '#0ecb81' : '#f6465d', 
                     fontSize: '10px', 
