@@ -105,12 +105,9 @@ export default function MarketTicker() {
             if (activities) {
                 activities.forEach((act: any) => {
                     const tid = Number(act.token_id);
-                    let actTime: number;
-                    try {
-                        const dateStr = act.created_at.includes('Z') ? act.created_at : act.created_at + 'Z';
-                        actTime = new Date(dateStr).getTime();
-                        if (isNaN(actTime)) actTime = new Date(act.created_at).getTime();
-                    } catch { actTime = new Date(act.created_at).getTime(); }
+                    const actTime = new Date(act.created_at).getTime();
+                    
+                    if (isNaN(actTime)) return;
 
                     if (act.activity_type === 'Sale') {
                         const price = Number(act.price) || 0;
@@ -129,7 +126,13 @@ export default function MarketTicker() {
             }
             
             if (isMounted) {
-                setNnmVolChange(volYest === 0 ? (volToday > 0 ? 100 : 0) : ((volToday - volYest) / volYest) * 100);
+                let changePercent = 0;
+                if (volYest > 0) {
+                    changePercent = ((volToday - volYest) / volYest) * 100;
+                } else if (volToday > 0) {
+                    changePercent = 100;
+                }
+                setNnmVolChange(Number(changePercent.toFixed(2)));
             }
 
             const getRealName = async (tokenId: bigint) => {
@@ -197,15 +200,16 @@ export default function MarketTicker() {
 
   const items = useMemo(() => {
     const marketItems = [
-        { id: 'ngx', label: 'NGX INDEX', value: ngxIndex.val, change: ngxIndex.change, link: '/ngx' },
-        { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: ngxCap.change, link: '/ngx' },
-        { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: ngxVol.change, link: '/ngx' },
+        { id: 'ngx', label: 'NGX INDEX', value: ngxIndex.val, change: Number(ngxIndex.change), link: '/ngx' },
+        { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: Number(ngxCap.change), link: '/ngx' },
+        { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: Number(ngxVol.change), link: '/ngx' },
         
-        { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: prices.ethChange, link: '/market' },
-        { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: prices.polChange, link: '/market' },
+        { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2})}`, change: Number(prices.ethChange.toFixed(2)), link: '/market' },
+        { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: Number(prices.polChange.toFixed(2)), link: '/market' },
         
         { id: 'nnm', label: 'NNM VOL', value: '24H', change: nnmVolChange, link: '/market' },
     ];
+
 
     const combined = [...marketItems, ...newItems, ...topItems];
     return [...combined, ...combined]; 
@@ -246,13 +250,13 @@ export default function MarketTicker() {
                 </span>
               )}
               
-              {(item.change !== undefined && item.change !== 0) && (
+              {item.change !== undefined && (
                 <span style={{ 
                     color: item.change >= 0 ? '#0ecb81' : '#f6465d', 
                     fontSize: '10px', 
                     fontWeight: '600'
                 }}>
-                  {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change).toFixed(2)}%
+                  {item.change > 0 ? '▲' : item.change < 0 ? '▼' : '▲'} {Math.abs(item.change).toFixed(2)}%
                 </span>
               )}
             </div>
