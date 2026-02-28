@@ -63,17 +63,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-TileImage" content="/icons/icon-192x192.png" />
       </head>
       <body className={inter.className}>
-        <Script src="https://cdn.jsdelivr.net/npm/eruda" strategy="beforeInteractive" />
-<Script id="eruda-init" strategy="afterInteractive">
-  {`
-    if (typeof window !== 'undefined') {
-      window.onload = function () {
-        eruda.init();
-      };
-    }
-  `}
-</Script>
-
         <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="afterInteractive" />
         <Script id="sw-unregister" strategy="afterInteractive">
           {`
