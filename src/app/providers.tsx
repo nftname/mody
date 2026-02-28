@@ -22,12 +22,14 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nftnnm.com';
 
+const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '9e2e602f47e436db24b660ee7f01f141';
+
 const config = getDefaultConfig({
   appName: 'NNM Market',
   appDescription: 'Nexus Digital Name NFTs Market',
   appUrl: origin,
   appIcon: `${origin}/icons/icon.svg`,
-  projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '9e2e602f47e436db24b660ee7f01f141',
+  projectId: projectId,
   wallets: [
     {
       groupName: 'Recommended',
