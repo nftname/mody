@@ -171,13 +171,13 @@ const Navbar = () => {
   };
 
   const CustomWalletTrigger = ({ isMobile }: { isMobile: boolean }) => {
-    const height = isMobile ? '28px' : elementHeight; 
-    const minWidth = isMobile ? '80px' : '110px'; 
-    const fontSize = isMobile ? '11px' : elementFontSize;
+    const height = isMobile ? '28px' : '29px'; 
+    const width = isMobile ? '80px' : '110px'; 
+    const fontSize = isMobile ? '11px' : '11px';
     const btnText = isMobile ? 'Connect' : 'Connect Wallet'; 
 
     return (
-      <div style={{ position: 'relative', height: height, minWidth: minWidth, display: 'inline-block' }}>
+      <div style={{ position: 'relative', height: height, width: width, flexShrink: 0 }}>
         <ConnectButton.Custom>
           {({ account, chain, openAccountModal, openConnectModal, authenticationStatus, mounted }) => {
             const ready = mounted && authenticationStatus !== 'loading';

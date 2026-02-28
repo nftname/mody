@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -59,7 +60,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 fontStack: 'system',
                 overlayBlur: 'small',
             })}
-            modalSize="compact"
+            modalSize="wide"
         >
           {children}
         </RainbowKitProvider>
