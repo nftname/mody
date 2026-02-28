@@ -854,7 +854,7 @@ const formatPriceDisplay = (price: string) => {
         }
 
         if (isOwner) {
-            if (listing) {
+            if (listing && address && listing.seller.toLowerCase() === address.toLowerCase()) {
                 return <button onClick={handleCancelListing} disabled={isPending} className={btnClass} style={{ ...OUTLINE_BTN_STYLE, borderRadius: '12px', width: mobile ? '65%' : '100%', maxWidth: mobile ? '500px' : 'none', fontSize: '16px' }}>Cancel Listing</button>;
             }
             return (
