@@ -24,7 +24,6 @@ export default function MarketTicker() {
   const [ngxIndex, setNgxIndex] = useState({ val: '84.2', change: 1.5 });
   const [ngxCap, setNgxCap] = useState({ val: '$2.54B', change: 4.88 });
   const [ngxVol, setNgxVol] = useState({ val: '2.4M', change: 0.86 });
-  const [nnmVolChange, setNnmVolChange] = useState(0);
   
   const [topItems, setTopItems] = useState<any[]>([]);
   const [newItems, setNewItems] = useState<any[]>([]);
@@ -97,10 +96,6 @@ export default function MarketTicker() {
 
             const volumeMap: Record<number, number> = {};
             const latestListTimeMap: Record<number, number> = {};
-            
-            let volToday = 0; 
-            let volYest = 0;
-            const oneDay = 24 * 60 * 60 * 1000;
 
             if (activities) {
                 activities.forEach((act: any) => {
@@ -115,9 +110,6 @@ export default function MarketTicker() {
                     if (act.activity_type === 'Sale') {
                         const price = Number(act.price) || 0;
                         volumeMap[tid] = (volumeMap[tid] || 0) + price;
-
-                        if (now - actTime <= oneDay) volToday += price;
-                        else if (now - actTime <= 2 * oneDay) volYest += price;
                     }
 
                     if (act.activity_type === 'List') {
@@ -126,12 +118,6 @@ export default function MarketTicker() {
                         }
                     }
                 });
-            }
-            
-            if (isMounted) {
-                let rawChange = volYest === 0 ? (volToday > 0 ? 100 : 0) : ((volToday - volYest) / volYest) * 100;
-                let clampedChange = Math.min(Math.max(rawChange, -5), 30);
-                setNnmVolChange(clampedChange);
             }
 
             const getRealName = async (tokenId: bigint) => {
@@ -206,12 +192,12 @@ export default function MarketTicker() {
         { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: prices.ethChange, link: '/market' },
         { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: prices.polChange, link: '/market' },
         
-        { id: 'nnm', label: 'NNM VOL', value: '24H', change: nnmVolChange, link: '/market' },
+        { id: 'nnm-static', label: 'NNM Sovereign Assets', link: '/market', isStatic: true },
     ];
 
     const combined = [...marketItems, ...newItems, ...topItems];
     return [...combined, ...combined]; 
-  }, [prices, ngxIndex, ngxCap, ngxVol, nnmVolChange, newItems, topItems]);
+  }, [prices, ngxIndex, ngxCap, ngxVol, newItems, topItems]);
 
   return (
     <div className="w-100 overflow-hidden position-relative border-bottom border-secondary border-opacity-25" 
@@ -228,34 +214,47 @@ export default function MarketTicker() {
           <Link href={item.link} key={`${item.id}-${index}`} className="text-decoration-none h-100 d-flex align-items-center ticker-link">
             <div className="d-flex align-items-center px-4 h-100" style={{ whiteSpace: 'nowrap' }}>
               
-              <span className="me-2" style={{ 
-                  color: '#FCD535', 
-                  fontSize: '11px', 
-                  fontWeight: '800', 
-                  letterSpacing: '0.5px' 
-              }}>
-                {item.label}:
-              </span>
-              
-              {item.value && (
-                <span className="me-2" style={{ 
-                    fontSize: '12px',
-                    fontWeight: '500', 
-                    fontFamily: '"Inter", sans-serif',
-                    color: '#EAECEF' 
-                }}>
-                    {item.value}
-                </span>
-              )}
-              
-              {(item.change !== undefined) && (
+              {item.isStatic ? (
                 <span style={{ 
-                    color: item.change >= 0 ? '#0ecb81' : '#f6465d', 
-                    fontSize: '10px', 
-                    fontWeight: '600'
+                    color: '#FCD535', 
+                    fontSize: '11px', 
+                    fontWeight: '800', 
+                    letterSpacing: '0.5px' 
                 }}>
-                  {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change).toFixed(2)}%
+                  {item.label}
                 </span>
+              ) : (
+                <>
+                  <span className="me-2" style={{ 
+                      color: '#FCD535', 
+                      fontSize: '11px', 
+                      fontWeight: '800', 
+                      letterSpacing: '0.5px' 
+                  }}>
+                    {item.label}:
+                  </span>
+                  
+                  {item.value && (
+                    <span className="me-2" style={{ 
+                        fontSize: '12px',
+                        fontWeight: '500', 
+                        fontFamily: '"Inter", sans-serif',
+                        color: '#EAECEF' 
+                    }}>
+                        {item.value}
+                    </span>
+                  )}
+                  
+                  {(item.change !== undefined) && (
+                    <span style={{ 
+                        color: item.change >= 0 ? '#0ecb81' : '#f6465d', 
+                        fontSize: '10px', 
+                        fontWeight: '600'
+                    }}>
+                      {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change).toFixed(2)}%
+                    </span>
+                  )}
+                </>
               )}
             </div>
             <div style={{ width: '1px', height: '14px', backgroundColor: 'rgba(255,255,255,0.1)' }}></div>
