@@ -10,13 +10,13 @@ import PresenceTracker from "@/components/PresenceTracker";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  metadataBase: new URL('https://nnm.market'),
+  metadataBase: new URL('https://nftnnm.com'),
   title: 'NNM | Digital Name Assets',
   description: 'The definitive marketplace for NFT Digital Identity. Secure your immutable priority on the blockchain. True ownership. Non-custodial.',
   openGraph: {
     title: 'NNM | Digital Name Assets',
     description: 'The definitive marketplace for NFT Digital Identity.',
-    url: 'https://nnm.market',
+    url: 'https://nftnnm.com',
     siteName: 'NNM Market',
     images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
     locale: 'en_US',
