@@ -430,7 +430,7 @@ const MintContent = () => {
 
                         <div className="d-flex d-md-none flex-column align-items-end mt-1">
                             <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px', lineHeight: '1' }}>FREE</span>
-                            <span style={{ fontSize: '11px', color: '#0ecb81', lineHeight: '1', marginTop: '2px' }}>15 Days</span>
+                            <span style={{ fontSize: '11px', color: '#0ecb81', lineHeight: '1', marginTop: '2px' }}>End March 31</span>
                         </div>
                     </div>
                 }
