@@ -189,7 +189,7 @@ export default function NNMConceptPage() {
                     <p>Some names are inherently scarce. Short character strings, culturally resonant words, and timeless identifiers often attract attention simply by their nature.</p>
                     <p className="fw-bold text-white">The Immortals Tier is designed for such names.</p>
                     <p>Names minted under this tier carry a higher minting fee, not as a signal of guaranteed value, but as a reflection of personal intent. The protocol does not assign worth to the name. The registrant does.</p>
-                    <p>Minting within the Immortals Tier does not ensure visibility, demand, liquidity, or market activity. It represents a deliberate decision at the point of creation, nothing more.</p>
+                    <p>Minting within the Immortals Tier does not ensure visibility, demand, utility, or network activity. It represents a deliberate decision at the point of creation, nothing more.</p>
                 </div>
             </div>
         </div>

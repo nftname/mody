@@ -1,16 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-// Color Palette Constants matching the Page Design
 const COLORS = {
-  MODAL_BG: '#1E2329',      // Binance Card BG
-  BORDER: '#2B3139',        // Subtle Dark Border
-  TEXT_HEAD: '#EAECEF',     // Off-White for Headings
-  TEXT_BODY: '#848E9C',     // Muted Blue-Grey for Text
-  TEXT_HIGHLIGHT: '#CFD6E0',// Platinum for strong warnings
-  GOLD_MAIN: '#FCD535',     // Binance Gold
-  SCROLL_TRACK: '#181A20',  // Darkest BG for scroll track
-  SCROLL_THUMB: '#474D57'   // Scroll thumb color
+  MODAL_BG: '#1E2329',      
+  BORDER: '#2B3139',        
+  TEXT_HEAD: '#EAECEF',    
+  TEXT_BODY: '#848E9C',    
+  TEXT_HIGHLIGHT: '#CFD6E0',
+  GOLD_MAIN: '#FCD535',     
+  SCROLL_TRACK: '#181A20',  
+  SCROLL_THUMB: '#474D57'   
 };
 
 export default function LegalModal() {
@@ -18,7 +17,6 @@ export default function LegalModal() {
 
   useEffect(() => {
     const checkTerms = () => {
-        // IMPORTANT: Updated version to 'v9' to force re-acceptance of the new 19 clauses
         const hasAccepted = localStorage.getItem('nnm_terms_accepted_v9');
         if (!hasAccepted) {
           setShowModal(true);
@@ -33,7 +31,6 @@ export default function LegalModal() {
   };
 
   const handleCancel = () => {
-    // Redirect or handle refusal
     window.location.href = 'https://google.com';
   };
 
@@ -46,7 +43,7 @@ export default function LegalModal() {
       left: 0, 
       width: '100%', 
       height: '100%', 
-      backgroundColor: 'rgba(0, 0, 0, 0.85)', // Slightly darker overlay for focus
+      backgroundColor: 'rgba(0, 0, 0, 0.85)', 
       backdropFilter: 'blur(8px)',
       zIndex: 999999, 
       display: 'flex', 
@@ -64,7 +61,7 @@ export default function LegalModal() {
         .legal-ul li { margin-bottom: 6px; list-style-type: disc; color: ${COLORS.TEXT_BODY}; font-weight: 400; }
         .legal-ul li::marker { color: ${COLORS.GOLD_MAIN}; }
         
-        .legal-term-title { margin-top: 16px; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: ${COLORS.TEXT_HEAD}; }
+        .legal-term-title { margin-top: 16px; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: ${COLORS.TEXT_HEAD}; text-transform: uppercase; }
         .legal-p { margin-bottom: 12px; }
       `}</style>
 
@@ -80,7 +77,6 @@ export default function LegalModal() {
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
       }}>
         
-        {/* Header */}
         <div className="p-4 border-bottom" style={{ borderColor: COLORS.BORDER }}>
           <h5 className="fw-bold m-0" style={{ fontFamily: 'sans-serif', fontSize: '22px', color: COLORS.TEXT_HEAD, letterSpacing: '-0.5px' }}>
             <span style={{ color: COLORS.GOLD_MAIN }}>NNM</span> Terms of Service
@@ -90,7 +86,6 @@ export default function LegalModal() {
           </p>
         </div>
 
-        {/* Scrollable Content */}
         <div className="legal-scroll p-4" style={{ 
           overflowY: 'auto', 
           flex: 1,
@@ -100,7 +95,6 @@ export default function LegalModal() {
           lineHeight: '1.6', 
           textAlign: 'left'
         }}>
-            {/* Intro */}
             <div className="p-3 mb-4 rounded-3" style={{ backgroundColor: '#181A20', border: `1px solid ${COLORS.BORDER}` }}>
               <p className="m-0">
                 <strong style={{ color: COLORS.GOLD_MAIN }}>IMPORTANT NOTICE:</strong> By accessing, browsing, connecting a wallet to, minting, listing, interacting with, or otherwise using the NFT Name Market (NNM) website, interface, smart contracts, or ChainFace services (collectively, the “Protocol”), you acknowledge that you have read, understood, and irrevocably agree to be legally bound by this Agreement. If you do not agree, you must immediately discontinue all access.
@@ -123,16 +117,21 @@ export default function LegalModal() {
               <li>NNM does not hold, control, or access user funds or private keys.</li>
               <li>All transactions are peer-to-peer and executed solely by users through their own wallets.</li>
               <li>NNM does not guarantee liquidity, execution, or value of any asset.</li>
+              <li>Users acknowledge that NNM is a neutral interface and does not mediate or intervene in transactions.</li>
             </ul>
 
             <p className="legal-term-title">3. DECENTRALIZED & JURISDICTION-NEUTRAL OPERATION</p>
-            <p className="legal-p">
-              NNM operates globally and is jurisdiction-agnostic. NNM does not solicit, target, or conduct business in any specific country and has no physical presence for financial operations. Users assume full responsibility for compliance with local laws.
-            </p>
+            <p className="legal-p">NNM operates globally and is jurisdiction-agnostic.</p>
+            <ul className="legal-ul">
+              <li>NNM does not solicit, target, or conduct business in any specific country.</li>
+              <li>NNM has no physical presence for financial operations.</li>
+              <li>Users assume full responsibility for compliance with local laws and regulations.</li>
+              <li>NNM assumes no liability for jurisdiction-specific regulatory obligations.</li>
+            </ul>
 
             <p className="legal-term-title">4. NO FINANCIAL, INVESTMENT, OR LEGAL ADVICE</p>
             <p className="legal-p">
-              All content is informational only. NNM provides no investment, financial, tax, or legal advice. Users act at their own risk. Users must seek independent professional counsel for any financial decisions.
+              All content is informational only. NNM provides no investment, financial, tax, or legal advice. Users act at their own risk. Users must seek independent professional counsel for any financial, investment, or legal decisions.
             </p>
 
             <p className="legal-term-title">5. DIGITAL ASSET CLASSIFICATION</p>
@@ -142,89 +141,140 @@ export default function LegalModal() {
               <li>Not securities, equities, or investment contracts.</li>
               <li>Not granting trademark, publicity, or commercial rights outside the blockchain.</li>
               <li>Not guaranteeing exclusivity, enforceability, or financial appreciation.</li>
+              <li>Users acknowledge that minting does not imply ownership rights beyond blockchain metadata.</li>
             </ul>
 
             <p className="legal-term-title">6. MARKET ACTIVITY & ADMIN/OPERATIONAL WALLETS</p>
             <p className="legal-p">
-              NNM may operate an Initial Market Testing Phase for up to ninety (90) days using authorized Operational and Admin Wallets. Such wallets are used for technical testing, initial liquidity, and educational evaluation.
+              NNM may operate an Initial Market Testing Phase for up to ninety (90) days using authorized Operational and Admin Wallets:
             </p>
-            <p className="legal-p">
-              Trades via Operational/Admin Wallets do not constitute financial advice. <strong style={{ color: COLORS.TEXT_HEAD }}>After the 90-day testing period</strong>, Operational/Admin Wallets cease experimental activities, and the marketplace operates fully user-driven.
-            </p>
+            <ul className="legal-ul">
+              <li>Such wallets are used for technical testing, initial ecosystem activity, educational evaluation of system mechanics, and operational metric assessments.</li>
+              <li>Trades via Operational/Admin Wallets do not constitute financial advice, investment recommendation, or market guarantees.</li>
+              <li>Users acknowledge that any observed market activity during this period is experimental and not indicative of future results.</li>
+              <li>NNM provides no warranty regarding network activity, volume, ecosystem demand, or outcomes during testing.</li>
+              <li><strong style={{ color: COLORS.TEXT_HEAD }}>After the 90-day testing period</strong>, Operational/Admin Wallets cease experimental activities, and the marketplace operates fully user-driven.</li>
+            </ul>
 
             <p className="legal-term-title">7. CHAINFACE SERVICE</p>
-            <p className="legal-p">
-              ChainFace provides decentralized identity display linked to NFT ownership. NNM does not custody funds or process payments. Users accept complete autonomy and privacy, with zero liability on NNM’s part.
-            </p>
+            <p className="legal-p">ChainFace provides decentralized identity display linked to NFT ownership.</p>
+            <ul className="legal-ul">
+              <li>NNM does not custody funds or process payments.</li>
+              <li>NNM does not verify legality of user transactions or mediate disputes.</li>
+              <li>Users fully control all interactions via ChainFace; all activities are peer-to-peer.</li>
+              <li>Users accept complete autonomy and privacy, with zero liability on NNM’s part.</li>
+            </ul>
 
             <p className="legal-term-title">8. CONVICTION POINTS SYSTEM</p>
-            <p className="legal-p">
-              Conviction Rank points are symbolic, non-monetary, and purely internal. They are not a currency, token, or security. NNM retains full control to modify or terminate points at any time.
-            </p>
+            <p className="legal-p">Conviction Rank points (WNNM → NNM Points):</p>
+            <ul className="legal-ul">
+              <li>Are symbolic, non-monetary, and purely internal to the platform.</li>
+              <li>Are not a currency, token, security, or tradable asset.</li>
+              <li>Are fully controlled by NNM and may be modified, suspended, or terminated at any time without notice.</li>
+              <li>Users acknowledge that points carry no claim to future tokens, coins, or tradable rights.</li>
+            </ul>
 
             <p className="legal-term-title">9. USER RESPONSIBILITY</p>
-            <p className="legal-p">
-              Users are fully responsible for content minted, listed, or displayed. Users acknowledge that NNM does not monitor or verify user content; all on-chain activity is solely the user’s responsibility.
-            </p>
+            <p className="legal-p">Users are fully responsible for:</p>
+            <ul className="legal-ul">
+              <li>Content minted, listed, or displayed on the Protocol.</li>
+              <li>Compliance with intellectual property, trademark, publicity rights, and third-party rights.</li>
+              <li>Wallet security, transaction approvals, and tax obligations.</li>
+              <li>Any actions, messages, or interactions via ChainFace or NFT assets.</li>
+              <li>Users acknowledge that NNM does not monitor or verify user content; all on-chain activity is solely the user’s responsibility.</li>
+            </ul>
 
             <p className="legal-term-title">10. PROHIBITED ACTIVITIES</p>
-            <p className="legal-p">
-              Users agree not to use NNM for money laundering, terrorist financing, sanctions violations, market manipulation (wash trading), or bot activity.
-            </p>
+            <p className="legal-p">Users agree not to use NNM for:</p>
+            <ul className="legal-ul">
+              <li>Money laundering, terrorist financing, or sanctions violations.</li>
+              <li>Market manipulation (including wash trading) or automated bot activity.</li>
+              <li>Fraudulent, deceptive, or illegal conduct.</li>
+            </ul>
+            <p className="legal-p">NNM reserves the right to restrict access to wallets suspected of prohibited activities or violation of these Terms.</p>
 
-            <p className="legal-term-title">11. PROHIBITED CONTENT & RIGHT TO BURN</p>
-            <p className="legal-p">
-              Users must NOT mint names that violate trademarks, contain hate speech, or are illegal.
-            </p>
+            <p className="legal-term-title">11. PROHIBITED CONTENT, THIRD-PARTY RIGHTS & RIGHT TO BURN</p>
+            <p className="legal-p">To maintain protocol integrity and compliance, users must NOT mint or display Digital Identity Assets that:</p>
+            <ul className="legal-ul">
+              <li>Violate trademarks, copyrights, or publicity rights of celebrities, public figures, or corporations.</li>
+              <li>Contain hate speech, slurs, explicit violence, pornography, or illegal content.</li>
+              <li>Are identified as “high-risk” names for misuse or infringement.</li>
+            </ul>
             <p className="legal-p" style={{ color: COLORS.TEXT_HEAD }}>
-               NNM reserves the <strong>strict right, at its sole discretion, to block, delist, or burn (permanently destroy)</strong> any Digital Identity Asset that violates these standards.
+               NNM reserves the <strong>strict right, at its sole discretion, to block, delist, or burn (permanently destroy)</strong> any Digital Identity Asset:
             </p>
+            <ul className="legal-ul">
+              <li>In response to valid legal claims.</li>
+              <li>If an asset violates the community standards or high-risk policies.</li>
+              <li>If the asset is involved in misuse, unauthorized commercial exploitation, or regulatory concerns.</li>
+            </ul>
             <p className="legal-p mt-2" style={{ color: COLORS.TEXT_HIGHLIGHT, fontWeight: '600' }}>
-               NO REFUNDS: In the event an asset is blocked, delisted, or burned, the user forfeits all access and is not entitled to any refund or compensation.
+               NO REFUNDS: In the event an asset is blocked, delisted, or burned, the user forfeits all access and is not entitled to any refund, compensation, or reimbursement for minting or gas fees.
             </p>
 
             <p className="legal-term-title">12. NAME BURN AUTHORIZATION</p>
-            <p className="legal-p">
-              NNM may burn assets in cases of verified legal claims, misuse, or threats to protocol integrity.
-            </p>
+            <p className="legal-p">NNM may, at its sole discretion, burn or remove Digital Identity Assets under circumstances including but not limited to:</p>
+            <ul className="legal-ul">
+              <li>Verified legal claims or court orders.</li>
+              <li>Misuse, impersonation, or infringement of third-party rights.</li>
+              <li>Detection of fraudulent, malicious, or harmful activity.</li>
+              <li>Any activity that threatens the integrity or security of the Protocol.</li>
+            </ul>
 
             <p className="legal-term-title">13. LIMITATION OF LIABILITY – “AS IS”</p>
-            <p className="legal-p">
-              NNM shall not be liable for smart contract bugs, network failures, high gas fees, Polygon congestion, or loss of funds. Maximum liability is limited to amounts directly paid to NNM.
-            </p>
+            <p className="legal-p">The Protocol is provided “AS IS” and “AS AVAILABLE.” NNM shall not be liable for:</p>
+            <ul className="legal-ul">
+              <li>Bugs, exploits, or vulnerabilities in smart contracts.</li>
+              <li>Network failures, latency, high gas fees, or congestion on the Polygon blockchain.</li>
+              <li>Loss of funds or assets.</li>
+              <li>Unauthorized wallet access.</li>
+              <li>Ecosystem volatility or network participation outcomes.</li>
+              <li>Regulatory or legal consequences arising from user activity.</li>
+            </ul>
+            <p className="legal-p">Maximum liability, if any, is strictly limited to amounts directly paid to NNM for services.</p>
 
             <p className="legal-term-title">14. INDEMNIFICATION</p>
-            <p className="legal-p">
-              Users agree to indemnify NNM against any claims arising from their use of the Protocol or violation of third-party rights.
-            </p>
+            <p className="legal-p">Users agree to indemnify, defend, and hold harmless NNM, affiliates, and associated entities from any claims, losses, or damages arising from:</p>
+            <ul className="legal-ul">
+              <li>Violation of laws or third-party rights.</li>
+              <li>Unauthorized transactions.</li>
+              <li>Misuse of NFT Names, ChainFace, or Digital Identity Assets.</li>
+            </ul>
 
             <p className="legal-term-title">15. INTELLECTUAL PROPERTY</p>
-            <p className="legal-p">
-              All branding, NGX Index, and proprietary tools belong to NNM. On-chain assets are controlled by users.
-            </p>
+            <ul className="legal-ul">
+              <li>All platform branding, analytics, NGX NFT Index, sub-indices, and proprietary tools remain exclusive property of NNM.</li>
+              <li>On-chain assets are fully controlled by individual wallet holders.</li>
+              <li>Reproduction, copying, or unauthorized use of proprietary data, indices, or methodology is strictly prohibited.</li>
+            </ul>
 
             <p className="legal-term-title">16. PRIVACY POLICY</p>
-            <p className="legal-p">
-              Zero-PII policy. No collection of names or emails. Blockchain transactions are public.
-            </p>
+            <p className="legal-p">NNM follows a Zero-PII policy:</p>
+            <ul className="legal-ul">
+              <li>No collection of personal data (names, emails, IP addresses).</li>
+              <li>No account registration required.</li>
+              <li>Blockchain transactions remain inherently public.</li>
+              <li>Users acknowledge that all on-chain activity is public by nature and at their own discretion.</li>
+            </ul>
 
             <p className="legal-term-title">17. MODIFICATIONS</p>
-            <p className="legal-p">
-              NNM may update these Terms at any time; continued use constitutes acceptance.
-            </p>
+            <p className="legal-p">NNM may update these Terms at any time; continued use constitutes acceptance of the updated Terms.</p>
 
-            <p className="legal-term-title">18. GOVERNING LAW</p>
-            <p className="legal-p">
-              All disputes are resolved via individual binding arbitration under Singapore law.
-            </p>
+            <p className="legal-term-title">18. GOVERNING LAW & ARBITRATION</p>
+            <ul className="legal-ul">
+              <li>All disputes are resolved via individual binding arbitration.</li>
+              <li>Class actions are waived.</li>
+              <li>Governing law: Singapore law and internationally recognized arbitration standards.</li>
+            </ul>
 
             <p className="legal-term-title">19. MISCELLANEOUS</p>
-            <p className="legal-p mb-0">
-              Users agree that NNM is a neutral interface only. These Terms cover all liabilities.
-            </p>
+            <ul className="legal-ul mb-0">
+              <li>Users agree that NNM is a neutral interface only, providing no financial, legal, or custodial functions.</li>
+              <li>Acceptance of these Terms constitutes full waiver of claims against NNM for user-generated actions, misuse, or regulatory consequences.</li>
+              <li>These Terms fully cover all liabilities, including name minting, NFT ownership, ChainFace use, and high-risk content control.</li>
+            </ul>
         </div>
 
-        {/* Footer Actions */}
         <div className="p-3 border-top d-flex justify-content-end gap-2" style={{ borderColor: COLORS.BORDER, backgroundColor: COLORS.MODAL_BG, borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>
             <button 
                 onClick={handleCancel}

@@ -1,11 +1,10 @@
 'use client';
 import Link from 'next/link';
 
-const BRAND_GOLD = '#FCD535'; // نفس درجة أصفر باينانس الذهبي
-const TEXT_OFF_WHITE = '#EAECEF'; // أوف وايت (للعناوين)
-const TEXT_MUTED = '#848E9C';     // رمادي مزرق (للنصوص)
-const TEXT_HIGHLIGHT = '#CFD6E0'; // بلاتيني (للتنبيهات المهمة - وسط بين الأبيض والرمادي)
-
+const BRAND_GOLD = '#FCD535'; 
+const TEXT_OFF_WHITE = '#EAECEF'; 
+const TEXT_MUTED = '#848E9C';     
+const TEXT_HIGHLIGHT = '#CFD6E0'; 
 // --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
@@ -141,10 +140,10 @@ export default function LegalPage() {
                         NNM may operate an Initial Market Testing Phase for up to ninety (90) days using authorized Operational and Admin Wallets:
                     </p>
                     <ul className="term-list">
-                        <li>Such wallets are used for technical testing, initial liquidity, educational evaluation of market activity, and trading indicator assessments.</li>
+                        <li>Such wallets are used for technical testing, initial ecosystem activity, educational evaluation of system mechanics, and operational metric assessments.</li>
                         <li>Trades via Operational/Admin Wallets do not constitute financial advice, investment recommendation, or market guarantees.</li>
                         <li>Users acknowledge that any observed market activity during this period is experimental and not indicative of future results.</li>
-                        <li>NNM provides no warranty regarding price, volume, liquidity, or outcomes during testing.</li>
+                        <li>NNM provides no warranty regarding network activity, volume, ecosystem demand, or outcomes during testing.</li>
                         <li><strong>After the 90-day testing period</strong>, Operational/Admin Wallets cease experimental activities, and the marketplace operates fully user-driven.</li>
                     </ul>
                 </div>
@@ -242,7 +241,7 @@ export default function LegalPage() {
                         <li>Network failures, latency, high gas fees, or congestion on the Polygon blockchain.</li>
                         <li>Loss of funds or assets.</li>
                         <li>Unauthorized wallet access.</li>
-                        <li>Market volatility or trading losses.</li>
+                        <li>Ecosystem volatility or network participation outcomes.</li>
                         <li>Regulatory or legal consequences arising from user activity.</li>
                     </ul>
                     <p className="term-text mt-2">Maximum liability, if any, is strictly limited to amounts directly paid to NNM for services.</p>
