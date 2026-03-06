@@ -289,7 +289,7 @@ const handleTouchEnd = (e: React.TouchEvent) => {
                         NNM &mdash; The Global Market for <span style={{ color: '#FCD535' }}>Nexus Rare Digital Name NFTs</span>
                     </h1>
                     <p className="mb-0 main-desc" style={{ fontSize: '1.1rem', color: '#848E9C', maxWidth: '90%' }}>
-                        Where Nexus Digital Name NFTs gain real financial value and global liquidity. Trade with confidence on the premier decentralized marketplace.
+                        Where Nexus Digital Name NFTs build genuine digital utility and global reach. Trade with confidence on the premier decentralized marketplace.
                     </p>
                 </div>
 

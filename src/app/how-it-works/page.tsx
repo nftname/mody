@@ -273,7 +273,7 @@ export default function HowItWorksPage() {
                 Conviction Rank — Measuring Belief, Not Hype
               </h2>
               <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
-                Most NFT marketplaces focus on price and volume. But Conviction Rank shows which digital names are truly backed by verified supporters. Each supporter signals real belief, creating a transparent layer of trust across the market. Conviction Rank explains why price moves before it moves and highlights assets with lasting confidence.
+                Most NFT marketplaces focus on price and volume. But Conviction Rank shows which digital names are truly backed by verified supporters. Each supporter signals real belief, creating a transparent layer of trust across the market. Conviction Rank reveals underlying community trust and highlights assets with lasting confidence.
                 <Link href="/conviction-rank" className="text-decoration-none fw-bold ms-2" style={{ color: GOLD_MEDIUM, borderBottom: `1px solid ${GOLD_MEDIUM}` }}>
                       Learn more about Conviction Rank →
                 </Link>

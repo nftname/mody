@@ -139,7 +139,7 @@ export default function AffiliatePage() {
                         NNM <span style={{ color: BRAND_GOLD }}>Alliance</span>
                     </h1>
                     <p style={{ color: TEXT_MUTED, maxWidth: '700px', margin: '0 auto', lineHeight: '1.6', fontSize: '15px' }}>
-                        Build a sustainable revenue stream. Earn <span style={{ color: '#fff' }}>30% instant commission</span> on mints, plus <span style={{ color: '#fff' }}>10% lifetime royalties</span>.
+                        Join the network growth. Earn <span style={{ color: '#fff' }}>30% instant rewards</span> on mints, plus <span style={{ color: '#fff' }}>10% lifetime royalties</span>.
                     </p>
                     <p style={{ color: BRAND_GOLD, fontSize: '12px', marginTop: '10px' }}>Total Referred Users: {relationshipsCount}</p>
                 </div>

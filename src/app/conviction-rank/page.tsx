@@ -187,7 +187,7 @@ export default function ConvictionRankPage() {
             
             <section className="mb-4 ps-lg-3">
               <h2 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
-                Beyond Price: Why Conviction Matters More Than Liquidity
+                Beyond Hype: Why Conviction Matters More Than Volume
               </h2>
               <p>In traditional markets, professional investors don’t build portfolios based on likes, hype, or short-term attention. They build them based on conviction.</p>
               <p>Conviction separates noise from signal. It’s the difference between a trade and a thesis.</p>
@@ -216,9 +216,9 @@ export default function ConvictionRankPage() {
               </h2>
               <p>Visible conviction changes market dynamics. Assets with strong conviction tend to:</p>
               <ul>
-                  <li>Trade with resilience</li>
-                  <li>Recover faster from downturns</li>
-                  <li>Attract long-term holders rather than short-term flippers</li>
+                  <li>Maintain community support</li>
+                  <li>Build lasting ecosystem relevance</li>
+                  <li>Attract long-term participants rather than short-term speculators</li>
               </ul>
               <p>This is not theory—it mirrors how high-conviction equities behave in traditional markets. Conviction Rank doesn’t predict price—it explains <strong className="text-white">why price moves before it moves.</strong></p>
             </section>

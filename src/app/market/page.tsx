@@ -345,7 +345,7 @@ function MarketPage() {
             <div className="row align-items-center px-3 mt-3 text-section desktop-only-text">
                 <div className="col-lg-12">
                     <h1 className="fw-bold mb-2 main-title" style={{ color: '#EAECEF' }}>Buy & Sell <span style={{ color: '#EAECEF' }}>Nexus Rare</span> Digital Name Assets NFTs</h1>
-                    <p className="mb-0 main-desc" style={{ color: '#848E9C' }}>Live prices, verified rarity, and a growing marketplace where traders compete for the most valuable digital name assets.</p>
+                    <p className="mb-0 main-desc" style={{ color: '#848E9C' }}>Live activity, verified rarity, and a growing ecosystem where users discover the most sought-after digital name assets.</p>
                 </div>
             </div>
             <div className="d-block d-md-none px-3 mt-3 mobile-only-text">
