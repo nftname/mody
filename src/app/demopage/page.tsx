@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 
 // 
 const COIN_LOGOS = {
-    BTC: "https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=026",
-    ETH: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=026",
-    POLYGON: "https://cryptologos.cc/logos/polygon-matic-logo.svg?v=026",
-    SOL: "https://cryptologos.cc/logos/solana-sol-logo.svg?v=026",
-    BNB: "https://cryptologos.cc/logos/bnb-bnb-logo.svg?v=026",
-    USDT: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=026",
+    BTC: "/icons/btc.svg",
+    ETH: "/icons/eth.svg",
+    POLYGON: "/icons/matic.svg",
+    SOL: "/icons/sol.svg",
+    BNB: "/icons/bnb.svg",
+    USDT: "/icons/usdt.svg",
 };
 
 const Web3PaymentButton = ({ type, name }: { type: keyof typeof COIN_LOGOS, name: string }) => (
