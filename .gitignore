@@ -31,10 +31,7 @@ yarn-debug.log
 yarn-error.log
 .cache
 
-# --- Project Specific Secrets (Root Only) ---
-# التعديل الهام: أضفنا علامة / في البداية
-# هذا يعني: اخفِ مجلد data الموجود في وجه المشروع فقط (السري)
-# واترك مجلد src/data الخاص بالتطبيق كما هو
+
 /data/
 /scripts/
 
@@ -45,11 +42,10 @@ package-lock.json
 *.csv
 
 # --- JSON Handling ---
-# إخفاء ملفات جيسون بشكل عام لزيادة الأمان
+
 *.json
 
-# --- الاستثناءات (هام جداً لعمل الموقع) ---
-# هذه القائمة تجبر Git على إظهار الملفات الضرورية وعدم إخفائها
+
 !package.json
 !tsconfig.json
 !vercel.json
@@ -59,5 +55,4 @@ package-lock.json
 !next.config.js
 !tailwind.config.ts
 
-# هام: السماح بملفات الجيسون الموجودة داخل كود الموقع (مثل abi.json)
 !src/data/*.json

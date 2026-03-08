@@ -2,14 +2,12 @@
 import Link from 'next/link';
 import React from 'react';
 
-// --- CONSTANTS & STYLES ---
 const GOLD_BASE = '#FCD535';
 const GOLD_LIGHT = '#FFF5CC';
 const GOLD_DARK = '#B3882A';
 const TEXT_OFF_WHITE = '#EAECEF';
 const TEXT_BODY_COLOR = '#848E9C';
 
-// --- BRAND ICONS DATA ---
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
 const trustedBrands = [ 
@@ -322,6 +320,18 @@ export default function ChainFacePage() {
                       <p className="cf-text">
                         The simplest starting point. No explanations needed. Your name opens the door.
                       </p>
+                  </div>
+
+                  <div className="content-block">
+                      <h3 className="cf-header">Exclusive Benefits</h3>
+                      <p className="cf-text">
+                        By claiming your unique name in the NNM Registry, you instantly gain lifetime membership in ChainFace — your personal blockchain identity visible to the world. You unlock exclusive perks including a five-star rating and free verification, plus Conviction points based on your tier:
+                      </p>
+                      <ul className="cf-list">
+                          <li><strong>Founders:</strong> 100,000 Conviction points</li>
+                          <li><strong>Elite:</strong> 200,000 Conviction points</li>
+                          <li><strong>Immortals:</strong> 300,000 Conviction points</li>
+                      </ul>
                   </div>
 
                    <div className="content-block">
