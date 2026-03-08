@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -40,25 +39,65 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { wallet, amount } = body;
+  const { action } = body;
 
-  if (!wallet || !amount || amount < 50) {
-    return NextResponse.json({ error: 'Invalid claim request' }, { status: 400 });
+  if (action === 'claim') {
+    const { wallet, amount } = body;
+
+    if (!wallet || !amount || amount < 50) {
+      return NextResponse.json({ error: 'Invalid claim request' }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from('affiliate_payouts')
+      .insert([
+        {
+          wallet_address: wallet,
+          amount: amount,
+          status: 'PENDING'
+        }
+      ]);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
   }
 
-  const { error } = await supabase
-    .from('affiliate_payouts')
-    .insert([
-      {
-        wallet_address: wallet,
-        amount: amount,
-        status: 'PENDING'
-      }
-    ]);
+  if (action === 'mint') {
+    const { buyerWallet, referrerWallet, amount, transactionHash } = body;
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!buyerWallet || !amount) {
+      return NextResponse.json({ error: 'Missing required data' }, { status: 400 });
+    }
+
+    if (referrerWallet && referrerWallet !== buyerWallet) {
+      await supabase
+        .from('affiliate_relationships')
+        .upsert(
+          { parent_wallet: referrerWallet, child_wallet: buyerWallet },
+          { onConflict: 'child_wallet' }
+        );
+
+      const commissionAmount = amount * 0.30;
+
+      await supabase
+        .from('affiliate_earnings')
+        .insert([
+          {
+            referrer_wallet: referrerWallet,
+            source_wallet: buyerWallet,
+            amount: commissionAmount,
+            earnings_type: 'MINT',
+            status: 'UNPAID',
+            tx_hash: transactionHash
+          }
+        ]);
+    }
+
+    return NextResponse.json({ success: true });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 }

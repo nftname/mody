@@ -103,7 +103,7 @@ export default function AffiliatePage() {
               const res = await fetch('/api/affiliate', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ wallet: address, amount: stats.unpaidBalance })
+                  body: JSON.stringify({ action: 'claim', wallet: address, amount: stats.unpaidBalance })
               });
               const data = await res.json();
               if(data.success) {
