@@ -26,13 +26,13 @@ const CONTRACT_ABI = parseAbi([
 ]);
 
 const COIN_LOGOS: any = {
-    BTC: "https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=026",
-    ETH: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=026",
-    POLYGON: "https://cryptologos.cc/logos/polygon-matic-logo.svg?v=026",
-    SOL: "https://cryptologos.cc/logos/solana-sol-logo.svg?v=026",
-    BNB: "https://cryptologos.cc/logos/bnb-bnb-logo.svg?v=026",
-    USDT: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=026",
-    WALLET: "https://cdn-icons-png.flaticon.com/512/60/60484.png" 
+    BTC: "/icons/btc.svg",
+    ETH: "/icons/eth.svg",
+    POLYGON: "/icons/matic.svg",
+    SOL: "/icons/sol.svg",
+    BNB: "/icons/bnb.svg",
+    USDT: "/icons/usdt.svg",
+    WALLET: "/icons/wallet.png" 
 };
 
 // --- COMPONENTS ---
