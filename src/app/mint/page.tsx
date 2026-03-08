@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useSearchParams } from 'next/navigation';
 import { useAccount, useWriteContract, useReadContract, usePublicClient } from "wagmi";
 import { parseAbi, keccak256, stringToBytes, formatEther } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -32,6 +33,8 @@ const MintContent = () => {
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
+  const searchParams = useSearchParams();
+  const referrerWallet = searchParams?.get('ref');
   
   const templateRef = useRef<HTMLDivElement>(null);
 
@@ -371,6 +374,22 @@ const MintContent = () => {
                  }
                  
                  if (address) notifyRewardSystem(address, tierName, mintedId);
+
+                 if (referrerWallet && receipt.transactionHash) {
+                     try {
+                         await fetch('/api/affiliate', {
+                             method: 'POST',
+                             headers: { 'Content-Type': 'application/json' },
+                             body: JSON.stringify({ 
+                                 action: 'mint', 
+                                 transactionHash: receipt.transactionHash, 
+                                 referrerWallet: referrerWallet 
+                             })
+                         });
+                     } catch (e) {
+                         console.error(e);
+                     }
+                 }
              }
           }
 
