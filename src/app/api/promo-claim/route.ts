@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(request: Request) {
     try {
@@ -13,18 +18,18 @@ export async function POST(request: Request) {
         const cleanAddress = wallet_address.toLowerCase();
 
         if (action === 'check') {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseAdmin
                 .from('promo_founder_claims')
                 .select('wallet_address')
                 .eq('wallet_address', cleanAddress)
                 .maybeSingle();
 
-            if (error) throw error;
+            if (error && error.code !== 'PGRST116') throw error;
             return NextResponse.json({ claimed: !!data });
         } 
         
         if (action === 'claim') {
-            const { error } = await supabase
+            const { error } = await supabaseAdmin
                 .from('promo_founder_claims')
                 .insert([{ 
                     wallet_address: cleanAddress,
