@@ -182,13 +182,14 @@ const MintContent = () => {
 
       if (tierName === "FOUNDER" && isPromoActive && !isAdmin) {
           try {
-              const { data, error } = await supabase
-                  .from('promo_founder_claims')
-                  .select('wallet_address')
-                  .eq('wallet_address', address.toLowerCase())
-                  .maybeSingle();
+              const res = await fetch('/api/promo-claim', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ action: 'check', wallet_address: address })
+              });
+              const data = await res.json();
 
-              if (data) {
+              if (data.claimed) {
                   setErrorTitle("Promo Limit Reached");
                   setErrorMessage("You have already claimed your free Founder asset. Limit is one free mint per wallet.");
                   setModalType('error');
@@ -358,10 +359,15 @@ const MintContent = () => {
                  }
 
                  if (tierName === "FOUNDER" && isPromoActive && !isAdmin) {
-                     await supabase.from('promo_founder_claims').insert([{
-                         wallet_address: address.toLowerCase(),
-                         claimed_at: new Date().toISOString()
-                     }]);
+                     try {
+                         await fetch('/api/promo-claim', {
+                             method: 'POST',
+                             headers: { 'Content-Type': 'application/json' },
+                             body: JSON.stringify({ action: 'claim', wallet_address: address })
+                         });
+                     } catch (e) {
+                         console.error(e);
+                     }
                  }
                  
                  if (address) notifyRewardSystem(address, tierName, mintedId);
