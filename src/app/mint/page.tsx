@@ -175,7 +175,30 @@ const MintContent = () => {
   };
 
   const handleMintProcess = async (tierName: string, tierIndex: number, priceDisplay: string) => {
-      if (!searchTerm || !status || !publicClient) return;
+      if (!searchTerm || !status || !publicClient || !address) return;
+
+      const promoEndDate = new Date('2026-03-31T23:59:59Z');
+      const isPromoActive = new Date() <= promoEndDate;
+
+      if (tierName === "FOUNDER" && isPromoActive && !isAdmin) {
+          try {
+              const { data, error } = await supabase
+                  .from('promo_founder_claims')
+                  .select('wallet_address')
+                  .eq('wallet_address', address.toLowerCase())
+                  .maybeSingle();
+
+              if (data) {
+                  setErrorTitle("Promo Limit Reached");
+                  setErrorMessage("You have already claimed your free Founder asset. Limit is one free mint per wallet.");
+                  setModalType('error');
+                  setShowModal(true);
+                  return;
+              }
+          } catch (err) {
+              console.error(err);
+          }
+      }
       
       setIsMinting(true);
       setProcessStep("Generative Engine: Creating high-res asset...");
@@ -333,6 +356,13 @@ const MintContent = () => {
                  } catch (e) {
                      console.error(e);
                  }
+
+                 if (tierName === "FOUNDER" && isPromoActive && !isAdmin) {
+                     await supabase.from('promo_founder_claims').insert([{
+                         wallet_address: address.toLowerCase(),
+                         claimed_at: new Date().toISOString()
+                     }]);
+                 }
                  
                  if (address) notifyRewardSystem(address, tierName, mintedId);
              }
@@ -444,13 +474,13 @@ const MintContent = () => {
 
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            {/* تم تصغير الحجم بنسبة 25% (320px بدلاً من 420px) وتغيير الخلفية لنفس لون الموقع */}
+            {/**/}
             <div style={{ width: '100%', maxWidth: '320px', backgroundColor: '#181A20', border: '1px solid #2B3139', borderRadius: '15px', padding: '24px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative' }}>
                 <button onClick={handleCloseModal} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: '#848E9C', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
 
                 {modalType === 'success' && (
                    <div className="fade-in">
-                     {/* تم تغيير اللون إلى الذهبي وتصغير الحجم */}
+                     {}
                      <div className="mb-3"><i className="bi bi-check-circle-fill" style={{fontSize: '2.6rem', color: '#FCD535'}}></i></div>
                      <h3 className="fw-bold mb-2" style={{ color: '#EAECEF', fontSize: '1.4rem' }}>History Made!</h3>
                      <p className="mb-3" style={{ color: '#848E9C', fontSize: '13px' }}>The name <span style={{color: '#FCD535'}}>{searchTerm}</span> is now your eternal digital asset.</p>
