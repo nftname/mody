@@ -11,7 +11,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS!;
 
 const publicClient = createPublicClient({
   chain: polygon,
-  transport: http('https://polygon-rpc.com')
+  transport: http('https://1rpc.io/matic')
 
 });
 
