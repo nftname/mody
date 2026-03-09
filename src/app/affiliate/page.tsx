@@ -96,8 +96,8 @@ export default function AffiliatePage() {
   ];
 
   const handleClaim = async () => {
-      if (stats.unpaidBalance < 50) return;
-      const confirmClaim = confirm(`Request payout for $${stats.unpaidBalance.toFixed(2)}?`);
+      if (stats.unpaidBalance < 500) return;
+      const confirmClaim = confirm(`Request payout for ${stats.unpaidBalance.toFixed(2)} POL?`);
       if(confirmClaim) {
           try {
               const res = await fetch('/api/affiliate', {
@@ -179,7 +179,7 @@ export default function AffiliatePage() {
                                     <div className="stat-icon"><i className="bi bi-bank"></i></div>
                                     <span className="trend-badge">Total Earned</span>
                                 </div>
-                                <div className="stat-value">${stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                                <div className="stat-value">{stats.royaltyRevenue.toFixed(2)} POL</div>
                                 <div className="stat-label">Lifetime Revenue</div>
                             </div>
                         </div>
@@ -199,7 +199,7 @@ export default function AffiliatePage() {
                                     <div className="stat-icon"><i className="bi bi-diamond"></i></div>
                                     <div className="stat-count-badge">{stats.mintCount} Mints</div>
                                 </div>
-                                <div className="stat-value">${stats.mintRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                                <div className="stat-value">{stats.mintRevenue.toFixed(2)} POL</div>
                                 <div className="stat-label">Mint Commission (30%)</div>
                             </div>
                         </div>
@@ -210,11 +210,11 @@ export default function AffiliatePage() {
                                         <div className="stat-icon" style={{ color: BRAND_GOLD }}><i className="bi bi-wallet2"></i></div>
                                         <span className="status-dot"></span>
                                     </div>
-                                    <div className="stat-value" style={{ color: BRAND_GOLD }}>${stats.unpaidBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                                    <div className="stat-value" style={{ color: BRAND_GOLD }}>{stats.unpaidBalance.toFixed(2)} POL</div>
                                     <div className="stat-label">Unpaid Balance</div>
                                 </div>
                                 <div className="mt-3">
-                                    {stats.unpaidBalance >= 50 ? (
+                                    {stats.unpaidBalance >= 500 ? (
                                         <button onClick={handleClaim} className="claim-btn active w-100">
                                             CLAIM PAYOUT <i className="bi bi-arrow-right ms-2"></i>
                                         </button>
@@ -224,7 +224,7 @@ export default function AffiliatePage() {
                                                 CLAIM PAYOUT
                                             </button>
                                             <div style={{ fontSize: '9px', color: TEXT_MUTED, marginTop: '5px' }}>
-                                                Minimum payout: $50.00
+                                                Minimum payout: 500.00 POL
                                             </div>
                                         </div>
                                     )}
@@ -250,7 +250,7 @@ export default function AffiliatePage() {
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#2B3139" vertical={false} />
                                             <XAxis dataKey="name" stroke={TEXT_MUTED} fontSize={11} tickLine={false} axisLine={false} />
-                                            <YAxis stroke={TEXT_MUTED} fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                                            <YAxis stroke={TEXT_MUTED} fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} POL`} />
                                             <Tooltip contentStyle={{ backgroundColor: PANEL_BG, border: `1px solid ${BORDER_COLOR}`, borderRadius: '8px', color: TEXT_PRIMARY }} itemStyle={{ color: BRAND_GOLD }} />
                                             <Area type="monotone" dataKey="revenue" stroke={BRAND_GOLD} strokeWidth={2} fillOpacity={1} fill="url(#colorRev)" />
                                         </AreaChart>
@@ -276,7 +276,7 @@ export default function AffiliatePage() {
                                         </PieChart>
                                     </ResponsiveContainer>
                                     <div style={{ position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-                                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: TEXT_PRIMARY }}>${stats.totalRevenue.toLocaleString()}</div>
+                                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: TEXT_PRIMARY }}>{stats.totalRevenue.toFixed(2)} POL</div>
                                         <div style={{ fontSize: '10px', color: TEXT_MUTED }}>Total Yield</div>
                                     </div>
                                 </div>
@@ -315,7 +315,7 @@ export default function AffiliatePage() {
                                                 <td style={{ fontFamily: 'monospace', color: TEXT_MUTED, whiteSpace: 'nowrap' }}>
                                                     {shortAddress(item.source_wallet)}
                                                 </td>
-                                                <td className="text-end" style={{ color: BRAND_GOLD, fontWeight: 'bold', whiteSpace: 'nowrap' }}>+${Number(item.amount).toFixed(2)}</td>
+                                                <td className="text-end" style={{ color: BRAND_GOLD, fontWeight: 'bold', whiteSpace: 'nowrap' }}>+{Number(item.amount).toFixed(2)} POL</td>
                                                 <td className="text-end">
                                                     <span className={`status-badge ${item.status === 'PAID' ? 'success' : 'pending'}`}>
                                                         {item.status}
