@@ -276,7 +276,7 @@ export default function AffiliatePage() {
                                         </PieChart>
                                     </ResponsiveContainer>
                                     <div style={{ position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-                                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: TEXT_PRIMARY }}>{stats.totalRevenue.toFixed(2)} POL</div>
+                                        <div style={{ fontSize: '18px', fontWeight: 'bold', color: TEXT_PRIMARY }}>{stats.totalRevenue.toFixed(2)} POL</div>
                                         <div style={{ fontSize: '10px', color: TEXT_MUTED }}>Total Yield</div>
                                     </div>
                                 </div>
@@ -366,7 +366,7 @@ export default function AffiliatePage() {
                                                         {shortAddress(item.tx_hash) || 'Processing'} <i className="bi bi-box-arrow-up-right ms-1" style={{ fontSize: '10px' }}></i>
                                                     </a>
                                                 </td>
-                                                <td className="text-end" style={{ color: TEXT_PRIMARY, fontWeight: 'bold', whiteSpace: 'nowrap' }}>${Number(item.amount).toFixed(2)}</td>
+                                                <td className="text-end" style={{ color: TEXT_PRIMARY, fontWeight: 'bold', whiteSpace: 'nowrap' }}>{Number(item.amount).toFixed(2)} POL</td>
                                                 <td className="text-end"><span className="status-badge success">{item.status}</span></td>
                                             </tr>
                                         ))
