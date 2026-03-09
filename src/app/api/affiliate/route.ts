@@ -11,7 +11,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS!;
 
 const publicClient = createPublicClient({
   chain: polygon,
-  transport: http()
+  transport: http('https://rpc.ankr.com/polygon')
 });
 
 export async function GET(request: Request) {
