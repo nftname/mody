@@ -84,13 +84,12 @@ export async function POST(request: Request) {
     }
 
     try {
-      const receipt = await publicClient.waitForTransactionReceipt({ 
-          hash: transactionHash as `0x${string}`,
-          timeout: 60000 
+      const receipt = await publicClient.getTransactionReceipt({ 
+          hash: transactionHash as `0x${string}`
       });
 
-      if (receipt.status !== 'success') {
-         return NextResponse.json({ error: 'Transaction failed on chain' }, { status: 400 });
+      if (!receipt || receipt.status !== 'success') {
+         return NextResponse.json({ error: 'Transaction failed or pending' }, { status: 400 });
       }
 
       const tx = await publicClient.getTransaction({ hash: transactionHash as `0x${string}` });
@@ -131,22 +130,21 @@ export async function POST(request: Request) {
             { onConflict: 'child_wallet' }
           );
 
-        if (amountPaid > 0) {
-          const commissionAmount = amountPaid * 0.30;
+        const commissionAmount = amountPaid * 0.30;
+        const statusValue = commissionAmount > 0 ? 'UNPAID' : 'PAID';
 
-          await supabase
-            .from('affiliate_earnings')
-            .insert([
-              {
-                referrer_wallet: finalReferrer,
-                source_wallet: buyerWallet,
-                amount: commissionAmount,
-                earnings_type: 'MINT',
-                status: 'UNPAID',
-                tx_hash: transactionHash
-              }
-            ]);
-        }
+        await supabase
+          .from('affiliate_earnings')
+          .insert([
+            {
+              referrer_wallet: finalReferrer,
+              source_wallet: buyerWallet,
+              amount: commissionAmount,
+              earnings_type: 'MINT',
+              status: statusValue,
+              tx_hash: transactionHash
+            }
+          ]);
       }
 
       return NextResponse.json({ success: true });
