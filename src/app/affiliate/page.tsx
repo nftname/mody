@@ -38,7 +38,7 @@ export default function AffiliatePage() {
   const fetchAffiliateData = async (wallet: string) => {
     setLoading(true);
     try {
-        const res = await fetch(`/api/affiliate?wallet=${wallet}`);
+        const res = await fetch(`/api/affiliate?wallet=${wallet.toLowerCase()}`);
         const data = await res.json();
         
         if (data.earnings) setEarnings(data.earnings);

@@ -17,11 +17,13 @@ const publicClient = createPublicClient({
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const wallet = searchParams.get('wallet');
+  const walletParam = searchParams.get('wallet');
 
-  if (!wallet) {
+  if (!walletParam) {
     return NextResponse.json({ error: 'Wallet missing' }, { status: 400 });
   }
+
+  const wallet = walletParam.toLowerCase();
 
   const { data: earningsData } = await supabase
     .from('affiliate_earnings')
@@ -104,18 +106,29 @@ export async function POST(request: Request) {
          return NextResponse.json({ error: 'Commission already processed' }, { status: 400 });
       }
 
-      const buyerWallet = tx.from;
+      const buyerWallet = tx.from.toLowerCase();
       const amountPaid = parseFloat(formatEther(tx.value));
 
       if (amountPaid <= 0) {
          return NextResponse.json({ error: 'No value transferred' }, { status: 400 });
       }
 
-      if (referrerWallet && referrerWallet.toLowerCase() !== buyerWallet.toLowerCase()) {
+      let finalReferrer = referrerWallet ? referrerWallet.toLowerCase() : null;
+
+      if (!finalReferrer) {
+          const { data: existingRel } = await supabase
+              .from('affiliate_relationships')
+              .select('parent_wallet')
+              .eq('child_wallet', buyerWallet)
+              .maybeSingle();
+          if (existingRel) finalReferrer = existingRel.parent_wallet;
+      }
+
+      if (finalReferrer && finalReferrer !== buyerWallet) {
         await supabase
           .from('affiliate_relationships')
           .upsert(
-            { parent_wallet: referrerWallet, child_wallet: buyerWallet },
+            { parent_wallet: finalReferrer, child_wallet: buyerWallet },
             { onConflict: 'child_wallet' }
           );
 
@@ -125,7 +138,7 @@ export async function POST(request: Request) {
           .from('affiliate_earnings')
           .insert([
             {
-              referrer_wallet: referrerWallet,
+              referrer_wallet: finalReferrer,
               source_wallet: buyerWallet,
               amount: commissionAmount,
               earnings_type: 'MINT',
@@ -134,6 +147,7 @@ export async function POST(request: Request) {
             }
           ]);
       }
+
 
       return NextResponse.json({ success: true });
 

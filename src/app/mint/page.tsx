@@ -375,7 +375,7 @@ const MintContent = () => {
                  
                  if (address) notifyRewardSystem(address, tierName, mintedId);
 
-                 if (referrerWallet && receipt.transactionHash) {
+                 if (receipt.transactionHash) {
                      try {
                          await fetch('/api/affiliate', {
                              method: 'POST',
@@ -383,13 +383,14 @@ const MintContent = () => {
                              body: JSON.stringify({ 
                                  action: 'mint', 
                                  transactionHash: receipt.transactionHash, 
-                                 referrerWallet: referrerWallet 
+                                 referrerWallet: referrerWallet ? referrerWallet.toLowerCase() : null 
                              })
                          });
                      } catch (e) {
                          console.error(e);
                      }
                  }
+
              }
           }
 
