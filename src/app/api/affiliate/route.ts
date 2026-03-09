@@ -6,9 +6,7 @@ import { polygon } from 'viem/chains';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS!;
-
 
 const publicClient = createPublicClient({
   chain: polygon,
@@ -19,133 +17,91 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const wallet = searchParams.get('wallet');
 
-  if (!wallet) {
-    return NextResponse.json({ error: 'Wallet missing' }, { status: 400 });
-  }
+  if (!wallet) return NextResponse.json({ error: 'Wallet missing' }, { status: 400 });
 
-  const { data: earningsData } = await supabase
-    .from('affiliate_earnings')
-    .select('*')
-    .eq('referrer_wallet', wallet)
-    .order('created_at', { ascending: false });
+  const { data: earningsData } = await supabase.from('affiliate_earnings').select('*').eq('referrer_wallet', wallet).order('created_at', { ascending: false });
+  const { data: payoutsData } = await supabase.from('affiliate_payouts').select('*').eq('wallet_address', wallet).order('created_at', { ascending: false });
+  const { count: relationshipsCount } = await supabase.from('affiliate_relationships').select('*', { count: 'exact', head: true }).eq('parent_wallet', wallet);
 
-  const { data: payoutsData } = await supabase
-    .from('affiliate_payouts')
-    .select('*')
-    .eq('wallet_address', wallet)
-    .order('created_at', { ascending: false });
-
-  const { count: relationshipsCount } = await supabase
-    .from('affiliate_relationships')
-    .select('*', { count: 'exact', head: true })
-    .eq('parent_wallet', wallet);
-
-  return NextResponse.json({
-    earnings: earningsData || [],
-    payouts: payoutsData || [],
-    relationshipsCount: relationshipsCount || 0
-  });
+  return NextResponse.json({ earnings: earningsData || [], payouts: payoutsData || [], relationshipsCount: relationshipsCount || 0 });
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { action } = body;
+  try {
+    const body = await request.json();
+    const { action } = body;
+    console.log("API CALLED - Action:", action);
 
-  if (action === 'claim') {
-    const { wallet, amount } = body;
-
-    if (!wallet || !amount || amount < 50) {
-      return NextResponse.json({ error: 'Invalid claim request' }, { status: 400 });
+    if (action === 'claim') {
+      const { wallet, amount } = body;
+      if (!wallet || !amount || amount < 50) return NextResponse.json({ error: 'Invalid claim request' }, { status: 400 });
+      const { error } = await supabase.from('affiliate_payouts').insert([{ wallet_address: wallet, amount: amount, status: 'PENDING' }]);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
     }
 
-    const { error } = await supabase
-      .from('affiliate_payouts')
-      .insert([
-        {
-          wallet_address: wallet,
-          amount: amount,
-          status: 'PENDING'
-        }
-      ]);
+    if (action === 'mint') {
+      const { transactionHash, referrerWallet } = body;
+      console.log("Mint Action - TxHash:", transactionHash, "Referrer:", referrerWallet);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+      if (!transactionHash) return NextResponse.json({ error: 'Missing transaction hash' }, { status: 400 });
 
-    return NextResponse.json({ success: true });
-  }
-
-  if (action === 'mint') {
-    const { transactionHash, referrerWallet } = body;
-
-    if (!transactionHash) {
-      return NextResponse.json({ error: 'Missing transaction hash' }, { status: 400 });
-    }
-
-    try {
       const tx = await publicClient.getTransaction({ hash: transactionHash as `0x${string}` });
+      console.log("Tx Fetched - To:", tx.to, "Value:", tx.value.toString());
+
       const receipt = await publicClient.getTransactionReceipt({ hash: transactionHash as `0x${string}` });
+      console.log("Receipt Fetched - Status:", receipt.status);
 
-      if (receipt.status !== 'success') {
-         return NextResponse.json({ error: 'Transaction failed on chain' }, { status: 400 });
-      }
-
+      if (receipt.status !== 'success') return NextResponse.json({ error: 'Transaction failed' }, { status: 400 });
+      
       if (tx.to?.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()) {
+         console.log("Contract Mismatch - Expected:", CONTRACT_ADDRESS, "Got:", tx.to);
          return NextResponse.json({ error: 'Invalid contract address' }, { status: 400 });
       }
 
-      const { data: existingTx } = await supabase
-        .from('affiliate_earnings')
-        .select('id')
-        .eq('tx_hash', transactionHash)
-        .single();
-
+      const { data: existingTx, error: selectError } = await supabase.from('affiliate_earnings').select('id').eq('tx_hash', transactionHash).maybeSingle();
+      if (selectError) console.log("Select Error:", selectError);
+      
       if (existingTx) {
-         return NextResponse.json({ error: 'Commission already processed' }, { status: 400 });
+         console.log("Tx Already Processed:", transactionHash);
+         return NextResponse.json({ error: 'Already processed' }, { status: 400 });
       }
 
       const buyerWallet = tx.from;
       const amountPaid = parseFloat(formatEther(tx.value));
-
-      if (amountPaid <= 0) {
-         return NextResponse.json({ error: 'No value transferred' }, { status: 400 });
-      }
+      console.log("Buyer:", buyerWallet, "AmountPaid:", amountPaid);
 
       if (referrerWallet && referrerWallet.toLowerCase() !== buyerWallet.toLowerCase()) {
-        await supabase
-          .from('affiliate_relationships')
-          .upsert(
-            { parent_wallet: referrerWallet, child_wallet: buyerWallet },
-            { onConflict: 'child_wallet' }
-          );
+        console.log("Upserting Relationship...");
+        const { error: relError } = await supabase.from('affiliate_relationships').upsert({ parent_wallet: referrerWallet.toLowerCase(), child_wallet: buyerWallet.toLowerCase() }, { onConflict: 'child_wallet' });
+        
+        if (relError) {
+            console.error("Relationship Upsert Error:", relError);
+            throw relError;
+        }
 
-        const commissionAmount = amountPaid * 0.30;
-
-        await supabase
-          .from('affiliate_earnings')
-          .insert([
-            {
-              referrer_wallet: referrerWallet,
-              source_wallet: buyerWallet,
-              amount: commissionAmount,
-              earnings_type: 'MINT',
-              status: 'UNPAID',
-              tx_hash: transactionHash
+        if (amountPaid > 0) {
+            const commissionAmount = amountPaid * 0.30;
+            console.log("Inserting Earnings - Amount:", commissionAmount);
+            const { error: earnError } = await supabase.from('affiliate_earnings').insert([{ referrer_wallet: referrerWallet.toLowerCase(), source_wallet: buyerWallet.toLowerCase(), amount: commissionAmount, earnings_type: 'MINT', status: 'UNPAID', tx_hash: transactionHash }]);
+            
+            if (earnError) {
+                console.error("Earnings Insert Error:", earnError);
+                throw earnError;
             }
-          ]);
+        } else {
+            console.log("Amount is 0 - Skipping earnings insert");
+        }
       }
 
+      console.log("Mint Process Completed Successfully");
       return NextResponse.json({ success: true });
-
-    } catch (error: any) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+  } catch (error: any) {
+    console.error("CRITICAL API ERROR:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 }
-
-
-
-
 
