@@ -9,7 +9,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS!;
 
-
 const publicClient = createPublicClient({
   chain: polygon,
   transport: http()
@@ -113,10 +112,6 @@ export async function POST(request: Request) {
       const buyerWallet = tx.from.toLowerCase();
       const amountPaid = parseFloat(formatEther(tx.value));
 
-      if (amountPaid <= 0) {
-         return NextResponse.json({ error: 'No value transferred' }, { status: 400 });
-      }
-
       let finalReferrer = referrerWallet ? referrerWallet.toLowerCase() : null;
 
       if (!finalReferrer) {
@@ -136,20 +131,22 @@ export async function POST(request: Request) {
             { onConflict: 'child_wallet' }
           );
 
-        const commissionAmount = amountPaid * 0.30;
+        if (amountPaid > 0) {
+          const commissionAmount = amountPaid * 0.30;
 
-        await supabase
-          .from('affiliate_earnings')
-          .insert([
-            {
-              referrer_wallet: finalReferrer,
-              source_wallet: buyerWallet,
-              amount: commissionAmount,
-              earnings_type: 'MINT',
-              status: 'UNPAID',
-              tx_hash: transactionHash
-            }
-          ]);
+          await supabase
+            .from('affiliate_earnings')
+            .insert([
+              {
+                referrer_wallet: finalReferrer,
+                source_wallet: buyerWallet,
+                amount: commissionAmount,
+                earnings_type: 'MINT',
+                status: 'UNPAID',
+                tx_hash: transactionHash
+              }
+            ]);
+        }
       }
 
       return NextResponse.json({ success: true });
