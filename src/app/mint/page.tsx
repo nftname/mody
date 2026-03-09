@@ -341,7 +341,7 @@ const MintContent = () => {
 
                  if (receipt.transactionHash) {
                      try {
-                         await fetch('/api/affiliate', {
+                         const affResponse = await fetch('/api/affiliate', {
                              method: 'POST',
                              headers: { 'Content-Type': 'application/json' },
                              body: JSON.stringify({ 
@@ -350,8 +350,21 @@ const MintContent = () => {
                                  referrerWallet: referrerWallet ? referrerWallet.toLowerCase() : null 
                              })
                          });
-                     } catch (e) {
-                         console.error(e);
+                         
+                         if (!affResponse.ok) {
+                             const affErrorText = await affResponse.text();
+                             setErrorTitle("Affiliate API Error");
+                             setErrorMessage(affErrorText);
+                             setModalType('error');
+                             setShowModal(true);
+                             return;
+                         }
+                     } catch (e: any) {
+                         setErrorTitle("Network Error");
+                         setErrorMessage(e.message);
+                         setModalType('error');
+                         setShowModal(true);
+                         return;
                      }
                  }
              }
