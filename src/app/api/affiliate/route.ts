@@ -85,12 +85,16 @@ export async function POST(request: Request) {
     }
 
     try {
-      const tx = await publicClient.getTransaction({ hash: transactionHash as `0x${string}` });
-      const receipt = await publicClient.getTransactionReceipt({ hash: transactionHash as `0x${string}` });
+      const receipt = await publicClient.waitForTransactionReceipt({ 
+          hash: transactionHash as `0x${string}`,
+          timeout: 60000 
+      });
 
       if (receipt.status !== 'success') {
          return NextResponse.json({ error: 'Transaction failed on chain' }, { status: 400 });
       }
+
+      const tx = await publicClient.getTransaction({ hash: transactionHash as `0x${string}` });
 
       if (tx.to?.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()) {
          return NextResponse.json({ error: 'Invalid contract address' }, { status: 400 });
@@ -147,7 +151,6 @@ export async function POST(request: Request) {
             }
           ]);
       }
-
 
       return NextResponse.json({ success: true });
 

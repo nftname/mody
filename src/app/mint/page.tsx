@@ -333,15 +333,7 @@ const MintContent = () => {
              if (transferLog && transferLog.topics[3]) {
                  const mintedId = parseInt(transferLog.topics[3], 16);
 
-                 await supabase.from('activities').insert([{
-                     token_id: mintedId,
-                     activity_type: 'Mint',
-                     from_address: '0x0000000000000000000000000000000000000000',
-                     to_address: address, 
-                     price: actualPriceInPOL.toFixed(4),
-                     created_at: new Date().toISOString()
-                 }]);
-
+                
                  try {
                      await fetch('/api/save-asset', {
                          method: 'POST',
