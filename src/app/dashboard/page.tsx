@@ -432,7 +432,7 @@ export default function DashboardPage() {
 
           setWalletBalances({ 
               wnnm: wallet ? Number(wallet.wnnm_balance) : 0, 
-              nnm: wallet ? Number(wallet.nnm_balance) : 0 
+              nnm: wallet ? Number(wallet.claimable_nnm) : 0 
           });
 
           const historyLogs = [

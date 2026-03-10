@@ -332,31 +332,6 @@ const formatPriceDisplay = (price: string) => {
                 throw new Error(result.message || 'Transaction failed');
             }
 
-            // ---------------------------------------------------------
-            // 2. INJECTED REWARD LOGIC: Grant 100 NNM immediately
-            // ---------------------------------------------------------
-            const { data: walletData, error: fetchError } = await supabase
-                .from('nnm_wallets')
-                .select('nnm_balance')
-                .eq('wallet_address', address)
-                .single();
-
-            // Ignore 'PGRST116' (row not found), treat balance as 0
-            if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
-
-            const currentNNM = walletData ? Number(walletData.nnm_balance) : 0;
-            const newNNM = currentNNM + 100;
-
-            const { error: rewardError } = await supabase
-                .from('nnm_wallets')
-                .upsert({
-                    wallet_address: address,
-                    nnm_balance: newNNM,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'wallet_address' });
-
-            if (rewardError) throw rewardError;
-            // ---------------------------------------------------------
 
             // 3. Success: Optimistic UI Update
             setConvictionCount(prev => prev + 100);

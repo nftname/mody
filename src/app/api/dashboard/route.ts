@@ -60,7 +60,7 @@ export async function POST(req: Request) {
         }
 
         if (action === 'getConviction') {
-            const { data: wallet } = await supabaseAdmin.from('nnm_wallets').select('wnnm_balance, nnm_balance').eq('wallet_address', address).maybeSingle();
+            const { data: wallet } = await supabaseAdmin.from('nnm_claim_balances').select('wnnm_balance, claimable_nnm').eq('wallet_address', address).maybeSingle();
             const { data: mints } = await supabaseAdmin.from('activities').select('*').match({ activity_type: 'Mint' }).ilike('to_address', address);
             const { data: sales } = await supabaseAdmin.from('activities').select('*').match({ activity_type: 'Sale' }).ilike('to_address', address);
             const { data: votes } = await supabaseAdmin.from('conviction_votes').select('*').ilike('supporter_address', address);

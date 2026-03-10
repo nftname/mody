@@ -11,45 +11,38 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { userWallet, amountNNM } = body;
 
-    // 1. التحقق من الرصيد
     const { data: userData } = await supabase
-      .from('nnm_wallets')
-      .select('nnm_balance')
+      .from('nnm_claim_balances')
+      .select('claimable_nnm')
       .eq('wallet_address', userWallet)
       .single();
 
-    if (!userData || parseFloat(userData.nnm_balance) < amountNNM) {
+    if (!userData || parseFloat(userData.claimable_nnm) < amountNNM) {
       return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
     }
 
-    // 2. تطبيق قاعدة الـ 5 سنت (The 5-Cent Rule)
-    // نحسب القيمة الدولارية المستحقة ونخزنها
     const usdValue = amountNNM * 0.05; 
 
-    // 3. خصم الرصيد من المحفظة
-    const newBalance = parseFloat(userData.nnm_balance) - amountNNM;
+    const newBalance = parseFloat(userData.claimable_nnm) - amountNNM;
     const { error: updateError } = await supabase
-      .from('nnm_wallets')
+      .from('nnm_claim_balances')
       .update({ 
-        nnm_balance: newBalance, 
+        claimable_nnm: newBalance, 
         updated_at: new Date().toISOString() 
       })
       .eq('wallet_address', userWallet);
 
     if (updateError) throw new Error("Failed to update balance: " + updateError.message);
 
-    // 4. تسجيل الطلب مع القيمة الدولارية المثبتة
-    // نترك (exchange_rate) و (tx_hash) للكود الأخير ليملأها وقت الصرف
     const { error: logError } = await supabase.from('nnm_payout_logs').insert([{
       wallet_address: userWallet,
       amount_nnm: amountNNM,
-      usd_value_at_time: usdValue, // هنا نثبت حق العميل بالدولار
+      usd_value_at_time: usdValue,
       status: 'PENDING',
       created_at: new Date().toISOString()
     }]);
 
     if (logError) {
-        // حماية: إذا فشل التسجيل نرجع خطأ (يمكنك إضافة كود لإعادة الرصيد هنا مستقبلاً)
         console.error("Database Insert Error:", logError);
         throw new Error("Failed to log request: " + logError.message);
     }

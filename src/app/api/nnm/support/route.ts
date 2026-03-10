@@ -49,12 +49,35 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString()
     }).eq('wallet_address', supporterWallet);
 
+    const { data: supporterClaimData } = await supabase
+      .from('nnm_claim_balances')
+      .select('wnnm_balance, claimable_nnm')
+      .eq('wallet_address', supporterWallet)
+      .maybeSingle();
+
+    if (supporterClaimData) {
+      await supabase.from('nnm_claim_balances').update({
+        wnnm_balance: parseFloat(supporterClaimData.wnnm_balance) - 100,
+        claimable_nnm: parseFloat(supporterClaimData.claimable_nnm) + 100, 
+        updated_at: new Date().toISOString()
+      }).eq('wallet_address', supporterWallet);
+    }
+
     const { data: ownerData } = await supabase.from('nnm_wallets').select('nnm_balance').eq('wallet_address', assetOwner).single();
     const currentOwnerBalance = ownerData ? parseFloat(ownerData.nnm_balance) : 0;
     
     await supabase.from('nnm_wallets').upsert({
       wallet_address: assetOwner,
       nnm_balance: currentOwnerBalance + 100, 
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'wallet_address' });
+
+    const { data: ownerClaimData } = await supabase.from('nnm_claim_balances').select('claimable_nnm').eq('wallet_address', assetOwner).maybeSingle();
+    const currentOwnerClaimBalance = ownerClaimData ? parseFloat(ownerClaimData.claimable_nnm) : 0;
+
+    await supabase.from('nnm_claim_balances').upsert({
+      wallet_address: assetOwner,
+      claimable_nnm: currentOwnerClaimBalance + 100, 
       updated_at: new Date().toISOString()
     }, { onConflict: 'wallet_address' });
 

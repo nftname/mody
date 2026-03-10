@@ -15,22 +15,23 @@ export async function POST(request: Request) {
 
     let nnmReward = 0;   
     let wnnmReward = 0; 
+    let newSystemWnnm = 0;
 
     const tierUpper = tier ? tier.toUpperCase() : 'FOUNDER';
-
     
     if (tierUpper === 'IMMORTAL') {
         nnmReward = 300000;
         wnnmReward = 3000;
+        newSystemWnnm = 30000;
     } else if (tierUpper === 'ELITE') {
         nnmReward = 200000;
         wnnmReward = 2000;
+        newSystemWnnm = 20000;
     } else {
-        // FOUNDER
         nnmReward = 100000;
         wnnmReward = 1000;
+        newSystemWnnm = 10000;
     }
-
    
     const { data: walletData } = await supabase
       .from('nnm_wallets')
@@ -40,11 +41,9 @@ export async function POST(request: Request) {
 
     const currentNNM = walletData ? Number(walletData.nnm_balance) : 0;
     const currentWNNM = walletData ? Number(walletData.wnnm_balance) : 0;
-
     
     const newNNM = currentNNM + nnmReward;
     const newWNNM = currentWNNM + wnnmReward;
-
     
     const { error: walletError } = await supabase
       .from('nnm_wallets')
@@ -57,7 +56,26 @@ export async function POST(request: Request) {
 
     if (walletError) throw walletError;
 
-   
+    const { data: claimData } = await supabase
+      .from('nnm_claim_balances')
+      .select('wnnm_balance, claimable_nnm')
+      .eq('wallet_address', wallet)
+      .single();
+
+    const currentClaimWNNM = claimData ? Number(claimData.wnnm_balance) : 0;
+    const currentClaimableNNM = claimData ? Number(claimData.claimable_nnm) : 0;
+
+    const { error: claimError } = await supabase
+      .from('nnm_claim_balances')
+      .upsert({
+        wallet_address: wallet,
+        wnnm_balance: currentClaimWNNM + newSystemWnnm,
+        claimable_nnm: currentClaimableNNM,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'wallet_address' });
+
+    if (claimError) console.error(claimError);
+
     if (tokenId) {
         const { error: voteError } = await supabase
             .from('conviction_votes')
@@ -68,10 +86,10 @@ export async function POST(request: Request) {
                 created_at: new Date().toISOString()
             });
             
-        if (voteError) console.error("Failed to insert conviction record:", voteError);
+        if (voteError) console.error(voteError);
     }
 
-    return NextResponse.json({ success: true, addedNNM: nnmReward, addedWNNM: wnnmReward });
+    return NextResponse.json({ success: true, addedNNM: nnmReward, addedWNNM: wnnmReward, newSystemAddedWNNM: newSystemWnnm });
 
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

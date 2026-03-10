@@ -523,3 +523,108 @@ Name: CHAINFACEVAULT
 Tier: IMMORTAL
 Wallet: 0xEF2921DcC9b9A942F0560E18CC56F5CaedEEe6A6
 ------------------------
+
+=================================
+Date: 2026-03-08
+=================================
+
+ID: 1283
+Name: EXPERT
+Tier: IMMORTAL
+Wallet: 0x2C68e2D6c624a2C449acd902Be3240a69aC0Caa0
+------------------------
+ID: 1284
+Name: BIGBOY
+Tier: FOUNDER
+Wallet: 0xf6C69305F5400c3551Cb7d7b3E6C4f43664F5ccf
+------------------------
+ID: 1285
+Name: BIGGIRL
+Tier: FOUNDER
+Wallet: 0xf6C69305F5400c3551Cb7d7b3E6C4f43664F5ccf
+------------------------
+ID: 1286
+Name: BANANA
+Tier: ELITE
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+ID: 1287
+Name: TRUMP
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1288
+Name: HEALTHYFOOD
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1289
+Name: HEALTHYTEETH
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+
+=================================
+Date: 2026-03-09
+=================================
+
+ID: 1290
+Name: SAM
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1291
+Name: DIAMOND
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1292
+Name: THESTAR
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1293
+Name: GREATLEADER
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1294
+Name: IRONWOMAN
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1295
+Name: TEACHER
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1296
+Name: COACH
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1297
+Name: AMAZING
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1298
+Name: BIGMAN
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1299
+Name: NICEGIRL
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1300
+Name: THEWITCH
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1301
+Name: CLASSY
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
