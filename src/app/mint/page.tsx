@@ -341,7 +341,7 @@ const MintContent = () => {
 
                  if (receipt.transactionHash) {
                      try {
-                         // إرسال الإحالة في الخلفية بدون ما نوقف العميل لو حصل خطأ
+                         
                          await fetch('/api/affiliate', {
                              method: 'POST',
                              headers: { 'Content-Type': 'application/json' },
