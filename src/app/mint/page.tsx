@@ -341,7 +341,8 @@ const MintContent = () => {
 
                  if (receipt.transactionHash) {
                      try {
-                         const affResponse = await fetch('/api/affiliate', {
+                         // إرسال الإحالة في الخلفية بدون ما نوقف العميل لو حصل خطأ
+                         await fetch('/api/affiliate', {
                              method: 'POST',
                              headers: { 'Content-Type': 'application/json' },
                              body: JSON.stringify({ 
@@ -350,21 +351,8 @@ const MintContent = () => {
                                  referrerWallet: referrerWallet ? referrerWallet.toLowerCase() : null 
                              })
                          });
-                         
-                         if (!affResponse.ok) {
-                             const affErrorText = await affResponse.text();
-                             setErrorTitle("Affiliate API Error");
-                             setErrorMessage(affErrorText);
-                             setModalType('error');
-                             setShowModal(true);
-                             return;
-                         }
                      } catch (e: any) {
-                         setErrorTitle("Network Error");
-                         setErrorMessage(e.message);
-                         setModalType('error');
-                         setShowModal(true);
-                         return;
+                         console.error("Affiliate update ignored:", e.message);
                      }
                  }
              }
