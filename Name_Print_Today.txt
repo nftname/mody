@@ -638,3 +638,18 @@ Name: ROYALFAMILY
 Tier: ELITE
 Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
 ------------------------
+
+=================================
+Date: 2026-03-11
+=================================
+
+ID: 1303
+Name: FIRSTTRADER
+Tier: ELITE
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
+ID: 1304
+Name: PROFESSIONAL
+Tier: FOUNDER
+Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
+------------------------
