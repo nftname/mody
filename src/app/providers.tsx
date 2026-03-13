@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -23,9 +24,10 @@ const config = getDefaultConfig({
   transports: {
     [polygon.id]: fallback([
       http("https://polygon.drpc.org"),
+      http("https://rpc-mainnet.maticvigil.com"),
+      http("https://polygon-rpc.com"),
       http("https://polygon-bor.publicnode.com"),
-      http("https://rpc.ankr.com/polygon"),
-      http("https://polygon.llamarpc.com")
+      http("https://rpc.ankr.com/polygon")
     ]),
     [mainnet.id]: fallback([
       http("https://cloudflare-eth.com"),
