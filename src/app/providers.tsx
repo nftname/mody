@@ -24,8 +24,6 @@ const config = getDefaultConfig({
   transports: {
     [polygon.id]: fallback([
       http("https://polygon.drpc.org"),
-      http("https://rpc-mainnet.maticvigil.com"),
-      http("https://polygon-rpc.com"),
       http("https://polygon-bor.publicnode.com"),
       http("https://rpc.ankr.com/polygon")
     ]),
