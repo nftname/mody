@@ -15,6 +15,17 @@ const resolveIPFS = (uri: string) => {
     return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://ipfs.io/ipfs/') : uri;
 };
 
+const fetchWithRetry = async (fn: () => Promise<any>, retries = 3, delay = 2000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            if (i === retries - 1) throw error;
+            await new Promise(res => setTimeout(res, delay));
+        }
+    }
+};
+
 export function useMarketData(timeFilter: string = 'All') {
     const publicClient = usePublicClient();
     const [listings, setListings] = useState<any[]>([]);
@@ -44,11 +55,14 @@ export function useMarketData(timeFilter: string = 'All') {
             if (!publicClient) return;
             if (isMounted) setLoading(true);
             try {
-                const data = await publicClient.readContract({
-                    address: MARKETPLACE_ADDRESS as `0x${string}`,
-                    abi: MARKET_ABI,
-                    functionName: 'getAllListings'
-                });
+                const data = await fetchWithRetry(() => 
+                    publicClient.readContract({
+                        address: MARKETPLACE_ADDRESS as `0x${string}`,
+                        abi: MARKET_ABI,
+                        functionName: 'getAllListings'
+                    })
+                );
+                
                 const [tokenIds, prices] = data as [bigint[], bigint[], `0x${string}`[]];
                 
                 if (!tokenIds || tokenIds.length === 0) {
@@ -147,25 +161,35 @@ export function useMarketData(timeFilter: string = 'All') {
 
                 const itemsMissingNames = items.filter(item => item.name.startsWith('Asset #'));
                 if (itemsMissingNames.length > 0) {
-                    itemsMissingNames.forEach(async (item) => {
-                        try {
-                            const uri = await publicClient.readContract({
-                                address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-                                abi: parseAbi(["function tokenURI(uint256) view returns (string)"]),
-                                functionName: 'tokenURI',
-                                args: [BigInt(item.id)]
-                            });
-                            const metaRes = await fetch(resolveIPFS(uri as string));
-                            const meta = await metaRes.json();
-                            if (meta.name && isMounted) {
-                                setListings(prev => prev.map(p => 
-                                    p.id === item.id 
-                                        ? { ...p, name: meta.name, tier: meta.attributes?.find((a:any) => a.trait_type === 'Tier')?.value || p.tier } 
-                                        : p
-                                ));
-                            }
-                        } catch (e) {}
-                    });
+                    const fetchMissingNamesInChunks = async () => {
+                        const chunkSize = 5;
+                        for (let i = 0; i < itemsMissingNames.length; i += chunkSize) {
+                            if (!isMounted) break;
+                            const chunk = itemsMissingNames.slice(i, i + chunkSize);
+                            
+                            await Promise.all(chunk.map(async (item) => {
+                                try {
+                                    const uri = await publicClient.readContract({
+                                        address: NFT_COLLECTION_ADDRESS as `0x${string}`,
+                                        abi: parseAbi(["function tokenURI(uint256) view returns (string)"]),
+                                        functionName: 'tokenURI',
+                                        args: [BigInt(item.id)]
+                                    });
+                                    const metaRes = await fetch(resolveIPFS(uri as string));
+                                    const meta = await metaRes.json();
+                                    if (meta.name && isMounted) {
+                                        setListings(prev => prev.map(p => 
+                                            p.id === item.id 
+                                                ? { ...p, name: meta.name, tier: meta.attributes?.find((a:any) => a.trait_type === 'Tier')?.value || p.tier } 
+                                                : p
+                                        ));
+                                    }
+                                } catch (e) {
+                                }
+                            }));
+                        }
+                    };
+                    fetchMissingNamesInChunks();
                 }
 
             } catch (error) {
