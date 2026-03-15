@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <title>NNM Token Logo 32x32 - 100% Accurate</title>
+    <defs>
+        <filter id="subtle3d-nnm" x="-10%" y="-10%" width="120%" height="120%">
+            <feOffset dx="0.5" dy="0.5" in="SourceAlpha" result="offset"/>
+            <feGaussianBlur stdDeviation="0.2" in="offset" result="blur"/>
+            <feComposite operator="out" in="SourceAlpha" in2="blur" result="inverse"/>
+            <feFlood flood-color="#00ACC1" flood-opacity="0.8" result="shadowColor"/>
+            <feComposite operator="in" in="shadowColor" in2="inverse" result="shadow"/>
+            <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
+        </filter>
+    </defs>
+    <rect width="32" height="32" fill="#00E5FF"/>
+    <path d="M16 8.5C13.5 8.5 12 10.3 11.6 12.9C10.9 11.8 9.9 10.3 8.7 10.3C6.6 10.3 5.4 12.5 4.9 15C4.5 17.2 4.9 18.4 5.8 19C6.7 19.6 8.2 19.5 10.1 18.3L10.3 18.5C12.4 16.2 13.9 13.5 15.3 11C16.7 13.5 18.2 16.2 20.3 18.5L20.5 18.3C22.4 19.5 23.9 19.6 24.8 19C25.7 18.4 26.1 17.2 25.7 15C25.2 12.5 24 10.3 21.9 10.3C20.7 10.3 19.7 11.8 19 12.9C18.6 10.3 17.1 8.5 14.6 8.5L16 8.5Z M16 12C14.9 14.1 13.6 16.6 12 18.7L11.7 18.9C12.9 19.7 14.4 20.2 16 20.2C17.6 20.2 19.1 19.7 20.3 18.9L20 18.7C18.4 16.6 17.1 14.1 16 12Z" fill="#FFFFFF" filter="url(#subtle3d-nnm)"/>
+</svg>
