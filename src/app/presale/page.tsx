@@ -168,10 +168,11 @@ export default function PresalePage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <input type="number" placeholder="0.0" value={amount} onChange={(e) => setAmount(e.target.value)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '40%', fontWeight: 'bold' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <img src="/icons/eth.svg" alt="ETH" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: selectedCoin === 'ETH' ? 1 : 0.4 }} />
-                  <img src="/icons/usdt.svg" alt="USDT" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: selectedCoin === 'USDT' ? 1 : 0.4 }} />
-                  <img src="/icons/matic.svg" alt="POL" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: selectedCoin === 'POL' ? 1 : 0.4 }} />
-                  <div onClick={cycleCoin} style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '12px', color: '#fff', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', marginLeft: '4px', width: '60px', justifyContent: 'center' }}>
+                  {}
+                  <img src="/icons/eth.svg" alt="ETH" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 1 }} />
+                  <img src="/icons/usdt.svg" alt="USDT" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 1 }} />
+                  <img src="/icons/matic.svg" alt="POL" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 1 }} />
+                  <div onClick={cycleCoin} style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '12px', color: '#fff', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', marginLeft: '4px', minWidth: '75px', justifyContent: 'center' }}>
                     {selectedCoin} ▼
                   </div>
                 </div>
