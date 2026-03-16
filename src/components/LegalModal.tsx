@@ -282,7 +282,7 @@ export default function LegalModal() {
             <ul className="legal-ul">
               <li>access to specific protocol features,</li>
               <li>ecosystem participation,</li>
-              <li>internal platform mechanics and payments (e.g., within ChainFace or NGX).</li>
+              <li>internal platform mechanics and payments.</li>
             </ul>
 
             <p className="legal-p mt-3"><strong style={{ color: COLORS.TEXT_HEAD }}>b. Explicit Disclaimer of Financial Products:</strong><br />
