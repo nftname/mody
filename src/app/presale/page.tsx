@@ -67,7 +67,16 @@ export default function PresalePage() {
   };
 
   return (
-    <div style={{ backgroundColor: '#0b1426', backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)', backgroundSize: '30px 30px', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', overflowX: 'hidden', fontFamily: 'sans-serif', padding: '20px 10px' }}>
+    <div style={{ backgroundColor: '#050a16', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', overflowX: 'hidden', fontFamily: 'sans-serif', padding: '20px 10px' }}>
+      
+      {/* PROFESSIONAL WEB3 AURORA BACKGROUND GLOWS */}
+      {/* Top Left Deep Magenta Glow */}
+      <div style={{ position: 'absolute', top: '0', left: '0', width: '100vw', height: '100vh', background: 'radial-gradient(circle at 10% 10%, rgba(225, 29, 72, 0.12) 0%, rgba(167, 139, 250, 0) 60%)', filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }}></div>
+      {/* Center Deep Purple Glow */}
+      <div style={{ position: 'absolute', top: '30%', left: '20%', width: '100vw', height: '100vh', background: 'radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.1) 0%, rgba(109, 40, 217, 0) 70%)', filter: 'blur(150px)', zIndex: 0, pointerEvents: 'none' }}></div>
+      {/* Bottom Right Royal Blue Glow */}
+      <div style={{ position: 'absolute', bottom: '0', right: '0', width: '100vw', height: '100vh', background: 'radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0) 60%)', filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }}></div>
+
       
       {/* Background Glows (Sa'te) */}
       <div style={{ position: 'absolute', top: '10%', left: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(225, 29, 72, 0.09) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
