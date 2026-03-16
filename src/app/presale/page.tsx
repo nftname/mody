@@ -153,10 +153,15 @@ export default function PresalePage() {
 
       {/* TOKENOMICS SECTION (COMPACT & PROFESSIONAL) */}
       <div style={{ width: '100%', maxWidth: '900px', zIndex: 1, marginBottom: '40px' }}>
+        <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 'bold', textAlign: 'center', marginBottom: '30px' }}>
+          NNM <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tokenomics</span>
+        </h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
           
-          {/* Left Container: Interactive Donut Chart */}
+          {/* Left Container: Interactive Donut Chart + Burn */}
           <div style={{ flex: '1', minWidth: '300px', background: 'rgba(147, 51, 234, 0.04)', border: '1px solid rgba(147, 51, 234, 0.1)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.05)', borderRadius: '20px', padding: '24px', backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            
+            <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', alignSelf: 'flex-start', marginBottom: '20px' }}>1 — NNM Distribution</h3>
             
             {/* Legends */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginBottom: '30px' }}>
@@ -175,7 +180,7 @@ export default function PresalePage() {
             </div>
 
             {/* SVG Donut Chart */}
-            <div style={{ position: 'relative', width: '220px', height: '220px' }}>
+            <div style={{ position: 'relative', width: '200px', height: '200px' }}>
               <svg viewBox="0 0 32 32" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)', overflow: 'visible' }}>
                 {tokenomicsData.map((item) => (
                   <circle
@@ -205,10 +210,24 @@ export default function PresalePage() {
                 </div>
               </div>
             </div>
+            
+            {/* Burn Mechanism (Relocated Here) */}
+            <div style={{ background: 'rgba(225, 29, 72, 0.05)', border: '1px solid rgba(225, 29, 72, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '30px', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ color: '#E11D48', fontSize: '18px' }}>🔥</span>
+                <span style={{ color: '#E11D48', fontSize: '16px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
+              </div>
+              <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.5' }}>
+                50% of protocol revenue generated from minting new digital name assets is permanently removed from circulation.
+              </p>
+            </div>
+            
           </div>
 
-          {/* Right Container: Token Details */}
+          {/* Right Container: Token Details + Vesting Specs */}
           <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            
+            <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>2 — Lockup Specs & Contracts</h3>
             
             {/* General Info */}
             <div style={{ background: 'rgba(147, 51, 234, 0.04)', border: '1px solid rgba(147, 51, 234, 0.1)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.05)', borderRadius: '20px', padding: '24px', backdropFilter: 'blur(20px)' }}>
@@ -231,9 +250,7 @@ export default function PresalePage() {
             </div>
 
             {/* Vesting Specs */}
-            <div style={{ background: 'rgba(147, 51, 234, 0.04)', border: '1px solid rgba(147, 51, 234, 0.1)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.05)', borderRadius: '20px', padding: '24px', backdropFilter: 'blur(20px)' }}>
-              <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>Vesting & Locks</h3>
-              
+            <div style={{ flex: 1, background: 'rgba(147, 51, 234, 0.04)', border: '1px solid rgba(147, 51, 234, 0.1)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.05)', borderRadius: '20px', padding: '24px', backdropFilter: 'blur(20px)' }}>
               <div style={{ marginBottom: '16px' }}>
                 <div style={{ color: '#E11D48', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Pre-sale Contract (35%)</div>
                 <div style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.4' }}>Smart contract is transparently verified on Polygon. 50% of initial utility contributions are programmatically allocated to initialize ecosystem liquidity.</div>
@@ -259,17 +276,6 @@ export default function PresalePage() {
                   View Here <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
                 </a>
               </div>
-            </div>
-
-            {/* Burn Mechanism */}
-            <div style={{ background: 'rgba(225, 29, 72, 0.05)', border: '1px solid rgba(225, 29, 72, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ color: '#E11D48', fontSize: '16px' }}>🔥</span>
-                <span style={{ color: '#E11D48', fontSize: '14px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
-              </div>
-              <p style={{ color: '#9ea9a9', fontSize: '12px', lineHeight: '1.5' }}>
-                50% of protocol revenue generated from minting new digital name assets is permanently removed from circulation.
-              </p>
             </div>
 
           </div>
