@@ -56,14 +56,14 @@ export default function PresalePage() {
       `}</style>
 
       {/* PRESALE BOX SECTION */}
-      <div style={{ display: 'flex', width: '100%', maxWidth: '900px', zIndex: 1, gap: '30px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '50px', marginTop: '20px' }}>
+      <div style={{ display: 'flex', width: '100%', maxWidth: '900px', zIndex: 1, gap: '30px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '30px', marginTop: '20px' }}>
         <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff' }}>
           <h1 style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '16px', lineHeight: '1.2' }}>
             The NNM Protocol <br/>
             <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Web3 Identity coin Presales</span>
           </h1>
-          <p style={{ color: '#9ea9a9', fontSize: '15px', maxWidth: '350px', lineHeight: '1.6' }}>
-            Join the most exclusive token launch. Secure your allocation before the public listing.
+          <p style={{ color: '#9ea9a9', fontSize: '15px', maxWidth: '100%', paddingRight: '10px', lineHeight: '1.6' }}>
+            Empowering the Polygon Ecosystem with Sovereign Identity and Institutional-Grade NFT Market Intelligence. A fully operational Web3 identity layer deployed on Polygon Mainnet. Join the most exclusive token launch. Secure your allocation before the public listing.
           </p>
         </div>
 
@@ -151,17 +151,35 @@ export default function PresalePage() {
         </div>
       </div>
 
+      {/* 3 CARDS SECTION */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', width: '100%', maxWidth: '900px', zIndex: 1, marginBottom: '60px' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '30px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#E11D48', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>1</div>
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>ChainFace Identity</h3>
+          <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>Transforming purely speculative NFTs into hyper-functional Web3 utilities via verified cross-chain payment dashboards.</p>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '30px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#9333EA', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>2</div>
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>The NGX Global Index</h3>
+          <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>The authoritative observatory for the NFT asset class, featuring Ecosystem Sentiment, Aggregated Volume, and Sector Market Cap.</p>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '30px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>3</div>
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>Conviction Rank</h3>
+          <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>An immutable, sybil-resistant ranking system rewarding genuine community belief over artificial wash trading.</p>
+        </div>
+      </div>
+
       {/* TOKENOMICS SECTION (COMPACT & PROFESSIONAL) */}
       <div style={{ width: '100%', maxWidth: '900px', zIndex: 1, marginBottom: '40px' }}>
-        <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 'bold', textAlign: 'center', marginBottom: '30px' }}>
+        <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 'bold', textAlign: 'left', marginBottom: '30px' }}>
           NNM <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tokenomics</span>
         </h2>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
+        
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'stretch' }}>
           
           {/* Left Container: Interactive Donut Chart + Burn */}
           <div style={{ flex: '1', minWidth: '300px', background: 'rgba(147, 51, 234, 0.04)', border: '1px solid rgba(147, 51, 234, 0.1)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.05)', borderRadius: '20px', padding: '24px', backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            
-            <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', alignSelf: 'flex-start', marginBottom: '20px' }}>1 — NNM Distribution</h3>
             
             {/* Legends */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginBottom: '30px' }}>
@@ -211,8 +229,8 @@ export default function PresalePage() {
               </div>
             </div>
             
-            {/* Burn Mechanism (Relocated Here) */}
-            <div style={{ background: 'rgba(225, 29, 72, 0.05)', border: '1px solid rgba(225, 29, 72, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '30px', width: '100%' }}>
+            {/* Burn Mechanism */}
+            <div style={{ background: 'rgba(225, 29, 72, 0.05)', border: '1px solid rgba(225, 29, 72, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '60px', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ color: '#E11D48', fontSize: '18px' }}>🔥</span>
                 <span style={{ color: '#E11D48', fontSize: '16px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
@@ -226,8 +244,6 @@ export default function PresalePage() {
 
           {/* Right Container: Token Details + Vesting Specs */}
           <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            
-            <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>2 — Lockup Specs & Contracts</h3>
             
             {/* General Info */}
             <div style={{ background: 'rgba(147, 51, 234, 0.04)', border: '1px solid rgba(147, 51, 234, 0.1)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.05)', borderRadius: '20px', padding: '24px', backdropFilter: 'blur(20px)' }}>
