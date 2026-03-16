@@ -175,7 +175,7 @@ export default function PresalePage() {
 
             {/* TICKER MOVED HERE - Speed increased to 10s */}
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
-              <div className="ticker" style={{ animationDuration: '10s' }}>
+              <div className="ticker" style={{ animationDuration: '07s' }}>
                 <span className="ticker-item">0x8a...3f buys <span>15,000 NNM</span></span>
                 <span className="ticker-item">0x2b...1a buys <span>50,000 NNM</span></span>
                 <span className="ticker-item">0x9c...7d buys <span>5,000 NNM</span></span>
