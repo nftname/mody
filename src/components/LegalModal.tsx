@@ -273,6 +273,45 @@ export default function LegalModal() {
               <li>Acceptance of these Terms constitutes full waiver of claims against NNM for user-generated actions, misuse, or regulatory consequences.</li>
               <li>These Terms fully cover all liabilities, including name minting, NFT ownership, ChainFace use, and high-risk content control.</li>
             </ul>
+
+            <p className="legal-term-title">20. NNM UTILITY TOKEN & PRESALE EVENTS</p>
+            <p className="legal-p">NNM may introduce a platform utility token (“NNM Token”) used exclusively for ecosystem functionality within the NNM Protocol.</p>
+            
+            <p className="legal-p mt-3"><strong style={{ color: COLORS.TEXT_HEAD }}>a. Pure Utility Nature:</strong><br />
+            The NNM Token is intended solely for platform utility purposes including but not limited to:</p>
+            <ul className="legal-ul">
+              <li>access to specific protocol features,</li>
+              <li>ecosystem participation,</li>
+              <li>internal platform mechanics and payments (e.g., within ChainFace or NGX).</li>
+            </ul>
+
+            <p className="legal-p mt-3"><strong style={{ color: COLORS.TEXT_HEAD }}>b. Explicit Disclaimer of Financial Products:</strong><br />
+            The NNM Token is strictly NOT:</p>
+            <ul className="legal-ul">
+              <li>a security,</li>
+              <li>an investment contract,</li>
+              <li>a share or equity instrument,</li>
+              <li>a financial product,</li>
+              <li>a promise of profit, yield, dividend, or return.</li>
+            </ul>
+
+            <p className="legal-p mt-3"><strong style={{ color: COLORS.TEXT_HEAD }}>c. Presale & Token Distribution:</strong><br />
+            Participation in any optional token distribution, presale event, initial offering, or ecosystem allocation is entirely voluntary and conducted at the user's sole risk. Any funds contributed during a presale are considered payments for future access to platform utility, not investments in a common enterprise.</p>
+
+            <p className="legal-p mt-3"><strong style={{ color: COLORS.TEXT_HEAD }}>d. No Market Guarantees:</strong><br />
+            NNM explicitly does not guarantee, support, or promise:</p>
+            <ul className="legal-ul">
+              <li>future market value,</li>
+              <li>secondary market liquidity,</li>
+              <li>listings on centralized or decentralized exchanges (CEX/DEX),</li>
+              <li>price appreciation or stabilization mechanisms.</li>
+            </ul>
+
+            <p className="legal-p mt-3"><strong style={{ color: COLORS.TEXT_HEAD }}>e. Risk Acknowledgment:</strong><br />
+            Users acknowledge that digital asset markets are highly volatile, unregulated, and experimental. The NNM Token may lose all value, become illiquid, or become technologically obsolete.</p>
+
+            <p className="legal-p mt-3"><strong style={{ color: COLORS.TEXT_HEAD }}>f. Informational Communications:</strong><br />
+            Nothing on the NNM website, interface, documentation, social media channels, or communications shall be interpreted, construed, or relied upon as investment advice, financial promotion, or a solicitation to buy securities.</p>
         </div>
 
         <div className="p-3 border-top d-flex justify-content-end gap-2" style={{ borderColor: COLORS.BORDER, backgroundColor: COLORS.MODAL_BG, borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>

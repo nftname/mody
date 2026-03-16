@@ -5,7 +5,7 @@ const BRAND_GOLD = '#FCD535';
 const TEXT_OFF_WHITE = '#EAECEF'; 
 const TEXT_MUTED = '#848E9C';     
 const TEXT_HIGHLIGHT = '#CFD6E0'; 
-// --- BRAND ICONS DATA ---
+
 const FOX_PATH = "M29.77 8.35C29.08 7.37 26.69 3.69 26.69 3.69L22.25 11.23L16.03 2.19L9.67 11.23L5.35 3.69C5.35 3.69 2.97 7.37 2.27 8.35C2.19 8.46 2.13 8.6 2.13 8.76C2.07 10.33 1.83 17.15 1.83 17.15L9.58 24.32L15.93 30.2L16.03 30.29L16.12 30.2L22.47 24.32L30.21 17.15C30.21 17.15 29.98 10.33 29.91 8.76C29.91 8.6 29.86 8.46 29.77 8.35ZM11.16 19.34L7.56 12.87L11.53 14.86L13.88 16.82L11.16 19.34ZM16.03 23.33L12.44 19.34L15.06 16.92L16.03 23.33ZM16.03 23.33L17.03 16.92L19.61 19.34L16.03 23.33ZM20.89 19.34L18.17 16.82L20.52 14.86L24.49 12.87L20.89 19.34Z";
 
 const trustedBrands = [ 
@@ -50,7 +50,6 @@ export default function LegalPage() {
           
           <div className="col-12 col-lg-10">
 
-            {/* HEADER */}
             <header className="mb-5 border-bottom border-secondary border-opacity-25 pb-4">
               <h1 className="fw-bold mb-2" 
                   style={{ 
@@ -66,7 +65,6 @@ export default function LegalPage() {
               </p>
             </header>
 
-            {/* INTRO */}
             <section className="mb-5">
                 <div className="p-4 rounded-3" style={{ backgroundColor: '#1E2329', border: '1px solid #2B3139' }}>
                     <p className="mb-0 fw-medium" style={{ color: TEXT_OFF_WHITE, lineHeight: '1.7', fontSize: '15px' }}>
@@ -75,11 +73,9 @@ export default function LegalPage() {
                 </div>
             </section>
 
-            {/* SECTION I */}
             <section className="mb-5">
                 <h2 className="section-title mb-4">I. TERMS OF SERVICE & LIABILITY</h2>
                 
-                {/* 1 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">1. ELIGIBILITY & AGE REQUIREMENTS</h3>
                     <p className="term-text">
@@ -87,7 +83,6 @@ export default function LegalPage() {
                     </p>
                 </div>
 
-                {/* 2 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">2. PROTOCOL NATURE – INTERFACE ONLY</h3>
                     <p className="term-text">NNM provides a strictly decentralized interface for autonomous smart contracts on public blockchains.</p>
@@ -100,7 +95,6 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 3 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">3. DECENTRALIZED & JURISDICTION-NEUTRAL OPERATION</h3>
                     <p className="term-text">NNM operates globally and is jurisdiction-agnostic.</p>
@@ -112,7 +106,6 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 4 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">4. NO FINANCIAL, INVESTMENT, OR LEGAL ADVICE</h3>
                     <p className="term-text">
@@ -120,7 +113,6 @@ export default function LegalPage() {
                     </p>
                 </div>
 
-                {/* 5 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">5. DIGITAL ASSET CLASSIFICATION</h3>
                     <p className="term-text">NFT Names and related digital items (“Digital Identity Assets”) are:</p>
@@ -133,7 +125,6 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 6 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">6. MARKET ACTIVITY & ADMIN/OPERATIONAL WALLETS</h3>
                     <p className="term-text">
@@ -148,7 +139,6 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 7 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">7. CHAINFACE SERVICE</h3>
                     <p className="term-text">ChainFace provides decentralized identity display linked to NFT ownership.</p>
@@ -160,7 +150,6 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 8 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">8. CONVICTION POINTS SYSTEM</h3>
                     <p className="term-text">Conviction Rank points (WNNM → NNM Points):</p>
@@ -172,7 +161,6 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 9 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">9. USER RESPONSIBILITY</h3>
                     <p className="term-text">Users are fully responsible for:</p>
@@ -185,7 +173,6 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 10 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">10. PROHIBITED ACTIVITIES</h3>
                     <p className="term-text">Users agree not to use NNM for:</p>
@@ -197,7 +184,6 @@ export default function LegalPage() {
                     <p className="term-text mt-2">NNM reserves the right to restrict access to wallets suspected of prohibited activities or violation of these Terms.</p>
                 </div>
 
-                {/* 11 - The Strong Burn Clause (COLOR UPDATED) */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">11. PROHIBITED CONTENT, THIRD-PARTY RIGHTS & RIGHT TO BURN</h3>
                     <p className="term-text">To maintain protocol integrity and compliance, users must NOT mint or display Digital Identity Assets that:</p>
@@ -214,13 +200,11 @@ export default function LegalPage() {
                         <li>If an asset violates the community standards or high-risk policies.</li>
                         <li>If the asset is involved in misuse, unauthorized commercial exploitation, or regulatory concerns.</li>
                     </ul>
-                    {/* HERE IS THE COLOR CHANGE: Using TEXT_HIGHLIGHT (#CFD6E0) */}
                     <p className="term-text mt-3 fw-bold" style={{ color: TEXT_HIGHLIGHT }}>
                         NO REFUNDS: In the event an asset is blocked, delisted, or burned, the user forfeits all access and is not entitled to any refund, compensation, or reimbursement for minting or gas fees.
                     </p>
                 </div>
 
-                {/* 12 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">12. NAME BURN AUTHORIZATION</h3>
                     <p className="term-text">NNM may, at its sole discretion, burn or remove Digital Identity Assets under circumstances including but not limited to:</p>
@@ -232,7 +216,6 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 13 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">13. LIMITATION OF LIABILITY – “AS IS”</h3>
                     <p className="term-text">The Protocol is provided “AS IS” and “AS AVAILABLE.” NNM shall not be liable for:</p>
@@ -247,7 +230,6 @@ export default function LegalPage() {
                     <p className="term-text mt-2">Maximum liability, if any, is strictly limited to amounts directly paid to NNM for services.</p>
                 </div>
 
-                {/* 14 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">14. INDEMNIFICATION</h3>
                     <p className="term-text">
@@ -260,7 +242,6 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 15 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">15. INTELLECTUAL PROPERTY</h3>
                     <ul className="term-list">
@@ -270,7 +251,6 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 16 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">16. PRIVACY POLICY</h3>
                     <p className="term-text">NNM follows a Zero-PII policy:</p>
@@ -282,13 +262,11 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 17 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">17. MODIFICATIONS</h3>
                     <p className="term-text">NNM may update these Terms at any time; continued use constitutes acceptance of the updated Terms.</p>
                 </div>
 
-                {/* 18 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">18. GOVERNING LAW & ARBITRATION</h3>
                     <ul className="term-list">
@@ -298,7 +276,6 @@ export default function LegalPage() {
                     </ul>
                 </div>
 
-                {/* 19 */}
                 <div className="term-block mb-4">
                     <h3 className="term-heading">19. MISCELLANEOUS</h3>
                     <ul className="term-list">
@@ -306,6 +283,49 @@ export default function LegalPage() {
                         <li>Acceptance of these Terms constitutes full waiver of claims against NNM for user-generated actions, misuse, or regulatory consequences.</li>
                         <li>These Terms fully cover all liabilities, including name minting, NFT ownership, ChainFace use, and high-risk content control.</li>
                     </ul>
+                </div>
+
+                <div className="term-block mb-4">
+                    <h3 className="term-heading">20. NNM UTILITY TOKEN & PRESALE EVENTS</h3>
+                    <p className="term-text">
+                        NNM may introduce a platform utility token (“NNM Token”) used exclusively for ecosystem functionality within the NNM Protocol.
+                    </p>
+
+                    <p className="term-text mt-3"><strong>a. Pure Utility Nature:</strong><br />
+                    The NNM Token is intended solely for platform utility purposes including but not limited to:</p>
+                    <ul className="term-list">
+                        <li>access to specific protocol features,</li>
+                        <li>ecosystem participation,</li>
+                        <li>internal platform mechanics and payments (e.g., within ChainFace or NGX).</li>
+                    </ul>
+
+                    <p className="term-text mt-3"><strong>b. Explicit Disclaimer of Financial Products:</strong><br />
+                    The NNM Token is strictly NOT:</p>
+                    <ul className="term-list">
+                        <li>a security,</li>
+                        <li>an investment contract,</li>
+                        <li>a share or equity instrument,</li>
+                        <li>a financial product,</li>
+                        <li>a promise of profit, yield, dividend, or return.</li>
+                    </ul>
+
+                    <p className="term-text mt-3"><strong>c. Presale & Token Distribution:</strong><br />
+                    Participation in any optional token distribution, presale event, initial offering, or ecosystem allocation is entirely voluntary and conducted at the user's sole risk. Any funds contributed during a presale are considered payments for future access to platform utility, not investments in a common enterprise.</p>
+
+                    <p className="term-text mt-3"><strong>d. No Market Guarantees:</strong><br />
+                    NNM explicitly does not guarantee, support, or promise:</p>
+                    <ul className="term-list">
+                        <li>future market value,</li>
+                        <li>secondary market liquidity,</li>
+                        <li>listings on centralized or decentralized exchanges (CEX/DEX),</li>
+                        <li>price appreciation or stabilization mechanisms.</li>
+                    </ul>
+
+                    <p className="term-text mt-3"><strong>e. Risk Acknowledgment:</strong><br />
+                    Users acknowledge that digital asset markets are highly volatile, unregulated, and experimental. The NNM Token may lose all value, become illiquid, or become technologically obsolete.</p>
+
+                    <p className="term-text mt-3"><strong>f. Informational Communications:</strong><br />
+                    Nothing on the NNM website, interface, documentation, social media channels, or communications shall be interpreted, construed, or relied upon as investment advice, financial promotion, or a solicitation to buy securities.</p>
                 </div>
 
             </section>
@@ -321,7 +341,6 @@ export default function LegalPage() {
       </div>
 
       <style jsx global>{`
-        /* Scrollbar Styling to match dark theme */
         ::-webkit-scrollbar {
           width: 8px;
         }
@@ -381,14 +400,12 @@ export default function LegalPage() {
             font-weight: bold;
         }
         
-        /* Ticker Animations */
         .brand-text-gold { background: linear-gradient(to bottom, #FCD535 0%, #B3882A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(252, 213, 53, 0.2); } 
         .brand-icon-gold { color: #FCD535; text-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } 
         .marquee-track { animation: scroll 75s linear infinite; width: max-content; }
       `}</style>
 
-      {/* --- BRAND TICKER --- */}
       <div className="w-100 py-3 border-top border-bottom border-secondary position-relative" style={{ borderColor: '#2B3139 !important', marginTop: 'auto', marginBottom: '10px', backgroundColor: '#0b0e11', maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
           <div className="text-center mb-2"><span className="text-secondary text-uppercase" style={{ fontSize: '10px', letterSpacing: '3px', opacity: 1, color: '#aaa' }}>Built for Web3</span></div>
           <div className="marquee-container overflow-hidden position-relative w-100">
