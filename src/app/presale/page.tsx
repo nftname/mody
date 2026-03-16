@@ -9,8 +9,16 @@ const tokenomicsData = [
   { id: 4, name: "Team & Advisors", percent: 10, amount: "1B", color: "#F59E0B", offset: -90 },
 ];
 
+// Mock API prices for background calculation (will be replaced by your Smart Contract API later)
+const coinPrices = {
+  POL: 0.5,
+  USDT: 1,
+  ETH: 3000
+};
+
 export default function PresalePage() {
   const [amount, setAmount] = useState('');
+  const [selectedCoin, setSelectedCoin] = useState<'POL' | 'USDT' | 'ETH'>('POL');
   const [showModal, setShowModal] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [activeSegment, setActiveSegment] = useState<number | null>(null);
@@ -36,11 +44,24 @@ export default function PresalePage() {
     }
   };
 
+  const handleQuickAmount = (val: string) => {
+    setAmount(val);
+    setSelectedCoin('USDT');
+  };
+
+  const cycleCoin = () => {
+    const coins: ('POL' | 'USDT' | 'ETH')[] = ['POL', 'USDT', 'ETH'];
+    const nextIdx = (coins.indexOf(selectedCoin) + 1) % coins.length;
+    setSelectedCoin(coins[nextIdx]);
+  };
+
+  const calculatedNNM = amount ? (Number(amount) * coinPrices[selectedCoin] / 0.0001).toFixed(0) : '';
+
   // Unified Sa'te Style with enhanced glow
   const saTeContainerStyle = {
     background: 'rgba(147, 51, 234, 0.05)', 
     border: '1px solid rgba(147, 51, 234, 0.09)', 
-    boxShadow: '0 0 30px rgba(147, 51, 234, 0.09)', // Enhanced glow
+    boxShadow: '0 0 30px rgba(147, 51, 234, 0.09)', 
     borderRadius: '20px',
     backdropFilter: 'blur(15px)',
   };
@@ -68,8 +89,8 @@ export default function PresalePage() {
       {/* PRESALE BOX SECTION */}
       <div style={{ display: 'flex', width: '100%', maxWidth: '900px', zIndex: 1, gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
         <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff' }}>
-          {/* Header Logo (128x128) aligned with the top of the right box */}
-          <div style={{ marginBottom: '20px' }}>
+          {/* Header Logo (128x128) aligned with the top of the right box - Margin increased by 200% (20px -> 60px) */}
+          <div style={{ marginBottom: '60px' }}>
             <img 
               src="/logo-coyn-nnm.png" 
               alt="NNM Logo" 
@@ -81,12 +102,11 @@ export default function PresalePage() {
             <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Web3 Identity coin Presales</span>
           </h1>
           <p style={{ color: '#9ea9a9', fontSize: '15px', maxWidth: '350px', lineHeight: '1.6' }}>
-            Join the most exclusive token launch. Secure your allocation before the public listing.
+            Empowering the Polygon Ecosystem with Sovereign Identity and Institutional-Grade NFT Market Intelligence. A fully operational Web3 identity layer deployed on Polygon Mainnet. Join the most exclusive token launch. Secure your allocation before the public listing.
           </p>
         </div>
 
         <div style={{ flex: '1', minWidth: '320px', display: 'flex', justifyContent: 'flex-end' }}>
-          {/* Main Presale Box using unified Sa'te style with glow */}
           <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.09)', padding: '20px', width: '100%', maxWidth: '380px' }}>
             
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
@@ -140,20 +160,19 @@ export default function PresalePage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>You Pay</span>
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  {['$10', '$50', '$100'].map(val => (
-                     <button key={val} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontSize: '9px', padding: '4px 8px', borderRadius: '8px', cursor: 'pointer' }}>{val}</button>
+                  {['10', '50', '100', '1000'].map(val => (
+                     <button key={val} onClick={() => handleQuickAmount(val)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontSize: '9px', padding: '4px 8px', borderRadius: '8px', cursor: 'pointer' }}>${val}</button>
                   ))}
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <input type="number" placeholder="0.0" value={amount} onChange={(e) => setAmount(e.target.value)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '40%', fontWeight: 'bold' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {/* أضيفت أيقونات العملات هنا */}
-                  <img src="/icons/eth.svg" alt="ETH" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-                  <img src="/icons/usdt.svg" alt="USDT" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-                  <img src="/icons/matic.svg" alt="POL" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-                  <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '12px', color: '#fff', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', marginLeft: '4px' }}>
-                    POL ▼
+                  <img src="/icons/eth.svg" alt="ETH" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: selectedCoin === 'ETH' ? 1 : 0.4 }} />
+                  <img src="/icons/usdt.svg" alt="USDT" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: selectedCoin === 'USDT' ? 1 : 0.4 }} />
+                  <img src="/icons/matic.svg" alt="POL" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: selectedCoin === 'POL' ? 1 : 0.4 }} />
+                  <div onClick={cycleCoin} style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '12px', color: '#fff', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', marginLeft: '4px', width: '60px', justifyContent: 'center' }}>
+                    {selectedCoin} ▼
                   </div>
                 </div>
               </div>
@@ -162,11 +181,10 @@ export default function PresalePage() {
             <div style={{ background: 'rgba(0, 0, 0, 0.3)', borderRadius: '14px', padding: '14px', marginBottom: '16px', border: '1px solid rgba(255, 255, 255, 0.03)' }}>
               <p style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>You Receive</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <input type="number" placeholder="0.0" disabled value={amount ? Number(amount) * 10000 : ''} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '60%', fontWeight: 'bold' }} />
+                <input type="number" placeholder="0.0" disabled value={calculatedNNM} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '60%', fontWeight: 'bold' }} />
                 <div style={{ background: 'rgba(225, 29, 72, 0.1)', padding: '6px 10px', borderRadius: '12px', color: '#E11D48', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid rgba(225, 29, 72, 0.2)' }}>
-                  {/* تمت إضافة لوجو NNM الدائري هنا */}
-                  <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover' }} />
-                  NNM
+                  <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '25px', height: '25px', borderRadius: '50%', objectFit: 'cover' }} />
+                  <span style={{ color: '#fff' }}>NNM</span>
                 </div>
               </div>
             </div>
@@ -178,7 +196,7 @@ export default function PresalePage() {
         </div>
       </div>
 
-      {/* 3 CARDS SECTION using unified Sa'te style with glow */}
+      {/* 3 CARDS SECTION */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', width: '100%', maxWidth: '900px', zIndex: 1, marginBottom: '60px' }}>
         <div style={{ ...saTeContainerStyle, padding: '30px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#E11D48', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>1</div>
@@ -197,7 +215,7 @@ export default function PresalePage() {
         </div>
       </div>
 
-      {/* TOKENOMICS SECTION (COMPACT & PROFESSIONAL) using unified Sa'te style with glow */}
+      {/* TOKENOMICS SECTION */}
       <div style={{ width: '100%', maxWidth: '900px', zIndex: 1, marginBottom: '40px' }}>
         <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 'bold', textAlign: 'left', marginBottom: '30px' }}>
           NNM <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tokenomics</span>
@@ -205,10 +223,7 @@ export default function PresalePage() {
         
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'stretch' }}>
           
-          {/* Left Container: Interactive Donut Chart + Burn */}
           <div style={{ flex: '1', minWidth: '300px', ...saTeContainerStyle, padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            
-            {/* Legends */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginBottom: '30px' }}>
               {tokenomicsData.map((item) => (
                 <div 
@@ -224,7 +239,6 @@ export default function PresalePage() {
               ))}
             </div>
 
-            {/* SVG Donut Chart */}
             <div style={{ position: 'relative', width: '200px', height: '200px' }}>
               <svg viewBox="0 0 32 32" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)', overflow: 'visible' }}>
                 {tokenomicsData.map((item) => (
@@ -245,7 +259,6 @@ export default function PresalePage() {
                 ))}
               </svg>
               
-              {/* Center Text */}
               <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
                 <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#fff', transition: 'all 0.3s ease' }}>
                   {activeSegment !== null ? tokenomicsData[activeSegment].amount : '10B'}
@@ -256,23 +269,19 @@ export default function PresalePage() {
               </div>
             </div>
             
-            {/* Burn Mechanism */}
-            <div style={{ background: 'rgba(225, 29, 72, 0.05)', border: '1px solid rgba(225, 29, 72, 0.09)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '30px', width: '100%' }}>
+            <div style={{ background: 'rgba(225, 29, 72, 0.05)', border: '1px solid rgba(225, 29, 72, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '60px', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ color: '#E11D48', fontSize: '18px' }}>🔥</span>
-                <span style={{ color: '#E11D48', fontSize: '14px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
+                <span style={{ color: '#E11D48', fontSize: '16px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
               </div>
               <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.5' }}>
                 50% of protocol revenue generated from minting new digital name assets is permanently removed from circulation.
               </p>
             </div>
-            
           </div>
 
-          {/* Right Container: Token Details + Vesting Specs using unified Sa'te style with glow */}
           <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
-            {/* General Info using unified Sa'te style with glow */}
             <div style={{ flex: 1, ...saTeContainerStyle, padding: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px', marginBottom: '12px' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '14px' }}>Total Supply</span>
@@ -295,7 +304,6 @@ export default function PresalePage() {
               </div>
             </div>
 
-            {/* Vesting Specs using unified Sa'te style with glow */}
             <div style={{ flex: 1, ...saTeContainerStyle, padding: '24px' }}>
               <div style={{ marginBottom: '16px' }}>
                 <div style={{ color: '#E11D48', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Pre-sale Contract (35%)</div>
@@ -328,14 +336,12 @@ export default function PresalePage() {
         </div>
       </div>
 
-      {/* DISCLAIMER */}
       <div style={{ maxWidth: '800px', margin: '20px auto', padding: '0 20px', textAlign: 'center' }}>
         <p style={{ fontSize: '12px', fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6' }}>
           <strong>Important Notice:</strong> NNM Tokens are digital utility units designed for use within the NNM ecosystem and its protocol functionalities. They are not securities, investment contracts, or financial instruments. Participation in this optional genesis distribution is entirely voluntary and may involve the complete loss of contributed digital assets due to the experimental nature of blockchain technologies. By proceeding, you acknowledge that you are acquiring NNM Tokens solely for their potential utility within the ecosystem and not with any expectation of profit or financial return.
         </p>
       </div>
 
-      {/* LEGAL MODAL */}
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#1a1c23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '24px', maxWidth: '450px', width: '90%' }}>
