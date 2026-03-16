@@ -39,8 +39,8 @@ export default function PresalePage() {
   // Unified Sa'te Style with enhanced glow
   const saTeContainerStyle = {
     background: 'rgba(147, 51, 234, 0.05)', 
-    border: '1px solid rgba(147, 51, 234, 0.15)', 
-    boxShadow: '0 0 30px rgba(147, 51, 234, 0.15)', // Enhanced glow
+    border: '1px solid rgba(147, 51, 234, 0.09)', 
+    boxShadow: '0 0 30px rgba(147, 51, 234, 0.09)', // Enhanced glow
     borderRadius: '20px',
     backdropFilter: 'blur(15px)',
   };
@@ -49,8 +49,8 @@ export default function PresalePage() {
     <div style={{ backgroundColor: '#181A20', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', overflowX: 'hidden', fontFamily: 'sans-serif', padding: '20px 10px' }}>
       
       {/* Background Glows (Sa'te) */}
-      <div style={{ position: 'absolute', top: '10%', left: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(225, 29, 72, 0.15) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
-      <div style={{ position: 'absolute', bottom: '10%', right: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
+      <div style={{ position: 'absolute', top: '10%', left: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(225, 29, 72, 0.09) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
+      <div style={{ position: 'absolute', bottom: '10%', right: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(147, 51, 234, 0.09) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
 
       <style>{`
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
@@ -66,8 +66,16 @@ export default function PresalePage() {
       `}</style>
 
       {/* PRESALE BOX SECTION */}
-      <div style={{ display: 'flex', width: '100%', maxWidth: '900px', zIndex: 1, gap: '30px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '60px', marginTop: '20px' }}> {/* Increased margin-bottom to 60px */}
+      <div style={{ display: 'flex', width: '100%', maxWidth: '900px', zIndex: 1, gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
         <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff' }}>
+          {/* Header Logo (128x128) aligned with the top of the right box */}
+          <div style={{ marginBottom: '20px' }}>
+            <img 
+              src="/logo-coyn-nnm.png" 
+              alt="NNM Logo" 
+              style={{ width: '128px', height: '128px', borderRadius: '20px', border: '1px solid rgba(147, 51, 234, 0.2)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.2)', objectFit: 'contain' }} 
+            />
+          </div>
           <h1 style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '16px', lineHeight: '1.2' }}>
             The NNM Protocol <br/>
             <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Web3 Identity coin Presales</span>
@@ -79,7 +87,7 @@ export default function PresalePage() {
 
         <div style={{ flex: '1', minWidth: '320px', display: 'flex', justifyContent: 'flex-end' }}>
           {/* Main Presale Box using unified Sa'te style with glow */}
-          <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.05)', boxShadow: '0 0 30px rgba(147, 51, 234, 0.15)', padding: '20px', width: '100%', maxWidth: '380px' }}>
+          <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.09)', padding: '20px', width: '100%', maxWidth: '380px' }}>
             
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
               <div className="ticker">
@@ -138,9 +146,15 @@ export default function PresalePage() {
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <input type="number" placeholder="0.0" value={amount} onChange={(e) => setAmount(e.target.value)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '60%', fontWeight: 'bold' }} />
-                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '12px', color: '#fff', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  POL ▼
+                <input type="number" placeholder="0.0" value={amount} onChange={(e) => setAmount(e.target.value)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '40%', fontWeight: 'bold' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {/* أضيفت أيقونات العملات هنا */}
+                  <img src="/icons/eth.svg" alt="ETH" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+                  <img src="/icons/usdt.svg" alt="USDT" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+                  <img src="/icons/matic.svg" alt="POL" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+                  <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '12px', color: '#fff', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', marginLeft: '4px' }}>
+                    POL ▼
+                  </div>
                 </div>
               </div>
             </div>
@@ -149,7 +163,9 @@ export default function PresalePage() {
               <p style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>You Receive</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <input type="number" placeholder="0.0" disabled value={amount ? Number(amount) * 10000 : ''} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '60%', fontWeight: 'bold' }} />
-                <div style={{ background: 'rgba(225, 29, 72, 0.1)', padding: '6px 10px', borderRadius: '12px', color: '#E11D48', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', border: '1px solid rgba(225, 29, 72, 0.2)' }}>
+                <div style={{ background: 'rgba(225, 29, 72, 0.1)', padding: '6px 10px', borderRadius: '12px', color: '#E11D48', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid rgba(225, 29, 72, 0.2)' }}>
+                  {/* تمت إضافة لوجو NNM الدائري هنا */}
+                  <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover' }} />
                   NNM
                 </div>
               </div>
@@ -241,7 +257,7 @@ export default function PresalePage() {
             </div>
             
             {/* Burn Mechanism */}
-            <div style={{ background: 'rgba(225, 29, 72, 0.05)', border: '1px solid rgba(225, 29, 72, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '30px', width: '100%' }}>
+            <div style={{ background: 'rgba(225, 29, 72, 0.05)', border: '1px solid rgba(225, 29, 72, 0.09)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '30px', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ color: '#E11D48', fontSize: '18px' }}>🔥</span>
                 <span style={{ color: '#E11D48', fontSize: '14px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
@@ -268,7 +284,10 @@ export default function PresalePage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px', marginBottom: '12px' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '14px' }}>Chain</span>
-                <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>Polygon</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <img src="/icons/matic.svg" alt="Polygon" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+                  <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>Polygon</span>
+                </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '14px' }}>Contract</span>
