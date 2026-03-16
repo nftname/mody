@@ -36,17 +36,26 @@ export default function PresalePage() {
     }
   };
 
+  // Unified Sa'te Glow Style for all containers
+  const unifiedContainerStyle = {
+    background: 'rgba(147, 51, 234, 0.06)', 
+    border: '1px solid rgba(147, 51, 234, 0.2)', 
+    boxShadow: '0 0 40px rgba(147, 51, 234, 0.2)', // Sa'te Purple Glow
+    borderRadius: '20px',
+    backdropFilter: 'blur(15px)',
+  };
+
   return (
     <div style={{ backgroundColor: '#181A20', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', overflowX: 'hidden', fontFamily: 'sans-serif', padding: '20px 10px' }}>
       
-      {/* Background Glows */}
-      <div style={{ position: 'absolute', top: '10%', left: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(225, 29, 72, 0.1) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
-      <div style={{ position: 'absolute', bottom: '10%', right: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(147, 51, 234, 0.1) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
+      {/* Enhanced Sa'te Background Glows */}
+      <div style={{ position: 'absolute', top: '5%', left: '15%', width: '450px', height: '450px', background: 'radial-gradient(circle, rgba(225, 29, 72, 0.3) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none', opacity: 0.8 }}></div>
+      <div style={{ position: 'absolute', bottom: '15%', right: '20%', width: '450px', height: '450px', background: 'radial-gradient(circle, rgba(147, 51, 234, 0.3) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none', opacity: 0.8 }}></div>
 
       <style>{`
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         .ticker { display: flex; width: 200%; animation: marquee 20s linear infinite; }
-        .ticker-item { white-space: nowrap; margin-right: 20px; font-size: 11px; color: #9ea9a9; }
+        .ticker-item { white-space: nowrap; margin-right: 20px; font-size: 11px; color: #fff; } // Unified ticker color
         .ticker-item span { color: #E11D48; font-weight: bold; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .chart-segment { transition: all 0.3s ease-out; cursor: pointer; }
@@ -56,8 +65,24 @@ export default function PresalePage() {
       `}</style>
 
       {/* PRESALE BOX SECTION */}
-      <div style={{ display: 'flex', width: '100%', maxWidth: '900px', zIndex: 1, gap: '30px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '30px', marginTop: '20px' }}>
+      <div style={{ display: 'flex', width: '100%', maxWidth: '900px', zIndex: 1, gap: '30px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '60px', marginTop: '20px' }}> {/* Unified gap to 60px */}
         <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff' }}>
+          
+          {/* Header Logo (128x128) - Aligned Top Left */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '20px' }}>
+            <img 
+              src="/logo-coyn-nnm.png" 
+              alt="NNM Logo" 
+              style={{
+                width: '128px', 
+                height: '128px', 
+                borderRadius: '20px', 
+                border: '2px solid rgba(147, 51, 234, 0.3)', 
+                boxShadow: '0 0 30px rgba(147, 51, 234, 0.3)', // Violet glow for logo
+              }} 
+            />
+          </div>
+
           <h1 style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '16px', lineHeight: '1.2' }}>
             The NNM Protocol <br/>
             <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Web3 Identity coin Presales</span>
@@ -68,7 +93,8 @@ export default function PresalePage() {
         </div>
 
         <div style={{ flex: '1', minWidth: '320px', display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '20px', padding: '20px', width: '100%', maxWidth: '380px', backdropFilter: 'blur(20px)', boxShadow: '0 8px 24px 0 rgba(0, 0, 0, 0.4)' }}>
+          {/* Presale Box with unified Sa'te style */}
+          <div style={{ ...unifiedContainerStyle, padding: '20px', width: '100%', maxWidth: '380px' }}>
             
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
               <div className="ticker">
@@ -151,26 +177,26 @@ export default function PresalePage() {
         </div>
       </div>
 
-      {/* 3 CARDS SECTION */}
+      {/* 3 CARDS SECTION with unified Sa'te style */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', width: '100%', maxWidth: '900px', zIndex: 1, marginBottom: '60px' }}>
-        <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '30px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)' }}>
+        <div style={{ ...unifiedContainerStyle, padding: '30px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#E11D48', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>1</div>
           <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>ChainFace Identity</h3>
           <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>Transforming purely speculative NFTs into hyper-functional Web3 utilities via verified cross-chain payment dashboards.</p>
         </div>
-        <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '30px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)' }}>
+        <div style={{ ...unifiedContainerStyle, padding: '30px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#9333EA', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>2</div>
           <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>The NGX Global Index</h3>
           <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>The authoritative observatory for the NFT asset class, featuring Ecosystem Sentiment, Aggregated Volume, and Sector Market Cap.</p>
         </div>
-        <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '30px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)' }}>
+        <div style={{ ...unifiedContainerStyle, padding: '30px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>3</div>
           <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>Conviction Rank</h3>
           <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>An immutable, sybil-resistant ranking system rewarding genuine community belief over artificial wash trading.</p>
         </div>
       </div>
 
-      {/* TOKENOMICS SECTION (COMPACT & PROFESSIONAL) */}
+      {/* TOKENOMICS SECTION (COMPACT & PROFESSIONAL) with unified Sa'te style */}
       <div style={{ width: '100%', maxWidth: '900px', zIndex: 1, marginBottom: '40px' }}>
         <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 'bold', textAlign: 'left', marginBottom: '30px' }}>
           NNM <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tokenomics</span>
@@ -179,7 +205,7 @@ export default function PresalePage() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'stretch' }}>
           
           {/* Left Container: Interactive Donut Chart + Burn */}
-          <div style={{ flex: '1', minWidth: '300px', background: 'rgba(147, 51, 234, 0.04)', border: '1px solid rgba(147, 51, 234, 0.1)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.05)', borderRadius: '20px', padding: '24px', backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ flex: '1', minWidth: '300px', ...unifiedContainerStyle, padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             
             {/* Legends */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginBottom: '30px' }}>
@@ -232,8 +258,8 @@ export default function PresalePage() {
             {/* Burn Mechanism */}
             <div style={{ background: 'rgba(225, 29, 72, 0.05)', border: '1px solid rgba(225, 29, 72, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '60px', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ color: '#E11D48', fontSize: '18px' }}>🔥</span>
-                <span style={{ color: '#E11D48', fontSize: '16px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
+                <span style={{ color: '#E11D48', fontSize: '16px' }}>🔥</span>
+                <span style={{ color: '#E11D48', fontSize: '14px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
               </div>
               <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.5' }}>
                 50% of protocol revenue generated from minting new digital name assets is permanently removed from circulation.
@@ -242,11 +268,11 @@ export default function PresalePage() {
             
           </div>
 
-          {/* Right Container: Token Details + Vesting Specs */}
+          {/* Right Container: Token Details + Vesting Specs with unified Sa'te style */}
           <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
-            {/* General Info */}
-            <div style={{ background: 'rgba(147, 51, 234, 0.04)', border: '1px solid rgba(147, 51, 234, 0.1)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.05)', borderRadius: '20px', padding: '24px', backdropFilter: 'blur(20px)' }}>
+            {/* General Info with unified Sa'te style */}
+            <div style={{ ...unifiedContainerStyle, padding: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px', marginBottom: '12px' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '14px' }}>Total Supply</span>
                 <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>10 Billion</span>
@@ -265,8 +291,8 @@ export default function PresalePage() {
               </div>
             </div>
 
-            {/* Vesting Specs */}
-            <div style={{ flex: 1, background: 'rgba(147, 51, 234, 0.04)', border: '1px solid rgba(147, 51, 234, 0.1)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.05)', borderRadius: '20px', padding: '24px', backdropFilter: 'blur(20px)' }}>
+            {/* Vesting Specs with unified Sa'te style */}
+            <div style={{ flex: 1, ...unifiedContainerStyle, padding: '24px' }}>
               <div style={{ marginBottom: '16px' }}>
                 <div style={{ color: '#E11D48', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Pre-sale Contract (35%)</div>
                 <div style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.4' }}>Smart contract is transparently verified on Polygon. 50% of initial utility contributions are programmatically allocated to initialize ecosystem liquidity.</div>
