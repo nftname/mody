@@ -97,7 +97,7 @@ export default function PresalePage() {
 
       <style>{`
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .ticker { display: flex; width: 200%; animation: marquee 20s linear infinite; }
+        .ticker { display: flex; width: max-content; animation: marquee 20s linear infinite; }
         .ticker-item { white-space: nowrap; margin-right: 20px; font-size: 11px; color: #fff; }
         .ticker-item span { color: #E11D48; font-weight: bold; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
