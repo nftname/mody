@@ -412,10 +412,6 @@ export default function PresalePage() {
               <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', overflow: 'hidden', marginBottom: '10px' }}>
                 <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #F43F5E 0%, #9333EA 100%)', borderRadius: '6px', transition: 'width 1s ease' }}></div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '14px', padding: '8px 12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                <span style={{ color: '#9ea9a9' }}>Current Phase Rate: <strong style={{ color: '#10B981' }}>${currentPriceUsd.toFixed(4)}</strong></span>
-                <span style={{ color: '#9ea9a9' }}>Next Phase Rate: <strong style={{ color: '#E11D48' }}>$0.0002</strong></span>
-              </div>
             </div>
           
 
