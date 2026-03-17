@@ -279,20 +279,30 @@ export default function PresalePage() {
 <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff', paddingLeft: '10px', marginTop: '10px' }}>
           
           {/* Top Navigation Buttons */}
-<div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '50px', marginTop: '1px' }}>
+<div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '50px', marginTop: '1px' }}>
   <a href="/whitepaper" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(225, 29, 72, 0.25)', padding: '8px 18px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(225, 29, 72, 0.1)', cursor: 'pointer' }}>
-      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.5px' }}>Whitepaper</span>
+    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(225, 29, 72, 0.25)', padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Whitepaper</span>
     </div>
   </a>
   <a href="#tokenomics-section" onClick={(e) => { e.preventDefault(); document.getElementById('tokenomics-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} style={{ textDecoration: 'none' }}>
-    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(147, 51, 234, 0.25)', padding: '8px 18px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(147, 51, 234, 0.1)', cursor: 'pointer' }}>
-      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.5px' }}>Tokenomics</span>
+    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(147, 51, 234, 0.25)', padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Tokenomics</span>
     </div>
   </a>
   <a href="#burn-section" onClick={(e) => { e.preventDefault(); document.getElementById('burn-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} style={{ textDecoration: 'none' }}>
-    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(225, 29, 72, 0.25)', padding: '8px 18px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(225, 29, 72, 0.1)', cursor: 'pointer' }}>
-      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.5px' }}>Burn Protocol</span>
+    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(225, 29, 72, 0.25)', padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Burn Protocol</span>
+    </div>
+  </a>
+  <a href="#roadmap-section" onClick={(e) => { e.preventDefault(); document.getElementById('roadmap-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} style={{ textDecoration: 'none' }}>
+    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(147, 51, 234, 0.25)', padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Roadmap</span>
+    </div>
+  </a>
+  <a href="#balance-section" onClick={(e) => { e.preventDefault(); }} style={{ textDecoration: 'none' }}>
+    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(225, 29, 72, 0.25)', padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Balance</span>
     </div>
   </a>
 </div>
@@ -385,17 +395,17 @@ export default function PresalePage() {
 <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '-10px' }}>
           <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '24px', width: '100%', maxWidth: '440px' }}>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '16px' }}>
-              <div style={{ flex: 1, background: 'rgba(0, 0, 0, 0.15)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '6px' }}>Current Price</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '10px' }}>
+              <div style={{ flex: 1, background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.04) 0%, rgba(147, 51, 234, 0.04) 100%)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Current Price</span>
                 <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.0001</span>
               </div>
-              <div style={{ flex: 1, background: 'rgba(0, 0, 0, 0.15)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '6px' }}>Next Price</span>
+              <div style={{ flex: 1, background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.04) 0%, rgba(147, 51, 234, 0.04) 100%)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Next Price</span>
                 <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.0002</span>
               </div>
-              <div style={{ flex: 1, background: 'rgba(0, 0, 0, 0.15)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '6px' }}>Listing Price</span>
+              <div style={{ flex: 1, background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.04) 0%, rgba(147, 51, 234, 0.04) 100%)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Listing Price</span>
                 <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.001</span>
               </div>
             </div>
