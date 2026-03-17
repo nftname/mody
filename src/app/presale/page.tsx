@@ -263,8 +263,8 @@ export default function PresalePage() {
         @keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
       `}</style>
 
-      <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', zIndex: 1, gap: '40px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '40px' }}>
-        <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff', paddingLeft: '20px' }}>
+      <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', zIndex: 1, gap: '40px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
+        <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff', paddingLeft: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '-15px', marginBottom: '24px', flexWrap: 'wrap' }}>
             <img 
               src="/logo-coyn-nnm.png" 
