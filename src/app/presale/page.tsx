@@ -12,7 +12,8 @@ const PRESALE_ABI = parseAbi([
   "function tokensSold() view returns (uint256)",
   "function getLatestPolPrice() view returns (uint256)",
   "function getCurrentTier() view returns (uint256)",
-  "function tiers(uint256) view returns (uint256, uint256)"
+  "function tiers(uint256) view returns (uint256, uint256)",
+  "function purchases(address) view returns (uint256 totalTokens, uint256 firstClaimed)"
 ]);
 
 
@@ -99,6 +100,17 @@ export default function PresalePage() {
   const livePolPriceUsd = rawPolPrice ? Number(rawPolPrice) / 1e8 : 0.5;
   const liveTokensPerUsd = tierData ? Number(tierData[0]) : 10000;
   const currentPriceUsd = liveTokensPerUsd > 0 ? 1 / liveTokensPerUsd : 0.0001;
+
+  const { data: purchaseData } = useReadContract({
+    address: PRESALE_ADDRESS,
+    abi: PRESALE_ABI,
+    functionName: 'purchases',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address, refetchInterval: 15000 }
+  });
+
+  const userNnmBalance = purchaseData ? Number(purchaseData[0]) / 1e18 : 0;
+  const userBalanceValueUsd = userNnmBalance * currentPriceUsd;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -401,16 +413,33 @@ export default function PresalePage() {
                 <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #F43F5E 0%, #9333EA 100%)', borderRadius: '6px', transition: 'width 1s ease' }}></div>
               </div>
             </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
-               <div>
-                  <span style={{ color: '#9ea9a9', fontSize: '11px' }}>Current Price: </span>
-                  <span style={{ color: '#fff', fontSize: '11px', fontWeight: 'bold' }}>${currentPriceUsd.toFixed(4)}</span>
-               </div>
-               <div>
-                  <span style={{ color: '#9ea9a9', fontSize: '11px' }}>Rate: </span>
-                  <span style={{ color: '#9333EA', fontSize: '11px', fontWeight: 'bold' }}>{liveTokensPerUsd.toLocaleString('en-US')} NNM/$1</span>
-               </div>
+          
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0, 0, 0, 0.3)', padding: '16px', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.05)', marginBottom: '16px' }}>
+              
+              {/* Left: User NNM Balance */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Your NNM Balance</span>
+                <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                  {isConnected ? userNnmBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                </span>
+              </div>
+
+              {/* Center: Glowing Equal Sign */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', height: '32px', borderRadius: '50%', background: 'rgba(147, 51, 234, 0.15)', border: '1px solid rgba(147, 51, 234, 0.4)', color: '#D8B4FE', fontWeight: 'bold', fontSize: '18px', boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}>
+                =
+              </div>
+
+              {/* Right: Value in USD & Current Price */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                <span style={{ color: '#10B981', fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                  ${isConnected ? userBalanceValueUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                </span>
+                <span style={{ color: '#9ea9a9', fontSize: '11px' }}>
+                  Price Now: <strong style={{ color: '#fff' }}>${currentPriceUsd.toFixed(4)}</strong>
+                </span>
+              </div>
+              
             </div>
 
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
