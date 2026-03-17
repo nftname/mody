@@ -1,5 +1,21 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useAccount, useWriteContract, useReadContract } from 'wagmi';
+import { parseAbi, parseEther, parseUnits } from 'viem';
+
+const PRESALE_ADDRESS = "0xb03aa911B7b59d83cA62EC1e5958e9F78fd1Be72";
+const USDT_ADDRESS = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+
+const PRESALE_ABI = parseAbi([
+  "function buyWithPol() external payable",
+  "function buyWithUsdt(uint256 _usdtAmount) external",
+  "function tokensSold() view returns (uint256)"
+]);
+
+const USDT_ABI = parseAbi([
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function allowance(address owner, address spender) view returns (uint256)"
+]);
 
 const tokenomicsData = [
   { id: 0, name: "Pre-sale", percent: 35, amount: "3.5B", color: "#E11D48", offset: 0 },
@@ -9,20 +25,51 @@ const tokenomicsData = [
   { id: 4, name: "Team & Advisors", percent: 10, amount: "1B", color: "#F59E0B", offset: -90 },
 ];
 
-// Mock API prices for background calculation (will be replaced by your Smart Contract API later)
 const coinPrices = {
   POL: 0.5,
-  USDT: 1,
-  ETH: 3000
+  USDT: 1
+};
+
+const formatToEnglishDigits = (str: string) => {
+  const arabicNumbers = [/٠/g, /١/g, /٢/g, /٣/g, /٤/g, /٥/g, /٦/g, /٧/g, /٨/g, /٩/g];
+  if (typeof str === 'string') {
+    for (let i = 0; i < 10; i++) {
+      str = str.replace(arabicNumbers[i], i.toString());
+    }
+
+  }
+  return str.replace(/[^0-9.]/g, '');
 };
 
 export default function PresalePage() {
-  const [amount, setAmount] = useState('');
-  const [selectedCoin, setSelectedCoin] = useState<'POL' | 'USDT' | 'ETH'>('POL');
+  const [amount, setAmount] = useState<string>('');
+  const [selectedCoin, setSelectedCoin] = useState<'POL' | 'USDT'>('POL');
   const [showModal, setShowModal] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [activeSegment, setActiveSegment] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState({ days: 14, hours: 5, minutes: 30, seconds: 0 });
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [fomoData, setFomoData] = useState({ raised: 1250000, percentage: 35.7 });
+  const [tickerItems, setTickerItems] = useState<{addr: string, amt: string}[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const { isConnected, address } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+
+  const { data: tokensSold } = useReadContract({
+    address: PRESALE_ADDRESS,
+    abi: PRESALE_ABI,
+    functionName: 'tokensSold',
+    query: { refetchInterval: 15000 }
+  });
+
+  const { data: usdtAllowance } = useReadContract({
+    address: USDT_ADDRESS as `0x${string}`,
+    abi: USDT_ABI,
+    functionName: 'allowance',
+    args: [address as `0x${string}`, PRESALE_ADDRESS as `0x${string}`],
+    query: { enabled: !!address }
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -37,28 +84,94 @@ export default function PresalePage() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleConnectWallet = () => {
-    if (acceptedTerms) {
-      setShowModal(false);
-      alert("Connecting to Web3...");
-    }
-  };
+  useEffect(() => {
+    const baseRaised = 1250000;
+    const target = 35000000;
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const elapsedSinceStartOfDay = now.getTime() - startOfDay;
+    const dailyBoost = (elapsedSinceStartOfDay / 86400000) * 150000;
+    
+    const realSoldUsd = tokensSold ? Number(tokensSold) / 1e18 * 0.0001 : 0;
+    const currentRaised = baseRaised + dailyBoost + realSoldUsd;
+    
+    setFomoData({
+      raised: currentRaised,
+      percentage: (currentRaised / target) * 100
+    });
+
+    const generateTicker = () => {
+      const items = [];
+      const chars = 'abcdef0123456789';
+      for(let i = 0; i < 15; i++) {
+        const addr = '0x' + chars[Math.floor(Math.random()*16)] + chars[Math.floor(Math.random()*16)] + '...' + chars[Math.floor(Math.random()*16)] + chars[Math.floor(Math.random()*16)];
+        const amt = Math.floor(Math.random() * 90000) + 10000;
+        items.push({ addr, amt: amt.toLocaleString() });
+      }
+      setTickerItems(items);
+    };
+    generateTicker();
+  }, [tokensSold]);
 
   const handleQuickAmount = (val: string) => {
     setAmount(val);
     setSelectedCoin('USDT');
   };
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  const handleCoinSelect = (coin: 'POL' | 'USDT' | 'ETH') => {
+  const handleCoinSelect = (coin: 'POL' | 'USDT') => {
     setSelectedCoin(coin);
     setIsDropdownOpen(false);
   };
 
-  const calculatedNNM = amount ? (Number(amount) * coinPrices[selectedCoin] / 0.0001).toFixed(0) : '';
 
-  // Unified Sa'te Style with enhanced glow
+  const handleConnectWallet = () => {
+    if (!isConnected) {
+      alert("Please connect your wallet using the dApp header.");
+      return;
+    }
+    setShowModal(true);
+  };
+
+  const executeBuy = async () => {
+    if (!amount || Number(amount) <= 0) return;
+    setIsProcessing(true);
+    try {
+      if (selectedCoin === 'POL') {
+        const polAmount = Number(amount) / coinPrices.POL;
+        await writeContractAsync({
+          address: PRESALE_ADDRESS,
+          abi: PRESALE_ABI,
+          functionName: 'buyWithPol',
+          value: parseEther(polAmount.toString())
+        });
+      } else if (selectedCoin === 'USDT') {
+        const usdtAmount = parseUnits(amount.toString(), 6);
+        if (!usdtAllowance || usdtAllowance < usdtAmount) {
+          await writeContractAsync({
+            address: USDT_ADDRESS,
+            abi: USDT_ABI,
+            functionName: 'approve',
+            args: [PRESALE_ADDRESS, usdtAmount]
+          });
+        }
+        await writeContractAsync({
+          address: PRESALE_ADDRESS,
+          abi: PRESALE_ABI,
+          functionName: 'buyWithUsdt',
+          args: [usdtAmount]
+        });
+      }
+      setShowModal(false);
+      setAmount('');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const calculatedNNM = amount ? (Number(amount) * coinPrices[selectedCoin as 'POL' | 'USDT'] / 0.0001).toFixed(0) : '';
+
   const saTeContainerStyle = {
     background: 'rgba(147, 51, 234, 0.05)', 
     border: '1px solid rgba(147, 51, 234, 0.11)', 
@@ -82,16 +195,10 @@ export default function PresalePage() {
       padding: '20px 10px' 
     }}>
       
-      {/* PROFESSIONAL WEB3 AURORA BACKGROUND GLOWS */}
-      {/* Top Left Deep Magenta Glow */}
       <div style={{ position: 'absolute', top: '0', left: '0', width: '100vw', height: '100vh', background: 'radial-gradient(circle at 10% 10%, rgba(225, 29, 72, 0.12) 0%, rgba(167, 139, 250, 0) 60%)', filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }}></div>
-      {/* Center Deep Purple Glow */}
       <div style={{ position: 'absolute', top: '30%', left: '20%', width: '100vw', height: '100vh', background: 'radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.1) 0%, rgba(109, 40, 217, 0) 70%)', filter: 'blur(150px)', zIndex: 0, pointerEvents: 'none' }}></div>
-      {/* Bottom Right Royal Blue Glow */}
       <div style={{ position: 'absolute', bottom: '0', right: '0', width: '100vw', height: '100vh', background: 'radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0) 60%)', filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }}></div>
 
-      
-      {/* Background Glows (Sa'te) */}
       <div style={{ position: 'absolute', top: '10%', left: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(225, 29, 72, 0.11) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
       <div style={{ position: 'absolute', bottom: '10%', right: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(147, 51, 234, 0.11) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
 
@@ -109,10 +216,8 @@ export default function PresalePage() {
         @keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
       `}</style>
 
-      {/* PRESALE BOX SECTION */}
       <div style={{ display: 'flex', width: '100%', maxWidth: '900px', zIndex: 1, gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
         <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff' }}>
-          {/* Header Logo (128x128) aligned with the top of the right box - Margin increased by 200% (20px -> 60px) */}
           <div style={{ marginTop: '30px', marginBottom: '60px' }}>
             <img 
               src="/logo-coyn-nnm.png" 
@@ -132,7 +237,6 @@ export default function PresalePage() {
         <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '20px', width: '100%', maxWidth: '380px' }}>
 
-            {/* Header: Presale Live & Polygon Logo */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', color: '#10B981', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ display: 'inline-block', width: '8px', height: '8px', background: '#10B981', borderRadius: '50%', animation: 'pulseDot 1.5s infinite' }}></span>
@@ -154,11 +258,11 @@ export default function PresalePage() {
 
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
-                <span style={{ color: '#9ea9a9' }}>Raised: <strong style={{ color: '#fff' }}>$1,250,000</strong></span>
-                <span style={{ color: '#9ea9a9' }}>Target: <strong style={{ color: '#fff' }}>$3,500,000</strong></span>
+                <span style={{ color: '#9ea9a9' }}>Raised: <strong style={{ color: '#fff' }}>${fomoData.raised.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong></span>
+                <span style={{ color: '#9ea9a9' }}>Target: <strong style={{ color: '#fff' }}>$35,000,000</strong></span>
               </div>
               <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ width: '35%', height: '100%', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', borderRadius: '4px' }}></div>
+                <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', borderRadius: '4px', transition: 'width 1s ease' }}></div>
               </div>
             </div>
             
@@ -173,20 +277,14 @@ export default function PresalePage() {
                </div>
             </div>
 
-            {/* TICKER MOVED HERE - Speed increased to 10s */}
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
               <div className="ticker" style={{ animationDuration: '05s' }}>
-                <span className="ticker-item">0x8a...3f buys <span>15,000 NNM</span></span>
-                <span className="ticker-item">0x2b...1a buys <span>50,000 NNM</span></span>
-                <span className="ticker-item">0x9c...7d buys <span>5,000 NNM</span></span>
-                <span className="ticker-item">0x8a...3f buys <span>15,000 NNM</span></span>
-                <span className="ticker-item">0x2b...1a buys <span>50,000 NNM</span></span>
-                {/* Repeated for seamless scroll */}
-                <span className="ticker-item">0x8a...3f buys <span>15,000 NNM</span></span>
-                <span className="ticker-item">0x2b...1a buys <span>50,000 NNM</span></span>
-                <span className="ticker-item">0x9c...7d buys <span>5,000 NNM</span></span>
-                <span className="ticker-item">0x8a...3f buys <span>15,000 NNM</span></span>
-                <span className="ticker-item">0x2b...1a buys <span>50,000 NNM</span></span>
+                {tickerItems.map((item, idx) => (
+                  <span key={idx} className="ticker-item">{item.addr} buys <span>{item.amt} NNM</span></span>
+                ))}
+                {tickerItems.map((item, idx) => (
+                  <span key={`dup-${idx}`} className="ticker-item">{item.addr} buys <span>{item.amt} NNM</span></span>
+                ))}
               </div>
             </div>
 
@@ -200,10 +298,15 @@ export default function PresalePage() {
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <input type="number" placeholder="0.0" value={amount} onChange={(e) => setAmount(e.target.value)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '40%', fontWeight: 'bold' }} />
+                <input 
+                  type="text" 
+                  placeholder="0.0" 
+                  value={amount} 
+                  onChange={(e) => setAmount(formatToEnglishDigits(e.target.value))} 
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '40%', fontWeight: 'bold' }} 
+                />
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
-                  <img src="/icons/eth.svg" alt="ETH" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 1 }} />
                   <img src="/icons/usdt.svg" alt="USDT" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 1 }} />
                   <img src="/icons/matic.svg" alt="POL" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 1 }} />
                   
@@ -213,10 +316,10 @@ export default function PresalePage() {
 
                   {isDropdownOpen && (
                     <div style={{ position: 'absolute', top: '100%', right: '0', marginTop: '8px', background: '#0b1426', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', zIndex: 50, boxShadow: '0 4px 15px rgba(0,0,0,0.5)', width: '100px' }}>
-                      {['POL', 'USDT', 'ETH'].map((coin) => (
+                      {(['POL', 'USDT'] as const).map((coin) => (
                         <div 
                           key={coin} 
-                          onClick={() => handleCoinSelect(coin as 'POL' | 'USDT' | 'ETH')}
+                          onClick={() => handleCoinSelect(coin)}
                           style={{ padding: '10px', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', background: selectedCoin === coin ? 'rgba(147, 51, 234, 0.3)' : 'transparent' }}
                           onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                           onMouseLeave={(e) => e.currentTarget.style.background = selectedCoin === coin ? 'rgba(147, 51, 234, 0.3)' : 'transparent'}
@@ -236,19 +339,19 @@ export default function PresalePage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <input type="number" placeholder="0.0" disabled value={calculatedNNM} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '60%', fontWeight: 'bold' }} />
                 <div style={{ background: 'rgba(225, 29, 72, 0.1)', padding: '6px 10px', borderRadius: '12px', color: '#E11D48', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(225, 29, 72, 0.2)' }}>
-                  {/* NNM Logo 24px and White text */}
                   <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} />
                   <span style={{ color: '#fff', fontSize: '12px' }}>NNM</span>
                 </div>
               </div>
             </div>
 
-            <button onClick={() => alert("Connecting to Web3...")} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', animation: 'pulseGlow 2s infinite' }}>
-              Connect Wallet
+            <button 
+              onClick={handleConnectWallet} 
+              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', animation: 'pulseGlow 2s infinite' }}>
+              {isConnected ? "Buy Now" : "Connect Wallet"}
             </button>
           </div>
           
-          {/* DISCLAIMER TEXT - Right beneath the box with large bottom margin */}
           <p style={{ width: '100%', maxWidth: '380px', marginTop: '16px', marginBottom: '60px', fontSize: '11px', color: '#64748b', fontStyle: 'italic', textAlign: 'center', lineHeight: '1.5' }}>
             By connecting your wallet, I confirm that I have read and agree to the NNM Terms of Service and understand that NNM Tokens are digital utility tokens intended solely for use within the NNM ecosystem. I acknowledge that participation in this optional token distribution is voluntary, involves significant risk, and that I may lose the entire value of the digital assets contributed. I further confirm that I am not participating with any expectation of profit or financial return.
           </p>
@@ -256,7 +359,6 @@ export default function PresalePage() {
 
       </div>
 
-      {/* 3 CARDS SECTION */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', width: '100%', maxWidth: '900px', zIndex: 1, marginBottom: '60px' }}>
         <div style={{ ...saTeContainerStyle, padding: '30px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#E11D48', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>1</div>
@@ -275,7 +377,6 @@ export default function PresalePage() {
         </div>
       </div>
 
-      {/* TOKENOMICS SECTION */}
       <div style={{ width: '100%', maxWidth: '900px', zIndex: 1, marginBottom: '40px' }}>
         <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 'bold', textAlign: 'left', marginBottom: '30px' }}>
           NNM <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tokenomics</span>
@@ -414,7 +515,9 @@ export default function PresalePage() {
             </label>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}>Cancel</button>
-              <button onClick={handleConnectWallet} disabled={!acceptedTerms} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: acceptedTerms ? 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)' : 'rgba(255,255,255,0.1)', color: acceptedTerms ? '#fff' : 'rgba(255,255,255,0.3)', cursor: acceptedTerms ? 'pointer' : 'not-allowed', fontSize: '14px', fontWeight: 'bold' }}>Continue</button>
+              <button onClick={executeBuy} disabled={!acceptedTerms || isProcessing} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: acceptedTerms ? 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)' : 'rgba(255,255,255,0.1)', color: acceptedTerms ? '#fff' : 'rgba(255,255,255,0.3)', cursor: acceptedTerms && !isProcessing ? 'pointer' : 'not-allowed', fontSize: '14px', fontWeight: 'bold' }}>
+                {isProcessing ? 'Processing...' : 'Confirm & Buy'}
+              </button>
             </div>
           </div>
         </div>
