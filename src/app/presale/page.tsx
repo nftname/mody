@@ -415,31 +415,27 @@ export default function PresalePage() {
             </div>
           
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0, 0, 0, 0.3)', padding: '16px', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.05)', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
               
-              {/* Left: User NNM Balance */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Your NNM Balance</span>
-                <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Balance</span>
+                <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} />
+                <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
                   {isConnected ? userNnmBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </span>
               </div>
 
-              {/* Center: Glowing Equal Sign */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', height: '32px', borderRadius: '50%', background: 'rgba(147, 51, 234, 0.15)', border: '1px solid rgba(147, 51, 234, 0.4)', color: '#D8B4FE', fontWeight: 'bold', fontSize: '18px', boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}>
-                =
-              </div>
+              <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: 'bold' }}>≈</span>
 
-              {/* Right: Value in USD & Current Price */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
-                <span style={{ color: '#10B981', fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: '#10B981', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
                   ${isConnected ? userBalanceValueUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </span>
                 <span style={{ color: '#9ea9a9', fontSize: '11px' }}>
                   Price Now: <strong style={{ color: '#fff' }}>${currentPriceUsd.toFixed(4)}</strong>
                 </span>
               </div>
-              
+
             </div>
 
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
