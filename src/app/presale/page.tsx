@@ -264,7 +264,7 @@ export default function PresalePage() {
       `}</style>
 
       <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', zIndex: 1, gap: '40px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
-        <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff' }}>
+        <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff', paddingLeft: '40px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '-15px', marginBottom: '24px', flexWrap: 'wrap' }}>
             <img 
               src="/logo-coyn-nnm.png" 
@@ -276,7 +276,7 @@ export default function PresalePage() {
                 <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff' }}>NNM</span>
                 <span style={{ fontSize: '12px', color: '#9ea9a9', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>Coin</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '10px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '10px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)', marginLeft: '-12px' }}>
                 <img src="/icons/matic.svg" alt="Polygon" style={{ width: '16px', height: '16px' }} />
                 <span style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold' }}>Polygon</span>
                 <span style={{ color: '#9ea9a9', fontSize: '13px', fontFamily: 'monospace' }}>0x5e64...2609</span>
