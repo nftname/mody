@@ -22,7 +22,7 @@ const USDT_ABI = parseAbi([
 ]);
 
 const tokenomicsData = [
-  { id: 0, name: "Pre-sale", percent: 35, amount: "3.5B", color: "#F43F5E", offset: 0 },
+  { id: 0, name: "Pre-sale", percent: 35, amount: "3.5B", color: "#FF7EB3", offset: 0 },
   { id: 1, name: "Protocol Liquidity", percent: 25, amount: "2.5B", color: "#9333EA", offset: -35 },
   { id: 2, name: "Community Rewards", percent: 15, amount: "1.5B", color: "#3B82F6", offset: -60 },
   { id: 3, name: "Ecosystem Expansion", percent: 15, amount: "1.5B", color: "#10B981", offset: -75 },
@@ -275,12 +275,12 @@ export default function PresalePage() {
             The NNM Protocol <br/>
             <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Web3 Identity coin Presales</span>
           </h1>
-          <p style={{ color: '#9ea9a9', fontSize: '15px', maxWidth: '350px', lineHeight: '1.6' }}>
+          <p style={{ color: '#9ea9a9', fontSize: '15px', maxWidth: '550px', lineHeight: '1.6' }}>
             Empowering the Polygon Ecosystem with Sovereign Identity and Institutional-Grade NFT Market Intelligence. A fully operational Web3 identity layer deployed on Polygon Mainnet. Join the most exclusive token launch. Secure your allocation before the public listing.
           </p>
         </div>
 
-        <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '24px', width: '100%', maxWidth: '440px' }}>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -520,7 +520,7 @@ export default function PresalePage() {
 
             <div style={{ flex: 1, ...saTeContainerStyle, padding: '24px' }}>
               <div style={{ marginBottom: '16px' }}>
-                <div style={{ color: '#F43F5E', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Pre-sale Contract (35%)</div>
+            <div style={{ color: '#FF7EB3', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Pre-sale Contract (35%)</div>
                 <div style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.4' }}>Allocated to early participants who contribute to identity layer adoption and protocol expansion. 50% of initial utility contributions are programmatically allocated to initialize ecosystem liquidity.</div>
               </div>
 
