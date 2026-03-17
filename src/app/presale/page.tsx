@@ -262,7 +262,7 @@ export default function PresalePage() {
         @keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
       `}</style>
 
-      <div style={{ display: 'flex', width: '100%', maxWidth: '900px', zIndex: 1, gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
+      <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', zIndex: 1, gap: '40px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
         <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff' }}>
           <div style={{ marginTop: '30px', marginBottom: '18px' }}>
             <img 
@@ -281,7 +281,7 @@ export default function PresalePage() {
         </div>
 
         <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-          <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '20px', width: '100%', maxWidth: '380px' }}>
+          <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '24px', width: '100%', maxWidth: '440px' }}>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', color: '#10B981', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -405,14 +405,14 @@ export default function PresalePage() {
             </button>
           </div>
           
-          <p style={{ width: '100%', maxWidth: '380px', marginTop: '16px', marginBottom: '60px', fontSize: '9px', color: '#64748b', fontStyle: 'italic', textAlign: 'center', lineHeight: '1.5' }}>
+          <p style={{ width: '100%', maxWidth: '440px', marginTop: '16px', marginBottom: '60px', fontSize: '9px', color: '#64748b', fontStyle: 'italic', textAlign: 'center', lineHeight: '1.5' }}>
             By connecting your wallet, I confirm that I have read and agree to the NNM Terms of Service and understand that NNM Tokens are digital utility tokens intended solely for use within the NNM ecosystem. I acknowledge that participation in this optional token distribution is voluntary, involves significant risk, and that I may lose the entire value of the digital assets contributed. I further confirm that I am not participating with any expectation of profit or financial return.
           </p>
         </div>
 
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', width: '100%', maxWidth: '900px', zIndex: 1, marginBottom: '60px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', width: '100%', maxWidth: '1200px', zIndex: 1, marginBottom: '60px' }}>
         <div style={{ ...saTeContainerStyle, padding: '30px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#E11D48', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>1</div>
           <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>ChainFace Identity</h3>
@@ -430,7 +430,7 @@ export default function PresalePage() {
         </div>
       </div>
 
-      <div style={{ width: '100%', maxWidth: '900px', zIndex: 1, marginBottom: '40px' }}>
+      <div style={{ width: '100%', maxWidth: '1200px', zIndex: 1, marginBottom: '40px' }}>
         <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 'bold', textAlign: 'left', marginBottom: '30px' }}>
           NNM <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tokenomics</span>
         </h2>
