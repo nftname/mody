@@ -85,8 +85,8 @@ export default function PresalePage() {
   }, []);
 
   useEffect(() => {
-    const baseRaised = 1250000;
-    const target = 35000000;
+    const baseRaised = 125000;
+    const target = 1050000;
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const elapsedSinceStartOfDay = now.getTime() - startOfDay;
@@ -170,7 +170,7 @@ export default function PresalePage() {
     }
   };
 
-  const calculatedNNM = amount ? (Number(amount) * coinPrices[selectedCoin as 'POL' | 'USDT'] / 0.0001).toFixed(0) : '';
+  const calculatedNNM = amount ? new Intl.NumberFormat('en-US').format(Math.floor(Number(amount) * coinPrices[selectedCoin as 'POL' | 'USDT'] / 0.0001)) : '';
 
   const saTeContainerStyle = {
     background: 'rgba(147, 51, 234, 0.05)', 
@@ -218,7 +218,7 @@ export default function PresalePage() {
 
       <div style={{ display: 'flex', width: '100%', maxWidth: '900px', zIndex: 1, gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
         <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff' }}>
-          <div style={{ marginTop: '30px', marginBottom: '60px' }}>
+          <div style={{ marginTop: '30px', marginBottom: '18px' }}>
             <img 
               src="/logo-coyn-nnm.png" 
               alt="NNM Logo" 
@@ -238,12 +238,12 @@ export default function PresalePage() {
           <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '20px', width: '100%', maxWidth: '380px' }}>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', color: '#10B981', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ display: 'inline-block', width: '8px', height: '8px', background: '#10B981', borderRadius: '50%', animation: 'pulseDot 1.5s infinite' }}></span>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', color: '#10B981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#10B981', borderRadius: '50%', animation: 'pulseDot 1.5s infinite' }}></span>
                 Presale Live
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}>
-                <img src="/icons/matic.svg" alt="Polygon" style={{ width: '14px', height: '14px', objectFit: 'contain' }} /> Polygon
+              <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontWeight: 'bold' }}>
+                <img src="/icons/matic.svg" alt="Polygon" style={{ width: '20px', height: '20px', objectFit: 'contain' }} /> Polygon
               </div>
             </div>
 
@@ -258,8 +258,8 @@ export default function PresalePage() {
 
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
-                <span style={{ color: '#9ea9a9' }}>Raised: <strong style={{ color: '#fff' }}>${fomoData.raised.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong></span>
-                <span style={{ color: '#9ea9a9' }}>Target: <strong style={{ color: '#fff' }}>$35,000,000</strong></span>
+                <span style={{ color: '#9ea9a9' }}>Raised: <strong style={{ color: '#fff' }}>${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}</strong></span>
+                <span style={{ color: '#9ea9a9' }}>Target: <strong style={{ color: '#fff' }}>$1,050,000</strong></span>
               </div>
               <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
                 <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', borderRadius: '4px', transition: 'width 1s ease' }}></div>
@@ -269,16 +269,16 @@ export default function PresalePage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
                <div>
                   <span style={{ color: '#9ea9a9', fontSize: '11px' }}>Current Price: </span>
-                  <span style={{ color: '#fff', fontSize: '11px', fontWeight: 'bold' }}>$0.0100</span>
+                  <span style={{ color: '#fff', fontSize: '11px', fontWeight: 'bold' }}>$0.0001</span>
                </div>
                <div>
                   <span style={{ color: '#9ea9a9', fontSize: '11px' }}>Rate: </span>
-                  <span style={{ color: '#9333EA', fontSize: '11px', fontWeight: 'bold' }}>100 NNM/$1</span>
+                  <span style={{ color: '#9333EA', fontSize: '11px', fontWeight: 'bold' }}>10,000 NNM/$1</span>
                </div>
             </div>
 
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
-              <div className="ticker" style={{ animationDuration: '05s' }}>
+              <div className="ticker" style={{ animationDuration: '09s' }}>
                 {tickerItems.map((item, idx) => (
                   <span key={idx} className="ticker-item">{item.addr} buys <span>{item.amt} NNM</span></span>
                 ))}
@@ -303,7 +303,7 @@ export default function PresalePage() {
                   placeholder="0.0" 
                   value={amount} 
                   onChange={(e) => setAmount(formatToEnglishDigits(e.target.value))} 
-                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '40%', fontWeight: 'bold' }} 
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', outline: 'none', width: '40%', fontWeight: 'bold' }} 
                 />
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
@@ -337,7 +337,7 @@ export default function PresalePage() {
             <div style={{ background: 'rgba(0, 0, 0, 0.3)', borderRadius: '14px', padding: '14px', marginBottom: '16px', border: '1px solid rgba(255, 255, 255, 0.03)' }}>
               <p style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>You Receive</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <input type="number" placeholder="0.0" disabled value={calculatedNNM} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', outline: 'none', width: '60%', fontWeight: 'bold' }} />
+                <input type="number" placeholder="0.0" disabled value={calculatedNNM} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', outline: 'none', width: '60%', fontWeight: 'bold' }} />
                 <div style={{ background: 'rgba(225, 29, 72, 0.1)', padding: '6px 10px', borderRadius: '12px', color: '#E11D48', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(225, 29, 72, 0.2)' }}>
                   <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} />
                   <span style={{ color: '#fff', fontSize: '12px' }}>NNM</span>
@@ -346,9 +346,10 @@ export default function PresalePage() {
             </div>
 
             <button 
-              onClick={handleConnectWallet} 
-              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', animation: 'pulseGlow 2s infinite' }}>
-              {isConnected ? "Buy Now" : "Connect Wallet"}
+              onClick={isConnected ? executeBuy : () => alert("Please connect your wallet using the dApp header.")} 
+              disabled={isProcessing}
+              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: isProcessing ? 'not-allowed' : 'pointer', animation: 'pulseGlow 2s infinite', opacity: isProcessing ? 0.7 : 1 }}>
+              {isProcessing ? "Processing..." : (isConnected ? "Buy Now" : "Connect Wallet")}
             </button>
           </div>
           
@@ -502,26 +503,6 @@ export default function PresalePage() {
           <strong>Important Notice:</strong> NNM Tokens are digital utility units designed for use within the NNM ecosystem and its protocol functionalities. They are not securities, investment contracts, or financial instruments. Participation in this optional genesis distribution is entirely voluntary and may involve the complete loss of contributed digital assets due to the experimental nature of blockchain technologies. By proceeding, you acknowledge that you are acquiring NNM Tokens solely for their potential utility within the ecosystem and not with any expectation of profit or financial return.
         </p>
       </div>
-
-      {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: '#1a1c23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '24px', maxWidth: '450px', width: '90%' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>Legal Confirmation</h3>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer', marginBottom: '24px' }}>
-              <input type="checkbox" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} style={{ marginTop: '4px', width: '18px', height: '18px', accentColor: '#E11D48', cursor: 'pointer' }} />
-              <span style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6' }}>
-                I confirm that I have read and agree to the NNM Terms of Service and understand that NNM Tokens are digital utility tokens intended solely for use within the NNM ecosystem. I acknowledge that participation in this optional token distribution is voluntary, involves significant risk, and that I may lose the entire value of the digital assets contributed. I further confirm that I am not participating with any expectation of profit or financial return.
-              </span>
-            </label>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}>Cancel</button>
-              <button onClick={executeBuy} disabled={!acceptedTerms || isProcessing} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: acceptedTerms ? 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)' : 'rgba(255,255,255,0.1)', color: acceptedTerms ? '#fff' : 'rgba(255,255,255,0.3)', cursor: acceptedTerms && !isProcessing ? 'pointer' : 'not-allowed', fontSize: '14px', fontWeight: 'bold' }}>
-                {isProcessing ? 'Processing...' : 'Confirm & Buy'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
