@@ -265,12 +265,32 @@ export default function PresalePage() {
 
       <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', zIndex: 1, gap: '40px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
         <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff' }}>
-          <div style={{ marginTop: '30px', marginBottom: '18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '-15px', marginBottom: '24px', flexWrap: 'wrap' }}>
             <img 
               src="/logo-coyn-nnm.png" 
               alt="NNM Logo" 
-              style={{ width: '128px', height: '128px', borderRadius: '20px', border: '1px solid rgba(147, 51, 234, 0.2)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.2)', objectFit: 'contain' }} 
+              style={{ width: '110px', height: '110px', borderRadius: '20px', border: '1px solid rgba(147, 51, 234, 0.2)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.2)', objectFit: 'contain' }} 
             />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff' }}>NNM</span>
+                <span style={{ fontSize: '12px', color: '#9ea9a9', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>Coin</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '10px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <img src="/icons/matic.svg" alt="Polygon" style={{ width: '16px', height: '16px' }} />
+                <span style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold' }}>Polygon</span>
+                <span style={{ color: '#9ea9a9', fontSize: '13px', fontFamily: 'monospace' }}>0x5e64...2609</span>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <button 
+                    onClick={() => { navigator.clipboard.writeText('0x5e6447c273300ac357c6713cb31a256345132609'); setCopied(true); setTimeout(() => setCopied(false), 2000); }} 
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  </button>
+                  {copied && <span style={{ position: 'absolute', left: '100%', marginLeft: '8px', background: '#10B981', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>Copied!</span>}
+                </div>
+              </div>
+            </div>
           </div>
           <h1 style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '16px', lineHeight: '1.2' }}>
             The NNM Protocol <br/>
@@ -280,44 +300,6 @@ export default function PresalePage() {
             Empowering the Polygon Ecosystem with Sovereign Identity and Institutional-Grade NFT Market Intelligence. A fully operational Web3 identity layer deployed on Polygon Mainnet. Join the most exclusive token launch. Secure your allocation before the public listing.
           </p>
           
-          <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff' }}>NNM</span>
-              <span style={{ fontSize: '12px', color: '#9ea9a9', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>Coin</span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(0,0,0,0.3)', padding: '8px 16px', borderRadius: '12px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <img src="/icons/matic.svg" alt="Polygon" style={{ width: '18px', height: '18px' }} />
-              <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>Polygon</span>
-              <span style={{ color: '#9ea9a9', fontSize: '14px', fontFamily: 'monospace' }}>0x5e64...2609</span>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <button 
-                  onClick={() => { navigator.clipboard.writeText('0x5e6447c273300ac357c6713cb31a256345132609'); setCopied(true); setTimeout(() => setCopied(false), 2000); }} 
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                </button>
-                {copied && <span style={{ position: 'absolute', left: '100%', marginLeft: '8px', background: '#10B981', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>Copied!</span>}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '8px' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>KYC</span>
-              </div>
-              <a href="https://solidityscan.com/" target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#00E676', padding: '6px 12px', borderRadius: '8px', textDecoration: 'none' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                <span style={{ color: '#000', fontSize: '12px', fontWeight: 'bold' }}>Audit</span>
-              </a>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0D1421', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '8px' }}>
-                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>CoinMarketCap</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0D1421', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '8px' }}>
-                <span style={{ color: '#8DC63F', fontSize: '12px', fontWeight: 'bold' }}>CoinGecko</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
