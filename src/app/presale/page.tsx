@@ -148,7 +148,25 @@ export default function PresalePage() {
 
   const handleCoinSelect = (coin: 'POL' | 'USDT') => {
     setSelectedCoin(coin);
-    setIsDropdownOpen(false);
+    setIsDropdownOpen(false);  
+  const usdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
+  const calculatedNNM = amount && Number(amount) > 0 ? new Intl.NumberFormat('en-US').format(Math.floor(usdValue * liveTokensPerUsd)) : '';
+  };
+
+  const handlePayAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAmount(formatToEnglishDigits(e.target.value));
+  };
+
+  const handleReceiveAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nnmValue = formatToEnglishDigits(e.target.value);
+    if (!nnmValue || Number(nnmValue) === 0) {
+      setAmount('');
+      return;
+    }
+    const usdRequired = Number(nnmValue) / liveTokensPerUsd;
+    const payRequired = selectedCoin === 'POL' ? usdRequired / livePolPriceUsd : usdRequired;
+
+    setAmount(parseFloat(payRequired.toFixed(4)).toString());
   };
 
 
@@ -198,7 +216,7 @@ export default function PresalePage() {
   };
 
   const usdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
-  const calculatedNNM = amount && Number(amount) > 0 ? new Intl.NumberFormat('en-US').format(Math.floor(usdValue * liveTokensPerUsd)) : '';
+  const calculatedNNM = amount && Number(amount) > 0 ? Math.floor(usdValue * liveTokensPerUsd).toString() : '';
 
   const saTeContainerStyle = {
     background: 'rgba(147, 51, 234, 0.05)', 
@@ -306,7 +324,7 @@ export default function PresalePage() {
             </div>
 
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
-              <div className="ticker" style={{ animationDuration: '11s' }}>
+              <div className="ticker" style={{ animationDuration: '15s' }}>
                 {tickerItems.map((item, idx) => (
                   <span key={idx} className="ticker-item">{item.addr} buys <span>{item.amt} NNM</span></span>
                 ))}
@@ -330,7 +348,7 @@ export default function PresalePage() {
                   type="text" 
                   placeholder="0.0" 
                   value={amount} 
-                  onChange={(e) => setAmount(formatToEnglishDigits(e.target.value))} 
+                  onChange={handlePayAmountChange} 
                   style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', outline: 'none', width: '40%', fontWeight: 'bold' }} 
                 />
                 
@@ -365,7 +383,13 @@ export default function PresalePage() {
             <div style={{ background: 'rgba(0, 0, 0, 0.3)', borderRadius: '14px', padding: '14px', marginBottom: '16px', border: '1px solid rgba(255, 255, 255, 0.03)' }}>
               <p style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>You Receive</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <input type="number" placeholder="0.0" disabled value={calculatedNNM} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', outline: 'none', width: '60%', fontWeight: 'bold' }} />
+                <input 
+                  type="text" 
+                  placeholder="0" 
+                  value={calculatedNNM} 
+                  onChange={handleReceiveAmountChange} 
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', outline: 'none', width: '60%', fontWeight: 'bold' }} 
+                />
                 <div style={{ background: 'rgba(225, 29, 72, 0.1)', padding: '6px 10px', borderRadius: '12px', color: '#E11D48', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(225, 29, 72, 0.2)' }}>
                   <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} />
                   <span style={{ color: '#fff', fontSize: '12px' }}>NNM</span>
