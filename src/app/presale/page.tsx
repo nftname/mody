@@ -22,7 +22,8 @@ const USDT_ABI = parseAbi([
 ]);
 
 const tokenomicsData = [
-  { id: 0, name: "Pre-sale", percent: 35, amount: "3.5B", color: "#E11D48", offset: 0 },  { id: 0, name: "Pre-sale", percent: 35, amount: "3.5B", color: "#F43F5E", offset: 0 },  { id: 1, name: "Protocol Liquidity", percent: 25, amount: "2.5B", color: "#9333EA", offset: -35 },
+  { id: 0, name: "Pre-sale", percent: 35, amount: "3.5B", color: "#F43F5E", offset: 0 },
+  { id: 1, name: "Protocol Liquidity", percent: 25, amount: "2.5B", color: "#9333EA", offset: -35 },
   { id: 2, name: "Community Rewards", percent: 15, amount: "1.5B", color: "#3B82F6", offset: -60 },
   { id: 3, name: "Ecosystem Expansion", percent: 15, amount: "1.5B", color: "#10B981", offset: -75 },
   { id: 4, name: "Team & Advisors", percent: 10, amount: "1B", color: "#F59E0B", offset: -90 },
@@ -294,20 +295,20 @@ export default function PresalePage() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
               {Object.entries(timeLeft).map(([unit, value]) => (
-                <div key={unit} style={{ background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(225, 29, 72, 0.2) 100%)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', padding: '8px', width: '50px', textAlign: 'center', color: '#fff' }}>
+                <div key={unit} style={{ background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(225, 29, 72, 0.2) 100%)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', padding: '10px 6px', width: '65px', textAlign: 'center', color: '#fff' }}>
                   <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{value.toString().padStart(2, '0')}</div>
                   <div style={{ fontSize: '9px', color: '#9ea9a9', textTransform: 'uppercase' }}>{unit}</div>
                 </div>
               ))}
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '12px' }}>
                 <span style={{ color: '#9ea9a9' }}>Raised: <strong style={{ color: '#fff' }}>${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}</strong></span>
                 <span style={{ color: '#9ea9a9' }}>Target: <strong style={{ color: '#fff' }}>$1,050,000</strong></span>
               </div>
-              <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', borderRadius: '4px', transition: 'width 1s ease' }}></div>
+              <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', overflow: 'hidden', marginBottom: '10px' }}>
+                <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #F43F5E 0%, #9333EA 100%)', borderRadius: '6px', transition: 'width 1s ease' }}></div>
               </div>
             </div>
             
