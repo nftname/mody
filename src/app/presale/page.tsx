@@ -265,6 +265,87 @@ export default function PresalePage() {
 
       <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', zIndex: 1, gap: '40px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
 <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff', paddingLeft: '10px', marginTop: '30px' }}>
+            {/* Top Navigation Buttons */}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '25px', marginTop: '-10px' }}>
+            <a href="/whitepaper" style={{ textDecoration: 'none' }}>
+              <div style={{ 
+                background: 'rgba(255, 255, 255, 0.02)', 
+                border: '1px solid rgba(225, 29, 72, 0.25)', 
+                padding: '8px 18px', 
+                borderRadius: '20px', 
+                backdropFilter: 'blur(10px)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                boxShadow: '0 4px 15px rgba(225, 29, 72, 0.1)', 
+                cursor: 'pointer' 
+              }}>
+                <span style={{ 
+                  background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
+                  WebkitBackgroundClip: 'text', 
+                  WebkitTextFillColor: 'transparent', 
+                  fontSize: '13px', 
+                  fontWeight: 'bold',
+                  letterSpacing: '0.5px'
+                }}>
+                  Whitepaper
+                </span>
+              </div>
+            </a>
+
+            <a href="#tokenomics-section" style={{ textDecoration: 'none' }}>
+              <div style={{ 
+                background: 'rgba(255, 255, 255, 0.02)', 
+                border: '1px solid rgba(147, 51, 234, 0.25)', 
+                padding: '8px 18px', 
+                borderRadius: '20px', 
+                backdropFilter: 'blur(10px)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                boxShadow: '0 4px 15px rgba(147, 51, 234, 0.1)', 
+                cursor: 'pointer' 
+              }}>
+                <span style={{ 
+                  background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
+                  WebkitBackgroundClip: 'text', 
+                  WebkitTextFillColor: 'transparent', 
+                  fontSize: '13px', 
+                  fontWeight: 'bold',
+                  letterSpacing: '0.5px'
+                }}>
+                  Tokenomics
+                </span>
+              </div>
+            </a>
+
+            <a href="#burn-section" style={{ textDecoration: 'none' }}>
+              <div style={{ 
+                background: 'rgba(255, 255, 255, 0.02)', 
+                border: '1px solid rgba(225, 29, 72, 0.25)', 
+                padding: '8px 18px', 
+                borderRadius: '20px', 
+                backdropFilter: 'blur(10px)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                boxShadow: '0 4px 15px rgba(225, 29, 72, 0.1)', 
+                cursor: 'pointer' 
+              }}>
+                <span style={{ 
+                  background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
+                  WebkitBackgroundClip: 'text', 
+                  WebkitTextFillColor: 'transparent', 
+                  fontSize: '13px', 
+                  fontWeight: 'bold',
+                  letterSpacing: '0.5px'
+                }}>
+                  Burn Protocol
+                </span>
+              </div>
+            </a>
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '-15px', marginBottom: '24px', flexWrap: 'wrap' }}>
             <img 
               src="/logo-coyn-nnm.png" 
