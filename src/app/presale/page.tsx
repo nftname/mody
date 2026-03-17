@@ -9,8 +9,12 @@ const USDT_ADDRESS = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
 const PRESALE_ABI = parseAbi([
   "function buyWithPol() external payable",
   "function buyWithUsdt(uint256 _usdtAmount) external",
-  "function tokensSold() view returns (uint256)"
+  "function tokensSold() view returns (uint256)",
+  "function getLatestPolPrice() view returns (uint256)",
+  "function getCurrentTier() view returns (uint256)",
+  "function tiers(uint256) view returns (uint256, uint256)"
 ]);
+
 
 const USDT_ABI = parseAbi([
   "function approve(address spender, uint256 amount) returns (bool)",
@@ -70,6 +74,30 @@ export default function PresalePage() {
     args: [address as `0x${string}`, PRESALE_ADDRESS as `0x${string}`],
     query: { enabled: !!address }
   });
+  const { data: rawPolPrice } = useReadContract({
+    address: PRESALE_ADDRESS,
+    abi: PRESALE_ABI,
+    functionName: 'getLatestPolPrice',
+    query: { refetchInterval: 30000 } 
+  });
+
+  const { data: currentTierIndex } = useReadContract({
+    address: PRESALE_ADDRESS,
+    abi: PRESALE_ABI,
+    functionName: 'getCurrentTier',
+  });
+
+  const { data: tierData } = useReadContract({
+    address: PRESALE_ADDRESS,
+    abi: PRESALE_ABI,
+    functionName: 'tiers',
+    args: [currentTierIndex ?? BigInt(0)],
+    query: { enabled: currentTierIndex !== undefined }
+  });
+
+  const livePolPriceUsd = rawPolPrice ? Number(rawPolPrice) / 1e8 : 0.5;
+  const liveTokensPerUsd = tierData ? Number(tierData[0]) : 10000;
+  const currentPriceUsd = liveTokensPerUsd > 0 ? 1 / liveTokensPerUsd : 0.0001;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -137,12 +165,11 @@ export default function PresalePage() {
     setIsProcessing(true);
     try {
       if (selectedCoin === 'POL') {
-        const polAmount = Number(amount) / coinPrices.POL;
         await writeContractAsync({
           address: PRESALE_ADDRESS,
           abi: PRESALE_ABI,
           functionName: 'buyWithPol',
-          value: parseEther(polAmount.toString())
+          value: parseEther(amount)
         });
       } else if (selectedCoin === 'USDT') {
         const usdtAmount = parseUnits(amount.toString(), 6);
@@ -170,7 +197,8 @@ export default function PresalePage() {
     }
   };
 
-  const calculatedNNM = amount ? new Intl.NumberFormat('en-US').format(Math.floor(Number(amount) * coinPrices[selectedCoin as 'POL' | 'USDT'] / 0.0001)) : '';
+  const usdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
+  const calculatedNNM = amount && Number(amount) > 0 ? new Intl.NumberFormat('en-US').format(Math.floor(usdValue * liveTokensPerUsd)) : '';
 
   const saTeContainerStyle = {
     background: 'rgba(147, 51, 234, 0.05)', 
@@ -269,16 +297,16 @@ export default function PresalePage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
                <div>
                   <span style={{ color: '#9ea9a9', fontSize: '11px' }}>Current Price: </span>
-                  <span style={{ color: '#fff', fontSize: '11px', fontWeight: 'bold' }}>$0.0001</span>
+                  <span style={{ color: '#fff', fontSize: '11px', fontWeight: 'bold' }}>${currentPriceUsd.toFixed(4)}</span>
                </div>
                <div>
                   <span style={{ color: '#9ea9a9', fontSize: '11px' }}>Rate: </span>
-                  <span style={{ color: '#9333EA', fontSize: '11px', fontWeight: 'bold' }}>10,000 NNM/$1</span>
+                  <span style={{ color: '#9333EA', fontSize: '11px', fontWeight: 'bold' }}>{liveTokensPerUsd.toLocaleString('en-US')} NNM/$1</span>
                </div>
             </div>
 
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
-              <div className="ticker" style={{ animationDuration: '09s' }}>
+              <div className="ticker" style={{ animationDuration: '11s' }}>
                 {tickerItems.map((item, idx) => (
                   <span key={idx} className="ticker-item">{item.addr} buys <span>{item.amt} NNM</span></span>
                 ))}
