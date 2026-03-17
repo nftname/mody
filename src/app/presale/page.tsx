@@ -264,7 +264,7 @@ export default function PresalePage() {
       `}</style>
 
       <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', zIndex: 1, gap: '40px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
-<div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff', paddingLeft: '10px', marginTop: '50px' }}>
+<div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff', paddingLeft: '10px', marginTop: '30px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '-15px', marginBottom: '24px', flexWrap: 'wrap' }}>
             <img 
               src="/logo-coyn-nnm.png" 
@@ -299,7 +299,52 @@ export default function PresalePage() {
           <p style={{ color: '#9ea9a9', fontSize: '15px', maxWidth: '550px', lineHeight: '1.6' }}>
             Empowering the Polygon Ecosystem with Sovereign Identity and Institutional-Grade NFT Market Intelligence. A fully operational Web3 identity layer deployed on Polygon Mainnet. Join the most exclusive token launch. Secure your allocation before the public listing.
           </p>
-          
+                    <div style={{ marginTop: '35px', display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '550px' }}>
+            {[
+              "Lifetime digital identity on the NNM Registry",
+              "Personal ChainFace account for payments & management",
+              "10,000 WNNM points for platform rewards",
+              "NNM token rewards proportional to purchase"
+            ].map((text, index) => (
+              <div key={index} style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                background: 'rgba(255, 255, 255, 0.03)', 
+                padding: '16px 20px', 
+                borderRadius: '14px', 
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                backdropFilter: 'blur(10px)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <span style={{ 
+                    background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
+                    WebkitBackgroundClip: 'text', 
+                    WebkitTextFillColor: 'transparent',
+                    fontSize: '18px',
+                    fontWeight: '900',
+                    fontFamily: 'monospace'
+                  }}>
+                    {index + 1}.
+                  </span>
+                  <span style={{ 
+                    fontSize: '15px', 
+                    fontWeight: '600', 
+                    color: '#f8fafc',
+                    letterSpacing: '0.3px'
+                  }}>
+                    {text}
+                  </span>
+                </div>
+                
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, marginLeft: '12px', filter: 'drop-shadow(0px 0px 6px rgba(16, 185, 129, 0.6))' }}>
+                  <circle cx="12" cy="12" r="10" fill="rgba(16, 185, 129, 0.15)" stroke="#10B981" strokeWidth="1.5"/>
+                  <path d="M8 12.5L10.5 15L16 9" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
