@@ -425,7 +425,7 @@ export default function PresalePage() {
                 </span>
               </div>
 
-              <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: 'bold', marginLeft: '16px' }}>≈</span>
+              <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: 'bold', marginLeft: '24px' }}>≈</span>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ color: '#10B981', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
