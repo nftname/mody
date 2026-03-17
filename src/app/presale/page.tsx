@@ -26,7 +26,7 @@ const tokenomicsData = [
   { id: 1, name: "Protocol Liquidity", percent: 25, amount: "2.5B", color: "#9333EA", offset: -35 },
   { id: 2, name: "Community Rewards", percent: 15, amount: "1.5B", color: "#3B82F6", offset: -60 },
   { id: 3, name: "Ecosystem Expansion", percent: 15, amount: "1.5B", color: "#10B981", offset: -75 },
-  { id: 4, name: "Team & Advisors", percent: 10, amount: "1B", color: "#F59E0B", offset: -90 },
+  { id: 4, name: "Team & Advisors", percent: 10, amount: "1B", color: "#FCD34D", offset: -90 },
 ];
 
 const coinPrices = {
@@ -483,10 +483,10 @@ export default function PresalePage() {
               </div>
             </div>
             
-            <div style={{ background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '60px', width: '100%' }}>
+            <div style={{ background: 'rgba(252, 211, 77, 0.05)', border: '1px solid rgba(252, 211, 77, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '60px', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ color: '#F59E0B', fontSize: '18px' }}>🔥</span>
-                <span style={{ color: '#F59E0B', fontSize: '16px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
+                <span style={{ color: '#FCD34D', fontSize: '18px' }}>🔥</span>
+                <span style={{ color: '#FCD34D', fontSize: '16px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
               </div>
               <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.5' }}>
                 50% of protocol revenue generated from minting new digital name assets is permanently removed from circulation.
@@ -538,7 +538,7 @@ export default function PresalePage() {
               </div>
 
               <div>
-                <div style={{ color: '#F59E0B', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Team & Advisors (10%)</div>
+                <div style={{ color: '#FCD34D', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Team & Advisors (10%)</div>
                 <div style={{ color: '#9ea9a9', fontSize: '13px', marginBottom: '4px' }}>12-Month Cliff Lock (100% locked until Mar 15, 2027).</div>
                 <a href="https://www.pinksale.finance/pinklock/polygon/record/1007817" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', fontSize: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
                   View Here <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
