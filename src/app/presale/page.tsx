@@ -22,8 +22,7 @@ const USDT_ABI = parseAbi([
 ]);
 
 const tokenomicsData = [
-  { id: 0, name: "Pre-sale", percent: 35, amount: "3.5B", color: "#E11D48", offset: 0 },
-  { id: 1, name: "Protocol Liquidity", percent: 25, amount: "2.5B", color: "#9333EA", offset: -35 },
+  { id: 0, name: "Pre-sale", percent: 35, amount: "3.5B", color: "#E11D48", offset: 0 },  { id: 0, name: "Pre-sale", percent: 35, amount: "3.5B", color: "#F43F5E", offset: 0 },  { id: 1, name: "Protocol Liquidity", percent: 25, amount: "2.5B", color: "#9333EA", offset: -35 },
   { id: 2, name: "Community Rewards", percent: 15, amount: "1.5B", color: "#3B82F6", offset: -60 },
   { id: 3, name: "Ecosystem Expansion", percent: 15, amount: "1.5B", color: "#10B981", offset: -75 },
   { id: 4, name: "Team & Advisors", percent: 10, amount: "1B", color: "#F59E0B", offset: -90 },
@@ -252,7 +251,7 @@ export default function PresalePage() {
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         .ticker { display: flex; width: max-content; animation: marquee 20s linear infinite; }
         .ticker-item { white-space: nowrap; margin-right: 20px; font-size: 11px; color: #fff; }
-        .ticker-item span { color: #E11D48; font-weight: bold; }
+        .ticker-item span { color: #10B981; font-weight: bold; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         @keyframes pulseGlow { 0% { box-shadow: 0 0 10px rgba(225, 29, 72, 0.2); } 50% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.4); } 100% { box-shadow: 0 0 10px rgba(225, 29, 72, 0.2); } }
         .chart-segment { transition: all 0.3s ease-out; cursor: pointer; }
@@ -295,7 +294,7 @@ export default function PresalePage() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
               {Object.entries(timeLeft).map(([unit, value]) => (
-                <div key={unit} style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', padding: '8px', width: '50px', textAlign: 'center', color: '#fff' }}>
+                <div key={unit} style={{ background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(225, 29, 72, 0.2) 100%)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', padding: '8px', width: '50px', textAlign: 'center', color: '#fff' }}>
                   <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{value.toString().padStart(2, '0')}</div>
                   <div style={{ fontSize: '9px', color: '#9ea9a9', textTransform: 'uppercase' }}>{unit}</div>
                 </div>
@@ -405,7 +404,7 @@ export default function PresalePage() {
             </button>
           </div>
           
-          <p style={{ width: '100%', maxWidth: '380px', marginTop: '16px', marginBottom: '60px', fontSize: '11px', color: '#64748b', fontStyle: 'italic', textAlign: 'center', lineHeight: '1.5' }}>
+          <p style={{ width: '100%', maxWidth: '380px', marginTop: '16px', marginBottom: '60px', fontSize: '9px', color: '#64748b', fontStyle: 'italic', textAlign: 'center', lineHeight: '1.5' }}>
             By connecting your wallet, I confirm that I have read and agree to the NNM Terms of Service and understand that NNM Tokens are digital utility tokens intended solely for use within the NNM ecosystem. I acknowledge that participation in this optional token distribution is voluntary, involves significant risk, and that I may lose the entire value of the digital assets contributed. I further confirm that I am not participating with any expectation of profit or financial return.
           </p>
         </div>
@@ -483,10 +482,10 @@ export default function PresalePage() {
               </div>
             </div>
             
-            <div style={{ background: 'rgba(225, 29, 72, 0.05)', border: '1px solid rgba(225, 29, 72, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '60px', width: '100%' }}>
+            <div style={{ background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '60px', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ color: '#E11D48', fontSize: '18px' }}>🔥</span>
-                <span style={{ color: '#E11D48', fontSize: '16px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
+                <span style={{ color: '#F59E0B', fontSize: '18px' }}>🔥</span>
+                <span style={{ color: '#F59E0B', fontSize: '16px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
               </div>
               <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.5' }}>
                 50% of protocol revenue generated from minting new digital name assets is permanently removed from circulation.
@@ -514,13 +513,13 @@ export default function PresalePage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '14px' }}>Contract</span>
-                <a href="https://polygonscan.com/token/0x5e6447c273300ac357c6713cb31a256345132609?a=0xb03aa911B7b59d83cA62EC1e5958e9F78fd1Be72" target="_blank" rel="noreferrer" style={{ color: '#E11D48', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace', textDecoration: 'none' }}>0x5e64...2609</a>
+                <a href="https://polygonscan.com/token/0x5e6447c273300ac357c6713cb31a256345132609?a=0xb03aa911B7b59d83cA62EC1e5958e9F78fd1Be72" target="_blank" rel="noreferrer" style={{ color: '#8247E5', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace', textDecoration: 'none' }}>0x5e64...2609</a>
               </div>
             </div>
 
             <div style={{ flex: 1, ...saTeContainerStyle, padding: '24px' }}>
               <div style={{ marginBottom: '16px' }}>
-                <div style={{ color: '#E11D48', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Pre-sale Contract (35%)</div>
+                <div style={{ color: '#F43F5E', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Pre-sale Contract (35%)</div>
                 <div style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.4' }}>Allocated to early participants who contribute to identity layer adoption and protocol expansion. 50% of initial utility contributions are programmatically allocated to initialize ecosystem liquidity.</div>
               </div>
 
@@ -551,7 +550,7 @@ export default function PresalePage() {
       </div>
 
       <div style={{ maxWidth: '800px', margin: '20px auto', padding: '0 20px', textAlign: 'center' }}>
-        <p style={{ fontSize: '12px', fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6' }}>
+        <p style={{ fontSize: '9px', fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6' }}>
           <strong>Important Notice:</strong> NNM Tokens are digital utility units designed for use within the NNM ecosystem and its protocol functionalities. They are not securities, investment contracts, or financial instruments. Participation in this optional genesis distribution is entirely voluntary and may involve the complete loss of contributed digital assets due to the experimental nature of blockchain technologies. By proceeding, you acknowledge that you are acquiring NNM Tokens solely for their potential utility within the ecosystem and not with any expectation of profit or financial return.
         </p>
       </div>
