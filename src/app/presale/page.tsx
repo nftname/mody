@@ -386,15 +386,15 @@ export default function PresalePage() {
           <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '24px', width: '100%', maxWidth: '440px' }}>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '16px' }}>
-              <div style={{ flex: 1, background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+              <div style={{ flex: 1, background: 'rgba(0, 0, 0, 0.15)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '6px' }}>Current Price</span>
                 <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.0001</span>
               </div>
-              <div style={{ flex: 1, background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+              <div style={{ flex: 1, background: 'rgba(0, 0, 0, 0.15)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '6px' }}>Next Price</span>
                 <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.0002</span>
               </div>
-              <div style={{ flex: 1, background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+              <div style={{ flex: 1, background: 'rgba(0, 0, 0, 0.15)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '6px' }}>Listing Price</span>
                 <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.001</span>
               </div>
