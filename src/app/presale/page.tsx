@@ -113,7 +113,7 @@ export default function PresalePage() {
       <div style={{ display: 'flex', width: '100%', maxWidth: '900px', zIndex: 1, gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
         <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff' }}>
           {/* Header Logo (128x128) aligned with the top of the right box - Margin increased by 200% (20px -> 60px) */}
-          <div style={{ marginBottom: '60px' }}>
+          <div style={{ marginTop: '90px', marginBottom: '60px' }}>
             <img 
               src="/logo-coyn-nnm.png" 
               alt="NNM Logo" 
@@ -175,7 +175,7 @@ export default function PresalePage() {
 
             {/* TICKER MOVED HERE - Speed increased to 10s */}
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
-              <div className="ticker" style={{ animationDuration: '03s' }}>
+              <div className="ticker" style={{ animationDuration: '05s' }}>
                 <span className="ticker-item">0x8a...3f buys <span>15,000 NNM</span></span>
                 <span className="ticker-item">0x2b...1a buys <span>50,000 NNM</span></span>
                 <span className="ticker-item">0x9c...7d buys <span>5,000 NNM</span></span>
