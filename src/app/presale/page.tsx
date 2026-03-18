@@ -54,7 +54,8 @@ export default function PresalePage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [fomoData, setFomoData] = useState({ raised: 1250000, percentage: 35.7 });
   const [tickerItems, setTickerItems] = useState<{addr: string, amt: string}[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+ const [isProcessing, setIsProcessing] = useState(false);
+ const [isSuccess, setIsSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const { isConnected, address } = useAccount();
@@ -289,6 +290,7 @@ export default function PresalePage() {
 
       setShowModal(false);
       setAmount('');
+      setIsSuccess(true);
     } catch (error) {
       console.error(error);
     } finally {
@@ -597,12 +599,50 @@ export default function PresalePage() {
               </div>
             </div>
 
-            <button 
-              onClick={isConnected ? executeBuy : () => alert("Please connect your wallet using the dApp header.")} 
-              disabled={isProcessing}
-              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: isProcessing ? 'not-allowed' : 'pointer', animation: 'pulseGlow 2s infinite', opacity: isProcessing ? 0.7 : 1 }}>
-              {isProcessing ? "Processing..." : (isConnected ? "Participate Now" : "Connect Wallet")}
-            </button>
+{!isSuccess ? (
+  <button 
+    onClick={isConnected ? executeBuy : () => alert("Please connect your wallet using the dApp header.")} 
+    disabled={isProcessing}
+    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: isProcessing ? 'not-allowed' : 'pointer', animation: 'pulseGlow 2s infinite', opacity: isProcessing ? 0.7 : 1 }}>
+    {isProcessing ? "Processing..." : (isConnected ? "Participate Now" : "Connect Wallet")}
+  </button>
+) : (
+  <div style={{ 
+    width: '100%', 
+    padding: '30px 20px', 
+    borderRadius: '16px', 
+    background: 'rgba(0, 0, 0, 0.4)', 
+    border: '1px solid rgba(147, 51, 234, 0.2)', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    alignItems: 'center'
+  }}>
+    <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', border: '2px solid #10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+    <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>Participation Successful</h3>
+    <p style={{ color: '#9ea9a9', fontSize: '12px', marginBottom: '24px' }}>Your transaction has been confirmed.</p>
+    
+    <a href="/presale/balance" style={{ textDecoration: 'none', width: '100%' }}>
+      <div style={{ 
+        width: '100%', 
+        padding: '12px', 
+        borderRadius: '10px', 
+        background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
+        color: '#fff', 
+        fontSize: '14px', 
+        fontWeight: 'bold', 
+        textAlign: 'center',
+        cursor: 'pointer',
+        boxShadow: '0 4px 15px rgba(225, 29, 72, 0.2)'
+      }}>
+        YOUR BALANCE
+      </div>
+    </a>
+    
+    <button onClick={() => setIsSuccess(false)} style={{ background: 'transparent', border: 'none', color: '#64748b', marginTop: '16px', cursor: 'pointer', fontSize: '11px', fontWeight: '600' }}>Participate Again</button>
+  </div>
+)}
           </div>
           
           <p style={{ width: '100%', maxWidth: '440px', marginTop: '16px', marginBottom: '60px', fontSize: '10px', color: '#64748b', fontStyle: 'italic', textAlign: 'center', lineHeight: '1.5' }}>
