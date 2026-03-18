@@ -87,8 +87,8 @@ export default function BalancePage() {
         
         <div style={cardStyle}>
           <div style={{ display: 'flex' }}>
-            <span style={{ ...labelStyle, width: '40%' }}>Total Contribution</span>
-            <span style={labelStyle}>Total Allocated NNM</span>
+            <span style={{ ...labelStyle, width: '40%' }}>Contribution</span>
+            <span style={labelStyle}>Allocated NNM</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto' }}>
             <span style={{ ...valueStyle, color: '#10B981', width: '40%' }}>${presaleData.investedUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
