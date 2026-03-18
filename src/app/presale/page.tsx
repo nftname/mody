@@ -489,9 +489,9 @@ export default function PresalePage() {
             </div>
 
             <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '12px' }}>
-                <span style={{ color: '#9ea9a9' }}>Raised: <strong style={{ color: '#fff' }}>${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}</strong></span>
-                <span style={{ color: '#9ea9a9' }}>Target: <strong style={{ color: '#fff' }}>$1,050,000</strong></span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '12px', alignItems: 'center' }}>
+                <span style={{ color: '#9ea9a9' }}>Raised: <span style={{ color: '#fff', fontWeight: '500', fontFamily: 'monospace', fontSize: '13px', marginLeft: '2px' }}>${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></span>
+                <span style={{ color: '#9ea9a9' }}>Target: <span style={{ color: '#fff', fontWeight: '500', fontFamily: 'monospace', fontSize: '13px', marginLeft: '2px' }}>$1,050,000</span></span>
               </div>
               <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', overflow: 'hidden', marginBottom: '10px' }}>
                 <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #F43F5E 0%, #9333EA 100%)', borderRadius: '6px', transition: 'width 1s ease' }}></div>
