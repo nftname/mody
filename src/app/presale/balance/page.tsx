@@ -92,7 +92,7 @@ export default function BalancePage() {
           <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto' }}>
             <span style={{ ...valueStyle, color: '#10B981', width: '40%' }}>${presaleData.investedUsd.toLocaleString()}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <img src="/logo-coyn-nnm.png" alt="" style={{ width: '18px', height: '18px', borderRadius: '50%' }} />
+              <img src="/logo-coyn-nnm.png" alt="" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
               <span style={valueStyle}>{presaleData.tokensBought.toLocaleString()}</span>
             </div>
           </div>
@@ -103,7 +103,7 @@ export default function BalancePage() {
             <span id="rewards-label" style={labelStyle}>Conviction Rewards</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: 'auto', paddingLeft: '45px' }}>
-             <img src="/logo-coyn-nnm.png" alt="" style={{ width: '18px', height: '18px', borderRadius: '50%' }} />
+             <img src="/logo-coyn-nnm.png" alt="" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
              <span style={valueStyle}>{isLoading ? '...' : rewardsBalance.toLocaleString()}</span>
           </div>
         </div>
