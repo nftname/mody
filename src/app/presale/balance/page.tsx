@@ -11,6 +11,7 @@ export default function BalancePage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
   const isPresaleEnded = false; 
+  // Note: listingPrice constant is used for logical calculation of Reference Value display.
   const listingPrice = 0.001;
 
   useEffect(() => {
@@ -90,7 +91,7 @@ export default function BalancePage() {
             <span style={labelStyle}>Total Allocated NNM</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto' }}>
-            <span style={{ ...valueStyle, color: '#10B981', width: '40%' }}>${presaleData.investedUsd.toLocaleString()}</span>
+            <span style={{ ...valueStyle, color: '#10B981', width: '40%' }}>${presaleData.investedUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <img src="/logo-coyn-nnm.png" alt="" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
               <span style={valueStyle}>{presaleData.tokensBought.toLocaleString()}</span>
@@ -116,7 +117,7 @@ export default function BalancePage() {
             </span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end', width: '35%' }}>
-            <span style={{ color: '#9ea9a9', fontSize: '10px', fontWeight: 'bold' }}>Available After Unlock</span>
+            <span style={{ color: '#9ea9a9', fontSize: '10px', fontWeight: 'bold' }}>Status</span>
             <button 
               disabled={!isPresaleEnded}
               style={{ 
@@ -158,7 +159,7 @@ export default function BalancePage() {
               {presaleData.history.length === 0 ? (
                 <tr>
                   <td colSpan={4} style={{ padding: '60px 24px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
-                    No activity found yet.
+                    No transactions found yet.
                   </td>
                 </tr>
               ) : (

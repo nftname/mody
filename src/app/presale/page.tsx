@@ -549,7 +549,7 @@ export default function PresalePage() {
                   placeholder="0.0" 
                   value={amount} 
                   onChange={handlePayAmountChange} 
-                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', outline: 'none', width: '40%', fontWeight: 'bold' }} 
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', outline: 'none', width: '40%'}} 
                 />
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
@@ -588,7 +588,7 @@ export default function PresalePage() {
                   placeholder="0" 
                   value={calculatedNNM} 
                   onChange={handleReceiveAmountChange} 
-                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', outline: 'none', width: '60%', fontWeight: 'bold' }} 
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', outline: 'none', width: '60%'}} 
                 />
                 <div style={{ background: 'rgba(225, 29, 72, 0.1)', padding: '6px 10px', borderRadius: '12px', color: '#E11D48', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(225, 29, 72, 0.2)' }}>
                   <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} />
