@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createPublicClient, http } from 'viem';
+import { polygon } from 'viem/chains';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
+
+const publicClient = createPublicClient({
+  chain: polygon,
+  transport: http()
+});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -48,23 +55,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
-    const rpcUrl = 'https://polygon-rpc.com';
-    const response = await fetch(rpcUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'eth_getTransactionReceipt',
-        params: [txHash],
-        id: 1
-      })
+    const receipt = await publicClient.waitForTransactionReceipt({ 
+      hash: txHash as `0x${string}` 
     });
-    
-    const rpcData = await response.json();
-    const receipt = rpcData.result;
 
-    if (!receipt || receipt.status !== '0x1') {
-      return NextResponse.json({ error: 'Transaction failed on blockchain' }, { status: 400 });
+    if (receipt.status !== 'success') {
+      return NextResponse.json({ error: 'Transaction failed on contract' }, { status: 400 });
     }
 
     const { error } = await supabaseAdmin
@@ -79,7 +75,7 @@ export async function POST(request: Request) {
       ]);
 
     if (error) {
-      return NextResponse.json({ error: 'Database Insert Error', details: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Database Insert Error' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
