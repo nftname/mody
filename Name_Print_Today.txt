@@ -653,3 +653,13 @@ Name: PROFESSIONAL
 Tier: FOUNDER
 Wallet: 0xBf3F812E558a4047b15897D936e3995A6bF29d35
 ------------------------
+
+=================================
+Date: 2026-03-18
+=================================
+
+ID: 1305
+Name: PLAYER
+Tier: IMMORTAL
+Wallet: 0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e
+------------------------

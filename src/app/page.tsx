@@ -568,15 +568,15 @@ function DesktopTable({ data, formatTablePrice, formatTableVolume, getRankStyle 
         <div className="table-responsive">
             <table className="table table-dark align-middle mb-0" style={{ backgroundColor: 'transparent' }}>
                 <thead><tr style={{ fontSize: '15px', borderBottom: '1px solid #2B3139', height: '50px' }}>
-                        <th colSpan={2} style={{ paddingBottom: '15px', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', width: '45%' }}>Name Asset</th>
-                        <th style={{ paddingBottom: '15px', textAlign: 'left', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap', width: '25%', paddingLeft: '15px' }}>Price</th>
+                        <th colSpan={2} style={{ paddingBottom: '15px', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', width: '40%' }}>Name Asset</th>
+                        <th style={{ paddingBottom: '15px', textAlign: 'left', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap', width: '30%', paddingLeft: '15px' }}>Price</th>
                         <th style={{ paddingBottom: '15px', textAlign: 'left', fontWeight: '400', color: '#848E9C', verticalAlign: 'middle', whiteSpace: 'nowrap', width: '30%', paddingLeft: '40px' }}>Volume</th>
                 </tr></thead>
 
                 <tbody style={{ fontSize: '14px', borderTop: 'none' }}>
                     {data.map((item: any) => (
                         <tr key={item.id} className="binance-row">
-                            <td style={{ width: '40px', verticalAlign: 'middle' }}>
+                            <td style={{ width: '25px', verticalAlign: 'middle' }}>
                                 {item.rank <= 3 ? (
                                     <span style={{ ...getRankStyle(item.rank), fontSize: '20px' }}>{item.rank}</span>
                                 ) : (
