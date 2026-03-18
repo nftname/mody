@@ -72,7 +72,8 @@ export default function BalancePage() {
     padding: '20px',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '12px'
+    gap: '12px',
+    overflow: 'hidden'
   };
 
   const labelStyle = { color: '#9ea9a9', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' as const, letterSpacing: '0.5px' };
@@ -84,23 +85,25 @@ export default function BalancePage() {
       <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '15px', width: '100%', maxWidth: '1000px', marginBottom: '40px', justifyContent: 'center' }}>
         
         <div style={cardStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={labelStyle}>Invested (USD)</span>
+          <div style={{ display: 'flex' }}>
+            <span style={{ ...labelStyle, width: '40%' }}>Invested (USD)</span>
             <span style={labelStyle}>Total NNM</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-            <span style={{ ...valueStyle, color: '#10B981' }}>${presaleData.investedUsd.toLocaleString()}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <img src="/logo-coyn-nnm.png" alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', boxShadow: '0 0 15px rgba(147, 51, 234, 0.2)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto' }}>
+            <span style={{ ...valueStyle, color: '#10B981', width: '40%' }}>${presaleData.investedUsd.toLocaleString()}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <img src="/logo-coyn-nnm.png" alt="" style={{ width: '18px', height: '18px', borderRadius: '50%' }} />
               <span style={valueStyle}>{presaleData.tokensBought.toLocaleString()}</span>
             </div>
           </div>
         </div>
 
         <div style={cardStyle}>
-          <span style={labelStyle}>Conviction Rewards</span>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: 'auto', gap: '8px' }}>
-             <img src="/logo-coyn-nnm.png" alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', boxShadow: '0 0 15px rgba(147, 51, 234, 0.2)' }} />
+          <div style={{ display: 'flex', width: '100%' }}>
+            <span id="rewards-label" style={labelStyle}>Conviction Rewards</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: 'auto', paddingLeft: '45px' }}>
+             <img src="/logo-coyn-nnm.png" alt="" style={{ width: '18px', height: '18px', borderRadius: '50%' }} />
              <span style={valueStyle}>{isLoading ? '...' : rewardsBalance.toLocaleString()}</span>
           </div>
         </div>
