@@ -16,7 +16,6 @@ const PRESALE_ABI = parseAbi([
   "function purchases(address) view returns (uint256 totalTokens, uint256 firstClaimed)"
 ]);
 
-
 const USDT_ABI = parseAbi([
   "function approve(address spender, uint256 amount) returns (bool)",
   "function allowance(address owner, address spender) view returns (uint256)"
@@ -41,7 +40,6 @@ const formatToEnglishDigits = (str: string) => {
     for (let i = 0; i < 10; i++) {
       str = str.replace(arabicNumbers[i], i.toString());
     }
-
   }
   return str.replace(/[^0-9.]/g, '');
 };
@@ -112,8 +110,6 @@ export default function PresalePage() {
   const userNnmBalance = purchaseData ? Number(purchaseData[0]) / 1e18 : 0;
   const userBalanceValueUsd = userNnmBalance * currentPriceUsd;
 
-  
-  // --- New API Balance Fetching ---
   const [apiTokensBought, setApiTokensBought] = useState<number>(0);
   useEffect(() => {
     if (!address) return;
@@ -181,8 +177,8 @@ export default function PresalePage() {
   const handleCoinSelect = (coin: 'POL' | 'USDT') => {
     setSelectedCoin(coin);
     setIsDropdownOpen(false);  
-  const usdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
-  const calculatedNNM = amount && Number(amount) > 0 ? new Intl.NumberFormat('en-US').format(Math.floor(usdValue * liveTokensPerUsd)) : '';
+    const usdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
+    const calculatedNNM = amount && Number(amount) > 0 ? new Intl.NumberFormat('en-US').format(Math.floor(usdValue * liveTokensPerUsd)) : '';
   };
 
   const handlePayAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,7 +197,6 @@ export default function PresalePage() {
     setAmount(parseFloat(payRequired.toFixed(4)).toString());
   };
 
-
   const handleConnectWallet = () => {
     if (!isConnected) {
       alert("Please connect your wallet using the dApp header.");
@@ -211,11 +206,13 @@ export default function PresalePage() {
   };
 
   const executeBuy = async () => {
-    if (!amount || Number(amount) <= 0) return;
+    if (!amount || Number(amount) <= 0 || !address) return;
     setIsProcessing(true);
     try {
+      let txHash;
+      
       if (selectedCoin === 'POL') {
-        await writeContractAsync({
+        txHash = await writeContractAsync({
           address: PRESALE_ADDRESS,
           abi: PRESALE_ABI,
           functionName: 'buyWithPol',
@@ -231,13 +228,30 @@ export default function PresalePage() {
             args: [PRESALE_ADDRESS, usdtAmount]
           });
         }
-        await writeContractAsync({
+        txHash = await writeContractAsync({
           address: PRESALE_ADDRESS,
           abi: PRESALE_ABI,
           functionName: 'buyWithUsdt',
           args: [usdtAmount]
         });
       }
+
+      if (txHash) {
+        const currentUsdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
+        const currentTokensBought = Math.floor(currentUsdValue * liveTokensPerUsd);
+
+        await fetch('/api/presale', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            wallet: address,
+            txHash: txHash,
+            amountUsd: currentUsdValue,
+            tokensBought: currentTokensBought
+          })
+        });
+      }
+
       setShowModal(false);
       setAmount('');
     } catch (error) {
@@ -463,10 +477,7 @@ export default function PresalePage() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ color: '#10B981', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
-                  ${isConnected ? (apiTokensBought * currentPriceUsd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
-                </span>
-                <span style={{ color: '#9ea9a9', fontSize: '11px' }}>
-                  Price Now: <strong style={{ color: '#fff' }}>${currentPriceUsd.toFixed(4)}</strong>
+                  ${isConnected ? (apiTokensBought * 0.001).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </span>
               </div>
 
@@ -762,7 +773,6 @@ export default function PresalePage() {
           </div>
         </div>
       </div>
-
 
       <div style={{ maxWidth: '800px', margin: '20px auto', padding: '0 20px', textAlign: 'center' }}>
         <p style={{ fontSize: '10px', fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6' }}>
