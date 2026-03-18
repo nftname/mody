@@ -387,7 +387,7 @@ export default function PresalePage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff' }}>NNM</span>
-                <span style={{ fontSize: '12px', color: '#9ea9a9', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>Coin</span>
+                <span style={{ fontSize: '12px', color: '#9ea9a9', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>Utility Access</span>
               </div>
 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '10px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)', marginLeft: '-12px' }}>
                 <img src="/icons/matic.svg" alt="Polygon" style={{ width: '20px', height: '20px' }} />
