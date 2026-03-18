@@ -510,12 +510,12 @@ const handleTouchEnd = (e: React.TouchEvent) => {
 function MobileTableHeader() { 
     return ( 
         <div className="d-flex justify-content-between mb-3 border-bottom border-secondary pb-2" style={{ borderColor: '#2B3139 !important', height: '40px', alignItems: 'flex-end' }}> 
-            {/* 45% Name */}
-            <div style={{ flex: '0 0 45%' }}> 
+            {/* 40% Name */}
+            <div style={{ flex: '0 0 40%' }}> 
                 <span style={{ fontSize: '13.5px', color: '#848E9C' }}>Name Asset</span> 
             </div> 
-            {/* 35% Price */}
-            <div style={{ flex: '0 0 35%', textAlign: 'left' }}> 
+            {/* 40% Price */}
+            <div style={{ flex: '0 0 40%', textAlign: 'left' }}> 
                 <span style={{ fontSize: '13.5px', color: '#848E9C' }}>Price</span> 
             </div>
             {/* 20% Volume */}
@@ -531,8 +531,8 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
         <Link href={`/asset/${item.id}`} className="text-decoration-none"> 
             <div className="d-flex align-items-center justify-content-between py-3 binance-row" style={{ borderBottom: '1px solid #2B3139' }}> 
                 
-                {/* 45% Name */}
-                <div className="d-flex align-items-center gap-2" style={{ flex: '0 0 45%', overflow: 'hidden' }}> 
+                {/* 40% Name */}
+                <div className="d-flex align-items-center gap-2" style={{ flex: '0 0 40%', overflow: 'hidden' }}> 
                     <div style={{ width: '15px', textAlign: 'center', flexShrink: 0 }}> 
                         {item.rank <= 3 ? ( <span style={{ ...getRankStyle(item.rank), fontSize: '14px' }}>{item.rank}</span> ) : ( <span className="text-white fw-light" style={{ fontSize: '10px' }}>{item.rank}</span> )} 
                     </div> 
@@ -540,9 +540,9 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
                     <span className="text-white fw-bold name-shake text-truncate" style={{ fontSize: '12px' }}>{item.name}</span> 
                 </div> 
                 
-                {/* 35% Price */}
-                <div className="d-flex align-items-center gap-2" style={{ flex: '0 0 35%', whiteSpace: 'nowrap' }}> 
-                    <span className="fw-normal text-white" style={{ fontSize: '13px' }}>{formatTablePrice(item.pricePol)}</span> 
+                {/* 40% Price */}
+                <div className="d-flex align-items-center gap-1" style={{ flex: '0 0 40%', flexWrap: 'wrap' }}> 
+                    <span className="fw-normal text-white" style={{ fontSize: '12px', wordBreak: 'break-word' }}>{formatTablePrice(item.pricePol)}</span> 
                     {item.change !== 0 && (
                         <span className="d-flex align-items-center" style={{ fontSize: '11px', fontWeight: 'bold', color: item.change > 0 ? '#0ecb81' : '#ea3943' }}>
                             {Math.abs(item.change).toFixed(0)}% 
@@ -553,12 +553,13 @@ function MobileRow({ item, formatTablePrice, formatTableVolume, getRankStyle }: 
 
                 {/* 20% Volume */}
                 <div className="d-flex flex-column align-items-end" style={{ flex: '0 0 20%', textAlign: 'right' }}> 
-                    <span className="text-white" style={{ fontSize: '13px', fontWeight: '400' }}>{formatTableVolume(item.volume)}</span> 
+                    <span className="text-white" style={{ fontSize: '12px', fontWeight: '400' }}>{formatTableVolume(item.volume)}</span> 
                 </div> 
             </div> 
         </Link> 
     ); 
 }
+
 
 function DesktopTable({ data, formatTablePrice, formatTableVolume, getRankStyle }: any) {
     const [isMounted, setIsMounted] = useState(false);
