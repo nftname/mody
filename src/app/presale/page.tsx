@@ -277,6 +277,8 @@ export default function PresalePage() {
         const currentUsdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
         const currentTokensBought = Math.floor(currentUsdValue * liveTokensPerUsd);
 
+        await new Promise(resolve => setTimeout(resolve, 10000));
+
         const response = await fetch('/api/presale', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -826,43 +828,63 @@ export default function PresalePage() {
       </div>
 {statusModal && (
   <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 10, 22, 0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-    <div style={{ width: '90%', maxWidth: '400px', background: '#050a16', border: '1px solid rgba(147, 51, 234, 0.2)', borderRadius: '24px', padding: '40px 30px', textAlign: 'center', position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+    <div style={{ width: '90%', maxWidth: '380px', background: '#050a16', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', padding: '30px 24px', textAlign: 'center', position: 'relative', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
+
+      {/* Icon Section */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
         {statusModal === 'success' ? (
-          <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', border: '2px solid #10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
         ) : (
-          <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(249, 115, 22, 0.1)', border: '2px solid #f97316', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(10deg)' }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(249, 115, 22, 0.05)', border: '1px solid rgba(249, 115, 22, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(-10deg)' }}><circle cx="12" cy="12" r="11"/><line x1="12" y1="7" x2="12" y2="13"/><circle cx="12" cy="17" r="0.5"/></svg>
           </div>
         )}
       </div>
-      <h3 style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', marginBottom: '12px' }}>
+
+      {/* Text Section */}
+      <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '500', marginBottom: '10px' }}>
         {statusModal === 'success' ? 'Participation Successful' : 'Action Required'}
       </h3>
-      <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', marginBottom: '32px' }}>
-        {statusModal === 'success' ? 'Your contribution has been recorded on the blockchain.' : errorMsg}
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+      {statusModal === 'success' ? (
+        <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.5', marginBottom: '24px' }}>
+          Your contribution has been successfully recorded on the blockchain.
+        </p>
+      ) : (
+        <div style={{ background: 'rgba(249, 115, 22, 0.05)', borderRadius: '12px', padding: '12px', marginBottom: '24px', textAlign: 'left' }}>
+          <p style={{ color: '#f8fafc', fontSize: '12px', marginBottom: '8px', fontWeight: 'bold' }}>Please check the following:</p>
+          <ul style={{ color: '#9ea9a9', fontSize: '11px', margin: 0, paddingLeft: '16px', lineHeight: '1.8' }}>
+            <li>Ensure you have sufficient <b>USDT</b> balance.</li>
+            <li>Ensure you have enough <b>POL</b> to cover gas fees.</li>
+            <li>The network might be busy, please try again.</li>
+          </ul>
+        </div>
+      )}
+
+      {/* Button Section */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {statusModal === 'success' ? (
           <a href="/presale/balance" style={{ textDecoration: 'none' }}>
-            <div style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}>
-              YOUR BALANCE
+            <div style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
+              VIEW BALANCE
             </div>
           </a>
         ) : (
-          <div onClick={() => setStatusModal(null)} style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}>
+          <div onClick={() => setStatusModal(null)} style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
             Try Again
           </div>
         )}
+        
         {statusModal === 'success' && (
-          <button onClick={() => setStatusModal(null)} style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '13px', cursor: 'pointer', marginTop: '8px' }}>Close</button>
+          <button onClick={() => setStatusModal(null)} style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '12px', cursor: 'pointer', marginTop: '4px' }}>Close</button>
         )}
       </div>
     </div>
   </div>
 )}
+
       <div style={{ maxWidth: '800px', margin: '20px auto', padding: '0 20px', textAlign: 'center' }}>
         <p style={{ fontSize: '10px', fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6' }}>
           <strong>Important Notice:</strong> NNM Tokens are digital utility units designed for use within the NNM ecosystem and its protocol functionalities. They are not securities, investment contracts, or financial instruments. Participation in this optional genesis distribution is entirely voluntary and may involve the complete loss of contributed digital assets due to the experimental nature of blockchain technologies. By proceeding, you acknowledge that you are acquiring NNM Tokens solely for their potential utility within the ecosystem and not with any expectation of profit or financial return.
