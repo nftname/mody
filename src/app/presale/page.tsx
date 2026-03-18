@@ -128,33 +128,65 @@ export default function PresalePage() {
   }, [address]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        if (prev.days > 0) return { ...prev, days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 };
-        return prev;
+    const START_TIME = new Date('2026-03-17T00:00:00Z').getTime(); 
+    const phase1Duration = 14 * 24 * 60 * 60 * 1000;
+    const loopDuration = 7 * 24 * 60 * 60 * 1000;
+    
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const elapsed = now - START_TIME;
+      
+      let timeRemaining = 0;
+      if (elapsed < 0) {
+        timeRemaining = phase1Duration;
+      } else if (elapsed < phase1Duration) {
+        timeRemaining = phase1Duration - elapsed;
+      } else {
+        const elapsedAfterPhase1 = elapsed - phase1Duration;
+        const timeInCurrentLoop = elapsedAfterPhase1 % loopDuration;
+        timeRemaining = loopDuration - timeInCurrentLoop;
+      }
+
+      setTimeLeft({
+        days: Math.floor(timeRemaining / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((timeRemaining % (1000 * 60)) / 1000),
       });
-    }, 1000);
+    };
+
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000); 
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
-    const baseRaised = 125000;
     const target = 1050000;
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const elapsedSinceStartOfDay = now.getTime() - startOfDay;
-    const dailyBoost = (elapsedSinceStartOfDay / 86400000) * 150000;
+    const BASE_RAISED = 235000;
     
-    const realSoldUsd = tokensSold ? Number(tokensSold) / 1e18 * 0.0001 : 0;
-    const currentRaised = baseRaised + dailyBoost + realSoldUsd;
-    
-    setFomoData({
-      raised: currentRaised,
-      percentage: (currentRaised / target) * 100
-    });
+    const realSoldUsd = tokensSold ? Number(tokensSold) / 1e18 * currentPriceUsd : 0; 
+    const finalRaised = BASE_RAISED + realSoldUsd; 
+    const finalPercentage = (finalRaised / target) * 100;
+
+    const duration = 1500; 
+    const steps = 60;
+    let currentStep = 0;
+
+    const interval = setInterval(() => {
+      currentStep++;
+      const progress = currentStep / steps;
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      setFomoData({
+        raised: finalRaised * easeOut,
+        percentage: finalPercentage * easeOut
+      });
+
+      if (currentStep >= steps) {
+        clearInterval(interval);
+        setFomoData({ raised: finalRaised, percentage: finalPercentage });
+      }
+    }, duration / steps);
 
     const generateTicker = () => {
       const items = [];
@@ -167,7 +199,10 @@ export default function PresalePage() {
       setTickerItems(items);
     };
     generateTicker();
-  }, [tokensSold]);
+
+    return () => clearInterval(interval);
+  }, [tokensSold, currentPriceUsd]);
+
 
   const handleQuickAmount = (val: string) => {
     setAmount(val);
@@ -308,8 +343,8 @@ export default function PresalePage() {
         @keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
       `}</style>
 
-      <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', zIndex: 1, gap: '40px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '20px' }}>
-<div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff', paddingLeft: '10px', marginTop: '10px' }}>
+      <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', zIndex: 1, gap: '40px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '0px' }}>
+<div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff', paddingLeft: '10px', marginTop: '0px' }}>
           
           {/* Top Navigation Buttons */}
 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '50px', marginTop: '1px' }}>
