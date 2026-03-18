@@ -77,7 +77,7 @@ export default function BalancePage() {
   };
 
   const labelStyle = { color: '#9ea9a9', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' as const, letterSpacing: '0.5px' };
-  const valueStyle = { color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace' };
+  const valueStyle = { color: '#f8fafc', fontSize: '18px', fontWeight: '500', fontFamily: 'monospace' };
 
   return (
     <div style={{ backgroundColor: '#050a16', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px', fontFamily: 'sans-serif' }}>
@@ -108,30 +108,32 @@ export default function BalancePage() {
           </div>
         </div>
 
-        <div style={cardStyle}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
-            <span style={labelStyle}>Value (@ $0.001)</span>
-            {isPresaleEnded && (
-              <button style={{ 
-                background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
-                border: 'none', 
-                color: '#fff', 
-                padding: '8px 16px', 
-                borderRadius: '8px', 
-                fontSize: '11px', 
-                fontWeight: 'bold', 
-                cursor: 'pointer',
-                boxShadow: '0 4px 15px rgba(225, 29, 72, 0.3)',
-                whiteSpace: 'nowrap'
-              }}>
-                Claim NNM
-              </button>
-            )}
-          </div>
-          <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ ...cardStyle, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+            <span style={labelStyle}>Est. Listing Value (@ $0.001)</span>
             <span style={{ ...valueStyle, color: '#10B981', fontSize: '26px' }}>
               ${totalValueAtListing.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end', width: '35%' }}>
+            <span style={{ color: '#9ea9a9', fontSize: '10px', fontWeight: 'bold' }}>Available at TGE</span>
+            <button 
+              disabled={!isPresaleEnded}
+              style={{ 
+                width: '100%',
+                background: isPresaleEnded ? 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)' : 'rgba(255,255,255,0.05)', 
+                border: isPresaleEnded ? 'none' : '1px solid rgba(255,255,255,0.1)', 
+                color: isPresaleEnded ? '#fff' : '#64748b', 
+                padding: '8px 0', 
+                borderRadius: '8px', 
+                fontSize: '11px', 
+                fontWeight: 'bold', 
+                cursor: isPresaleEnded ? 'pointer' : 'not-allowed',
+                boxShadow: isPresaleEnded ? '0 4px 15px rgba(225, 29, 72, 0.3)' : 'none',
+                whiteSpace: 'nowrap'
+              }}>
+              Claim
+            </button>
           </div>
         </div>
 
