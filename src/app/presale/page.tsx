@@ -347,7 +347,7 @@ export default function PresalePage() {
             <img 
               src="/logo-coyn-nnm.png" 
               alt="NNM Logo" 
-              style={{ width: '110px', height: '110px', borderRadius: '50%', border: '1px solid rgba(147, 51, 234, 0.2)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.2)', objectFit: 'contain' }} 
+              style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid rgba(147, 51, 234, 0.2)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.2)', objectFit: 'contain' }} 
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
