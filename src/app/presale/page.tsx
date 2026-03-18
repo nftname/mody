@@ -680,7 +680,7 @@ export default function PresalePage() {
         </div>
       </div>
 
-      <div id="roadmap-section" style={{ width: '100%', maxWidth: '1200px', zIndex: 1, marginTop: '60px', marginBottom: '80px' }}>
+<div id="roadmap-section" style={{ width: '100%', maxWidth: '900px', padding: '0 20px', zIndex: 1, marginTop: '60px', marginBottom: '80px' }}>
         <h2 style={{ color: '#f8fafc', fontSize: '28px', fontWeight: 'bold', textAlign: 'left', marginBottom: '30px' }}>
           NNM <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Roadmap</span>
         </h2>
