@@ -112,6 +112,25 @@ export default function PresalePage() {
   const userNnmBalance = purchaseData ? Number(purchaseData[0]) / 1e18 : 0;
   const userBalanceValueUsd = userNnmBalance * currentPriceUsd;
 
+  
+  // --- New API Balance Fetching ---
+  const [apiTokensBought, setApiTokensBought] = useState<number>(0);
+  useEffect(() => {
+    if (!address) return;
+    const fetchPresaleBalance = async () => {
+      try {
+        const res = await fetch(`/api/presale?wallet=${address}`);
+        const data = await res.json();
+        if (data.success) {
+          setApiTokensBought(data.totalTokensBought);
+        }
+      } catch (e) {
+        console.error("Failed to fetch balance from API");
+      }
+    };
+    fetchPresaleBalance();
+  }, [address]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
@@ -436,7 +455,7 @@ export default function PresalePage() {
                 <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Balance</span>
                 <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} />
                 <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
-                  {isConnected ? userNnmBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                  {isConnected ? apiTokensBought.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </span>
               </div>
 
@@ -444,7 +463,7 @@ export default function PresalePage() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ color: '#10B981', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
-                  ${isConnected ? userBalanceValueUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                  ${isConnected ? (apiTokensBought * currentPriceUsd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </span>
                 <span style={{ color: '#9ea9a9', fontSize: '11px' }}>
                   Price Now: <strong style={{ color: '#fff' }}>${currentPriceUsd.toFixed(4)}</strong>
