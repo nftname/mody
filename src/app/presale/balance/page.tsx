@@ -110,7 +110,7 @@ export default function BalancePage() {
 
         <div style={{ ...cardStyle, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-            <span style={labelStyle}>Est. Listing Value (@ $0.001)</span>
+            <span style={labelStyle}>Est. Listing (@ $0.001)</span>
             <span style={{ ...valueStyle, color: '#10B981', fontSize: '26px' }}>
               ${totalValueAtListing.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>

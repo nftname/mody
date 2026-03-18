@@ -504,16 +504,16 @@ export default function PresalePage() {
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Balance</span>
                 <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} />
-                <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500', fontFamily: 'monospace' }}>
                   {isConnected ? apiTokensBought.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </span>
               </div>
 
-              <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: 'bold', textAlign: 'center' }}>≈</span>
+              <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: '500', textAlign: 'center' }}>≈</span>
 
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Listing Price</span>
-                <span style={{ color: '#10B981', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                <span style={{ color: '#10B981', fontSize: '14px', fontWeight: '500', fontFamily: 'monospace' }}>
                   ${isConnected ? (apiTokensBought * 0.001).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </span>
               </div>
