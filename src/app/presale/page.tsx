@@ -333,11 +333,12 @@ export default function PresalePage() {
       <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Roadmap</span>
     </div>
   </a>
-  <a href="#balance-section" onClick={(e) => { e.preventDefault(); }} style={{ textDecoration: 'none' }}>
+  <a href="https://www.nftnnm.com/presale/balance" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
     <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(225, 29, 72, 0.25)', padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
       <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Balance</span>
     </div>
   </a>
+
 </div>
 
           {/* Logo and Title */}
@@ -346,7 +347,7 @@ export default function PresalePage() {
             <img 
               src="/logo-coyn-nnm.png" 
               alt="NNM Logo" 
-              style={{ width: '110px', height: '110px', borderRadius: '20px', border: '1px solid rgba(147, 51, 234, 0.2)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.2)', objectFit: 'contain' }} 
+              style={{ width: '110px', height: '110px', borderRadius: '50%', border: '1px solid rgba(147, 51, 234, 0.2)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.2)', objectFit: 'contain' }} 
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -354,7 +355,7 @@ export default function PresalePage() {
                 <span style={{ fontSize: '12px', color: '#9ea9a9', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>Coin</span>
               </div>
 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '10px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)', marginLeft: '-12px' }}>
-                <img src="/icons/matic.svg" alt="Polygon" style={{ width: '16px', height: '16px' }} />
+                <img src="/icons/matic.svg" alt="Polygon" style={{ width: '20px', height: '20px' }} />
                 <span style={{ color: '#9ea9a9', fontSize: '13px', fontWeight: 'bold' }}>Polygon</span>
                 <span style={{ color: '#f3f4f6', fontSize: '13px', fontFamily: 'monospace' }}>0x5e64..2609</span>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -362,9 +363,9 @@ export default function PresalePage() {
                     onClick={() => { navigator.clipboard.writeText('0x5e6447c273300ac357c6713cb31a256345132609'); setCopied(true); setTimeout(() => setCopied(false), 2000); }} 
                     style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
                   >
-                    <svg style={{ transform: 'scaleX(-1)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <svg style={{ transform: 'scaleX(-1)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ea9a9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                   </button>
-                  {copied && <span style={{ position: 'absolute', left: '100%', marginLeft: '8px', background: '#10B981', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>Copied!</span>}
+                  {copied && <span style={{ position: 'absolute', left: '100%', marginLeft: '8px', background: '#000', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>Copied!</span>}
                 </div>
               </div>
             </div>
@@ -463,9 +464,9 @@ export default function PresalePage() {
             </div>
           
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Balance</span>
                 <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} />
                 <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
@@ -473,9 +474,10 @@ export default function PresalePage() {
                 </span>
               </div>
 
-              <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: 'bold', marginLeft: '24px' }}>≈</span>
+              <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: 'bold', textAlign: 'center' }}>≈</span>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
+                <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Listing Price</span>
                 <span style={{ color: '#10B981', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
                   ${isConnected ? (apiTokensBought * 0.001).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </span>
