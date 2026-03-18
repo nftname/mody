@@ -680,7 +680,7 @@ export default function PresalePage() {
         </div>
       </div>
 
-<div id="roadmap-section" style={{ width: '100%', maxWidth: '900px', padding: '0 20px', zIndex: 1, marginTop: '60px', marginBottom: '80px' }}>
+<div id="roadmap-section" style={{ width: '100%', maxWidth: '1000px', padding: '0 20px', zIndex: 1, marginTop: '60px', marginBottom: '80px' }}>
         <h2 style={{ color: '#f8fafc', fontSize: '28px', fontWeight: 'bold', textAlign: 'left', marginBottom: '30px' }}>
           NNM <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Roadmap</span>
         </h2>
@@ -695,7 +695,7 @@ export default function PresalePage() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 0px 5px rgba(225, 29, 72, 0.5))' }}><path d="M20 6L9 17l-5-5"/></svg>
               </div>
               <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 1: The Genesis & Identity Layer</h3>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 1 - The Genesis & Identity Layer</h3>
                 <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Deployment of the NNM Protocol on the Polygon Mainnet. Activation of ChainFace identity profiles, enabling cross-chain interactions and foundational ecosystem functionality. Initial minting of Nexus Digital Name Assets.</p>
               </div>
             </div>
@@ -705,7 +705,7 @@ export default function PresalePage() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 0px 5px rgba(225, 29, 72, 0.5))' }}><path d="M20 6L9 17l-5-5"/></svg>
               </div>
               <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 2: Network Infrastructure & Activation</h3>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 2 - Network Infrastructure & Activation</h3>
                 <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Establishment of core ecosystem infrastructure, including multi-chain interaction capabilities within ChainFace and initial integration of the NGX Index for tracking network activity and ecosystem data.</p>
               </div>
             </div>
@@ -715,7 +715,7 @@ export default function PresalePage() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 0px 5px rgba(225, 29, 72, 0.5))' }}><path d="M20 6L9 17l-5-5"/></svg>
               </div>
               <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 3: Ecosystem Utility Distribution</h3>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 3 - Ecosystem Utility Distribution</h3>
                 <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Ongoing distribution of the NNM utility token to early participants, enabling access to ecosystem features, identity services, and internal protocol interactions.</p>
               </div>
             </div>
@@ -725,7 +725,7 @@ export default function PresalePage() {
                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#64748b' }}></div>
               </div>
               <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 4: Decentralized Liquidity & Protocol Mechanics</h3>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 4 - Decentralized Liquidity & Protocol Mechanics</h3>
                 <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Initialization of decentralized liquidity pools with time-locked smart contracts. Activation of usage-based protocol mechanics, including automated supply adjustments linked to network activity.</p>
               </div>
             </div>
@@ -735,7 +735,7 @@ export default function PresalePage() {
                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#64748b' }}></div>
               </div>
               <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 5: Global Integration & Ecosystem Expansion</h3>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 5 - Global Integration & Ecosystem Expansion</h3>
                 <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Continuous expansion of the ChainFace identity layer and ecosystem infrastructure, supporting broader accessibility and long-term protocol evolution.</p>
               </div>
             </div>
