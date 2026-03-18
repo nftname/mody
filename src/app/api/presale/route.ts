@@ -1,5 +1,5 @@
-
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase'; 
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -8,10 +8,22 @@ export async function GET(request: Request) {
     if (!wallet) return NextResponse.json({ error: 'Wallet required' }, { status: 400 });
 
     try {
-        const history: any[] = []; 
+
+        const { data, error } = await supabase
+            .from('presale_transactions')
+            .select('*')
+            .eq('wallet_address', wallet)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Supabase GET Error:', error);
+            return NextResponse.json({ error: 'Database Error' }, { status: 500 });
+        }
+
+        const history = data || [];
         
-        const totalInvestedUsd = history.reduce((sum, tx) => sum + Number(tx.amount_usd), 0);
-        const totalTokensBought = history.reduce((sum, tx) => sum + Number(tx.tokens_bought), 0);
+        const totalInvestedUsd = history.reduce((sum: number, tx: any) => sum + Number(tx.amount_usd), 0);
+        const totalTokensBought = history.reduce((sum: number, tx: any) => sum + Number(tx.tokens_bought), 0);
 
         return NextResponse.json({
             success: true,
@@ -20,6 +32,7 @@ export async function GET(request: Request) {
             history
         });
     } catch (error) {
+        console.error('Server Error:', error);
         return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
     }
 }
@@ -33,11 +46,26 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing data' }, { status: 400 });
         }
 
+
+        const { error } = await supabase
+            .from('presale_transactions')
+            .insert([
+                {
+                    wallet_address: wallet.toLowerCase(),
+                    tx_hash: txHash,
+                    amount_usd: amountUsd,
+                    tokens_bought: tokensBought
+                }
+            ]);
+
+        if (error) {
+            console.error('Supabase POST Error:', error);
+            return NextResponse.json({ error: 'Database Insert Error', details: error.message }, { status: 500 });
+        }
+
         return NextResponse.json({ success: true });
     } catch (error) {
+        console.error('Server Error:', error);
         return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
     }
 }
-
-
-

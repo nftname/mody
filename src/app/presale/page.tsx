@@ -736,7 +736,7 @@ export default function PresalePage() {
 
               <div>
                 <div style={{ color: '#FCD34D', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Team & Advisors (10%)</div>
-                <div style={{ color: '#9ea9a9', fontSize: '13px', marginBottom: '4px' }}>12-Month Cliff Lock (100% locked until Mar 15, 2027).</div>
+                <div style={{ color: '#9ea9a9', fontSize: '13px', marginBottom: '4px' }}>12-Month Cliff (100% Locked until Mar 15, 2027).</div>
                 <a href="https://www.pinksale.finance/pinklock/polygon/record/1007817" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', fontSize: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
                   View Here <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
                 </a>
