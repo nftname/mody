@@ -109,27 +109,27 @@ export default function BalancePage() {
         </div>
 
         <div style={cardStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
             <span style={labelStyle}>Value (@ $0.001)</span>
             {isPresaleEnded && (
               <button style={{ 
-                background: 'linear-gradient(90deg, #9333EA 0%, #E11D48 50%, #3B82F6 100%)', 
+                background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
                 border: 'none', 
                 color: '#fff', 
-                padding: '6px 12px', 
+                padding: '8px 16px', 
                 borderRadius: '8px', 
-                fontSize: '10px', 
+                fontSize: '11px', 
                 fontWeight: 'bold', 
                 cursor: 'pointer',
                 boxShadow: '0 4px 15px rgba(225, 29, 72, 0.3)',
                 whiteSpace: 'nowrap'
               }}>
-                Claim Now
+                Claim NNM
               </button>
             )}
           </div>
-          <div style={{ marginTop: 'auto' }}>
-            <span style={{ ...valueStyle, color: '#10B981', fontSize: '24px' }}>
+          <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
+            <span style={{ ...valueStyle, color: '#10B981', fontSize: '26px' }}>
               ${totalValueAtListing.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
@@ -162,8 +162,11 @@ export default function BalancePage() {
               ) : (
                 presaleData.history.map((tx, index) => (
                   <tr key={index} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                    <td style={{ padding: '16px 24px', color: '#f8fafc', fontSize: '13px' }}>
-                      {new Date(tx.created_at).toLocaleString()}
+                    <td style={{ padding: '16px 24px', color: '#f8fafc', fontSize: '13px', whiteSpace: 'nowrap' }}>
+                      {new Date(tx.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} 
+                      <span style={{ color: '#9ea9a9', marginLeft: '6px', fontSize: '11px' }}>
+                        {new Date(tx.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
                     </td>
                     <td style={{ padding: '16px 24px', color: '#10B981', fontSize: '13px', fontWeight: 'bold' }}>
                       ${Number(tx.amount_usd).toFixed(2)}
