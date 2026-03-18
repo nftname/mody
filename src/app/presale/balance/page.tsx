@@ -63,92 +63,101 @@ export default function BalancePage() {
 
   const cardStyle = {
     flex: 1,
-    minWidth: '280px',
-    background: 'rgba(255, 255, 255, 0.02)',
+    minWidth: '320px',
+    background: 'rgba(147, 51, 234, 0.05)', 
+    border: '1px solid rgba(147, 51, 234, 0.11)', 
+    boxShadow: '0 0 30px rgba(147, 51, 234, 0.11)', 
+    borderRadius: '20px',
     backdropFilter: 'blur(15px)',
-    borderRadius: '16px',
     padding: '24px',
-    borderLeft: '1px solid rgba(255,255,255,0.05)',
-    borderRight: '1px solid rgba(255,255,255,0.05)',
-    borderBottom: '1px solid rgba(255,255,255,0.05)',
     display: 'flex',
     flexDirection: 'column' as const,
-    position: 'relative' as const,
-    overflow: 'hidden' as const,
+    gap: '15px'
   };
 
-  return (
-    <div style={{ backgroundColor: '#050a16', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 20px', fontFamily: 'sans-serif' }}>
-      
-      <div style={{ width: '100%', maxWidth: '1200px', marginBottom: '40px' }}>
-        <h1 style={{ color: '#fff', fontSize: '32px', fontWeight: 'bold' }}>
-          My <span style={{ background: 'linear-gradient(90deg, #9333EA 0%, #E11D48 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Portfolio</span>
-        </h1>
-      </div>
+  const labelStyle = { color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' as const, letterSpacing: '0.5px' };
+  const valueStyle = { color: '#f8fafc', fontSize: '22px', fontWeight: 'bold', fontFamily: 'monospace' };
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', maxWidth: '1200px', marginBottom: '50px' }}>
+  return (
+    <div style={{ backgroundColor: '#050a16', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px', fontFamily: 'sans-serif' }}>
+      
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', width: '100%', maxWidth: '1200px', marginBottom: '50px', justifyContent: 'center' }}>
         
-        <div style={{ ...cardStyle, borderTop: '2px solid transparent', borderImage: 'linear-gradient(90deg, #3B82F6, #9333EA) 1', boxShadow: '0 -5px 20px rgba(59, 130, 246, 0.1)' }}>
-          <span style={{ color: '#9ea9a9', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Invested & Allocation</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: 'auto' }}>
-            <span style={{ color: '#10B981', fontSize: '18px', fontWeight: 'bold' }}>${presaleData.investedUsd.toLocaleString()}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
-              <span style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold', fontFamily: 'monospace' }}>
-                {presaleData.tokensBought.toLocaleString()}
-              </span>
+        {/* Card 1: Invested & Allocation */}
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={labelStyle}>Invested (USD)</span>
+            <span style={labelStyle}>Total NNM</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ ...valueStyle, color: '#10B981' }}>${presaleData.investedUsd.toLocaleString()}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={valueStyle}>{presaleData.tokensBought.toLocaleString()}</span>
+              <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '40px', height: '40px', borderRadius: '50%', boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }} />
             </div>
           </div>
         </div>
 
-        <div style={{ ...cardStyle, borderTop: '2px solid transparent', borderImage: 'linear-gradient(90deg, #9333EA, #E11D48) 1', boxShadow: '0 -5px 20px rgba(147, 51, 234, 0.1)' }}>
-          <span style={{ color: '#9ea9a9', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Conviction Rewards</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: 'auto' }}>
-            <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '32px', height: '32px', borderRadius: '50%', filter: 'grayscale(30%)' }} />
-            <span style={{ color: '#fff', fontSize: '28px', fontWeight: 'bold', fontFamily: 'monospace' }}>
-              {isLoading ? '...' : rewardsBalance.toLocaleString()}
-            </span>
+        {/* Card 2: Conviction Rewards */}
+        <div style={cardStyle}>
+          <span style={labelStyle}>Conviction Rewards</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+            <span style={valueStyle}>{isLoading ? '...' : rewardsBalance.toLocaleString()}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+               <span style={{ ...labelStyle, fontSize: '14px', color: '#fff' }}>NNM</span>
+               <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '40px', height: '40px', borderRadius: '50%', boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }} />
+            </div>
           </div>
         </div>
 
-        <div style={{ ...cardStyle, borderTop: '2px solid transparent', borderImage: 'linear-gradient(90deg, #E11D48, #F59E0B) 1', boxShadow: '0 -5px 20px rgba(225, 29, 72, 0.1)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ color: '#9ea9a9', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Listing Value</span>
+        {/* Card 3: Listing Value & Claim Button */}
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={labelStyle}>Listing Value (@ $0.001)</span>
             {isPresaleEnded && (
-              <button style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
+              <button style={{ 
+                background: 'linear-gradient(90deg, #9333EA 0%, #E11D48 50%, #3B82F6 100%)', 
+                border: 'none', 
+                color: '#fff', 
+                padding: '8px 16px', 
+                borderRadius: '10px', 
+                fontSize: '12px', 
+                fontWeight: 'bold', 
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(225, 29, 72, 0.3)'
+              }}>
                 Claim Now
               </button>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: 'auto' }}>
-            <span style={{ color: '#10B981', fontSize: '28px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+          <div style={{ marginTop: 'auto' }}>
+            <span style={{ ...valueStyle, color: '#10B981', fontSize: '28px' }}>
               ${totalValueAtListing.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
-            <span style={{ color: '#64748b', fontSize: '12px', marginTop: '8px' }}>@ $0.001</span>
           </div>
         </div>
 
       </div>
 
-      <div style={{ width: '100%', maxWidth: '1000px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', overflow: 'hidden' }}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <h3 style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>Presale Transaction History</h3>
+      <div style={{ width: '100%', maxWidth: '1000px', background: 'rgba(147, 51, 234, 0.03)', border: '1px solid rgba(147, 51, 234, 0.1)', borderRadius: '20px', overflow: 'hidden', backdropFilter: 'blur(10px)' }}>
+        <div style={{ padding: '24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+          <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Presale Transaction History</h3>
         </div>
         
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead style={{ background: 'rgba(0,0,0,0.2)' }}>
               <tr>
-                <th style={{ padding: '16px 24px', color: '#64748b', fontSize: '12px', fontWeight: 'normal', textTransform: 'uppercase' }}>Date</th>
-                <th style={{ padding: '16px 24px', color: '#64748b', fontSize: '12px', fontWeight: 'normal', textTransform: 'uppercase' }}>Invested (USD)</th>
-                <th style={{ padding: '16px 24px', color: '#64748b', fontSize: '12px', fontWeight: 'normal', textTransform: 'uppercase' }}>Tokens Bought</th>
-                <th style={{ padding: '16px 24px', color: '#64748b', fontSize: '12px', fontWeight: 'normal', textTransform: 'uppercase', textAlign: 'right' }}>Transaction</th>
+                <th style={{ padding: '16px 24px', color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>Date</th>
+                <th style={{ padding: '16px 24px', color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>Invested (USD)</th>
+                <th style={{ padding: '16px 24px', color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>Tokens Bought</th>
+                <th style={{ padding: '16px 24px', color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'right' }}>Tx Hash</th>
               </tr>
             </thead>
             <tbody>
               {presaleData.history.length === 0 ? (
                 <tr>
-                  <td colSpan={4} style={{ padding: '40px 24px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
+                  <td colSpan={4} style={{ padding: '60px 24px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
                     No transactions found yet.
                   </td>
                 </tr>
