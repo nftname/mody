@@ -86,8 +86,8 @@ export default function BalancePage() {
         
         <div style={cardStyle}>
           <div style={{ display: 'flex' }}>
-            <span style={{ ...labelStyle, width: '40%' }}>Invested (USD)</span>
-            <span style={labelStyle}>Total NNM</span>
+            <span style={{ ...labelStyle, width: '40%' }}>Total Contribution</span>
+            <span style={labelStyle}>Total Allocated NNM</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto' }}>
             <span style={{ ...valueStyle, color: '#10B981', width: '40%' }}>${presaleData.investedUsd.toLocaleString()}</span>
@@ -110,13 +110,13 @@ export default function BalancePage() {
 
         <div style={{ ...cardStyle, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-            <span style={labelStyle}>Est. Listing (@ $0.001)</span>
+            <span style={labelStyle}>Reference Value (@ $0.001)</span>
             <span style={{ ...valueStyle, color: '#10B981', fontSize: '26px' }}>
               ${totalValueAtListing.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end', width: '35%' }}>
-            <span style={{ color: '#9ea9a9', fontSize: '10px', fontWeight: 'bold' }}>Available at TGE</span>
+            <span style={{ color: '#9ea9a9', fontSize: '10px', fontWeight: 'bold' }}>Available After Unlock</span>
             <button 
               disabled={!isPresaleEnded}
               style={{ 
@@ -132,7 +132,7 @@ export default function BalancePage() {
                 boxShadow: isPresaleEnded ? '0 4px 15px rgba(225, 29, 72, 0.3)' : 'none',
                 whiteSpace: 'nowrap'
               }}>
-              Claim
+              Unlock
             </button>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function BalancePage() {
 
       <div style={{ width: '100%', maxWidth: '1000px', background: 'rgba(147, 51, 234, 0.03)', border: '1px solid rgba(147, 51, 234, 0.1)', borderRadius: '20px', overflow: 'hidden', backdropFilter: 'blur(10px)' }}>
         <div style={{ padding: '24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-          <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Presale Transaction History</h3>
+          <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Participation History</h3>
         </div>
         
         <div style={{ overflowX: 'auto' }}>
@@ -149,8 +149,8 @@ export default function BalancePage() {
             <thead style={{ background: 'rgba(0,0,0,0.2)' }}>
               <tr>
                 <th style={{ padding: '16px 24px', color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>Date</th>
-                <th style={{ padding: '16px 24px', color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>Invested (USD)</th>
-                <th style={{ padding: '16px 24px', color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>Tokens Bought</th>
+                <th style={{ padding: '16px 24px', color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>Contribution (USD)</th>
+                <th style={{ padding: '16px 24px', color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>NNM Allocated</th>
                 <th style={{ padding: '16px 24px', color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'right' }}>Tx Hash</th>
               </tr>
             </thead>
@@ -158,7 +158,7 @@ export default function BalancePage() {
               {presaleData.history.length === 0 ? (
                 <tr>
                   <td colSpan={4} style={{ padding: '60px 24px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
-                    No transactions found yet.
+                    No activity found yet.
                   </td>
                 </tr>
               ) : (
