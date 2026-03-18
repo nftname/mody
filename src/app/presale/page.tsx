@@ -407,10 +407,12 @@ export default function PresalePage() {
           </div>
           <h1 style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '16px', lineHeight: '1.2' }}>
             The NNM Protocol <br/>
-            <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Web3 Identity coin Presales</span>
+            <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Web3 Identity Utility Access
+</span>
           </h1>
           <p style={{ color: '#9ea9a9', fontSize: '15px', maxWidth: '550px', lineHeight: '1.6' }}>
-            Empowering the Polygon Ecosystem with Sovereign Identity and Institutional-Grade NFT Market Intelligence. A fully operational Web3 identity layer deployed on Polygon Mainnet. Join the most exclusive token launch. Secure your allocation before the public listing.
+            Empowering the Polygon Ecosystem with Sovereign Identity and Institutional-Grade NFT Market Intelligence. A fully operational Web3 identity layer deployed on Polygon Mainnet. Access the NNM ecosystem during its Genesis phase. Limited participation available.
+
           </p>
           <div style={{ marginTop: '35px', display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '480px' }}>
             {[
@@ -466,15 +468,16 @@ export default function PresalePage() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '10px' }}>
               <div style={{ flex: 1, background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.04) 0%, rgba(147, 51, 234, 0.04) 100%)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Current Price</span>
+                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Current Access Tier
+</span>
                 <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.0001</span>
               </div>
               <div style={{ flex: 1, background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.04) 0%, rgba(147, 51, 234, 0.04) 100%)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Next Price</span>
+                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Next Access Tier</span>
                 <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.0002</span>
               </div>
               <div style={{ flex: 1, background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.04) 0%, rgba(147, 51, 234, 0.04) 100%)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Listing Price</span>
+                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Final Access Tier</span>
                 <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.001</span>
               </div>
             </div>
@@ -490,8 +493,8 @@ export default function PresalePage() {
 
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '12px', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9' }}>Raised: <span style={{ color: '#fff', fontWeight: '500', fontFamily: 'monospace', fontSize: '13px', marginLeft: '2px' }}>${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></span>
-                <span style={{ color: '#9ea9a9' }}>Target: <span style={{ color: '#fff', fontWeight: '500', fontFamily: 'monospace', fontSize: '13px', marginLeft: '2px' }}>$1,050,000</span></span>
+                <span style={{ color: '#9ea9a9' }}>Participation Volume:  <span style={{ color: '#fff', fontWeight: '500', fontFamily: 'monospace', fontSize: '13px', marginLeft: '2px' }}>${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></span>
+                <span style={{ color: '#9ea9a9' }}>Participation Capacity: <span style={{ color: '#fff', fontWeight: '500', fontFamily: 'monospace', fontSize: '13px', marginLeft: '2px' }}>$1,050,000</span></span>
               </div>
               <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', overflow: 'hidden', marginBottom: '10px' }}>
                 <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #F43F5E 0%, #9333EA 100%)', borderRadius: '6px', transition: 'width 1s ease' }}></div>
@@ -533,7 +536,7 @@ export default function PresalePage() {
 
             <div style={{ background: 'rgba(0, 0, 0, 0.3)', borderRadius: '14px', padding: '14px', marginBottom: '12px', border: '1px solid rgba(255, 255, 255, 0.03)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>You Pay</span>
+                <span style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>You Contribute</span>
                 <div style={{ display: 'flex', gap: '4px' }}>
                   {['10', '50', '100', '1000'].map(val => (
                      <button key={val} onClick={() => handleQuickAmount(val)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontSize: '9px', padding: '4px 8px', borderRadius: '8px', cursor: 'pointer' }}>${val}</button>
@@ -578,7 +581,7 @@ export default function PresalePage() {
             </div>
 
             <div style={{ background: 'rgba(0, 0, 0, 0.3)', borderRadius: '14px', padding: '14px', marginBottom: '16px', border: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <p style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>You Receive</p>
+              <p style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>You Get</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <input 
                   type="text" 
@@ -598,7 +601,7 @@ export default function PresalePage() {
               onClick={isConnected ? executeBuy : () => alert("Please connect your wallet using the dApp header.")} 
               disabled={isProcessing}
               style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: isProcessing ? 'not-allowed' : 'pointer', animation: 'pulseGlow 2s infinite', opacity: isProcessing ? 0.7 : 1 }}>
-              {isProcessing ? "Processing..." : (isConnected ? "Buy Now" : "Connect Wallet")}
+              {isProcessing ? "Processing..." : (isConnected ? "Participate Now" : "Connect Wallet")}
             </button>
           </div>
           
@@ -686,7 +689,7 @@ export default function PresalePage() {
                 <span style={{ color: '#FCD34D', fontSize: '16px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
               </div>
               <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.5' }}>
-                50% of protocol revenue generated from minting new digital name assets is permanently removed from circulation.
+                50% of tokens generated from platform activity (digital name minting) are permanently removed from circulation.
               </p>
             </div>
           </div>
@@ -717,8 +720,8 @@ export default function PresalePage() {
 
             <div style={{ flex: 1, ...saTeContainerStyle, padding: '24px' }}>
               <div style={{ marginBottom: '16px' }}>
-            <div style={{ color: '#FF7EB3', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Pre-sale Contract (35%)</div>
-                <div style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.4' }}>Allocated to early participants who contribute to identity layer adoption and protocol expansion. 50% of initial utility contributions are programmatically allocated to initialize ecosystem liquidity.</div>
+            <div style={{ color: '#FF7EB3', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Genesis Allocation (35%)</div>
+                <div style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.4' }}>Allocated to early users supporting platform usage and feature expansion. 50% of initial utility contributions are programmatically allocated to support internal platform balance.</div>
               </div>
 
               <div style={{ marginBottom: '16px' }}>
@@ -792,8 +795,9 @@ export default function PresalePage() {
                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#64748b' }}></div>
               </div>
               <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 4 - Decentralized Liquidity & Protocol Mechanics</h3>
-                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Initialization of decentralized liquidity pools with time-locked smart contracts. Activation of usage-based protocol mechanics, including automated supply adjustments linked to network activity.</p>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 4 - Decentralized Liquidity & Platform Mechanics</h3>
+                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Initialization of Internal system balancing mechanisms with time-locked smart contracts. Activation of usage-based platform mechanics
+, including automated supply adjustments linked to network activity.</p>
               </div>
             </div>
 
