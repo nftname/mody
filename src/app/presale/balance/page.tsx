@@ -62,76 +62,71 @@ export default function BalancePage() {
   }
 
   const cardStyle = {
-    flex: 1,
-    minWidth: '320px',
+    flex: '1',
+    minWidth: '0',
     background: 'rgba(147, 51, 234, 0.05)', 
     border: '1px solid rgba(147, 51, 234, 0.11)', 
     boxShadow: '0 0 30px rgba(147, 51, 234, 0.11)', 
     borderRadius: '20px',
     backdropFilter: 'blur(15px)',
-    padding: '24px',
+    padding: '20px',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '15px'
+    gap: '12px'
   };
 
-  const labelStyle = { color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' as const, letterSpacing: '0.5px' };
-  const valueStyle = { color: '#f8fafc', fontSize: '22px', fontWeight: 'bold', fontFamily: 'monospace' };
+  const labelStyle = { color: '#9ea9a9', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' as const, letterSpacing: '0.5px' };
+  const valueStyle = { color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace' };
 
   return (
     <div style={{ backgroundColor: '#050a16', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px', fontFamily: 'sans-serif' }}>
       
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', width: '100%', maxWidth: '1200px', marginBottom: '50px', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '15px', width: '100%', maxWidth: '1000px', marginBottom: '40px', justifyContent: 'center' }}>
         
-        {/* Card 1: Invested & Allocation */}
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span style={labelStyle}>Invested (USD)</span>
             <span style={labelStyle}>Total NNM</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
             <span style={{ ...valueStyle, color: '#10B981' }}>${presaleData.investedUsd.toLocaleString()}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img src="/logo-coyn-nnm.png" alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', boxShadow: '0 0 15px rgba(147, 51, 234, 0.2)' }} />
               <span style={valueStyle}>{presaleData.tokensBought.toLocaleString()}</span>
-              <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '40px', height: '40px', borderRadius: '50%', boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }} />
             </div>
           </div>
         </div>
 
-        {/* Card 2: Conviction Rewards */}
         <div style={cardStyle}>
           <span style={labelStyle}>Conviction Rewards</span>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-            <span style={valueStyle}>{isLoading ? '...' : rewardsBalance.toLocaleString()}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-               <span style={{ ...labelStyle, fontSize: '14px', color: '#fff' }}>NNM</span>
-               <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '40px', height: '40px', borderRadius: '50%', boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }} />
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: 'auto', gap: '8px' }}>
+             <img src="/logo-coyn-nnm.png" alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', boxShadow: '0 0 15px rgba(147, 51, 234, 0.2)' }} />
+             <span style={valueStyle}>{isLoading ? '...' : rewardsBalance.toLocaleString()}</span>
           </div>
         </div>
 
-        {/* Card 3: Listing Value & Claim Button */}
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={labelStyle}>Listing Value (@ $0.001)</span>
+            <span style={labelStyle}>Value (@ $0.001)</span>
             {isPresaleEnded && (
               <button style={{ 
                 background: 'linear-gradient(90deg, #9333EA 0%, #E11D48 50%, #3B82F6 100%)', 
                 border: 'none', 
                 color: '#fff', 
-                padding: '8px 16px', 
-                borderRadius: '10px', 
-                fontSize: '12px', 
+                padding: '6px 12px', 
+                borderRadius: '8px', 
+                fontSize: '10px', 
                 fontWeight: 'bold', 
                 cursor: 'pointer',
-                boxShadow: '0 4px 15px rgba(225, 29, 72, 0.3)'
+                boxShadow: '0 4px 15px rgba(225, 29, 72, 0.3)',
+                whiteSpace: 'nowrap'
               }}>
                 Claim Now
               </button>
             )}
           </div>
           <div style={{ marginTop: 'auto' }}>
-            <span style={{ ...valueStyle, color: '#10B981', fontSize: '28px' }}>
+            <span style={{ ...valueStyle, color: '#10B981', fontSize: '24px' }}>
               ${totalValueAtListing.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
