@@ -22,7 +22,7 @@ const USDT_ABI = parseAbi([
 ]);
 
 const tokenomicsData = [
-  { id: 0, name: "Pre-sale", percent: 35, amount: "3.5B", color: "#FF7EB3", offset: 0 },
+  { id: 0, name: "Genesis Allocation", percent: 35, amount: "3.5B", color: "#FF7EB3", offset: 0 },
   { id: 1, name: "Protocol Liquidity", percent: 25, amount: "2.5B", color: "#9333EA", offset: -35 },
   { id: 2, name: "Community Rewards", percent: 15, amount: "1.5B", color: "#3B82F6", offset: -60 },
   { id: 3, name: "Ecosystem Expansion", percent: 15, amount: "1.5B", color: "#10B981", offset: -75 },
@@ -411,7 +411,7 @@ export default function PresalePage() {
 </span>
           </h1>
           <p style={{ color: '#9ea9a9', fontSize: '15px', maxWidth: '550px', lineHeight: '1.6' }}>
-            Empowering the Polygon Ecosystem with Sovereign Identity and Institutional-Grade NFT Market Intelligence. A fully operational Web3 identity layer deployed on Polygon Mainnet. Access the NNM ecosystem during its Genesis phase. Limited participation available.
+            Empowering the Polygon Ecosystem with Sovereign Identity and Institutional-Grade NFT Market Intelligence. A fully operational Web3 identity layer deployed on Polygon Mainnet. Access the NNM ecosystem during its Genesis phase. Limited participation available. NNM is a utility-based digital system designed for use within the platform only.
 
           </p>
           <div style={{ marginTop: '35px', display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '480px' }}>
@@ -419,7 +419,7 @@ export default function PresalePage() {
               "Lifetime digital identity on the NNM Registry",
               "ChainFace payments & management",
               "10,000 WNNM points for platform rewards",
-              "NNM token rewards proportional to purchase"
+              "NNM utility allocation based on participation"
             ].map((text, index) => (
               <div key={index} style={{ 
                 display: 'flex', 
@@ -515,7 +515,7 @@ export default function PresalePage() {
               <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: '500', textAlign: 'center' }}>≈</span>
 
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-start', paddingLeft: '30px' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Listing Price</span>
+                <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Estimated Value</span>
                 <span style={{ color: '#10B981', fontSize: '14px', fontWeight: '500', fontFamily: 'monospace' }}>
                   ${isConnected ? (apiTokensBought * 0.001).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </span>
@@ -526,10 +526,10 @@ export default function PresalePage() {
             <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
               <div className="ticker" style={{ animationDuration: '15s' }}>
                 {tickerItems.map((item, idx) => (
-                  <span key={idx} className="ticker-item">{item.addr} buys <span>{item.amt} NNM</span></span>
+                  <span key={idx} className="ticker-item">{item.addr} participated — <span>{item.amt} NNM</span></span>
                 ))}
                 {tickerItems.map((item, idx) => (
-                  <span key={`dup-${idx}`} className="ticker-item">{item.addr} buys <span>{item.amt} NNM</span></span>
+                  <span key={`dup-${idx}`} className="ticker-item">{item.addr} participated — <span>{item.amt} NNM</span></span>
                 ))}
               </div>
             </div>
@@ -795,7 +795,7 @@ export default function PresalePage() {
                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#64748b' }}></div>
               </div>
               <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 4 - Decentralized Liquidity & Platform Mechanics</h3>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 4 - Platform Infrastructure & Mechanics</h3>
                 <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Initialization of Internal system balancing mechanisms with time-locked smart contracts. Activation of usage-based platform mechanics
 , including automated supply adjustments linked to network activity.</p>
               </div>
