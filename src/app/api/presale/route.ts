@@ -55,12 +55,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
-    const receipt = await publicClient.waitForTransactionReceipt({ 
-      hash: txHash as `0x${string}` 
-    });
+    try {
+      const receipt = await publicClient.getTransactionReceipt({ 
+        hash: txHash as `0x${string}` 
+      });
 
-    if (receipt.status !== 'success') {
-      return NextResponse.json({ error: 'Transaction failed on contract' }, { status: 400 });
+      if (!receipt || receipt.status !== 'success') {
+        return NextResponse.json({ error: 'Transaction invalid on blockchain' }, { status: 400 });
+      }
+    } catch (e) {
+      return NextResponse.json({ error: 'Transaction not found on blockchain' }, { status: 400 });
     }
 
     const { error } = await supabaseAdmin

@@ -824,7 +824,45 @@ export default function PresalePage() {
           </div>
         </div>
       </div>
-
+{statusModal && (
+  <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 10, 22, 0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+    <div style={{ width: '90%', maxWidth: '400px', background: '#050a16', border: '1px solid rgba(147, 51, 234, 0.2)', borderRadius: '24px', padding: '40px 30px', textAlign: 'center', position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+        {statusModal === 'success' ? (
+          <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', border: '2px solid #10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+        ) : (
+          <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(249, 115, 22, 0.1)', border: '2px solid #f97316', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(10deg)' }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+        )}
+      </div>
+      <h3 style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', marginBottom: '12px' }}>
+        {statusModal === 'success' ? 'Participation Successful' : 'Action Required'}
+      </h3>
+      <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', marginBottom: '32px' }}>
+        {statusModal === 'success' ? 'Your contribution has been recorded on the blockchain.' : errorMsg}
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {statusModal === 'success' ? (
+          <a href="/presale/balance" style={{ textDecoration: 'none' }}>
+            <div style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}>
+              YOUR BALANCE
+            </div>
+          </a>
+        ) : (
+          <div onClick={() => setStatusModal(null)} style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Try Again
+          </div>
+        )}
+        {statusModal === 'success' && (
+          <button onClick={() => setStatusModal(null)} style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '13px', cursor: 'pointer', marginTop: '8px' }}>Close</button>
+        )}
+      </div>
+    </div>
+  </div>
+)}
       <div style={{ maxWidth: '800px', margin: '20px auto', padding: '0 20px', textAlign: 'center' }}>
         <p style={{ fontSize: '10px', fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6' }}>
           <strong>Important Notice:</strong> NNM Tokens are digital utility units designed for use within the NNM ecosystem and its protocol functionalities. They are not securities, investment contracts, or financial instruments. Participation in this optional genesis distribution is entirely voluntary and may involve the complete loss of contributed digital assets due to the experimental nature of blockchain technologies. By proceeding, you acknowledge that you are acquiring NNM Tokens solely for their potential utility within the ecosystem and not with any expectation of profit or financial return.
