@@ -681,94 +681,69 @@ export default function PresalePage() {
       </div>
 
       <div id="roadmap-section" style={{ width: '100%', maxWidth: '1200px', zIndex: 1, marginTop: '60px', marginBottom: '80px' }}>
-        <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 'bold', textAlign: 'left', marginBottom: '40px' }}>
+        <h2 style={{ color: '#f8fafc', fontSize: '28px', fontWeight: 'bold', textAlign: 'left', marginBottom: '30px' }}>
           NNM <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Roadmap</span>
         </h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0px', position: 'relative', paddingLeft: '20px' }}>
-          
-          <div style={{ position: 'absolute', left: '35px', top: '20px', bottom: '20px', width: '2px', background: 'linear-gradient(180deg, #E11D48 0%, #9333EA 60%, rgba(147, 51, 234, 0.2) 100%)', zIndex: 0 }}></div>
+        
+        <div style={{ background: 'rgba(147, 51, 234, 0.05)', border: '1px solid rgba(147, 51, 234, 0.11)', boxShadow: '0 0 30px rgba(147, 51, 234, 0.11)', borderRadius: '20px', backdropFilter: 'blur(15px)', padding: '40px 30px' }}>
+          <div style={{ position: 'relative', paddingLeft: '10px' }}>
+            
+            <div style={{ position: 'absolute', left: '19px', top: '10px', bottom: '10px', width: '2px', background: 'linear-gradient(180deg, #E11D48 0%, #9333EA 60%, rgba(255,255,255,0.05) 100%)', zIndex: 0 }}></div>
 
-          <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '30px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #E11D48 0%, #9333EA 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 15px rgba(225, 29, 72, 0.4)' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '40px' }}>
+              <div style={{ width: '20px', display: 'flex', justifyContent: 'center', background: 'transparent', paddingTop: '2px' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 0px 5px rgba(225, 29, 72, 0.5))' }}><path d="M20 6L9 17l-5-5"/></svg>
               </div>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '4px' }}><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-            </div>
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', padding: '20px', backdropFilter: 'blur(10px)', flex: 1, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '10px' }}>
-                <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Phase 1: The Genesis & Identity Layer</h3>
-                <span style={{ color: '#10B981', fontSize: '12px', fontWeight: 'bold', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '6px' }}>Completed</span>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 1: The Genesis & Identity Layer</h3>
+                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Deployment of the NNM Protocol on the Polygon Mainnet. Activation of ChainFace identity profiles, enabling cross-chain interactions and foundational ecosystem functionality. Initial minting of Nexus Digital Name Assets.</p>
               </div>
-              <p style={{ color: '#f8fafc', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Deployment of the NNM Protocol on the Polygon Mainnet. Activation of ChainFace identity profiles, enabling cross-chain interactions and foundational ecosystem functionality. Initial minting of Nexus Digital Name Assets.</p>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '30px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #E11D48 0%, #9333EA 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 15px rgba(225, 29, 72, 0.4)' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '40px' }}>
+              <div style={{ width: '20px', display: 'flex', justifyContent: 'center', background: 'transparent', paddingTop: '2px' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 0px 5px rgba(225, 29, 72, 0.5))' }}><path d="M20 6L9 17l-5-5"/></svg>
               </div>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9333EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '4px' }}><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-            </div>
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', padding: '20px', backdropFilter: 'blur(10px)', flex: 1, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '10px' }}>
-                <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Phase 2: Network Infrastructure & Activation</h3>
-                <span style={{ color: '#10B981', fontSize: '12px', fontWeight: 'bold', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '6px' }}>Completed</span>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 2: Network Infrastructure & Activation</h3>
+                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Establishment of core ecosystem infrastructure, including multi-chain interaction capabilities within ChainFace and initial integration of the NGX Index for tracking network activity and ecosystem data.</p>
               </div>
-              <p style={{ color: '#f8fafc', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Establishment of core ecosystem infrastructure, including multi-chain interaction capabilities within ChainFace and initial integration of the NGX Index for tracking network activity and ecosystem data.</p>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '30px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #E11D48 0%, #9333EA 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 15px rgba(147, 51, 234, 0.4)' }}>
-                <div style={{ width: '10px', height: '10px', background: '#fff', borderRadius: '50%', animation: 'pulseDot 1.5s infinite' }}></div>
+            <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '40px' }}>
+              <div style={{ width: '20px', display: 'flex', justifyContent: 'center', background: 'transparent', paddingTop: '2px' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 0px 5px rgba(225, 29, 72, 0.5))' }}><path d="M20 6L9 17l-5-5"/></svg>
               </div>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(147, 51, 234, 0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '4px' }}><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-            </div>
-            <div style={{ background: 'rgba(147, 51, 234, 0.05)', border: '1px solid rgba(147, 51, 234, 0.2)', borderRadius: '16px', padding: '20px', backdropFilter: 'blur(10px)', flex: 1, boxShadow: '0 0 20px rgba(147, 51, 234, 0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '10px' }}>
-                <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Phase 3: Ecosystem Utility Distribution</h3>
-                <span style={{ color: '#D8B4FE', fontSize: '12px', fontWeight: 'bold', background: 'rgba(147, 51, 234, 0.2)', padding: '4px 8px', borderRadius: '6px' }}>Current Phase</span>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 3: Ecosystem Utility Distribution</h3>
+                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Ongoing distribution of the NNM utility token to early participants, enabling access to ecosystem features, identity services, and internal protocol interactions.</p>
               </div>
-              <p style={{ color: '#fff', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Ongoing distribution of the NNM utility token to early participants, enabling access to ecosystem features, identity services, and internal protocol interactions.</p>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '30px', opacity: 0.5 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.1)', border: '2px solid rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ width: '8px', height: '8px', background: 'rgba(255, 255, 255, 0.4)', borderRadius: '50%' }}></div>
+            <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '40px', opacity: 0.5 }}>
+              <div style={{ width: '20px', display: 'flex', justifyContent: 'center', background: 'transparent', paddingTop: '8px' }}>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#64748b' }}></div>
               </div>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '4px' }}><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-            </div>
-            <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', padding: '20px', backdropFilter: 'blur(10px)', flex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '10px' }}>
-                <h3 style={{ color: '#9ea9a9', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Phase 4: Decentralized Liquidity & Protocol Mechanics</h3>
-                <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 'bold', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 8px', borderRadius: '6px' }}>Q2 2026</span>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 4: Decentralized Liquidity & Protocol Mechanics</h3>
+                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Initialization of decentralized liquidity pools with time-locked smart contracts. Activation of usage-based protocol mechanics, including automated supply adjustments linked to network activity.</p>
               </div>
-              <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Initialization of decentralized liquidity pools with time-locked smart contracts. Activation of usage-based protocol mechanics, including automated supply adjustments linked to network activity.</p>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, opacity: 0.5 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.1)', border: '2px solid rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ width: '8px', height: '8px', background: 'rgba(255, 255, 255, 0.4)', borderRadius: '50%' }}></div>
+            <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, opacity: 0.5 }}>
+              <div style={{ width: '20px', display: 'flex', justifyContent: 'center', background: 'transparent', paddingTop: '8px' }}>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#64748b' }}></div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 5: Global Integration & Ecosystem Expansion</h3>
+                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Continuous expansion of the ChainFace identity layer and ecosystem infrastructure, supporting broader accessibility and long-term protocol evolution.</p>
               </div>
             </div>
-            <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', padding: '20px', backdropFilter: 'blur(10px)', flex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '10px' }}>
-                <h3 style={{ color: '#9ea9a9', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Phase 5: Global Integration & Ecosystem Expansion</h3>
-                <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 'bold', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 8px', borderRadius: '6px' }}>Ongoing</span>
-              </div>
-              <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Continuous expansion of the ChainFace identity layer and ecosystem infrastructure, supporting broader accessibility and long-term protocol evolution.</p>
-            </div>
+
           </div>
-          
         </div>
       </div>
+
 
       <div style={{ maxWidth: '800px', margin: '20px auto', padding: '0 20px', textAlign: 'center' }}>
         <p style={{ fontSize: '10px', fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6' }}>
