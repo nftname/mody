@@ -18,8 +18,10 @@ const PRESALE_ABI = parseAbi([
 
 const USDT_ABI = parseAbi([
   "function approve(address spender, uint256 amount) returns (bool)",
-  "function allowance(address owner, address spender) view returns (uint256)"
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function balanceOf(address account) view returns (uint256)"
 ]);
+
 
 const tokenomicsData = [
   { id: 0, name: "Genesis Allocation", percent: 35, amount: "3.5B", color: "#FF7EB3", offset: 0 },
@@ -77,6 +79,14 @@ export default function PresalePage() {
     args: [address as `0x${string}`, PRESALE_ADDRESS as `0x${string}`],
     query: { enabled: !!address }
   });
+    const { data: usdtBalance } = useReadContract({
+    address: USDT_ADDRESS as `0x${string}`,
+    abi: USDT_ABI,
+    functionName: 'balanceOf',
+    args: [address as `0x${string}`],
+    query: { enabled: !!address }
+  });
+
   const { data: rawPolPrice } = useReadContract({
     address: PRESALE_ADDRESS,
     abi: PRESALE_ABI,
@@ -249,15 +259,20 @@ export default function PresalePage() {
     setErrorMsg('');
     
     try {
-      const balance = await publicClient.getBalance({ address });
       if (selectedCoin === 'POL') {
+        const polBalance = await publicClient.getBalance({ address });
         const valueToSend = parseEther(amount);
-        if (balance < valueToSend) {
-          throw new Error("Insufficient funds: Low POL balance.");
+        if (polBalance < valueToSend) {
+          throw new Error("Insufficient funds: Your POL balance is too low.");
         }
-      } else {
-        if (balance < parseEther("0.02")) {
-          throw new Error("Insufficient funds: Low POL balance for gas fees.");
+      } else if (selectedCoin === 'USDT') {
+        const usdtAmount = parseUnits(amount.toString(), 6);
+        if (usdtBalance === undefined || usdtBalance < usdtAmount) {
+          throw new Error("Insufficient funds: Your USDT balance is too low.");
+        }
+        const polBalance = await publicClient.getBalance({ address });
+        if (polBalance < parseEther("0.02")) {
+          throw new Error("Insufficient funds: You need a small amount of POL for gas fees.");
         }
       }
 
@@ -297,12 +312,17 @@ export default function PresalePage() {
           setStatusModal('success');
           setAmount('');
           
+          const usdValueFinal = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
+          const tokensBoughtFinal = Math.floor(usdValueFinal * liveTokensPerUsd);
+
           fetch('/api/presale', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               wallet: address,
-              txHash: txHash
+              txHash: txHash,
+              amountUsd: usdValueFinal,
+              tokensBought: tokensBoughtFinal
             })
           }).catch(() => {});
         } else {
@@ -310,7 +330,11 @@ export default function PresalePage() {
         }
       }
     } catch (error: any) {
-      setErrorMsg(error?.message || "Transaction cancelled.");
+      let readableError = error?.message || "Transaction cancelled.";
+      if (readableError.includes("User rejected") || readableError.includes("User denied")) {
+         readableError = "You cancelled the transaction in your wallet.";
+      }
+      setErrorMsg(readableError);
       setStatusModal('error');
       setSubmittedTxHash(null);
     } finally {

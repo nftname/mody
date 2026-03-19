@@ -1,17 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { createPublicClient, http, parseAbiItem, decodeEventLog, formatEther } from 'viem';
-import { polygon } from 'viem/chains';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
-
-const publicClient = createPublicClient({
-  chain: polygon,
-  transport: http()
-});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -49,55 +42,10 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { wallet, txHash } = body;
+    const { wallet, txHash, amountUsd, tokensBought } = body;
 
-    if (!wallet || !txHash) {
+    if (!wallet || !txHash || amountUsd === undefined || tokensBought === undefined) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
-    }
-
-    let receipt = null;
-    for (let i = 0; i < 30; i++) {
-      try {
-        receipt = await publicClient.getTransactionReceipt({ 
-          hash: txHash as `0x${string}` 
-        });
-        if (receipt) break;
-      } catch (e) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-    }
-
-    if (!receipt || receipt.status !== 'success') {
-      return NextResponse.json({ error: 'Transaction invalid on blockchain' }, { status: 400 });
-    }
-
-    const purchasedEventAbi = parseAbiItem('event Purchased(address indexed buyer, uint256 usdAmount, uint256 tokenAmount, string method)');
-    
-    let amountUsd = 0;
-    let tokensBought = 0;
-    let eventFound = false;
-
-    for (const log of receipt.logs) {
-      try {
-        const decoded = decodeEventLog({
-          abi: [purchasedEventAbi],
-          data: log.data,
-          topics: log.topics,
-        });
-
-        if (decoded.eventName === 'Purchased' && decoded.args.buyer.toLowerCase() === wallet.toLowerCase()) {
-          amountUsd = Number(Number(formatEther(decoded.args.usdAmount)).toFixed(2));
-          tokensBought = Number(Number(formatEther(decoded.args.tokenAmount)).toFixed(2));
-          eventFound = true;
-          break;
-        }
-      } catch (e) {
-        continue;
-      }
-    }
-
-    if (!eventFound) {
-      return NextResponse.json({ error: 'Purchase event not found' }, { status: 400 });
     }
 
     const { error } = await supabaseAdmin
@@ -106,8 +54,8 @@ export async function POST(request: Request) {
         {
           wallet_address: wallet.toLowerCase(),
           tx_hash: txHash,
-          amount_usd: amountUsd,
-          tokens_bought: tokensBought
+          amount_usd: Number(amountUsd).toFixed(2),
+          tokens_bought: Number(tokensBought).toFixed(2)
         }
       ]);
 
