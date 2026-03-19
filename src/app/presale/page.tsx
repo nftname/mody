@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract, usePublicClient } from 'wagmi';
 import { parseAbi, parseEther, parseUnits } from 'viem';
 
 const PRESALE_ADDRESS = "0xb03aa911B7b59d83cA62EC1e5958e9F78fd1Be72";
@@ -61,6 +61,7 @@ export default function PresalePage() {
   const [submittedTxHash, setSubmittedTxHash] = useState<`0x${string}` | null>(null);
   const { isConnected, address } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
 
   const { data: tokensSold } = useReadContract({
     address: PRESALE_ADDRESS,
@@ -241,57 +242,8 @@ export default function PresalePage() {
     }
     setShowModal(true);
   };
-  const { isLoading: isWaitingForTx, isSuccess: isTxConfirmed, isError: isTxFailed } = useWaitForTransactionReceipt({
-    hash: submittedTxHash as `0x${string}`,
-    query: { enabled: !!submittedTxHash }
-  });
-
-  useEffect(() => {
-    if (isTxConfirmed && submittedTxHash && address) {
-      const registerTransaction = async () => {
-        try {
-          const usdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
-          const currentTokensBought = Math.floor(usdValue * liveTokensPerUsd);
-
-          const response = await fetch('/api/presale', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              wallet: address,
-              txHash: submittedTxHash,
-              amountUsd: usdValue,
-              tokensBought: currentTokensBought
-            })
-          });
-
-          const data = await response.json();
-          if (data.success) {
-            setStatusModal('success');
-          } else {
-            throw new Error(data.error || "Database Verification Failed");
-          }
-        } catch (error: any) {
-          console.error(error);
-          setErrorMsg("Transaction confirmed on blockchain, but failed to register in database. Please contact support.");
-          setStatusModal('error');
-        } finally {
-          setSubmittedTxHash(null);
-          setAmount(''); 
-        }
-      };
-
-      registerTransaction();
-    }
-
-    if (isTxFailed) {
-        setErrorMsg("Transaction failed on the blockchain. Please ensure you have sufficient funds and try again.");
-        setStatusModal('error');
-        setSubmittedTxHash(null);
-    }
-
-  }, [isTxConfirmed, isTxFailed, submittedTxHash, address, amount, selectedCoin, livePolPriceUsd, liveTokensPerUsd]);
   const executeBuy = async () => {
-    if (!amount || Number(amount) <= 0 || !address) return;
+    if (!amount || Number(amount) <= 0 || !address || !publicClient) return;
     setIsProcessing(true);
     setSubmittedTxHash(null); 
     
@@ -325,12 +277,43 @@ export default function PresalePage() {
       if (txHash) {
         setSubmittedTxHash(txHash); 
         setShowModal(false); 
+        
+        const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+        
+        if (receipt.status === 'success') {
+          const response = await fetch('/api/presale', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              wallet: address,
+              txHash: txHash
+            })
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            setStatusModal('success');
+            setAmount('');
+          } else {
+            throw new Error(data.error || "Database Verification Failed");
+          }
+        } else {
+          throw new Error("Transaction failed on the blockchain");
+        }
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setErrorMsg("Transaction rejected or failed in wallet. Please try again.");
+      const errStr = error?.message || "";
+      if (errStr.includes("Database Verification Failed")) {
+          setErrorMsg("Transaction confirmed on blockchain, but failed to register in database. Please contact support.");
+      } else if (errStr.includes("Transaction failed on the blockchain")) {
+          setErrorMsg("Transaction failed on the blockchain. Please ensure you have sufficient funds and try again.");
+      } else {
+          setErrorMsg("Transaction rejected or failed in wallet. Please try again.");
+      }
       setStatusModal('error');
+      setSubmittedTxHash(null);
     } finally {
       setIsProcessing(false);
     }
@@ -640,9 +623,9 @@ export default function PresalePage() {
 
             <button 
               onClick={isConnected ? executeBuy : () => alert("Please connect your wallet using the dApp header.")} 
-            disabled={isProcessing || isWaitingForTx}
+              disabled={isProcessing}
               style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: isProcessing ? 'not-allowed' : 'pointer', animation: 'pulseGlow 2s infinite', opacity: isProcessing ? 0.7 : 1 }}>
-              {isProcessing || isWaitingForTx ? "Processing..." : (isConnected ? "Participate Now" : "Connect Wallet")}
+              {isProcessing ? "Processing..." : (isConnected ? "Participate Now" : "Connect Wallet")}
             </button>
           </div>
           

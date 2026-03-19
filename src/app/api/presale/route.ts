@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, http, parseAbiItem, decodeEventLog, formatEther } from 'viem';
 import { polygon } from 'viem/chains';
 
 const supabaseAdmin = createClient(
@@ -49,30 +49,47 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { wallet, txHash, amountUsd, tokensBought } = body;
+    const { wallet, txHash } = body;
 
-    if (!wallet || !txHash || !amountUsd || !tokensBought) {
+    if (!wallet || !txHash) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
-    let isSuccess = false;
-    for (let i = 0; i < 3; i++) {
+    const receipt = await publicClient.waitForTransactionReceipt({ 
+      hash: txHash as `0x${string}` 
+    });
+    
+    if (receipt.status !== 'success') {
+      return NextResponse.json({ error: 'Transaction invalid on blockchain' }, { status: 400 });
+    }
+
+    const purchasedEventAbi = parseAbiItem('event Purchased(address indexed buyer, uint256 usdAmount, uint256 tokenAmount, string method)');
+    
+    let amountUsd = 0;
+    let tokensBought = 0;
+    let eventFound = false;
+
+    for (const log of receipt.logs) {
       try {
-        const receipt = await publicClient.getTransactionReceipt({ 
-          hash: txHash as `0x${string}` 
+        const decoded = decodeEventLog({
+          abi: [purchasedEventAbi],
+          data: log.data,
+          topics: log.topics,
         });
-        
-        if (receipt && receipt.status === 'success') {
-          isSuccess = true;
+
+        if (decoded.eventName === 'Purchased' && decoded.args.buyer.toLowerCase() === wallet.toLowerCase()) {
+          amountUsd = Number(formatEther(decoded.args.usdAmount));
+          tokensBought = Number(formatEther(decoded.args.tokenAmount));
+          eventFound = true;
           break;
         }
       } catch (e) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        continue;
       }
     }
 
-    if (!isSuccess) {
-      return NextResponse.json({ error: 'Transaction invalid on blockchain' }, { status: 400 });
+    if (!eventFound) {
+      return NextResponse.json({ error: 'Purchase event not found' }, { status: 400 });
     }
 
     const { error } = await supabaseAdmin
@@ -87,6 +104,9 @@ export async function POST(request: Request) {
       ]);
 
     if (error) {
+      if (error.code === '23505') {
+        return NextResponse.json({ success: true }); 
+      }
       return NextResponse.json({ error: 'Database Insert Error' }, { status: 500 });
     }
 
