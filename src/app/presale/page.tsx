@@ -861,57 +861,55 @@ export default function PresalePage() {
         </div>
       </div>
 {statusModal && (
-  <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 10, 22, 0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-    <div style={{ width: '90%', maxWidth: '380px', background: '#050a16', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', padding: '30px 24px', textAlign: 'center', position: 'relative', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
-
-      {/* Icon Section */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+  <div 
+    onClick={() => setStatusModal(null)}
+    style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 10, 22, 0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+  >
+    <div 
+      onClick={(e) => e.stopPropagation()}
+      style={{ width: '85%', maxWidth: '285px', background: '#050a16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '22px', padding: '22px 18px', textAlign: 'center', position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
         {statusModal === 'success' ? (
-          <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid #10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
         ) : (
-          <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(249, 115, 22, 0.05)', border: '1px solid rgba(249, 115, 22, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(-10deg)' }}><circle cx="12" cy="12" r="11"/><line x1="12" y1="7" x2="12" y2="13"/><circle cx="12" cy="17" r="0.5"/></svg>
+          <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(252, 211, 77, 0.05)', border: '1px solid #FCD34D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#FCD34D', fontSize: '22px', fontWeight: 'bold' }}>!</span>
           </div>
         )}
       </div>
 
-      {/* Text Section */}
-      <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '500', marginBottom: '10px' }}>
-        {statusModal === 'success' ? 'Participation Successful' : 'Action Required'}
+      <h3 style={{ color: '#fff', fontSize: '15px', fontWeight: '600', marginBottom: '10px' }}>
+        {statusModal === 'success' ? 'Confirmed' : 'Action Required'}
       </h3>
 
       {statusModal === 'success' ? (
-        <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.5', marginBottom: '24px' }}>
-          Your contribution has been successfully recorded on the blockchain.
+        <p style={{ color: '#9ea9a9', fontSize: '11px', lineHeight: '1.5', marginBottom: '18px' }}>
+          Your contribution has been successfully recorded.
         </p>
       ) : (
-        <div style={{ background: 'rgba(246, 70, 93, 0.1)', borderRadius: '12px', padding: '12px', marginBottom: '24px', textAlign: 'left', border: '1px solid rgba(246, 70, 93, 0.2)' }}>
-          <p style={{ color: '#f8fafc', fontSize: '12px', marginBottom: '8px', fontWeight: 'bold' }}>Action Update:</p>
-          <p style={{ color: '#f6465d', fontSize: '13px', margin: 0, lineHeight: '1.6', fontFamily: 'monospace', wordBreak: 'break-word' }}>
-            {errorMsg || "Transaction rejected or insufficient funds."}
+        <div style={{ marginBottom: '18px', textAlign: 'center' }}>
+          <p style={{ color: '#9ea9a9', fontSize: '11px', lineHeight: '1.6', margin: 0 }}>
+            Please ensure you have sufficient <b>USDT</b> and <b>POL</b> for gas fees. Check your connection and try again.
           </p>
         </div>
       )}
 
-      {/* Button Section */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {statusModal === 'success' ? (
           <a href="/presale/balance" style={{ textDecoration: 'none' }}>
-            <div style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
+            <div style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
               VIEW BALANCE
             </div>
           </a>
         ) : (
-          <div onClick={() => setStatusModal(null)} style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
+          <div onClick={() => setStatusModal(null)} style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
             Try Again
           </div>
         )}
-        
-        {statusModal === 'success' && (
-          <button onClick={() => setStatusModal(null)} style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '12px', cursor: 'pointer', marginTop: '4px' }}>Close</button>
-        )}
+        <button onClick={() => setStatusModal(null)} style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '10px', cursor: 'pointer' }}>Close</button>
       </div>
     </div>
   </div>
