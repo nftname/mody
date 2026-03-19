@@ -259,12 +259,13 @@ export default function PresalePage() {
       } else if (selectedCoin === 'USDT') {
         const usdtAmount = parseUnits(amount.toString(), 6);
         if (!usdtAllowance || usdtAllowance < usdtAmount) {
-          await writeContractAsync({
+          const approveTxHash = await writeContractAsync({
             address: USDT_ADDRESS,
             abi: USDT_ABI,
             functionName: 'approve',
             args: [PRESALE_ADDRESS, usdtAmount]
           });
+          await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
         }
         txHash = await writeContractAsync({
           address: PRESALE_ADDRESS,
@@ -295,23 +296,15 @@ export default function PresalePage() {
             setStatusModal('success');
             setAmount('');
           } else {
-            throw new Error(data.error || "Database Verification Failed");
+            throw new Error(`API Error: ${data.error}`);
           }
         } else {
-          throw new Error("Transaction failed on the blockchain");
+          throw new Error("Blockchain: Transaction failed");
         }
       }
-
     } catch (error: any) {
       console.error(error);
-      const errStr = error?.message || "";
-      if (errStr.includes("Database Verification Failed")) {
-          setErrorMsg("Transaction confirmed on blockchain, but failed to register in database. Please contact support.");
-      } else if (errStr.includes("Transaction failed on the blockchain")) {
-          setErrorMsg("Transaction failed on the blockchain. Please ensure you have sufficient funds and try again.");
-      } else {
-          setErrorMsg("Transaction rejected or failed in wallet. Please try again.");
-      }
+      setErrorMsg(error?.message || "Unknown error occurred");
       setStatusModal('error');
       setSubmittedTxHash(null);
     } finally {
@@ -866,12 +859,10 @@ export default function PresalePage() {
         </p>
       ) : (
         <div style={{ background: 'rgba(249, 115, 22, 0.05)', borderRadius: '12px', padding: '12px', marginBottom: '24px', textAlign: 'left' }}>
-          <p style={{ color: '#f8fafc', fontSize: '12px', marginBottom: '8px', fontWeight: 'bold' }}>Please check the following:</p>
-          <ul style={{ color: '#9ea9a9', fontSize: '11px', margin: 0, paddingLeft: '16px', lineHeight: '1.8' }}>
-            <li>Ensure you have sufficient <b>USDT</b> balance.</li>
-            <li>Ensure you have enough <b>POL</b> to cover gas fees.</li>
-            <li>The network might be busy, please try again.</li>
-          </ul>
+          <p style={{ color: '#f8fafc', fontSize: '12px', marginBottom: '8px', fontWeight: 'bold' }}>Error Details:</p>
+          <p style={{ color: '#f6465d', fontSize: '13px', margin: 0, lineHeight: '1.6', fontFamily: 'monospace', wordBreak: 'break-word' }}>
+            {errorMsg}
+          </p>
         </div>
       )}
 
