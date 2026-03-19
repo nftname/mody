@@ -276,35 +276,27 @@ export default function PresalePage() {
       }
 
       if (txHash) {
-        setSubmittedTxHash(txHash); 
-        setShowModal(false); 
+        setSubmittedTxHash(txHash);
         
         const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
         
         if (receipt.status === 'success') {
-          const response = await fetch('/api/presale', {
+          setStatusModal('success');
+          setAmount('');
+          
+          fetch('/api/presale', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               wallet: address,
               txHash: txHash
             })
-          });
-
-          const data = await response.json();
-          if (data.success) {
-            setStatusModal('success');
-            setAmount('');
-          } else {
-            throw new Error(`API Error: ${data.error}`);
-          }
+          }).catch(() => {});
         } else {
-          throw new Error("Blockchain: Transaction failed");
+          setStatusModal('error');
         }
       }
-    } catch (error: any) {
-      console.error(error);
-      setErrorMsg(error?.message || "Unknown error occurred");
+    } catch (error) {
       setStatusModal('error');
       setSubmittedTxHash(null);
     } finally {
@@ -859,10 +851,12 @@ export default function PresalePage() {
         </p>
       ) : (
         <div style={{ background: 'rgba(249, 115, 22, 0.05)', borderRadius: '12px', padding: '12px', marginBottom: '24px', textAlign: 'left' }}>
-          <p style={{ color: '#f8fafc', fontSize: '12px', marginBottom: '8px', fontWeight: 'bold' }}>Error Details:</p>
-          <p style={{ color: '#f6465d', fontSize: '13px', margin: 0, lineHeight: '1.6', fontFamily: 'monospace', wordBreak: 'break-word' }}>
-            {errorMsg}
-          </p>
+          <p style={{ color: '#f8fafc', fontSize: '12px', marginBottom: '8px', fontWeight: 'bold' }}>Please check the following:</p>
+          <ul style={{ color: '#9ea9a9', fontSize: '11px', margin: 0, paddingLeft: '16px', lineHeight: '1.8' }}>
+            <li>Ensure you have sufficient <b>USDT</b> balance.</li>
+            <li>Ensure you have enough <b>POL</b> to cover gas fees.</li>
+            <li>The network might be busy, please try again.</li>
+          </ul>
         </div>
       )}
 

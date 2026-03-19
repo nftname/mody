@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     }
 
     let receipt = null;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 30; i++) {
       try {
         receipt = await publicClient.getTransactionReceipt({ 
           hash: txHash as `0x${string}` 
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     }
 
     if (!receipt || receipt.status !== 'success') {
-      return NextResponse.json({ error: 'Transaction invalid or not found on blockchain' }, { status: 400 });
+      return NextResponse.json({ error: 'Transaction invalid on blockchain' }, { status: 400 });
     }
 
     const purchasedEventAbi = parseAbiItem('event Purchased(address indexed buyer, uint256 usdAmount, uint256 tokenAmount, string method)');
