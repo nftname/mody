@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useReadContract } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseAbi, parseEther, parseUnits } from 'viem';
 
 const PRESALE_ADDRESS = "0xb03aa911B7b59d83cA62EC1e5958e9F78fd1Be72";
@@ -58,7 +58,7 @@ export default function PresalePage() {
   const [statusModal, setStatusModal] = useState<'success' | 'error' | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [copied, setCopied] = useState(false);
-
+  const [submittedTxHash, setSubmittedTxHash] = useState<`0x${string}` | null>(null);
   const { isConnected, address } = useAccount();
   const { writeContractAsync } = useWriteContract();
 
@@ -241,13 +241,62 @@ export default function PresalePage() {
     }
     setShowModal(true);
   };
+  const { isLoading: isWaitingForTx, isSuccess: isTxConfirmed, isError: isTxFailed } = useWaitForTransactionReceipt({
+    hash: submittedTxHash as `0x${string}`,
+    query: { enabled: !!submittedTxHash }
+  });
 
+  useEffect(() => {
+    if (isTxConfirmed && submittedTxHash && address) {
+      const registerTransaction = async () => {
+        try {
+          const usdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
+          const currentTokensBought = Math.floor(usdValue * liveTokensPerUsd);
+
+          const response = await fetch('/api/presale', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              wallet: address,
+              txHash: submittedTxHash,
+              amountUsd: usdValue,
+              tokensBought: currentTokensBought
+            })
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            setStatusModal('success');
+          } else {
+            throw new Error(data.error || "Database Verification Failed");
+          }
+        } catch (error: any) {
+          console.error(error);
+          setErrorMsg("Transaction confirmed on blockchain, but failed to register in database. Please contact support.");
+          setStatusModal('error');
+        } finally {
+          setSubmittedTxHash(null);
+          setAmount(''); 
+        }
+      };
+
+      registerTransaction();
+    }
+
+    if (isTxFailed) {
+        setErrorMsg("Transaction failed on the blockchain. Please ensure you have sufficient funds and try again.");
+        setStatusModal('error');
+        setSubmittedTxHash(null);
+    }
+
+  }, [isTxConfirmed, isTxFailed, submittedTxHash, address, amount, selectedCoin, livePolPriceUsd, liveTokensPerUsd]);
   const executeBuy = async () => {
     if (!amount || Number(amount) <= 0 || !address) return;
     setIsProcessing(true);
+    setSubmittedTxHash(null); 
+    
     try {
       let txHash;
-      
       if (selectedCoin === 'POL') {
         txHash = await writeContractAsync({
           address: PRESALE_ADDRESS,
@@ -274,39 +323,19 @@ export default function PresalePage() {
       }
 
       if (txHash) {
-        const currentUsdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
-        const currentTokensBought = Math.floor(currentUsdValue * liveTokensPerUsd);
-
-        await new Promise(resolve => setTimeout(resolve, 10000));
-
-        const response = await fetch('/api/presale', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            wallet: address,
-            txHash: txHash,
-            amountUsd: currentUsdValue,
-            tokensBought: currentTokensBought
-          })
-        });
-
-        const data = await response.json();
-        if (data.success) {
-           setStatusModal('success');
-        } else {
-           throw new Error("Verification Failed");
-        }
+        setSubmittedTxHash(txHash); 
+        setShowModal(false); 
       }
-      setAmount('');
-    } catch (error: any) {
+
+    } catch (error) {
       console.error(error);
-      setErrorMsg("Transaction not completed. Please try again.");
+      setErrorMsg("Transaction rejected or failed in wallet. Please try again.");
       setStatusModal('error');
     } finally {
       setIsProcessing(false);
-      setShowModal(false);
     }
   };
+
 
   const usdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
   const calculatedNNM = amount && Number(amount) > 0 ? Math.floor(usdValue * liveTokensPerUsd).toString() : '';
@@ -611,9 +640,9 @@ export default function PresalePage() {
 
             <button 
               onClick={isConnected ? executeBuy : () => alert("Please connect your wallet using the dApp header.")} 
-              disabled={isProcessing}
+            disabled={isProcessing || isWaitingForTx}
               style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: isProcessing ? 'not-allowed' : 'pointer', animation: 'pulseGlow 2s infinite', opacity: isProcessing ? 0.7 : 1 }}>
-              {isProcessing ? "Processing..." : (isConnected ? "Participate Now" : "Connect Wallet")}
+              {isProcessing || isWaitingForTx ? "Processing..." : (isConnected ? "Participate Now" : "Connect Wallet")}
             </button>
           </div>
           
