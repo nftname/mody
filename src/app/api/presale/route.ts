@@ -1,7 +1,3 @@
-
-
-
-
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createPublicClient, http, parseAbiItem, decodeEventLog, formatEther } from 'viem';
@@ -90,7 +86,6 @@ export async function POST(request: Request) {
         });
 
         if (decoded.eventName === 'Purchased' && decoded.args.buyer.toLowerCase() === wallet.toLowerCase()) {
-          // حل مشكلة numeric(18, 2) هنا بتقريب الأرقام لكسرين فقط
           amountUsd = Number(Number(formatEther(decoded.args.usdAmount)).toFixed(2));
           tokensBought = Number(Number(formatEther(decoded.args.tokenAmount)).toFixed(2));
           eventFound = true;

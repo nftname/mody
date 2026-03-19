@@ -246,6 +246,7 @@ export default function PresalePage() {
     if (!amount || Number(amount) <= 0 || !address || !publicClient) return;
     setIsProcessing(true);
     setSubmittedTxHash(null); 
+    setErrorMsg('');
     
     try {
       const balance = await publicClient.getBalance({ address });
@@ -255,8 +256,8 @@ export default function PresalePage() {
           throw new Error("Insufficient funds: Low POL balance.");
         }
       } else {
-        if (balance < parseEther("0.02")) { 
-          throw new Error("Insufficient funds: Low POL balance for gas.");
+        if (balance < parseEther("0.02")) {
+          throw new Error("Insufficient funds: Low POL balance for gas fees.");
         }
       }
 
@@ -309,15 +310,13 @@ export default function PresalePage() {
         }
       }
     } catch (error: any) {
-      console.error("Transaction Error:", error);
+      setErrorMsg(error?.message || "Transaction cancelled.");
       setStatusModal('error');
       setSubmittedTxHash(null);
     } finally {
       setIsProcessing(false);
     }
   };
-
-
 
   const usdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
   const calculatedNNM = amount && Number(amount) > 0 ? Math.floor(usdValue * liveTokensPerUsd).toString() : '';
@@ -864,13 +863,11 @@ export default function PresalePage() {
           Your contribution has been successfully recorded on the blockchain.
         </p>
       ) : (
-        <div style={{ background: 'rgba(249, 115, 22, 0.05)', borderRadius: '12px', padding: '12px', marginBottom: '24px', textAlign: 'left' }}>
-          <p style={{ color: '#f8fafc', fontSize: '12px', marginBottom: '8px', fontWeight: 'bold' }}>Please check the following:</p>
-          <ul style={{ color: '#9ea9a9', fontSize: '11px', margin: 0, paddingLeft: '16px', lineHeight: '1.8' }}>
-            <li>Ensure you have sufficient <b>USDT</b> balance.</li>
-            <li>Ensure you have enough <b>POL</b> to cover gas fees.</li>
-            <li>The network might be busy, please try again.</li>
-          </ul>
+        <div style={{ background: 'rgba(246, 70, 93, 0.1)', borderRadius: '12px', padding: '12px', marginBottom: '24px', textAlign: 'left', border: '1px solid rgba(246, 70, 93, 0.2)' }}>
+          <p style={{ color: '#f8fafc', fontSize: '12px', marginBottom: '8px', fontWeight: 'bold' }}>Action Update:</p>
+          <p style={{ color: '#f6465d', fontSize: '13px', margin: 0, lineHeight: '1.6', fontFamily: 'monospace', wordBreak: 'break-word' }}>
+            {errorMsg || "Transaction rejected or insufficient funds."}
+          </p>
         </div>
       )}
 
