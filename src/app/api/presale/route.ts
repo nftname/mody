@@ -55,12 +55,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
-    const receipt = await publicClient.waitForTransactionReceipt({ 
-      hash: txHash as `0x${string}` 
-    });
-    
-    if (receipt.status !== 'success') {
-      return NextResponse.json({ error: 'Transaction invalid on blockchain' }, { status: 400 });
+    let receipt = null;
+    for (let i = 0; i < 5; i++) {
+      try {
+        receipt = await publicClient.getTransactionReceipt({ 
+          hash: txHash as `0x${string}` 
+        });
+        if (receipt) break;
+      } catch (e) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+
+    if (!receipt || receipt.status !== 'success') {
+      return NextResponse.json({ error: 'Transaction invalid or not found on blockchain' }, { status: 400 });
     }
 
     const purchasedEventAbi = parseAbiItem('event Purchased(address indexed buyer, uint256 usdAmount, uint256 tokenAmount, string method)');
