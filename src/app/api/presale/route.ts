@@ -7,7 +7,6 @@ const supabaseAdmin = createClient(
 );
 
 const PRESALE_ADDRESS = "0xb03aa911B7b59d83cA62EC1e5958e9F78fd1Be72".toLowerCase();
-const RPC_URL = "https://polygon-rpc.com";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -51,7 +50,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
-    const rpcResponse = await fetch(RPC_URL, {
+    // استخدام Alchemy بدلاً من السيرفرات العامة لضمان عدم الحظر
+    const alchemyKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
+    if (!alchemyKey) {
+      return NextResponse.json({ error: 'Alchemy key missing from server' }, { status: 500 });
+    }
+
+    const alchemyUrl = `https://polygon-mainnet.g.alchemy.com/v2/${alchemyKey}`;
+
+    const rpcResponse = await fetch(alchemyUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -66,17 +73,19 @@ export async function POST(request: Request) {
     const receipt = rpcData.result;
 
     if (!receipt) {
-      return NextResponse.json({ error: 'Transaction not found' }, { status: 400 });
+      return NextResponse.json({ error: 'Transaction not found on blockchain' }, { status: 400 });
     }
 
+    // التحقق الصارم من الشروط الأمنية
     const isSuccess = receipt.status === '0x1';
     const isFromValid = receipt.from.toLowerCase() === wallet.toLowerCase();
     const isToValid = receipt.to && receipt.to.toLowerCase() === PRESALE_ADDRESS;
 
     if (!isSuccess || !isFromValid || !isToValid) {
-      return NextResponse.json({ error: 'Invalid transaction details' }, { status: 400 });
+      return NextResponse.json({ error: 'Transaction security check failed' }, { status: 400 });
     }
 
+    // التسجيل في قاعدة البيانات بعد التأكد من البلوكتشين
     const { error } = await supabaseAdmin
       .from('presale_transactions')
       .insert([
