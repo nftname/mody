@@ -560,7 +560,7 @@ export default function PresalePage() {
               <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: '500', textAlign: 'center' }}>≈</span>
 
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-start', paddingLeft: '30px' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Estimated Value</span>
+                <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Estimated</span>
                 <span style={{ color: '#10B981', fontSize: '14px', fontWeight: '500', fontFamily: 'monospace' }}>
                   ${isConnected ? (apiTokensBought * 0.001).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </span>
