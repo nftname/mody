@@ -226,13 +226,14 @@ const Navbar = () => {
   const menuIcons: { [key: string]: string } = {
     'Home': 'bi-house-door',
     'Market': 'bi-shop',
+    'Genesis': 'bi-fire',
     'NGX Index': 'bi-activity',
     'Mint': 'bi-diamond',
     'ChainFace': 'bi-person-badge',
     'NNM Concept': 'bi-layers'
   };
 
-  const menuItems = ['Home', 'Market'];
+  const menuItems = ['Home', 'Market', 'Genesis'];
 
   const bottomDrawerItems = [
     { label: 'News & Updates', href: '/news', icon: 'bi-newspaper' },
@@ -306,7 +307,7 @@ const Navbar = () => {
         </div>
 
         {/* DESKTOP LOGO */}
-        <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0, marginRight: '40px' }}> 
+        <div className="d-none d-lg-flex align-items-center" style={{ flexShrink: 0, marginRight: '20px' }}> 
             <Link href="/" className="navbar-brand d-flex align-items-center gap-2 m-0 p-0" style={{ textDecoration: 'none' }}> 
               <LogoSVG mobile={false} />
               <span className="gold-text-gradient" style={{ fontFamily: 'sans-serif', fontWeight: '800', fontSize: '22px', letterSpacing: '1px', marginTop: '1px' }}>NNM</span>
@@ -332,21 +333,25 @@ const Navbar = () => {
             
             {/* Desktop Links */}
             <div className="d-flex align-items-center" style={{ flexShrink: 1, minWidth: 0, paddingTop: '5px' }}> 
-                <ul className="navbar-nav mb-2 mb-lg-0 d-flex flex-row align-items-center" style={{ gap: '18px' }}>
+                <ul className="navbar-nav mb-2 mb-lg-0 d-flex flex-row align-items-center" style={{ gap: '14px' }}>
                     
-                    {/* Home & Market */}
-                    {menuItems.map((item) => (
-                        <li className="nav-item" key={item}>
-                            <Link 
-                                href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
-                                onClick={(e) => handleNavClick(item, e)}
-                                className={`nav-link fw-medium desktop-nav-link ${pathname === (item === 'Home' ? '/' : `/${item.toLowerCase()}`) ? 'active' : ''}`}
-                                style={{ fontSize: navFontSize, whiteSpace: 'nowrap' }} 
-                            >
-                                {item}
-                            </Link>
-                        </li>
-                    ))}
+                    {menuItems.map((item) => {
+                        const itemHref = item === 'Home' ? '/' : item === 'Genesis' ? '/presale' : `/${item.toLowerCase().replace(/\s+/g, '-')}`;
+                        const isActive = pathname === itemHref;
+                        return (
+                            <li className="nav-item" key={item}>
+                                <Link 
+                                    href={itemHref}
+                                    onClick={(e) => handleNavClick(item, e)}
+                                    className={`nav-link fw-medium desktop-nav-link ${isActive ? 'active' : ''} d-flex align-items-center gap-1`}
+                                    style={{ fontSize: navFontSize, whiteSpace: 'nowrap' }} 
+                                >
+                                    {item === 'Genesis' && <i className="bi bi-fire" style={{ color: '#FCD535', fontSize: '13px' }}></i>}
+                                    {item}
+                                </Link>
+                            </li>
+                        );
+                    })}
                     
                     {/* NGX Dropdown */}
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
@@ -578,16 +583,19 @@ const Navbar = () => {
               <div className="d-flex flex-column w-100 justify-content-start gap-2" style={{ marginTop: '-8px' }}>
                   <div className="d-flex flex-column gap-2">
                     {/* Standard Items */}
-                    {menuItems.map((item) => (
-                        <Link key={item} 
-                                href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
-                                onClick={closeDrawer}
-                                className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3"
-                                style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
-                            <i className={`bi ${menuIcons[item]} opacity-75`} style={{ fontSize: '18px' }}></i>
-                            {item}
-                        </Link>
-                    ))}
+                    {menuItems.map((item) => {
+                        const itemHref = item === 'Home' ? '/' : item === 'Genesis' ? '/presale' : `/${item.toLowerCase().replace(/\s+/g, '-')}`;
+                        return (
+                            <Link key={item} 
+                                    href={itemHref}
+                                    onClick={closeDrawer}
+                                    className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3"
+                                    style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
+                                <i className={`bi ${menuIcons[item]} opacity-75`} style={{ fontSize: '18px', color: item === 'Genesis' ? '#FCD535' : 'inherit' }}></i>
+                                {item}
+                            </Link>
+                        );
+                    })}
 
                     <Link href="/ngx" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
                         <i className="bi bi-activity opacity-75" style={{ fontSize: '18px' }}></i>
