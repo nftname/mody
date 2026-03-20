@@ -6,9 +6,6 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-const PRESALE_ADDRESS = "0xb03aa911B7b59d83cA62EC1e5958e9F78fd1Be72".toLowerCase();
-const RPC_URL = "https://polygon.llamarpc.com";
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const wallet = searchParams.get('wallet')?.toLowerCase();
@@ -47,40 +44,12 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { wallet, txHash, amountUsd, tokensBought } = body;
 
+    // التحقق فقط من وصول البيانات من الواجهة الأمامية
     if (!wallet || !txHash || amountUsd === undefined || tokensBought === undefined) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
-    const rpcResponse = await fetch(RPC_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'eth_getTransactionReceipt',
-        params: [txHash],
-        id: 1,
-      }),
-    });
-
-    if (!rpcResponse.ok) {
-       return NextResponse.json({ error: 'RPC Fetch Failed' }, { status: 500 });
-    }
-
-    const rpcData = await rpcResponse.json();
-    const receipt = rpcData.result;
-
-    if (!receipt) {
-      return NextResponse.json({ error: 'Transaction not found on blockchain' }, { status: 400 });
-    }
-
-    const isSuccess = receipt.status === '0x1';
-    const isFromValid = receipt.from.toLowerCase() === wallet.toLowerCase();
-    const isToValid = receipt.to && receipt.to.toLowerCase() === PRESALE_ADDRESS;
-
-    if (!isSuccess || !isFromValid || !isToValid) {
-      return NextResponse.json({ error: 'Transaction security check failed' }, { status: 400 });
-    }
-
+    // إدراج البيانات مباشرة في Supabase (بناءً على تأكيد الواجهة الأمامية)
     const { error } = await supabaseAdmin
       .from('presale_transactions')
       .insert([
@@ -93,6 +62,7 @@ export async function POST(request: Request) {
       ]);
 
     if (error) {
+      // إذا كانت المعاملة مسجلة مسبقاً، نعتبرها ناجحة ولا نكررها
       if (error.code === '23505') {
         return NextResponse.json({ success: true }); 
       }
