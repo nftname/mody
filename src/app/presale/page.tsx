@@ -433,9 +433,12 @@ export default function PresalePage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff' }}>NNM</span>
                 <span style={{ fontSize: '12px', color: '#9ea9a9', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>Utility Access</span>
-                <div style={{ transform: 'scale(0.55)', transformOrigin: 'left center', margin: '-15px 0 -15px 10px', height: '65px', width: '220px' }}>
-                  <iframe srcDoc="<html><body style='margin:0;padding:0;overflow:hidden;background:transparent;'><script async src='https://coinvote.cc/api/badge_embed.php?id=36426'></script></body></html>" style={{ width: '100%', height: '100%', border: 'none', overflow: 'hidden' }} sandbox="allow-scripts" scrolling="no"></iframe>
-                </div>
+                <a href="https://coinvote.cc/coin/NNM-Protocol" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', marginLeft: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(252, 211, 77, 0.1)', border: '1px solid rgba(252, 211, 77, 0.4)', padding: '2px 8px', borderRadius: '6px', cursor: 'pointer' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                    <span style={{ color: '#FCD34D', fontSize: '11px', fontWeight: 'bold' }}>Coinvote</span>
+                  </div>
+                </a>
               </div>
 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '10px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)', marginLeft: '-12px' }}>
                 <img src="/icons/matic.svg" alt="Polygon" style={{ width: '20px', height: '20px' }} />
