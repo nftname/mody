@@ -433,12 +433,16 @@ export default function PresalePage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff' }}>NNM</span>
                 <span style={{ fontSize: '12px', color: '#9ea9a9', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>Utility Access</span>
-                <a href="https://coinvote.cc/coin/NNM-Protocol" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', marginLeft: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(252, 211, 77, 0.1)', border: '1px solid rgba(252, 211, 77, 0.4)', padding: '2px 8px', borderRadius: '6px', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', gap: '6px', marginLeft: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(252, 211, 77, 0.1)', border: '1px solid rgba(252, 211, 77, 0.4)', padding: '2px 8px', borderRadius: '6px', userSelect: 'none' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
                     <span style={{ color: '#FCD34D', fontSize: '11px', fontWeight: 'bold' }}>Coinvote</span>
                   </div>
-                </a>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.4)', padding: '2px 8px', borderRadius: '6px', userSelect: 'none' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    <span style={{ color: '#3B82F6', fontSize: '11px', fontWeight: 'bold' }}>Coinmooner</span>
+                  </div>
+                </div>
               </div>
 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '10px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)', marginLeft: '-12px' }}>
                 <img src="/icons/matic.svg" alt="Polygon" style={{ width: '20px', height: '20px' }} />
