@@ -433,9 +433,14 @@ export default function PresalePage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff' }}>NNM</span>
                 <span style={{ fontSize: '12px', color: '#9ea9a9', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>Utility Access</span>
-                <div style={{ transform: 'scale(0.55)', transformOrigin: 'left center', margin: '-15px 0 -15px 10px', height: 'fit-content' }}>
-                  <script async src="https://coinvote.cc/api/badge_embed.php?id=36426"></script>
-                </div>
+                <div style={{ transform: 'scale(0.55)', transformOrigin: 'left center', margin: '-15px 0 -15px 10px', height: 'fit-content' }} ref={(el) => {
+                  if (el && el.children.length === 0) {
+                    const script = document.createElement('script');
+                    script.src = "https://coinvote.cc/api/badge_embed.php?id=36426";
+                    script.async = true;
+                    el.appendChild(script);
+                  }
+                }}></div>
               </div>
 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '10px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)', marginLeft: '-12px' }}>
                 <img src="/icons/matic.svg" alt="Polygon" style={{ width: '20px', height: '20px' }} />
