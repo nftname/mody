@@ -63,6 +63,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-TileImage" content="/icons/icon-192x192.png" />
       </head>
       <body className={inter.className}>
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-NQY65DTMFD" strategy="afterInteractive" />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-NQY65DTMFD');
+          `}
+        </Script>
+
         <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="afterInteractive" />
         <Script id="sw-unregister" strategy="afterInteractive">
           {`
