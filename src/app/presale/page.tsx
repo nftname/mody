@@ -532,9 +532,9 @@ export default function PresalePage() {
         </div>
 
 <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '-10px' }}>
-  <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '24px', width: '100%', maxWidth: '440px' }}>
+  <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '24px 24px 16px 24px', width: '100%', maxWidth: '440px' }}>
 
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '24px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <span style={{ color: '#fff', fontSize: '22px', fontWeight: '900' }}>$0.0001</span>
         <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px' }}>Current Access</span>
@@ -549,20 +549,29 @@ export default function PresalePage() {
       </div>
     </div>
 
-    <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-      <div style={{ color: '#9ea9a9', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Total Raised</div>
-      <div style={{ color: '#FCD34D', fontSize: '38px', fontWeight: '900', fontFamily: 'monospace', lineHeight: '1', textShadow: '0 0 15px rgba(252, 211, 77, 0.3)' }}>
-        ${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+    <div style={{ marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'baseline' }}>
+            <span style={{ color: '#9ea9a9', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginRight: '4px' }}>Collected Balance</span>
+            <span style={{ color: '#FCD34D', fontSize: '32px', fontWeight: '900', fontFamily: 'monospace', lineHeight: '1' }}>
+              ${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+            </span>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>
+            of <span style={{ color: '#fff' }}>$1,050,000</span> Goal
+          </div>
+        </div>
       </div>
-      <div style={{ color: '#9ea9a9', fontSize: '12px', marginTop: '8px' }}>
-        of <span style={{ color: '#fff' }}>$1,050,000</span> Goal
-      </div>
-      <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden', marginTop: '14px' }}>
-        <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #FCD34D 0%, #F59E0B 100%)', borderRadius: '4px', transition: 'width 1s ease' }}></div>
+      
+      <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+        <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #FF7EB3 0%, #9333EA 100%)', borderRadius: '4px', transition: 'width 1s ease' }}></div>
       </div>
     </div>
 
-    <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '28px' }}>
+    <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '20px' }}>
       {Object.entries(timeLeft).map(([unit, value]) => (
         <div key={unit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ fontSize: '28px', fontWeight: '900', color: '#fff', lineHeight: '1' }}>{value.toString().padStart(2, '0')}</div>
@@ -571,7 +580,7 @@ export default function PresalePage() {
       ))}
     </div>
 
-    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
         <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Balance</span>
         <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} />
