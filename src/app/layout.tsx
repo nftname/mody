@@ -18,15 +18,15 @@ export const metadata = {
     description: 'The definitive marketplace for NFT Digital Identity.',
     url: 'https://nftnnm.com',
     siteName: 'NNM Market',
-    images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
+    images: [{ url: '/logo-square.jpg', width: 300, height: 300 }],
     locale: 'en_US',
     type: 'website',
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: 'NNM | Digital Name Assets',
     site: '@nnmmarket',
-    images: ['/og-image.jpg'],
+    images: ['/logo-square.jpg'],
   },
   icons: {
     icon: '/favicon.ico',
