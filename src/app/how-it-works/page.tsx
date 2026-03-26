@@ -251,21 +251,62 @@ export default function HowItWorksPage() {
               </p>
             </header>
 
+
             {/* SECTIONS */}
             <section className="mb-5 ps-lg-3">
-              <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
-                What Are <span style={{ color: GOLD_MEDIUM }}>Digital Name Assets</span>?
+              <h2 className="fw-bold mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
+                What Are Digital Name Assets?
               </h2>
               <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
-                Digital Name Assets are unique, non-fungible blockchain assets that represent rare digital identifiers. They are not identities, domains, or credentials. They are collectible, ownable digital assets secured by decentralized networks and verifiable on-chain.
-              </p>
-              <p style={{ lineHeight: '1.6', color: TEXT_BODY_COLOR }}>
-                Each asset is defined by scarcity, provenance, and permanence. Ownership is recorded transparently on the blockchain, allowing users to hold, trade, or transfer assets without intermediaries. 
-                <span className="ms-1">
-                   For insights into asset structuring and tiered classification, refer to the <Link href="/ranking" className="text-decoration-none" style={{ color: GOLD_MEDIUM, borderBottom: `1px solid ${GOLD_MEDIUM}` }}>Ranking Registry</Link>.
-                </span>
+                Digital Name Assets are unique, non-fungible blockchain assets representing rare digital identifiers. Distinct from conventional identities, domains, or credentials, they function as collectible, fully ownable digital properties secured by decentralized networks and strictly verifiable on-chain.
               </p>
             </section>
+
+            <section className="mb-5 ps-lg-3">
+              <h2 className="fw-bold mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
+                1. Mint Your Asset
+              </h2>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
+                Navigate to the Minting portal to search for your desired Web3 name. Upon availability, select from three lifetime ownership tiers with zero recurring renewal fees: Founders (currently offered at no cost; standard $5), Elite ($10), and Immortals ($15). Upon selection, the asset is minted securely as a Polygon NFT directly to your wallet.
+              </p>
+            </section>
+
+            <section className="mb-5 ps-lg-3">
+              <h2 className="fw-bold mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
+                2. Access Your Dashboard
+              </h2>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
+                Following the minting process, access your personalized Dashboard. Here, you can view your newly acquired digital asset securely stored in your connected wallet. The dashboard also provides direct access to your dedicated ChainFace profile, enabling immediate customization.
+              </p>
+            </section>
+
+            <section className="mb-5 ps-lg-3">
+              <h2 className="fw-bold mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
+                3. Configure Your ChainFace Profile
+              </h2>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
+                Initialize your ChainFace interface to serve as your unified payment hub. You may integrate wallet addresses across up to six major blockchain networks. This generates a consolidated link and QR code, facilitating seamless cryptocurrency transactions across mobile and desktop platforms without the need to manage multiple address strings.
+              </p>
+            </section>
+
+            <section className="mb-5 ps-lg-3">
+              <h2 className="fw-bold mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
+                4. Establish Trust and Verification
+              </h2>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
+                Upon profile activation, the NNM Protocol automatically allocates an introductory Gold Star alongside 300,000 Conviction points to establish a foundational trust metric. For enhanced institutional credibility, users may undergo a global identity or phone verification process for a one-time fee of $1, unlocking advanced Verification Stars (Green or Blue).
+              </p>
+            </section>
+
+            <section className="mb-5 ps-lg-3">
+              <h2 className="fw-bold mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
+                5. Asset Valuation and the Marketplace
+              </h2>
+              <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
+                Continuous community interaction with your ChainFace profile progressively accumulates Conviction points, which may correlate with the asset's overall market valuation. Should you require a specific, pre-owned brand name, our decentralized Marketplace allows you to browse, acquire, and trade existing Digital Name Assets globally.
+              </p>
+            </section>
+
 
              {/* --- Conviction Rank Section --- */}
             <section className="mb-5 ps-lg-3">
