@@ -284,17 +284,7 @@ const handleTouchEnd = (e: React.TouchEvent) => {
             <div className="row align-items-center px-3 px-lg-4 pb-4">
                 
                 {/* LEFT: TEXT CONTENT */}
-                <div className="col-lg-6 mb-4 mb-lg-0">
-                    <h1 className="fw-bold mb-3 main-title" style={{ fontSize: '1.9rem', lineHeight: '1.2', color: '#EAECEF' }}>
-                        NNM &mdash; The Global Market for <span style={{ color: '#FCD535' }}>Nexus Rare Digital Name NFTs</span>
-                    </h1>
-                    <p className="mb-0 main-desc" style={{ fontSize: '1.1rem', color: '#848E9C', maxWidth: '90%' }}>
-                        Where Nexus Digital Name NFTs build genuine digital utility and global reach. Trade with confidence on the premier decentralized marketplace.
-                    </p>
-                </div>
-
-                {/* LEFT: TEXT CONTENT */}
-                <div className="col-lg-7 mb-4 mb-lg-0"> {}
+                <div className="col-lg-7 mb-4 mb-lg-0">
                     <h1 className="fw-bold mb-3 main-title" style={{ fontSize: '1.9rem', lineHeight: '1.2', color: '#EAECEF' }}>
                         NNM &mdash; The Global Market for <span style={{ color: '#FCD535' }}>Nexus Rare Digital Name NFTs</span>
                     </h1>
@@ -304,7 +294,7 @@ const handleTouchEnd = (e: React.TouchEvent) => {
                 </div>
 
                 {/* RIGHT: IMAGE SLIDER (CAROUSEL) */}
-                <div className="col-lg-5"> {}
+                <div className="col-lg-5">
                     <div 
                         className="hero-slider-container position-relative overflow-hidden" 
                         style={{ 
