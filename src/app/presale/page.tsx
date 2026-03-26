@@ -534,7 +534,7 @@ export default function PresalePage() {
 <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '-10px' }}>
   <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '24px 24px 16px 24px', width: '100%', maxWidth: '440px' }}>
 
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '24px' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <span style={{ color: '#fff', fontSize: '22px', fontWeight: '900' }}>$0.0001</span>
         <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px' }}>Current Access</span>
@@ -549,15 +549,13 @@ export default function PresalePage() {
       </div>
     </div>
 
-    <div style={{ marginBottom: '16px' }}>
+    <div style={{ marginBottom: '32px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
-        <div style={{ textAlign: 'left' }}>
-          <div style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'baseline' }}>
-            <span style={{ color: '#9ea9a9', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginRight: '4px' }}>Collected Balance</span>
-            <span style={{ color: '#FCD34D', fontSize: '32px', fontWeight: '900', fontFamily: 'monospace', lineHeight: '1' }}>
-              ${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-            </span>
-          </div>
+        <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+          <span style={{ color: '#9ea9a9', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>COLLECTED</span>
+          <span style={{ color: '#FCD34D', fontSize: '32px', fontWeight: '900', fontFamily: 'monospace', lineHeight: '1' }}>
+            ${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+          </span>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>
