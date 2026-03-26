@@ -532,75 +532,74 @@ export default function PresalePage() {
         </div>
 
 <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '-10px' }}>
-          <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '24px', width: '100%', maxWidth: '440px' }}>
+  <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '24px', width: '100%', maxWidth: '440px' }}>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '10px' }}>
-              <div style={{ flex: 1, background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.04) 0%, rgba(147, 51, 234, 0.04) 100%)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Current Access Tier
-</span>
-                <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.0001</span>
-              </div>
-              <div style={{ flex: 1, background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.04) 0%, rgba(147, 51, 234, 0.04) 100%)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Next Access Tier</span>
-                <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.0002</span>
-              </div>
-              <div style={{ flex: 1, background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.04) 0%, rgba(147, 51, 234, 0.04) 100%)', border: '1px solid rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', marginBottom: '2px' }}>Final Access Tier</span>
-                <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>$0.001</span>
-              </div>
-            </div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '24px' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span style={{ color: '#fff', fontSize: '22px', fontWeight: '900' }}>$0.0001</span>
+        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px' }}>Current Access</span>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span style={{ color: '#fff', fontSize: '22px', fontWeight: '900' }}>$0.0002</span>
+        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px' }}>Next Tier</span>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span style={{ color: '#fff', fontSize: '22px', fontWeight: '900' }}>$0.001</span>
+        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px' }}>Final Tier</span>
+      </div>
+    </div>
 
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
-              {Object.entries(timeLeft).map(([unit, value]) => (
-                <div key={unit} style={{ background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(225, 29, 72, 0.2) 100%)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', padding: '10px 6px', width: '65px', textAlign: 'center', color: '#fff' }}>
-                  <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{value.toString().padStart(2, '0')}</div>
-                  <div style={{ fontSize: '9px', color: '#9ea9a9', textTransform: 'uppercase' }}>{unit}</div>
-                </div>
-              ))}
-            </div>
+    <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+      <div style={{ color: '#9ea9a9', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Total Raised</div>
+      <div style={{ color: '#FCD34D', fontSize: '38px', fontWeight: '900', fontFamily: 'monospace', lineHeight: '1', textShadow: '0 0 15px rgba(252, 211, 77, 0.3)' }}>
+        ${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+      </div>
+      <div style={{ color: '#9ea9a9', fontSize: '12px', marginTop: '8px' }}>
+        of <span style={{ color: '#fff' }}>$1,050,000</span> Goal
+      </div>
+      <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden', marginTop: '14px' }}>
+        <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #FCD34D 0%, #F59E0B 100%)', borderRadius: '4px', transition: 'width 1s ease' }}></div>
+      </div>
+    </div>
 
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '12px', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9' }}>Participation Volume:  <span style={{ color: '#fff', fontWeight: '500', fontFamily: 'monospace', fontSize: '13px', marginLeft: '2px' }}>${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></span>
-                <span style={{ color: '#9ea9a9' }}>Participation Capacity: <span style={{ color: '#fff', fontWeight: '500', fontFamily: 'monospace', fontSize: '13px', marginLeft: '2px' }}>$1,050,000</span></span>
-              </div>
-              <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', overflow: 'hidden', marginBottom: '10px' }}>
-                <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #F43F5E 0%, #9333EA 100%)', borderRadius: '6px', transition: 'width 1s ease' }}></div>
-              </div>
-            </div>
-          
+    <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '28px' }}>
+      {Object.entries(timeLeft).map(([unit, value]) => (
+        <div key={unit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ fontSize: '28px', fontWeight: '900', color: '#fff', lineHeight: '1' }}>{value.toString().padStart(2, '0')}</div>
+          <div style={{ fontSize: '11px', color: '#9ea9a9', textTransform: 'uppercase', marginTop: '6px' }}>{unit}</div>
+        </div>
+      ))}
+    </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
-              
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Balance</span>
-                <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} />
-                <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500', fontFamily: 'monospace' }}>
-                  {isConnected ? apiTokensBought.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
-                </span>
-              </div>
+    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Balance</span>
+        <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} />
+        <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500', fontFamily: 'monospace' }}>
+          {isConnected ? apiTokensBought.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+        </span>
+      </div>
 
-              <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: '500', textAlign: 'center' }}>≈</span>
+      <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: '500', textAlign: 'center' }}>≈</span>
 
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-start', paddingLeft: '30px' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Estimated</span>
-                <span style={{ color: '#10B981', fontSize: '14px', fontWeight: '500', fontFamily: 'monospace' }}>
-                  ${isConnected ? (apiTokensBought * 0.001).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
-                </span>
-              </div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-start', paddingLeft: '30px' }}>
+        <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Estimated</span>
+        <span style={{ color: '#10B981', fontSize: '14px', fontWeight: '500', fontFamily: 'monospace' }}>
+          ${isConnected ? (apiTokensBought * 0.001).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+        </span>
+      </div>
+    </div>
 
-            </div>
-
-            <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
-              <div className="ticker" style={{ animationDuration: '15s' }}>
-                {tickerItems.map((item, idx) => (
-                  <span key={idx} className="ticker-item">{item.addr} participated — <span>{item.amt} NNM</span></span>
-                ))}
-                {tickerItems.map((item, idx) => (
-                  <span key={`dup-${idx}`} className="ticker-item">{item.addr} participated — <span>{item.amt} NNM</span></span>
-                ))}
-              </div>
-            </div>
+    <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
+      <div className="ticker" style={{ animationDuration: '20s' }}>
+        {tickerItems.map((item, idx) => (
+          <span key={idx} className="ticker-item">{item.addr} participated — <span>{item.amt} NNM</span></span>
+        ))}
+        {tickerItems.map((item, idx) => (
+          <span key={`dup-${idx}`} className="ticker-item">{item.addr} participated — <span>{item.amt} NNM</span></span>
+        ))}
+      </div>
+    </div>
 
             <div style={{ background: 'rgba(0, 0, 0, 0.3)', borderRadius: '14px', padding: '14px', marginBottom: '12px', border: '1px solid rgba(255, 255, 255, 0.03)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
