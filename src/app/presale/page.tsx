@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useReadContract, usePublicClient } from 'wagmi';
 import { parseAbi, parseEther, parseUnits } from 'viem';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 
 const PRESALE_ADDRESS = "0xb03aa911B7b59d83cA62EC1e5958e9F78fd1Be72";
 const USDT_ADDRESS = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
@@ -63,6 +64,7 @@ export default function PresalePage() {
   const [submittedTxHash, setSubmittedTxHash] = useState<`0x${string}` | null>(null);
   const { isConnected, address } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const { openConnectModal } = useConnectModal();
   const publicClient = usePublicClient();
 
   const { data: tokensSold } = useReadContract({
@@ -672,16 +674,18 @@ export default function PresalePage() {
             </div>
 
             <button 
-              onClick={isConnected ? executeBuy : () => alert("Please connect your wallet using the dApp header.")} 
+              onClick={isConnected ? executeBuy : openConnectModal} 
               disabled={isProcessing}
               style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: isProcessing ? 'not-allowed' : 'pointer', animation: 'pulseGlow 2s infinite', opacity: isProcessing ? 0.7 : 1 }}>
               {isProcessing ? "Processing..." : (isConnected ? "Participate Now" : "Connect Wallet")}
             </button>
           </div>
           
-          <p style={{ width: '100%', maxWidth: '440px', marginTop: '16px', marginBottom: '60px', fontSize: '10px', color: '#64748b', fontStyle: 'italic', textAlign: 'center', lineHeight: '1.5' }}>
-            By connecting your wallet, I confirm that I have read and agree to the NNM Terms of Service and understand that NNM Tokens are digital utility tokens intended solely for use within the NNM ecosystem. I acknowledge that participation in this optional token distribution is voluntary, involves significant risk, and that I may lose the entire value of the digital assets contributed. I further confirm that I am not participating with any expectation of profit or financial return.
-          </p>
+          <div style={{ width: '100%', textAlign: 'center', marginTop: '12px', marginBottom: '60px' }}>
+              <span style={{ fontSize: '11px', color: '#848E9C', opacity: 0.8 }}>
+                  Participating means you accept the T&C
+              </span>
+          </div>
         </div>
 
       </div>
