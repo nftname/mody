@@ -563,10 +563,30 @@ export default function PresalePage() {
       </div>
     </div>
 
-    <div style={{ textAlign: 'center', marginBottom: '16px', marginTop: '10px' }}>
-      <span style={{ color: '#10B981', fontSize: '21px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-        Final Tier: $0.001
-      </span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginBottom: '20px', marginTop: '10px' }}>
+      <div style={{ 
+        background: 'rgba(255, 255, 255, 0.02)', 
+        border: '1px solid rgba(225, 29, 72, 0.3)', 
+        padding: '3px 12px', 
+        borderRadius: '20px', 
+        backdropFilter: 'blur(10px)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <span style={{ 
+          background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
+          WebkitBackgroundClip: 'text', 
+          WebkitTextFillColor: 'transparent', 
+          fontSize: '10.5px', 
+          fontWeight: 'bold', 
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
+          Final Tier
+        </span>
+      </div>
+      <span style={{ color: '#10B981', fontSize: '21px', fontWeight: 'bold', letterSpacing: '0.5px' }}>$0.001</span>
     </div>
 
     <div style={{ marginBottom: '24px' }}>
