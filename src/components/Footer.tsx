@@ -20,11 +20,11 @@ const Footer = () => {
                         <a href="https://x.com/nnmmarket" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-twitter-x"></i><span>Twitter</span>
                         </a>
+                        <a href="https://t.me/NFTNNM" target="_blank" rel="noopener noreferrer" className="footer-social-row">
+                            <i className="bi bi-telegram"></i><span>Telegram</span>
+                        </a>
                         <a href="https://discord.gg/gNR8zwgtpc" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-discord"></i><span>Discord</span>
-                        </a>
-                        <a href="https://medium.com/@nftnnmmarket" target="_blank" rel="noopener noreferrer" className="footer-social-row">
-                            <i className="bi bi-medium"></i><span>Medium</span>
                         </a>
                         <a href="https://www.facebook.com/profile.php?id=61586895007931" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-facebook"></i><span>Facebook</span>
@@ -32,8 +32,8 @@ const Footer = () => {
                         <a href="https://www.instagram.com/NNM_Assets" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-instagram"></i><span>Instagram</span>
                         </a>
-                        <a href="https://t.me/NFTNNM" target="_blank" rel="noopener noreferrer" className="footer-social-row">
-                            <i className="bi bi-telegram"></i><span>Telegram</span>
+                        <a href="https://medium.com/@nftnnmmarket" target="_blank" rel="noopener noreferrer" className="footer-social-row">
+                            <i className="bi bi-medium"></i><span>Medium</span>
                         </a>
                     </div>
                 </div>

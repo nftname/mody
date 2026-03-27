@@ -650,20 +650,24 @@ const Navbar = () => {
                         <i className="bi bi-twitter-x" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       </a>
 
-                      <a href="https://www.facebook.com/profile.php?id=61586895007931" target="_blank" rel="noopener noreferrer">
-                        <i className="bi bi-facebook" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
+                      <a href="https://t.me/NFTNNM" target="_blank" rel="noopener noreferrer">
+                        <i className="bi bi-telegram" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       </a>
 
                       <a href="https://discord.gg/gNR8zwgtpc" target="_blank" rel="noopener noreferrer">
                         <i className="bi bi-discord" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       </a>
 
-                      <a href="https://medium.com/@nftnnmmarket" target="_blank" rel="noopener noreferrer">
-                        <i className="bi bi-medium" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
+                      <a href="https://www.facebook.com/profile.php?id=61586895007931" target="_blank" rel="noopener noreferrer">
+                        <i className="bi bi-facebook" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       </a>
 
                       <a href="https://www.instagram.com/NNM_Assets" target="_blank" rel="noopener noreferrer">
                         <i className="bi bi-instagram" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
+                      </a>
+
+                      <a href="https://medium.com/@nftnnmmarket" target="_blank" rel="noopener noreferrer">
+                        <i className="bi bi-medium" style={{ fontSize: '20px', color: matteGoldIcon }}></i>
                       </a>
                       
                   </div>
