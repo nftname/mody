@@ -175,7 +175,7 @@ export default function PresalePage() {
 
   useEffect(() => {
     const target = 1050000;
-    const BASE_RAISED = 6000;
+    const BASE_RAISED = 6407;
     
     const realSoldUsd = tokensSold ? Number(tokensSold) / 1e18 * currentPriceUsd : 0; 
     const finalRaised = BASE_RAISED + realSoldUsd; 
