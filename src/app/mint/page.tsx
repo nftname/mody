@@ -178,7 +178,14 @@ const MintContent = () => {
   };
 
   const handleMintProcess = async (tierName: string, tierIndex: number, priceDisplay: string) => {
-      if (!searchTerm || !status || !publicClient) return;
+      if (status !== 'available' || !searchTerm) {
+          setErrorTitle("Name Not Available");
+          setErrorMessage("This name is not available for minting. Please search for an available name first.");
+          setModalType('error');
+          setShowModal(true);
+          return;
+      }
+      if (!publicClient) return;
       
       setIsMinting(true);
       setProcessStep("Generative Engine: Creating high-res asset...");
@@ -579,11 +586,7 @@ const LuxuryIngot = ({ label, price, isAvailable, onMint, isMinting }: LuxuryIng
                                 <button 
                                     onClick={openConnectModal}
                                     className="btn-ingot"
-                                    style={{
-                                        width: '100%',
-                                        height: '50px',
-                                        cursor: 'pointer'
-                                    }}
+                                    style={{ width: '100%', height: '50px', cursor: 'pointer' }}
                                 >
                                     {label}
                                 </button>
@@ -591,19 +594,19 @@ const LuxuryIngot = ({ label, price, isAvailable, onMint, isMinting }: LuxuryIng
                         </ConnectButton.Custom>
                     </div>
                 ) : (
-                    <button
-                        onClick={onMint} 
-                        disabled={isMinting || !isAvailable}
-                        className="btn-ingot"
-                        style={{
-                            width: '100%',
-                            height: '50px',
-                            cursor: (isMinting || !isAvailable) ? 'not-allowed' : 'pointer',
-                            opacity: (!isAvailable) ? 0.5 : 1
-                        }}
-                    >
-                       {isMinting ? <div className="spinner-border spinner-border-sm text-dark" role="status"></div> : label}
-                    </button>
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <button
+                            onClick={onMint} 
+                            disabled={isMinting}
+                            className="btn-ingot"
+                            style={{ width: '100%', height: '50px', cursor: isMinting ? 'wait' : 'pointer' }}
+                        >
+                           {isMinting ? <div className="spinner-border spinner-border-sm text-dark" role="status"></div> : label}
+                        </button>
+                        <span style={{ fontSize: '9px', color: '#848E9C', marginTop: '6px', textAlign: 'center', opacity: 0.7 }}>
+                            Minting means you accept the T&C
+                        </span>
+                    </div>
                 )}
                 
             </div>
