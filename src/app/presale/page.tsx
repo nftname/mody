@@ -573,7 +573,7 @@ export default function PresalePage() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ color: '#9ea9a9', fontSize: '16px', marginBottom: '2px' }}>
-            of <span style={{ color: '#fff' }}>$1,050,000</span> Goal
+            of <span style={{ color: '#fff' }}>$1,050,000</span>
           </div>
         </div>
       </div>
