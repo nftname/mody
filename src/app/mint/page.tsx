@@ -423,17 +423,17 @@ const MintContent = () => {
         <div className="row justify-content-center g-2 mobile-clean-stack"> 
             <LuxuryIngot 
                 label="IMMORTAL" 
-                price="$15" 
+                price="$10" 
                 isAvailable={status === 'available'} 
-                onMint={() => handleMintProcess("IMMORTAL", 0, "$15")} 
+                onMint={() => handleMintProcess("IMMORTAL", 0, "$10")} 
                 isMinting={isMinting} 
             />
 
             <LuxuryIngot 
                 label="ELITE" 
-                price="$10" 
+                price="$5" 
                 isAvailable={status === 'available'} 
-                onMint={() => handleMintProcess("ELITE", 1, "$10")} 
+                onMint={() => handleMintProcess("ELITE", 1, "$5")} 
                 isMinting={isMinting} 
             />
 
