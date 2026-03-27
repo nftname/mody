@@ -548,28 +548,28 @@ export default function PresalePage() {
 <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '-10px' }}>
   <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '12px 24px 16px 24px', width: '100%', maxWidth: '440px' }}>
 
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '16px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0001</span>
-        <span style={{ color: '#9ea9a9', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>المستوى السابق</span>
+        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Previous Tier</span>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0002</span>
-        <span style={{ color: '#9ea9a9', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>الوصول الحالي</span>
+        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Current Access</span>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.001</span>
-        <span style={{ color: '#9ea9a9', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>المستوى القادم</span>
+        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Next Tier</span>
       </div>
     </div>
 
-    <div style={{ textAlign: 'center', marginBottom: '24px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '10px', borderRadius: '12px', boxShadow: '0 0 15px rgba(16, 185, 129, 0.1)' }}>
-      <span style={{ color: '#10B981', fontSize: '15px', fontWeight: 'bold', textShadow: '0 0 8px rgba(16, 185, 129, 0.3)', letterSpacing: '0.5px' }}>
-        Target Final Listing Price: $0.001
+    <div style={{ textAlign: 'center', marginBottom: '16px', marginTop: '10px' }}>
+      <span style={{ color: '#10B981', fontSize: '14px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+        Final Tier: $0.001
       </span>
     </div>
 
-    <div style={{ marginBottom: '32px' }}>
+    <div style={{ marginBottom: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
         <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
           <span style={{ color: '#9ea9a9', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>COLLECTED</span>
