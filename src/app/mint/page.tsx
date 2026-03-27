@@ -445,12 +445,12 @@ const MintContent = () => {
                         
                         <div className="d-none d-md-flex align-items-baseline position-absolute" style={{ left: '100%', bottom: '0', paddingLeft: '8px' }}>
                             <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px', marginRight: '5px' }}>FREE</span>
-                            <span style={{ fontSize: '12px', color: '#0ecb81', whiteSpace: 'nowrap' }}>until March 31</span>
+                            <span style={{ fontSize: '12px', color: '#0ecb81', whiteSpace: 'nowrap' }}></span>
                         </div>
 
                         <div className="d-flex d-md-none flex-column align-items-end mt-1">
                             <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px', lineHeight: '1' }}>FREE</span>
-                            <span style={{ fontSize: '11px', color: '#0ecb81', lineHeight: '1', marginTop: '2px' }}>until March 31</span>
+                            <span style={{ fontSize: '11px', color: '#0ecb81', lineHeight: '1', marginTop: '2px' }}></span>
                         </div>
                     </div>
                 }
