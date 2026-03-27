@@ -550,21 +550,21 @@ export default function PresalePage() {
 
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.00009</span>
+        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Previous Tier</span>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0001</span>
-        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Previous Tier</span>
+        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Current Access</span>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0002</span>
-        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Current Access</span>
-      </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.001</span>
-        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Next Tier</span>
+        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Next Tier</span>
       </div>
     </div>
 
     <div style={{ textAlign: 'center', marginBottom: '16px', marginTop: '10px' }}>
-      <span style={{ color: '#10B981', fontSize: '14px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+      <span style={{ color: '#10B981', fontSize: '21px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
         Final Tier: $0.001
       </span>
     </div>
