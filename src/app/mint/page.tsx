@@ -447,25 +447,22 @@ const MintContent = () => {
             <LuxuryIngot 
                 label="FOUNDERS" 
                 price={
-                    <div className="position-relative d-flex flex-column align-items-center align-items-md-start">
-                        <span style={{ textDecoration: 'line-through', color: '#848E9C', fontSize: '16px' }}>$5</span>
-                        
-                        <div className="d-none d-md-flex align-items-baseline position-absolute" style={{ left: '100%', bottom: '0', paddingLeft: '8px' }}>
-                            <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px', marginRight: '5px' }}>FREE</span>
-                            <span style={{ fontSize: '12px', color: '#0ecb81', whiteSpace: 'nowrap' }}></span>
-                        </div>
-
-                        <div className="d-flex d-md-none flex-column align-items-end mt-1">
-                            <span style={{ color: '#0ecb81', fontWeight: 'bold', fontSize: '16px', lineHeight: '1' }}>FREE</span>
-                            <span style={{ fontSize: '11px', color: '#0ecb81', lineHeight: '1', marginTop: '2px' }}></span>
-                        </div>
-                    </div>
+                    <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#FCD535', fontSize: '16px', textShadow: '0px 1px 2px rgba(0,0,0,0.5)' }}>
+                        Free
+                    </span>
                 }
                 isAvailable={status === 'available'} 
                 onMint={() => handleMintProcess("FOUNDER", 2, "FREE")} 
                 isMinting={isMinting} 
             />
 
+        </div>
+        <div className="row justify-content-center mt-4 mb-2">
+            <div className="col-10 col-md-6 text-center">
+                <span style={{ fontSize: '14px', color: '#848E9C', opacity: 0.8, display: 'block' }}>
+                    Minting means you accept the T&C
+                </span>
+            </div>
         </div>
       </div>
 
@@ -594,19 +591,14 @@ const LuxuryIngot = ({ label, price, isAvailable, onMint, isMinting }: LuxuryIng
                         </ConnectButton.Custom>
                     </div>
                 ) : (
-                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <button
-                            onClick={onMint} 
-                            disabled={isMinting}
-                            className="btn-ingot"
-                            style={{ width: '100%', height: '50px', cursor: isMinting ? 'wait' : 'pointer' }}
-                        >
-                           {isMinting ? <div className="spinner-border spinner-border-sm text-dark" role="status"></div> : label}
-                        </button>
-                        <span style={{ fontSize: '9px', color: '#848E9C', marginTop: '6px', textAlign: 'center', opacity: 0.7 }}>
-                            Minting means you accept the T&C
-                        </span>
-                    </div>
+                    <button
+                        onClick={onMint} 
+                        disabled={isMinting}
+                        className="btn-ingot"
+                        style={{ width: '100%', height: '50px', cursor: isMinting ? 'wait' : 'pointer' }}
+                    >
+                       {isMinting ? <div className="spinner-border spinner-border-sm text-dark" role="status"></div> : label}
+                    </button>
                 )}
                 
             </div>
