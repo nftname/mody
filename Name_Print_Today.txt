@@ -663,3 +663,13 @@ Name: PLAYER
 Tier: IMMORTAL
 Wallet: 0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e
 ------------------------
+
+=================================
+Date: 2026-03-27
+=================================
+
+ID: 1306
+Name: ALLDICKS
+Tier: FOUNDER
+Wallet: 0xcA03EEb1b72652B524068B95248BD7da33e053F2
+------------------------

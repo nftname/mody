@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -7,6 +6,7 @@ import {
   getDefaultConfig,
   RainbowKitProvider,
   darkTheme,
+  DisclaimerComponent,
 } from '@rainbow-me/rainbowkit';
 import { WagmiProvider, http, fallback } from 'wagmi';
 import { polygon, mainnet, bsc } from 'viem/chains';
@@ -46,6 +46,13 @@ const config = getDefaultConfig({
 
 const queryClient = new QueryClient();
 
+const CustomDisclaimer: DisclaimerComponent = ({ Text, Link }) => (
+  <Text>
+    By connecting your wallet, you agree to our{' '}
+    <Link href="https://nftnnm.com/legal">Terms of Service</Link>.
+  </Text>
+);
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
@@ -59,6 +66,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 overlayBlur: 'small',
             })}
             modalSize="wide"
+            appInfo={{
+              appName: 'NNM',
+              learnMoreUrl: 'https://nftnnm.com/how-it-works',
+              disclaimer: CustomDisclaimer,
+            }}
         >
           {children}
         </RainbowKitProvider>
