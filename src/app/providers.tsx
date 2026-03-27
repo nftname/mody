@@ -65,7 +65,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 fontStack: 'system',
                 overlayBlur: 'small',
             })}
-            modalSize="wide"
+            modalSize="compact"
             appInfo={{
               appName: 'NNM',
               learnMoreUrl: 'https://nftnnm.com/how-it-works',
