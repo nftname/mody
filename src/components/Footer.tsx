@@ -2,11 +2,9 @@
 import Link from 'next/link';
 
 const Footer = () => {
-  // ✅ فك الارتباط: متغيرات منفصلة تماماً للتحكم الدقيق
-  const headerFontSize = '14px';       // حجم العناوين الرئيسية
-  
-  const socialFontSize = '13px';       // 1. حجم خط روابط التواصل الاجتماعي (ثابت)
-  const standardLinkFontSize = '9px'; // 2. حجم خط الروابط الـ 12 الأخرى (تم تصغيره كما طلبت)
+  const headerFontSize = '14px';     
+  const socialFontSize = '13px';       
+  const standardLinkFontSize = '9px';
   
   const linkColor = 'rgba(255, 255, 255, 0.5)';
   const linkHoverColor = '#FCD535';
@@ -16,34 +14,30 @@ const Footer = () => {
         <div className="container">
             <div className="row g-3">
                 
-                {/* SECTION 1: COMMUNITY (SOCIALS) */}
                 <div className="col-6 col-md-3 pe-md-2" style={{ borderRight: '1px solid rgba(255, 255, 255, 0.05)' }}>
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Community</h6>
                     <div className="d-flex flex-column gap-2">
-                        {/* 1. X (Twitter) - Correct Link */}
                         <a href="https://x.com/nnmmarket" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-twitter-x"></i><span>Twitter</span>
                         </a>
-                        {/* 2. Discord - Correct Link */}
                         <a href="https://discord.gg/gNR8zwgtpc" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-discord"></i><span>Discord</span>
                         </a>
-                        {/* 3. Medium - Correct Link */}
                         <a href="https://medium.com/@nftnnmmarket" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-medium"></i><span>Medium</span>
                         </a>
-                        {/* 4. Facebook - Correct Link */}
                         <a href="https://www.facebook.com/profile.php?id=61586895007931" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-facebook"></i><span>Facebook</span>
                         </a>
-                        {/* 5. Instagram - Correct Link */}
                         <a href="https://www.instagram.com/NNM_Assets" target="_blank" rel="noopener noreferrer" className="footer-social-row">
                             <i className="bi bi-instagram"></i><span>Instagram</span>
+                        </a>
+                        <a href="https://t.me/NFTNNM" target="_blank" rel="noopener noreferrer" className="footer-social-row">
+                            <i className="bi bi-telegram"></i><span>Telegram</span>
                         </a>
                     </div>
                 </div>
 
-                {/* SECTION 2: MARKETPLACE */}
                 <div className="col-6 col-md-3 ps-md-4">
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Marketplace</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
@@ -54,7 +48,6 @@ const Footer = () => {
                     </ul>
                 </div>
 
-                {/* SECTION 3: RESOURCES */}
                 <div className="col-6 col-md-3">
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Resources</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
@@ -65,7 +58,6 @@ const Footer = () => {
                     </ul>
                 </div>
 
-                {/* SECTION 4: COMPANY */}
                 <div className="col-6 col-md-3">
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Company</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
@@ -86,22 +78,20 @@ const Footer = () => {
         </div>
 
         <style jsx>{`
-            /* Social Rows Style (مفصولة تماماً) */
             .footer-social-row { 
                 display: flex; align-items: center; gap: 10px; 
                 color: ${linkColor}; 
                 text-decoration: none; 
-                font-size: ${socialFontSize}; /* يأخذ من متغير السوشيال فقط */
+                font-size: ${socialFontSize};
                 transition: all 0.2s ease; 
             }
             .footer-social-row:hover { color: #fff; transform: translateX(5px); }
             .footer-social-row i { color: ${linkHoverColor}; font-size: 14px; } 
             
-            /* General Links Style (للأقسام الـ 12 الأخرى) */
             .footer-link-item { 
                 text-decoration: none; 
                 color: ${linkColor}; 
-                font-size: ${standardLinkFontSize}; /* يأخذ من المتغير المصغر */
+                font-size: ${standardLinkFontSize}; 
                 transition: color 0.2s; 
             }
             .footer-link-item:hover { color: ${linkHoverColor}; }
