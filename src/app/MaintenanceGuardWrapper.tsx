@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import LegalModal from "@/components/LegalModal";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
@@ -129,7 +128,6 @@ export default function MaintenanceGuardWrapper({ children }: { children: React.
   return (
     <div className="d-flex flex-column min-vh-100">
       <Navbar />
-      <LegalModal />
       <main className="flex-grow-1">{children}</main>
       <Footer />
     </div>
