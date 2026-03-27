@@ -546,21 +546,27 @@ export default function PresalePage() {
         </div>
 
 <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '-10px' }}>
-  <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '24px 24px 16px 24px', width: '100%', maxWidth: '440px' }}>
+  <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '12px 24px 16px 24px', width: '100%', maxWidth: '440px' }}>
 
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '24px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '16px' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: '22px', fontWeight: '900' }}>$0.0001</span>
-        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px' }}>Current Access</span>
+        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0001</span>
+        <span style={{ color: '#9ea9a9', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>المستوى السابق</span>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: '22px', fontWeight: '900' }}>$0.0002</span>
-        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px' }}>Next Tier</span>
+        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0002</span>
+        <span style={{ color: '#9ea9a9', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>الوصول الحالي</span>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: '22px', fontWeight: '900' }}>$0.001</span>
-        <span style={{ color: '#9ea9a9', fontSize: '11px', marginTop: '4px' }}>Final Tier</span>
+        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.001</span>
+        <span style={{ color: '#9ea9a9', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>المستوى القادم</span>
       </div>
+    </div>
+
+    <div style={{ textAlign: 'center', marginBottom: '24px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '10px', borderRadius: '12px', boxShadow: '0 0 15px rgba(16, 185, 129, 0.1)' }}>
+      <span style={{ color: '#10B981', fontSize: '15px', fontWeight: 'bold', textShadow: '0 0 8px rgba(16, 185, 129, 0.3)', letterSpacing: '0.5px' }}>
+        Target Final Listing Price: $0.001
+      </span>
     </div>
 
     <div style={{ marginBottom: '32px' }}>
@@ -573,7 +579,7 @@ export default function PresalePage() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ color: '#9ea9a9', fontSize: '16px', marginBottom: '2px' }}>
-            of <span style={{ color: '#fff' }}>$1,050,000</span>
+            / <span style={{ color: '#fff' }}>$1,050,000</span>
           </div>
         </div>
       </div>
