@@ -178,13 +178,30 @@ const MintContent = () => {
   };
 
   const handleMintProcess = async (tierName: string, tierIndex: number, priceDisplay: string) => {
-      if (status !== 'available' || !searchTerm) {
-          setErrorTitle("Name Not Available");
-          setErrorMessage("This name is not available for minting. Please search for an available name first.");
+      if (!searchTerm) {
+          setErrorTitle("Enter a Name");
+          setErrorMessage("Please enter a name in the search box first.");
           setModalType('error');
           setShowModal(true);
           return;
       }
+
+      if (status === null) {
+          setErrorTitle("Verification Required");
+          setErrorMessage("Please click the search icon next to the input box to verify availability first.");
+          setModalType('error');
+          setShowModal(true);
+          return;
+      }
+
+      if (status !== 'available') {
+          setErrorTitle("Name Not Available");
+          setErrorMessage("This name is not available or already taken. Please search for another name.");
+          setModalType('error');
+          setShowModal(true);
+          return;
+      }
+
       if (!publicClient) return;
       
       setIsMinting(true);
