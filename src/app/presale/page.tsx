@@ -550,7 +550,7 @@ export default function PresalePage() {
 
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.00009</span>
+        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0001</span>
         <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Previous Tier</span>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
