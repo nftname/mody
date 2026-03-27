@@ -220,15 +220,27 @@ export default function PresalePage() {
 
 
   const handleQuickAmount = (val: string) => {
-    setAmount(val);
-    setSelectedCoin('USDT');
+    if (selectedCoin === 'POL') {
+      const polNeeded = (Number(val) / livePolPriceUsd) * 1.0025;
+      setAmount(parseFloat(polNeeded.toFixed(4)).toString());
+    } else {
+      setAmount(val);
+    }
   };
 
   const handleCoinSelect = (coin: 'POL' | 'USDT') => {
     setSelectedCoin(coin);
-    setIsDropdownOpen(false);  
-    const usdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
-    const calculatedNNM = amount && Number(amount) > 0 ? new Intl.NumberFormat('en-US').format(Math.floor(usdValue * liveTokensPerUsd)) : '';
+    setIsDropdownOpen(false);
+    
+    if (amount && Number(amount) > 0) {
+      if (coin === 'POL' && selectedCoin === 'USDT') {
+        const polNeeded = (Number(amount) / livePolPriceUsd) * 1.0025;
+        setAmount(parseFloat(polNeeded.toFixed(4)).toString());
+      } else if (coin === 'USDT' && selectedCoin === 'POL') {
+        const usdValue = (Number(amount) / 1.0025) * livePolPriceUsd;
+        setAmount(parseFloat(usdValue.toFixed(2)).toString());
+      }
+    }
   };
 
   const handlePayAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
