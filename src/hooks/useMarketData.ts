@@ -150,9 +150,9 @@ export function useMarketData(timeFilter: string = 'All') {
                     const offersCount = Number(dbRecord.offerscount) || 0;
                     const itemVolume = Number(dbRecord.volume) || 0;
 
-                    const volScore = maxVolume > 0 ? (itemVolume / maxVolume) * 35 : 0;
-                    const salesScore = maxSales > 0 ? (salesCount / maxSales) * 25 : 0;
-                    const convictionScorePercent = maxConviction > 0 ? (organicPoints / maxConviction) * 25 : 0;
+                    const volScore = maxVolume > 0 ? (itemVolume / maxVolume) * 30 : 0;
+                    const salesScore = maxSales > 0 ? (salesCount / maxSales) * 20 : 0;
+                    const convictionScorePercent = maxConviction > 0 ? (organicPoints / maxConviction) * 35 : 0;
                     const offersScore = maxOffers > 0 ? (offersCount / maxOffers) * 15 : 0;
 
                     const trendingScore = volScore + salesScore + convictionScorePercent + offersScore;
