@@ -99,8 +99,32 @@ export function useMarketData(timeFilter: string = 'All') {
 
                 const dbStats = await fetchStats(chunks);
                 const statsMap: Record<string, any> = {};
+                
+                let maxVolume = 0;
+                let maxSales = 0;
+                let maxOffers = 0;
+                let maxConviction = 0;
+
                 dbStats.forEach((s: any) => {
                     statsMap[s.token_id.toString()] = s;
+                    
+                    const vol = Number(s.volume) || 0;
+                    const sales = Number(s.sales) || 0;
+                    const offers = Number(s.offerscount) || 0;
+                    
+                    const tierLower = (s.tier || 'Common').toLowerCase().trim();
+                    let baseDeduction = 0;
+                    if (tierLower === 'immortal') baseDeduction = 300000;
+                    else if (tierLower === 'elite') baseDeduction = 200000;
+                    else if (tierLower.includes('founder')) baseDeduction = 100000;
+                    
+                    const rawVotes = Number(s.convictionscore) || 0;
+                    const organicPoints = Math.max(0, rawVotes - baseDeduction) / 1000;
+
+                    if (vol > maxVolume) maxVolume = vol;
+                    if (sales > maxSales) maxSales = sales;
+                    if (offers > maxOffers) maxOffers = offers;
+                    if (organicPoints > maxConviction) maxConviction = organicPoints;
                 });
 
                 const items = tokenIds.map((id, index) => {
@@ -124,10 +148,18 @@ export function useMarketData(timeFilter: string = 'All') {
 
                     const salesCount = Number(dbRecord.sales) || 0;
                     const offersCount = Number(dbRecord.offerscount) || 0;
+                    const itemVolume = Number(dbRecord.volume) || 0;
+
+                    const volScore = maxVolume > 0 ? (itemVolume / maxVolume) * 35 : 0;
+                    const salesScore = maxSales > 0 ? (salesCount / maxSales) * 25 : 0;
+                    const convictionScorePercent = maxConviction > 0 ? (organicPoints / maxConviction) * 25 : 0;
+                    const offersScore = maxOffers > 0 ? (offersCount / maxOffers) * 15 : 0;
+
+                    const trendingScore = volScore + salesScore + convictionScorePercent + offersScore;
                     
-                    const trendingScore = (salesCount * 40) + (offersCount * 2) + organicPoints;
                     const pricePol = parseFloat(formatEther(prices[index]));
                     const lastSale = Number(dbRecord.lastsale) || 0;
+
                     
                     let change = 0;
                     if (lastSale > 0) {
