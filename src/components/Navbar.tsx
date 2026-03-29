@@ -228,7 +228,7 @@ const Navbar = () => {
     'Home': 'bi-house-door',
     'Market': 'bi-shop',
     'Genesis': 'bi-fire',
-    'NGX Index': 'bi-activity',
+    'NFX Index': 'bi-activity',
     'Mint': 'bi-diamond',
     'ChainFace': 'bi-person-badge',
     'NNM Concept': 'bi-layers'
@@ -354,7 +354,7 @@ const Navbar = () => {
                         );
                     })}
                     
-                    {/* NGX Dropdown */}
+                    {/* NFX Dropdown */}
                     <li className="nav-item dropdown position-relative" style={{ zIndex: 1055 }}
                         onMouseEnter={() => setIsInsightsOpen(true)}
                         onMouseLeave={() => setIsInsightsOpen(false)}>

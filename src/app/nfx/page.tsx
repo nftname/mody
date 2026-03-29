@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
-import NGXWidget from '@/components/NGXWidget';
-import NGXCapWidget from '@/components/NGXCapWidget';
-import NGXVolumeWidget from '@/components/NGXVolumeWidget';
-import NGXLiveChart from '@/components/NGXLiveChart';
+import NGXWidget from '@/components/NFXWidget';
+import NGXCapWidget from '@/components/NFXCapWidget';
+import NGXVolumeWidget from '@/components/NFXVolumeWidget';
+import NGXLiveChart from '@/components/NFXLiveChart';
 import MarketTicker from '@/components/MarketTicker';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;

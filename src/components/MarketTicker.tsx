@@ -185,9 +185,9 @@ export default function MarketTicker() {
 
   const items = useMemo(() => {
     const marketItems = [
-        { id: 'ngx', label: 'NGX INDEX', value: ngxIndex.val, change: ngxIndex.change, link: '/ngx' },
-        { id: 'ngx-cap', label: 'NGX CAP', value: ngxCap.val, change: ngxCap.change, link: '/ngx' },
-        { id: 'ngx-vol', label: 'NGX VOL', value: ngxVol.val, change: ngxVol.change, link: '/ngx' },
+        { id: 'ngx', label: 'NFX INDEX', value: ngxIndex.val, change: ngxIndex.change, link: '/ngx' },
+        { id: 'ngx-cap', label: 'NFX CAP', value: ngxCap.val, change: ngxCap.change, link: '/ngx' },
+        { id: 'ngx-vol', label: 'NFX VOL', value: ngxVol.val, change: ngxVol.change, link: '/ngx' },
         
         { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: prices.ethChange, link: '/market' },
         { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: prices.polChange, link: '/market' },

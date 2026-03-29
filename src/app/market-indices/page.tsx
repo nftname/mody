@@ -1,9 +1,9 @@
 'use client';
 import Link from 'next/link';
 
-import NGXWidget from '@/components/NGXWidget';
-import NGXCapWidget from '@/components/NGXCapWidget';
-import NGXVolumeWidget from '@/components/NGXVolumeWidget';
+import NFXWidget from '@/components/NFXWidget';
+import NFXCapWidget from '@/components/NFXCapWidget';
+import NFXVolumeWidget from '@/components/NFXVolumeWidget';
 
 const GOLD_MEDIUM = '#FCD535';
 const GOLD_LIGHT = '#FCD535';
@@ -44,7 +44,7 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
 };
 
-export default function NGXWhitepaperPage() {
+export default function NFXWhitepaperPage() {
   return (
     <main className="ngx-page" style={{ backgroundColor: '#181A20', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column' }}>
       
@@ -151,16 +151,16 @@ export default function NGXWhitepaperPage() {
 
             <header className="mb-4 pb-3 border-bottom border-secondary border-opacity-25 text-start">
               <h1 className="fw-bold mb-2" style={{ fontSize: '2.2rem', letterSpacing: '-1px', lineHeight: '1.2' }}>
-                NGX NFT Index <span style={{ color: GOLD_MEDIUM }}>Framework</span>
+                NFX NFT Index <span style={{ color: GOLD_MEDIUM }}>Framework</span>
               </h1>
               <h2 className="mb-3" style={{ fontSize: '1.2rem', fontWeight: '400', letterSpacing: '0.5px', color: '#EAECEF' }}>
                 Institutional Whitepaper
               </h2>
               
               <div style={{ maxWidth: '100%' }}>
-                <p className="fw-bold text-white mb-2">Introduction: NGX NFT Index</p>
+                <p className="fw-bold text-white mb-2">Introduction: NFX NFT Index</p>
                 <p>
-                  The <strong className="text-white">NGX NFT Index</strong> represents a comprehensive framework designed to provide a structural lens on the global NFT market. Developed as a neutral analytical benchmark, this framework aggregates the entirety of NFT market activity across the four primary sectors: <strong className="text-white">Land, Gaming, Art, and Digital Names (e.g., ENS-like domains, NNM Registry)</strong>. Its purpose is to establish a reference architecture for market participants, researchers, and competing platforms, reflecting both historical evolution and current structural dynamics of the NFT ecosystem.
+                  The <strong className="text-white">NFX NFT Index</strong> represents a comprehensive framework designed to provide a structural lens on the global NFT market. Developed as a neutral analytical benchmark, this framework aggregates the entirety of NFT market activity across the four primary sectors: <strong className="text-white">Land, Gaming, Art, and Digital Names (e.g., ENS-like domains, NNM Registry)</strong>. Its purpose is to establish a reference architecture for market participants, researchers, and competing platforms, reflecting both historical evolution and current structural dynamics of the NFT ecosystem.
                 </p>
                 <p>
                   This framework does <strong className="text-white">not constitute financial advice</strong>, a trading signal, or an investment instrument. Instead, it serves as a <strong className="text-white">methodological and academic reference</strong> that documents the evolution, structure, and activity of NFT assets across the global market.
@@ -172,14 +172,14 @@ export default function NGXWhitepaperPage() {
                 <div className="widget-float-container">
                     <div className="widget-box-style">
                         <div className="widget-scaler">
-                            <NGXWidget theme="dark" title="NGX NFTs" />
+                            <NFXWidget theme="dark" title="NFX NFTs" />
                         </div>
                     </div>
                 </div>
 
                 <div className="text-start">
                     <h2 className="fw-bold mb-3" style={{ fontSize: '1.5rem' }}>
-                        <span style={{ color: GOLD_MEDIUM }}>1.</span> NGX NFT Sentiment Index
+                        <span style={{ color: GOLD_MEDIUM }}>1.</span> NFX NFT Sentiment Index
                     </h2>
                     
                     <p>
@@ -195,7 +195,7 @@ export default function NGXWhitepaperPage() {
                     </ul>
 
                     <p>
-                        By documenting historical sentiment fluctuations, the index establishes <strong className="text-white">temporal precedence</strong>, reinforcing the intellectual ownership of the NGX NFT analytical methodology.
+                        By documenting historical sentiment fluctuations, the index establishes <strong className="text-white">temporal precedence</strong>, reinforcing the intellectual ownership of the NFX NFT analytical methodology.
                     </p>
                     <div style={{ clear: 'both' }}></div>
                 </div>
@@ -205,14 +205,14 @@ export default function NGXWhitepaperPage() {
                 <div className="widget-float-container">
                     <div className="widget-box-style">
                         <div className="widget-scaler">
-                             <NGXCapWidget theme="dark" title="NGX Cap NFTs" />
+                             <NFXCapWidget theme="dark" title="NFX Cap NFTs" />
                         </div>
                     </div>
                 </div>
 
                 <div className="text-start">
                     <h2 className="fw-bold mb-3" style={{ fontSize: '1.5rem' }}>
-                            <span style={{ color: GOLD_MEDIUM }}>2.</span> NGX NFT Market Capitalization Index
+                            <span style={{ color: GOLD_MEDIUM }}>2.</span> NFX NFT Market Capitalization Index
                     </h2>
                     
                     <p>
@@ -238,14 +238,14 @@ export default function NGXWhitepaperPage() {
                 <div className="widget-float-container">
                     <div className="widget-box-style">
                         <div className="widget-scaler">
-                            <NGXVolumeWidget theme="dark" title="NGX Volume" />
+                            <NFXVolumeWidget theme="dark" title="NFX Volume" />
                         </div>
                     </div>
                 </div>
 
                 <div className="text-start">
                     <h2 className="fw-bold mb-3" style={{ fontSize: '1.5rem' }}>
-                            <span style={{ color: GOLD_MEDIUM }}>3.</span> NGX NFT Volume Index
+                            <span style={{ color: GOLD_MEDIUM }}>3.</span> NFX NFT Volume Index
                     </h2>
                     
                     <p>
@@ -261,7 +261,7 @@ export default function NGXWhitepaperPage() {
                     </ul>
 
                     <p>
-                        By structuring volume data as an independent index, this component reinforces the NGX NFT Index <strong className="text-white">as a benchmark standard</strong> while safeguarding the integrity of intellectual property and historical precedence.
+                        By structuring volume data as an independent index, this component reinforces the NFX NFT Index <strong className="text-white">as a benchmark standard</strong> while safeguarding the integrity of intellectual property and historical precedence.
                     </p>
                     <div style={{ clear: 'both' }}></div>
                 </div>
@@ -275,7 +275,7 @@ export default function NGXWhitepaperPage() {
                             Framework Positioning & Legal Notice
                         </h3>
                         <p>
-                            The <strong className="text-white">NGX NFT Index Framework</strong> is intended solely as a <strong className="text-white">neutral, reference-grade analytical tool</strong>. It does <strong className="text-white">not constitute investment advice</strong>, solicitation, or a predictive mechanism. All indicators are descriptive of market structure, aggregated activity, and sectoral dynamics.
+                            The <strong className="text-white">NFX NFT Index Framework</strong> is intended solely as a <strong className="text-white">neutral, reference-grade analytical tool</strong>. It does <strong className="text-white">not constitute investment advice</strong>, solicitation, or a predictive mechanism. All indicators are descriptive of market structure, aggregated activity, and sectoral dynamics.
                         </p>
                         <p>
                             The framework and its components document the historical development and structural design of NFT market indices, establishing precedence and <strong className="text-white">institutional credibility</strong> without claiming operational authority or proprietary market control. Use of this framework does not imply endorsement, sponsorship, or affiliation with any market participant, platform, or regulatory body.
@@ -287,7 +287,7 @@ export default function NGXWhitepaperPage() {
                             Conclusion
                         </h3>
                         <p>
-                            The NGX NFT Index Framework embodies a <strong className="text-white">methodical, academically-oriented, and institutionally rigorous</strong> approach to understanding the NFT ecosystem. By providing neutral, aggregate insights into sentiment, market capitalization, and volume across all major sectors, it establishes a reference standard for:
+                            The NFX NFT Index Framework embodies a <strong className="text-white">methodical, academically-oriented, and institutionally rigorous</strong> approach to understanding the NFT ecosystem. By providing neutral, aggregate insights into sentiment, market capitalization, and volume across all major sectors, it establishes a reference standard for:
                         </p>
                         <ul>
                             <li>Market researchers</li>
@@ -305,7 +305,7 @@ export default function NGXWhitepaperPage() {
 
             <footer className="text-start" style={{ borderTop: '1px solid #2B3139', paddingTop: '20px', marginTop: '20px', marginBottom: '40px' }}>
               <p style={{ fontSize: '11px', color: '#848E9C', lineHeight: '1.5' }}>
-                © 2026 NNM. All rights reserved. NGX Indices are powered by real-time on-chain data.
+                © 2026 NNM. All rights reserved. NFX Indices are powered by real-time on-chain data.
               </p>
             </footer>
 

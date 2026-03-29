@@ -352,10 +352,10 @@ export default function HowItWorksPage() {
 
             <section className="mb-5 ps-lg-3">
               <h2 className="fw-bold text-white mb-3" style={{ fontSize: '1.25rem', color: TEXT_OFF_WHITE }}>
-                NGX Index: Market Intelligence
+                NFX Index: Market Intelligence
               </h2>
               <p style={{ lineHeight: '1.6', marginBottom: '14px', color: TEXT_BODY_COLOR }}>
-                NGX is a global NFT market indicator developed to observe ecosystem-wide activity. It reflects aggregated market signals across NFT sectors, including Digital Name Assets, without providing financial predictions or investment advice.
+                NFX is a global NFT market indicator developed to observe ecosystem-wide activity. It reflects aggregated market signals across NFT sectors, including Digital Name Assets, without providing financial predictions or investment advice.
               </p>
               <p style={{ lineHeight: '1.6', color: TEXT_BODY_COLOR }}>
                 NNM is one of several data contributors to NGX. The index is informational only and does not represent performance guarantees.

@@ -2,14 +2,14 @@ import { ethers } from "ethers";
 import { CONTRACT_ADDRESS } from "../data/config";
 import ABI from "../data/abi.json";
 
-export interface NGXMetric {
+export interface NFXMetric {
   value: number;
   label: string;
   trend: 'up' | 'down' | 'stable';
   change: number;
 }
 
-export interface NGXData {
+export interface NFXData {
   score: number;
   status: 'Panic' | 'Weak' | 'Neutral' | 'Bullish' | 'Hyper';
   change24h: number;
@@ -22,11 +22,11 @@ export interface NGXData {
   };
 }
 
-let cachedData: NGXData | null = null;
+let cachedData: NFXData | null = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 5 * 60 * 1000;
 
-export async function getNGXLiveScore(): Promise<NGXData> {
+export async function getNFXLiveScore(): Promise<NFXData> {
   const now = Date.now();
 
   if (cachedData && (now - lastFetchTime < CACHE_DURATION)) {
@@ -61,14 +61,14 @@ export async function getNGXLiveScore(): Promise<NGXData> {
 
     finalScore = Math.max(10, Math.min(99, finalScore));
 
-    let status: NGXData['status'] = 'Neutral';
+    let status: NFXData['status'] = 'Neutral';
     if (finalScore < 30) status = 'Panic';
     else if (finalScore < 45) status = 'Weak';
     else if (finalScore < 60) status = 'Neutral';
     else if (finalScore < 75) status = 'Bullish';
     else status = 'Hyper';
 
-    const newData: NGXData = {
+    const newData: NFXData = {
       score: Number(finalScore.toFixed(2)),
       status: status,
       change24h: Number(((ethChange * 0.7) + (ensChange * 0.3)).toFixed(2)),
@@ -99,7 +99,7 @@ export async function getNGXLiveScore(): Promise<NGXData> {
   }
 }
 
-export const NGX_HISTORY = [
+export const NFX_HISTORY = [
   { time: '2024-Q1', value: 45 },
   { time: '2024-Q2', value: 52 },
   { time: '2024-Q3', value: 48 },

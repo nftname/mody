@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CrosshairMode, AreaSeries, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
 import { createClient } from '@supabase/supabase-js';
 
-// --- إعداد اتصال Supabase ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -16,7 +15,6 @@ const SECTORS = [
   { key: 'Utility NFT', color: '#00D8D6' }         
 ];
 
-// --- الفلاتر الجديدة المطلوبة ---
 const VIEW_MODES = [
     { label: '2017 - 2026', value: 'HISTORY' },
     { label: '2026 - 2030', value: 'FORECAST' }
@@ -39,7 +37,7 @@ function useClickOutside(ref: any, handler: any) {
 
 export default function NGXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const watermarkRef = useRef<HTMLDivElement>(null); // مرجع للعلامة المائية للحماية
+  const watermarkRef = useRef<HTMLDivElement>(null); // 
   
   // الحالة (State)
   const [activeSector, setActiveSector] = useState(SECTORS[0]);
@@ -48,7 +46,7 @@ export default function NGXLiveChart() {
   const [chartInstance, setChartInstance] = useState<any>(null);
   const [seriesInstance, setSeriesInstance] = useState<ISeriesApi<"Area"> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isChartBroken, setIsChartBroken] = useState(false); // حالة لكسر الرسم البياني عند التلاعب
+  const [isChartBroken, setIsChartBroken] = useState(false); // 
 
   const [isSectorOpen, setIsSectorOpen] = useState(false);
   const [isTimeOpen, setIsTimeOpen] = useState(false);
@@ -56,35 +54,29 @@ export default function NGXLiveChart() {
   const sectorRef = useRef<HTMLDivElement>(null);
   const timeRef = useRef<HTMLDivElement>(null);
 
-  // مرجع الذاكرة المؤقتة
   const dataCache = useRef<Record<string, any[]>>({});
 
   useClickOutside(sectorRef, () => setIsSectorOpen(false));
   useClickOutside(timeRef, () => setIsTimeOpen(false));
 
-  // --- [جديد] وظيفة التحميل المسبق الشامل في الخلفية ---
   useEffect(() => {
     const prefetchAllData = async () => {
-        // جلب كل البيانات دفعة واحدة (أسرع بكثير من طلبات منفصلة)
         const { data } = await supabase
-            .from('ngx_static_chart')
+            .from('nfx_static_chart')
             .select('sector_key, mode, timestamp, value')
             .order('timestamp', { ascending: true });
 
         if (data) {
-            // توزيع البيانات على الكاش
             data.forEach((item: any) => {
                 const key = `${item.sector_key}_${item.mode}`;
                 if (!dataCache.current[key]) dataCache.current[key] = [];
                 
-                // إضافة النقطة (يمكن تحسين الأداء هنا بعدم التكرار، لكن الذاكرة تتحمل)
                 dataCache.current[key].push({
                     time: Number(item.timestamp) as UTCTimestamp,
                     value: Number(item.value)
                 });
             });
 
-            // تنظيف وترتيب الكاش لكل قطاع لضمان عدم التكرار
             Object.keys(dataCache.current).forEach(key => {
                  const unique = Array.from(new Map(dataCache.current[key].map(i => [i.time, i])).values());
                  dataCache.current[key] = unique.sort((a, b) => (a.time as number) - (b.time as number));
@@ -92,29 +84,25 @@ export default function NGXLiveChart() {
         }
     };
     
-    // تأخير بسيط للسماح للرسم الأول بالظهور أولاً
     setTimeout(prefetchAllData, 500);
   }, []);
 
-  // --- الموتور: الجلب من الذاكرة أو الداتا بيز ---
   const fetchFromDB = async (sectorKey: string, mode: string) => {
     if (!seriesInstance || !chartInstance || isChartBroken) return;
     
     const cacheKey = `${sectorKey}_${mode}`;
 
-    // 1. الفحص الفوري في الذاكرة (سنجد البيانات هنا غالباً بفضل التحميل المسبق)
     if (dataCache.current[cacheKey] && dataCache.current[cacheKey].length > 0) {
         seriesInstance.setData(dataCache.current[cacheKey]);
         chartInstance.timeScale().fitContent();
         return; 
     }
 
-    // 2. إذا لم نجدها (لأول مرة فقط)، نجلبها من السيرفر
     setIsLoading(true);
 
     try {
         const { data, error } = await supabase
-            .from('ngx_static_chart')
+            .from('nfx_static_chart')
             .select('timestamp, value')
             .eq('sector_key', sectorKey)
             .eq('mode', mode)
@@ -130,7 +118,7 @@ export default function NGXLiveChart() {
                 value: Number(d.value)
             }));
 
-            dataCache.current[cacheKey] = formattedData; // حفظ للمستقبل
+            dataCache.current[cacheKey] = formattedData; // 
 
             seriesInstance.setData(formattedData);
             chartInstance.timeScale().fitContent();
@@ -145,37 +133,31 @@ export default function NGXLiveChart() {
     }
   };
 
-  // --- نظام الحماية (Security System) ---
   useEffect(() => {
-    // دالة التحقق من سلامة العلامة المائية
     const checkIntegrity = () => {
         const watermark = watermarkRef.current;
-        // شروط الحماية: يجب أن يكون العنصر موجوداً، ويحتوي على النص الصحيح، ويكون مرئياً
         if (!watermark || watermark.innerText !== 'NNM' || getComputedStyle(watermark).display === 'none' || getComputedStyle(watermark).visibility === 'hidden' || getComputedStyle(watermark).opacity === '0') {
             setIsChartBroken(true);
-            if (seriesInstance) seriesInstance.setData([]); // مسح البيانات
+            if (seriesInstance) seriesInstance.setData([]); // 
             if (chartInstance) chartInstance.applyOptions({ layout: { textColor: 'transparent' }, grid: { vertLines: { visible: false }, horzLines: { visible: false } } }); // إخفاء المحاور والشبكة
         }
     };
 
-    // تشغيل التحقق بشكل دوري كل ثانية
     const intervalId = setInterval(checkIntegrity, 1000);
 
-    // تحقق أولي بعد وقت قصير لضمان التحميل
     const timeoutId = setTimeout(checkIntegrity, 2000);
     
-    // مراقب التغييرات في الـ DOM (MutationObserver) لحماية أقوى
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.removedNodes) {
                 mutation.removedNodes.forEach((node) => {
                     if (node === watermarkRef.current) {
-                        checkIntegrity(); // تحقق فوراً عند الحذف
+                        checkIntegrity(); // 
                     }
                 });
             }
             if (mutation.target === watermarkRef.current) {
-                 checkIntegrity(); // تحقق عند تعديل خصائص العنصر
+                 checkIntegrity(); //
             }
         });
     });
@@ -194,7 +176,6 @@ export default function NGXLiveChart() {
   }, [chartInstance, seriesInstance]);
 
 
-  // 1. تهيئة الرسم البياني (باستخدام إعدادات الكود القديم حرفياً)
   useEffect(() => {
     if (!chartContainerRef.current || isChartBroken) return;
 
@@ -212,19 +193,16 @@ export default function NGXLiveChart() {
       width: chartContainerRef.current.clientWidth,
       height: 400,
       
-      // --- هنا السر: إعدادات الوقت من الكود القديم لضمان عمل الجوال ---
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true,
         timeVisible: true,
         secondsVisible: false,
-        // هذه الإعدادات هي التي تضبط الجوال
         fixLeftEdge: true,
         fixRightEdge: true,
         rightOffset: 10, 
         minBarSpacing: 0.5,
         
-        // تنسيق التاريخ (تم تعديله ليظهر السنة لأننا نعرض تاريخاً طويلاً)
         tickMarkFormatter: (time: number, tickMarkType: any, locale: any) => {
             const date = new Date(time * 1000);
             // يظهر: Jan '24
@@ -290,17 +268,17 @@ export default function NGXLiveChart() {
     };
   }, [isChartBroken]);
 
-  // 2. تحديث البيانات عند تغيير الفلتر
+
   useEffect(() => {
     if (seriesInstance && chartInstance && !isChartBroken) {
-        // تحديث الألوان
+       
         seriesInstance.applyOptions({
             lineColor: activeSector.color,
             topColor: `${activeSector.color}66`, 
             bottomColor: `${activeSector.color}00`, 
         });
 
-        // جلب البيانات الجديدة
+        // 
         fetchFromDB(activeSector.key, activeViewMode.value);
     }
   }, [activeSector, activeViewMode, seriesInstance, chartInstance, isChartBroken]);
@@ -350,7 +328,7 @@ export default function NGXLiveChart() {
            )}
         </div>
 
-        {/* Loading Indicator (بسيط كما في الكود القديم) */}
+        {/* Loading Indicator ( */}
         {isLoading && !isChartBroken && (
             <div className="loading-indicator">
                 <span className="spinner"></span> Updating...
@@ -387,7 +365,7 @@ export default function NGXLiveChart() {
       </div>
 
       <div ref={chartContainerRef} className="chart-canvas-wrapper" style={{ position: 'relative', opacity: isChartBroken ? 0.2 : 1 }}>
-          {/* العلامة المائية NNM - مربوطة بمرجع للحماية */}
+          {/* */}
           <div ref={watermarkRef} className="chart-watermark" style={{ userSelect: 'none', pointerEvents: 'none' }}>NNM</div>
       </div>
       
@@ -455,7 +433,7 @@ export default function NGXLiveChart() {
         .custom-option:hover { color: var(--hover-color, #fff); }
         .custom-option.selected { background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 600; }
 
-        /* تنسيق العلامة المائية الافتراضي (للكمبيوتر) */
+        /* */
         .chart-watermark {
             position: absolute;
             bottom: 35px;
@@ -470,7 +448,7 @@ export default function NGXLiveChart() {
             letter-spacing: 1px;
         }
 
-        /* --- التعديل المطلوب: رفع العلامة المائية في الجوال --- */
+        /* */
         @media (max-width: 768px) {
             .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
             .chart-canvas-wrapper { height: 350px !important; }
@@ -478,10 +456,10 @@ export default function NGXLiveChart() {
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }
             .sector-wrapper { flex-grow: 0; width: auto; min-width: 120px; max-width: 150px; margin-right: auto; }
             .time-wrapper { width: auto; min-width: 60px; flex-shrink: 0; }
-            /* تم رفع العلامة المائية هنا لتكون فوق خط التاريخ */
+            /* */
             .chart-watermark { 
                 font-size: 14px; 
-                bottom: 40px; /* <-- تم التعديل لرفعها فوق الخط */
+                bottom: 40px; /* */
                 left: 15px; 
             }
         }

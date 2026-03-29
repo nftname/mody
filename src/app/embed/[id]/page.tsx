@@ -2,9 +2,9 @@
 import React from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import NGXWidget from '@/components/NGXWidget';
-import NGXCapWidget from '@/components/NGXCapWidget';
-import NGXVolumeWidget from '@/components/NGXVolumeWidget';
+import NGXWidget from '@/components/NFXWidget';
+import NGXCapWidget from '@/components/NFXCapWidget';
+import NGXVolumeWidget from '@/components/NFXVolumeWidget';
 
 const FullBarWidget = ({ theme }: { theme: 'dark' | 'light' }) => (
     <div className="d-flex gap-2 align-items-center justify-content-center w-100 h-100" 

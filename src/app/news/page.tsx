@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import MarketTicker from '@/components/MarketTicker';
-import NGXWidget from '@/components/NGXWidget';
-import NGXCapWidget from '@/components/NGXCapWidget';
-import NGXVolumeWidget from '@/components/NGXVolumeWidget';
+import NGXWidget from '@/components/NFXWidget';
+import NGXCapWidget from '@/components/NFXCapWidget';
+import NGXVolumeWidget from '@/components/NFXVolumeWidget';
 
 const BACKGROUND_DARK = '#181A20';
 const SURFACE_DARK = '#1E2329';

@@ -735,7 +735,7 @@ export default function PresalePage() {
         </div>
         <div style={{ ...saTeContainerStyle, padding: '30px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#9333EA', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>2</div>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>The NGX Global Index</h3>
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>The NFX Global Index</h3>
           <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>The authoritative observatory for the NFT asset class, featuring Ecosystem Sentiment, Aggregated Volume, and Sector Market Cap.</p>
         </div>
         <div style={{ ...saTeContainerStyle, padding: '30px' }}>
@@ -891,7 +891,7 @@ export default function PresalePage() {
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 2 - Network Infrastructure & Activation</h3>
-                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Establishment of core ecosystem infrastructure, including multi-chain interaction capabilities within ChainFace and initial integration of the NGX Index for tracking network activity and ecosystem data.</p>
+                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Establishment of core ecosystem infrastructure, including multi-chain interaction capabilities within ChainFace and initial integration of the NFX Index for tracking network activity and ecosystem data.</p>
               </div>
             </div>
 

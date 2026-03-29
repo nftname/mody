@@ -225,7 +225,7 @@ export async function GET() {
         <br><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
         <p style="font-size: 0.85rem; color: #888; font-style: italic; line-height: 1.4;">
             <strong>Disclaimer:</strong> The information provided in this article regarding the <strong>NNM Protocol</strong>, <strong>NFTs</strong>, and digital assets is for informational purposes only and does not constitute financial advice. 
-            All market data, including the <strong>NGX Index</strong> and sector performance, is automated and subject to volatility. 
+            All market data, including the <strong>NFX Index</strong> and sector performance, is automated and subject to volatility. 
             Users should conduct their own research (DYOR) before minting or trading any <strong>Visual Identity</strong> assets or crypto products.
         </p>
         `;

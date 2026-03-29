@@ -245,7 +245,7 @@ export default function LegalPage() {
                 <div className="term-block mb-4">
                     <h3 className="term-heading">15. INTELLECTUAL PROPERTY</h3>
                     <ul className="term-list">
-                        <li>All platform branding, analytics, NGX NFT Index, sub-indices, and proprietary tools remain exclusive property of NNM.</li>
+                        <li>All platform branding, analytics, NFX NFT Index, sub-indices, and proprietary tools remain exclusive property of NNM.</li>
                         <li>On-chain assets are fully controlled by individual wallet holders.</li>
                         <li>Reproduction, copying, or unauthorized use of proprietary data, indices, or methodology is strictly prohibited.</li>
                     </ul>

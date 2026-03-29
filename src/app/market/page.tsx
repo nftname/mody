@@ -4,9 +4,9 @@ import React, { useState, useMemo, useEffect, Component, ReactNode } from 'react
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import MarketTicker from '@/components/MarketTicker';
-import NGXWidget from '@/components/NGXWidget';
-import NGXCapWidget from '@/components/NGXCapWidget';
-import NGXVolumeWidget from '@/components/NGXVolumeWidget';
+import NGXWidget from '@/components/NFXWidget';
+import NGXCapWidget from '@/components/NFXCapWidget';
+import NGXVolumeWidget from '@/components/NFXVolumeWidget';
 import { usePublicClient, useAccount } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
