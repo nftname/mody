@@ -22,9 +22,9 @@ interface WidgetProps {
   title?: string;
 }
 
-export default function NGXVolumeWidget({ 
+export default function NFXVolumeWidget({ 
   theme = 'dark', 
-  title = 'NGX Volume'
+  title = 'NFX Volume'
 }: WidgetProps) {
   const [data, setData] = useState<VolumeData | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -57,7 +57,7 @@ export default function NGXVolumeWidget({
         const json = await res.json();
         setData(json);
       } catch (error) {
-        console.error('Error fetching NGX Volume data:', error);
+        console.error('Error fetching NFX Volume data:', error);
       }
     };
     fetchData();

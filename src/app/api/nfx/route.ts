@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-interface NGXData {
+interface NFXData {
   score: number;
   status: 'STRONG SELL' | 'SELL' | 'NEUTRAL' | 'BUY' | 'STRONG BUY';
   change24h: number;
@@ -18,7 +18,7 @@ interface NGXData {
   };
 }
 
-let cachedData: NGXData | null = null;
+let cachedData: NFXData | null = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 60 * 1000;
 
@@ -51,7 +51,6 @@ export async function GET() {
     const artChange = data.apecoin.usd_24h_change || 0;
     const gamingChange = data['immutable-x'].usd_24h_change || 0;
 
-    // Calculate NGX Score
     const globalMomentum = 
         (identityChange * 0.30) + 
         (artChange * 0.25) + 
@@ -61,7 +60,7 @@ export async function GET() {
     let finalScore = 50 + (globalMomentum * 3.5);
     finalScore = Math.max(10, Math.min(95, finalScore));
 
-    let status: NGXData['status'] = 'NEUTRAL';
+    let status: NFXData['status'] = 'NEUTRAL';
     if (finalScore < 25) status = 'STRONG SELL';
     else if (finalScore < 45) status = 'SELL';
     else if (finalScore < 55) status = 'NEUTRAL';

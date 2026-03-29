@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 
-interface NGXData {
+interface NFXData {
   score: number;
   status: string;
   change24h: number;
@@ -32,11 +32,11 @@ function describeArc(x: number, y: number, radius: number, startAngle: number, e
     ].join(" ");
 }
 
-export default function NGXWidget({ 
+export default function NFXWidget({ 
   theme = 'dark', 
-  title = 'NGX NFTs' 
+  title = 'NFX NFTs' 
 }: WidgetProps) {
-  const [data, setData] = useState<NGXData | null>(null);
+  const [data, setData] = useState<NFXData | null>(null);
   const [mounted, setMounted] = useState(false);
   const [hoveredInfo, setHoveredInfo] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -65,7 +65,7 @@ export default function NGXWidget({
         const json = await res.json();
         setData(json);
       } catch (error) {
-        console.error('Error fetching NGX data:', error);
+        console.error('Error fetching NFX data:', error);
       }
     };
     fetchData();
@@ -101,8 +101,6 @@ export default function NGXWidget({
   const scoreStr = data.score.toFixed(1);
   const [scoreInt, scoreDec] = scoreStr.split('.');
 
-  // دالة لتحديد نص التلميح بناءً على مكان الماوس (أو الحالة الحالية)
-  // هنا سأعتمد على الحالة الحالية للمؤشر لعرض التلميح المناسب
   const getTooltipText = () => {
       if (data.score < 20) return "Strong Sell Signal (0-20)";
       if (data.score < 40) return "Sell Signal (20-40)";
@@ -117,7 +115,7 @@ export default function NGXWidget({
       
       return (
         <svg viewBox="-95 -15 190 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" overflow="visible">
-            {/* المناطق مع التلميحات */}
+            {/* */}
             <path d={describeArc(0, 80, radius, 0, 36)} fill="none" stroke="#e53935" strokeWidth={stroke} 
                   onMouseEnter={() => setHoveredInfo("Strong Sell (0-20)")} onMouseLeave={() => setHoveredInfo(null)} style={{cursor:'help'}}/>
             <path d={describeArc(0, 80, radius, 36, 72)} fill="none" stroke="#fb8c00" strokeWidth={stroke} 

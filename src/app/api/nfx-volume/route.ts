@@ -7,7 +7,7 @@ interface SectorData {
   value: number;
   color: string;
   volume: string;
-  change: number; // مطلوب في الواجهة
+  change: number; //
 }
 
 interface MarketStats {
@@ -16,13 +16,13 @@ interface MarketStats {
   topLoser: { name: string; change: number };
 }
 
-interface NGXVolumeData {
+interface NFXVolumeData {
   sectors: SectorData[];
   marketStats: MarketStats;
   lastUpdate: string;
 }
 
-let cachedData: NGXVolumeData | null = null;
+let cachedData: NFXVolumeData | null = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 60 * 1000;
 
@@ -34,7 +34,6 @@ export async function GET() {
   }
 
   try {
-    // 1. سلة العملات (نفس التعديل السابق)
     const tokens = {
       nam: ['ethereum-name-service', 'space-id', 'bonfida'],
       art: ['apecoin', 'blur', 'render-token'],
@@ -75,7 +74,7 @@ export async function GET() {
 
       return {
         label: label,
-        value: 0, // سيتم حسابه لاحقاً
+        value: 0, // 
         rawVol: totalVol,
         volume: `$${(totalVol / 1000000).toFixed(1)}M`,
         change: avgChange,
@@ -92,13 +91,12 @@ export async function GET() {
 
     const maxVol = Math.max(...sectorsRaw.map(s => s.rawVol));
     
-    // تصحيح: تعيين البيانات مع الحفاظ على change
     const sectors: SectorData[] = sectorsRaw.map(s => ({
       label: s.label,
       value: maxVol > 0 ? Math.round((s.rawVol / maxVol) * 100) : 0,
       color: s.color,
       volume: s.volume,
-      change: s.change // تم تمرير القيمة هنا لحل الخطأ
+      change: s.change // 
     }));
 
     const totalMarketChange = sectorsRaw.reduce((acc, curr) => acc + curr.change, 0) / 4;
@@ -107,7 +105,7 @@ export async function GET() {
     const topLoser = sortedByChange[sortedByChange.length - 1];
 
     cachedData = {
-      sectors: sectors, // تمرير المصفوفة كاملة كما هي
+      sectors: sectors, // 
       marketStats: {
         totalVolChange: Number(totalMarketChange.toFixed(2)),
         topGainer: { name: topGainer.label, change: Number(topGainer.change.toFixed(2)) },
@@ -120,7 +118,6 @@ export async function GET() {
     return NextResponse.json(cachedData);
 
   } catch (error) {
-    // تصحيح: إضافة change إلى بيانات الطوارئ
     return NextResponse.json({
         sectors: [
             { label: 'NAM', value: 80, color: '#38BDF8', volume: '$45M', change: 2.5 },

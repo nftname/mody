@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 
-interface NGXCapData {
+interface NFXCapData {
   marketCap: string;
   change24h: number;
   rangeProgress: number; 
@@ -13,11 +13,11 @@ interface WidgetProps {
   title?: string;
 }
 
-export default function NGXCapWidget({ 
+export default function NFXCapWidget({ 
   theme = 'dark', 
-  title = 'NGX Cap NFTs'
+  title = 'NFX Cap NFTs'
 }: WidgetProps) {
-  const [data, setData] = useState<NGXCapData | null>(null);
+  const [data, setData] = useState<NFXCapData | null>(null);
   const [mounted, setMounted] = useState(false);
   const [hoveredInfo, setHoveredInfo] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -47,7 +47,7 @@ export default function NGXCapWidget({
         const json = await res.json();
         setData(json);
       } catch (error) {
-        console.error('Error fetching NGX Cap data:', error);
+        console.error('Error fetching NFX Cap data:', error);
         setData({
             marketCap: '$2.54B',
             change24h: 4.88,
@@ -83,11 +83,11 @@ export default function NGXCapWidget({
         
         {/* Header Row */}
         <div className="d-flex align-items-center w-100" style={{ zIndex: 2 }}>
-            {/* تعديل 1: تقليل الفجوة من gap-2 إلى gap-1 لتوفير المساحة */}
+            {/**/}
             <div className="d-flex align-items-center gap-1">
                 <span className="fw-bold text-nowrap title-text" style={{ color: titleColor }}>{title}</span>
                 
-                {/* تعديل 2 و 3: تصغير الخط والتحكم بحجم السهم بدقة */}
+                {/* */}
                 <div className="mobile-percentage fw-bold d-flex align-items-center" 
                      style={{ fontSize: '7px', color: changeColor, display: 'none', lineHeight: '1' }}>
                     <span style={{ fontSize: '6px', marginRight: '1px' }}>{data.change24h >= 0 ? '▲' : '▼'}</span>

@@ -35,7 +35,7 @@ function useClickOutside(ref: any, handler: any) {
   }, [ref, handler]);
 }
 
-export default function NGXLiveChart() {
+export default function NFXLiveChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const watermarkRef = useRef<HTMLDivElement>(null); // 
   
@@ -371,7 +371,7 @@ export default function NGXLiveChart() {
       
       <div className="text-end px-2 pb-2" style={{ opacity: isChartBroken ? 0.2 : 1 }}>
           <small className="text-muted fst-italic" style={{ fontSize: '10px' }}>
-              * Powered by NGX Engine Volume Index.
+              * Powered by NFX Engine Volume Index.
           </small>
       </div>
 
