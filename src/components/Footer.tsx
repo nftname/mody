@@ -42,7 +42,7 @@ const Footer = () => {
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Marketplace</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
                         <li><Link href="/market" className="footer-link-item">Market</Link></li>
-                        <li><Link href="/ngx" className="footer-link-item">Analysis (NGX)</Link></li>
+                        <li><Link href="/ngx" className="footer-link-item">Analysis (NFX)</Link></li>
                         <li><Link href="/conviction-rank" className="footer-link-item">Conviction Rank</Link></li>
                         <li><Link href="/ranking" className="footer-link-item">Registry Rank</Link></li>
                     </ul>
