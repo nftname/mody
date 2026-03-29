@@ -83,7 +83,7 @@ import { useMarketData } from '@/hooks/useMarketData';
                     return ( <div onClick={openConnectModal} style={{...customDisconnectStyle, borderColor: '#ff4d4d', color: '#ff4d4d'}}> Wrong Net </div> );
                   }
                   return (
-                    <div onClick={openAccountModal} style={{...customConnectStyle, fontSize: '12.5px', color: '#848E9C'}}>
+                    <div onClick={openAccountModal} style={{...customConnectStyle, fontSize: '13px', color: '#EAECEF', border: '1px solid rgba(252, 213, 53, 0.4)'}}>
                         <span style={{ fontFamily: 'monospace', letterSpacing: '0.5px' }}>
                             {account.address.slice(0, 4)}...{account.address.slice(-4)}
                         </span>
