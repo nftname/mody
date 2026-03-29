@@ -162,10 +162,10 @@ export async function GET() {
             marketString = "General Market data is currently neutral.";
         }
 
-        const ngxMomentum = (validSectors.reduce((acc, curr) => acc + curr.change, 0) / validSectors.length); 
+        const nfxMomentum = (validSectors.reduce((acc, curr) => acc + curr.change, 0) / validSectors.length); 
         let marketMood = 'Neutral';
-        if (ngxMomentum > 2) marketMood = 'Greed / High Demand';
-        else if (ngxMomentum < -2) marketMood = 'Fear / Correction';
+        if (nfxMomentum > 2) marketMood = 'Greed / High Demand';
+        else if (nfxMomentum < -2) marketMood = 'Fear / Correction';
 
         const selectedImageFilename = await getSequentialImage();
 

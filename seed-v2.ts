@@ -58,8 +58,8 @@ async function run() {
   
   // 1. تنظيف الجدول
   console.log("🧹 Truncating DB...");
-  const { error } = await supabase.rpc('truncate_ngx_volume_index');
-  if (error) await supabase.from('ngx_volume_index').delete().neq('id', 0);
+  const { error } = await supabase.rpc('truncate_nfx_volume_index');
+  if (error) await supabase.from('nfx_volume_index').delete().neq('id', 0);
 
   const recordsToUpsert: any[] = [];
 
@@ -139,7 +139,7 @@ async function run() {
     const chunkSize = 5000; // دفعات كبيرة
     for (let i = 0; i < recordsToUpsert.length; i += chunkSize) {
       const chunk = recordsToUpsert.slice(i, i + chunkSize);
-      await supabase.from('ngx_volume_index').upsert(chunk, { onConflict: 'sector_key, timestamp' });
+      await supabase.from('nfx_volume_index').upsert(chunk, { onConflict: 'sector_key, timestamp' });
       process.stdout.write('💾');
     }
   }

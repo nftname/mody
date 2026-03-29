@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
-import NGXWidget from '@/components/NFXWidget';
-import NGXCapWidget from '@/components/NFXCapWidget';
-import NGXVolumeWidget from '@/components/NFXVolumeWidget';
-import NGXLiveChart from '@/components/NFXLiveChart';
+import NFXWidget from '@/components/NFXWidget';
+import NFXCapWidget from '@/components/NFXCapWidget';
+import NFXVolumeWidget from '@/components/NFXVolumeWidget';
+import NFXLiveChart from '@/components/NFXLiveChart';
 import MarketTicker from '@/components/MarketTicker';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -221,7 +221,7 @@ const ProtectedWidgetWrapper = ({ children }: { children: React.ReactNode }) => 
     </div>
 );
 
-export default function NGXPage() {
+export default function NFXPage() {
   const trustedBrands = [ 
     { name: "POLYGON", icon: "bi-link-45deg", isCustom: false },
     { name: "BNB CHAIN", icon: "bi-diamond-fill", isCustom: false },
@@ -275,21 +275,21 @@ export default function NGXPage() {
   };
 
   return (
-    <main className="ngx-page" style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', color: TEXT_PRIMARY }}>
+    <main className="nfx-page" style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', color: TEXT_PRIMARY }}>
       <MarketTicker />
 
       <div className="header-wrapper shadow-sm">
         <div className="container-fluid p-0"> 
             <div className="widgets-grid-container">
-                <div className="widget-item"> <NGXWidget theme="dark" /> </div>
-                <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
-                <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
+                <div className="widget-item"> <NFXWidget theme="dark" /> </div>
+                <div className="widget-item"> <NFXCapWidget theme="dark" /> </div>
+                <div className="widget-item"> <NFXVolumeWidget theme="dark" /> </div>
             </div>
             
             <div className="content-container">
     <div className="row ps-2 ps-lg-4 pe-2 mt-3 text-section align-items-center">
 
-                    <h1 className="mb-2 unified-title">NGX NFT Index — The Global Benchmark</h1>
+                    <h1 className="mb-2 unified-title">NFX NFT Index — The Global Benchmark</h1>
                     <p className="mb-0 unified-text">
                         The premier indicator observing the global NFT ecosystem, aggregating sentiment, activity, and rare digital name trends across all platforms.
                     </p>
@@ -302,7 +302,7 @@ export default function NGXPage() {
         
         <div className="content-container mb-4 chart-responsive-wrapper">
 
-     <NGXLiveChart />
+     <NFXLiveChart />
 </div>
 
         <div className="content-container">
@@ -320,7 +320,7 @@ export default function NGXPage() {
                 <h3 className="unified-title mt-4 mb-2" style={{ fontSize: '1.3rem' }}>Why Market Indexing Matters in NFTs</h3>
                 <p className="unified-text mb-3">In digital ecosystems, indicators serve as neutral observatories—tools that reflect adoption trends rather than predict outcomes. As NFTs mature, similar indexing frameworks are beginning to surface, not to forecast prices, but to contextualize market evolution.</p>
                 <p className="unified-text mb-3">Indexing in NFT markets provides a way to observe asset-class balance, category dominance, and structural shifts over time. Rather than focusing on individual projects, indices analyze the ecosystem itself.</p>
-                <p className="unified-text mb-3">Within this context, independent frameworks such as the NGX Index have emerged to monitor NFT market architecture through classification models, asset weighting, and scarcity dynamics. The NGX Index does not function as a pricing oracle or investment signal. Instead, it operates as a structural reference—tracking how different NFT asset classes evolve relative to one another as the market matures.</p>
+                <p className="unified-text mb-3">Within this context, independent frameworks such as the NFX Index have emerged to monitor NFT market architecture through classification models, asset weighting, and scarcity dynamics. The NFX Index does not function as a pricing oracle or investment signal. Instead, it operates as a structural reference—tracking how different NFT asset classes evolve relative to one another as the market matures.</p>
                 <p className="unified-text mb-3">This approach reflects a broader transition in NFTs: from speculation-driven discovery toward infrastructure-level understanding.</p>
 
                 <h3 className="unified-title mt-4 mb-2" style={{ fontSize: '1.3rem' }}>NFTs as a Recognized Digital Utility</h3>
@@ -388,7 +388,7 @@ export default function NGXPage() {
 
                 <div className="w-100 mt-2 border-top border-secondary" style={{ borderColor: '#333 !important', paddingTop: '8px' }}>
                     <p className="fst-italic mb-0 w-100" style={{ lineHeight: '1.2', fontSize: '9px', color: '#777', opacity: 0.9 }}>
-                        This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NGX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
+                        This article is provided for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or an offer to buy or sell any digital asset. References to market structures, indices, or frameworks—including the NFX Index—are descriptive in nature and intended solely to illustrate industry developments. Readers are encouraged to conduct independent research and consult qualified professionals before making any financial or strategic decisions. The publication of this material does not imply endorsement, solicitation, or prediction of market performance.
                     </p>
                 </div>
                 
@@ -401,18 +401,18 @@ export default function NGXPage() {
                     <div className="row g-2 justify-content-center align-items-stretch">
                         <div className="col-12 col-lg-8">
                              <EmbedCard 
-                                title="NGX Full Market Bar"
+                                title="NFX Full Market Bar"
                                 isFullBar={true}
                                 component={
                                     <ProtectedWidgetWrapper>
                                         <div className="d-flex justify-content-center align-items-center w-100" style={{ minWidth: '950px', gap: '0' }}>
-                                            <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NGXWidget theme="dark" /></div>
-                                            <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NGXCapWidget theme="dark" /></div>
-                                            <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NGXVolumeWidget theme="dark" /></div>
+                                            <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NFXWidget theme="dark" /></div>
+                                            <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NFXCapWidget theme="dark" /></div>
+                                            <div style={{ margin: '0 !important', padding: '0 !important', display: 'flex', justifyContent: 'center' }}><NFXVolumeWidget theme="dark" /></div>
                                         </div>
                                     </ProtectedWidgetWrapper>
                                 }
-                                embedId="ngx-full-bar"
+                                embedId="nfx-full-bar"
                              />
                         </div>
 
@@ -421,7 +421,7 @@ export default function NGXPage() {
                                 title="Live Chart Widget"
                                 isChart={true}
                                 component={<StaticMiniChart isMobile={false} />} 
-                                embedId="ngx-chart-widget"
+                                embedId="nfx-chart-widget"
                              />
                         </div>
 
@@ -431,10 +431,10 @@ export default function NGXPage() {
                                 label="Sentiment" 
                                 component={
                                     <ProtectedWidgetWrapper>
-                                        <NGXWidget theme="dark" />
+                                        <NFXWidget theme="dark" />
                                     </ProtectedWidgetWrapper>
                                 } 
-                                embedId="ngx-sentiment" 
+                                embedId="nfx-sentiment" 
                             />
                         </div>
                         <div className="col-4">
@@ -443,10 +443,10 @@ export default function NGXPage() {
                                 label="Cap" 
                                 component={
                                     <ProtectedWidgetWrapper>
-                                        <NGXCapWidget theme="dark" />
+                                        <NFXCapWidget theme="dark" />
                                     </ProtectedWidgetWrapper>
                                 } 
-                                embedId="ngx-cap" 
+                                embedId="nfx-cap" 
                             />
                         </div>
                         <div className="col-4">
@@ -455,10 +455,10 @@ export default function NGXPage() {
                                 label="Volume" 
                                 component={
                                     <ProtectedWidgetWrapper>
-                                        <NGXVolumeWidget theme="dark" />
+                                        <NFXVolumeWidget theme="dark" />
                                     </ProtectedWidgetWrapper>
                                 } 
-                                embedId="ngx-volume" 
+                                embedId="nfx-volume" 
                             />
                         </div>
                     </div>

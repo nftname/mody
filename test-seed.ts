@@ -85,7 +85,7 @@ async function run() {
   
   // 3. مسح البيانات القديمة تماماً
   console.log("🧹 Cleaning DB...");
-  const { error: delError } = await supabase.from('ngx_volume_index').delete().neq('id', 0);
+  const { error: delError } = await supabase.from('nfx_volume_index').delete().neq('id', 0);
   if (delError) console.error("Warning cleaning DB:", delError.message);
 
   const recordsToUpsert: any[] = [];
@@ -164,7 +164,7 @@ async function run() {
     for (let i = 0; i < recordsToUpsert.length; i += chunkSize) {
       const chunk = recordsToUpsert.slice(i, i + chunkSize);
       const { error } = await supabase
-          .from('ngx_volume_index')
+          .from('nfx_volume_index')
           .upsert(chunk, { onConflict: 'sector_key, timestamp' });
       
       if (error) {
