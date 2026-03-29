@@ -52,7 +52,7 @@ export default function NGXVolumeWidget({
     setMounted(true);
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/ngx-volume');
+        const res = await fetch('/api/nfx-volume');
         if (!res.ok) throw new Error('Failed to fetch data');
         const json = await res.json();
         setData(json);

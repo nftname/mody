@@ -54,9 +54,9 @@ export default function MarketTicker() {
     const fetchNgxData = async () => {
       try {
         const [r1, r2, r3] = await Promise.all([
-          fetch('/api/ngx').catch(() => null), 
-          fetch('/api/ngx-cap').catch(() => null), 
-          fetch('/api/ngx-volume').catch(() => null)
+          fetch('/api/nfx').catch(() => null), 
+          fetch('/api/nfx-cap').catch(() => null), 
+          fetch('/api/nfx-volume').catch(() => null)
         ]);
         
         if (r1 && r1.ok) { const j = await r1.json(); setNgxIndex({ val: (j.score || 84.2).toFixed(1), change: j.change24h || 0 }); }

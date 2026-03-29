@@ -60,7 +60,7 @@ export default function NGXWidget({
     setMounted(true);
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/ngx');
+        const res = await fetch('/api/nfx');
         if (!res.ok) throw new Error('Failed to fetch data');
         const json = await res.json();
         setData(json);

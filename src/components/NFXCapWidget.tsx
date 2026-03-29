@@ -42,7 +42,7 @@ export default function NGXCapWidget({
     setMounted(true);
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/ngx-cap');
+        const res = await fetch('/api/nfx-cap');
         if (!res.ok) throw new Error('Failed to fetch data');
         const json = await res.json();
         setData(json);
