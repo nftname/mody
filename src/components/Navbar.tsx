@@ -364,7 +364,7 @@ const Navbar = () => {
                           className={`nav-link fw-medium shadow-none desktop-nav-link ${pathname === '/ngx' ? 'active' : ''}`}
                           style={{ fontSize: navFontSize, whiteSpace: 'nowrap', padding: '0.5rem 0' }}
                         >
-                          NGX
+                          NFX
                         </Link>
                         <button 
                           onClick={(e) => { e.preventDefault(); setIsInsightsOpen(!isInsightsOpen); }}
@@ -390,7 +390,7 @@ const Navbar = () => {
         borderRadius: '8px'
     }}>
   {[
-    { label: 'NGX', href: '/ngx' },
+    { label: 'NFX', href: '/ngx' },
     { label: 'Market Indices', href: '/market-indices' }
   ].map((subItem, idx, arr) => (
       <li key={subItem.label}>
@@ -600,7 +600,7 @@ const Navbar = () => {
 
                     <Link href="/ngx" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
                         <i className="bi bi-activity opacity-75" style={{ fontSize: '18px' }}></i>
-                        NGX
+                        NFX
                     </Link>
 
                     <Link href="/mint" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
