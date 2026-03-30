@@ -75,8 +75,8 @@ export default function NFXCapWidget({
   const changeColor = data.change24h >= 0 ? NEON_GREEN : TICKER_RED;
 
   return (
-    <div className="ngx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
-    <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
+    <div className="nfx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
+    <Link href="/nfx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
       
       <div className="glass-container d-flex flex-column justify-content-between rounded-3 position-relative overflow-hidden"
            style={{ ...glassStyle }}>
@@ -153,14 +153,14 @@ export default function NFXCapWidget({
     </Link>
 
     {hoveredInfo && (
-        <div className="ngx-tooltip" style={{ top: mousePos.y + 15, left: mousePos.x + 15 }}>
+        <div className="nfx-tooltip" style={{ top: mousePos.y + 15, left: mousePos.x + 15 }}>
             {hoveredInfo}
         </div>
     )}
 
     <style jsx>{`
         /* --- DESKTOP STYLES --- */
-        .ngx-widget-container {
+        .nfx-widget-container {
             position: relative;
             width: 100%;
             max-width: 310px; 
@@ -207,7 +207,7 @@ export default function NFXCapWidget({
 
         /* --- MOBILE STYLES --- */
         @media (max-width: 768px) {
-            .ngx-widget-container {
+            .nfx-widget-container {
                 min-width: 112px !important; 
                 max-width: 112px !important;
                 margin-left: 0 !important; 
@@ -250,7 +250,7 @@ export default function NFXCapWidget({
         }
 
         @media (min-width: 992px) {
-            .ngx-widget-container {
+            .nfx-widget-container {
                 margin-left: auto;
                 margin-right: 0;
             }
@@ -265,7 +265,7 @@ export default function NFXCapWidget({
             100% { text-shadow: 0 0 2px rgba(14, 203, 129, 0.1); opacity: 1; }
         }
 
-        .ngx-tooltip {
+        .nfx-tooltip {
             position: absolute;
             padding: 4px 8px;
             border-radius: 4px;

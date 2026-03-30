@@ -358,7 +358,7 @@ export default function HowItWorksPage() {
                 NFX is a global NFT market indicator developed to observe ecosystem-wide activity. It reflects aggregated market signals across NFT sectors, including Digital Name Assets, without providing financial predictions or investment advice.
               </p>
               <p style={{ lineHeight: '1.6', color: TEXT_BODY_COLOR }}>
-                NNM is one of several data contributors to NGX. The index is informational only and does not represent performance guarantees.
+                NNM is one of several data contributors to NFX. The index is informational only and does not represent performance guarantees.
               </p>
             </section>
 

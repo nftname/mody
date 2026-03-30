@@ -4,9 +4,9 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamicImport from 'next/dynamic';
-const NGXWidget = dynamicImport(() => import('@/components/NFXWidget'), { ssr: false });
-const NGXCapWidget = dynamicImport(() => import('@/components/NFXCapWidget'), { ssr: false });
-const NGXVolumeWidget = dynamicImport(() => import('@/components/NFXVolumeWidget'), { ssr: false });
+const NFXWidget = dynamicImport(() => import('@/components/NFXWidget'), { ssr: false });
+const NFXCapWidget = dynamicImport(() => import('@/components/NFXCapWidget'), { ssr: false });
+const NFXVolumeWidget = dynamicImport(() => import('@/components/NFXVolumeWidget'), { ssr: false });
 import { usePublicClient } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
@@ -275,9 +275,9 @@ const handleTouchEnd = (e: React.TouchEvent) => {
              {/* Top Widgets */}
             <div className="widgets-grid-container mb-4" style={{ minHeight: '64px' }}>
 
-                <div className="widget-item"> <NGXWidget theme="dark" /> </div>
-                <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
-                <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
+                <div className="widget-item"> <NFXWidget theme="dark" /> </div>
+                <div className="widget-item"> <NFXCapWidget theme="dark" /> </div>
+                <div className="widget-item"> <NFXVolumeWidget theme="dark" /> </div>
             </div>
             
             {/* HERO SECTION SPLIT (TEXT LEFT / SLIDER RIGHT) */}

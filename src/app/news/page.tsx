@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import MarketTicker from '@/components/MarketTicker';
-import NGXWidget from '@/components/NFXWidget';
-import NGXCapWidget from '@/components/NFXCapWidget';
-import NGXVolumeWidget from '@/components/NFXVolumeWidget';
+import NFXWidget from '@/components/NFXWidget';
+import NFXCapWidget from '@/components/NFXCapWidget';
+import NFXVolumeWidget from '@/components/NFXVolumeWidget';
 
 const BACKGROUND_DARK = '#181A20';
 const SURFACE_DARK = '#1E2329';
@@ -77,9 +77,9 @@ export default function NewsPage() {
       <div className="header-wrapper" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, padding: '8px 0', backgroundColor: SURFACE_DARK }}>
         <div className="container-fluid p-0"> 
             <div className="widgets-grid-horizontal">
-                <div className="widget-capsule"> <NGXWidget theme="dark" /> </div>
-                <div className="widget-capsule"> <NGXCapWidget theme="dark" /> </div>
-                <div className="widget-capsule"> <NGXVolumeWidget theme="dark" /> </div>
+                <div className="widget-capsule"> <NFXWidget theme="dark" /> </div>
+                <div className="widget-capsule"> <NFXCapWidget theme="dark" /> </div>
+                <div className="widget-capsule"> <NFXVolumeWidget theme="dark" /> </div>
             </div>
         </div>
       </div>

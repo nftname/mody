@@ -21,9 +21,9 @@ export default function MarketTicker() {
   
   const [prices, setPrices] = useState({ eth: 0, ethChange: 0, pol: 0, polChange: 0 });
   
-  const [ngxIndex, setNgxIndex] = useState({ val: '84.2', change: 1.5 });
-  const [ngxCap, setNgxCap] = useState({ val: '$2.54B', change: 4.88 });
-  const [ngxVol, setNgxVol] = useState({ val: '2.4M', change: 0.86 });
+  const [nfxIndex, setNfxIndex] = useState({ val: '84.2', change: 1.5 });
+  const [nfxCap, setNfxCap] = useState({ val: '$2.54B', change: 4.88 });
+  const [nfxVol, setNfxVol] = useState({ val: '2.4M', change: 0.86 });
   
   const [topItems, setTopItems] = useState<any[]>([]);
   const [newItems, setNewItems] = useState<any[]>([]);
@@ -51,7 +51,7 @@ export default function MarketTicker() {
   }, []);
 
   useEffect(() => {
-    const fetchNgxData = async () => {
+    const fetchNfxData = async () => {
       try {
         const [r1, r2, r3] = await Promise.all([
           fetch('/api/nfx').catch(() => null), 
@@ -59,14 +59,14 @@ export default function MarketTicker() {
           fetch('/api/nfx-volume').catch(() => null)
         ]);
         
-        if (r1 && r1.ok) { const j = await r1.json(); setNgxIndex({ val: (j.score || 84.2).toFixed(1), change: j.change24h || 0 }); }
-        if (r2 && r2.ok) { const j = await r2.json(); setNgxCap({ val: j.marketCap || '$2.54B', change: j.change24h || 0 }); }
-        if (r3 && r3.ok) { const j = await r3.json(); setNgxVol({ val: j.marketStats?.totalVolumeDisplay || '2.4M', change: j.marketStats?.totalVolChange || 0 }); }
+        if (r1 && r1.ok) { const j = await r1.json(); setNfxIndex({ val: (j.score || 84.2).toFixed(1), change: j.change24h || 0 }); }
+        if (r2 && r2.ok) { const j = await r2.json(); setNfxCap({ val: j.marketCap || '$2.54B', change: j.change24h || 0 }); }
+        if (r3 && r3.ok) { const j = await r3.json(); setNfxVol({ val: j.marketStats?.totalVolumeDisplay || '2.4M', change: j.marketStats?.totalVolChange || 0 }); }
       } catch (e) {}
     };
     
-    fetchNgxData();
-    const interval = setInterval(fetchNgxData, 60000);
+    fetchNfxData();
+    const interval = setInterval(fetchNfxData, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -185,9 +185,9 @@ export default function MarketTicker() {
 
   const items = useMemo(() => {
     const marketItems = [
-        { id: 'ngx', label: 'NFX INDEX', value: ngxIndex.val, change: ngxIndex.change, link: '/ngx' },
-        { id: 'ngx-cap', label: 'NFX CAP', value: ngxCap.val, change: ngxCap.change, link: '/ngx' },
-        { id: 'ngx-vol', label: 'NFX VOL', value: ngxVol.val, change: ngxVol.change, link: '/ngx' },
+        { id: 'nfx', label: 'NFX INDEX', value: nfxIndex.val, change: nfxIndex.change, link: '/nfx' },
+        { id: 'nfx-cap', label: 'NFX CAP', value: nfxCap.val, change: nfxCap.change, link: '/nfx' },
+        { id: 'nfx-vol', label: 'NFX VOL', value: nfxVol.val, change: nfxVol.change, link: '/nfx' },
         
         { id: 'eth', label: 'ETH', value: `$${prices.eth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: prices.ethChange, link: '/market' },
         { id: 'pol', label: 'POL', value: `$${prices.pol.toFixed(2)}`, change: prices.polChange, link: '/market' },
@@ -197,7 +197,7 @@ export default function MarketTicker() {
 
     const combined = [...marketItems, ...newItems, ...topItems];
     return [...combined, ...combined]; 
-  }, [prices, ngxIndex, ngxCap, ngxVol, newItems, topItems]);
+  }, [prices, nfxIndex, nfxCap, nfxVol, newItems, topItems]);
 
   return (
     <div className="w-100 overflow-hidden position-relative border-bottom border-secondary border-opacity-25" 

@@ -61,9 +61,9 @@ export default function NFXLiveChart() {
 
   useEffect(() => {
     const prefetchAllData = async () => {
-        const { data } = await supabase
-            .from('nfx_static_chart')
-            .select('sector_key, mode, timestamp, value')
+const { data } = await supabase
+    .from('nfx_chart_view')
+    .select('sector_key, mode, timestamp, value')
             .order('timestamp', { ascending: true });
 
         if (data) {
@@ -101,9 +101,9 @@ export default function NFXLiveChart() {
     setIsLoading(true);
 
     try {
-        const { data, error } = await supabase
-            .from('nfx_static_chart')
-            .select('timestamp, value')
+const { data, error } = await supabase
+    .from('nfx_chart_view')
+    .select('timestamp, value')
             .eq('sector_key', sectorKey)
             .eq('mode', mode)
             .order('timestamp', { ascending: true });
@@ -284,7 +284,7 @@ export default function NFXLiveChart() {
   }, [activeSector, activeViewMode, seriesInstance, chartInstance, isChartBroken]);
 
   return (
-    <div className="ngx-chart-glass mb-4" style={{ position: 'relative' }}>
+    <div className="nfx-chart-glass mb-4" style={{ position: 'relative' }}>
       {isChartBroken && (
           <div style={{
               position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -376,7 +376,7 @@ export default function NFXLiveChart() {
       </div>
 
       <style jsx>{`
-        .ngx-chart-glass {
+        .nfx-chart-glass {
             background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -450,7 +450,7 @@ export default function NFXLiveChart() {
 
         /* */
         @media (max-width: 768px) {
-            .ngx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
+            .nfx-chart-glass { padding: 0; border: none; background: transparent; backdrop-filter: none; }
             .chart-canvas-wrapper { height: 350px !important; }
             .filters-container { padding: 5px 0px; margin-bottom: 5px; }
             .custom-select-trigger { font-size: 12px; padding: 6px 8px; }

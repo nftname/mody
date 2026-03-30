@@ -4,9 +4,9 @@ import React, { useState, useMemo, useEffect, Component, ReactNode } from 'react
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
 import MarketTicker from '@/components/MarketTicker';
-import NGXWidget from '@/components/NFXWidget';
-import NGXCapWidget from '@/components/NFXCapWidget';
-import NGXVolumeWidget from '@/components/NFXVolumeWidget';
+import NFXWidget from '@/components/NFXWidget';
+import NFXCapWidget from '@/components/NFXCapWidget';
+import NFXVolumeWidget from '@/components/NFXVolumeWidget';
 import { usePublicClient, useAccount } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
@@ -333,13 +333,13 @@ function MarketPage() {
         <div className="container-fluid p-0"> 
             <div className="widgets-grid-container">
                 <SafeWidget>
-                    <div className="widget-item"> <NGXWidget theme="dark" /> </div>
+                    <div className="widget-item"> <NFXWidget theme="dark" /> </div>
                 </SafeWidget>
                 <SafeWidget>
-                    <div className="widget-item"> <NGXCapWidget theme="dark" /> </div>
+                    <div className="widget-item"> <NFXCapWidget theme="dark" /> </div>
                 </SafeWidget>
                 <SafeWidget>
-                    <div className="widget-item"> <NGXVolumeWidget theme="dark" /> </div>
+                    <div className="widget-item"> <NFXVolumeWidget theme="dark" /> </div>
                 </SafeWidget>
             </div>
             <div className="row align-items-center px-3 mt-3 text-section desktop-only-text">

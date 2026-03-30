@@ -46,12 +46,12 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
 
 export default function NFXWhitepaperPage() {
   return (
-    <main className="ngx-page" style={{ backgroundColor: '#181A20', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <main className="nfx-page" style={{ backgroundColor: '#181A20', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column' }}>
       
       <style jsx global>{`
-        .ngx-page p,
-        .ngx-page li,
-        .ngx-page .text-body {
+        .nfx-page p,
+        .nfx-page li,
+        .nfx-page .text-body {
           font-family: "Inter", "Segoe UI", sans-serif;
           font-size: 15px;
           color: #848E9C !important; 
@@ -59,19 +59,19 @@ export default function NFXWhitepaperPage() {
           margin-bottom: 8px;
         }
 
-        .ngx-page h1,
-        .ngx-page h2,
-        .ngx-page h3,
-        .ngx-page .text-white {
+        .nfx-page h1,
+        .nfx-page h2,
+        .nfx-page h3,
+        .nfx-page .text-white {
           color: #EAECEF !important;
         }
 
-        .ngx-page ul {
+        .nfx-page ul {
             list-style-type: disc !important;
             padding-left: 20px !important;
             margin-bottom: 15px;
         }
-        .ngx-page li {
+        .nfx-page li {
             display: list-item !important;
             margin-bottom: 6px;
         }

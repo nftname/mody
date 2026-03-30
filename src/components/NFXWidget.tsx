@@ -151,8 +151,8 @@ export default function NFXWidget({
   };
 
   return (
-    <div className="ngx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
-    <Link href="/ngx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
+    <div className="nfx-widget-container" ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredInfo(null)}>
+    <Link href="/nfx" className="text-decoration-none" style={{ cursor: 'pointer', display: 'block' }}>
       
       <div className="glass-container d-flex flex-column justify-content-between rounded-3 position-relative overflow-hidden"
            style={{ ...glassStyle }}>
@@ -207,13 +207,13 @@ export default function NFXWidget({
 
     {/* TOOLTIP COMPONENT ADDED HERE */}
     {hoveredInfo && (
-        <div className="ngx-tooltip" style={{ top: mousePos.y + 15, left: mousePos.x + 15 }}>
+        <div className="nfx-tooltip" style={{ top: mousePos.y + 15, left: mousePos.x + 15 }}>
             {hoveredInfo}
         </div>
     )}
 
     <style jsx>{`
-        .ngx-widget-container {
+        .nfx-widget-container {
             position: relative;
             width: 100%;
             max-width: 310px; 
@@ -264,7 +264,7 @@ export default function NFXWidget({
         }
 
         /* Tooltip Style */
-        .ngx-tooltip {
+        .nfx-tooltip {
             position: absolute;
             padding: 4px 8px;
             border-radius: 4px;
@@ -280,7 +280,7 @@ export default function NFXWidget({
         }
 
         @media (max-width: 768px) {
-            .ngx-widget-container {
+            .nfx-widget-container {
                 min-width: 112px !important; 
                 max-width: 112px !important; 
                 margin-right: auto !important; 
@@ -333,7 +333,7 @@ export default function NFXWidget({
         }
 
         @media (min-width: 992px) {
-            .ngx-widget-container {
+            .nfx-widget-container {
                 margin-left: auto;
                 margin-right: 0;
             }
