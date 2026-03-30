@@ -62,7 +62,7 @@ export default function NFXLiveChart() {
   useEffect(() => {
     const prefetchAllData = async () => {
 const { data } = await supabase
-    .from('nfx_chart_view')
+    .from('nfx_static_chart')
     .select('sector_key, mode, timestamp, value')
             .order('timestamp', { ascending: true });
 
@@ -102,7 +102,7 @@ const { data } = await supabase
 
     try {
 const { data, error } = await supabase
-    .from('nfx_chart_view')
+    .from('nfx_static_chart')
     .select('timestamp, value')
             .eq('sector_key', sectorKey)
             .eq('mode', mode)

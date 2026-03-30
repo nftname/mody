@@ -327,6 +327,24 @@ export default function LegalPage() {
                     <p className="term-text mt-3"><strong>f. Informational Communications:</strong><br />
                     Nothing on the NNM website, interface, documentation, social media channels, or communications shall be interpreted, construed, or relied upon as investment advice, financial promotion, or a solicitation to buy securities.</p>
                 </div>
+                                <div className="term-block mb-4">
+                    <h3 className="term-heading">21. EXPANSION CAMPAIGN & MILESTONE CONDITIONS</h3>
+
+                    <p className="term-text mt-3"><strong>a. Nature of the Campaign:</strong><br />
+                    The NNM Protocol Expansion Campaign (the "Campaign") and any associated reward vaults, leaderboards, or point systems are structured strictly as a performance-based network growth and affiliate reward program. The Campaign relies entirely on user effort, community building, and network expansion. It is strictly not a lottery, game of chance, investment opportunity, or guarantee of financial return.</p>
+
+                    <p className="term-text mt-3"><strong>b. Milestone-Based Vaults:</strong><br />
+                    The unlocking and distribution of any reward vaults (totaling up to a potential maximum of $300,000) are strictly contingent upon the Protocol reaching predefined, specific minting volume and active participation milestones within the Campaign period.</p>
+
+                    <p className="term-text mt-3"><strong>c. Timeframe and Expiration:</strong><br />
+                    The Campaign runs for a maximum period of six (6) months, officially concluding on September 30, 2026. If a specific network volume milestone is not successfully met by the conclusion of this 6-month period, any remaining locked Vaults will remain permanently sealed. The Campaign will conclude without the distribution of any unmet Vaults, and users acknowledge that they are not entitled to any alternative compensation, refunds, or financial equivalents.</p>
+
+                    <p className="term-text mt-3"><strong>d. Direct Affiliate Commissions:</strong><br />
+                    The 30% referral commission is a single-tier (direct) marketing reward provided solely for successful, verified network expansion (completed active mints by directly referred users). It does not constitute a multi-level marketing (MLM) structure or pyramid scheme.</p>
+
+                    <p className="term-text mt-3"><strong>e. Modification and Termination Right:</strong><br />
+                    NNM reserves the absolute right, at its sole discretion, to modify, suspend, or terminate the Campaign, withhold rewards, or adjust milestones at any time to ensure network integrity, prevent fraud (such as wash trading, botting, or sybil attacks), or comply with local and international regulatory requirements, without prior notice or liability.</p>
+                </div>
 
             </section>
 

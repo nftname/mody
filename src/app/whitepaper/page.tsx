@@ -1,12 +1,13 @@
 'use client';
 import React from 'react';
 
-const GOLD_ACCENT = '#D4AF37';
-const TEXT_WHITE = '#FFFFFF';
-const TEXT_OFF_WHITE = '#EAECEF';
-const TEXT_BODY_COLOR = '#A0AEC0';
-const BG_MAIN = '#0B0F19';
-const BG_SURFACE = '#111827';
+// --- LIGHT THEME COLORS ---
+const GOLD_ACCENT = '#B8860B'; // Darker gold for better contrast on white
+const TEXT_MAIN = '#1A202C';   // Soft black for headings
+const TEXT_BODY = '#4A5568';   // Slate gray for body text
+const BG_MAIN = '#F7F9FA';     // Broken white (Off-white) for the background
+const BG_SURFACE = '#FFFFFF';  // Pure white for cards/disclaimer boxes
+const BORDER_LIGHT = 'rgba(0, 0, 0, 0.08)';
 
 export default function WhitepaperPage() {
   return (
@@ -41,38 +42,39 @@ export default function WhitepaperPage() {
 
         .wp-header {
             margin-bottom: 4rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid ${BORDER_LIGHT};
             padding-bottom: 2rem;
         }
 
         .wp-main-title {
-            color: ${TEXT_WHITE};
+            color: ${TEXT_MAIN};
             font-size: 2.5rem;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: -0.5px;
             margin-bottom: 0.5rem;
         }
 
         .wp-subtitle {
-            color: ${TEXT_BODY_COLOR};
+            color: ${TEXT_BODY};
             font-size: 1rem;
-            font-weight: 400;
+            font-weight: 500;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
 
         .wp-disclaimer {
             background-color: ${BG_SURFACE};
-            border-left: 2px solid ${TEXT_BODY_COLOR};
+            border-left: 3px solid ${GOLD_ACCENT};
             padding: 1.5rem;
             margin-bottom: 3rem;
             border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
 
         .wp-disclaimer-title {
-            color: ${TEXT_OFF_WHITE};
-            font-size: 0.9rem;
-            font-weight: 600;
+            color: ${TEXT_MAIN};
+            font-size: 0.95rem;
+            font-weight: 700;
             text-transform: uppercase;
             margin-bottom: 0.5rem;
             letter-spacing: 0.5px;
@@ -83,27 +85,32 @@ export default function WhitepaperPage() {
         }
 
         .wp-section-title { 
-            color: ${TEXT_OFF_WHITE}; 
-            font-weight: 600; 
-            font-size: 1.5rem; 
+            color: ${TEXT_MAIN}; 
+            font-weight: 700; 
+            font-size: 1.6rem; 
             margin-bottom: 1.5rem;
             letter-spacing: -0.3px;
         }
 
         .wp-sub-title {
-            color: ${TEXT_OFF_WHITE};
-            font-weight: 500;
-            font-size: 1.1rem;
+            color: ${TEXT_MAIN};
+            font-weight: 600;
+            font-size: 1.15rem;
             margin-top: 2rem;
             margin-bottom: 1rem;
         }
 
         .wp-text { 
-            color: ${TEXT_BODY_COLOR}; 
+            color: ${TEXT_BODY}; 
             line-height: 1.8; 
-            font-size: 1rem; 
+            font-size: 1.05rem; 
             margin-bottom: 1.2rem; 
-            font-weight: 300;
+            font-weight: 400;
+        }
+
+        .wp-text strong {
+            color: ${TEXT_MAIN};
+            font-weight: 600;
         }
 
         .wp-list { 
@@ -116,11 +123,16 @@ export default function WhitepaperPage() {
         .wp-list li { 
             position: relative; 
             padding-left: 24px; 
-            color: ${TEXT_BODY_COLOR}; 
+            color: ${TEXT_BODY}; 
             margin-bottom: 0.8rem; 
-            font-size: 1rem;
+            font-size: 1.05rem;
             line-height: 1.6;
-            font-weight: 300;
+            font-weight: 400;
+        }
+
+        .wp-list li strong {
+            color: ${TEXT_MAIN};
+            font-weight: 600;
         }
 
         .wp-list li::before {
@@ -132,7 +144,6 @@ export default function WhitepaperPage() {
             height: 6px;
             background-color: ${GOLD_ACCENT};
             border-radius: 50%;
-            opacity: 0.7;
         }
 
         .wp-stats-grid {
@@ -143,7 +154,8 @@ export default function WhitepaperPage() {
             padding: 2rem;
             border-radius: 8px;
             margin: 2rem 0;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            border: 1px solid ${BORDER_LIGHT};
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
         }
 
         @media (min-width: 768px) {
@@ -153,30 +165,31 @@ export default function WhitepaperPage() {
         }
 
         .wp-stat-label {
-            color: ${TEXT_BODY_COLOR};
+            color: ${TEXT_BODY};
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 0.4rem;
+            font-weight: 600;
         }
 
         .wp-stat-value {
-            color: ${TEXT_OFF_WHITE};
+            color: ${TEXT_MAIN};
             font-size: 1.2rem;
-            font-weight: 500;
+            font-weight: 700;
         }
 
         .wp-footer {
             margin-top: 5rem;
             padding-top: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid ${BORDER_LIGHT};
             text-align: left;
         }
 
         .wp-footer-text {
-            color: ${TEXT_BODY_COLOR};
-            font-size: 0.8rem;
-            opacity: 0.6;
+            color: ${TEXT_BODY};
+            font-size: 0.85rem;
+            font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -191,7 +204,7 @@ export default function WhitepaperPage() {
 
           <div className="wp-disclaimer">
               <div className="wp-disclaimer-title">Important Disclaimer</div>
-              <p className="wp-text" style={{ fontSize: '0.9rem', marginBottom: 0 }}>
+              <p className="wp-text" style={{ fontSize: '0.95rem', marginBottom: 0 }}>
                 The information contained in this document is for informational purposes only.
                 The NNM Token is a digital utility token designed exclusively for use within the NNM ecosystem.
                 NNM Tokens are not securities, investment contracts, shares, or financial instruments.
@@ -243,7 +256,7 @@ export default function WhitepaperPage() {
               <p className="wp-text">Through NNM, users can:</p>
               <ul className="wp-list">
                   <li>Mint unique digital name NFTs</li>
-                  <li>Trade digital names in a global marketplace</li>
+                  <li>Exchange digital names in a global peer-to-peer environment</li>
                   <li>Build portable Web3 identities</li>
                   <li>Create payment-ready digital profiles</li>
               </ul>
@@ -254,7 +267,7 @@ export default function WhitepaperPage() {
               <ul className="wp-list">
                   <li>Digital name ownership</li>
                   <li>Identity profiles</li>
-                  <li>Marketplace liquidity</li>
+                  <li>Ecosystem accessibility</li>
                   <li>Blockchain payment capabilities</li>
               </ul>
               <p className="wp-text">
@@ -317,42 +330,56 @@ export default function WhitepaperPage() {
 
               <h4 className="wp-sub-title">Allocation Structure</h4>
               <ul className="wp-list">
-                  <li><span style={{ color: TEXT_OFF_WHITE, fontWeight: 500 }}>35% — Early Network Bootstrapping:</span> Allocated to early participants who contribute to identity layer adoption and protocol expansion.</li>
-                  <li><span style={{ color: TEXT_OFF_WHITE, fontWeight: 500 }}>25% — Protocol Liquidity:</span> Reserved for decentralized exchange liquidity pools to support marketplace accessibility. Liquidity is subject to a 12-month lock period.</li>
-                  <li><span style={{ color: TEXT_OFF_WHITE, fontWeight: 500 }}>15% — Community Rewards:</span> Allocated for ecosystem incentives, adoption programs, and community growth. Distributed via 6-month linear vesting.</li>
-                  <li><span style={{ color: TEXT_OFF_WHITE, fontWeight: 500 }}>15% — Strategic Partnerships:</span> Reserved for infrastructure partners, ecosystem integrations, and global onboarding initiatives.</li>
-                  <li><span style={{ color: TEXT_OFF_WHITE, fontWeight: 500 }}>10% — Core Contributors:</span> Allocated to protocol developers and early contributors. Subject to a 12-month cliff lock, unlocking in March 2027.</li>
+                  <li><strong>35% — Early Network Bootstrapping:</strong> Allocated to early participants who contribute to identity layer adoption and protocol expansion.</li>
+                  <li><strong>25% — Protocol Liquidity:</strong> Reserved for decentralized exchange liquidity pools to support marketplace accessibility. Liquidity is subject to a 12-month lock period.</li>
+                  <li><strong>15% — Community Rewards:</strong> Allocated for ecosystem incentives, adoption programs, and community growth. Distributed via 6-month linear vesting.</li>
+                  <li><strong>15% — Strategic Partnerships:</strong> Reserved for infrastructure partners, ecosystem integrations, and global onboarding initiatives.</li>
+                  <li><strong>10% — Core Contributors:</strong> Allocated to protocol developers and early contributors. Subject to a 12-month cliff lock, unlocking in March 2027.</li>
               </ul>
+
+              <h4 className="wp-sub-title">6.1 Genesis Allocation & Phased Network Access</h4>
+              <p className="wp-text">
+                To ensure a robust and well-tested network environment prior to full public deployment, the NNM Protocol utilizes a phased early access model for the Genesis Allocation. During this bootstrapping period, early participants who assist in stress-testing the smart contracts, establishing the ChainFace identity layer, and providing initial network activity receive subsidized access to NNM utility units.
+              </p>
+              <p className="wp-text">The phased access reflects the progressive stability of the network:</p>
+              <ul className="wp-list">
+                  <li><strong>Early Tester Phase ($0.0001 per NNM):</strong> A heavily subsidized rate recognizing the maximum contribution to beta testing and early network validation.</li>
+                  <li><strong>Current Beta Access ($0.0002 per NNM):</strong> An adjusted rate reflecting increased network stability and continued early adoption efforts.</li>
+                  <li><strong>Network Launch Phase ($0.001 per NNM):</strong> The standard utility baseline rate established for full network functionality upon mainnet maturity.</li>
+              </ul>
+              <p className="wp-text">
+                This structured access is designed strictly to incentivize active platform testing and early network bootstrapping, and is not structured to provide speculative financial returns.
+              </p>
           </section>
 
           <section className="wp-section">
-              <h3 className="wp-section-title">7. Automated Burn Mechanism</h3>
+              <h3 className="wp-section-title">7. Automated Network Security</h3>
               <p className="wp-text">
-                The NNM Protocol incorporates a sustainability model tied to ecosystem activity.
-                A portion of protocol-generated revenue is permanently removed from circulation.
-              </p>
-              <p className="wp-text" style={{ color: TEXT_OFF_WHITE, fontWeight: 500 }}>
-                Specifically: 50% of protocol revenue generated from digital name minting is programmatically burned.
+                The NNM Protocol incorporates a security and sustainability model tied to network activity.
+                A portion of protocol-generated utility fees is permanently removed from circulation.
               </p>
               <p className="wp-text">
-                This mechanism ensures that token supply dynamics are connected directly to real network usage and demand.
+                <strong>Specifically:</strong> 50% of protocol fees generated from digital name minting is programmatically burned to prevent network spam and ensure smart contract sustainability.
+              </p>
+              <p className="wp-text">
+                This mechanism ensures that network operations are connected directly to real usage and efficiency.
               </p>
           </section>
 
           <section className="wp-section">
               <h3 className="wp-section-title">8. Marketplace Infrastructure</h3>
               <p className="wp-text">
-                The NNM Marketplace functions as a decentralized trading hub for digital name NFTs.
+                The NNM Marketplace functions as a decentralized peer-to-peer exchange environment for digital name NFTs.
               </p>
               <p className="wp-text">Users can:</p>
               <ul className="wp-list">
                   <li>Mint rare digital names</li>
-                  <li>Buy and sell names globally</li>
+                  <li>Transfer and acquire names globally</li>
                   <li>Discover trending digital identities</li>
                   <li>Participate in the growing digital name economy</li>
               </ul>
               <p className="wp-text">
-                The marketplace introduces liquidity to digital names, transforming them into tradable Web3 assets.
+                The marketplace introduces broad accessibility to digital names, transforming them into transferable Web3 assets.
               </p>
           </section>
 
@@ -418,8 +445,8 @@ export default function WhitepaperPage() {
                   <li>Dividend distribution</li>
               </ul>
               <p className="wp-text">
-                Participation in token distributions, presales, or ecosystem allocations is entirely voluntary and conducted at the user's sole risk.
-                Funds contributed during any presale are considered payments for future access to software utility, not investments in a common enterprise.
+                Participation in token distributions, genesis distributions, or ecosystem allocations is entirely voluntary and conducted at the user's sole risk.
+                Funds contributed during any genesis phase are considered payments for future access to software utility, not investments in a common enterprise.
               </p>
           </section>
 
@@ -446,7 +473,7 @@ export default function WhitepaperPage() {
                 The NNM Protocol introduces a new category within the decentralized ecosystem: tradable digital name identities.
               </p>
               <p className="wp-text">
-                By combining NFT ownership, identity infrastructure, and marketplace liquidity, NNM aims to build the foundation for a future where digital names become essential components of online presence.
+                By combining NFT ownership, identity infrastructure, and marketplace accessibility, NNM aims to build the foundation for a future where digital names become essential components of online presence.
               </p>
               <p className="wp-text">
                 As Web3 continues to evolve, decentralized identity systems will become a fundamental pillar of the internet. NNM is positioned to play a key role in shaping that future.

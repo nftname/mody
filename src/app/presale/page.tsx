@@ -58,7 +58,7 @@ export default function PresalePage() {
   const [fomoData, setFomoData] = useState({ raised: 1250000, percentage: 35.7 });
   const [tickerItems, setTickerItems] = useState<{addr: string, amt: string}[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [statusModal, setStatusModal] = useState<'success' | 'error' | null>(null);
+  const [statusModal, setStatusModal] = useState<'success' | 'error' | 'empty_amount' | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [copied, setCopied] = useState(false);
   const [submittedTxHash, setSubmittedTxHash] = useState<`0x${string}` | null>(null);
@@ -267,7 +267,13 @@ export default function PresalePage() {
     setShowModal(true);
   };
   const executeBuy = async () => {
-    if (!amount || Number(amount) <= 0 || !address || !publicClient) return;
+    if (!amount || Number(amount) <= 0) {
+      setStatusModal('empty_amount');
+      return;
+    }
+
+    if (!address || !publicClient) return;
+
     setIsProcessing(true);
     setSubmittedTxHash(null); 
     setErrorMsg('');
@@ -501,7 +507,7 @@ export default function PresalePage() {
               "Lifetime digital identity on the NNM Registry",
               "ChainFace payments & management",
               "10,000 WNNM points for platform rewards",
-              "NNM utility allocation based on participation"
+              "NNM utility allocation for early testers"
             ].map((text, index) => (
               <div key={index} style={{ 
                 display: 'flex', 
@@ -551,41 +557,46 @@ export default function PresalePage() {
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0001</span>
-        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Previous Tier</span>
-      </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0001</span>
-        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Current Access</span>
+        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Early Tester Tier</span>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0002</span>
-        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Next Tier</span>
+        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>​Current Beta Access</span>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0003</span>
+        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>​Next Phase Reward</span>
       </div>
     </div>
 
-    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '12px', marginTop: '10px' }}>
-      <div style={{ 
-        background: 'rgba(255, 255, 255, 0.02)', 
-        border: '1px solid rgba(225, 29, 72, 0.3)', 
-        padding: '3px 10px', 
-        borderRadius: '20px', 
-        backdropFilter: 'blur(10px)',
-        display: 'inline-flex',
-        alignItems: 'center'
-      }}>
-        <span style={{ 
-          background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
-          WebkitBackgroundClip: 'text', 
-          WebkitTextFillColor: 'transparent', 
-          fontSize: '9px', 
-          fontWeight: 'bold', 
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '12px', marginTop: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+        <div style={{ 
+          background: 'rgba(255, 255, 255, 0.02)', 
+          border: '1px solid rgba(225, 29, 72, 0.3)', 
+          padding: '3px 10px', 
+          borderRadius: '20px', 
+          backdropFilter: 'blur(10px)',
+          display: 'inline-flex',
+          alignItems: 'center'
         }}>
-          Final Tier
-        </span>
+          <span style={{ 
+            background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
+            WebkitBackgroundClip: 'text', 
+            WebkitTextFillColor: 'transparent', 
+            fontSize: '9px', 
+            fontWeight: 'bold', 
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}>
+            Final Tier
+          </span>
+        </div>
+        <span style={{ color: '#10B981', fontSize: '21px', fontWeight: 'bold', letterSpacing: '0.5px' }}>$0.001</span>
       </div>
-      <span style={{ color: '#10B981', fontSize: '21px', fontWeight: 'bold', letterSpacing: '0.5px' }}>$0.001</span>
+      <span style={{ color: '#9ea9a9', fontSize: '8px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '8px', textAlign: 'center' }}>
+        (Reward for early testing utility)
+      </span>
     </div>
 
     <div style={{ marginBottom: '24px' }}>
@@ -736,7 +747,7 @@ export default function PresalePage() {
         <div style={{ ...saTeContainerStyle, padding: '30px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#9333EA', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>2</div>
           <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>The NFX Global Index</h3>
-          <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>The authoritative observatory for the NFT asset class, featuring Ecosystem Sentiment, Aggregated Volume, and Sector Market Cap.</p>
+          <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>The authoritative observatory for the NFT ecosystem, featuring Ecosystem Sentiment, Network Activity, and Ecosystem Size.</p>
         </div>
         <div style={{ ...saTeContainerStyle, padding: '30px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>3</div>
@@ -801,10 +812,10 @@ export default function PresalePage() {
 <div id="burn-section" style={{ background: 'rgba(252, 211, 77, 0.05)', border: '1px solid rgba(252, 211, 77, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '60px', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ color: '#FCD34D', fontSize: '18px' }}>🔥</span>
-                <span style={{ color: '#FCD34D', fontSize: '16px', fontWeight: 'bold' }}>Automated Burn Protocol</span>
+                <span style={{ color: '#FCD34D', fontSize: '16px', fontWeight: 'bold' }}>Automated Network Security</span>
               </div>
               <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.5' }}>
-                50% of tokens generated from platform activity (digital name minting) are permanently removed from circulation.
+                50% of tokens generated from platform activity (digital name minting) are permanently removed from circulation to prevent network spam and ensure smart contract sustainability.
               </p>
             </div>
           </div>
@@ -943,6 +954,10 @@ export default function PresalePage() {
           <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid #10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
+        ) : statusModal === 'empty_amount' ? (
+          <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid #3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#3B82F6', fontSize: '22px', fontWeight: 'bold' }}>i</span>
+          </div>
         ) : (
           <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(252, 211, 77, 0.05)', border: '1px solid #FCD34D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: '#FCD34D', fontSize: '22px', fontWeight: 'bold' }}>!</span>
@@ -951,13 +966,19 @@ export default function PresalePage() {
       </div>
 
       <h3 style={{ color: '#fff', fontSize: '15px', fontWeight: '600', marginBottom: '10px' }}>
-        {statusModal === 'success' ? 'Confirmed' : 'Action Required'}
+        {statusModal === 'success' ? 'Confirmed' : statusModal === 'empty_amount' ? 'Amount Required' : 'Action Required'}
       </h3>
 
       {statusModal === 'success' ? (
         <p style={{ color: '#9ea9a9', fontSize: '11px', lineHeight: '1.5', marginBottom: '18px' }}>
           Your contribution has been successfully recorded.
         </p>
+      ) : statusModal === 'empty_amount' ? (
+         <div style={{ marginBottom: '18px', textAlign: 'center' }}>
+          <p style={{ color: '#9ea9a9', fontSize: '11px', lineHeight: '1.6', margin: 0 }}>
+            Please enter the amount of <b>{selectedCoin}</b> you wish to contribute before proceeding.
+          </p>
+        </div>
       ) : (
         <div style={{ marginBottom: '18px', textAlign: 'center' }}>
           <p style={{ color: '#9ea9a9', fontSize: '11px', lineHeight: '1.6', margin: 0 }}>
@@ -975,7 +996,7 @@ export default function PresalePage() {
           </a>
         ) : (
           <div onClick={() => setStatusModal(null)} style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
-            Try Again
+            {statusModal === 'empty_amount' ? 'Got it' : 'Try Again'}
           </div>
         )}
         <button onClick={() => setStatusModal(null)} style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '10px', cursor: 'pointer' }}>Close</button>

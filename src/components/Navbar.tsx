@@ -227,14 +227,14 @@ const Navbar = () => {
   const menuIcons: { [key: string]: string } = {
     'Home': 'bi-house-door',
     'Market': 'bi-shop',
-    'Genesis': 'bi-fire',
+    '$NNM': 'bi-fire',
     'NFX Index': 'bi-activity',
     'Mint': 'bi-diamond',
     'ChainFace': 'bi-person-badge',
     'NNM Concept': 'bi-layers'
   };
 
-  const menuItems = ['Home', 'Market', 'Genesis'];
+  const menuItems = ['Home', 'Market', '$NNM'];
 
   const bottomDrawerItems = [
     { label: 'News & Updates', href: '/news', icon: 'bi-newspaper' },
@@ -242,7 +242,8 @@ const Navbar = () => {
     { label: 'Affiliate Program', href: '/affiliate', icon: 'bi-briefcase' },
     { label: 'Rankings', href: '/ranking', icon: 'bi-trophy' },
     { label: 'Blog', href: '/blog', icon: 'bi-pencil-square' },
-    { label: 'Contact', href: '/contact', icon: 'bi-chat-left-text' }
+    { label: 'Contact', href: '/contact', icon: 'bi-chat-left-text' },
+    { label: 'Legal & Terms', href: '/legal', icon: 'bi-file-earmark-text' }
   ];
 
   const ChicProfileIcon = ({ size = 24, color = metallicGoldHex }) => (
@@ -337,7 +338,7 @@ const Navbar = () => {
                 <ul className="navbar-nav mb-2 mb-lg-0 d-flex flex-row align-items-center" style={{ gap: '14px' }}>
                     
                     {menuItems.map((item) => {
-                        const itemHref = item === 'Home' ? '/' : item === 'Genesis' ? '/presale' : `/${item.toLowerCase().replace(/\s+/g, '-')}`;
+                        const itemHref = item === 'Home' ? '/' : item === '$NNM' ? '/presale' : `/${item.toLowerCase().replace(/\s+/g, '-')}`;
                         const isActive = pathname === itemHref;
                         return (
                             <li className="nav-item" key={item}>
@@ -347,7 +348,7 @@ const Navbar = () => {
                                     className={`nav-link fw-medium desktop-nav-link ${isActive ? 'active' : ''} d-flex align-items-center gap-1`}
                                     style={{ fontSize: navFontSize, whiteSpace: 'nowrap' }} 
                                 >
-                                    {item === 'Genesis' && <i className="bi bi-fire" style={{ color: '#FCD535', fontSize: '13px' }}></i>}
+                                    {item === '$NNM' && <i className="bi bi-fire" style={{ color: '#FCD535', fontSize: '13px' }}></i>}
                                     {item}
                                 </Link>
                             </li>
@@ -585,14 +586,14 @@ const Navbar = () => {
                   <div className="d-flex flex-column gap-2">
                     {/* Standard Items */}
                     {menuItems.map((item) => {
-                        const itemHref = item === 'Home' ? '/' : item === 'Genesis' ? '/presale' : `/${item.toLowerCase().replace(/\s+/g, '-')}`;
+                        const itemHref = item === 'Home' ? '/' : item === '$NNM' ? '/presale' : `/${item.toLowerCase().replace(/\s+/g, '-')}`;
                         return (
                             <Link key={item} 
                                     href={itemHref}
                                     onClick={closeDrawer}
                                     className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3"
                                     style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
-                                <i className={`bi ${menuIcons[item]} opacity-75`} style={{ fontSize: '18px', color: item === 'Genesis' ? '#FCD535' : 'inherit' }}></i>
+                                <i className={`bi ${menuIcons[item]} opacity-75`} style={{ fontSize: '18px', color: item === '$NNM' ? '#FCD535' : 'inherit' }}></i>
                                 {item}
                             </Link>
                         );
