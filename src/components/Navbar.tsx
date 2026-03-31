@@ -246,6 +246,7 @@ const Navbar = () => {
     { label: 'Legal & Terms', href: '/legal', icon: 'bi-file-earmark-text' }
   ];
 
+
   const ChicProfileIcon = ({ size = 24, color = metallicGoldHex }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 4V4.01C14.2 4.01 16 5.8 16 8C16 10.2 14.2 12 12 12C9.8 12 8 10.2 8 8C8 5.8 9.8 4 12 4ZM12 14C15.5 14 18.37 15.28 19.5 17.15C17.7 19.56 14.98 20.98 12 21V21C9.02 20.98 6.3 19.56 4.5 17.15C5.63 15.28 8.5 14 12 14Z" fill={color}/>
@@ -346,8 +347,7 @@ const Navbar = () => {
                                     href={itemHref}
                                     onClick={(e) => handleNavClick(item, e)}
                                     className={`nav-link fw-medium desktop-nav-link ${isActive ? 'active' : ''} d-flex align-items-center gap-1`}
-                                    style={{ fontSize: navFontSize, whiteSpace: 'nowrap' }} 
-                                >
+                                    style={{ fontSize: navFontSize, whiteSpace: 'nowrap', pointerEvents: item === '$NNM' ? 'none' : 'auto' }}                                >
                                     {item === '$NNM' && <i className="bi bi-fire" style={{ color: '#FCD535', fontSize: '13px' }}></i>}
                                     {item}
                                 </Link>
@@ -592,7 +592,7 @@ const Navbar = () => {
                                     href={itemHref}
                                     onClick={closeDrawer}
                                     className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3"
-                                    style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
+                                    style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px', pointerEvents: item === '$NNM' ? 'none' : 'auto' }}>
                                 <i className={`bi ${menuIcons[item]} opacity-75`} style={{ fontSize: '18px', color: item === '$NNM' ? '#FCD535' : 'inherit' }}></i>
                                 {item}
                             </Link>

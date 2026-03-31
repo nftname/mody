@@ -344,6 +344,10 @@ export default function LegalPage() {
 
                     <p className="term-text mt-3"><strong>e. Modification and Termination Right:</strong><br />
                     NNM reserves the absolute right, at its sole discretion, to modify, suspend, or terminate the Campaign, withhold rewards, or adjust milestones at any time to ensure network integrity, prevent fraud (such as wash trading, botting, or sybil attacks), or comply with local and international regulatory requirements, without prior notice or liability.</p>
+                    
+                    <p className="term-text mt-3"><strong>f. Anti-Sybil & Claiming Requirements:</strong><br />
+                    To protect the integrity of the ecosystem from automated manipulation (Sybil attacks, botting, or wash trading), NNM employs strict on-chain analytical verification. While participation is permissionless, <strong>the claiming and withdrawal of any Campaign rewards strictly require the winning wallet to possess a fully verified and active ChainFace identity profile.</strong> NNM reserves the absolute right to delay reward distributions for up to thirty (30) days for audit purposes, and to permanently disqualify and confiscate rewards from any cluster of wallets exhibiting coordinated, automated, or non-organic behavior, without any right to appeal.</p>
+               
                 </div>
 
             </section>

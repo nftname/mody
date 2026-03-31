@@ -722,10 +722,9 @@ export default function PresalePage() {
             </div>
 
             <button 
-              onClick={isConnected ? executeBuy : openConnectModal} 
-              disabled={isProcessing}
-              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: isProcessing ? 'not-allowed' : 'pointer', animation: 'pulseGlow 2s infinite', opacity: isProcessing ? 0.7 : 1 }}>
-              {isProcessing ? "Processing..." : (isConnected ? "Participate Now" : "Connect Wallet")}
+              disabled={true}
+              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: 'not-allowed', opacity: 0.5 }}>
+              Maintenance
             </button>
           </div>
           
