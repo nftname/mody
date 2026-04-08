@@ -249,7 +249,7 @@ export default function ChainFacePage() {
                       marginBottom: '20px'
                   }}>
                       <img 
-                        src="/images/chainface-hero.jpg" 
+                        src="/images/chainface-hero.png" 
                         alt="ChainFace Identity" 
                         style={{ width: '100%', height: 'auto', display: 'block' }} 
                       />

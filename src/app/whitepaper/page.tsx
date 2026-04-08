@@ -90,6 +90,7 @@ export default function WhitepaperPage() {
             font-size: 1.6rem; 
             margin-bottom: 1.5rem;
             letter-spacing: -0.3px;
+            text-transform: uppercase;
         }
 
         .wp-sub-title {
@@ -160,7 +161,7 @@ export default function WhitepaperPage() {
 
         @media (min-width: 768px) {
             .wp-stats-grid {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: repeat(3, 1fr);
             }
         }
 
@@ -175,8 +176,46 @@ export default function WhitepaperPage() {
 
         .wp-stat-value {
             color: ${TEXT_MAIN};
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 700;
+        }
+
+        /* Table Styles Added for Tokenomics Schedule */
+        .wp-table-container {
+            overflow-x: auto;
+            margin: 2rem 0;
+            border-radius: 8px;
+            border: 1px solid ${BORDER_LIGHT};
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        }
+
+        .wp-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: ${BG_SURFACE};
+            min-width: 600px;
+        }
+
+        .wp-table th, .wp-table td {
+            padding: 1rem 1.2rem;
+            text-align: left;
+            border-bottom: 1px solid ${BORDER_LIGHT};
+            color: ${TEXT_BODY};
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .wp-table th {
+            background-color: #F8FAFC;
+            color: ${TEXT_MAIN};
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+        }
+
+        .wp-table tr:last-child td {
+            border-bottom: none;
         }
 
         .wp-footer {
@@ -198,291 +237,223 @@ export default function WhitepaperPage() {
       <div className="wp-container">
           
           <header className="wp-header">
-              <h1 className="wp-main-title">NNM Protocol</h1>
-              <h2 className="wp-subtitle">Whitepaper v1.0 — March 2026</h2>
+              <h1 className="wp-main-title">Nexus Name Market (NNM)</h1>
+              <h2 className="wp-subtitle">Whitepaper v2.1 — The Identity Layer & Utility Economy on Solana</h2>
           </header>
 
-          <div className="wp-disclaimer">
-              <div className="wp-disclaimer-title">Important Disclaimer</div>
-              <p className="wp-text" style={{ fontSize: '0.95rem', marginBottom: 0 }}>
-                The information contained in this document is for informational purposes only.
-                The NNM Token is a digital utility token designed exclusively for use within the NNM ecosystem.
-                NNM Tokens are not securities, investment contracts, shares, or financial instruments.
-                Participation in any token distribution is voluntary and at the user's own risk. Digital asset markets are highly volatile and experimental. No expectation of profit or financial return is implied or guaranteed.
-              </p>
-          </div>
-
           <section className="wp-section">
-              <h3 className="wp-section-title">1. Executive Summary</h3>
+              <h3 className="wp-section-title">1. Abstract</h3>
               <p className="wp-text">
-                The internet is rapidly evolving toward decentralized ownership and digital identity. However, a major infrastructure gap still exists: portable, user-owned identity and naming systems within Web3 ecosystems.
+                Nexus Name Market (NNM) is a decentralized identity layer designed to bridge cross-chain interaction through Digital Name Assets (DNA). Originally conceptualized on Polygon, the NNM utility token has migrated to the Solana Network to leverage high-speed infrastructure and low-latency transaction finality. While the identity registration layer (ChainFace) remains on Polygon for structural consistency, the $NNM token serves as a core utility component within the ecosystem, enabling seamless interaction across protocol functionalities.
               </p>
               <p className="wp-text">
-                The NNM Protocol (NFT Name Market) introduces a decentralized marketplace and identity infrastructure where users can mint, own, trade, and utilize rare digital name NFTs across Web3 environments.
-              </p>
-              <p className="wp-text">
-                At the center of the ecosystem is the ChainFace Identity Layer, which transforms digital name ownership into a usable identity and payment interface.
-              </p>
-              <p className="wp-text">
-                The NNM Token powers internal protocol operations, including marketplace activity, identity services, and ecosystem functionality.
-                The NNM Protocol aims to create a global market for scarce digital names while enabling a new layer of decentralized digital identity.
+                The NNM Protocol is designed to transform digital names into functional, verifiable, and transferable on-chain identifiers, supporting decentralized identity infrastructure across multiple blockchain environments.
               </p>
           </section>
 
           <section className="wp-section">
-              <h3 className="wp-section-title">2. The Problem</h3>
+              <h3 className="wp-section-title">2. Core Ecosystem Components</h3>
+              
+              <h4 className="wp-sub-title">2.1 ChainFace Identity Profiles</h4>
               <p className="wp-text">
-                Despite the rapid growth of blockchain technology, the Web3 ecosystem still faces major limitations related to identity, usability, and digital presence.
-                Current blockchain interactions rely heavily on complex wallet addresses that are difficult to remember, share, or brand.
+                ChainFace is the foundational identity layer on the Polygon network. It transforms traditional NFTs into hyper-functional Web3 IDs, enabling cross-chain payment dashboards, identity verification primitives, and persistent on-chain presence.
               </p>
-              <p className="wp-text">This creates several problems:</p>
-              <ul className="wp-list">
-                  <li>Wallet addresses are long and unintuitive.</li>
-                  <li>Users lack recognizable digital identities.</li>
-                  <li>Payment interactions are difficult to simplify.</li>
-                  <li>Digital names remain fragmented across multiple platforms.</li>
-              </ul>
+
+              <h4 className="wp-sub-title">2.2 The NFX Global Index</h4>
               <p className="wp-text">
-                Existing naming systems partially address these issues, but they often lack market liquidity, integrated identity tools, or flexible ecosystem functionality.
-                The Web3 ecosystem requires a unified infrastructure where digital names become functional identity assets.
+                The NFX Index acts as a data-driven observatory for the NFT and digital asset sector, providing aggregated insights into ecosystem activity, network behavior, and digital asset dynamics.
+              </p>
+
+              <h4 className="wp-sub-title">2.3 Conviction Rank</h4>
+              <p className="wp-text">
+                A sybil-resistant ranking system that prioritizes authentic user participation, rewarding long-term ecosystem engagement over artificial or manipulated activity patterns.
               </p>
           </section>
 
           <section className="wp-section">
-              <h3 className="wp-section-title">3. The NNM Solution</h3>
+              <h3 className="wp-section-title">3. Tokenomics ($NNM – Solana)</h3>
               <p className="wp-text">
-                The NNM Protocol introduces a decentralized marketplace and identity framework where digital names function as scarce digital assets.
-              </p>
-              <p className="wp-text">Through NNM, users can:</p>
-              <ul className="wp-list">
-                  <li>Mint unique digital name NFTs</li>
-                  <li>Exchange digital names in a global peer-to-peer environment</li>
-                  <li>Build portable Web3 identities</li>
-                  <li>Create payment-ready digital profiles</li>
-              </ul>
-              <p className="wp-text">
-                This transforms a simple name into a functional Web3 identity layer.
-              </p>
-              <p className="wp-text">The protocol integrates:</p>
-              <ul className="wp-list">
-                  <li>Digital name ownership</li>
-                  <li>Identity profiles</li>
-                  <li>Ecosystem accessibility</li>
-                  <li>Blockchain payment capabilities</li>
-              </ul>
-              <p className="wp-text">
-                The goal is to transform Web3 naming into a global digital asset category.
-              </p>
-          </section>
-
-          <section className="wp-section">
-              <h3 className="wp-section-title">4. ChainFace Identity Layer</h3>
-              <p className="wp-text">
-                The ChainFace Identity Layer acts as the functional interface connecting digital names with real blockchain activity.
-                ChainFace allows users to transform NFT name ownership into a fully usable Web3 identity profile.
-              </p>
-              <p className="wp-text">Each ChainFace identity can include:</p>
-              <ul className="wp-list">
-                  <li>A unique digital name NFT</li>
-                  <li>A public Web3 identity profile</li>
-                  <li>On-chain payment receiving capabilities</li>
-                  <li>Social and ecosystem integrations</li>
-              </ul>
-              <p className="wp-text">
-                This transforms digital names into operational Web3 identities, not just static assets.
-                Users can share their ChainFace identity as a single destination for digital interaction across decentralized environments.
-              </p>
-          </section>
-
-          <section className="wp-section">
-              <h3 className="wp-section-title">5. NNM Token Utility</h3>
-              <p className="wp-text">
-                The NNM Token functions strictly as a utility token within the protocol.
-                It enables core ecosystem interactions including:
-              </p>
-              <ul className="wp-list">
-                  <li>Accessing premium ChainFace identity features</li>
-                  <li>Marketplace transaction mechanics</li>
-                  <li>Protocol-level functionality and automation</li>
-                  <li>Participation in ecosystem tools and services</li>
-              </ul>
-              <p className="wp-text">
-                The token is designed purely for platform functionality, not as a financial instrument.
-              </p>
-          </section>
-
-          <section className="wp-section">
-              <h3 className="wp-section-title">6. Tokenomics</h3>
-              <p className="wp-text">
-                The NNM ecosystem operates with a fixed maximum supply.
+                The $NNM token is a native SPL utility token deployed on the Solana Blockchain. It is designed exclusively for use within the NNM ecosystem and its associated protocol functionalities.
               </p>
               
+              <h4 className="wp-sub-title">Core Parameters</h4>
               <div className="wp-stats-grid">
                   <div>
                       <div className="wp-stat-label">Total Supply</div>
-                      <div className="wp-stat-value">10,000,000,000 NNM Tokens</div>
+                      <div className="wp-stat-value">1,000,000,000 $NNM</div>
                   </div>
                   <div>
-                      <div className="wp-stat-label">Network</div>
-                      <div className="wp-stat-value">Polygon (PoS)</div>
+                      <div className="wp-stat-label">Genesis Date</div>
+                      <div className="wp-stat-value">April 22, 2026</div>
+                  </div>
+                  <div>
+                      <div className="wp-stat-label">Presale Duration</div>
+                      <div className="wp-stat-value">30 Days</div>
                   </div>
               </div>
 
-              <h4 className="wp-sub-title">Allocation Structure</h4>
-              <ul className="wp-list">
-                  <li><strong>35% — Early Network Bootstrapping:</strong> Allocated to early participants who contribute to identity layer adoption and protocol expansion.</li>
-                  <li><strong>25% — Protocol Liquidity:</strong> Reserved for decentralized exchange liquidity pools to support marketplace accessibility. Liquidity is subject to a 12-month lock period.</li>
-                  <li><strong>15% — Community Rewards:</strong> Allocated for ecosystem incentives, adoption programs, and community growth. Distributed via 6-month linear vesting.</li>
-                  <li><strong>15% — Strategic Partnerships:</strong> Reserved for infrastructure partners, ecosystem integrations, and global onboarding initiatives.</li>
-                  <li><strong>10% — Core Contributors:</strong> Allocated to protocol developers and early contributors. Subject to a 12-month cliff lock, unlocking in March 2027.</li>
-              </ul>
+              <h4 className="wp-sub-title">3.1 Allocation & Vesting Schedule</h4>
+              <div className="wp-table-container">
+                  <table className="wp-table">
+                      <thead>
+                          <tr>
+                              <th>Category</th>
+                              <th>Allocation</th>
+                              <th>Total Tokens</th>
+                              <th>Vesting Schedule</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td><strong>Presale Allocation</strong></td>
+                              <td>30%</td>
+                              <td>300,000,000</td>
+                              <td>40% unlocked at TGE; remaining released linearly over 60 days</td>
+                          </tr>
+                          <tr>
+                              <td><strong>Liquidity Pool</strong></td>
+                              <td>15%</td>
+                              <td>150,000,000</td>
+                              <td>100% locked for 365 days post-listing</td>
+                          </tr>
+                          <tr>
+                              <td><strong>Platform Rewards & Ecosystem</strong></td>
+                              <td>34%</td>
+                              <td>340,000,000</td>
+                              <td>5% unlocked at TGE; remaining released linearly over 12 months</td>
+                          </tr>
+                          <tr>
+                              <td><strong>Treasury & Growth</strong></td>
+                              <td>8%</td>
+                              <td>80,000,000</td>
+                              <td>5% unlocked at TGE; remaining 3% released linearly over 12 months</td>
+                          </tr>
+                          <tr>
+                              <td><strong>Team Allocation</strong></td>
+                              <td>5%</td>
+                              <td>50,000,000</td>
+                              <td>6-month cliff; then linear vesting over 12 months</td>
+                          </tr>
+                          <tr>
+                              <td><strong>Development Fund</strong></td>
+                              <td>5%</td>
+                              <td>50,000,000</td>
+                              <td>6-month cliff; then linear vesting over 12 months</td>
+                          </tr>
+                          <tr>
+                              <td><strong>Emergency Reserve</strong></td>
+                              <td>3%</td>
+                              <td>30,000,000</td>
+                              <td>Available via multi-signature treasury wallet</td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
+          </section>
 
-              <h4 className="wp-sub-title">6.1 Genesis Allocation & Phased Network Access</h4>
+          <section className="wp-section">
+              <h3 className="wp-section-title">4. Deflationary Protocol</h3>
               <p className="wp-text">
-                To ensure a robust and well-tested network environment prior to full public deployment, the NNM Protocol utilizes a phased early access model for the Genesis Allocation. During this bootstrapping period, early participants who assist in stress-testing the smart contracts, establishing the ChainFace identity layer, and providing initial network activity receive subsidized access to NNM utility units.
+                To support long-term ecosystem sustainability and align token supply with real protocol usage, NNM implements an automated usage-based deflationary mechanism.
               </p>
-              <p className="wp-text">The phased access reflects the progressive stability of the network:</p>
               <ul className="wp-list">
-                  <li><strong>Early Tester Phase ($0.0001 per NNM):</strong> A heavily subsidized rate recognizing the maximum contribution to beta testing and early network validation.</li>
-                  <li><strong>Current Beta Access ($0.0002 per NNM):</strong> An adjusted rate reflecting increased network stability and continued early adoption efforts.</li>
-                  <li><strong>Network Launch Phase ($0.001 per NNM):</strong> The standard utility baseline rate established for full network functionality upon mainnet maturity.</li>
+                  <li><strong>10% Usage-Based Burn:</strong> 10% of all protocol revenue generated from internal platform activity (including digital name minting) is permanently removed from circulation.</li>
+                  <li><strong>Dynamic Supply Adjustment:</strong> This mechanism operates continuously based on actual network activity, ensuring that token supply evolves in alignment with real usage rather than speculative demand.</li>
+                  <li><strong>Protocol Integrity:</strong> The burn process is executed through predefined smart contract logic, ensuring transparency, consistency, and verifiability.</li>
+              </ul>
+          </section>
+
+          <section className="wp-section">
+              <h3 className="wp-section-title">5. Security & Transparency</h3>
+              <p className="wp-text">
+                All token allocations, vesting schedules, and liquidity mechanisms are enforced through publicly verifiable smart contracts deployed on the Solana blockchain.
+              </p>
+              <p className="wp-text">These mechanisms ensure:</p>
+              <ul className="wp-list">
+                  <li>Transparent and immutable token distribution</li>
+                  <li>Enforced vesting and lock-up schedules</li>
+                  <li>Liquidity protection through time-locked smart contracts</li>
+                  <li>Verifiable burn mechanics and on-chain activity tracking</li>
               </ul>
               <p className="wp-text">
-                This structured access is designed strictly to incentivize active platform testing and early network bootstrapping, and is not structured to provide speculative financial returns.
+                All relevant contract activity may be independently verified through publicly accessible blockchain explorers.
               </p>
           </section>
 
           <section className="wp-section">
-              <h3 className="wp-section-title">7. Automated Network Security</h3>
-              <p className="wp-text">
-                The NNM Protocol incorporates a security and sustainability model tied to network activity.
-                A portion of protocol-generated utility fees is permanently removed from circulation.
-              </p>
-              <p className="wp-text">
-                <strong>Specifically:</strong> 50% of protocol fees generated from digital name minting is programmatically burned to prevent network spam and ensure smart contract sustainability.
-              </p>
-              <p className="wp-text">
-                This mechanism ensures that network operations are connected directly to real usage and efficiency.
-              </p>
-          </section>
-
-          <section className="wp-section">
-              <h3 className="wp-section-title">8. Marketplace Infrastructure</h3>
-              <p className="wp-text">
-                The NNM Marketplace functions as a decentralized peer-to-peer exchange environment for digital name NFTs.
-              </p>
-              <p className="wp-text">Users can:</p>
-              <ul className="wp-list">
-                  <li>Mint rare digital names</li>
-                  <li>Transfer and acquire names globally</li>
-                  <li>Discover trending digital identities</li>
-                  <li>Participate in the growing digital name economy</li>
-              </ul>
-              <p className="wp-text">
-                The marketplace introduces broad accessibility to digital names, transforming them into transferable Web3 assets.
-              </p>
-          </section>
-
-          <section className="wp-section">
-              <h3 className="wp-section-title">9. Ecosystem Growth Strategy</h3>
-              <p className="wp-text">
-                The NNM Protocol focuses on long-term adoption through multiple ecosystem growth vectors:
-              </p>
-              <ul className="wp-list">
-                  <li>Web3 identity adoption through ChainFace profiles</li>
-                  <li>Marketplace expansion for digital name assets</li>
-                  <li>Strategic partnerships with decentralized platforms</li>
-                  <li>Community-driven ecosystem participation</li>
-              </ul>
-              <p className="wp-text">
-                The protocol is designed to grow organically as digital identity becomes a fundamental layer of the decentralized internet.
-              </p>
-          </section>
-
-          <section className="wp-section">
-              <h3 className="wp-section-title">10. Development Roadmap</h3>
+              <h3 className="wp-section-title">6. Legal Notice & Disclaimer</h3>
               
-              <h4 className="wp-sub-title">Phase 1 — Protocol Launch (Q1 2026)</h4>
-              <ul className="wp-list">
-                  <li>NNM protocol deployment</li>
-                  <li>Genesis digital name minting</li>
-                  <li>Initial marketplace launch</li>
-              </ul>
+              <div className="wp-disclaimer" style={{ marginBottom: '2rem', marginTop: '1.5rem' }}>
+                  <div className="wp-disclaimer-title">IMPORTANT: PLEASE READ THIS SECTION CAREFULLY.</div>
+              </div>
 
-              <h4 className="wp-sub-title">Phase 2 — Identity Layer Expansion (Q2 2026)</h4>
-              <ul className="wp-list">
-                  <li>ChainFace identity system release</li>
-                  <li>Payment profile functionality</li>
-                  <li>Enhanced marketplace tools</li>
-              </ul>
-
-              <h4 className="wp-sub-title">Phase 3 — Ecosystem Liquidity (Q3 2026)</h4>
-              <ul className="wp-list">
-                  <li>Decentralized exchange liquidity deployment</li>
-                  <li>Ecosystem onboarding initiatives</li>
-                  <li>Protocol analytics layer development</li>
-              </ul>
-
-              <h4 className="wp-sub-title">Phase 4 — Global Expansion (Q4 2026)</h4>
-              <ul className="wp-list">
-                  <li>Cross-chain exploration</li>
-                  <li>Ecosystem integrations</li>
-                  <li>Global digital identity adoption initiatives</li>
-              </ul>
-          </section>
-
-          <section className="wp-section">
-              <h3 className="wp-section-title">11. Legal Framework</h3>
+              <h4 className="wp-sub-title">6.1 No Financial Return Expectation</h4>
               <p className="wp-text">
-                The NNM Protocol operates as a decentralized software platform.
-                The NNM Token is designed solely as a digital utility unit within the ecosystem.
+                NNM Tokens are digital utility units designed solely for use within the NNM ecosystem and its protocol functionalities. They are not securities, investment contracts, or financial instruments. Participation in the Genesis distribution is entirely voluntary.
               </p>
-              <p className="wp-text">The token does not represent:</p>
+              <p className="wp-text">
+                By acquiring $NNM, you explicitly acknowledge that you are doing so for its intended utility within the ecosystem and <strong>NOT</strong> with any expectation of profit, capital appreciation, financial return, or speculative gain.
+              </p>
+
+              <h4 className="wp-sub-title">6.2 No Guarantees</h4>
+              <p className="wp-text">The NNM Protocol does not guarantee:</p>
               <ul className="wp-list">
-                  <li>Ownership rights</li>
-                  <li>Equity participation</li>
-                  <li>Profit entitlement</li>
-                  <li>Dividend distribution</li>
+                  <li>Market value</li>
+                  <li>Token price stability</li>
+                  <li>Liquidity availability</li>
+                  <li>Exchange listings</li>
+                  <li>Future adoption or ecosystem growth</li>
               </ul>
               <p className="wp-text">
-                Participation in token distributions, genesis distributions, or ecosystem allocations is entirely voluntary and conducted at the user's sole risk.
-                Funds contributed during any genesis phase are considered payments for future access to software utility, not investments in a common enterprise.
+                All forward-looking elements are subject to change based on technical, regulatory, and market conditions.
               </p>
-          </section>
 
-          <section className="wp-section">
-              <h3 className="wp-section-title">12. Risk Disclosure</h3>
+              <h4 className="wp-sub-title">6.3 Risk of Digital Asset Loss</h4>
               <p className="wp-text">
-                Users should be aware that blockchain technology and digital assets are experimental and may involve significant risks.
+                The use of blockchain-based systems involves inherent and significant risks. Participation in the NNM ecosystem may result in the partial or total loss of digital assets.
               </p>
-              <p className="wp-text">These risks include but are not limited to:</p>
+              <p className="wp-text">Risks include, but are not limited to:</p>
               <ul className="wp-list">
-                  <li>Technological vulnerabilities</li>
+                  <li>Smart contract vulnerabilities</li>
+                  <li>Network failures</li>
                   <li>Market volatility</li>
                   <li>Regulatory uncertainty</li>
-                  <li>Liquidity limitations</li>
               </ul>
               <p className="wp-text">
-                Digital assets may lose all value or become illiquid. Participants should only interact with the protocol if they fully understand these risks.
+                Nexus Name Market, its developers, contributors, and affiliates shall not be held liable for any losses, damages, or disruptions resulting from participation in the protocol.
               </p>
-          </section>
 
-          <section className="wp-section" style={{ marginTop: '4rem' }}>
-              <h3 className="wp-section-title">Conclusion</h3>
+              <h4 className="wp-sub-title">6.4 Compliance & User Responsibility</h4>
               <p className="wp-text">
-                The NNM Protocol introduces a new category within the decentralized ecosystem: tradable digital name identities.
+                Participation in any token distribution event is the sole responsibility of the participant.
               </p>
               <p className="wp-text">
-                By combining NFT ownership, identity infrastructure, and marketplace accessibility, NNM aims to build the foundation for a future where digital names become essential components of online presence.
+                Users must ensure compliance with all applicable laws and regulations in their respective jurisdictions before interacting with the NNM Protocol.
               </p>
               <p className="wp-text">
-                As Web3 continues to evolve, decentralized identity systems will become a fundamental pillar of the internet. NNM is positioned to play a key role in shaping that future.
+                The NNM project does not provide financial, legal, or investment advice.
+              </p>
+
+              <h4 className="wp-sub-title">6.5 Forward-Looking Statements</h4>
+              <p className="wp-text">
+                This document may contain forward-looking statements related to future development, integrations, and ecosystem expansion.
+              </p>
+              <p className="wp-text">
+                Such statements are not guarantees of future performance and are subject to uncertainty, technical feasibility, and evolving market conditions.
+              </p>
+
+              <h4 className="wp-sub-title">6.6 Voluntary Participation</h4>
+              <p className="wp-text">
+                All participation within the NNM ecosystem is voluntary and based on engagement with experimental decentralized technologies.
+              </p>
+              <p className="wp-text">
+                Users acknowledge full responsibility for their decisions and interactions within the protocol.
               </p>
           </section>
 
           <footer className="wp-footer">
               <div className="wp-footer-text">
-                © 2026 NNM PROTOCOL | WHITEPAPER V1.0
+                © 2026 Nexus Name Market (NNM). All Rights Reserved.
               </div>
           </footer>
 

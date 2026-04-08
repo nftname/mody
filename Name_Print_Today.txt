@@ -673,3 +673,58 @@ Name: ALLDICKS
 Tier: FOUNDER
 Wallet: 0xcA03EEb1b72652B524068B95248BD7da33e053F2
 ------------------------
+
+=================================
+Date: 2026-04-03
+=================================
+
+ID: 1307
+Name: PHARAOH
+Tier: FOUNDER
+Wallet: 0x0946B8c60b667Cb3446c18af33bf21e9940a9289
+------------------------
+
+=================================
+Date: 2026-04-04
+=================================
+
+ID: 1308
+Name: SMARTTRADER
+Tier: FOUNDER
+Wallet: 0x0946B8c60b667Cb3446c18af33bf21e9940a9289
+------------------------
+ID: 1309
+Name: CRYPTO
+Tier: FOUNDER
+Wallet: 0x0946B8c60b667Cb3446c18af33bf21e9940a9289
+------------------------
+
+=================================
+Date: 2026-04-06
+=================================
+
+ID: 1310
+Name: THETOP
+Tier: FOUNDER
+Wallet: 0x0946B8c60b667Cb3446c18af33bf21e9940a9289
+------------------------
+ID: 1311
+Name: SUMMIT
+Tier: FOUNDER
+Wallet: 0x7b804cA71f7655B0b5ABbc583C5eC5bc9a812A5e
+------------------------
+ID: 1312
+Name: ABOMINATION
+Tier: FOUNDER
+Wallet: 0xEF2921DcC9b9A942F0560E18CC56F5CaedEEe6A6
+------------------------
+ID: 1313
+Name: MYSTERIOUS
+Tier: FOUNDER
+Wallet: 0x1BCffC139536da5E880d15246C3dC3e386254318
+------------------------
+ID: 1314
+Name: ONLYYOU
+Tier: ELITE
+Wallet: 0x7b804cA71f7655B0b5ABbc583C5eC5bc9a812A5e
+------------------------

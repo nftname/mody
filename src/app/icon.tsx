@@ -1,7 +1,9 @@
 import { ImageResponse } from 'next/og';
 
+export const dynamic = 'force-dynamic';
+
 // Route segment config
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 export const size = {
   width: 512,

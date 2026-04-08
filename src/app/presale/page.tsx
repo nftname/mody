@@ -1,1014 +1,1277 @@
-"use client";
+'use client';
 import React, { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useReadContract, usePublicClient } from 'wagmi';
-import { parseAbi, parseEther, parseUnits } from 'viem';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import Link from 'next/link';
 
-const PRESALE_ADDRESS = "0xb03aa911B7b59d83cA62EC1e5958e9F78fd1Be72";
-const USDT_ADDRESS = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
-
-const PRESALE_ABI = parseAbi([
-  "function buyWithPol() external payable",
-  "function buyWithUsdt(uint256 _usdtAmount) external",
-  "function tokensSold() view returns (uint256)",
-  "function getLatestPolPrice() view returns (uint256)",
-  "function getCurrentTier() view returns (uint256)",
-  "function tiers(uint256) view returns (uint256, uint256)",
-  "function purchases(address) view returns (uint256 totalTokens, uint256 firstClaimed)"
-]);
-
-const USDT_ABI = parseAbi([
-  "function approve(address spender, uint256 amount) returns (bool)",
-  "function allowance(address owner, address spender) view returns (uint256)",
-  "function balanceOf(address account) view returns (uint256)"
-]);
-
-
-const tokenomicsData = [
-  { id: 0, name: "Genesis Allocation", percent: 35, amount: "3.5B", color: "#FF7EB3", offset: 0 },
-  { id: 1, name: "Protocol Liquidity", percent: 25, amount: "2.5B", color: "#9333EA", offset: -35 },
-  { id: 2, name: "Community Rewards", percent: 15, amount: "1.5B", color: "#3B82F6", offset: -60 },
-  { id: 3, name: "Ecosystem Expansion", percent: 15, amount: "1.5B", color: "#10B981", offset: -75 },
-  { id: 4, name: "Team & Advisors", percent: 10, amount: "1B", color: "#FCD34D", offset: -90 },
-];
-
-const coinPrices = {
-  POL: 0.5,
-  USDT: 1
-};
-
-const formatToEnglishDigits = (str: string) => {
-  const arabicNumbers = [/٠/g, /١/g, /٢/g, /٣/g, /٤/g, /٥/g, /٦/g, /٧/g, /٨/g, /٩/g];
-  if (typeof str === 'string') {
-    for (let i = 0; i < 10; i++) {
-      str = str.replace(arabicNumbers[i], i.toString());
-    }
-  }
-  return str.replace(/[^0-9.]/g, '');
-};
+const COLOR_NAVY_BG = '#050a16';
+const TARGET_DATE = new Date('2026-04-22T12:00:00Z').getTime();
 
 export default function PresalePage() {
-  const [amount, setAmount] = useState<string>('');
-  const [selectedCoin, setSelectedCoin] = useState<'POL' | 'USDT'>('POL');
-  const [showModal, setShowModal] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [activeSegment, setActiveSegment] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState({ days: 14, hours: 5, minutes: 30, seconds: 0 });
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [fomoData, setFomoData] = useState({ raised: 1250000, percentage: 35.7 });
-  const [tickerItems, setTickerItems] = useState<{addr: string, amt: string}[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [statusModal, setStatusModal] = useState<'success' | 'error' | 'empty_amount' | null>(null);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [submittedTxHash, setSubmittedTxHash] = useState<`0x${string}` | null>(null);
-  const { isConnected, address } = useAccount();
-  const { writeContractAsync } = useWriteContract();
-  const { openConnectModal } = useConnectModal();
-  const publicClient = usePublicClient();
-
-  const { data: tokensSold } = useReadContract({
-    address: PRESALE_ADDRESS,
-    abi: PRESALE_ABI,
-    functionName: 'tokensSold',
-    query: { refetchInterval: 15000 }
-  });
-
-  const { data: usdtAllowance } = useReadContract({
-    address: USDT_ADDRESS as `0x${string}`,
-    abi: USDT_ABI,
-    functionName: 'allowance',
-    args: [address as `0x${string}`, PRESALE_ADDRESS as `0x${string}`],
-    query: { enabled: !!address }
-  });
-    const { data: usdtBalance } = useReadContract({
-    address: USDT_ADDRESS as `0x${string}`,
-    abi: USDT_ABI,
-    functionName: 'balanceOf',
-    args: [address as `0x${string}`],
-    query: { enabled: !!address }
-  });
-
-  const { data: rawPolPrice } = useReadContract({
-    address: PRESALE_ADDRESS,
-    abi: PRESALE_ABI,
-    functionName: 'getLatestPolPrice',
-    query: { refetchInterval: 30000 } 
-  });
-
-  const { data: currentTierIndex } = useReadContract({
-    address: PRESALE_ADDRESS,
-    abi: PRESALE_ABI,
-    functionName: 'getCurrentTier',
-  });
-
-  const { data: tierData } = useReadContract({
-    address: PRESALE_ADDRESS,
-    abi: PRESALE_ABI,
-    functionName: 'tiers',
-    args: [currentTierIndex ?? BigInt(0)],
-    query: { enabled: currentTierIndex !== undefined }
-  });
-
-  const livePolPriceUsd = rawPolPrice ? Number(rawPolPrice) / 1e8 : 0.5;
-  const liveTokensPerUsd = tierData ? Number(tierData[0]) : 10000;
-  const currentPriceUsd = liveTokensPerUsd > 0 ? 1 / liveTokensPerUsd : 0.0001;
-
-  const { data: purchaseData } = useReadContract({
-    address: PRESALE_ADDRESS,
-    abi: PRESALE_ABI,
-    functionName: 'purchases',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address, refetchInterval: 15000 }
-  });
-
-  const userNnmBalance = purchaseData ? Number(purchaseData[0]) / 1e18 : 0;
-  const userBalanceValueUsd = userNnmBalance * currentPriceUsd;
-
-  const [apiTokensBought, setApiTokensBought] = useState<number>(0);
-  useEffect(() => {
-    if (!address) return;
-    const fetchPresaleBalance = async () => {
-      try {
-        const res = await fetch(`/api/presale?wallet=${address}`);
-        const data = await res.json();
-        if (data.success) {
-          setApiTokensBought(data.totalTokensBought);
-        }
-      } catch (e) {
-        console.error("Failed to fetch balance from API");
-      }
-    };
-    fetchPresaleBalance();
-  }, [address]);
-
-  useEffect(() => {
-    const START_TIME = new Date('2026-03-17T00:00:00Z').getTime(); 
-    const phase1Duration = 14 * 24 * 60 * 60 * 1000;
-    const loopDuration = 7 * 24 * 60 * 60 * 1000;
+    const [isMounted, setIsMounted] = useState(false);
+    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const [isConnected, setIsConnected] = useState(false);
     
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const elapsed = now - START_TIME;
-      
-      let timeRemaining = 0;
-      if (elapsed < 0) {
-        timeRemaining = phase1Duration;
-      } else if (elapsed < phase1Duration) {
-        timeRemaining = phase1Duration - elapsed;
-      } else {
-        const elapsedAfterPhase1 = elapsed - phase1Duration;
-        const timeInCurrentLoop = elapsedAfterPhase1 % loopDuration;
-        timeRemaining = loopDuration - timeInCurrentLoop;
-      }
-
-      setTimeLeft({
-        days: Math.floor(timeRemaining / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((timeRemaining % (1000 * 60)) / 1000),
-      });
-    };
-
-    updateTimer();
-    const timer = setInterval(updateTimer, 1000); 
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const target = 1050000;
-    const BASE_RAISED = 6407;
+    const [blockchainData, setBlockchainData] = useState({
+        currentPhase: 1,
+        currentPrice: 0.001,
+        nextPrice: 0.0025,
+        phaseTarget: 60000000,
+        tokensSoldInPhase: 15000000,
+        baseFomoFill: 25
+    });
     
-    const realSoldUsd = tokensSold ? Number(tokensSold) / 1e18 * currentPriceUsd : 0; 
-    const finalRaised = BASE_RAISED + realSoldUsd; 
-    const finalPercentage = (finalRaised / target) * 100;
+    const totalPresaleAllocation = 300000000;
+    const finalPrice = 0.005;
+    const currentRate = blockchainData.currentPrice === 0.001 ? 80000 : 32000;
 
-    const duration = 1500; 
-    const steps = 60;
-    let currentStep = 0;
+    const progressPercentage = Math.min(
+        100, 
+        ((blockchainData.tokensSoldInPhase / blockchainData.phaseTarget) * 100) + blockchainData.baseFomoFill
+    );
 
-    const interval = setInterval(() => {
-      currentStep++;
-      const progress = currentStep / steps;
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-
-      setFomoData({
-        raised: finalRaised * easeOut,
-        percentage: finalPercentage * easeOut
-      });
-
-      if (currentStep >= steps) {
-        clearInterval(interval);
-        setFomoData({ raised: finalRaised, percentage: finalPercentage });
-      }
-    }, duration / steps);
-
-    const generateTicker = () => {
-      const items = [];
-      const chars = 'abcdef0123456789';
-      for(let i = 0; i < 15; i++) {
-        const addr = '0x' + chars[Math.floor(Math.random()*16)] + chars[Math.floor(Math.random()*16)] + '...' + chars[Math.floor(Math.random()*16)] + chars[Math.floor(Math.random()*16)];
-        const amt = Math.floor(Math.random() * 90000) + 10000;
-        items.push({ addr, amt: amt.toLocaleString() });
-      }
-      setTickerItems(items);
-    };
-    generateTicker();
-
-    return () => clearInterval(interval);
-  }, [tokensSold, currentPriceUsd]);
-
-
-  const handleQuickAmount = (val: string) => {
-    if (selectedCoin === 'POL') {
-      const polNeeded = (Number(val) / livePolPriceUsd) * 1.0025;
-      setAmount(parseFloat(polNeeded.toFixed(4)).toString());
-    } else {
-      setAmount(val);
-    }
-  };
-
-  const handleCoinSelect = (coin: 'POL' | 'USDT') => {
-    setSelectedCoin(coin);
-    setIsDropdownOpen(false);
+    const [activeDonut, setActiveDonut] = useState({ label: 'TOTAL SUPPLY', val: '1B', color: '#fff' });
     
-    if (amount && Number(amount) > 0) {
-      if (coin === 'POL' && selectedCoin === 'USDT') {
-        const polNeeded = (Number(amount) / livePolPriceUsd) * 1.0025;
-        setAmount(parseFloat(polNeeded.toFixed(4)).toString());
-      } else if (coin === 'USDT' && selectedCoin === 'POL') {
-        const usdValue = (Number(amount) / 1.0025) * livePolPriceUsd;
-        setAmount(parseFloat(usdValue.toFixed(2)).toString());
-      }
-    }
-  };
+    const allocations = [
+        { id: 'presale', label: 'Presale Allocation', percent: 30, color: '#ff85a1' },
+        { id: 'rewards', label: 'Platform Rewards', percent: 34, color: '#9b51e0' },
+        { id: 'liquidity', label: 'Liquidity Pool', percent: 15, color: '#14F195' },
+        { id: 'treasury', label: 'Treasury & Growth', percent: 8, color: '#f3c24d' },
+        { id: 'team', label: 'Team Allocation', percent: 5, color: '#00bfff' },
+        { id: 'dev', label: 'Development Fund', percent: 5, color: '#00fa9a' },
+        { id: 'reserve', label: 'Emergency Reserve', percent: 3, color: '#d3a4ff' }
+    ];
 
-  const handlePayAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAmount(formatToEnglishDigits(e.target.value));
-  };
+    const [solAmount, setSolAmount] = useState('');
+    const [nnmAmount, setNnmAmount] = useState('');
 
-  const handleReceiveAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const nnmValue = formatToEnglishDigits(e.target.value);
-    if (!nnmValue || Number(nnmValue) === 0) {
-      setAmount('');
-      return;
-    }
-    const usdRequired = Number(nnmValue) / liveTokensPerUsd;
-    const payRequired = selectedCoin === 'POL' ? usdRequired / livePolPriceUsd : usdRequired;
-
-    setAmount(parseFloat(payRequired.toFixed(4)).toString());
-  };
-
-  const handleConnectWallet = () => {
-    if (!isConnected) {
-      alert("Please connect your wallet using the dApp header.");
-      return;
-    }
-    setShowModal(true);
-  };
-  const executeBuy = async () => {
-    if (!amount || Number(amount) <= 0) {
-      setStatusModal('empty_amount');
-      return;
-    }
-
-    if (!address || !publicClient) return;
-
-    setIsProcessing(true);
-    setSubmittedTxHash(null); 
-    setErrorMsg('');
-    
-    try {
-      if (selectedCoin === 'POL') {
-        const polBalance = await publicClient.getBalance({ address });
-        const valueToSend = parseEther(amount);
-        if (polBalance < valueToSend) {
-          throw new Error("Insufficient funds: Your POL balance is too low.");
-        }
-      } else if (selectedCoin === 'USDT') {
-        const usdtAmount = parseUnits(amount.toString(), 6);
-        if (usdtBalance === undefined || usdtBalance < usdtAmount) {
-          throw new Error("Insufficient funds: Your USDT balance is too low.");
-        }
-        const polBalance = await publicClient.getBalance({ address });
-        if (polBalance < parseEther("0.02")) {
-          throw new Error("Insufficient funds: You need a small amount of POL for gas fees.");
-        }
-      }
-
-      let txHash;
-      if (selectedCoin === 'POL') {
-        txHash = await writeContractAsync({
-          address: PRESALE_ADDRESS,
-          abi: PRESALE_ABI,
-          functionName: 'buyWithPol',
-          value: parseEther(amount)
-        });
-      } else if (selectedCoin === 'USDT') {
-        const usdtAmount = parseUnits(amount.toString(), 6);
-        if (!usdtAllowance || usdtAllowance < usdtAmount) {
-          const approveTxHash = await writeContractAsync({
-            address: USDT_ADDRESS,
-            abi: USDT_ABI,
-            functionName: 'approve',
-            args: [PRESALE_ADDRESS, usdtAmount]
-          });
-          await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
-        }
-        txHash = await writeContractAsync({
-          address: PRESALE_ADDRESS,
-          abi: PRESALE_ABI,
-          functionName: 'buyWithUsdt',
-          args: [usdtAmount]
-        });
-      }
-
-      if (txHash) {
-        setSubmittedTxHash(txHash);
+    useEffect(() => {
+        setIsMounted(true);
         
-        const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
-        
-        if (receipt.status === 'success') {
-          setStatusModal('success');
-          setAmount('');
-          
-          const usdValueFinal = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
-          const tokensBoughtFinal = Math.floor(usdValueFinal * liveTokensPerUsd);
+        const timer = setInterval(() => {
+            const now = new Date().getTime();
+            const difference = TARGET_DATE - now;
 
-          fetch('/api/presale', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              wallet: address,
-              txHash: txHash,
-              amountUsd: usdValueFinal,
-              tokensBought: tokensBoughtFinal
-            })
-          }).catch(() => {});
+            if (difference > 0) {
+                setTimeLeft({
+                    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                    minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+                    seconds: Math.floor((difference % (1000 * 60)) / 1000)
+                });
+            } else {
+                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+            }
+        }, 1000);
+
+        const observerOptions = { threshold: 0.15 };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        const hiddenElements = document.querySelectorAll('.reveal');
+        hiddenElements.forEach((el) => observer.observe(el));
+
+        return () => {
+            clearInterval(timer);
+            observer.disconnect();
+        };
+    }, [isMounted]);
+
+    const toEnglishDigits = (str: string) => {
+        const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+        return str.replace(/[٠-٩]/g, (char) => arabicNumbers.indexOf(char).toString()).replace(/[^0-9.]/g, '');
+    };
+
+    const handleSolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = toEnglishDigits(e.target.value);
+        setSolAmount(val);
+        if (val && !isNaN(Number(val))) {
+            const calculated = Number(val) * currentRate;
+            setNnmAmount(calculated.toString());
         } else {
-          throw new Error("Transaction failed on the blockchain");
+            setNnmAmount('');
         }
-      }
-    } catch (error: any) {
-      let readableError = error?.message || "Transaction cancelled.";
-      if (readableError.includes("User rejected") || readableError.includes("User denied")) {
-         readableError = "You cancelled the transaction in your wallet.";
-      }
-      setErrorMsg(readableError);
-      setStatusModal('error');
-      setSubmittedTxHash(null);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+    };
 
-  const usdValue = selectedCoin === 'POL' ? Number(amount) * livePolPriceUsd : Number(amount);
-  const calculatedNNM = amount && Number(amount) > 0 ? Math.floor(usdValue * liveTokensPerUsd).toString() : '';
+    const handleQuickSelect = (amount: number) => {
+        setSolAmount(amount.toString());
+        setNnmAmount((amount * currentRate).toString());
+    };
 
-  const saTeContainerStyle = {
-    background: 'rgba(147, 51, 234, 0.05)', 
-    border: '1px solid rgba(147, 51, 234, 0.11)', 
-    boxShadow: '0 0 30px rgba(147, 51, 234, 0.11)', 
-    borderRadius: '20px',
-    backdropFilter: 'blur(15px)',
-  };
+    if (!isMounted) return null;
 
-  return (
-    <div style={{ 
-      backgroundColor: '#050a16', 
-      backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'28\' height=\'49\' viewBox=\'0 0 28 49\'%3E%3Cg fill-rule=\'evenodd\'%3E%3Cg id=\'hexagons\' fill=\'none\' stroke=\'rgba(255,255,255,0.01)\' stroke-width=\'1\'%3E%3Cpath d=\'M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.65V49h-2z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-      backgroundSize: '84px 147px',
-      minHeight: '100vh', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      position: 'relative', 
-      overflowX: 'hidden', 
-      fontFamily: 'sans-serif', 
-      padding: '20px 10px' 
-    }}>
-      
-      <div style={{ position: 'absolute', top: '0', left: '0', width: '100vw', height: '100vh', background: 'radial-gradient(circle at 10% 10%, rgba(225, 29, 72, 0.12) 0%, rgba(167, 139, 250, 0) 60%)', filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }}></div>
-      <div style={{ position: 'absolute', top: '30%', left: '20%', width: '100vw', height: '100vh', background: 'radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.1) 0%, rgba(109, 40, 217, 0) 70%)', filter: 'blur(150px)', zIndex: 0, pointerEvents: 'none' }}></div>
-      <div style={{ position: 'absolute', bottom: '0', right: '0', width: '100vw', height: '100vh', background: 'radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0) 60%)', filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }}></div>
+    return (
+        <main className="presale-wrapper">
+            <div className="twinkling-stars"></div>
 
-      <div style={{ position: 'absolute', top: '10%', left: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(225, 29, 72, 0.11) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
-      <div style={{ position: 'absolute', bottom: '10%', right: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(147, 51, 234, 0.11) 0%, rgba(24, 26, 32, 0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
-
-      <style>{`
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .ticker { display: flex; width: max-content; animation: marquee 20s linear infinite; }
-        .ticker-item { white-space: nowrap; margin-right: 20px; font-size: 11px; color: #fff; }
-        .ticker-item span { color: #10B981; font-weight: bold; }
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        @keyframes pulseGlow { 0% { box-shadow: 0 0 10px rgba(225, 29, 72, 0.2); } 50% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.4); } 100% { box-shadow: 0 0 10px rgba(225, 29, 72, 0.2); } }
-        .chart-segment { transition: all 0.3s ease-out; cursor: pointer; }
-        .chart-segment:hover, .chart-segment.active { stroke-width: 6; filter: drop-shadow(0px 0px 8px rgba(255,255,255,0.4)); }
-        .legend-item { transition: all 0.3s ease; opacity: 0.7; }
-        .legend-item:hover, .legend-item.active { opacity: 1; transform: translateY(-2px); background: rgba(255,255,255,0.05); }
-        @keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
-      `}</style>
-
-      <div style={{ display: 'flex', width: '100%', maxWidth: '1100px', zIndex: 1, gap: '40px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '60px', marginTop: '0px', zoom: '0.90', margin: '0 auto' }}><div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', color: '#fff', paddingLeft: '10px', marginTop: '0px' }}>
-          
-          {/* Top Navigation Buttons */}
-<div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '50px', marginTop: '1px' }}>
-  <a href="/whitepaper" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(225, 29, 72, 0.25)', padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Whitepaper</span>
-    </div>
-  </a>
-  <a href="#tokenomics-section" onClick={(e) => { e.preventDefault(); document.getElementById('tokenomics-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} style={{ textDecoration: 'none' }}>
-    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(147, 51, 234, 0.25)', padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Tokenomics</span>
-    </div>
-  </a>
-  <a href="#burn-section" onClick={(e) => { e.preventDefault(); document.getElementById('burn-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} style={{ textDecoration: 'none' }}>
-    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(225, 29, 72, 0.25)', padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Burn Protocol</span>
-    </div>
-  </a>
-  <a href="#roadmap-section" onClick={(e) => { e.preventDefault(); document.getElementById('roadmap-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} style={{ textDecoration: 'none' }}>
-    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(147, 51, 234, 0.25)', padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Roadmap</span>
-    </div>
-  </a>
-  <a href="https://www.nftnnm.com/presale/balance" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(225, 29, 72, 0.25)', padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-      <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 'bold' }}>Balance</span>
-    </div>
-  </a>
-
-</div>
-
-          {/* Logo and Title */}
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '-15px', marginBottom: '24px', flexWrap: 'wrap' }}>
-            <img 
-              src="/logo-coyn-nnm.png" 
-              alt="NNM Logo" 
-              style={{ width: '95px', height: '95px', borderRadius: '50%', border: '1px solid rgba(147, 51, 234, 0.2)', boxShadow: '0 0 20px rgba(147, 51, 234, 0.2)', objectFit: 'contain' }} 
-            />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff' }}>NNM</span>
-                <span style={{ fontSize: '12px', color: '#9ea9a9', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>Utility Access</span>
-                <div style={{ display: 'flex', gap: '6px', marginLeft: '6px', marginTop: '1px' }}>
-                  
-                  <a href="https://coinvote.cc/coin/NNM-Protocol" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(252, 211, 77, 0.1)', border: '1px solid rgba(252, 211, 77, 0.4)', padding: '2px 8px', borderRadius: '6px', cursor: 'pointer' }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                      <span style={{ color: '#FCD34D', fontSize: '11px', fontWeight: 'bold' }}>Coinvote</span>
+            <div className="container-main">
+                <header className="nav-top">
+                    <div className="neon-btn-group">
+                        <Link href="/whitepaper" className="link-reset">
+                            <button className="neon-btn slide-right-to-left-1"><span>Whitepaper</span></button>
+                        </Link>
+                        <a href="#tokenomics-section" className="link-reset">
+                            <button className="neon-btn slide-right-to-left-2"><span>Tokenomics</span></button>
+                        </a>
+                        <a href="#burn-section" className="link-reset">
+                            <button className="neon-btn slide-right-to-left-3"><span>Burn Protocol</span></button>
+                        </a>
+                        <a href="#roadmap-section" className="link-reset">
+                            <button className="neon-btn slide-right-to-left-4"><span>Roadmap</span></button>
+                        </a>
+                        <Link href="/presale/balance" className="link-reset">
+                            <button className="neon-btn slide-right-to-left-5"><span>Balance</span></button>
+                        </Link>
                     </div>
-                  </a>
+                </header>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '2px 8px', borderRadius: '6px', userSelect: 'none' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 12S5 4 12 4 23 12 23 12-19 20 12 20 1 12z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <circle cx="12" cy="12" r="3" fill="#3B82F6"/>
-                      <circle cx="12" cy="12" r="1" fill="#fff"/>
-                    </svg>
-                    <div style={{ fontSize: '11px', fontWeight: 'bold', display: 'flex' }}>
-                      <span style={{ color: '#fff' }}>Coin</span>
-                      <span style={{ color: '#3B82F6' }}>mooner</span>
-                    </div>
-                  </div>
+                <section className="hero-section">
+                    <div className="hero-text-block">
+                        <h1 className="hero-title gradient-glow">Web3 Identity Utility Access with $NNM</h1>
+                        <p className="hero-description">
+                           Access the $NNM Genesis phase. Limited participation. 
+                           Powered by a native utility token.
+                        </p>
 
-                </div>
-              </div>
 
-<div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '10px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)', marginLeft: '-12px' }}>
-                <img src="/icons/matic.svg" alt="Polygon" style={{ width: '20px', height: '20px' }} />
-                <span style={{ color: '#9ea9a9', fontSize: '13px', fontWeight: 'bold' }}>Polygon</span>
-                <span style={{ color: '#f3f4f6', fontSize: '13px', fontFamily: 'monospace' }}>0x5e64..2609</span>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <button 
-                    onClick={() => { navigator.clipboard.writeText('0x5e6447c273300ac357c6713cb31a256345132609'); setCopied(true); setTimeout(() => setCopied(false), 2000); }} 
-                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
-                  >
-                    <svg style={{ transform: 'scaleX(-1)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ea9a9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                  </button>
-                  {copied && <span style={{ position: 'absolute', left: '100%', marginLeft: '8px', background: '#000', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>Copied!</span>}
-                </div>
-              </div>
-            </div>
-          </div>
-          <h1 style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '16px', lineHeight: '1.2' }}>
-            The NNM Protocol <br/>
-            <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Web3 Identity Utility Access
-</span>
-          </h1>
-          <p style={{ color: '#9ea9a9', fontSize: '15px', maxWidth: '550px', lineHeight: '1.6' }}>
-            Empowering the Polygon Ecosystem with Sovereign Identity and Institutional-Grade NFT Market Intelligence. A fully operational Web3 identity layer deployed on Polygon Mainnet. Access the NNM ecosystem during its Genesis phase. Limited participation available. NNM is a utility-based digital system designed for use within the platform only.
-
-          </p>
-          <div style={{ marginTop: '35px', display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '480px' }}>
-            {[
-              "Lifetime digital identity on the NNM Registry",
-              "ChainFace payments & management",
-              "10,000 WNNM points for platform rewards",
-              "NNM utility allocation for early testers"
-            ].map((text, index) => (
-              <div key={index} style={{ 
-                display: 'flex', 
-                alignItems: 'flex-start', 
-                justifyContent: 'space-between', 
-                background: 'rgba(255, 255, 255, 0.03)', 
-                padding: '14px 18px', 
-                borderRadius: '12px', 
-                border: '1px solid rgba(255, 255, 255, 0.05)',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                backdropFilter: 'blur(10px)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
-                  <span style={{ 
-                    background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
-                    WebkitBackgroundClip: 'text', 
-                    WebkitTextFillColor: 'transparent',
-                    fontSize: '18px',
-                    fontWeight: '900',
-                    fontFamily: 'monospace',
-                    marginTop: '1px'
-                  }}>
-                    {index + 1}
-                  </span>
-                  <span style={{ 
-                    fontSize: '14px', 
-                    fontWeight: '600', 
-                    color: '#f8fafc',
-                    letterSpacing: '0.3px',
-                    lineHeight: '1.5'
-                  }}>
-                    {text}
-                  </span>
-                </div>
-                
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, marginLeft: '12px', filter: 'drop-shadow(0px 0px 8px rgba(16, 185, 129, 0.7))', marginTop: '0px' }}>
-                  <path d="M4 12L10 18L20 8" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-            ))}
-          </div>
-        </div>
-
-<div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '-10px' }}>
-  <div style={{ ...saTeContainerStyle, background: 'rgba(147, 51, 234, 0.11)', padding: '12px 24px 16px 24px', width: '100%', maxWidth: '440px' }}>
-
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0001</span>
-        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Early Tester Tier</span>
-      </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0002</span>
-        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>​Current Beta Access</span>
-      </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'normal' }}>$0.0003</span>
-        <span style={{ color: '#9ea9a9', fontSize: '8px', marginTop: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>​Next Phase Reward</span>
-      </div>
-    </div>
-
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '12px', marginTop: '10px' }}>
-      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-        <div style={{ 
-          background: 'rgba(255, 255, 255, 0.02)', 
-          border: '1px solid rgba(225, 29, 72, 0.3)', 
-          padding: '3px 10px', 
-          borderRadius: '20px', 
-          backdropFilter: 'blur(10px)',
-          display: 'inline-flex',
-          alignItems: 'center'
-        }}>
-          <span style={{ 
-            background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', 
-            WebkitBackgroundClip: 'text', 
-            WebkitTextFillColor: 'transparent', 
-            fontSize: '9px', 
-            fontWeight: 'bold', 
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
-            Final Tier
-          </span>
-        </div>
-        <span style={{ color: '#10B981', fontSize: '21px', fontWeight: 'bold', letterSpacing: '0.5px' }}>$0.001</span>
-      </div>
-      <span style={{ color: '#9ea9a9', fontSize: '8px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '8px', textAlign: 'center' }}>
-        (Reward for early testing utility)
-      </span>
-    </div>
-
-    <div style={{ marginBottom: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
-        <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-          <span style={{ color: '#9ea9a9', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>COLLECTED</span>
-          <span style={{ color: '#FCD34D', fontSize: '32px', fontWeight: '900', fontFamily: 'monospace', lineHeight: '1' }}>
-            ${fomoData.raised.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-          </span>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ color: '#9ea9a9', fontSize: '16px', marginBottom: '2px' }}>
-            / <span style={{ color: '#fff' }}>$1,050,000</span>
-          </div>
-        </div>
-      </div>
-      
-      <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
-        <div style={{ width: `${Math.min(fomoData.percentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #FF7EB3 0%, #9333EA 100%)', borderRadius: '4px', transition: 'width 1s ease' }}></div>
-      </div>
-    </div>
-
-    <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '20px' }}>
-      {Object.entries(timeLeft).map(([unit, value]) => (
-        <div key={unit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ fontSize: '28px', fontWeight: '900', color: '#fff', lineHeight: '1' }}>{value.toString().padStart(2, '0')}</div>
-          <div style={{ fontSize: '11px', color: '#9ea9a9', textTransform: 'uppercase', marginTop: '6px' }}>{unit}</div>
-        </div>
-      ))}
-    </div>
-
-    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Balance</span>
-        <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} />
-        <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500', fontFamily: 'monospace' }}>
-          {isConnected ? apiTokensBought.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
-        </span>
-      </div>
-
-      <span style={{ color: '#D8B4FE', fontSize: '18px', fontWeight: '500', textAlign: 'center' }}>≈</span>
-
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-start', paddingLeft: '30px' }}>
-        <span style={{ color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold' }}>Estimated</span>
-        <span style={{ color: '#10B981', fontSize: '14px', fontWeight: '500', fontFamily: 'monospace' }}>
-          ${isConnected ? (apiTokensBought * 0.001).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
-        </span>
-      </div>
-    </div>
-
-    <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', borderRadius: '10px' }}>
-      <div className="ticker" style={{ animationDuration: '20s' }}>
-        {tickerItems.map((item, idx) => (
-          <span key={idx} className="ticker-item">{item.addr} participated — <span>{item.amt} NNM</span></span>
-        ))}
-        {tickerItems.map((item, idx) => (
-          <span key={`dup-${idx}`} className="ticker-item">{item.addr} participated — <span>{item.amt} NNM</span></span>
-        ))}
-      </div>
-    </div>
-
-            <div style={{ background: 'rgba(0, 0, 0, 0.3)', borderRadius: '14px', padding: '14px', marginBottom: '12px', border: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>You Contribute</span>
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  {['10', '50', '100', '1000'].map(val => (
-                     <button key={val} onClick={() => handleQuickAmount(val)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontSize: '9px', padding: '4px 8px', borderRadius: '8px', cursor: 'pointer' }}>${val}</button>
-                  ))}
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <input 
-                  type="text" 
-                  placeholder="0.0" 
-                  value={amount} 
-                  onChange={handlePayAmountChange} 
-                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', outline: 'none', width: '40%'}} 
-                />
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
-                  <img src="/icons/usdt.svg" alt="USDT" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 1 }} />
-                  <img src="/icons/matic.svg" alt="POL" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 1 }} />
-                  
-                  <div onClick={() => setIsDropdownOpen(!isDropdownOpen)} style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '12px', color: '#fff', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', marginLeft: '4px', minWidth: '75px', justifyContent: 'center' }}>
-                    {selectedCoin} ▼
-                  </div>
-
-                  {isDropdownOpen && (
-                    <div style={{ position: 'absolute', top: '100%', right: '0', marginTop: '8px', background: '#0b1426', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', zIndex: 50, boxShadow: '0 4px 15px rgba(0,0,0,0.5)', width: '100px' }}>
-                      {(['POL', 'USDT'] as const).map((coin) => (
-                        <div 
-                          key={coin} 
-                          onClick={() => handleCoinSelect(coin)}
-                          style={{ padding: '10px', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', background: selectedCoin === coin ? 'rgba(147, 51, 234, 0.3)' : 'transparent' }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = selectedCoin === coin ? 'rgba(147, 51, 234, 0.3)' : 'transparent'}
-                        >
-                          {coin}
+                    <div className="benefits-list reveal">
+                        <div className="benefit-bar reveal-left delay-1">
+                            <span className="benefit-number">1</span>
+                            <span className="benefit-text">Lifetime digital identity on the NNM Registry</span>
+                            <span className="benefit-icon">&#10003;</span>
                         </div>
-                      ))}
+                        <div className="benefit-bar reveal-left delay-2">
+                            <span className="benefit-number">2</span>
+                            <span className="benefit-text">ChainFace payments & management</span>
+                            <span className="benefit-icon">&#10003;</span>
+                        </div>
+                        <div className="benefit-bar reveal-left delay-3">
+                            <span className="benefit-number">3</span>
+                            <span className="benefit-text">1,000 WNNM points for platform rewards</span>
+                            <span className="benefit-icon">&#10003;</span>
+                        </div>
+                        <div className="benefit-bar reveal-left delay-4">
+                            <span className="benefit-number">4</span>
+                            <span className="benefit-text">NNM utility allocation for early testers</span>
+                            <span className="benefit-icon">&#10003;</span>
+                        </div>
                     </div>
-                  )}
+                    </div>
+
+                    <div className="presale-fomo-panel">
+                        <div className="d-flex justify-content-between mb-3 align-items-end">
+                            <div className="price-line text-left">
+                                Phase {blockchainData.currentPhase} Price<br/>
+                                <span className="text-white fw-bold" style={{ fontSize: '1.2rem' }}>${blockchainData.currentPrice}</span>
+                            </div>
+                            <div className="price-line text-center">
+                                Next Phase Price<br/>
+                                <span className="text-white fw-bold">${blockchainData.nextPrice}</span>
+                            </div>
+                            <div className="price-line text-right">
+                                Listing Price<br/>
+                                <span className="gold-metallic-text" style={{ fontSize: '1.4rem' }}>${finalPrice}</span>
+                            </div>
+                        </div>
+
+                        <div className="countdown-inline-row mb-3">
+                            <div className="countdown-wrapper">
+                                <div className="time-box">
+                                    <span className="time-value">{timeLeft.days}</span>
+                                    <span className="time-label">D</span>
+                                </div>
+                                <div className="time-box">
+                                    <span className="time-value">{timeLeft.hours}</span>
+                                    <span className="time-label">H</span>
+                                </div>
+                                <div className="time-box">
+                                    <span className="time-value">{timeLeft.minutes}</span>
+                                    <span className="time-label">M</span>
+                                </div>
+                                <div className="time-box">
+                                    <span className="time-value">{timeLeft.seconds}</span>
+                                    <span className="time-label">S</span>
+                                </div>
+                            </div>
+                            <div className="current-price-inline">
+                                <div className="price-line" style={{ fontSize: '0.65rem' }}>Current Phase</div>
+                                <div className="gold-metallic-text" style={{ fontSize: '0.7rem' }}>
+                                    ${blockchainData.currentPrice}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="progress-container-presale mb-3">
+                            <div className="d-flex justify-content-between mb-1">
+                                <span className="text-light-muted" style={{ fontSize: '0.75rem' }}>Phase {blockchainData.currentPhase} Availability</span>
+                                <span className="text-white fw-bold" style={{ fontSize: '0.75rem' }}>
+                                    {blockchainData.tokensSoldInPhase.toLocaleString()} / <span style={{ color: '#9b51e0' }}>{blockchainData.phaseTarget.toLocaleString()} NNM</span>
+                                </span>
+                            </div>
+                            <div className="presale-bar-style">
+                                <div 
+                                    className="presale-fill-style" 
+                                    style={{ width: `${progressPercentage}%` }}
+                                ></div>
+                            </div>
+                        </div>
+
+                        <div className="exchange-module">
+                            <div className="quick-select-container">
+                                <button className="quick-btn" onClick={() => handleQuickSelect(0.1)}>0.1 SOL</button>
+                                <button className="quick-btn" onClick={() => handleQuickSelect(0.5)}>0.5 SOL</button>
+                                <button className="quick-btn" onClick={() => handleQuickSelect(1)}>1 SOL</button>
+                                <button className="quick-btn" onClick={() => handleQuickSelect(10)}>10 SOL</button>
+                                <button className="quick-btn" onClick={() => handleQuickSelect(15)}>15 SOL</button>
+                            </div>
+
+                            <div className="input-card mb-2">
+                                <div className="d-flex justify-content-between mb-2">
+                                    <span className="input-label">YOU CONTRIBUTE</span>
+                                </div>
+                                <div className="input-row">
+                                    <input 
+                                        type="text" 
+                                        inputMode="decimal"
+                                        placeholder="0.0" 
+                                        value={solAmount}
+                                        onChange={handleSolChange}
+                                        className="crypto-input"
+                                        lang="en"
+                                        dir="ltr"
+                                    />
+                                    <div className="token-selector">
+                                        <div className="token-icon sol-icon"></div>
+                                        <span>SOL</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="input-card mb-4">
+                                <div className="d-flex justify-content-between mb-2">
+                                    <span className="input-label">YOU GET</span>
+                                </div>
+                                <div className="input-row">
+                                    <input 
+                                        type="text" 
+                                        placeholder="0" 
+                                        value={nnmAmount}
+                                        readOnly
+                                        className="crypto-input readonly"
+                                        lang="en"
+                                        dir="ltr"
+                                    />
+                                    <div className="token-selector">
+                                        <div className="token-icon nnm-icon"></div>
+                                        <span>NNM</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style={{ position: 'relative', width: '75%', margin: '0 auto' }}>
+                                <div style={{ 
+                                    position: 'absolute', 
+                                    top: 0, left: 0, right: 0, bottom: 0, 
+                                    backgroundColor: 'transparent', 
+                                    zIndex: 10, 
+                                    borderRadius: '10px', 
+                                    cursor: 'not-allowed'
+                                }}></div>
+                                
+                                <button className="connect-wallet-btn" style={{ width: '100%', opacity: 1 }}>
+                                    <span>{isConnected ? 'Participate Now' : 'Connect Wallet'}</span>
+                                </button>
+                            </div>
+                            
+                            <div style={{ textAlign: 'center', margin: '12px 0' }}>
+                                <span className="gradient-glow" style={{ fontSize: '0.9rem', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                                    ⏳ Opening ... 22-4-2026
+                                </span>
+                            </div>
+
+                            <div className="legal-disclaimer mt-2">
+                                Participating means you accept the T&C
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="features-section reveal">
+                    <div className="feature-card reveal-right delay-1">
+                        <h3 className="feature-title gradient-glow">ChainFace Identity</h3>
+                        <p className="feature-desc">
+                            Transforming purely speculative NFTs into hyper-functional Web3 utilities via verified cross-chain payment dashboards.
+                        </p>
+                    </div>
+                    <div className="feature-card reveal-right delay-2">
+                        <h3 className="feature-title gradient-glow">The NFX Global Index</h3>
+                        <p className="feature-desc">
+                            The authoritative observatory for the NFT ecosystem, featuring Ecosystem Sentiment, Network Activity, and Ecosystem Size.
+                        </p>
+                    </div>
+                    <div className="feature-card reveal-right delay-3">
+                        <h3 className="feature-title gradient-glow">Conviction Rank</h3>
+                        <p className="feature-desc">
+                            An immutable, sybil-resistant ranking system rewarding genuine community belief over artificial wash trading.
+                        </p>
+                    </div>
+                </section> 
+                <div className="tokenomics-header reveal">
+                    <h2 className="hero-title gradient-glow" style={{ fontSize: '1.25rem' }}>NNM Tokenomics</h2>
+                </div>
+                
+                <section className="tokenomics-section" id="tokenomics-section">
+                    
+                    <div className="tokenomics-card reveal-left reveal">
+                        <div className="donut-container">
+                            <div className="donut-legend">
+                                {allocations.map((item, i) => (
+                                    <div key={i} className="legend-item" onMouseEnter={() => setActiveDonut({ label: item.label, val: `${item.percent}%`, color: item.color })} onMouseLeave={() => setActiveDonut({ label: 'TOTAL SUPPLY', val: '1B', color: '#fff' })}>
+                                        <span className="legend-dot" style={{ backgroundColor: item.color }}></span>
+                                        <span className="legend-text">{item.label} {item.percent}%</span>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <div className="donut-chart-wrapper">
+                                <svg viewBox="0 0 36 36" className="donut-chart" style={{ overflow: 'visible' }}>
+                                    <circle strokeDasharray="100 0" strokeDashoffset="0" cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#1a1a3a" strokeWidth="4"></circle>
+                                    {allocations.map((slice, index) => {
+                                        let cumulativePercent = 0;
+                                        for (let i = 0; i < index; i++) cumulativePercent += allocations[i].percent;
+                                        const offset = 100 - cumulativePercent;
+                                        return (
+                                            <circle 
+                                                key={index}
+                                                strokeDasharray={`${slice.percent} ${100 - slice.percent}`} 
+                                                strokeDashoffset={offset} 
+                                                cx="18" cy="18" r="15.91549430918954" 
+                                                fill="transparent" 
+                                                stroke={slice.color} 
+                                                strokeWidth="4"
+                                                className="donut-segment"
+                                                onMouseEnter={() => setActiveDonut({ label: slice.label, val: `${slice.percent}%`, color: slice.color })}
+                                                onMouseLeave={() => setActiveDonut({ label: 'TOTAL SUPPLY', val: '1B', color: '#fff' })}
+                                            ></circle>
+                                        );
+                                    })}
+                                </svg>
+                                <div className="donut-inner-text">
+                                    <span className="donut-val" style={{ color: activeDonut.color }}>{activeDonut.val}</span>
+                                    <span className="donut-label">{activeDonut.label}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="token-info-table">
+                            <div className="table-row">
+                                <span className="table-key">Total Supply</span>
+                                <span className="table-val text-white">1,000,000,000</span>
+                            </div>
+                            <div className="table-row">
+                                <span className="table-key">Genesis Price</span>
+                                <span className="table-val text-white">$0.001 per NNM</span>
+                            </div>
+                            <div className="table-row">
+                                <span className="table-key">Chain</span>
+                                <span className="table-val chain-val">
+                                    <div className="table-icon" style={{backgroundImage: "url('/icons/sol.svg')"}}></div>
+                                    Solana
+                                </span>
+                            </div>
+                            <div className="table-row">
+                                <span className="table-key">Contract</span>
+                                <span className="table-val">
+                                    <a href="https://solscan.io/token/BfKz5Afz5u2oARnGziyiqbDKzyqsxkeHM8fHFfbkoX5x" target="_blank" rel="noopener noreferrer" className="blue-link">BfKz5Afz...koX5x</a>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="tokenomics-card reveal-right reveal delay-1">
+                        <div className="allocation-details-scroll">
+                            <div className="alloc-item">
+                                <h4 className="gradient-glow">Presale Allocation (30%)</h4>
+                                <p>Distributed to early participants in the Genesis phase. 40% unlocked at TGE, remainder released linearly over 60 days. <a href="https://solscan.io/token/BfKz5Afz5u2oARnGziyiqbDKzyqsxkeHM8fHFfbkoX5x#holders" target="_blank" rel="noopener noreferrer" className="verify-link">View Contract ↗</a></p>
+                            </div>
+                            <div className="alloc-item">
+                                <h4 className="gradient-glow">Liquidity Pool (15%) 🔒</h4>
+                                <p>Allocated to DEX liquidity. Locked for 365 days post‑listing to protect price stability.</p>
+                            </div>
+                            <div className="alloc-item">
+                                <h4 className="gradient-glow">Platform Rewards & Ecosystem (34%) 🔒</h4>
+                                <p>5% unlocked at TGE; remaining 30% released linearly over 12 months. <a href="https://app.streamflow.finance/contract/solana/mainnet/FZsJohSkoxwpQr1PAd7kkStx1V7W72H4FFfCjmMjj1XF" target="_blank" rel="noopener noreferrer" className="verify-link">View Vesting ↗</a></p>
+                            </div>
+                            <div className="alloc-item">
+                                <h4 className="gradient-glow">Treasury & Growth (8%) 🔒</h4>
+                                <p>5% unlocked at TGE; remaining 2% released linearly over 12 months. <a href="https://app.streamflow.finance/contract/solana/mainnet/FZsJohSkoxwpQr1PAd7kkStx1V7W72H4FFfCjmMjj1XF" target="_blank" rel="noopener noreferrer" className="verify-link">View Vesting ↗</a></p>
+                            </div>
+                            <div className="alloc-item">
+                                <h4 className="gradient-glow">Team Allocation (5%) 🔒</h4>
+                                <p>Locked with 6‑month cliff, then linear vesting over 12 months. <a href="https://app.streamflow.finance/contract/solana/mainnet/3BfN83ZJ5kS17onwqKARB3CMWw3nrRXHrnntWDCBtMxF" target="_blank" rel="noopener noreferrer" className="verify-link">View Vesting ↗</a></p>
+                            </div>
+                            <div className="alloc-item">
+                                <h4 className="gradient-glow">Development Fund (5%) 🔒</h4>
+                                <p>Locked with 6‑month cliff, then linear vesting over 12 months. <a href="https://app.streamflow.finance/contract/solana/mainnet/3BfN83ZJ5kS17onwqKARB3CMWw3nrRXHrnntWDCBtMxF" target="_blank" rel="noopener noreferrer" className="verify-link">View Vesting ↗</a></p>
+                            </div>
+                            <div className="alloc-item">
+                                <h4 className="gradient-glow">Emergency Reserve (3%) 🔒</h4>
+                                <p>Available immediately via multi‑signature treasury wallet. <a href="https://solscan.io/account/7mtVq6GVK7vZip9fSvcjvfXeh4MMTM5YCg1a9CaNCYyF" target="_blank" rel="noopener noreferrer" className="verify-link">View Wallet ↗</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div id="burn-section" className="burn-box-wide reveal reveal-left delay-1">
+                    <div className="burn-header">
+                        <span className="burn-icon">🔥</span>
+                        <h4 className="gradient-glow">Automated Network Security</h4>
+                    </div>
+                    <p>
+                        10% of tokens generated from platform activity (digital name minting) are permanently removed from circulation to prevent network spam and ensure smart contract sustainability.
+                    </p>
+                </div>
+                <div className="roadmap-header reveal-left reveal mt-100" id="roadmap-section">
+                    <h2 className="hero-title gradient-glow" style={{ fontSize: '1.25rem', textAlign: 'left' }}>NNM Roadmap</h2>
                 </div>
 
-              </div>
-            </div>
+                <section className="roadmap-section">
 
-            <div style={{ background: 'rgba(0, 0, 0, 0.3)', borderRadius: '14px', padding: '14px', marginBottom: '16px', border: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <p style={{ color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>You Get</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <input 
-                  type="text" 
-                  placeholder="0" 
-                  value={calculatedNNM} 
-                  onChange={handleReceiveAmountChange} 
-                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', outline: 'none', width: '60%'}} 
-                />
-                <div style={{ background: 'rgba(225, 29, 72, 0.1)', padding: '6px 10px', borderRadius: '12px', color: '#E11D48', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(225, 29, 72, 0.2)' }}>
-                  <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} />
-                  <span style={{ color: '#fff', fontSize: '12px' }}>NNM</span>
+                    <div className="roadmap-card reveal reveal-left delay-1">
+                        <h3 className="feature-title gradient-glow">Phase 1 - The Genesis & Identity Layer</h3>
+                        <p className="feature-desc">
+                            Deployment of the NNM Protocol on the Polygon Mainnet. Activation of ChainFace identity profiles, enabling cross-chain interactions and foundational ecosystem functionality. Initial minting of Nexus Digital Name Assets.
+                        </p>
+                    </div>
+
+                    <div className="roadmap-card reveal reveal-left delay-2">
+                        <h3 className="feature-title gradient-glow">Phase 2 - Network Infrastructure & Activation</h3>
+                        <p className="feature-desc">
+                            Establishment of core ecosystem infrastructure, including multi-chain interaction capabilities within ChainFace and initial integration of the NFX Index for tracking network activity and ecosystem data.
+                        </p>
+                    </div>
+
+                    <div className="roadmap-card reveal reveal-left delay-3">
+                        <h3 className="feature-title gradient-glow">Phase 3 - Ecosystem Utility Distribution</h3>
+                        <p className="feature-desc">
+                            Ongoing distribution of the NNM utility token to early participants, enabling access to ecosystem features, identity services, and internal protocol interactions.
+                        </p>
+                    </div>
+
+                    <div className="roadmap-card reveal reveal-left delay-4">
+                        <h3 className="feature-title gradient-glow">Phase 4 - Platform Infrastructure & Mechanics</h3>
+                        <p className="feature-desc">
+                            Initialization of Internal system balancing mechanisms with time-locked smart contracts. Activation of usage-based platform mechanics , including automated supply adjustments linked to network activity.
+                        </p>
+                    </div>
+
+                    <div className="roadmap-card reveal reveal-left delay-5">
+                        <h3 className="feature-title gradient-glow">Phase 5 - Global Integration & Ecosystem Expansion</h3>
+                        <p className="feature-desc">
+                            Continuous expansion of the ChainFace identity layer and ecosystem infrastructure, supporting broader accessibility and long-term protocol evolution.
+                        </p>
+                    </div>
+                </section>
+
+                <div className="important-notice-footer">
+                    Important Notice: NNM Tokens are digital utility units designed for use within the NNM ecosystem and its protocol functionalities. They are not securities, investment contracts, or financial instruments. Participation in this optional genesis distribution is entirely voluntary and may involve the complete loss of contributed digital assets due to the experimental nature of blockchain technologies. By proceeding, you acknowledge that you are acquiring NNM Tokens solely for their potential utility within the ecosystem and not with any expectation of profit or financial return.
                 </div>
-              </div>
+
             </div>
 
-            <button 
-              disabled={true}
-              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: 'not-allowed', opacity: 0.5 }}>
-              Maintenance
-            </button>
-          </div>
-          
-          <div style={{ width: '100%', textAlign: 'center', marginTop: '12px', marginBottom: '60px' }}>
-              <span style={{ fontSize: '11px', color: '#848E9C', opacity: 0.8 }}>
-                  Participating means you accept the T&C
-              </span>
-          </div>
-        </div>
+            <style dangerouslySetInnerHTML={{ __html: `
+                .presale-wrapper {
+                    scroll-behavior: smooth;
+                    background-color: ${COLOR_NAVY_BG};
+                    min-height: 100vh;
+                    width: 100%;
+                    position: relative;
+                    overflow: hidden;
+                    font-family: 'Inter', sans-serif;
+                }
 
-      </div>
+                .twinkling-stars {
+                    position: fixed;
+                    top: 0; left: 0; width: 100%; height: 100%;
+                    z-index: 0;
+                    pointer-events: none;
+                }
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', width: '100%', maxWidth: '1200px', zIndex: 1, marginTop: '20px', marginBottom: '60px' }}>
-        <div style={{ ...saTeContainerStyle, padding: '30px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#E11D48', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>1</div>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>ChainFace Identity</h3>
-          <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>Transforming purely speculative NFTs into hyper-functional Web3 utilities via verified cross-chain payment dashboards.</p>
-        </div>
-        <div style={{ ...saTeContainerStyle, padding: '30px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#9333EA', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>2</div>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>The NFX Global Index</h3>
-          <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>The authoritative observatory for the NFT ecosystem, featuring Ecosystem Sentiment, Network Activity, and Ecosystem Size.</p>
-        </div>
-        <div style={{ ...saTeContainerStyle, padding: '30px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>3</div>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>Conviction Rank</h3>
-          <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.6' }}>An immutable, sybil-resistant ranking system rewarding genuine community belief over artificial wash trading.</p>
-        </div>
-      </div>
+                .twinkling-stars::after {
+                    content: "";
+                    position: absolute;
+                    top: -150%; left: -150%; width: 400%; height: 400%;
+                    background-image: 
+                        radial-gradient(2px 2px at 40px 60px, #fff, rgba(0,0,0,0)),
+                        radial-gradient(1.5px 1.5px at 100px 150px, #fff, rgba(0,0,0,0)),
+                        radial-gradient(2px 2px at 200px 50px, #fff, rgba(0,0,0,0)),
+                        radial-gradient(1.5px 1.5px at 300px 250px, #fff, rgba(0,0,0,0));
+                    background-repeat: repeat;
+                    background-size: 400px 400px;
+                    opacity: 0.5;
+                    animation: starsRotate 120s linear infinite, starsFlash 6s infinite alternate;
+                }
 
-<div id="tokenomics-section" style={{ width: '100%', maxWidth: '1200px', zIndex: 1, marginTop: '60px', marginBottom: '40px' }}>
-        <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 'bold', textAlign: 'left', marginBottom: '30px' }}>
-          NNM <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tokenomics</span>
-        </h2>
-        
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'stretch' }}>
-          
-          <div style={{ flex: '1', minWidth: '300px', ...saTeContainerStyle, padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginBottom: '30px' }}>
-              {tokenomicsData.map((item) => (
-                <div 
-                  key={item.id}
-                  className={`legend-item ${activeSegment === item.id ? 'active' : ''}`}
-                  onMouseEnter={() => setActiveSegment(item.id)}
-                  onMouseLeave={() => setActiveSegment(null)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.3)', padding: '6px 10px', borderRadius: '20px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.05)' }}
-                >
-                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: item.color }}></div>
-                  <span style={{ fontSize: '12px', color: '#fff', fontWeight: 'bold' }}>{item.name} <span style={{ color: '#fff', marginLeft: '4px' }}>{item.percent}%</span></span>
-                </div>
-              ))}
-            </div>
+                @keyframes starsRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                @keyframes starsFlash { from { opacity: 0.3; } to { opacity: 0.8; filter: brightness(1.5); } }
 
-            <div style={{ position: 'relative', width: '200px', height: '200px' }}>
-              <svg viewBox="0 0 32 32" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)', overflow: 'visible' }}>
-                {tokenomicsData.map((item) => (
-                  <circle
-                    key={item.id}
-                    className={`chart-segment ${activeSegment === item.id ? 'active' : ''}`}
-                    r="15.91549430918954"
-                    cx="16"
-                    cy="16"
-                    fill="transparent"
-                    stroke={item.color}
-                    strokeWidth={activeSegment === item.id ? "5.5" : "4"}
-                    strokeDasharray={`${item.percent} ${100 - item.percent}`}
-                    strokeDashoffset={item.offset}
-                    onMouseEnter={() => setActiveSegment(item.id)}
-                    onMouseLeave={() => setActiveSegment(null)}
-                  />
-                ))}
-              </svg>
-              
-              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
-                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#fff', transition: 'all 0.3s ease' }}>
-                  {activeSegment !== null ? tokenomicsData[activeSegment].amount : '10B'}
-                </div>
-                <div style={{ fontSize: '12px', color: '#fff', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>
-                  {activeSegment !== null ? 'NNM' : 'TOTAL SUPPLY'}
-                </div>
-              </div>
-            </div>
-            
-<div id="burn-section" style={{ background: 'rgba(252, 211, 77, 0.05)', border: '1px solid rgba(252, 211, 77, 0.15)', borderRadius: '20px', padding: '16px', backdropFilter: 'blur(20px)', marginTop: '60px', width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ color: '#FCD34D', fontSize: '18px' }}>🔥</span>
-                <span style={{ color: '#FCD34D', fontSize: '16px', fontWeight: 'bold' }}>Automated Network Security</span>
-              </div>
-              <p style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.5' }}>
-                50% of tokens generated from platform activity (digital name minting) are permanently removed from circulation to prevent network spam and ensure smart contract sustainability.
-              </p>
-            </div>
-          </div>
+                .container-main {
+                    position: relative;
+                    z-index: 10;
+                    width: 100%;
+                    max-width: 1400px;
+                    margin: 0 auto;
+                    padding: 30px 4%;
+                }
 
-          <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            
-            <div style={{ flex: 1, ...saTeContainerStyle, padding: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px', marginBottom: '12px' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '14px' }}>Total Supply</span>
-                <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>10 Billion</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px', marginBottom: '12px' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '14px' }}>Genesis Price</span>
-                <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>$0.0001 per NNM</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px', marginBottom: '12px' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '14px' }}>Chain</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <img src="/icons/matic.svg" alt="Polygon" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
-                  <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>Polygon</span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#9ea9a9', fontSize: '14px' }}>Contract</span>
-                <a href="https://polygonscan.com/token/0x5e6447c273300ac357c6713cb31a256345132609?a=0xb03aa911B7b59d83cA62EC1e5958e9F78fd1Be72" target="_blank" rel="noreferrer" style={{ color: '#8247E5', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace', textDecoration: 'none' }}>0x5e64...2609</a>
-              </div>
-            </div>
+                .nav-top {
+                    display: flex;
+                    justify-content: flex-start;
+                    margin-bottom: 27px;
+                }
 
-            <div style={{ flex: 1, ...saTeContainerStyle, padding: '24px' }}>
-              <div style={{ marginBottom: '16px' }}>
-            <div style={{ color: '#FF7EB3', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Genesis Allocation (35%)</div>
-                <div style={{ color: '#9ea9a9', fontSize: '13px', lineHeight: '1.4' }}>Allocated to early users supporting platform usage and feature expansion. 50% of initial utility contributions are programmatically allocated to support internal platform balance.</div>
-              </div>
+                .neon-btn-group {
+                    display: flex;
+                    gap: 15px;
+                    flex-wrap: wrap;
+                }
 
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ color: '#9333EA', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Protocol Liquidity (25%)</div>
-                <div style={{ color: '#9ea9a9', fontSize: '13px' }}>Locked for 12 months to ensure ecosystem stability.</div>
-              </div>
-              
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ color: '#3B82F6', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Community Rewards (15%)</div>
-                <div style={{ color: '#9ea9a9', fontSize: '13px', marginBottom: '4px' }}>6-Month Linear Vesting (16.66% monthly release).</div>
-                <a href="https://www.pinksale.finance/pinklock/polygon/record/1007818" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', fontSize: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
-                  View Here <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
-                </a>
-              </div>
+                .link-reset { text-decoration: none; display: flex; }
 
-              <div>
-                <div style={{ color: '#FCD34D', fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Team & Advisors (10%)</div>
-                <div style={{ color: '#9ea9a9', fontSize: '13px', marginBottom: '4px' }}>12-Month Cliff (100% Locked until Mar 15, 2027).</div>
-                <a href="https://www.pinksale.finance/pinklock/polygon/record/1007817" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', fontSize: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
-                  View Here <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
-                </a>
-              </div>
-            </div>
+                .neon-btn {
+                    background: rgba(255, 255, 255, 0.02);
+                    border: 1px solid rgba(255, 75, 130, 0.25);
+                    padding: 10px 22px;
+                    border-radius: 30px;
+                    backdrop-filter: blur(10px);
+                    cursor: pointer;
+                    opacity: 0;
+                    transition: all 0.3s ease;
+                }
 
-          </div>
-        </div>
-      </div>
+                .neon-btn span {
+                    background: linear-gradient(90deg, #9b51e0 0%, #ff4b82 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    font-weight: 700;
+                }
 
-<div id="roadmap-section" style={{ width: '100%', maxWidth: '1000px', padding: '0 20px', zIndex: 1, marginTop: '60px', marginBottom: '80px' }}>
-        <h2 style={{ color: '#f8fafc', fontSize: '28px', fontWeight: 'bold', textAlign: 'left', marginBottom: '30px' }}>
-          NNM <span style={{ background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Roadmap</span>
-        </h2>
-        
-        <div style={{ background: 'rgba(147, 51, 234, 0.05)', border: '1px solid rgba(147, 51, 234, 0.11)', boxShadow: '0 0 30px rgba(147, 51, 234, 0.11)', borderRadius: '20px', backdropFilter: 'blur(15px)', padding: '40px 30px' }}>
-          <div style={{ position: 'relative', paddingLeft: '10px' }}>
-            
-            <div style={{ position: 'absolute', left: '19px', top: '10px', bottom: '10px', width: '2px', background: 'linear-gradient(180deg, #E11D48 0%, #9333EA 60%, rgba(255,255,255,0.05) 100%)', zIndex: 0 }}></div>
+                .neon-btn:hover {
+                    background: rgba(255, 255, 255, 0.08);
+                    box-shadow: 0 0 20px rgba(255, 75, 130, 0.4);
+                }
 
-            <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '40px' }}>
-              <div style={{ width: '20px', display: 'flex', justifyContent: 'center', background: 'transparent', paddingTop: '2px' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 0px 5px rgba(225, 29, 72, 0.5))' }}><path d="M20 6L9 17l-5-5"/></svg>
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 1 - The Genesis & Identity Layer</h3>
-                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Deployment of the NNM Protocol on the Polygon Mainnet. Activation of ChainFace identity profiles, enabling cross-chain interactions and foundational ecosystem functionality. Initial minting of Nexus Digital Name Assets.</p>
-              </div>
-            </div>
+                .slide-right-to-left-1 { animation: slideNavBtn 1.8s forwards 0.2s; }
+                .slide-right-to-left-2 { animation: slideNavBtn 1.8s forwards 0.4s; }
+                .slide-right-to-left-3 { animation: slideNavBtn 1.8s forwards 0.6s; }
+                .slide-right-to-left-4 { animation: slideNavBtn 1.8s forwards 0.8s; }
+                .slide-right-to-left-5 { animation: slideNavBtn 1.8s forwards 1.0s; }
 
-            <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '40px' }}>
-              <div style={{ width: '20px', display: 'flex', justifyContent: 'center', background: 'transparent', paddingTop: '2px' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 0px 5px rgba(225, 29, 72, 0.5))' }}><path d="M20 6L9 17l-5-5"/></svg>
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 2 - Network Infrastructure & Activation</h3>
-                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Establishment of core ecosystem infrastructure, including multi-chain interaction capabilities within ChainFace and initial integration of the NFX Index for tracking network activity and ecosystem data.</p>
-              </div>
-            </div>
+                @keyframes slideNavBtn {
+                    0% { transform: translateX(100vw); opacity: 0; }
+                    100% { transform: translateX(0); opacity: 1; }
+                }
 
-            <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '40px' }}>
-              <div style={{ width: '20px', display: 'flex', justifyContent: 'center', background: 'transparent', paddingTop: '2px' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 0px 5px rgba(225, 29, 72, 0.5))' }}><path d="M20 6L9 17l-5-5"/></svg>
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 3 - Ecosystem Utility Distribution</h3>
-                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Ongoing distribution of the NNM utility token to early participants, enabling access to ecosystem features, identity services, and internal protocol interactions.</p>
-              </div>
-            </div>
+                .hero-section {
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    gap: 5%;
+                    min-height: 50vh;
+                }
 
-            <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, marginBottom: '40px', opacity: 0.5 }}>
-              <div style={{ width: '20px', display: 'flex', justifyContent: 'center', background: 'transparent', paddingTop: '8px' }}>
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#64748b' }}></div>
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 4 - Platform Infrastructure & Mechanics</h3>
-                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Initialization of Internal system balancing mechanisms with time-locked smart contracts. Activation of usage-based platform mechanics
-, including automated supply adjustments linked to network activity.</p>
-              </div>
-            </div>
+                .hero-text-block {
+                    width: 45%;
+                    margin-top: 4%;
+                    opacity: 0;
+                    animation: slideLeftBlock 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.5s;
+                    text-align: left;
+                }
 
-            <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1, opacity: 0.5 }}>
-              <div style={{ width: '20px', display: 'flex', justifyContent: 'center', background: 'transparent', paddingTop: '8px' }}>
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#64748b' }}></div>
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Phase 5 - Global Integration & Ecosystem Expansion</h3>
-                <p style={{ color: '#9ea9a9', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>Continuous expansion of the ChainFace identity layer and ecosystem infrastructure, supporting broader accessibility and long-term protocol evolution.</p>
-              </div>
-            </div>
+                .presale-fomo-panel {
+                    margin-right: 3%;
+                    width: 50%;
+                    opacity: 0;
+                    animation: slideRightBlock 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.5s;
+                    background: rgba(14, 28, 65, 0.25);
+                    border: 1px solid rgba(162, 0, 255, 0.15);
+                    border-radius: 20px;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 0 15px rgba(162, 0, 255, 0.2), 0 0 40px rgba(162, 0, 255, 0.1);
+                    padding: 28px 30px;
+                    display: flex;
+                    flex-direction: column;
+                }
 
-          </div>
-        </div>
-      </div>
-{statusModal && (
-  <div 
-    onClick={() => setStatusModal(null)}
-    style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 10, 22, 0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
-  >
-    <div 
-      onClick={(e) => e.stopPropagation()}
-      style={{ width: '85%', maxWidth: '285px', background: '#050a16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '22px', padding: '22px 18px', textAlign: 'center', position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-        {statusModal === 'success' ? (
-          <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid #10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-          </div>
-        ) : statusModal === 'empty_amount' ? (
-          <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid #3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#3B82F6', fontSize: '22px', fontWeight: 'bold' }}>i</span>
-          </div>
-        ) : (
-          <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(252, 211, 77, 0.05)', border: '1px solid #FCD34D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#FCD34D', fontSize: '22px', fontWeight: 'bold' }}>!</span>
-          </div>
-        )}
-      </div>
+                @keyframes slideLeftBlock {
+                    0% { transform: translateX(-200vw); opacity: 0; }
+                    100% { transform: translateX(0); opacity: 1; }
+                }
 
-      <h3 style={{ color: '#fff', fontSize: '15px', fontWeight: '600', marginBottom: '10px' }}>
-        {statusModal === 'success' ? 'Confirmed' : statusModal === 'empty_amount' ? 'Amount Required' : 'Action Required'}
-      </h3>
+                @keyframes slideRightBlock {
+                    0% { transform: translateX(100vw); opacity: 0; }
+                    100% { transform: translateX(0); opacity: 1; }
+                }
 
-      {statusModal === 'success' ? (
-        <p style={{ color: '#9ea9a9', fontSize: '11px', lineHeight: '1.5', marginBottom: '18px' }}>
-          Your contribution has been successfully recorded.
-        </p>
-      ) : statusModal === 'empty_amount' ? (
-         <div style={{ marginBottom: '18px', textAlign: 'center' }}>
-          <p style={{ color: '#9ea9a9', fontSize: '11px', lineHeight: '1.6', margin: 0 }}>
-            Please enter the amount of <b>{selectedCoin}</b> you wish to contribute before proceeding.
-          </p>
-        </div>
-      ) : (
-        <div style={{ marginBottom: '18px', textAlign: 'center' }}>
-          <p style={{ color: '#9ea9a9', fontSize: '11px', lineHeight: '1.6', margin: 0 }}>
-            Please ensure you have sufficient <b>USDT</b> and <b>POL</b> for gas fees. Check your connection and try again.
-          </p>
-        </div>
-      )}
+                .hero-title {
+                    font-size: 2.2rem;
+                    font-weight: 600;
+                    line-height: 1.5;
+                    margin-bottom: 12px;
+                }
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {statusModal === 'success' ? (
-          <a href="/presale/balance" style={{ textDecoration: 'none' }}>
-            <div style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
-              VIEW BALANCE
-            </div>
-          </a>
-        ) : (
-          <div onClick={() => setStatusModal(null)} style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
-            {statusModal === 'empty_amount' ? 'Got it' : 'Try Again'}
-          </div>
-        )}
-        <button onClick={() => setStatusModal(null)} style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '10px', cursor: 'pointer' }}>Close</button>
-      </div>
-    </div>
-  </div>
-)}
+                .gradient-glow {
+                    background: linear-gradient(90deg, #9b51e0 15%, #ff4b82 50%, #9b51e0 85%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-size: 200% auto;
+                    animation: textShine 6s linear infinite;
+                }
 
-      <div style={{ maxWidth: '800px', margin: '20px auto', padding: '0 20px', textAlign: 'center' }}>
-        <p style={{ fontSize: '10px', fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6' }}>
-          <strong>Important Notice:</strong> NNM Tokens are digital utility units designed for use within the NNM ecosystem and its protocol functionalities. They are not securities, investment contracts, or financial instruments. Participation in this optional genesis distribution is entirely voluntary and may involve the complete loss of contributed digital assets due to the experimental nature of blockchain technologies. By proceeding, you acknowledge that you are acquiring NNM Tokens solely for their potential utility within the ecosystem and not with any expectation of profit or financial return.
-        </p>
-      </div>
-    </div>
-  );
+                @keyframes textShine { to { background-position: 200% center; } }
+
+                .hero-description {
+                    color: #EAECEF;
+                    font-size: 1.05rem;
+                    line-height: 1.6;
+                    font-weight: 200;
+                    letter-spacing: 0.4px;
+                }
+
+                .benefits-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    margin-top: 70px;
+                }
+
+                .benefit-bar {
+                    display: flex;
+                    align-items: center;
+                    background: rgba(14, 28, 65, 0.4);
+                    border: 1px solid rgba(162, 0, 255, 0.15);
+                    border-radius: 12px;
+                    padding: 14px 20px;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                    opacity: 0;
+                    transform: translateX(-100px);
+                }
+
+                .benefits-list.active .benefit-bar {
+                    animation: slideInBarFromLeft 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+                }
+
+                @keyframes slideInBarFromLeft {
+                    0% { transform: translateX(-100px); opacity: 0; }
+                    100% { transform: translateX(0); opacity: 1; }
+                }
+
+                .benefits-list.active .delay-1 { animation-delay: 0.2s; }
+                .benefits-list.active .delay-2 { animation-delay: 0.9s; }
+                .benefits-list.active .delay-3 { animation-delay: 1.6s; }
+                .benefits-list.active .delay-4 { animation-delay: 2.3s; }
+
+                .benefit-number {
+                    font-weight: 800;
+                    font-size: 1.1rem;
+                    margin-right: 15px;
+                    color: #ff4b82;
+                }
+
+                .benefit-text {
+                    color: #EAECEF;
+                    font-size: 0.85rem;
+                    font-weight: 300;
+                    letter-spacing: 0.4px;
+                    flex-grow: 1;
+                }
+
+                .benefit-icon {
+                    color: #14F195;
+                    font-weight: bold;
+                    font-size: 1.2rem;
+                }
+                .price-line { color: #b0c0c0; font-size: 0.8rem; line-height: 1.4; }
+                
+                .gold-metallic-text {
+                    background: linear-gradient(135deg, #f7df85 0%, #e19d08 40%, #fbe9aa 50%, #f3c24d 60%, #e19d08 70%, #f7df85 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    display: inline-block;
+                    font-weight: 900;
+                }
+
+                .countdown-inline-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-start;
+                    gap: 20px;
+                    background: rgba(0,0,0,0.15);
+                    padding: 12px 15px;
+                    border-radius: 15px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                }
+
+                .countdown-wrapper { display: flex; gap: 8px; }
+                .time-box {
+                    background: rgba(14, 28, 65, 0.6);
+                    border: 1px solid rgba(155, 81, 224, 0.4);
+                    border-radius: 8px;
+                    padding: 10px 8px;
+                    min-width: 55px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: inset 0 0 10px rgba(162, 0, 255, 0.1);
+                }
+                .time-value {
+                    color: #fff; font-size: 1.3rem; font-weight: 700; line-height: 1; margin-bottom: 2px;
+                    text-shadow: 0 0 10px rgba(255, 75, 130, 0.5);
+                }
+                .time-label { color: #b0c0c0; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 1px; }
+
+                .current-price-inline {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    text-align: center;
+                }
+
+                .presale-bar-style {
+                    width: 100%; height: 14px; background: rgba(14, 28, 65, 0.6); border-radius: 12px;
+                    border: 1px solid rgba(155, 81, 224, 0.4); overflow: hidden;
+                    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+                }
+                .presale-fill-style {
+                    height: 100%; background: linear-gradient(90deg, #9b51e0 0%, #ff4b82 100%); border-radius: 12px;
+                    box-shadow: 0 0 15px rgba(255, 75, 130, 0.6);
+                }
+
+                .exchange-module {
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: 16px;
+                    padding: 18px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                }
+
+                .quick-select-container {
+                    display: flex;
+                    gap: 8px;
+                    margin-bottom: 12px;
+                    justify-content: flex-end;
+                    flex-wrap: wrap;
+                }
+
+                .quick-btn {
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    color: #b0c0c0;
+                    font-size: 0.7rem;
+                    padding: 4px 10px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.1s;
+                }
+
+                .quick-btn:hover {
+                    background: rgba(155, 81, 224, 0.3);
+                    color: #fff;
+                }
+
+                .input-card {
+                    background: rgba(14, 28, 65, 0.5);
+                    border-radius: 12px;
+                    padding: 9px 15px;
+                    border: 1px solid rgba(255,255,255,0.08);
+                }
+
+                .input-label {
+                    color: #fff;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    letter-spacing: 0.5px;
+                }
+
+                .input-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    background: transparent;
+                }
+
+                input.crypto-input::-webkit-outer-spin-button,
+                input.crypto-input::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+                
+                input.crypto-input {
+                    -moz-appearance: textfield;
+                }
+
+                .crypto-input {
+                    background: transparent;
+                    border: none;
+                    color: #fff;
+                    font-size: 1.2rem;
+                    font-weight: 400;
+                    width: 60%;
+                    outline: none;
+                }
+                
+                .crypto-input::placeholder { color: rgba(255,255,255,0.2); }
+                .crypto-input.readonly { color: #b0c0c0; }
+
+                .token-selector {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: rgba(255,255,255,0.05);
+                    padding: 6px 12px;
+                    border-radius: 20px;
+                    color: #fff;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                }
+
+                .token-icon {
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    background-size: cover;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                }
+                
+                .sol-icon { 
+                    background-image: url('/icons/sol.svg');
+                    background-size: 65%;
+                    background-color: #1a1a1a;
+                }
+                
+                .nnm-icon { 
+                    background-image: url('/logo-coyn-nnm.png');
+                }
+
+                .connect-wallet-btn {
+                    width: 75%;
+                    display: block;
+                    margin: 0 auto;
+                    background: linear-gradient(90deg, #9b51e0 0%, #ff4b82 100%);
+                    border: none;
+                    padding: 11px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 0 15px rgba(255, 75, 130, 0.3);
+                }
+
+                .connect-wallet-btn span {
+                    color: white;
+                    font-size: 0.85rem;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+
+                .connect-wallet-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 0 25px rgba(255, 75, 130, 0.5);
+                }
+
+                .legal-disclaimer {
+                    text-align: center;
+                    color: #b0c0c0;
+                    font-size: 0.7rem;
+                }
+
+                .text-center { text-align: center; }
+                .text-left { text-align: left; }
+                .text-right { text-align: right; }
+                .text-white { color: #fff; }
+                .fw-bold { font-weight: bold; }
+                .mb-1 { margin-bottom: 0.25rem; }
+                .mb-2 { margin-bottom: 0.5rem; }
+                .mb-3 { margin-bottom: 1rem; }
+                .mb-4 { margin-bottom: 1.5rem; }
+                .d-flex { display: flex; }
+                .align-items-end { align-items: flex-end; }
+                .align-items-center { align-items: center; }
+                .justify-content-center { justify-content: center; }
+                .justify-content-between { justify-content: space-between; }
+                .text-light-muted { color: #b0c0c0; }
+
+                .features-section {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 30px;
+                    margin-top: 120px;
+                    width: 100%;
+                }
+
+                .reveal-right {
+                    transform: translateX(100px);
+                    opacity: 0;
+                }
+
+                .active .reveal-right {
+                    transform: translateX(0);
+                    opacity: 1;
+                    transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+                }
+
+                .active .delay-1 { transition-delay: 0.2s; }
+                .active .delay-2 { transition-delay: 0.9s; }
+                .active .delay-3 { transition-delay: 1.6s; }
+
+                .feature-card {
+                    flex: 1;
+                    background: rgba(14, 28, 65, 0.4);
+                    border: 1px solid rgba(162, 0, 255, 0.15);
+                    border-radius: 16px;
+                    padding: 30px;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .feature-title {
+                    font-size: 1.15rem;
+                    font-weight: 700;
+                    margin-bottom: 12px;
+                    margin-top: 0;
+                }
+
+                .feature-desc {
+                    color: #b0c0c0;
+                    font-size: 0.85rem;
+                    line-height: 1.6;
+                    font-weight: 300;
+                    margin: 0;
+                }
+
+                .tokenomics-header {
+                    margin-top: 100px;
+                    margin-bottom: 20px;
+                }
+
+                .reveal-left.active, .reveal-right.active {
+                    transform: translateX(0);
+                    opacity: 1;
+                    transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+                }
+
+                .reveal-left.active.delay-1, .reveal-right.active.delay-1 { transition-delay: 0.2s; }
+                .reveal-left.active.delay-2, .reveal-right.active.delay-2 { transition-delay: 0.4s; }
+
+                .tokenomics-section {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 30px;
+                    width: 100%;
+                    align-items: stretch;
+                    scroll-margin-top: 35vh;
+                }
+
+                .tokenomics-card {
+                    flex: 1;
+                    background: rgba(14, 28, 65, 0.4);
+                    border: 1px solid rgba(162, 0, 255, 0.15);
+                    border-radius: 20px;
+                    padding: 35px;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .donut-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    margin-bottom: 30px;
+                }
+
+                .donut-legend {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    gap: 12px;
+                    margin-bottom: 60px;
+                }
+
+                .legend-item {
+                    display: flex;
+                    align-items: center;
+                    font-size: 0.75rem;
+                    color: #b0c0c0;
+                    cursor: pointer;
+                    transition: color 0.3s ease;
+                }
+                
+                .legend-item:hover { color: #fff; }
+
+                .legend-dot {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                    margin-right: 6px;
+                }
+
+                .donut-chart-wrapper {
+                    position: relative;
+                    width: 210px;
+                    height: 210px;
+                }
+
+                .donut-chart {
+                    width: 100%;
+                    height: 100%;
+                    transform: rotate(-180deg);
+                    overflow: visible;
+                }
+
+                .donut-segment {
+                    transition: stroke-width 0.3s ease, filter 0.3s ease;
+                    cursor: pointer;
+                }
+
+                .donut-segment:hover {
+                    stroke-width: 6;
+                    filter: drop-shadow(0px 0px 6px rgba(255,255,255,0.4));
+                }
+
+                .donut-inner-text {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    text-align: center;
+                    display: flex;
+                    flex-direction: column;
+                    pointer-events: none;
+                }
+
+                .donut-val {
+                    font-size: 1.8rem;
+                    font-weight: 300;
+                    line-height: 1.1;
+                    text-shadow: 0 0 10px rgba(0,0,0,0.5);
+                    transition: color 0.3s ease;
+                }
+
+                .donut-label {
+                    font-size: 0.65rem;
+                    color: #b0c0c0;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    margin-top: 5px;
+                }
+
+                .burn-box-wide {
+                    background: rgba(14, 28, 65, 0.4);
+                    border: 1px solid rgba(162, 0, 255, 0.15);
+                    border-radius: 16px;
+                    padding: 25px 40px;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 0 20px rgba(162, 0, 255, 0.15);
+                    margin: 160px auto 0 auto;
+                    width: 70%;
+                    text-align: center;
+                    overflow: hidden;
+                    transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+                    opacity: 0;
+                    transform: translateX(-150px);
+                    scroll-margin-top: 35vh;
+                }
+
+                .burn-box-wide.active {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+
+                .burn-box-wide:hover {
+                    transform: translateX(-30px);
+                    box-shadow: 0 0 30px rgba(162, 0, 255, 0.3);
+                    border-color: rgba(162, 0, 255, 0.4);
+                }
+
+                .burn-box-wide .burn-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 12px;
+                }
+
+                .burn-box-wide .burn-icon {
+                    font-size: 1.2rem;
+                    margin-right: 10px;
+                }
+
+                .burn-box-wide h4 {
+                    margin: 0;
+                    font-size: 1rem;
+                }
+
+                .burn-box-wide p {
+                    color: #b0c0c0;
+                    font-size: 0.85rem;
+                    line-height: 1.6;
+                    margin: 0;
+                }
+
+                .token-info-table {
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-top: 45px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                }
+
+                .table-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 10px 0;
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                }
+                
+                .table-row:last-child { border-bottom: none; padding-bottom: 0; }
+                .table-row:first-child { padding-top: 0; }
+
+                .table-key {
+                    color: #b0c0c0;
+                    font-size: 0.85rem;
+                }
+
+                .table-val {
+                    font-size: 0.9rem;
+                    font-weight: 400;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .chain-val { color: #fff; font-weight: 400; }
+
+                .table-icon {
+                    width: 16px; height: 16px; margin-right: 6px;
+                    background-size: cover; background-position: center; border-radius: 50%;
+                }
+
+                .blue-link {
+                    color: #4da8da;
+                    text-decoration: none;
+                    transition: color 0.2s;
+                }
+
+                .blue-link:hover { color: #82cfff; text-decoration: underline; }
+
+                .verify-link {
+                    color: #9b51e0;
+                    text-decoration: none;
+                    font-weight: 600;
+                    margin-left: 5px;
+                    transition: color 0.2s;
+                }
+
+                .verify-link:hover { color: #ff4b82; text-decoration: underline; }
+
+                .allocation-details-scroll {
+                    overflow-y: auto;
+                    padding-right: 10px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 25px;
+                    flex-grow: 1;
+                }
+
+                .allocation-details-scroll::-webkit-scrollbar { width: 4px; }
+                .allocation-details-scroll::-webkit-scrollbar-thumb { background: rgba(162, 0, 255, 0.5); border-radius: 4px; }
+
+                .alloc-item h4 {
+                    margin: 0 0 8px 0;
+                    font-size: 1.05rem;
+                    font-weight: 700;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                }
+
+                .alloc-item p {
+                    margin: 0;
+                    color: #b0c0c0;
+                    font-size: 0.9rem;
+                    line-height: 1.6;
+                }
+                    .mt-100 { margin-top: 100px; }
+
+                    #roadmap-section { scroll-margin-top: 40vh; }
+                    .roadmap-section {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 20px;
+                        width: 100%;
+                        margin-top: 20px;
+                        margin-bottom: 40px;
+                    }
+
+                    .roadmap-card {
+                        background: rgba(14, 28, 65, 0.4);
+                        border: 1px solid rgba(162, 0, 255, 0.15);
+                        border-radius: 16px;
+                        padding: 25px 30px;
+                        backdrop-filter: blur(10px);
+                        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                        width: 100%;
+                        opacity: 0;
+                        transform: translateX(-100px);
+                        transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+                    }
+
+                    .roadmap-card.active {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+
+                    .roadmap-card.delay-1 { transition-delay: 0.2s; }
+                    .roadmap-card.delay-2 { transition-delay: 0.4s; }
+                    .roadmap-card.delay-3 { transition-delay: 0.6s; }
+                    .roadmap-card.delay-4 { transition-delay: 0.8s; }
+                    .roadmap-card.delay-5 { transition-delay: 1s; }
+
+                    .important-notice-footer {
+                        margin-top: 80px;
+                        padding-bottom: 30px;
+                        color: #888;
+                        font-size: 0.72rem;
+                        font-style: italic;
+                        text-align: center;
+                        max-width: 1100px;
+                        margin-left: auto;
+                        margin-right: auto;
+                        line-height: 1.6;
+                        opacity: 0.8;
+                    }
+
+                @media (max-width: 991px) {
+                    .nav-top { justify-content: center; }
+                    .hero-section { flex-direction: column; justify-content: flex-start; gap: 40px; align-items: center; }
+                    .hero-text-block { width: 90%; text-align: center; margin-top: 0; }
+                    .presale-fomo-panel { width: 95%; padding: 25px 15px; }
+                    .hero-title { font-size: 1.8rem; }
+                    .countdown-inline-row { flex-direction: column; align-items: center; text-align: center; gap: 15px; } 
+                    .features-section { flex-direction: column; gap: 20px; }
+                    .tokenomics-section { flex-direction: column; }
+                }
+            ` }} />
+        </main>
+    );
 }

@@ -168,7 +168,7 @@ function Home() {
     const [touchStart, setTouchStart] = useState(0);
 
     const heroImages = ["/hero-blue.jpg", "/hero-red.jpg", "/hero-black.jpg"];
-    const heroLinks = ["/mint", "/chainface", "/market"];
+    const heroLinks = ["/Rewards", "/chainface", "/presale"];
 
     useEffect(() => {
         if (isPaused) return; 

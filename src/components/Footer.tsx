@@ -10,7 +10,7 @@ const Footer = () => {
   const linkHoverColor = '#FCD535';
 
   return (
-    <footer className="desktop-only-footer" style={{ backgroundColor: '#0B0E11', borderTop: '1px solid rgba(255, 255, 255, 0.08)', padding: '40px 0 20px', marginTop: 'auto' }}>
+    <footer className="desktop-only-footer">
         <div className="container">
             <div className="row g-3">
                 
@@ -61,9 +61,9 @@ const Footer = () => {
                 <div className="col-6 col-md-3">
                     <h6 className="fw-bold mb-3 text-white text-uppercase" style={{ fontSize: headerFontSize, letterSpacing: '1px' }}>Company</h6>
                     <ul className="list-unstyled d-flex flex-column gap-2">
-                        <li><Link href="/nnm-concept" className="footer-link-item">NNM Concept</Link></li>
+                        <li><Link href="/Rewards" className="footer-link-item">NNM Rewards</Link></li>
                         <li><Link href="/affiliate" className="footer-link-item">Affiliate Program</Link></li>
-                        <li><Link href="/legal" className="footer-link-item">Legal & Terms</Link></li>
+                        <li><Link href="/legal" target="_blank" className="footer-link-item">Legal & Terms</Link></li>
                         <li><Link href="/contact" className="footer-link-item">Contact</Link></li>
                     </ul>
                 </div>
@@ -72,12 +72,55 @@ const Footer = () => {
             
             <div className="row mt-5 pt-3 border-top border-secondary" style={{ borderColor: 'rgba(255, 255, 255, 0.05) !important' }}>
                 <div className="col-12 text-center text-secondary" style={{ fontSize: '10px' }}>
-                    &copy; 2025 NNM Digital Name Assets Market. All rights reserved.
+                    &copy; 2026 NNM Digital Name Assets Market. All rights reserved.
                 </div>
             </div>
         </div>
 
         <style jsx>{`
+            .desktop-only-footer {
+                position: relative;
+                overflow: hidden;
+                background: linear-gradient(to bottom, #050a16 0%, #050a16 100%);
+                border-top: 1px solid rgba(59, 130, 246, 0.15);
+                padding: 40px 0 20px;
+                margin-top: auto;
+            }
+
+            .desktop-only-footer::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: -100%;
+                width: 100%;
+                height: 2px;
+                background: linear-gradient(270deg, transparent, rgba(59, 130, 246, 0.8), transparent);
+                animation: tech-wave-rtl 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+                z-index: 1;
+            }
+
+            .desktop-only-footer::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: -100%;
+                width: 50%;
+                height: 100%;
+                background: linear-gradient(270deg, transparent, rgba(59, 130, 246, 0.02), transparent);
+                animation: light-sweep-rtl 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+                pointer-events: none;
+            }
+
+            @keyframes tech-wave-rtl {
+                0% { right: -100%; }
+                100% { right: 100%; }
+            }
+
+            @keyframes light-sweep-rtl {
+                0% { right: -100%; }
+                100% { right: 100%; }
+            }
+
             .footer-social-row { 
                 display: flex; align-items: center; gap: 10px; 
                 color: ${linkColor}; 

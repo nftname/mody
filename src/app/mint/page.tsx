@@ -1,11 +1,11 @@
 'use client';
-
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useAccount, useWriteContract, useReadContract, usePublicClient } from "wagmi";
-import { parseAbi, keccak256, stringToBytes, formatEther } from 'viem';
+import { parseAbi, keccak256, stringToBytes, formatEther, createPublicClient, http } from 'viem';
+import { polygon } from 'viem/chains';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { toBlob } from 'html-to-image';
 import { CONTRACT_ADDRESS } from '@/data/config';
@@ -44,7 +44,7 @@ const MintContent = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [errorTitle, setErrorTitle] = useState(''); 
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState<'process' | 'error' | 'success'>('process');
+  const [modalType, setModalType] = useState<'process' | 'error' | 'success' | 'founder_success'>('process');
   const [processStep, setProcessStep] = useState(''); 
   const [mounted, setMounted] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
@@ -116,14 +116,19 @@ const MintContent = () => {
     setStatus(null);
 
     try {
-        if (!publicClient) return;
+        const searchClient = createPublicClient({
+            chain: polygon,
+            transport: http('https://polygon-bor.publicnode.com')
+        });
+
         const nameHash = keccak256(stringToBytes(cleanName));
-        const isRegistered = await publicClient.readContract({
+        const isRegistered = await searchClient.readContract({
             address: CONTRACT_ADDRESS as `0x${string}`,
             abi: CONTRACT_ABI,
             functionName: 'registeredNames',
             args: [nameHash]
         });
+        
         if (isRegistered) setStatus('taken');
         else setStatus('available');
 
@@ -186,17 +191,17 @@ const MintContent = () => {
           return;
       }
 
-      if (status === null) {
-          setErrorTitle("Verification Required");
-          setErrorMessage("Please click the search icon next to the input box to verify availability first.");
+      if (status !== 'available') {
+          setErrorTitle("Name Not Available");
+          setErrorMessage("This name is not available or already taken. Please search for another name.");
           setModalType('error');
           setShowModal(true);
           return;
       }
 
-      if (status !== 'available') {
-          setErrorTitle("Name Not Available");
-          setErrorMessage("This name is not available or already taken. Please search for another name.");
+      if (!address || !address.startsWith('0x')) {
+          setErrorTitle("Wallet Required");
+          setErrorMessage("Please connect a valid wallet first.");
           setModalType('error');
           setShowModal(true);
           return;
@@ -211,11 +216,9 @@ const MintContent = () => {
 
       try {
           const imageBlob = await generateSnapshot(searchTerm, tierName);
-          
           if (!imageBlob) throw new Error("Failed to generate asset snapshot locally.");
 
           setProcessStep("Uploading: Securing asset on IPFS...");
-          
           const date = new Date();
           const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
           const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
@@ -232,90 +235,116 @@ const MintContent = () => {
               body: formData 
           });
 
-          if (!apiResponse.ok) {
-              const errorData = await apiResponse.json();
-              throw new Error(errorData.error || "Upload Failed");
-          }
-
+          if (!apiResponse.ok) throw new Error("Upload Failed");
           const { gatewayUrl, metadataUri } = await apiResponse.json();
           const tokenURI = metadataUri;
 
-          const metadataObject = {
-            name: searchTerm,
-            description: LONG_DESCRIPTION,
-            image: gatewayUrl, 
-            attributes: [
-              { trait_type: "Asset Type", value: "Digital Name" },
-              { trait_type: "Generation", value: "Gen-0" },
-              { trait_type: "Tier", value: tierName },
-              { trait_type: "Platform", value: "NNM Registry" },
-              { trait_type: "Collection", value: "Genesis - 001" },
-              { trait_type: "Mint Date", value: dynamicDate }
-            ]
-          };
+          if (tierName === "FOUNDER") {
+              setProcessStep("Backend Processing: Minting & Transferring to your wallet...");
+              
+              const timestamp = Date.now();
+              const securityToken = btoa(`${address}-${timestamp}-nnm-secure`);
+
+              const airdropRes = await fetch('/api/airdrop', {
+                  method: 'POST',
+                  headers: { 
+                      'Content-Type': 'application/json',
+                      'x-secure-token': securityToken,
+                      'x-secure-timestamp': timestamp.toString()
+                  },
+                  body: JSON.stringify({
+                      wallet: address,
+                      name: searchTerm,
+                      tokenURI: metadataUri,
+                      tierName: tierName,
+                      imageUrl: gatewayUrl
+                  })
+              });
+
+              const airdropData = await airdropRes.json();
+              
+              if (!airdropRes.ok) {
+                  if (airdropData.error === 'Founder tier already claimed.') {
+                      setErrorTitle("Limit Reached");
+                      setErrorMessage("You have already claimed a Founder tier name. This tier is limited to one per wallet.");
+                  } else {
+                      setErrorTitle("Minting Failed");
+                      setErrorMessage(airdropData.error || "Founder minting failed.");
+                  }
+                  setModalType('error');
+                  setShowModal(true);
+                  setIsMinting(false);
+                  return; 
+              }
+
+              try {
+                  await fetch('/api/save-asset', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                          token_id: airdropData.tokenId,
+                          name: searchTerm,
+                          tier: tierName,
+                          image_url: gatewayUrl,
+                          description: LONG_DESCRIPTION,
+                          attributes: [
+                           { trait_type: "Asset Type", value: "Digital Name" },
+                           { trait_type: "Generation", value: "Gen-0" },
+                           { trait_type: "Tier", value: tierName },
+                           { trait_type: "Platform", value: "NNM Registry" },
+                           { trait_type: "Collection", value: "Genesis - 001" },
+                           { trait_type: "Mint Date", value: dynamicDate }
+                         ],
+                          mint_date: dynamicDate,
+                          metadata_uri: tokenURI
+                      })
+                  });
+              } catch (e) {}
+
+              setModalType('founder_success'); 
+              setShowModal(true);
+              return; 
+          }
 
           setProcessStep("Wallet: Please sign the transaction...");
 
           let hash;
-          if (isAdmin) {
-            hash = await writeContractAsync({
-              address: CONTRACT_ADDRESS as `0x${string}`,
-              abi: CONTRACT_ABI,
-              functionName: 'reserveName',
-              args: [searchTerm, tierIndex, tokenURI],
-            });
+          let usdAmountWei;
+          
+          if (tierName === "IMMORTAL") {
+              usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceImmortal' });
           } else {
-            let usdAmountWei;
-            
-            if (tierName === "IMMORTAL") {
-                usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceImmortal' });
-            } else if (tierName === "ELITE") {
-                usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceElite' });
-            } else {
-                usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceFounder' });
-            }
-
-            let valueToSend = BigInt(0);
-
-            if (usdAmountWei > BigInt(0)) {
-                const costInMatic = await publicClient.readContract({
-                   address: CONTRACT_ADDRESS as `0x${string}`,
-                   abi: CONTRACT_ABI,
-                   functionName: 'getMaticCost',
-                   args: [usdAmountWei]
-                });
-                valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
-            }
-
-            if (address && valueToSend > BigInt(0)) {
-                const balance = await publicClient.getBalance({ address });
-                if (balance < valueToSend) throw new Error("Insufficient funds (Pre-flight check): Low POL balance.");
-            }
-            
-            hash = await writeContractAsync({
-              address: CONTRACT_ADDRESS as `0x${string}`,
-              abi: CONTRACT_ABI,
-              functionName: 'mintPublic',
-              args: [searchTerm, tierIndex, tokenURI],
-              value: valueToSend, 
-            });
+              usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceElite' });
           }
 
-          const receipt = await publicClient.waitForTransactionReceipt({ hash });
+          let valueToSend = BigInt(0);
+          if (usdAmountWei > BigInt(0)) {
+              const costInMatic = await publicClient.readContract({
+                 address: CONTRACT_ADDRESS as `0x${string}`,
+                 abi: CONTRACT_ABI,
+                 functionName: 'getMaticCost',
+                 args: [usdAmountWei]
+              });
+              valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
+          }
 
+          const balance = await publicClient.getBalance({ address });
+          if (balance < valueToSend) throw new Error("Insufficient funds (Pre-flight check): Low balance.");
+          
+          hash = await writeContractAsync({
+            address: CONTRACT_ADDRESS as `0x${string}`,
+            abi: CONTRACT_ABI,
+            functionName: 'mintPublic',
+            args: [searchTerm, tierIndex, tokenURI],
+            value: valueToSend, 
+          });
+
+          const receipt = await publicClient.waitForTransactionReceipt({ hash });
+          
           if (receipt.status === 'success') {
              let actualPriceInPOL = 0;
 
              if (!isAdmin) {
-                 let usdAmountWei;
-                 if (tierName === "IMMORTAL") {
-                     usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceImmortal' });
-                 } else if (tierName === "ELITE") {
-                     usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceElite' });
-                 } else {
-                     usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceFounder' });
-                 }
-
                  if (usdAmountWei > BigInt(0)) {
                      const costInMatic = await publicClient.readContract({
                         address: CONTRACT_ADDRESS as `0x${string}`,
@@ -323,8 +352,8 @@ const MintContent = () => {
                         functionName: 'getMaticCost',
                         args: [usdAmountWei]
                      });
-                     const valueToSend = (costInMatic * BigInt(101)) / BigInt(100);
-                     actualPriceInPOL = parseFloat(formatEther(valueToSend));
+                     const finalValue = (costInMatic * BigInt(101)) / BigInt(100);
+                     actualPriceInPOL = parseFloat(formatEther(finalValue));
                  }
              }
 
@@ -352,20 +381,24 @@ const MintContent = () => {
                              tier: tierName,
                              image_url: gatewayUrl,
                              description: LONG_DESCRIPTION,
-                             attributes: metadataObject.attributes,
+                             attributes: [
+                              { trait_type: "Asset Type", value: "Digital Name" },
+                              { trait_type: "Generation", value: "Gen-0" },
+                              { trait_type: "Tier", value: tierName },
+                              { trait_type: "Platform", value: "NNM Registry" },
+                              { trait_type: "Collection", value: "Genesis - 001" },
+                              { trait_type: "Mint Date", value: dynamicDate }
+                            ],
                              mint_date: dynamicDate,
                              metadata_uri: tokenURI
                          })
                      });
-                 } catch (e) {
-                     console.error(e);
-                 }
+                 } catch (e) {}
                  
                  if (address) notifyRewardSystem(address, tierName, mintedId);
 
                  if (receipt.transactionHash) {
                      try {
-                         
                          await fetch('/api/affiliate', {
                              method: 'POST',
                              headers: { 'Content-Type': 'application/json' },
@@ -375,13 +408,11 @@ const MintContent = () => {
                                  referrerWallet: referrerWallet ? referrerWallet.toLowerCase() : null 
                              })
                          });
-                     } catch (e: any) {
-                         console.error("Affiliate update ignored:", e.message);
-                     }
+                     } catch (e: any) {}
                  }
              }
           }
-
+          
           setModalType('success');
           setShowModal(true);
 
@@ -485,13 +516,13 @@ const MintContent = () => {
 
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            {/* تم تصغير الحجم بنسبة 25% (320px بدلاً من 420px) وتغيير الخلفية لنفس لون الموقع */}
+            {}
             <div style={{ width: '100%', maxWidth: '320px', backgroundColor: '#181A20', border: '1px solid #2B3139', borderRadius: '15px', padding: '24px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative' }}>
                 <button onClick={handleCloseModal} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: '#848E9C', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
 
                 {modalType === 'success' && (
                    <div className="fade-in">
-                     {/* تم تغيير اللون إلى الذهبي وتصغير الحجم */}
+                     {}
                      <div className="mb-3"><i className="bi bi-check-circle-fill" style={{fontSize: '2.6rem', color: '#FCD535'}}></i></div>
                      <h3 className="fw-bold mb-2" style={{ color: '#EAECEF', fontSize: '1.4rem' }}>History Made!</h3>
                      <p className="mb-3" style={{ color: '#848E9C', fontSize: '13px' }}>The name <span style={{color: '#FCD535'}}>{searchTerm}</span> is now your eternal digital asset.</p>
@@ -501,11 +532,27 @@ const MintContent = () => {
                      <div className="mt-3"><button onClick={handleCloseModal} className="btn btn-link text-decoration-none" style={{fontSize: '11px', color: '#848E9C'}}>Mint Another</button></div>
                    </div>
                 )}
-
+                {modalType === 'founder_success' && (
+                   <div className="fade-in">
+                     <div className="mb-3"><i className="bi bi-check-circle-fill" style={{fontSize: '2.6rem', color: '#0ecb81'}}></i></div>
+                     <h3 className="fw-bold mb-2" style={{ color: '#EAECEF', fontSize: '1.4rem' }}>History Made!</h3>
+                     <p className="mb-3" style={{ color: '#848E9C', fontSize: '13px' }}>
+                        The name <span style={{color: '#FCD535'}}>{searchTerm}</span> is now your eternal digital asset.
+                        <br/>
+                        <strong style={{color: '#0ecb81', display: 'block', marginTop: '10px'}}>
+                           In a few minutes, the NFT will be sent to your wallet for free.
+                        </strong>
+                     </p>
+                     <Link href={`/dashboard`} passHref>
+                        <button className="btn w-100 fw-bold py-2" style={{ background: GOLD_GRADIENT_DIAGONAL, border: 'none', color: '#181A20', fontSize: '14px', borderRadius: '8px' }}>View Dashboard <i className="bi bi-arrow-right ms-2"></i></button>
+                     </Link>
+                     <div className="mt-3"><button onClick={handleCloseModal} className="btn btn-link text-decoration-none" style={{fontSize: '11px', color: '#848E9C'}}>Close</button></div>
+                   </div>
+                )}
                 {modalType === 'process' && (
                    <div className="fade-in">
                      <div className="mb-3 position-relative d-inline-block">
-                        {/* تم تصغير حجم العداد */}
+                        {}
                         <div className="spinner-border" style={{ color: '#FCD535', width: '3rem', height: '3rem', borderWidth: '0.2em' }} role="status"></div>
                         <div className="position-absolute top-50 start-50 translate-middle fw-bold" style={{ fontSize: '12px', color: '#EAECEF' }}>{timer}</div>
                      </div>
@@ -518,7 +565,7 @@ const MintContent = () => {
 
                 {modalType === 'error' && (
                     <div className="fade-in">
-                        {/* تم تصغير حجم أيقونة الخطأ */}
+                        {}
                         <i className="bi bi-info-circle-fill mb-3" style={{ fontSize: '2.2rem', color: '#FCD535' }}></i>
                         <h5 className="fw-bold mb-2" style={{ color: '#EAECEF', fontSize: '1.1rem' }}>{errorTitle || "Notice"}</h5>
                         <p className="mb-3" style={{ fontSize: '12px', color: '#848E9C' }}>{errorMessage}</p>

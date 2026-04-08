@@ -8,10 +8,12 @@ export default function BalancePage() {
   
   const [presaleData, setPresaleData] = useState({ investedUsd: 0, tokensBought: 0, history: [] as any[] });
   const [rewardsBalance, setRewardsBalance] = useState<number>(0);
+  const [socialPoints, setSocialPoints] = useState<number>(0);
+  const [ecosystemPoints, setEcosystemPoints] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
   const isPresaleEnded = false; 
-  const listingPrice = 0.001;
+  const listingPrice = 0.10;
 
   useEffect(() => {
     if (!address) return;
@@ -29,14 +31,16 @@ export default function BalancePage() {
           });
         }
 
-        const rewardsRes = await fetch('/api/dashboard', { 
+        const rewardsRes = await fetch('/api/campaign', { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ action: 'getConviction', address }) 
         });
         const rewardsJson = await rewardsRes.json();
-        if (!rewardsJson.error && rewardsJson.wallet) {
-          setRewardsBalance(Number(rewardsJson.wallet.claimable_nnm) || 0);
+        if (!rewardsJson.error) {
+          setRewardsBalance(rewardsJson.wallet?.claimable_nnm ? Number(rewardsJson.wallet.claimable_nnm) : 0);
+          setSocialPoints(rewardsJson.social_points || 0);
+          setEcosystemPoints(rewardsJson.ecosystem_points || 0);
         }
       } catch (e) {
         console.error(e);
@@ -48,7 +52,7 @@ export default function BalancePage() {
     fetchAllData();
   }, [address]);
 
-  const totalNnmBalance = presaleData.tokensBought + rewardsBalance;
+  const totalNnmBalance = presaleData.tokensBought + rewardsBalance + socialPoints + ecosystemPoints;
   const totalValueAtListing = totalNnmBalance * listingPrice;
 
   if (!isConnected) {
@@ -61,82 +65,85 @@ export default function BalancePage() {
     );
   }
 
-  const cardStyle = {
-    flex: '1',
-    minWidth: '0',
-    background: 'rgba(147, 51, 234, 0.05)', 
-    border: '1px solid rgba(147, 51, 234, 0.11)', 
-    boxShadow: '0 0 30px rgba(147, 51, 234, 0.11)', 
-    borderRadius: '20px',
-    backdropFilter: 'blur(15px)',
-    padding: '20px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px',
-    overflow: 'hidden'
-  };
-
-  const labelStyle = { color: '#9ea9a9', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' as const, letterSpacing: '0.5px' };
+  const labelStyle = { color: '#9ea9a9', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' as const, letterSpacing: '0.5px' };
   const valueStyle = { color: '#f8fafc', fontSize: '18px', fontWeight: '500', fontFamily: 'monospace' };
 
   return (
     <div style={{ backgroundColor: '#050a16', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px', fontFamily: 'sans-serif' }}>
       
-      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '15px', width: '100%', maxWidth: '1000px', marginBottom: '40px', justifyContent: 'center' }}>
-        
-        <div style={cardStyle}>
-          <div style={{ display: 'flex' }}>
-            <span style={{ ...labelStyle, width: '40%' }}>Contribution</span>
-            <span style={labelStyle}>Allocated NNM</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto' }}>
-            <span style={{ ...valueStyle, color: '#10B981', width: '40%' }}>${presaleData.investedUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <img src="/logo-coyn-nnm.png" alt="" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
-              <span style={valueStyle}>{presaleData.tokensBought.toLocaleString()}</span>
-            </div>
-          </div>
+      <div style={{ 
+          width: '100%', 
+          maxWidth: '1000px', 
+          marginBottom: '40px', 
+          background: 'rgba(147, 51, 234, 0.05)', 
+          border: '1px solid rgba(147, 51, 234, 0.11)', 
+          boxShadow: '0 0 30px rgba(147, 51, 234, 0.11)', 
+          borderRadius: '20px',
+          backdropFilter: 'blur(15px)',
+          overflow: 'hidden'
+      }}>
+        <div style={{ overflowX: 'auto', padding: '20px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+            <thead>
+              <tr>
+                <th style={{ ...labelStyle, padding: '0 16px 16px 16px' }}>Presale Allocated</th>
+                <th style={{ ...labelStyle, padding: '0 16px 16px 16px' }}>Conviction</th>
+                <th style={{ ...labelStyle, padding: '0 16px 16px 16px' }}>Social Points</th>
+                <th style={{ ...labelStyle, padding: '0 16px 16px 16px' }}>Ecosystem</th>
+                <th style={{ ...labelStyle, padding: '0 16px 16px 16px' }}>Total Value (@ $0.10)</th>
+                <th style={{ ...labelStyle, padding: '0 16px 16px 16px', textAlign: 'center' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ padding: '0 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <img src="/logo-coyn-nnm.png" alt="NNM" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
+                    <span style={valueStyle}>{isLoading ? '...' : presaleData.tokensBought.toLocaleString()}</span>
+                  </div>
+                </td>
+                <td style={{ padding: '0 16px' }}>
+                  <span style={valueStyle}>{isLoading ? '...' : rewardsBalance.toLocaleString()}</span>
+                </td>
+                <td style={{ padding: '0 16px' }}>
+                  <span style={valueStyle}>{isLoading ? '...' : socialPoints.toLocaleString()}</span>
+                </td>
+                <td style={{ padding: '0 16px' }}>
+                  <span style={valueStyle}>{isLoading ? '...' : ecosystemPoints.toLocaleString()}</span>
+                </td>
+                <td style={{ padding: '0 16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ ...valueStyle, fontSize: '20px', fontWeight: 'normal' }}>{isLoading ? '...' : totalNnmBalance.toLocaleString()}</span>
+                    <span style={{ color: '#10B981', fontSize: '13px', fontWeight: 'normal', marginTop: '4px' }}>
+                      ≈ ${totalValueAtListing.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </td>
+                <td style={{ padding: '0 16px', textAlign: 'center', verticalAlign: 'middle' }}>
+                  <button 
+                    disabled={!isPresaleEnded}
+                    style={{ 
+                      minWidth: '120px',
+                      background: 'linear-gradient(90deg, #a200ff 0%, #ff0055 100%)', 
+                      border: 'none', 
+                      color: 'white', 
+                      padding: '8px 16px', 
+                      borderRadius: '8px', 
+                      fontSize: '11px', 
+                      fontWeight: '700',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      cursor: isPresaleEnded ? 'pointer' : 'not-allowed',
+                      opacity: isPresaleEnded ? 1 : 0.6,
+                      whiteSpace: 'nowrap'
+                    }}>
+                    {isPresaleEnded ? 'Claim Tokens' : 'Locked 🔒'}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <div style={cardStyle}>
-          <div style={{ display: 'flex', width: '100%' }}>
-            <span id="rewards-label" style={labelStyle}>Conviction Rewards</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: 'auto', paddingLeft: '45px' }}>
-             <img src="/logo-coyn-nnm.png" alt="" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
-             <span style={valueStyle}>{isLoading ? '...' : rewardsBalance.toLocaleString()}</span>
-          </div>
-        </div>
-
-        <div style={{ ...cardStyle, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-            <span style={labelStyle}>Reference Value (@ $0.001)</span>
-            <span style={{ ...valueStyle, color: '#10B981', fontSize: '26px' }}>
-              ${totalValueAtListing.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end', width: '35%' }}>
-            <span style={{ color: '#9ea9a9', fontSize: '10px', fontWeight: 'bold' }}>Status</span>
-            <button 
-              disabled={!isPresaleEnded}
-              style={{ 
-                width: '100%',
-                background: isPresaleEnded ? 'linear-gradient(90deg, #E11D48 0%, #9333EA 100%)' : 'rgba(255,255,255,0.05)', 
-                border: isPresaleEnded ? 'none' : '1px solid rgba(255,255,255,0.1)', 
-                color: isPresaleEnded ? '#fff' : '#64748b', 
-                padding: '8px 0', 
-                borderRadius: '8px', 
-                fontSize: '11px', 
-                fontWeight: 'bold', 
-                cursor: isPresaleEnded ? 'pointer' : 'not-allowed',
-                boxShadow: isPresaleEnded ? '0 4px 15px rgba(225, 29, 72, 0.3)' : 'none',
-                whiteSpace: 'nowrap'
-              }}>
-              Unlock
-            </button>
-          </div>
-        </div>
-
       </div>
 
       <div style={{ width: '100%', maxWidth: '1000px', background: 'rgba(147, 51, 234, 0.03)', border: '1px solid rgba(147, 51, 234, 0.1)', borderRadius: '20px', overflow: 'hidden', backdropFilter: 'blur(10px)' }}>
@@ -145,7 +152,7 @@ export default function BalancePage() {
         </div>
         
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
             <thead style={{ background: 'rgba(0,0,0,0.2)' }}>
               <tr>
                 <th style={{ padding: '16px 24px', color: '#9ea9a9', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>Date</th>

@@ -44,12 +44,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { wallet, txHash, amountUsd, tokensBought } = body;
 
-    // التحقق فقط من وصول البيانات من الواجهة الأمامية
     if (!wallet || !txHash || amountUsd === undefined || tokensBought === undefined) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
-    // إدراج البيانات مباشرة في Supabase (بناءً على تأكيد الواجهة الأمامية)
     const { error } = await supabaseAdmin
       .from('presale_transactions')
       .insert([
@@ -62,7 +60,6 @@ export async function POST(request: Request) {
       ]);
 
     if (error) {
-      // إذا كانت المعاملة مسجلة مسبقاً، نعتبرها ناجحة ولا نكررها
       if (error.code === '23505') {
         return NextResponse.json({ success: true }); 
       }

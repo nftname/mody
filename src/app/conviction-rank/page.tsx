@@ -147,7 +147,7 @@ export default function ConvictionRankPage() {
                             boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
                         }}>
                         <img 
-                            src="/conviction.jpg" 
+                            src="/conviction.png" 
                             alt="Conviction Rank" 
                             className="w-100 h-100 object-fit-cover" 
                         />

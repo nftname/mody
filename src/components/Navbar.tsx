@@ -228,13 +228,14 @@ const Navbar = () => {
     'Home': 'bi-house-door',
     'Market': 'bi-shop',
     '$NNM': 'bi-fire',
+    'Rewards': 'bi-gift-fill',
     'NFX Index': 'bi-activity',
     'Mint': 'bi-diamond',
     'ChainFace': 'bi-person-badge',
     'NNM Concept': 'bi-layers'
   };
 
-  const menuItems = ['Home', 'Market', '$NNM'];
+  const menuItems = ['Home', 'Market', 'Mint', '$NNM', 'Rewards'];
 
   const bottomDrawerItems = [
     { label: 'News & Updates', href: '/news', icon: 'bi-newspaper' },
@@ -339,7 +340,7 @@ const Navbar = () => {
                 <ul className="navbar-nav mb-2 mb-lg-0 d-flex flex-row align-items-center" style={{ gap: '14px' }}>
                     
                     {menuItems.map((item) => {
-                        const itemHref = item === 'Home' ? '/' : item === '$NNM' ? '/presale' : `/${item.toLowerCase().replace(/\s+/g, '-')}`;
+                        const itemHref = item === 'Home' ? '/' : item === '$NNM' ? '/presale' : item === 'Rewards' ? '/Rewards' : `/${item.toLowerCase().replace(/\s+/g, '-')}`;
                         const isActive = pathname === itemHref;
                         return (
                             <li className="nav-item" key={item}>
@@ -347,8 +348,9 @@ const Navbar = () => {
                                     href={itemHref}
                                     onClick={(e) => handleNavClick(item, e)}
                                     className={`nav-link fw-medium desktop-nav-link ${isActive ? 'active' : ''} d-flex align-items-center gap-1`}
-                                    style={{ fontSize: navFontSize, whiteSpace: 'nowrap', pointerEvents: item === '$NNM' ? 'none' : 'auto' }}                                >
-                                    {item === '$NNM' && <i className="bi bi-fire" style={{ color: '#FCD535', fontSize: '13px' }}></i>}
+                                    style={{ fontSize: navFontSize, whiteSpace: 'nowrap' }}
+                                >
+                                    {item === 'Rewards' && <i className="bi bi-gift-fill" style={{ color: '#FCD535', fontSize: '13px' }}></i>}
                                     {item}
                                 </Link>
                             </li>
@@ -409,18 +411,6 @@ const Navbar = () => {
   ))}
 </ul>
                      
-                    </li>
-
-                    {/* Mint */}
-                    <li className="nav-item">
-                        <Link 
-                            href="/mint"
-                            onClick={(e) => handleNavClick('Mint', e)}
-                            className={`nav-link fw-medium desktop-nav-link ${pathname === '/mint' ? 'active' : ''}`}
-                            style={{ fontSize: navFontSize, whiteSpace: 'nowrap' }} 
-                        >
-                            Mint
-                        </Link>
                     </li>
 
                     {/* ChainFace */}
@@ -505,7 +495,7 @@ const Navbar = () => {
 
             {/* Desktop Right Side */}
             <div className="d-flex align-items-center justify-content-end gap-2" style={{ flexShrink: 0, marginLeft: '20px' }}> 
-                <form onSubmit={handleSearch} className="position-relative" style={{ width: '240px', height: elementHeight }}>
+                <form onSubmit={handleSearch} className="position-relative" style={{ width: '180px', height: elementHeight }}>
                    <input type="text" className="form-control search-input-custom text-white shadow-none" placeholder="Search..." 
                         value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                         style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '6px', fontSize:'13px', height: '100%', paddingLeft: '34px', border: `1px solid ${subtleBorder}`, caretColor: metallicGoldHex }} 
@@ -586,14 +576,15 @@ const Navbar = () => {
                   <div className="d-flex flex-column gap-2">
                     {/* Standard Items */}
                     {menuItems.map((item) => {
-                        const itemHref = item === 'Home' ? '/' : item === '$NNM' ? '/presale' : `/${item.toLowerCase().replace(/\s+/g, '-')}`;
+                        const itemHref = item === 'Home' ? '/' : item === '$NNM' ? '/presale' : item === 'Rewards' ? '/Rewards' : `/${item.toLowerCase().replace(/\s+/g, '-')}`;
+                        const isGoldIcon = item === '$NNM' || item === 'Rewards';
                         return (
                             <Link key={item} 
                                     href={itemHref}
                                     onClick={closeDrawer}
                                     className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3"
-                                    style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px', pointerEvents: item === '$NNM' ? 'none' : 'auto' }}>
-                                <i className={`bi ${menuIcons[item]} opacity-75`} style={{ fontSize: '18px', color: item === '$NNM' ? '#FCD535' : 'inherit' }}></i>
+                                    style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
+                                <i className={`bi ${menuIcons[item]} opacity-75`} style={{ fontSize: '18px', color: isGoldIcon ? '#FCD535' : 'inherit' }}></i>
                                 {item}
                             </Link>
                         );
@@ -602,11 +593,6 @@ const Navbar = () => {
                     <Link href="/nfx" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
                         <i className="bi bi-activity opacity-75" style={{ fontSize: '18px' }}></i>
                         NFX
-                    </Link>
-
-                    <Link href="/mint" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>
-                        <i className="bi bi-diamond opacity-75" style={{ fontSize: '18px' }}></i>
-                        Mint
                     </Link>
 
                     <Link href="/chainface" onClick={closeDrawer} className="text-decoration-none fw-bold py-1 d-flex align-items-center gap-3" style={{ fontSize: '16px', color: offWhiteText, letterSpacing: '0.5px' }}>

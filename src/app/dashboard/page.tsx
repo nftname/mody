@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAccount, useBalance, usePublicClient } from "wagmi";
+import { useAccount, useBalance, usePublicClient, useSwitchChain } from "wagmi";
 import { parseAbi, formatEther } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
 
@@ -20,9 +20,10 @@ const MARKETPLACE_ABI = parseAbi([
 ]);
 
 export default function DashboardPage() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
+  const { switchChain } = useSwitchChain();
   const { data: balanceData } = useBalance({ address });
-  const publicClient = usePublicClient(); // Use the global shared client
+  const publicClient = usePublicClient(); 
   
   // --- States ---
   const [myAssets, setMyAssets] = useState<any[]>([]);
@@ -612,6 +613,27 @@ export default function DashboardPage() {
             <div className="text-center">
                 <h2 className="text-white mb-3">Connect Wallet to View Profile</h2>
                 <p className="text-secondary mb-4">Please connect your wallet to see your NNM assets.</p>
+            </div>
+        </main>
+    );
+  }
+
+  if (chain?.id !== 137) {
+    return (
+        <main style={{ backgroundColor: '#181A20', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+            <div className="text-center fade-in">
+                <i className="bi bi-diagram-3 text-white mb-3 d-block" style={{ fontSize: '3.5rem', opacity: 0.5 }}></i>
+                <h2 className="text-white mb-3">Switch to Polygon Network</h2>
+                <p className="text-secondary mb-4" style={{ maxWidth: '400px', margin: '0 auto', lineHeight: '1.6' }}>
+                    Your wallet is currently connected to an unsupported network. Please switch to Polygon to view and manage your assets safely.
+                </p>
+                <button 
+                    onClick={() => switchChain({ chainId: 137 })} 
+                    className="btn fw-bold px-4 py-2 mt-2"
+                    style={{ background: GOLD_GRADIENT, color: '#181A20', border: 'none', borderRadius: '8px', fontSize: '15px' }}
+                >
+                    Switch Network
+                </button>
             </div>
         </main>
     );

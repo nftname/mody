@@ -193,7 +193,7 @@ export default function LegalPage() {
                         <li>Are identified as “high-risk” names for misuse or infringement.</li>
                     </ul>
                     <p className="term-text mt-3">
-                        NNM reserves the <strong>strict right, at its sole discretion, to block, delist, or burn (permanently destroy)</strong> any Digital Identity Asset:
+                        NNM reserves the right, where technically feasible via smart contract mechanisms, at its sole discretion, to block, delist, or burn (permanently destroy) any Digital Identity Asset:
                     </p>
                     <ul className="term-list">
                         <li>In response to valid legal claims.</li>
@@ -221,7 +221,7 @@ export default function LegalPage() {
                     <p className="term-text">The Protocol is provided “AS IS” and “AS AVAILABLE.” NNM shall not be liable for:</p>
                     <ul className="term-list">
                         <li>Bugs, exploits, or vulnerabilities in smart contracts.</li>
-                        <li>Network failures, latency, high gas fees, or congestion on the Polygon blockchain.</li>
+                        <li>Network failures, latency, high gas fees, congestion, or downtime on the Polygon or Solana blockchains.</li>
                         <li>Loss of funds or assets.</li>
                         <li>Unauthorized wallet access.</li>
                         <li>Ecosystem volatility or network participation outcomes.</li>
@@ -231,7 +231,28 @@ export default function LegalPage() {
                 </div>
 
                 <div className="term-block mb-4">
-                    <h3 className="term-heading">14. INDEMNIFICATION</h3>
+                    <h3 className="term-heading">14. SMART CONTRACT RISK</h3>
+                    <p className="term-text">
+                        Users acknowledge that smart contracts may contain bugs, vulnerabilities, or unforeseen risks that could result in partial or total loss of digital assets. NNM provides no guarantees regarding the security or functionality of smart contracts.
+                    </p>
+                </div>
+
+                <div className="term-block mb-4">
+                    <h3 className="term-heading">15. NO FIDUCIARY DUTY</h3>
+                    <p className="term-text">
+                        NNM owes no fiduciary duty to any user, and no relationship of trust, agency, or advisory is created through use of the Protocol.
+                    </p>
+                </div>
+
+                <div className="term-block mb-4">
+                    <h3 className="term-heading">16. FORCE MAJEURE</h3>
+                    <p className="term-text">
+                        NNM shall not be liable for any failure or delay resulting from events beyond its reasonable control, including but not limited to regulatory changes, government actions, network disruptions, or force majeure events.
+                    </p>
+                </div>
+
+                <div className="term-block mb-4">
+                    <h3 className="term-heading">17. INDEMNIFICATION</h3>
                     <p className="term-text">
                         Users agree to indemnify, defend, and hold harmless NNM, affiliates, and associated entities from any claims, losses, or damages arising from:
                     </p>
@@ -243,7 +264,7 @@ export default function LegalPage() {
                 </div>
 
                 <div className="term-block mb-4">
-                    <h3 className="term-heading">15. INTELLECTUAL PROPERTY</h3>
+                    <h3 className="term-heading">18. INTELLECTUAL PROPERTY</h3>
                     <ul className="term-list">
                         <li>All platform branding, analytics, NFX NFT Index, sub-indices, and proprietary tools remain exclusive property of NNM.</li>
                         <li>On-chain assets are fully controlled by individual wallet holders.</li>
@@ -252,10 +273,10 @@ export default function LegalPage() {
                 </div>
 
                 <div className="term-block mb-4">
-                    <h3 className="term-heading">16. PRIVACY POLICY</h3>
+                    <h3 className="term-heading">19. PRIVACY POLICY</h3>
                     <p className="term-text">NNM follows a Zero-PII policy:</p>
                     <ul className="term-list">
-                        <li>No collection of personal data (names, emails, IP addresses).</li>
+                        <li>NNM does not intentionally collect personally identifiable information (such as names or emails).</li>
                         <li>No account registration required.</li>
                         <li>Blockchain transactions remain inherently public.</li>
                         <li>Users acknowledge that all on-chain activity is public by nature and at their own discretion.</li>
@@ -263,21 +284,21 @@ export default function LegalPage() {
                 </div>
 
                 <div className="term-block mb-4">
-                    <h3 className="term-heading">17. MODIFICATIONS</h3>
+                    <h3 className="term-heading">20. MODIFICATIONS</h3>
                     <p className="term-text">NNM may update these Terms at any time; continued use constitutes acceptance of the updated Terms.</p>
                 </div>
 
                 <div className="term-block mb-4">
-                    <h3 className="term-heading">18. GOVERNING LAW & ARBITRATION</h3>
+                    <h3 className="term-heading">21. GOVERNING LAW & ARBITRATION</h3>
                     <ul className="term-list">
                         <li>All disputes are resolved via individual binding arbitration.</li>
                         <li>Class actions are waived.</li>
-                        <li>Governing law: Singapore law and internationally recognized arbitration standards.</li>
+                        <li>Disputes shall be resolved under internationally recognized arbitration frameworks, without reliance on a specific jurisdiction where not applicable.</li>
                     </ul>
                 </div>
 
                 <div className="term-block mb-4">
-                    <h3 className="term-heading">19. MISCELLANEOUS</h3>
+                    <h3 className="term-heading">22. MISCELLANEOUS</h3>
                     <ul className="term-list">
                         <li>Users agree that NNM is a neutral interface only, providing no financial, legal, or custodial functions.</li>
                         <li>Acceptance of these Terms constitutes full waiver of claims against NNM for user-generated actions, misuse, or regulatory consequences.</li>
@@ -286,49 +307,38 @@ export default function LegalPage() {
                 </div>
 
                 <div className="term-block mb-4">
-                    <h3 className="term-heading">20. NNM UTILITY TOKEN & PRESALE EVENTS</h3>
+                    <h3 className="term-heading">23. $NNM UTILITY TOKEN (SOLANA) & PRESALE EVENTS</h3>
                     <p className="term-text">
-                        NNM may introduce a platform utility token (“NNM Token”) used exclusively for ecosystem functionality within the NNM Protocol.
+                        The NNM Protocol incorporates a native SPL utility token (“$NNM”) deployed on the Solana Network, used exclusively for ecosystem functionality within the NNM Protocol.
                     </p>
 
                     <p className="term-text mt-3"><strong>a. Pure Utility Nature:</strong><br />
-                    The NNM Token is intended solely for platform utility purposes including but not limited to:</p>
-                    <ul className="term-list">
-                        <li>access to specific protocol features,</li>
-                        <li>ecosystem participation,</li>
-                        <li>internal platform mechanics and payments.</li>
-                    </ul>
+                    The $NNM Token is intended solely for platform utility purposes including but not limited to access to specific protocol features, non-financial participation incentives, and internal platform mechanics. Users acknowledge that acquiring $NNM does not create any expectation of profit derived from the efforts of others.</p>
 
                     <p className="term-text mt-3"><strong>b. Explicit Disclaimer of Financial Products:</strong><br />
-                    The NNM Token is strictly NOT:</p>
-                    <ul className="term-list">
-                        <li>a security,</li>
-                        <li>an investment contract,</li>
-                        <li>a share or equity instrument,</li>
-                        <li>a financial product,</li>
-                        <li>a promise of profit, yield, dividend, or return.</li>
-                    </ul>
+                    The $NNM Token is strictly NOT a security, investment contract, share, equity instrument, financial product, or a promise of yield, dividend, or financial return.</p>
 
-                    <p className="term-text mt-3"><strong>c. Presale & Token Distribution:</strong><br />
-                    Participation in any optional token distribution, presale event, initial offering, or ecosystem allocation is entirely voluntary and conducted at the user's sole risk. Any funds contributed during a presale are considered payments for future access to platform utility, not investments in a common enterprise.</p>
+                    <p className="term-text mt-3"><strong>c. Network & Allocations:</strong><br />
+                    The token operates on the Solana Blockchain. Distribution across categories (e.g., Presale, Liquidity, Treasury, Team) is subject to transparency disclosures published separately. Distribution is strictly reliant on the technical stability of the Solana network.</p>
 
-                    <p className="term-text mt-3"><strong>d. No Market Guarantees:</strong><br />
-                    NNM explicitly does not guarantee, support, or promise:</p>
-                    <ul className="term-list">
-                        <li>future market value,</li>
-                        <li>secondary market liquidity,</li>
-                        <li>listings on centralized or decentralized exchanges (CEX/DEX),</li>
-                        <li>price appreciation or stabilization mechanisms.</li>
-                    </ul>
+                    <p className="term-text mt-3"><strong>d. Deflationary Protocol:</strong><br />
+                    The protocol implements an automated, usage-based burn mechanism. This mechanism does not guarantee a value increase and does not represent a redistribution of profits to token holders. It is a technological feature for protocol sustainability, not a speculative tool.</p>
 
-                    <p className="term-text mt-3"><strong>e. Risk Acknowledgment:</strong><br />
-                    Users acknowledge that digital asset markets are highly volatile, unregulated, and experimental. The NNM Token may lose all value, become illiquid, or become technologically obsolete.</p>
+                    <p className="term-text mt-3"><strong>e. Presale & Token Distribution:</strong><br />
+                    Participation in any optional token distribution is entirely voluntary and conducted at the user's sole risk. Funds contributed are considered payments for future access to platform utility, not investments in a common enterprise, with no guarantee of delivery timeline, feature availability, or completion.</p>
 
-                    <p className="term-text mt-3"><strong>f. Informational Communications:</strong><br />
-                    Nothing on the NNM website, interface, documentation, social media channels, or communications shall be interpreted, construed, or relied upon as investment advice, financial promotion, or a solicitation to buy securities.</p>
+                    <p className="term-text mt-3"><strong>f. No Market Guarantees:</strong><br />
+                    NNM explicitly does not guarantee future market value, secondary market liquidity, exchange listings (CEX/DEX), or price stabilization mechanisms.</p>
+
+                    <p className="term-text mt-3"><strong>g. Risk Acknowledgment:</strong><br />
+                    Users acknowledge that digital asset markets are highly volatile and unregulated. The $NNM Token may lose all value, become illiquid, or become technologically obsolete.</p>
+
+                    <p className="term-text mt-3"><strong>h. Informational Communications:</strong><br />
+                    Nothing on the Protocol interface or communications shall be interpreted as investment advice, financial promotion, or a solicitation to buy securities.</p>
                 </div>
-                                <div className="term-block mb-4">
-                    <h3 className="term-heading">21. EXPANSION CAMPAIGN & MILESTONE CONDITIONS</h3>
+
+                <div className="term-block mb-4">
+                    <h3 className="term-heading">24. EXPANSION CAMPAIGN & MILESTONE CONDITIONS</h3>
 
                     <p className="term-text mt-3"><strong>a. Nature of the Campaign:</strong><br />
                     The NNM Protocol Expansion Campaign (the "Campaign") and any associated reward vaults, leaderboards, or point systems are structured strictly as a performance-based network growth and affiliate reward program. The Campaign relies entirely on user effort, community building, and network expansion. It is strictly not a lottery, game of chance, investment opportunity, or guarantee of financial return.</p>
@@ -340,7 +350,7 @@ export default function LegalPage() {
                     The Campaign runs for a maximum period of six (6) months, officially concluding on September 30, 2026. If a specific network volume milestone is not successfully met by the conclusion of this 6-month period, any remaining locked Vaults will remain permanently sealed. The Campaign will conclude without the distribution of any unmet Vaults, and users acknowledge that they are not entitled to any alternative compensation, refunds, or financial equivalents.</p>
 
                     <p className="term-text mt-3"><strong>d. Direct Affiliate Commissions:</strong><br />
-                    The 30% referral commission is a single-tier (direct) marketing reward provided solely for successful, verified network expansion (completed active mints by directly referred users). It does not constitute a multi-level marketing (MLM) structure or pyramid scheme.</p>
+                    The 30% referral commission is a single-tier (direct) marketing reward provided solely for verified direct user activity (completed active mints by directly referred users), based strictly on non-hierarchical participation.</p>
 
                     <p className="term-text mt-3"><strong>e. Modification and Termination Right:</strong><br />
                     NNM reserves the absolute right, at its sole discretion, to modify, suspend, or terminate the Campaign, withhold rewards, or adjust milestones at any time to ensure network integrity, prevent fraud (such as wash trading, botting, or sybil attacks), or comply with local and international regulatory requirements, without prior notice or liability.</p>
@@ -446,4 +456,3 @@ export default function LegalPage() {
     </main>
   );
 }
-

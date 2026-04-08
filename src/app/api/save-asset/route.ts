@@ -2,8 +2,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-// نستخدم مفتاح الخدمة (Service Role) لتجاوز قيود الأمان RLS
-// تأكد من وجود SUPABASE_SERVICE_ROLE_KEY في ملف .env.local
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -13,7 +11,7 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
         
-        // استلام البيانات من الصفحة
+  
         const { 
             token_id, 
             name, 
@@ -27,7 +25,6 @@ export async function POST(req: Request) {
 
         console.log(`📥 API: Saving Asset #${token_id} - ${name}`);
 
-        // الإدخال المباشر في الجدول بناءً على الخانات التي رأيناها في الصور
         const { error } = await supabaseAdmin
             .from('assets_metadata')
             .upsert({
@@ -36,7 +33,7 @@ export async function POST(req: Request) {
                 tier: tier,               // Text
                 image_url: image_url,     // Text
                 description: description, // Text
-                attributes: attributes,   // JSONB (يقبل المصفوفة كما هي)
+                attributes: attributes,   // JSONB
                 mint_date: mint_date,     // Text
                 metadata_uri: metadata_uri, // Text
                 updated_at: new Date().toISOString()

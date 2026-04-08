@@ -9,7 +9,7 @@ const supabaseAdmin = createClient(
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { action, address, tokenIds, tokenId, isFav, taskId, proof, points } = body;
+        const { action, address, tokenIds, tokenId, isFav } = body;
 
         if (!address) {
             return NextResponse.json({ error: 'Missing address' }, { status: 400 });
@@ -59,28 +59,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ activities: actData, offers: offData });
         }
 
-        if (action === 'submitTask') {
-            await supabaseAdmin.from('users').upsert({ wallet_address: address }, { onConflict: 'wallet_address' });
-            await supabaseAdmin.from('tasks').upsert({ task_id: taskId, points_reward: points }, { onConflict: 'task_id' });
-            
-            const { error } = await supabaseAdmin.from('user_completed_tasks').insert({
-                user_wallet: address,
-                task_id: taskId,
-                submitted_proof: proof
-            });
-            if (error) throw error;
-            return NextResponse.json({ success: true });
-        }
-
-        if (action === 'getLeaderboard') {
-            const { data, error } = await supabaseAdmin.from('leaderboard_view')
-                .select('*')
-                .order('total_points', { ascending: false })
-                .limit(50);
-            if (error) throw error;
-            return NextResponse.json({ data });
-        }
-
         if (action === 'getConviction') {
             const { data: wallet } = await supabaseAdmin.from('nnm_claim_balances').select('wnnm_balance, claimable_nnm').eq('wallet_address', address).maybeSingle();
             const { data: mints } = await supabaseAdmin.from('activities').select('*').match({ activity_type: 'Mint' }).ilike('to_address', address);
@@ -88,32 +66,7 @@ export async function POST(req: Request) {
             const { data: votes } = await supabaseAdmin.from('conviction_votes').select('*').ilike('supporter_address', address);
             const { data: pays } = await supabaseAdmin.from('activities').select('*').match({ activity_type: 'Pay' }).ilike('to_address', address);
             
-            let socialPointsTotal = 0;
-            const { data: completedTasks, error: tasksError } = await supabaseAdmin
-                .from('user_completed_tasks')
-                .select(`task_id, tasks ( points_reward )`)
-                .ilike('user_wallet', address);
-            
-            if (!tasksError && completedTasks) {
-                socialPointsTotal = completedTasks.reduce((sum, item: any) => {
-                    const p = item.tasks && item.tasks.points_reward ? Number(item.tasks.points_reward) : 0;
-                    return sum + p;
-                }, 0);
-            }
-
-            const { data: completedTasksList } = await supabaseAdmin.from('user_completed_tasks').select('task_id').ilike('user_wallet', address);
-            const completedTaskIds = completedTasksList ? completedTasksList.map((t: any) => t.task_id) : [];
-
-            return NextResponse.json({ 
-                wallet, 
-                mints, 
-                sales, 
-                votes, 
-                pays,
-                social_points: socialPointsTotal,
-                ecosystem_points: 0,
-                completed_tasks: completedTaskIds
-            });
+            return NextResponse.json({ wallet, mints, sales, votes, pays });
         }
 
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

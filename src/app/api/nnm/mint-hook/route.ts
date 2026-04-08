@@ -22,15 +22,15 @@ export async function POST(request: Request) {
     if (tierUpper === 'IMMORTAL') {
         nnmReward = 300000;
         wnnmReward = 3000;
-        newSystemWnnm = 30000;
+        newSystemWnnm = 3000;
     } else if (tierUpper === 'ELITE') {
         nnmReward = 200000;
         wnnmReward = 2000;
-        newSystemWnnm = 20000;
+        newSystemWnnm = 2000;
     } else {
         nnmReward = 100000;
         wnnmReward = 1000;
-        newSystemWnnm = 10000;
+        newSystemWnnm = 1000;
     }
    
     const { data: walletData } = await supabase
