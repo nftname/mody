@@ -11,15 +11,16 @@ const BORDER_LIGHT = 'rgba(0, 0, 0, 0.08)';
 
 export default function WhitepaperPage() {
   return (
-    <main className="whitepaper-page" style={{ 
-      backgroundColor: BG_MAIN, 
-      minHeight: '100vh', 
-      paddingBottom: '80px', 
-      fontFamily: '"Inter", "Segoe UI", sans-serif',
-      overflowX: 'hidden',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
+        <main className="whitepaper-page" style={{ 
+          backgroundColor: BG_MAIN, 
+          minHeight: '100vh', 
+          paddingBottom: '80px', 
+          fontFamily: '"Inter", "Segoe UI", sans-serif',
+          display: 'flex',
+          flexDirection: 'column',
+          width: '100%',
+          overflowX: 'hidden'
+        }}>
       
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -38,6 +39,24 @@ export default function WhitepaperPage() {
             max-width: 900px;
             margin: 0 auto;
             padding: 4rem 2rem;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: break-word;
+        }
+
+        @media (max-width: 768px) {
+            .wp-container {
+                padding: 2rem 1.2rem;
+            }
+            .wp-main-title {
+                font-size: 1.8rem;
+            }
+            .wp-section-title {
+                font-size: 1.35rem;
+            }
+            .wp-text, .wp-list li {
+                font-size: 0.95rem;
+            }
         }
 
         .wp-header {
@@ -181,12 +200,15 @@ export default function WhitepaperPage() {
         }
 
         /* Table Styles Added for Tokenomics Schedule */
-        .wp-table-container {
+       .wp-table-container {
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             margin: 2rem 0;
             border-radius: 8px;
             border: 1px solid ${BORDER_LIGHT};
             box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            width: 100%;
+            display: block;
         }
 
         .wp-table {

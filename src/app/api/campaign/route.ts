@@ -66,17 +66,17 @@ export async function POST(req: Request) {
 
         if (action === 'submitTask') {
             const TASK_POINTS: { [key: string]: number } = {
-                'tw_rt': 10,
-                'tw_like': 10,
-                'tg_like': 10,
-                'fb_like': 10,
-                'ig_like': 10,
-                'md_like': 10,
-                'tw_follow': 30,
-                'tg_join': 30,
-                'fb_follow': 30,
-                'ig_follow': 30,
-                'md_follow': 30
+                'tw_rt': 30,
+                'tw_like': 30,
+                'tg_like': 30,
+                'fb_like': 30,
+                'ig_like': 30,
+                'md_like': 30,
+                'tw_follow': 100,
+                'tg_join': 100,
+                'fb_follow': 100,
+                'ig_follow': 100,
+                'md_follow': 100
             };
 
             const securePoints = TASK_POINTS[taskId];

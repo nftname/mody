@@ -13,7 +13,7 @@ export default function BalancePage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
   const isPresaleEnded = false; 
-  const listingPrice = 0.10;
+  const listingPrice = 0.005;
 
   useEffect(() => {
     if (!address) return;
@@ -90,7 +90,7 @@ export default function BalancePage() {
                 <th style={{ ...labelStyle, padding: '0 16px 16px 16px' }}>Conviction</th>
                 <th style={{ ...labelStyle, padding: '0 16px 16px 16px' }}>Social Points</th>
                 <th style={{ ...labelStyle, padding: '0 16px 16px 16px' }}>Ecosystem</th>
-                <th style={{ ...labelStyle, padding: '0 16px 16px 16px' }}>Total Value (@ $0.10)</th>
+                <th style={{ ...labelStyle, padding: '0 16px 16px 16px' }}>Total Value (@ $0.005)</th>
                 <th style={{ ...labelStyle, padding: '0 16px 16px 16px', textAlign: 'center' }}>Action</th>
               </tr>
             </thead>
