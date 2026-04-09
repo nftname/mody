@@ -19,35 +19,37 @@ const ABI = parseAbi([
 
 export async function POST(request: Request) {
   try {
-    const secureToken = request.headers.get('x-secure-token');
-    const secureTimestamp = request.headers.get('x-secure-timestamp');
+    const { wallet, name, tokenURI, tierName, imageUrl, recaptchaToken } = await request.json();
 
-    if (!secureToken || !secureTimestamp) {
-        return NextResponse.json({ error: 'Unauthorized request.' }, { status: 401 });
-    }
-
-    const timeDiff = Date.now() - parseInt(secureTimestamp);
-    if (timeDiff > 180000 || timeDiff < 0) {
-        return NextResponse.json({ error: 'Request expired or invalid.' }, { status: 401 });
-    }
-
-    const { wallet, name, tokenURI, tierName, imageUrl } = await request.json();
-    
     if (!wallet || !wallet.startsWith('0x')) {
         return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 });
     }
 
-    const { data: existingActivity } = await supabase
-      .from('activities')
-      .select('id')
-      .eq('to_address', wallet)
-      .eq('activity_type', 'Mint Founder')
-      .limit(1);
+    if (tierName === "FOUNDER") {
+        if (!recaptchaToken) {
+            return NextResponse.json({ error: 'Security validation missing.' }, { status: 401 });
+        }
 
-    if (existingActivity && existingActivity.length > 0) {
-      return NextResponse.json({ error: 'Founder tier already claimed.' }, { status: 403 });
+        const recaptchaSecret = process.env.RECAPTCHA_SECRET_KEY!;
+        const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecret}&response=${recaptchaToken}`;
+        const recaptchaRes = await fetch(verifyUrl, { method: 'POST' });
+        const recaptchaData = await recaptchaRes.json();
+
+        if (!recaptchaData.success || recaptchaData.score < 0.5 || recaptchaData.action !== 'mint_founder') {
+            return NextResponse.json({ error: 'Automated behavior detected.' }, { status: 403 });
+        }
+
+        const { data: existingActivity } = await supabase
+          .from('activities')
+          .select('id')
+          .eq('to_address', wallet)
+          .eq('activity_type', 'Mint Founder')
+          .limit(1);
+
+        if (existingActivity && existingActivity.length > 0) {
+          return NextResponse.json({ error: 'Founder tier already claimed.' }, { status: 403 });
+        }
     }
-
     const rawPrivateKey = process.env.NNM_Airdrop_WALLET_PRIVATE_KEY || '';
     const formattedPrivateKey = rawPrivateKey.startsWith('0x') ? rawPrivateKey : `0x${rawPrivateKey}`;
     const account = privateKeyToAccount(formattedPrivateKey as `0x${string}`);

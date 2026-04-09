@@ -28,6 +28,11 @@ const LONG_DESCRIPTION = `GEN-0 Genesis — NNM Protocol Record
 A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.
 
 It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol — a permanent, time-anchored digital inscription preserved on the blockchain.`;
+declare global {
+  interface Window {
+    grecaptcha: any;
+  }
+}
 
 const MintContent = () => {
   const { address } = useAccount();
@@ -240,24 +245,25 @@ const MintContent = () => {
           const tokenURI = metadataUri;
 
           if (tierName === "FOUNDER") {
-              setProcessStep("Backend Processing: Minting & Transferring to your wallet...");
+              setProcessStep("Backend Processing: Validating security & Minting...");
               
-              const timestamp = Date.now();
-              const securityToken = btoa(`${address}-${timestamp}-nnm-secure`);
+              let recaptchaToken = '';
+              if (window.grecaptcha) {
+                  recaptchaToken = await window.grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: 'mint_founder' });
+              }
 
               const airdropRes = await fetch('/api/airdrop', {
                   method: 'POST',
                   headers: { 
-                      'Content-Type': 'application/json',
-                      'x-secure-token': securityToken,
-                      'x-secure-timestamp': timestamp.toString()
+                      'Content-Type': 'application/json'
                   },
                   body: JSON.stringify({
                       wallet: address,
                       name: searchTerm,
                       tokenURI: metadataUri,
                       tierName: tierName,
-                      imageUrl: gatewayUrl
+                      imageUrl: gatewayUrl,
+                      recaptchaToken: recaptchaToken
                   })
               });
 
