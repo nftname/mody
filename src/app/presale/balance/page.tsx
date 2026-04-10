@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import Link from 'next/link';
 
 export default function BalancePage() {
   const { address, isConnected } = useAccount();
@@ -69,8 +70,79 @@ export default function BalancePage() {
   const valueStyle = { color: '#f8fafc', fontSize: '18px', fontWeight: '500', fontFamily: 'monospace' };
 
   return (
-    <div style={{ backgroundColor: '#050a16', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px', fontFamily: 'sans-serif' }}>
+    <div style={{ backgroundColor: '#050a16', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 20px', fontFamily: 'sans-serif' }}>
       
+      <style>{`
+        .static-neon-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 75, 130, 0.25);
+            padding: 8.5px 18px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+        .static-neon-btn span {
+            background: linear-gradient(90deg, #9b51e0 0%, #ff4b82 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .static-neon-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 20px rgba(255, 75, 130, 0.4);
+        }
+
+        @media (max-width: 767px) {
+            .mobile-full-width {
+                flex-wrap: nowrap !important;
+                gap: 6px !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+            .mobile-full-width > a {
+                flex: 1 !important;
+                display: flex !important;
+                min-width: 0 !important;
+            }
+            .static-neon-btn {
+                width: 100% !important;
+                padding: 8.5px 0 !important;
+            }
+            .static-neon-btn span {
+                font-size: 10px !important;
+                letter-spacing: -0.5px !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+        }
+      `}</style>
+
+      <div className="mobile-full-width" style={{ width: '100%', maxWidth: '1000px', display: 'flex', gap: '15px', justifyContent: 'flex-start', marginBottom: '60px', flexWrap: 'wrap' }}>
+          <Link href="/Rewards" style={{ textDecoration: 'none' }}>
+              <button className="static-neon-btn">
+                  <span>Rewards</span>
+              </button>
+          </Link>
+          <Link href="/presale" style={{ textDecoration: 'none' }}>
+              <button className="static-neon-btn">
+                  <span>$ NNM Utility</span>
+              </button>
+          </Link>
+          <Link href="/join" style={{ textDecoration: 'none' }}>
+              <button className="static-neon-btn">
+                  <span>Join Socials</span>
+              </button>
+          </Link>
+      </div>
+
       <div style={{ 
           width: '100%', 
           maxWidth: '1000px', 
@@ -78,7 +150,7 @@ export default function BalancePage() {
           background: 'rgba(147, 51, 234, 0.05)', 
           border: '1px solid rgba(147, 51, 234, 0.11)', 
           boxShadow: '0 0 30px rgba(147, 51, 234, 0.11)', 
-          borderRadius: '20px',
+          borderRadius: '10px',
           backdropFilter: 'blur(15px)',
           overflow: 'hidden'
       }}>
@@ -146,7 +218,7 @@ export default function BalancePage() {
         </div>
       </div>
 
-      <div style={{ width: '100%', maxWidth: '1000px', background: 'rgba(147, 51, 234, 0.03)', border: '1px solid rgba(147, 51, 234, 0.1)', borderRadius: '20px', overflow: 'hidden', backdropFilter: 'blur(10px)' }}>
+      <div style={{ width: '100%', maxWidth: '1000px', background: 'rgba(147, 51, 234, 0.03)', border: '1px solid rgba(147, 51, 234, 0.1)', borderRadius: '10px', overflow: 'hidden', backdropFilter: 'blur(10px)' }}>
         <div style={{ padding: '24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
           <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Participation History</h3>
         </div>

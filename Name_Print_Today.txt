@@ -743,3 +743,38 @@ Name: WEBENGINEER
 Tier: FOUNDER
 Wallet: 0x66E4b7eeC16D33cfA0086713FCf6C26b6B3BCa62
 ------------------------
+
+=================================
+Date: 2026-04-10
+=================================
+
+ID: 1317
+Name: ADAM1
+Tier: FOUNDER
+Wallet: 0xf8723Bd042D292e9437b88083e5299cF944bC8BC
+------------------------
+ID: 1318
+Name: ADAM2
+Tier: FOUNDER
+Wallet: 0xdF7597418F168483A040a6C50444AE656af4186A
+------------------------
+ID: 1319
+Name: ADAM5
+Tier: FOUNDER
+Wallet: 0x17aBA3FbB1A9a4dDEA13c68c1010aE8743CBd5C8
+------------------------
+ID: 1320
+Name: ADAM4
+Tier: FOUNDER
+Wallet: 0x990132c5e27AAa57F1c9bcACFdc4d61889adbabd
+------------------------
+ID: 1321
+Name: ADAM6
+Tier: FOUNDER
+Wallet: 0x944B4fd51183487DCE66D8e4cFDa4AC0b3301261
+------------------------
+ID: 1322
+Name: ADAM7
+Tier: FOUNDER
+Wallet: 0x05567921bD1809Bd18f44C8189feE91C47553118
+------------------------

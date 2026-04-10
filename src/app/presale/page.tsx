@@ -1262,14 +1262,113 @@ export default function PresalePage() {
                     }
 
                 @media (max-width: 991px) {
-                    .nav-top { justify-content: center; }
-                    .hero-section { flex-direction: column; justify-content: flex-start; gap: 40px; align-items: center; }
-                    .hero-text-block { width: 90%; text-align: center; margin-top: 0; }
-                    .presale-fomo-panel { width: 95%; padding: 25px 15px; }
-                    .hero-title { font-size: 1.8rem; }
-                    .countdown-inline-row { flex-direction: column; align-items: center; text-align: center; gap: 15px; } 
-                    .features-section { flex-direction: column; gap: 20px; }
-                    .tokenomics-section { flex-direction: column; }
+                    .nav-top { justify-content: center; width: 100%; margin-bottom: 50px !important; }
+                    .neon-btn-group {
+                        display: grid !important;
+                        grid-template-columns: repeat(6, 1fr) !important;
+                        gap: 8px !important;
+                        width: 100% !important;
+                    }
+                    .link-reset:nth-child(1) { grid-column: 1 / 3; grid-row: 1; }
+                    .link-reset:nth-child(4) { grid-column: 3 / 5; grid-row: 1; }
+                    .link-reset:nth-child(5) { grid-column: 5 / 7; grid-row: 1; }
+                    .link-reset:nth-child(2) { grid-column: 2 / 4; grid-row: 2; }
+                    .link-reset:nth-child(3) { grid-column: 4 / 6; grid-row: 2; }
+                    
+                    .link-reset { width: 100%; display: flex; }
+                    .neon-btn {
+                        width: 100%;
+                        padding: 8.5px 0 !important;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .neon-btn span {
+                        font-size: 11px !important;
+                        letter-spacing: -0.4px !important;
+                        white-space: nowrap !important;
+                    }
+
+                    .hero-section { flex-direction: column !important; justify-content: flex-start; gap: 30px; align-items: center; }
+                    .hero-text-block { width: 95%; text-align: center; margin-top: 20px !important; }
+                    .hero-title { font-size: 1.8rem !important; }
+                    .hero-description { font-size: 0.94rem !important; }
+
+                    .presale-fomo-panel { width: 100% !important; padding: 25px 12px !important; }
+                    .presale-fomo-panel .d-flex.justify-content-between.mb-3 { margin-bottom: 20px !important; }
+                    .price-line { font-size: 0.64rem !important; margin-bottom: 4px !important; line-height: 1.2 !important; }
+                    .gold-metallic-text { font-size: 1.1rem !important; }
+                    
+                    .countdown-inline-row { padding: 12px !important; gap: 12px !important; flex-direction: column; align-items: center; }
+                    .time-box { padding: 6px 4px !important; min-width: 42px !important; }
+                    .time-value { font-size: 1.05rem !important; margin-bottom: 4px !important; }
+                    .time-label { font-size: 0.44rem !important; }
+                    .current-price-inline { margin-top: 8px !important; }
+
+                    .progress-container-presale { margin-bottom: 25px !important; }
+                    .progress-container-presale span { font-size: 0.6rem !important; }
+
+                    .quick-select-container { 
+                        justify-content: space-between !important; 
+                        flex-wrap: nowrap !important; 
+                        gap: 4px !important; 
+                        width: 100% !important;
+                    }
+                    .quick-btn { 
+                        flex: 1 1 0 !important; 
+                        font-size: 0.56rem !important; 
+                        padding: 6px 2px !important; 
+                        white-space: nowrap !important;
+                        text-align: center !important;
+                    }
+
+                    .connect-wallet-btn { padding: 9px !important; }
+
+                    .features-section { flex-direction: column !important; width: 100% !important; gap: 20px !important; margin-top: 60px !important; }
+                    .feature-card { width: 100% !important; padding: 25px !important; min-height: auto !important; }
+                    .feature-title { font-size: 1.1rem !important; }
+                    .feature-desc { font-size: 0.85rem !important; }
+
+                    .tokenomics-section { flex-direction: column !important; gap: 30px !important; }
+                    .tokenomics-card { padding: 25px 15px !important; width: 100% !important; }
+                    
+                    .donut-container { flex-direction: column !important; align-items: center !important; }
+                    .donut-chart-wrapper { margin-bottom: 30px !important; }
+                    .donut-legend { 
+                        display: flex !important;
+                        flex-direction: column !important; 
+                        align-items: flex-start !important; 
+                        gap: 12px !important; 
+                        width: 100% !important;
+                        padding-left: 15% !important;
+                        margin-bottom: 50px !important;
+                    }
+                    .legend-item { font-size: 0.85rem !important; width: 100% !important; display: flex !important; align-items: center !important; }
+
+                    .token-info-table { width: 100% !important; padding: 20px 15px !important; margin-top: 25px !important;}
+                    .table-row { justify-content: space-between !important; padding: 14px 0 !important; }
+                    .table-key { font-size: 0.85rem !important; text-align: left !important; }
+                    .table-val { font-size: 0.85rem !important; text-align: right !important; justify-content: flex-end !important; }
+
+                    .burn-box-wide { 
+                        width: 100% !important; 
+                        padding: 25px 20px !important; 
+                        margin-top: 60px !important; 
+                        transform: translateX(0) translateY(0) !important;
+                    }
+                    .burn-header { 
+                        display: flex !important; 
+                        flex-direction: row !important; 
+                        align-items: center !important; 
+                        justify-content: center !important; 
+                        gap: 8px !important; 
+                        flex-wrap: nowrap !important;
+                    }
+                    .burn-icon { margin: 0 !important; font-size: 1.2rem !important; line-height: 1 !important; }
+                    .burn-box-wide h4 { margin: 0 !important; font-size: 1rem !important; text-align: center !important; line-height: 1 !important; }
+                    .burn-box-wide p { font-size: 0.85rem !important; text-align: center !important; margin-top: 15px !important; }
+
+                    .mt-100 { margin-top: 60px !important; }
                 }
             ` }} />
         </main>

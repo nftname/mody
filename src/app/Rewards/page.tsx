@@ -235,90 +235,6 @@ export default function RewardsPage() {
                             </svg>
                         </div>
                     </div>
-
-                    <div className="info-panels-grid position-relative" style={{ marginBottom: '5rem' }}>
-                        <div className="glass-panel-80 glow-unified-purple slide-in-left">
-                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">$300,000 Network Rewards Program</h3>
-                            <div className="panel-text-content">
-                                <p className="text-light-muted mb-2 fw-light">Up to $300,000 in rewards distributed across multiple phases over 6 months.</p>
-                                <p className="text-light-muted mb-2 fw-light">Each phase unlocks as the network grows — driven by real participation.</p>
-                                <p className="text-light-muted fw-light">No lottery. No randomness. Just measurable network expansion.</p>
-                            </div>
-                        </div>
-
-                        <div className="glass-panel-80 glow-unified-purple slide-in-right">
-                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">Multiple Ways to Earn</h3>
-                            <div className="panel-text-content">
-                                <p className="text-light-muted mb-3 fw-light">Earn rewards through your participation:</p>
-                                <ul className="list-unstyled ms-3">
-                                    <li className="text-light-muted mb-2 fw-light">• Mint your free Founders name</li>
-                                    <li className="text-light-muted mb-2 fw-light">• Complete daily tasks and social activity</li>
-                                    <li className="text-light-muted mb-2 fw-light">• Hold your name and grow your presence</li>
-                                    <li className="text-light-muted mb-3 fw-light">• Invite others and expand the network</li>
-                                </ul>
-                                <p className="text-light-muted fw-light">All activity contributes to your ranking and reward eligibility.</p>
-                            </div>
-                        </div>
-
-                        <div className="glass-panel-80 glow-unified-purple reveal-up" style={{ gridColumn: '1 / -1', maxWidth: '800px', margin: '0 auto' }}>
-                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">Early Participation Advantage</h3>
-                            <div className="panel-text-content">
-                                <p className="text-light-muted mb-2 fw-light">By joining early, you gain access to all reward layers from day one.</p>
-                                <p className="text-light-muted mb-2 fw-light">Your activity starts accumulating immediately within the system.</p>
-                                <p className="text-light-muted fw-light">Participants with higher contribution and network impact gain stronger positioning in the leaderboard.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="reveal-left text-center" style={{ margin: '6rem 0' }}>
-                        <h2 className="fw-normal" style={{ fontSize: '1.6rem', textShadow: '0 0 15px rgba(255, 75, 130, 0.4)', color: 'white' }}>
-                            <span>🎉💰</span> <span className="animated-gradient-text">Start early. Accumulate more. Position yourself ahead.</span> <span>💰🎉</span>
-                        </h2>
-                    </div>
-
-                    <div className="stages-wrapper reveal-cards-container" style={{ marginBottom: '6rem' }}>
-                        <div className="stages-scroll">
-                            
-                            <div className="stage-card">
-                                <h4 className="stage-title animated-gradient-text">1- Connect & Join as a Founder</h4>
-                                <p className="stage-text">Connect your wallet to access the NNM Protocol.</p>
-                                <p className="stage-text">No accounts. No custody. Full control from your side.</p>
-                                <p className="stage-text">Early participants can mint a Founders Digital Name at no cost (gas fees only), securing their position as part of the initial network layer.</p>
-                            </div>
-
-                            <div className="stage-card">
-                                <h4 className="stage-title animated-gradient-text">2- Mint & Expand Your Position</h4>
-                                <p className="stage-text">Start with your free Founders mint, then optionally expand using higher tiers (Elite / Immortals) to increase your presence and activity weight within the ecosystem.</p>
-                                <p className="stage-text">Each mint strengthens your position and unlocks deeper participation across the network.</p>
-                            </div>
-
-                            <div className="stage-card">
-                                <h4 className="stage-title animated-gradient-text">3- Earn Through Activity</h4>
-                                <p className="stage-text mb-2">Earn platform rewards through:</p>
-                                <ul className="stage-list">
-                                    <li>Your activity and engagement</li>
-                                    <li>Social and platform tasks</li>
-                                    <li>Direct referrals</li>
-                                </ul>
-                                <p className="stage-text">All rewards are based on real usage and verified participation — transparently tracked on-chain.</p>
-                            </div>
-
-                            <div className="stage-card">
-                                <h4 className="stage-title animated-gradient-text">4- Unlock Vaults & Benefit</h4>
-                                <p className="stage-text">As the network grows, Reward Vaults unlock progressively.</p>
-                                <p className="stage-text">Participants earn rewards based on contribution, ranking, and verified activity.</p>
-                                <p className="stage-text">Early participants benefit from broader access to all reward layers.</p>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div className="reveal-left text-center" style={{ marginBottom: '3rem', padding: '0 5%' }}>
-                        <h2 className="animated-gradient-text fw-normal" style={{ fontSize: '1.6rem', lineHeight: '1.5' }}>
-                            Early participants gain access to all reward layers from day one — with no upfront cost beyond gas.
-                        </h2>
-                    </div>
-
                     <div className="text-center reveal-up" style={{ marginBottom: '5rem' }}>
                         <p className="fst-italic text-white mb-3" style={{ fontSize: '1rem', letterSpacing: '0.5px', fontWeight: '300' }}>
                             Join early. Secure your position. Start earning through participation.
@@ -330,7 +246,9 @@ export default function RewardsPage() {
 
                     <div className="vaults-section reveal-up" style={{ marginBottom: '6rem' }}>
                         <div className="d-flex align-items-center mb-4 ms-3">
-                            <h3 className="fw-bold text-white mb-0" style={{ fontSize: '1.6rem' }}>🔥 Reward Vaults</h3>
+                            <h3 className="fw-bold mb-0" style={{ fontSize: '1.36rem' }}>
+                                🔥 <span className="animated-gradient-text">Reward Vaults</span>
+                            </h3>
                         </div>
                         
                         <div className="position-relative">
@@ -430,6 +348,87 @@ export default function RewardsPage() {
                         </div>
                     </div>
 
+
+                    <div className="info-panels-grid position-relative" style={{ marginBottom: '5rem' }}>
+                        <div className="glass-panel-80 glow-unified-purple slide-in-left">
+                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">$300,000 Network Rewards</h3>
+                            <div className="panel-text-content">
+                                <p className="text-light-muted mb-2 fw-light">Up to $300,000 in rewards distributed across multiple phases over 6 months.</p>
+                                <p className="text-light-muted mb-2 fw-light">Each phase unlocks as the network grows — driven by real participation.</p>
+                                <p className="text-light-muted fw-light">No lottery. No randomness. Just measurable network expansion.</p>
+                                <p className="text-light-muted fw-light">As one of the early founders, you will receive an instant gift of 1000 $WNNM added to your dashboard account.</p>
+                            </div>
+                        </div>
+
+                        <div className="glass-panel-80 glow-unified-purple slide-in-right">
+                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">Multiple Ways to Earn</h3>
+                            <div className="panel-text-content">
+                                <p className="text-light-muted mb-3 fw-light">Earn rewards through your participation:</p>
+                                <ul className="list-unstyled ms-3">
+                                    <li className="text-light-muted mb-2 fw-light">• Mint your free Founders name</li>
+                                    <li className="text-light-muted mb-2 fw-light">• Complete daily tasks and social activity</li>
+                                    <li className="text-light-muted mb-2 fw-light">• Hold your name and grow your presence</li>
+                                    <li className="text-light-muted mb-3 fw-light">• Invite others and get an instant 30% cashback , plus 10% lifetime royalties.</li>
+                                </ul>
+                                <p className="text-light-muted fw-light">Every action you take contributes to your ranking and rewards.</p>
+                            </div>
+                        </div>
+
+                        <div className="glass-panel-80 glow-unified-purple reveal-up" style={{ gridColumn: '1 / -1', maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
+                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">Early Access Means Founder-Level Advantages</h3>
+                            <div className="panel-text-content">
+                                <p className="text-light-muted mb-2 fw-light">Join early today and unlock all reward layers from day one.</p>
+                                <p className="text-light-muted mb-2 fw-light">Earn instantly. Grow faster. Dominate the leaderboard.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="stages-wrapper reveal-cards-container" style={{ marginBottom: '6rem' }}>
+                        <div className="stages-scroll">
+                            
+                            <div className="stage-card">
+                                <h4 className="stage-title animated-gradient-text">1- Connect & Join as a Founder</h4>
+                                <p className="stage-text">Connect your wallet to access the NNM Protocol.</p>
+                                <p className="stage-text">No accounts. No custody. Full control from your side.</p>
+                                <p className="stage-text">Early participants can mint a Founders Digital Name at no cost (gas fees only), securing their position as part of the initial network layer.</p>
+                            </div>
+
+                            <div className="stage-card">
+                                <h4 className="stage-title animated-gradient-text">2- Mint & Expand Your Position</h4>
+                                <p className="stage-text">Start with your free Founders mint, then optionally expand using higher tiers (Elite / Immortals) to increase your presence and activity weight within the ecosystem.</p>
+                                <p className="stage-text">Each mint strengthens your position and unlocks deeper participation across the network.</p>
+                            </div>
+
+                            <div className="stage-card">
+                                <h4 className="stage-title animated-gradient-text">3- Earn Through Activity</h4>
+                                <p className="stage-text mb-2">Earn platform rewards through:</p>
+                                <ul className="stage-list">
+                                    <li>Your activity and engagement</li>
+                                    <li>Social and platform tasks</li>
+                                    <li>Direct referrals</li>
+                                </ul>
+                                <p className="stage-text">All rewards are based on real usage and verified participation — transparently tracked on-chain.</p>
+                            </div>
+
+                            <div className="stage-card">
+                                <h4 className="stage-title animated-gradient-text">4- Unlock Vaults & Benefit</h4>
+                                <p className="stage-text">As the network grows, Reward Vaults unlock progressively.</p>
+                                <p className="stage-text">Participants earn rewards based on contribution, ranking, and verified activity.</p>
+                                <p className="stage-text">Early participants benefit from broader access to all reward layers.</p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div className="text-center reveal-up" style={{ marginBottom: '5rem' }}>
+                        <p className="fst-italic text-white mb-3" style={{ fontSize: '1rem', letterSpacing: '0.5px', fontWeight: '300' }}>
+                            Join early. Secure your position. Start earning through participation.
+                        </p>
+                        <Link href="/mint" style={{ textDecoration: 'none' }}>
+                            <button className="btn-action-main">Start Earning Now</button>
+                        </Link>
+                    </div>
+
                     <div className="legal-disclaimer-wrapper text-center reveal-up" style={{ marginTop: '2rem' }}>
                         <p className="text-white mx-auto" style={{ fontSize: '12.5px', maxWidth: '800px', opacity: 1, lineHeight: '1.6', fontWeight: '500' }}>
                          Unlocking of all reward vaults is contingent upon reaching specific network volume milestones within the 6-month campaign period. See Section 21 of our <Link href="/legal" target="_blank" rel="noopener noreferrer" className="text-white" style={{ textDecoration: 'underline', fontWeight: 'bold' }}>Terms of Service</Link> for full details.
@@ -499,12 +498,12 @@ export default function RewardsPage() {
                 }
 
                 .panel-main-title {
-                    font-size: 1.8rem;
+                    font-size: 1.6rem;
                 }
 
                 .panel-text-content p, .panel-text-content li {
                     color: #EAECEF !important;
-                    font-size: 0.95rem;
+                    font-size: 1rem;
                     line-height: 1.65;
                     letter-spacing: 0.3px;
                     font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -702,7 +701,7 @@ export default function RewardsPage() {
                 .stage-list { 
                     color: #EAECEF; 
                     font-weight: 300; 
-                    font-size: 0.85rem; 
+                    font-size: 0.45rem; 
                     line-height: 1.65; 
                     padding-left: 12px; 
                     margin-bottom: 12px; 
@@ -825,6 +824,8 @@ export default function RewardsPage() {
                 .vault-reward-item span { color: #fff; font-weight: 600; }
 
                 @media (max-width: 991px) {
+                    .btn-action-main { padding: 13.5px 37.5px; font-size: 0.75rem; }
+                    .vault-nav-btn { display: none !important; }
                     .info-panels-grid { grid-template-columns: 1fr; width: 95%; }
                     .glass-panel-80 { width: 100% !important; grid-column: 1 / -1 !important; padding: 30px 20px; }
                     .reveal-left, .reveal-right, .reveal-right-slow { transform: translateX(0) translateY(40px); opacity: 0; }
