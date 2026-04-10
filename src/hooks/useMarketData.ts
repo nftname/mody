@@ -74,7 +74,7 @@ export function useMarketData(timeFilter: string = 'All') {
                 }
 
                 const tokenIdsStr = tokenIds.map(id => id.toString());
-                const CHUNK_SIZE = 150;
+                const CHUNK_SIZE = 80;
                 const chunks: string[][] = [];
                 for (let i = 0; i < tokenIdsStr.length; i += CHUNK_SIZE) {
                     chunks.push(tokenIdsStr.slice(i, i + CHUNK_SIZE));
@@ -190,11 +190,10 @@ export function useMarketData(timeFilter: string = 'All') {
                     setListings(items);
                     setLoading(false); 
                 }
-
                 const itemsMissingNames = items.filter(item => item.name.startsWith('Asset #'));
                 if (itemsMissingNames.length > 0) {
                     const fetchMissingNamesInChunks = async () => {
-                        const chunkSize = 5;
+                        const chunkSize = 15;
                         for (let i = 0; i < itemsMissingNames.length; i += chunkSize) {
                             if (!isMounted) break;
                             const chunk = itemsMissingNames.slice(i, i + chunkSize);
