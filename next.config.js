@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  compress: true,
 
   experimental: {
     serverComponentsExternalPackages: ['sharp'],
@@ -63,7 +64,6 @@ const nextConfig = {
       form-action 'self';
       upgrade-insecure-requests;
     `.replace(/\s{2,}/g, ' ').trim();
-
 
     return [
       {
