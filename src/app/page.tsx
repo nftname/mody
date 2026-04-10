@@ -4,9 +4,18 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamicImport from 'next/dynamic';
-const NFXWidget = dynamicImport(() => import('@/components/NFXWidget'), { ssr: false });
-const NFXCapWidget = dynamicImport(() => import('@/components/NFXCapWidget'), { ssr: false });
-const NFXVolumeWidget = dynamicImport(() => import('@/components/NFXVolumeWidget'), { ssr: false });
+const NFXWidget = dynamicImport(() => import('@/components/NFXWidget'), { 
+    ssr: false, 
+    loading: () => <div style={{ height: '64px', backgroundColor: '#181A20' }}></div> 
+});
+const NFXCapWidget = dynamicImport(() => import('@/components/NFXCapWidget'), { 
+    ssr: false, 
+    loading: () => <div style={{ height: '64px', backgroundColor: '#181A20' }}></div> 
+});
+const NFXVolumeWidget = dynamicImport(() => import('@/components/NFXVolumeWidget'), { 
+    ssr: false, 
+    loading: () => <div style={{ height: '64px', backgroundColor: '#181A20' }}></div> 
+});
 import { usePublicClient } from "wagmi";
 import { parseAbi, formatEther, erc721Abi } from 'viem';
 import { NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from '@/data/config';
@@ -86,8 +95,8 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                         fill 
                         style={{ objectFit: 'fill', objectPosition: 'center' }}
                         sizes="(max-width: 768px) 50vw, 25vw"
-                        quality={60}
-                        priority
+                        quality={50}
+                        loading="lazy"
                    />
                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.1)' }}></div>
                    <div style={{

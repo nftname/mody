@@ -1,10 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   compress: true,
-
+  swcMinify: true,
   experimental: {
     serverComponentsExternalPackages: ['sharp'],
+    optimizePackageImports: ['bi', 'viem', 'wagmi'],
   },
 
   images: {
