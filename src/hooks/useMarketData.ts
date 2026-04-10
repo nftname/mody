@@ -74,7 +74,7 @@ export function useMarketData(timeFilter: string = 'All') {
                 }
 
                 const tokenIdsStr = tokenIds.map(id => id.toString());
-                const CHUNK_SIZE = 80;
+                const CHUNK_SIZE = 60;
                 const chunks: string[][] = [];
                 for (let i = 0; i < tokenIdsStr.length; i += CHUNK_SIZE) {
                     chunks.push(tokenIdsStr.slice(i, i + CHUNK_SIZE));
