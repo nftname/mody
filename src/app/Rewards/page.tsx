@@ -155,7 +155,7 @@ export default function RewardsPage() {
                             </Link>
                             <Link href="/presale" style={{ textDecoration: 'none', display: 'flex' }}>
                                 <button className="neon-btn slide-btn-5">
-                                    <span>NNM Utility</span>
+                                    <span>$ NNM Utility</span>
                                 </button>
                             </Link>
                         </div>

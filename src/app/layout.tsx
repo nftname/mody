@@ -39,15 +39,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <link rel="preload" href="/hero-blue.jpg" as="image" type="image/jpeg" fetchPriority="high" />
-        
         <link rel="preconnect" href="https://cigztdxswhkkyootcywr.supabase.co" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://pulse.walletconnect.org" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://api.web3modal.org" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://polygon-bor.publicnode.com" crossOrigin="anonymous" />
         
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" />
+        <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" as="style" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" id="bs-icons" suppressHydrationWarning />
+        <link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" as="style" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" media="print" id="fa-icons" suppressHydrationWarning />
+        <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: "document.getElementById('bs-icons').media='all'; document.getElementById('fa-icons').media='all';" }} />
         <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />

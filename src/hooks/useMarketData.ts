@@ -99,6 +99,40 @@ export function useMarketData(timeFilter: string = 'All') {
 
                 const dbStats = await fetchStats(chunks);
                 const statsMap: Record<string, any> = {};
+
+                const fetchActivities = async (targetChunks: string[][]) => {
+                    const promises = targetChunks.map(async (chunk) => {
+                        try {
+                            const { data } = await supabase
+                                .from('activities')
+                                .select('token_id, created_at')
+                                .eq('activity_type', 'List')
+                                .in('token_id', chunk);
+                            return data || [];
+                        } catch (e) {
+                            return [];
+                        }
+                    });
+                    const results = await Promise.all(promises);
+                    return results.flat();
+                };
+
+                const dbActivities = await fetchActivities(chunks);
+                const latestListTimeMap: Record<string, number> = {};
+
+                dbActivities.forEach((act: any) => {
+                    const tid = act.token_id.toString();
+                    let actTime = 0;
+                    try {
+                        const dateStr = act.created_at.includes('Z') ? act.created_at : act.created_at + 'Z';
+                        actTime = new Date(dateStr).getTime();
+                        if (isNaN(actTime)) actTime = new Date(act.created_at).getTime();
+                    } catch { actTime = new Date(act.created_at).getTime(); }
+
+                    if (!latestListTimeMap[tid] || actTime > latestListTimeMap[tid]) {
+                        latestListTimeMap[tid] = actTime;
+                    }
+                });
                 
                 let maxVolume = 0;
                 let maxSales = 0;
@@ -175,7 +209,7 @@ export function useMarketData(timeFilter: string = 'All') {
                         pricePol: pricePol,
                         lastSale: lastSale,
                         volume: Number(dbRecord.volume) || 0,
-                        listedTime: Number(dbRecord.listedtime) || 0,
+                        listedTime: latestListTimeMap[idStr] || Number(dbRecord.listedtime) || 0,
                         lastActive: Number(dbRecord.lastactive) || 0,
                         mintYear: mintYear,
                         trendingScore: trendingScore,

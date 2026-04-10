@@ -87,7 +87,7 @@ const AssetCard = ({ item, priceDisplay, volumeDisplay }: { item: any, priceDisp
                         style={{ objectFit: 'fill', objectPosition: 'center' }}
                         sizes="(max-width: 768px) 50vw, 25vw"
                         quality={60}
-                        loading="lazy"
+                        priority
                    />
                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.1)' }}></div>
                    <div style={{
@@ -264,9 +264,9 @@ const handleTouchEnd = (e: React.TouchEvent) => {
   return (
     <main className="no-select" style={{ backgroundColor: '#181A20', minHeight: '100vh', paddingBottom: '0px', fontFamily: '"Inter", "Segoe UI", sans-serif', overflowX: 'hidden' }}>
       
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@400;700&display=swap');
-      `}</style>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@400;700&display=swap" rel="stylesheet" />
 
     
 
