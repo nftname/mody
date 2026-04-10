@@ -1253,14 +1253,74 @@ export default function JoinCampaignPage() {
                     filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
                 }
                 @media (max-width: 768px) {
+                    .stats-table-wrapper {
+                        width: 100%;
+                        overflow-x: auto;
+                        -webkit-overflow-scrolling: touch;
+                    }
+                    .stats-table {
+                        min-width: 500px;
+                    }
+                    .stats-table th {
+                        font-size: 65%;
+                        white-space: nowrap;
+                        padding: 10px;
+                    }
+                    .points-val {
+                        font-size: 15px;
+                    }
+                    .task-header {
+                        flex-wrap: nowrap;
+                        padding: 6px 7px;
+                    }
+                    .task-icon-wrapper {
+                        width: 24px;
+                        height: 24px;
+                        font-size: 12px;
+                    }
+                    .task-label {
+                        font-size: 8px;
+                        white-space: normal;
+                    }
+                    .task-points-badge {
+                        margin-right: 0px;
+                    }
+                    .task-points-badge .points-val {
+                        font-size: 8px;
+                    }
+                    .task-points-badge .points-type {
+                        font-size: 7px;
+                    }
                     .desktop-wallet {
                         display: none;
                     }
                     .mobile-wallet {
                         display: inline-block;
+                        font-size: 11px;
                     }
-                    .col-wallet { width: 35%; }
-                    .col-points { width: 30%; }
+                    .leaderboard-table {
+                        min-width: 450px;
+                    }
+                    .leaderboard-table-header th {
+                        font-size: 72%;
+                        white-space: nowrap;
+                    }
+                    .rank-text {
+                        font-size: 14px;
+                    }
+                    .leaderboard-points-val {
+                        font-size: 13px;
+                    }
+                    .col-rank { width: 15%; }
+                    .col-wallet { width: 45%; }
+                    .col-points { 
+                        width: 40%; 
+                        text-align: center  !important; 
+                        padding-left: 0 !important;
+                    }
+                    .tasks-section h2 {
+                     font-size:1.1rem !important;
+                    }
                 }
                 @keyframes slideInFromRight {
                     0% {
@@ -1304,11 +1364,11 @@ export default function JoinCampaignPage() {
                 }
                 .neon-btn-container button {
                     opacity: 0;
-                    animation: slideInFromFarRight 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
+                    animation: slideInFromFarRight 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
                 }
                 .neon-btn-container button:nth-child(1) { animation-delay: 0.2s; }
-                .neon-btn-container button:nth-child(2) { animation-delay: 1.2s; }
-                .neon-btn-container button:nth-child(3) { animation-delay: 2.2s; }
+                .neon-btn-container button:nth-child(2) { animation-delay: 0.8s; }
+                .neon-btn-container button:nth-child(3) { animation-delay: 1.4s; }
 
                 .btn-lightchain-action {
                     background-color: #f8f9fa;
