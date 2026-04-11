@@ -83,4 +83,6 @@ html, body {
 
 .footer-social-row i { color: #FCD535; } 
 .footer-social-row:hover i { color: #fff; }
-
+.grecaptcha-badge { 
+  visibility: hidden !important; 
+}

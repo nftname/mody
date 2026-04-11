@@ -273,9 +273,12 @@ const MintContent = () => {
                   if (airdropData.error === 'Founder tier already claimed.') {
                       setErrorTitle("Limit Reached");
                       setErrorMessage("You have already claimed a Founder tier name. This tier is limited to one per wallet.");
+                  } else if (airdropData.error === 'Security validation missing.' || airdropData.error === 'Automated behavior detected.') {
+                      setErrorTitle("Security Check");
+                      setErrorMessage("Please refresh the page and try again to verify your session.");
                   } else {
-                      setErrorTitle("Minting Failed");
-                      setErrorMessage(airdropData.error || "Founder minting failed.");
+                      setErrorTitle("Network Busy");
+                      setErrorMessage("The network is experiencing high traffic. Please try again in a few moments.");
                   }
                   setModalType('error');
                   setShowModal(true);
@@ -454,7 +457,7 @@ const MintContent = () => {
         </p>
       </div>
 
-      <div className="container mb-1">
+<div className="container mb-1" style={{ marginTop: '15px' }}>
         <div className="mx-auto position-relative" style={{ maxWidth: '600px' }}>
           <form onSubmit={checkAvailability} className="position-relative">
             <input 
@@ -515,6 +518,11 @@ const MintContent = () => {
             <div className="col-10 col-md-6 text-center">
                 <span style={{ fontSize: '14px', color: '#848E9C', opacity: 0.8, display: 'block' }}>
                     Minting means you accept the T&C
+                </span>
+                <span style={{ fontSize: '11px', color: '#848E9C', opacity: 0.5, display: 'block', marginTop: '10px' }}>
+                    This site is protected by reCAPTCHA and the Google 
+                    <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" style={{ color: '#848E9C', textDecoration: 'underline', marginLeft: '4px', marginRight: '4px' }}>Privacy Policy</a> and 
+                    <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" style={{ color: '#848E9C', textDecoration: 'underline', marginLeft: '4px' }}>Terms of Service</a> apply.
                 </span>
             </div>
         </div>

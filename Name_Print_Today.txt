@@ -778,3 +778,38 @@ Name: ADAM7
 Tier: FOUNDER
 Wallet: 0x05567921bD1809Bd18f44C8189feE91C47553118
 ------------------------
+
+=================================
+Date: 2026-04-11
+=================================
+
+ID: 1323
+Name: ADAM8
+Tier: FOUNDER
+Wallet: 0x990132c5e27AAa57F1c9bcACFdc4d61889adbabd
+------------------------
+ID: 1324
+Name: ADAM9
+Tier: FOUNDER
+Wallet: 0x990132c5e27AAa57F1c9bcACFdc4d61889adbabd
+------------------------
+ID: 1325
+Name: ADAM10
+Tier: FOUNDER
+Wallet: 0x58518E6801CCCA7CE573ed387664885074d0adbE
+------------------------
+ID: 1326
+Name: ADAM11
+Tier: FOUNDER
+Wallet: 0x2C68e2D6c624a2C449acd902Be3240a69aC0Caa0
+------------------------
+ID: 1327
+Name: THEMOON
+Tier: FOUNDER
+Wallet: 0xE93DCafeE7B81E7Fbfc9eF309c8731eA3706318d
+------------------------
+ID: 1328
+Name: LADYMOON
+Tier: FOUNDER
+Wallet: 0xd3d96c18DA4D7BceefF009194d0dd31a98C4Dc18
+------------------------

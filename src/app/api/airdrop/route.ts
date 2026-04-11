@@ -50,45 +50,87 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'Founder tier already claimed.' }, { status: 403 });
         }
     }
+
     const rawPrivateKey = process.env.NNM_Airdrop_WALLET_PRIVATE_KEY || '';
     const formattedPrivateKey = rawPrivateKey.startsWith('0x') ? rawPrivateKey : `0x${rawPrivateKey}`;
     const account = privateKeyToAccount(formattedPrivateKey as `0x${string}`);
     
     const client = createWalletClient({ account, chain: polygon, transport: http('https://polygon-bor.publicnode.com') }).extend(publicActions);
 
-    const mintHash = await client.writeContract({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      functionName: 'mintPublic',
-      args: [name, 2, tokenURI],
-      value: BigInt(0),
-      chain: polygon,
-      account: account
-    });
+    let mintReceipt;
+    let mintAttempt = 0;
+    const MAX_RETRIES = 3;
 
-    const mintReceipt = await client.waitForTransactionReceipt({ hash: mintHash });
+    while (mintAttempt < MAX_RETRIES) {
+        try {
+            if (mintAttempt > 0) {
+                const jitter = Math.floor(Math.random() * 2500) + 1000;
+                await new Promise(res => setTimeout(res, jitter));
+            }
+            
+            const transactionCount = await client.getTransactionCount({ address: account.address });
+
+            const mintHash = await client.writeContract({
+                address: CONTRACT_ADDRESS,
+                abi: ABI,
+                functionName: 'mintPublic',
+                args: [name, 2, tokenURI],
+                value: BigInt(0),
+                chain: polygon,
+                account: account,
+                nonce: transactionCount
+            });
+
+            mintReceipt = await client.waitForTransactionReceipt({ hash: mintHash });
+            break;
+        } catch (err: any) {
+            mintAttempt++;
+            if (mintAttempt >= MAX_RETRIES) throw err;
+        }
+    }
 
     let mintedTokenId = BigInt(0);
-    for (const log of mintReceipt.logs) {
-      try {
-        if(log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') {
-          mintedTokenId = BigInt(log.topics[3]!);
+    if (mintReceipt && mintReceipt.logs) {
+        for (const log of mintReceipt.logs) {
+            try {
+                if(log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') {
+                    mintedTokenId = BigInt(log.topics[3]!);
+                }
+            } catch (e) {}
         }
-      } catch (e) {}
     }
 
     if (mintedTokenId === BigInt(0)) throw new Error("Token ID extraction failed");
 
-    const transferHash = await client.writeContract({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      functionName: 'transferFrom',
-      args: [account.address, wallet as `0x${string}`, mintedTokenId],
-      chain: polygon,
-      account: account
-    });
-    
-    await client.waitForTransactionReceipt({ hash: transferHash });
+    await new Promise(res => setTimeout(res, 4000));
+
+    let transferAttempt = 0;
+    while (transferAttempt < MAX_RETRIES) {
+        try {
+            if (transferAttempt > 0) {
+                const jitter = Math.floor(Math.random() * 2000) + 1000;
+                await new Promise(res => setTimeout(res, jitter));
+            }
+
+            const transactionCount = await client.getTransactionCount({ address: account.address });
+
+            const transferHash = await client.writeContract({
+                address: CONTRACT_ADDRESS,
+                abi: ABI,
+                functionName: 'transferFrom',
+                args: [account.address, wallet as `0x${string}`, mintedTokenId],
+                chain: polygon,
+                account: account,
+                nonce: transactionCount
+            });
+            
+            await client.waitForTransactionReceipt({ hash: transferHash });
+            break;
+        } catch (err: any) {
+            transferAttempt++;
+            if (transferAttempt >= MAX_RETRIES) throw err;
+        }
+    }
 
     await supabase.from('activities').insert([{
         token_id: Number(mintedTokenId),
@@ -138,6 +180,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, tokenId: Number(mintedTokenId) });
 
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("Airdrop API Error:", err.message);
+    return NextResponse.json({ error: "Network congested. Please try again." }, { status: 500 });
   }
 }
