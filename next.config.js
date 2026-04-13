@@ -54,12 +54,12 @@ const nextConfig = {
   async headers() {
     const cspHeader = `
       default-src 'self';
-      script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/;
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+      script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.googletagmanager.com https://nowpayments.io https://*.nowpayments.io;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://nowpayments.io https://*.nowpayments.io;
       font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:;
-      img-src 'self' blob: data: https://www.google-analytics.com https://www.nftnnm.com https://*.pinata.cloud https://gateway.pinata.cloud https://ipfs.io https://cloudflare-ipfs.com https://raw.githubusercontent.com https://cryptologos.cc https://cdn-icons-png.flaticon.com https://api.qrserver.com https://imagedelivery.net https://explorer-api.walletconnect.com;
-      connect-src 'self' blob: data: https://www.google.com https://www.google-analytics.com https://1rpc.io https://fonts.googleapis.com https://fonts.gstatic.com https://*.pinata.cloud https://gateway.pinata.cloud https://ipfs.io https://cloudflare-ipfs.com https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org https://*.infura.io https://*.alchemyapi.io https://cloudflare-eth.com https://*.supabase.co wss://*.supabase.co https://api.web3modal.org https://*.llamarpc.com https://rpc.ankr.com https://bsc-dataseed.binance.org https://api.coingecko.com https://polygon-bor.publicnode.com https://cdn.jsdelivr.net https://*.drpc.org https://*.maticvigil.com https://*.builder0x69.com https://*.defibit.io https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com https://mempool.space https://blockstream.info https://*.phantom.app https://*.solflare.com https://*.unisat.io https://*.xverse.app https://*.okx.com https://polygon-rpc.com https://walletconnect.com wss://walletconnect.com https://walletconnect.org wss://walletconnect.org;
-      frame-src 'self' https://verify.didit.me https://app.uniswap.org https://*.walletconnect.com https://*.walletconnect.org https://*.coinbase.com https://*.phantom.app https://*.solflare.com https://*.unisat.io https://*.xverse.app https://*.okx.com https://walletconnect.com https://walletconnect.org https://www.google.com/recaptcha/;
+      img-src 'self' blob: data: https://www.google-analytics.com https://www.googletagmanager.com https://www.nftnnm.com https://*.pinata.cloud https://gateway.pinata.cloud https://ipfs.io https://cloudflare-ipfs.com https://raw.githubusercontent.com https://cryptologos.cc https://cdn-icons-png.flaticon.com https://api.qrserver.com https://imagedelivery.net https://explorer-api.walletconnect.com https://nowpayments.io https://*.nowpayments.io;
+      connect-src 'self' localhost:* ws://localhost:* blob: data: https://www.google.com https://www.google-analytics.com https://1rpc.io https://fonts.googleapis.com https://fonts.gstatic.com https://*.pinata.cloud https://gateway.pinata.cloud https://ipfs.io https://cloudflare-ipfs.com https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org https://*.infura.io https://*.alchemyapi.io https://cloudflare-eth.com https://*.supabase.co wss://*.supabase.co https://api.web3modal.org https://*.llamarpc.com https://rpc.ankr.com https://bsc-dataseed.binance.org https://api.coingecko.com https://polygon-bor.publicnode.com https://cdn.jsdelivr.net https://*.drpc.org https://*.maticvigil.com https://*.builder0x69.com https://*.defibit.io https://solana-rpc.publicnode.com wss://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com wss://api.mainnet-beta.solana.com https://mempool.space https://blockstream.info https://*.phantom.app https://*.solflare.com https://*.unisat.io https://*.xverse.app https://*.okx.com https://polygon-rpc.com https://walletconnect.com wss://walletconnect.com https://walletconnect.org wss://walletconnect.org https://nowpayments.io https://api.nowpayments.io https://api.binance.com;
+      frame-src 'self' https://verify.didit.me https://app.uniswap.org https://*.walletconnect.com https://*.walletconnect.org https://*.coinbase.com https://*.phantom.app https://*.solflare.com https://*.unisat.io https://*.xverse.app https://*.okx.com https://walletconnect.com https://walletconnect.org https://nowpayments.io https://*.nowpayments.io;
       object-src 'none';
       base-uri 'self';
       form-action 'self';
@@ -115,6 +115,5 @@ const nextConfig = {
     ]
   }
 };
-
 
 export default nextConfig;

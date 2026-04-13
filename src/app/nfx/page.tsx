@@ -34,6 +34,7 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
                 </defs>
                 <path d={icon} fill="url(#goldGradientIcon)" />
             </svg>
+            
         );
     }
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
@@ -130,13 +131,15 @@ const EmbedCard = ({ title, component, embedId, label, isFullBar, isChart }: any
   }
 
   return (
+    
     <div className="embed-card h-100 d-flex flex-column justify-content-between">
       <div className="preview-area" style={{ height: previewHeight }}>
         <div className={`widget-scale-wrapper ${isFullBar ? 'full-bar-scale' : isChart ? 'chart-scale' : 'individual-scale'}`} style={{ pointerEvents: 'none' }}>
           {isChart ? <StaticMiniChart isMobile={isMobile} /> : component}
         </div>
       </div>
-      
+            <title>NNM | NFX</title>
+
       <div className="info-area mt-1 text-center" style={{ zIndex: 10 }}>
         <h6 className="d-none d-md-block mb-1 unified-title" style={{ fontSize: '10px', marginBottom: '4px' }}>{title}</h6>
         {label && <div className="mobile-label fw-bold mb-1">{label}</div>}

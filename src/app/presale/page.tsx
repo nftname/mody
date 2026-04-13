@@ -106,6 +106,8 @@ export default function PresalePage() {
 
     return (
         <main className="presale-wrapper">
+           <title>NNM | presale</title>
+           
             <div className="twinkling-stars"></div>
 
             <div className="container-main">

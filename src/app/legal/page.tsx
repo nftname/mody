@@ -44,7 +44,8 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
 export default function LegalPage() {
   return (
     <main className="legal-page" style={{ backgroundColor: '#181A20', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif', paddingBottom: '80px' }}>
-      
+            <title>NNM | Legal</title>
+
       <div className="container pt-5">
         <div className="row justify-content-center">
           

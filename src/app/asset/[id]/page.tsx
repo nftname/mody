@@ -858,7 +858,8 @@ const formatPriceDisplay = (price: string) => {
     return (
         <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
             <CustomModal isOpen={modal.isOpen} type={modal.type} title={modal.title} message={modal.message} onClose={closeModal} />
-            
+                  <title>NNM | Asset</title>
+
             <div className="container-fluid" style={{ maxWidth: '1280px', paddingTop: '20px' }}>
                 <div className="row g-3 g-lg-5">
                     

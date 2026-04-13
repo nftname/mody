@@ -58,6 +58,7 @@ export default function BalancePage() {
 
   if (!isConnected) {
     return (
+      
       <div style={{ backgroundColor: '#050a16', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', color: '#fff' }}>
           <h2 style={{ marginBottom: '16px' }}>Connect Your Wallet</h2>
@@ -71,7 +72,8 @@ export default function BalancePage() {
 
   return (
     <div style={{ backgroundColor: '#050a16', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 20px', fontFamily: 'sans-serif' }}>
-      
+            <title>NNM | balance</title>
+
       <style>{`
         .static-neon-btn {
             background: rgba(255, 255, 255, 0.02);

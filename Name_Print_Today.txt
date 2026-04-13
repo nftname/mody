@@ -813,3 +813,118 @@ Name: LADYMOON
 Tier: FOUNDER
 Wallet: 0xd3d96c18DA4D7BceefF009194d0dd31a98C4Dc18
 ------------------------
+
+=================================
+Date: 2026-04-11
+=================================
+
+ID: 1329
+Name: ADAM12
+Tier: FOUNDER
+Wallet: 0x54B5cB43bc4e38C3e4B078cB56Dbd45827b7e5d7
+------------------------
+ID: 1330
+Name: ADAM13
+Tier: FOUNDER
+Wallet: 0xed746DCD504549e014aB74Ca4eB0b5f16f6F8312
+------------------------
+
+=================================
+Date: 2026-04-12
+=================================
+
+ID: 1331
+Name: ADAM17
+Tier: FOUNDER
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+ID: 1332
+Name: ADAM18
+Tier: FOUNDER
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+
+=================================
+Date: 2026-04-12
+=================================
+
+ID: 1333
+Name: ADAM20
+Tier: FOUNDER
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+ID: 1334
+Name: ADAM21
+Tier: FOUNDER
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+
+=================================
+Date: 2026-04-12
+=================================
+
+ID: 1335
+Name: ADAM22
+Tier: FOUNDER
+Wallet: 0xfa148Ea96986E89c7bEEe67D3b8F72B3719aAb7e
+------------------------
+
+=================================
+Date: 2026-04-12
+=================================
+
+ID: 1336
+Name: ADAM25
+Tier: FOUNDER
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+ID: 1337
+Name: ADAM26
+Tier: FOUNDER
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+ID: 1338
+Name: ADAM27
+Tier: ELITE
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+ID: 1339
+Name: ADAM28
+Tier: FOUNDER
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+ID: 1340
+Name: ADAM29
+Tier: IMMORTAL
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+
+=================================
+Date: 2026-04-12
+=================================
+
+ID: 1341
+Name: ADAM30
+Tier: ELITE
+Wallet: 0xf91D8509BCa479DC8a4E37597374F93f11c00Ba0
+------------------------
+
+=================================
+Date: 2026-04-12
+=================================
+
+ID: 1342
+Name: ADAM31
+Tier: ELITE
+Wallet: 0xf91D8509BCa479DC8a4E37597374F93f11c00Ba0
+------------------------
+ID: 1343
+Name: ADAM32
+Tier: FOUNDER
+Wallet: 0xf91D8509BCa479DC8a4E37597374F93f11c00Ba0
+------------------------
+ID: 1344
+Name: ADAM33
+Tier: IMMORTAL
+Wallet: 0xf91D8509BCa479DC8a4E37597374F93f11c00Ba0
+------------------------

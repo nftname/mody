@@ -61,7 +61,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-TileImage" content="/icons/icon-192x192.png" />
       </head>
       <body className={inter.className}>
-        <Script src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`} strategy="afterInteractive" />
         <Script src="https://www.googletagmanager.com/gtag/js?id=G-NQY65DTMFD" strategy="lazyOnload" />
         <Script id="google-analytics" strategy="lazyOnload">
           {`

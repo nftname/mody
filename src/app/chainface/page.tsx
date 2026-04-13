@@ -29,6 +29,7 @@ const trustedBrands = [
 const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: boolean }) => {
     if (isCustomSVG) {
         return (
+            
             <svg viewBox="0 0 32 32" width="22" height="22" style={{ marginBottom: '2px' }}>
                 <defs>
                   <linearGradient id="goldGradientIcon" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -38,6 +39,7 @@ const GoldIcon = ({ icon, isCustomSVG = false }: { icon: string, isCustomSVG?: b
                 </defs>
                 <path d={icon} fill="url(#goldGradientIcon)" />
             </svg>
+            
         );
     }
     return <i className={`bi ${icon} brand-icon-gold`} style={{ fontSize: '20px' }}></i>;
@@ -67,7 +69,8 @@ export default function ChainFacePage() {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      
+            <title>NNM | ChainFace</title>
+
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&family=Satoshi:wght@700;900&family=Orbitron:wght@500;700&display=swap');
         

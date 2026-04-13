@@ -73,6 +73,7 @@ export default function NewsPage() {
     <main style={{ backgroundColor: BACKGROUND_DARK, minHeight: '100vh', fontFamily: '"Inter", sans-serif', paddingBottom: '80px' }}>
       
       <MarketTicker />
+      <title>NNM | News</title>
 
       <div className="header-wrapper" style={{ borderBottom: `1px solid ${BORDER_COLOR}`, padding: '8px 0', backgroundColor: SURFACE_DARK }}>
         <div className="container-fluid p-0"> 

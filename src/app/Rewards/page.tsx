@@ -32,45 +32,16 @@ export default function RewardsPage() {
     }, []);
 
     useEffect(() => {
-        const fetchPremiumMints = async () => {
-            try {
-                const response = await fetch('/api/rewards');
-                const data = await response.json();
-                
-                if (data.totalPremiumMints !== undefined) {
-                    const targetNumber = data.totalPremiumMints;
-                    let currentNumber = 2000;
-                    const duration = 1500;
-                    const steps = 60;
-                    const stepTime = duration / steps;
-                    const decrement = (2000 - targetNumber) / steps;
-
-                    const animateInterval = setInterval(() => {
-                        currentNumber -= decrement;
-                        if (currentNumber <= targetNumber) {
-                            setNamesMinted(targetNumber);
-                            clearInterval(animateInterval);
-                        } else {
-                            setNamesMinted(Math.floor(currentNumber));
-                        }
-                    }, stepTime);
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        };
-
-        if (isMounted) {
-            fetchPremiumMints();
-            const refreshInterval = setInterval(fetchPremiumMints, 30000);
-            return () => clearInterval(refreshInterval);
+        if (isMounted && totalSupplyData !== undefined) {
+            const currentTotal = Number(totalSupplyData);
+            setNamesMinted(currentTotal);
         }
-    }, [isMounted]);
+    }, [isMounted, totalSupplyData]);
 
     useEffect(() => {
         if (!isMounted) return;
 
-        const targetDate = new Date('2026-05-04T12:00:00Z').getTime();
+        const targetDate = new Date('2026-04-22T12:00:00Z').getTime();
 
         const timerInterval = setInterval(() => {
             const now = new Date().getTime();
@@ -125,12 +96,12 @@ export default function RewardsPage() {
 
     return (
         <main className="campaign-main">
-            
+      <title>NNM | Rewards</title>
             <div className="twinkling-stars"></div>
 
-            <div className="container-fluid pt-4 position-relative z-index-content" style={{ padding: '0 4%', maxWidth: '1200px', margin: '0 auto' }}>
+            <div className="container-fluid pt-3 position-relative z-index-content" style={{ padding: '0 4%', maxWidth: '1200px', margin: '0 auto' }}>
                 
-                <header className="row align-items-center mb-4 mt-2">
+                <header className="row align-items-center mb-4 mt-0">
                     <div className="col-12 text-center text-lg-start">
                         <div className="neon-btn-container justify-content-center justify-content-lg-start">
                             <Link href="/Rewards" style={{ textDecoration: 'none', display: 'flex' }}>
@@ -164,84 +135,91 @@ export default function RewardsPage() {
 
                 <div className="campaign-content pb-5">
                     
-                    <div className="hero-section" style={{ textAlign: 'center', marginBottom: '6rem', paddingTop: '3rem' }}>
-                        <h1 className="fw-bold gradient-title-hero mb-5 reveal-hero-left" style={{ fontSize: '2rem', lineHeight: '1.4' }}>
-                            Join to receive rewards up to <span className="gold-metallic-text" style={{ fontSize: '2.3rem' }}>$300,000</span><br/>
-                            NNM Expansion Campaign
+                    <div className="hero-section" style={{ textAlign: 'center', marginBottom: '6rem', paddingTop: '1rem' }}>
+                        <h1 className="fw-bold gradient-title-hero mb-2 reveal-hero-left" style={{ fontSize: '1.5rem', lineHeight: '1.4' }}>
+                            Join Early & Start Earning from <span className="gold-metallic-text" style={{ fontSize: '1.8rem' }}>$300,000</span><br/>
+                             Earn Token Rewards Today
+
                         </h1>
-                        <div className="tracker-container reveal-up">
-                            <div className="tracker-left">
-                                <div className="countdown-wrapper">
-                                    <div className="time-box">
-                                        <span className="time-value">{timeLeft.days}</span>
-                                        <span className="time-label">DAYS</span>
+                        <div>
+                            <div className="tracker-container">
+                                <div className="tracker-left">
+                                    <div className="countdown-wrapper">
+                                        <div className="time-box">
+                                            <span className="time-value">{timeLeft.days}</span>
+                                            <span className="time-label">DAYS</span>
+                                        </div>
+                                        <div className="time-box">
+                                            <span className="time-value">{timeLeft.hours}</span>
+                                            <span className="time-label">HOURS</span>
+                                        </div>
+                                        <div className="time-box">
+                                            <span className="time-value">{timeLeft.minutes}</span>
+                                            <span className="time-label">MINS</span>
+                                        </div>
+                                        <div className="time-box">
+                                            <span className="time-value">{timeLeft.seconds}</span>
+                                            <span className="time-label">SECS</span>
+                                        </div>
                                     </div>
-                                    <div className="time-box">
-                                        <span className="time-value">{timeLeft.hours}</span>
-                                        <span className="time-label">HOURS</span>
-                                    </div>
-                                    <div className="time-box">
-                                        <span className="time-value">{timeLeft.minutes}</span>
-                                        <span className="time-label">MINS</span>
-                                    </div>
-                                    <div className="time-box">
-                                        <span className="time-value">{timeLeft.seconds}</span>
-                                        <span className="time-label">SECS</span>
+                                    <div className="countdown-text">
+                                       Time left to collect free tokens before launch
                                     </div>
                                 </div>
-                                <div className="countdown-text">
-                                    Targeting the remaining names to unlock the Vault
-                                </div>
-                            </div>
 
-                            <div className="tracker-center">
-                                <span className="phase-text">Phase 1</span>
-                            </div>
+                                <div className="tracker-center">
+                                    <span className="phase-text">Early Access</span>
+                                </div>
 
-                            <div className="tracker-right">
-                                <div className="progress-header">
-                                    <span className="progress-title">Names Minted</span>
-                                    <span className="progress-count">{namesMinted} / 2000</span>
-                                </div>
-                                <div className="progress-bar-bg">
-                                    <div className="progress-bar-fill" style={{ width: `${(namesMinted / 2000) * 100}%` }}></div>
-                                </div>
-                                <div className="vault-reward-container">
-                                    <img src="/box.png" alt="Reward Vault" className="vault-box-img" />
-                                    <span className="gold-metallic-text vault-reward-amount">$1,000</span>
+                                <div className="tracker-right">
+                                    <div className="progress-header">
+                                        <span className="progress-title">Users Joined</span>
+                                        <span className="progress-count">{namesMinted} / 2000</span>
+                                    </div>
+                                    <div className="progress-bar-bg">
+                                        <div className="progress-bar-fill" style={{ width: `${(namesMinted / 2000) * 100}%` }}></div>
+                                    </div>
+                                    <div className="vault-reward-container">
+                                        <img src="/box.png" alt="Reward Vault" className="vault-box-img" />
+                                        <span className="gold-metallic-text vault-reward-amount">$1,000</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <p className="text-light-muted fs-6 mx-auto reveal-hero-right" style={{ maxWidth: '900px', lineHeight: '1.8' }}>
-                            Welcome to the largest Web3 network growth event. The NNM Protocol is distributing up to $300,000 in ecosystem rewards over the next 6 months. This isn&apos;t a lottery—your rewards are driven entirely by your activity, your community building, and your contribution to the network.
-                        </p>
-                        
-                        <div className="glowing-line-container reveal-up" style={{ width: '100%', marginTop: '3rem', position: 'relative' }}>
-                            <svg viewBox="0 0 1000 50" preserveAspectRatio="none" style={{ width: '100%', height: '35px', overflow: 'visible' }}>
-                                <path d="M0,15 L335,15 C355,15 370,35 380,35 L620,35 C630,35 645,15 665,15 L1000,15"
-                                      fill="none"
-                                      stroke="url(#glowGradient)"
-                                      strokeWidth="2"
-                                      style={{ filter: 'drop-shadow(0px 6px 8px rgba(162, 0, 255, 0.5))' }} />
-                                <defs>
-                                    <linearGradient id="glowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stopColor="transparent" />
-                                        <stop offset="20%" stopColor="#8A2BE2" />
-                                        <stop offset="50%" stopColor="#FF1493" />
-                                        <stop offset="80%" stopColor="#8A2BE2" />
-                                        <stop offset="100%" stopColor="transparent" />
-                                    </linearGradient>
-                                </defs>
-                            </svg>
+                            
+                            <p className="text-light-muted fs-6 mx-auto" style={{ maxWidth: '900px', lineHeight: '1.8' }}>
+                                Welcome to the largest Web3 network growth event. The NNM Protocol is distributing up to $300,000 in ecosystem rewards over the next 6 months. This isn&apos;t a lottery—your rewards are driven entirely by your activity, your community building, and your contribution to the network.
+                            </p>
+                            
+                            <div className="glowing-line-container" style={{ width: '100%', marginTop: '2rem', position: 'relative' }}>
+                                <svg viewBox="0 0 1000 50" preserveAspectRatio="none" style={{ width: '100%', height: '35px', overflow: 'visible' }}>
+                                    <path d="M0,15 L335,15 C355,15 370,35 380,35 L620,35 C630,35 645,15 665,15 L1000,15"
+                                          fill="none"
+                                          stroke="url(#glowGradient)"
+                                          strokeWidth="2"
+                                          style={{ filter: 'drop-shadow(0px 6px 8px rgba(162, 0, 255, 0.5))' }} />
+                                    <defs>
+                                        <linearGradient id="glowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stopColor="transparent" />
+                                            <stop offset="20%" stopColor="#8A2BE2" />
+                                            <stop offset="50%" stopColor="#FF1493" />
+                                            <stop offset="80%" stopColor="#8A2BE2" />
+                                            <stop offset="100%" stopColor="transparent" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
                         </div>
                     </div>
-                    <div className="text-center reveal-up" style={{ marginBottom: '5rem' }}>
-                        <p className="fst-italic text-white mb-3" style={{ fontSize: '1rem', letterSpacing: '0.5px', fontWeight: '300' }}>
-                            Join early. Secure your position. Start earning through participation.
-                        </p>
-                        <Link href="/mint" style={{ textDecoration: 'none' }}>
-                            <button className="btn-action-main">Start Earning Now</button>
-                        </Link>
+                    
+                    <div>
+                        <div className="text-center" style={{ marginBottom: '5rem', marginTop: '-5rem', position: 'relative', zIndex: 10 }}>
+                            <Link href="/mint" style={{ textDecoration: 'none' }}>
+                                <button className="btn-action-main">🎁 Get Free Tokens Now</button>
+                            </Link>
+                            <p className="fst-italic text-white mb-3" style={{ fontSize: '1rem', letterSpacing: '1.5px', fontWeight: '300', marginTop: '15px' }}>
+                                Join early and start collecting rewards instantly.
+                            </p>
+                        </div>
                     </div>
 
                     <div className="vaults-section reveal-up" style={{ marginBottom: '6rem' }}>
@@ -263,161 +241,168 @@ export default function RewardsPage() {
                                 
                                 <div className="vault-card phase-1">
                                     <div className="phase-title">🟪 Phase 1</div>
-                                    <div className="vault-target">Target: 2,000 Names</div>
+                                    <div className="vault-target">Target: 2,000 Accounts</div>
                                     <div className="vault-amount-display">Vault: <span className="gold-metallic-text">$1,000</span></div>
                                     <div className="vault-alert">🔥 Almost Unlocked</div>
                                     <div className="vault-rewards-list mt-3">
                                         <div className="vault-reward-item">Top 3 → <span>$100</span></div>
                                         <div className="vault-reward-item">Top 4–10 → <span>$50</span></div>
-                                        <div className="vault-reward-item">Top 11–45 → <span>$10</span></div>
+                                        <div className="vault-reward-item">Top 11–50 → <span>$10</span></div>
                                     </div>
                                 </div>
 
                                 <div className="vault-card">
                                     <div className="phase-title">🟪 Phase 2</div>
-                                    <div className="vault-target">Target: 4,000 Names</div>
+                                    <div className="vault-target">Target: 4,000 Accounts</div>
                                     <div className="vault-amount-display">Vault: <span className="gold-metallic-text">$2,000</span></div>
                                     <div className="vault-rewards-list mt-4">
                                         <div className="vault-reward-item">Top 3 → <span>$200</span></div>
                                         <div className="vault-reward-item">Top 4–10 → <span>$100</span></div>
-                                        <div className="vault-reward-item">Top 11–45 → <span>$20</span></div>
+                                        <div className="vault-reward-item">Top 11–50 → <span>$20</span></div>
                                     </div>
                                 </div>
 
                                 <div className="vault-card">
                                     <div className="phase-title">🟪 Phase 3</div>
-                                    <div className="vault-target">Target: 6,000 Names</div>
+                                    <div className="vault-target">Target: 6,000 Accounts</div>
                                     <div className="vault-amount-display">Vault: <span className="gold-metallic-text">$5,000</span></div>
                                     <div className="vault-rewards-list mt-4">
                                         <div className="vault-reward-item">Top 3 → <span>$500</span></div>
                                         <div className="vault-reward-item">Top 4–10 → <span>$250</span></div>
-                                        <div className="vault-reward-item">Top 11–45 → <span>$50</span></div>
+                                        <div className="vault-reward-item">Top 11–50 → <span>$50</span></div>
                                     </div>
                                 </div>
 
                                 <div className="vault-card">
                                     <div className="phase-title">🟪 Phase 4</div>
-                                    <div className="vault-target">Target: 10,000 Names</div>
+                                    <div className="vault-target">Target: 10,000 Accounts</div>
                                     <div className="vault-amount-display">Vault: <span className="gold-metallic-text">$10,000</span></div>
                                     <div className="vault-rewards-list mt-4">
                                         <div className="vault-reward-item">Top 3 → <span>$1,000</span></div>
                                         <div className="vault-reward-item">Top 4–10 → <span>$500</span></div>
-                                        <div className="vault-reward-item">Top 11–45 → <span>$100</span></div>
+                                        <div className="vault-reward-item">Top 11–50 → <span>$100</span></div>
                                     </div>
                                 </div>
 
                                 <div className="vault-card">
                                     <div className="phase-title">🟪 Phase 5</div>
-                                    <div className="vault-target">Target: 20,000 Names</div>
+                                    <div className="vault-target">Target: 20,000 Accounts</div>
                                     <div className="vault-amount-display">Vault: <span className="gold-metallic-text">$20,000</span></div>
                                     <div className="vault-rewards-list mt-4">
                                         <div className="vault-reward-item">Top 3 → <span>$2,000</span></div>
                                         <div className="vault-reward-item">Top 4–10 → <span>$1,000</span></div>
-                                        <div className="vault-reward-item">Top 11–45 → <span>$200</span></div>
+                                        <div className="vault-reward-item">Top 11–50 → <span>$200</span></div>
                                     </div>
                                 </div>
 
                                 <div className="vault-card">
                                     <div className="phase-title">🟪 Phase 6</div>
-                                    <div className="vault-target">Target: 40,000 Names</div>
+                                    <div className="vault-target">Target: 40,000 Accounts</div>
                                     <div className="vault-amount-display">Vault: <span className="gold-metallic-text">$50,000</span></div>
                                     <div className="vault-rewards-list mt-4">
                                         <div className="vault-reward-item">Top 3 → <span>$5,000</span></div>
                                         <div className="vault-reward-item">Top 4–10 → <span>$2,500</span></div>
-                                        <div className="vault-reward-item">Top 11–45 → <span>$500</span></div>
+                                        <div className="vault-reward-item">Top 11–50 → <span>$500</span></div>
                                     </div>
                                 </div>
 
                                 <div className="vault-card phase-final">
                                     <div className="phase-title">🟪 Phase 7</div>
-                                    <div className="vault-target">Target: 100,000 Names</div>
+                                    <div className="vault-target">Target: 100,000 Accounts</div>
                                     <div className="vault-amount-display">Vault: <span className="gold-metallic-text">$100,000</span></div>
                                     <div className="vault-rewards-list mt-4">
                                         <div className="vault-reward-item">Top 3 → <span>$10,000</span></div>
                                         <div className="vault-reward-item">Top 4–10 → <span>$5,000</span></div>
-                                        <div className="vault-reward-item">Top 11–45 → <span>$1,000</span></div>
+                                        <div className="vault-reward-item">Top 11–50 → <span>$1,000</span></div>
                                     </div>
                                 </div>
 
                             </div>
                         </div>
                         <div className="text-center mt-4">
-                            <span className="fst-italic text-light-muted d-block" style={{ fontSize: '0.85rem' }}>
-                                Rewards are distributed based on ranking and verified activity.
+                            <span className="fst-italic text-light-muted d-block" style={{ fontSize: '1.05rem' }}>
+                                Rewards depend on your activity and ranking within the platform.
                             </span>
                         </div>
                     </div>
 
 
-                    <div className="info-panels-grid position-relative" style={{ marginBottom: '5rem' }}>
-                        <div className="glass-panel-80 glow-unified-purple slide-in-left">
-                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">$300,000 Network Rewards</h3>
-                            <div className="panel-text-content">
-                                <p className="text-light-muted mb-2 fw-light">Up to $300,000 in rewards distributed across multiple phases over 6 months.</p>
-                                <p className="text-light-muted mb-2 fw-light">Each phase unlocks as the network grows — driven by real participation.</p>
-                                <p className="text-light-muted fw-light">No lottery. No randomness. Just measurable network expansion.</p>
-                                <p className="text-light-muted fw-light">As one of the early founders, you will receive an instant gift of 1000 $WNNM added to your dashboard account.</p>
-                            </div>
-                        </div>
+<div className="info-panels-grid position-relative" style={{ marginBottom: '5rem' }}>
+    <div className="glass-panel-80 glow-unified-purple slide-in-left">
+        <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">$300,000 Reward Vaults</h3>
+        <div className="panel-text-content">
+            <p className="text-light-muted mb-2 fw-light">Up to $300,000 distributed to the top 50 active participants across 7 milestone phases.</p>
+            <p className="text-light-muted mb-2 fw-light">Every time a network milestone is reached, a new vault opens.</p>
+            <p className="text-light-muted fw-light">No random lotteries. The top 50 contributors on the leaderboard take the cash prizes directly to their wallets.</p>
+        </div>
+    </div>
 
-                        <div className="glass-panel-80 glow-unified-purple slide-in-right">
-                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">Multiple Ways to Earn</h3>
-                            <div className="panel-text-content">
-                                <p className="text-light-muted mb-3 fw-light">Earn rewards through your participation:</p>
-                                <ul className="list-unstyled ms-3">
-                                    <li className="text-light-muted mb-2 fw-light">• Mint your free Founders name</li>
-                                    <li className="text-light-muted mb-2 fw-light">• Complete daily tasks and social activity</li>
-                                    <li className="text-light-muted mb-2 fw-light">• Hold your name and grow your presence</li>
-                                    <li className="text-light-muted mb-3 fw-light">• Invite others and get an instant 30% cashback , plus 10% lifetime royalties.</li>
-                                </ul>
-                                <p className="text-light-muted fw-light">Every action you take contributes to your ranking and rewards.</p>
-                            </div>
-                        </div>
+    <div className="glass-panel-80 glow-unified-purple slide-in-right">
+        <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">4 Ways to Earn</h3>
+        <div className="panel-text-content">
+            <ul className="list-unstyled ms-3">
+                <li className="text-light-muted mb-2 fw-light">💰 <strong>Activate Account:</strong> Get up to 3,000 $WNNM instantly.</li>
+                <li className="text-light-muted mb-2 fw-light">🤝 <strong>Invite Friends:</strong> Earn 30% INSTANT cash directly to your wallet.</li>
+                <li className="text-light-muted mb-2 fw-light">📱 <strong>Daily Bounties:</strong> Complete social tasks to grow your balance.</li>
+                <li className="text-light-muted mb-3 fw-light">🏆 <strong>Vault Drops:</strong>  Rank in the Top 50 to win Phase Cash Prizes.</li>
+            </ul>
+        </div>
+    </div>
 
-                        <div className="glass-panel-80 glow-unified-purple reveal-up" style={{ gridColumn: '1 / -1', maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">Early Access Means Founder-Level Advantages</h3>
-                            <div className="panel-text-content">
-                                <p className="text-light-muted mb-2 fw-light">Join early today and unlock all reward layers from day one.</p>
-                                <p className="text-light-muted mb-2 fw-light">Earn instantly. Grow faster. Dominate the leaderboard.</p>
-                            </div>
-                        </div>
-                    </div>
+    <div className="glass-panel-80 glow-unified-purple reveal-up" style={{ gridColumn: '1 / -1', maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
+        <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">May 22nd: Official Token Activation</h3>
+        <div className="panel-text-content">
+<p className="text-light-muted mb-2 fw-light">The Genesis Phase begins April 22nd, and the $WNNM token utility is expected to activate on May 22nd.</p>
+<p className="text-light-muted mb-0 fw-light">All $WNNM points collected during this phase will influence early ecosystem allocation. Accumulate as much as possible before the phase ends.</p>
+        </div>
+    </div>
+</div>
 
                     <div className="stages-wrapper reveal-cards-container" style={{ marginBottom: '6rem' }}>
-                        <div className="stages-scroll">
-                            
-                            <div className="stage-card">
-                                <h4 className="stage-title animated-gradient-text">1- Connect & Join as a Founder</h4>
-                                <p className="stage-text">Connect your wallet to access the NNM Protocol.</p>
-                                <p className="stage-text">No accounts. No custody. Full control from your side.</p>
-                                <p className="stage-text">Early participants can mint a Founders Digital Name at no cost (gas fees only), securing their position as part of the initial network layer.</p>
-                            </div>
-
-                            <div className="stage-card">
-                                <h4 className="stage-title animated-gradient-text">2- Mint & Expand Your Position</h4>
-                                <p className="stage-text">Start with your free Founders mint, then optionally expand using higher tiers (Elite / Immortals) to increase your presence and activity weight within the ecosystem.</p>
-                                <p className="stage-text">Each mint strengthens your position and unlocks deeper participation across the network.</p>
-                            </div>
-
-                            <div className="stage-card">
-                                <h4 className="stage-title animated-gradient-text">3- Earn Through Activity</h4>
-                                <p className="stage-text mb-2">Earn platform rewards through:</p>
-                                <ul className="stage-list">
-                                    <li>Your activity and engagement</li>
-                                    <li>Social and platform tasks</li>
-                                    <li>Direct referrals</li>
+                    <div className="stages-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '40px', maxWidth: '900px', margin: '0 auto 6rem auto' }}>
+                        
+                        <div className="glass-panel-80 glow-unified-purple reveal-left">
+                            <h4 className="fw-bold gradient-title-hero mb-3" style={{ fontSize: '1.4rem' }}>1- Activate Your Account</h4>
+                            <div className="panel-text-content">
+                                <p className="text-light-muted mb-3 fw-light">Choose your entry tier to activate your dashboard and become eligible to receive your first token allocation:</p>
+                                <ul className="list-unstyled ms-4">
+                                    <li className="text-light-muted mb-2">💎 <strong className="text-white">Founder ($3):</strong> 1,000 $WNNM</li>
+                                    <li className="text-light-muted mb-2">🔥 <strong className="text-white">Elite ($5):</strong> 2,000 $WNNM</li>
+                                    <li className="text-light-muted">👑 <strong className="text-white">Immortal ($10):</strong> 3,000 $WNNM</li>
                                 </ul>
-                                <p className="stage-text">All rewards are based on real usage and verified participation — transparently tracked on-chain.</p>
                             </div>
-
-                            <div className="stage-card">
-                                <h4 className="stage-title animated-gradient-text">4- Unlock Vaults & Benefit</h4>
-                                <p className="stage-text">As the network grows, Reward Vaults unlock progressively.</p>
-                                <p className="stage-text">Participants earn rewards based on contribution, ranking, and verified activity.</p>
-                                <p className="stage-text">Early participants benefit from broader access to all reward layers.</p>
-                            </div>
-
                         </div>
+
+                        <div className="glass-panel-80 glow-unified-purple reveal-right">
+                            <h4 className="fw-bold gradient-title-hero mb-3" style={{ fontSize: '1.4rem' }}>2- Earn 30% Instant Cash</h4>
+                            <div className="panel-text-content">
+                                <p className="text-light-muted mb-2 fw-light">Once activated, you unlock your unique referral link.</p>
+                                <p className="text-light-muted fw-light">Share your link with your network and earn up to 30% referral rewards Rewards are distributed to your wallet according to platform terms.</p>
+                            </div>
+                        </div>
+
+                        <div className="glass-panel-80 glow-unified-purple reveal-left">
+                            <h4 className="fw-bold gradient-title-hero mb-3" style={{ fontSize: '1.4rem' }}>3- Complete Daily Bounties</h4>
+                            <div className="panel-text-content">
+                                <p className="text-light-muted mb-3 fw-light">Maximize your token balance before launch by participating in daily tasks:</p>
+                                <ul className="list-unstyled ms-4">
+                                    <li className="text-light-muted mb-2">• Engage with social media posts</li>
+                                    <li className="text-light-muted mb-2">• Participate in community events</li>
+                                    <li className="text-light-muted mb-3">• Help the network expand</li>
+                                </ul>
+                                <p className="text-light-muted fw-light">More points = A bigger advantage on launch day.</p>
+                            </div>
+                        </div>
+
+                        <div className="glass-panel-80 glow-unified-purple reveal-right">
+                            <h4 className="fw-bold gradient-title-hero mb-3" style={{ fontSize: '1.4rem' }}>4- Top 50 Vault Rewards</h4>
+                            <div className="panel-text-content">
+                                <p className="text-light-muted mb-2 fw-light">As more accounts are activated, the 7 Reward Vaults unlock sequentially.</p>
+                                <p className="text-light-muted fw-light">The Top 50 most active users in each phase may receive rewards, scaling up to $100,000 in the final vault.</p>
+                            </div>
+                        </div>
+
+                    </div>
                     </div>
 
                     <div className="text-center reveal-up" style={{ marginBottom: '5rem' }}>
@@ -425,13 +410,13 @@ export default function RewardsPage() {
                             Join early. Secure your position. Start earning through participation.
                         </p>
                         <Link href="/mint" style={{ textDecoration: 'none' }}>
-                            <button className="btn-action-main">Start Earning Now</button>
+                            <button className="btn-action-main">🎁 Get Free Tokens Now</button>
                         </Link>
                     </div>
 
                     <div className="legal-disclaimer-wrapper text-center reveal-up" style={{ marginTop: '2rem' }}>
                         <p className="text-white mx-auto" style={{ fontSize: '12.5px', maxWidth: '800px', opacity: 1, lineHeight: '1.6', fontWeight: '500' }}>
-                         Unlocking of all reward vaults is contingent upon reaching specific network volume milestones within the 6-month campaign period. See Section 21 of our <Link href="/legal" target="_blank" rel="noopener noreferrer" className="text-white" style={{ textDecoration: 'underline', fontWeight: 'bold' }}>Terms of Service</Link> for full details.
+                         Rewards are distributed based on platform activity and participation. Participation does not guarantee earnings. All rewards depend on user engagement and campaign performance.  <Link href="/legal" target="_blank" rel="noopener noreferrer" className="text-white" style={{ textDecoration: 'underline', fontWeight: 'bold' }}>Terms of Service</Link> for full details.
                         </p>
                     </div>
 
@@ -488,11 +473,11 @@ export default function RewardsPage() {
                     border-radius: 20px;
                     backdrop-filter: blur(10px);
                     -webkit-backdrop-filter: blur(10px);
-                    padding: 40px 50px;
+                    padding: 40px 20px;
                     width: 100%;
                     display: flex;
                     flex-direction: column;
-                    justify-content: center;
+                    justify-content: flex-start;
                     transition: transform 0.4s ease;
                     box-sizing: border-box;
                 }
@@ -526,15 +511,16 @@ export default function RewardsPage() {
 
                 .reveal-hero-left { opacity: 0; transform: translateX(-150px); transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
                 .reveal-hero-right { opacity: 0; transform: translateX(150px); transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-                .reveal-left { opacity: 0; transform: translateX(-150px); transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-                .reveal-right { opacity: 0; transform: translateX(150px); transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-                .reveal-up { opacity: 0; transform: translateY(60px); transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+                .reveal-left { opacity: 0; transform: translateX(-150px); transition: all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); }
+                .reveal-right { opacity: 0; transform: translateX(150px); transition: all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); }
+                .reveal-up { opacity: 0; transform: translateY(60px); transition: all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); }
 
                 .show-element {
                     opacity: 1 !important;
                     transform: translate(0, 0) !important;
-                    transition: opacity 1.5s ease-out, transform 1.5s ease-out !important;
+                    transition: opacity 0.7s ease-out, transform 0.7s ease-out !important;
                 }
+
 
                 .glow-unified-purple { 
                     box-shadow: 0 0 15px rgba(162, 0, 255, 0.2), 0 0 40px rgba(162, 0, 255, 0.1); 
@@ -557,16 +543,17 @@ export default function RewardsPage() {
 
                 .text-light-muted { color: #b0c0c0; }
 
-                .neon-btn-container { display: flex; gap: 15px; flex-wrap: wrap; }
+                .neon-btn-container { display: flex; gap: 12px; flex-wrap: wrap; }
                 .neon-btn {
                     background: rgba(255, 255, 255, 0.02);
                     border: 1px solid rgba(255, 75, 130, 0.25);
-                    padding: 10px 22px;
+                    padding: 8px 18px;
                     border-radius: 30px;
                     backdrop-filter: blur(10px);
                     cursor: pointer;
                     opacity: 0;
                     transition: all 0.3s ease;
+                    font-size: 0.85rem;
                 }
 
                 .neon-btn span {
@@ -596,7 +583,7 @@ export default function RewardsPage() {
                     background: linear-gradient(90deg, #a200ff 0%, #ff0055 100%);
                     color: white;
                     border: none;
-                    padding: 18px 50px;
+                    padding: 13px 38px;
                     border-radius: 35px;
                     font-weight: bold;
                     text-transform: uppercase;
@@ -618,7 +605,7 @@ export default function RewardsPage() {
                 }
                 
                 .tracker-left, .tracker-center, .tracker-right { display: flex; flex-direction: column; }
-                .tracker-left { width: 40%; align-items: flex-start; }
+                .tracker-left { width: 40%; align-items: flex-center; }
                 .tracker-center { width: 20%; align-items: center; justify-content: center; transform: translateY(15px); }
                 .tracker-right { width: 40%; justify-content: flex-start; }
                 
@@ -648,14 +635,14 @@ export default function RewardsPage() {
                 .phase-text {
                     background: linear-gradient(90deg, #9b51e0 0%, #ff4b82 100%);
                     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                    font-size: 1.3rem; font-weight: 800; text-transform: uppercase; letter-spacing: 4px;
+                    font-size: 1.0rem; font-weight: 600; text-transform: uppercase; letter-spacing: 4px;
                     text-shadow: 0 0 15px rgba(255, 75, 130, 0.15); white-space: nowrap;
                 }
-                
-                .progress-header { display: flex; justify-content: space-between; margin-bottom: 12px; color: #fff; font-weight: 600; font-size: 1.1rem; }
+            
+                .progress-header { display: flex; justify-content: space-between; width: 100%; margin-bottom: 12px; color: #fff; font-weight: 600; font-size: 1.1rem; }
                 .progress-title { color: #b0c0c0; }
                 .progress-bar-bg {
-                    width: 100%; height: 21px; background: rgba(14, 28, 65, 0.6); border-radius: 12px;
+                    width: 100%; height: 14px; background: rgba(14, 28, 65, 0.6); border-radius: 12px;
                     border: 1px solid rgba(155, 81, 224, 0.4); overflow: hidden;
                     box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 10px rgba(162, 0, 255, 0.1);
                 }
@@ -665,7 +652,7 @@ export default function RewardsPage() {
                 }
                 
                 .vault-reward-container { display: flex; align-items: center; justify-content: flex-start; margin-top: 25px; }
-                .vault-box-img { width: 75px; height: auto; margin-right: 15px; animation: boxFloat 5s ease-in-out infinite; filter: drop-shadow(0 0 15px rgba(255, 75, 130, 0.2)); }
+                .vault-box-img { width: 35px; height: auto; margin-right: 15px; animation: boxFloat 5s ease-in-out infinite; filter: drop-shadow(0 0 15px rgba(255, 75, 130, 0.2)); }
                 @keyframes boxFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
                 .vault-reward-amount { font-size: 1.25rem !important; line-height: 1; margin: 0; padding: 0; }
 
@@ -774,6 +761,7 @@ export default function RewardsPage() {
                     animation: shineEffect 4s linear infinite;
                     display: inline-block;
                 }
+                    
 
                 @keyframes leftToCenter {
                     0% { transform: translateX(-100%); opacity: 0; }
@@ -786,12 +774,12 @@ export default function RewardsPage() {
                 }
 
                 .slide-in-left {
-                    animation: leftToCenter 2s ease-out forwards;
+                    animation: leftToCenter 1s ease-out forwards;
                 }
 
                 .slide-in-right {
-                    animation: rightToCenter 2s ease-out forwards;
-                    animation-delay: 1.5s;
+                    animation: rightToCenter 1s ease-out forwards;
+                    animation-delay: 0.4s;
                 }
 
                 .stage-card p {
@@ -824,7 +812,7 @@ export default function RewardsPage() {
                 .vault-reward-item span { color: #fff; font-weight: 600; }
 
                 @media (max-width: 991px) {
-                    .btn-action-main { padding: 13.5px 37.5px; font-size: 0.75rem; }
+                    .btn-action-main { padding: 10px 28px; font-size: 0.75rem; }
                     .vault-nav-btn { display: none !important; }
                     .info-panels-grid { grid-template-columns: 1fr; width: 95%; }
                     .glass-panel-80 { width: 100% !important; grid-column: 1 / -1 !important; padding: 30px 20px; }

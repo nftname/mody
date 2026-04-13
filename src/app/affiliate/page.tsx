@@ -128,7 +128,9 @@ export default function AffiliatePage() {
   if (!mounted) return null;
 
   return (
-    <main className="affiliate-main">
+    <main className="affiliate-main"> 
+          <title>NNM | Affiliate</title>
+
         <div className="twinkling-stars"></div>
         
         <div className="container pt-5 position-relative z-index-1">

@@ -328,6 +328,8 @@ export default function JoinCampaignPage() {
 
     return (
         <main className="campaign-main">
+                  <title>NNM | join</title>
+
             <div className="twinkling-stars"></div>
 
             <div className="container-fluid pt-2 position-relative z-index-1" style={{ padding: '0 4%', maxWidth: '1600px', margin: '0 auto' }}>

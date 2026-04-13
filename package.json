@@ -10,11 +10,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@depay/widgets": "^13.0.45",
     "@metaplex-foundation/genesis": "^0.31.0",
     "@metaplex-foundation/mpl-toolbox": "^0.10.0",
     "@metaplex-foundation/umi": "^1.5.1",
     "@metaplex-foundation/umi-bundle-defaults": "^1.5.1",
     "@rainbow-me/rainbowkit": "^2.1.2",
+    "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
     "@supabase/supabase-js": "^2.95.3",
     "@tanstack/react-query": "^5.40.0",
@@ -23,7 +25,7 @@
     "bootstrap-icons": "^1.13.1",
     "bs58": "^6.0.0",
     "chart.js": "^4.4.0",
-    "ethers": "^6.16.0",
+    "ethers": "^5.7.2",
     "form-data": "^4.0.5",
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",

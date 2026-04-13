@@ -11,6 +11,7 @@ import { toBlob } from 'html-to-image';
 import { CONTRACT_ADDRESS } from '@/data/config';
 import { supabase } from '@/lib/supabase';
 import MintTemplate from '@/components/MintTemplate';
+import { useMintPayment } from '@/hooks/useMintPayment';
 
 const CONTRACT_ABI = parseAbi([
   "function owner() view returns (address)",
@@ -28,11 +29,7 @@ const LONG_DESCRIPTION = `GEN-0 Genesis — NNM Protocol Record
 A singular, unreplicable digital artifact. This digital name is recorded on-chain with a verifiable creation timestamp and immutable registration data under the NNM protocol, serving as a canonical reference layer for historical name precedence within this system.
 
 It represents a Gen-0 registered digital asset and exists solely as a transferable NFT, without renewal, guarantees, utility promises, or dependency. Ownership is absolute, cryptographically secured, and fully transferable. No subscriptions. No recurring fees. No centralized control. This record establishes the earliest verifiable origin of the name as recognized by the NNM protocol — a permanent, time-anchored digital inscription preserved on the blockchain.`;
-declare global {
-  interface Window {
-    grecaptcha: any;
-  }
-}
+
 
 const MintContent = () => {
   const { address } = useAccount();
@@ -53,9 +50,107 @@ const MintContent = () => {
   const [processStep, setProcessStep] = useState(''); 
   const [mounted, setMounted] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
-  const [timer, setTimer] = useState(60);
+  const [timer, setTimer] = useState(90);
 
   const [snapshotData, setSnapshotData] = useState({ name: '', tier: 'ELITE' });
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedTierForPayment, setSelectedTierForPayment] = useState({ name: '', index: 0, priceDisplay: '' });
+  const [selectedCoin, setSelectedCoin] = useState('POLYGON');
+  
+  const COIN_LOGOS: any = {
+    BTC: "/icons/btc.svg",
+    ETH: "/icons/eth.svg",
+    POLYGON: "/icons/matic.svg",
+    SOL: "/icons/sol.svg",
+    BNB: "/icons/bnb.svg",
+    USDT: "/icons/usdt.svg"
+  };
+
+  const { processPayment } = useMintPayment();
+
+  const handleAlternativePayment = async (coin: string) => {
+      setIsPaymentModalOpen(false);
+      
+      let usdValue = 0;
+      if (selectedTierForPayment.priceDisplay !== "FREE" && selectedTierForPayment.priceDisplay !== "$0") {
+          usdValue = parseFloat(selectedTierForPayment.priceDisplay.replace('$', ''));
+      }
+      if (isNaN(usdValue)) usdValue = 0;
+
+      const totalUsd = usdValue + 0.01;
+
+      setIsMinting(true);
+      setProcessStep("Generative Engine: Creating high-res asset...");
+      setModalType('process');
+      setShowModal(true);
+
+      try {
+          const imageBlob = await generateSnapshot(searchTerm, selectedTierForPayment.name);
+          if (!imageBlob) throw new Error("Failed to generate asset snapshot locally.");
+
+          setProcessStep("Uploading: Securing asset on IPFS...");
+          const date = new Date();
+          const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+          const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+
+          const formData = new FormData();
+          formData.append('file', imageBlob, `NNM-${searchTerm}.png`);
+          formData.append('name', searchTerm);
+          formData.append('tier', selectedTierForPayment.name);
+          formData.append('description', LONG_DESCRIPTION);
+          formData.append('dynamicDate', dynamicDate);
+
+          const apiResponse = await fetch('/api/generate-image', { 
+              method: 'POST',
+              body: formData 
+          });
+
+          if (!apiResponse.ok) throw new Error("Upload Failed");
+          const { gatewayUrl, metadataUri } = await apiResponse.json();
+
+          let cryptoAmount = totalUsd.toString();
+          
+          if (coin !== 'USDT') {
+              try {
+                  const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${coin}USDT`);
+                  const data = await res.json();
+                  cryptoAmount = (totalUsd / parseFloat(data.price)).toFixed(6);
+              } catch (e) {
+                  const fallbacks: any = { 'SOL': 140, 'BTC': 65000, 'ETH': 3000, 'BNB': 580 };
+                  cryptoAmount = (totalUsd / (fallbacks[coin] || 1)).toFixed(6);
+              }
+          }
+
+          setProcessStep(`Wallet: Please confirm ${cryptoAmount} ${coin} payment...`);
+
+          const txHash = await processPayment(coin, cryptoAmount);
+
+          if (!txHash) throw new Error("User rejected");
+
+          setProcessStep("Securing Asset & Finalizing Registry...");
+
+          fetch('/api/airdrop', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  wallet: address,
+                  name: searchTerm,
+                  tokenURI: metadataUri,
+                  tierName: selectedTierForPayment.name,
+                  imageUrl: gatewayUrl,
+                  txHash: txHash,
+                  coin: coin
+              })
+          }).catch(() => {});
+
+          setModalType('founder_success'); 
+          setShowModal(true);
+
+      } catch (err: any) {
+          handleError(err);
+          setIsMinting(false);
+      }
+  };
 
   const { data: ownerAddress } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
@@ -68,22 +163,6 @@ const MintContent = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const notifyRewardSystem = async (userWallet: any, tierName: string, tokenId: number) => {
-    try {
-        await fetch('/api/nnm/mint-hook', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                wallet: userWallet,
-                tier: tierName,
-                tokenId: tokenId 
-            }),
-        });
-    } catch (error) {
-        console.error(error);
-    }
-  };
 
   const generateSnapshot = async (name: string, tier: string) => {
     setSnapshotData({ name, tier });
@@ -176,9 +255,17 @@ const MintContent = () => {
           niceTitle = "Action Cancelled";
           niceMessage = "You cancelled the transaction. No funds were deducted.";
       } 
-      else if (errStr.includes("Insufficient funds") || errStr.includes("exceeds balance") || errStr.includes("low balance")) {
+      else if (errStr.includes("Insufficient funds") || errStr.includes("exceeds balance") || errStr.includes("low balance") || errStr.includes("gas required exceeds allowance")) {
           niceTitle = "Insufficient Balance";
-          niceMessage = "Your wallet balance is lower than the required amount (Price + Gas). Please top up POL and try again.";
+          niceMessage = "Please ensure your wallet has enough funds to cover the required price and network gas fees. Top up your wallet and try again.";
+      }
+      else if (errStr.includes("WALLET_NOT_FOUND")) {
+          niceTitle = "Wallet Not Found";
+          niceMessage = "Required wallet (e.g., Phantom for Solana, UniSat for BTC) is not installed or connected in your browser. Please install the extension.";
+      }
+      else if (errStr.includes("switch chain") || errStr.includes("Unrecognized chain ID") || errStr.includes("chain not configured")) {
+          niceTitle = "Network Switch Failed";
+          niceMessage = "Please manually switch your wallet to the selected network (Ethereum/BNB) to proceed with the payment.";
       }
 
       setErrorTitle(niceTitle);
@@ -187,7 +274,8 @@ const MintContent = () => {
       setShowModal(true);
   };
 
-  const handleMintProcess = async (tierName: string, tierIndex: number, priceDisplay: string) => {
+
+    const handleOpenPaymentModal = (tierName: string, tierIndex: number, priceDisplay: string) => {
       if (!searchTerm) {
           setErrorTitle("Enter a Name");
           setErrorMessage("Please enter a name in the search box first.");
@@ -212,18 +300,80 @@ const MintContent = () => {
           return;
       }
 
+      setSelectedTierForPayment({ name: tierName, index: tierIndex, priceDisplay });
+      setIsPaymentModalOpen(true);
+  };
+
+  const handleMintProcess = async (tierName: string, tierIndex: number, priceDisplay: string) => {
+      if (!searchTerm) {
+          setErrorTitle("Enter a Name");
+          setErrorMessage("Please enter a name in the search box first.");
+          setModalType('error');
+          setShowModal(true);
+          return;
+      }
+
+      if (status !== 'available') {
+          setErrorTitle("Name Not Available");
+          setErrorMessage("This name is not available or already taken.");
+          setModalType('error');
+          setShowModal(true);
+          return;
+      }
+
+      if (!address || !address.startsWith('0x')) {
+          setErrorTitle("Wallet Required");
+          setErrorMessage("Please connect a valid wallet first.");
+          setModalType('error');
+          setShowModal(true);
+          return;
+      }
+
       if (!publicClient) return;
       
       setIsMinting(true);
-      setProcessStep("Generative Engine: Creating high-res asset...");
+      setProcessStep("Preparing Secure Transaction...");
       setModalType('process');
       setShowModal(true);
 
       try {
+          const polygonReadClient = createPublicClient({
+              chain: polygon,
+              transport: http('https://polygon-bor.publicnode.com')
+          });
+
+          let usdAmountWei = BigInt(0);
+          if (tierName === "IMMORTAL") {
+              usdAmountWei = await polygonReadClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceImmortal' });
+          } else if (tierName === "ELITE") {
+              usdAmountWei = await polygonReadClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceElite' });
+          } else if (tierName === "FOUNDER") {
+              usdAmountWei = await polygonReadClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceFounder' });
+          }
+
+          let valueToSend = BigInt(0);
+          if (usdAmountWei > BigInt(0)) {
+              const costInMatic = await polygonReadClient.readContract({
+                 address: CONTRACT_ADDRESS as `0x${string}`,
+                 abi: CONTRACT_ABI,
+                 functionName: 'getMaticCost',
+                 args: [usdAmountWei]
+              });
+              valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
+          }
+
+          const balance = await polygonReadClient.getBalance({ address });
+          if (balance < valueToSend) throw new Error("Insufficient funds (Pre-flight check): Low balance.");
+          
+          setProcessStep("Wallet: Please confirm payment to Treasury...");
+          const txHash = await processPayment('POLYGON', formatEther(valueToSend));
+          if (!txHash) throw new Error("Transaction rejected");
+
+          setProcessStep("Payment Confirmed! Finalizing Registry...");
+
           const imageBlob = await generateSnapshot(searchTerm, tierName);
           if (!imageBlob) throw new Error("Failed to generate asset snapshot locally.");
 
-          setProcessStep("Uploading: Securing asset on IPFS...");
           const date = new Date();
           const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
           const dynamicDate = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
@@ -240,186 +390,55 @@ const MintContent = () => {
               body: formData 
           });
 
-          if (!apiResponse.ok) throw new Error("Upload Failed");
+          if (!apiResponse.ok) throw new Error("Image Engine Error");
           const { gatewayUrl, metadataUri } = await apiResponse.json();
-          const tokenURI = metadataUri;
 
-          if (tierName === "FOUNDER") {
-              setProcessStep("Backend Processing: Validating security & Minting...");
-              
-              let recaptchaToken = '';
-              if (window.grecaptcha) {
-                  recaptchaToken = await window.grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: 'mint_founder' });
-              }
+          fetch('/api/airdrop', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  wallet: address,
+                  name: searchTerm,
+                  tokenURI: metadataUri,
+                  tierName: tierName,
+                  imageUrl: gatewayUrl,
+                  txHash: txHash,
+                  coin: 'POLYGON'
+              })
+          }).catch(() => {});
 
-              const airdropRes = await fetch('/api/airdrop', {
-                  method: 'POST',
-                  headers: { 
-                      'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                      wallet: address,
-                      name: searchTerm,
-                      tokenURI: metadataUri,
-                      tierName: tierName,
-                      imageUrl: gatewayUrl,
-                      recaptchaToken: recaptchaToken
-                  })
-              });
+          try {
+               await fetch('/api/save-asset', {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify({
+                       token_id: 0,
+                       name: searchTerm,
+                       tier: tierName,
+                       image_url: gatewayUrl,
+                       description: LONG_DESCRIPTION,
+                       attributes: [
+                        { trait_type: "Asset Type", value: "Digital Name" },
+                        { trait_type: "Generation", value: "Gen-0" },
+                        { trait_type: "Tier", value: tierName },
+                        { trait_type: "Platform", value: "NNM Registry" },
+                        { trait_type: "Collection", value: "Genesis - 001" },
+                        { trait_type: "Mint Date", value: dynamicDate }
+                      ],
+                       mint_date: dynamicDate,
+                       metadata_uri: metadataUri
+                   })
+               });
+          } catch (e) {}
 
-              const airdropData = await airdropRes.json();
-              
-              if (!airdropRes.ok) {
-                  if (airdropData.error === 'Founder tier already claimed.') {
-                      setErrorTitle("Limit Reached");
-                      setErrorMessage("You have already claimed a Founder tier name. This tier is limited to one per wallet.");
-                  } else if (airdropData.error === 'Security validation missing.' || airdropData.error === 'Automated behavior detected.') {
-                      setErrorTitle("Security Check");
-                      setErrorMessage("Please refresh the page and try again to verify your session.");
-                  } else {
-                      setErrorTitle("Network Busy");
-                      setErrorMessage("The network is experiencing high traffic. Please try again in a few moments.");
-                  }
-                  setModalType('error');
-                  setShowModal(true);
-                  setIsMinting(false);
-                  return; 
-              }
-
-              try {
-                  await fetch('/api/save-asset', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                          token_id: airdropData.tokenId,
-                          name: searchTerm,
-                          tier: tierName,
-                          image_url: gatewayUrl,
-                          description: LONG_DESCRIPTION,
-                          attributes: [
-                           { trait_type: "Asset Type", value: "Digital Name" },
-                           { trait_type: "Generation", value: "Gen-0" },
-                           { trait_type: "Tier", value: tierName },
-                           { trait_type: "Platform", value: "NNM Registry" },
-                           { trait_type: "Collection", value: "Genesis - 001" },
-                           { trait_type: "Mint Date", value: dynamicDate }
-                         ],
-                          mint_date: dynamicDate,
-                          metadata_uri: tokenURI
-                      })
-                  });
-              } catch (e) {}
-
-              setModalType('founder_success'); 
-              setShowModal(true);
-              return; 
-          }
-
-          setProcessStep("Wallet: Please sign the transaction...");
-
-          let hash;
-          let usdAmountWei;
-          
-          if (tierName === "IMMORTAL") {
-              usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceImmortal' });
-          } else {
-              usdAmountWei = await publicClient.readContract({ address: CONTRACT_ADDRESS as `0x${string}`, abi: CONTRACT_ABI, functionName: 'priceElite' });
-          }
-
-          let valueToSend = BigInt(0);
-          if (usdAmountWei > BigInt(0)) {
-              const costInMatic = await publicClient.readContract({
-                 address: CONTRACT_ADDRESS as `0x${string}`,
-                 abi: CONTRACT_ABI,
-                 functionName: 'getMaticCost',
-                 args: [usdAmountWei]
-              });
-              valueToSend = (costInMatic * BigInt(101)) / BigInt(100); 
-          }
-
-          const balance = await publicClient.getBalance({ address });
-          if (balance < valueToSend) throw new Error("Insufficient funds (Pre-flight check): Low balance.");
-          
-          hash = await writeContractAsync({
-            address: CONTRACT_ADDRESS as `0x${string}`,
-            abi: CONTRACT_ABI,
-            functionName: 'mintPublic',
-            args: [searchTerm, tierIndex, tokenURI],
-            value: valueToSend, 
-          });
-
-          const receipt = await publicClient.waitForTransactionReceipt({ hash });
-          
-          if (receipt.status === 'success') {
-             let actualPriceInPOL = 0;
-
-             if (!isAdmin) {
-                 if (usdAmountWei > BigInt(0)) {
-                     const costInMatic = await publicClient.readContract({
-                        address: CONTRACT_ADDRESS as `0x${string}`,
-                        abi: CONTRACT_ABI,
-                        functionName: 'getMaticCost',
-                        args: [usdAmountWei]
-                     });
-                     const finalValue = (costInMatic * BigInt(101)) / BigInt(100);
-                     actualPriceInPOL = parseFloat(formatEther(finalValue));
-                 }
-             }
-
-             const transferLog = receipt.logs.find(log => log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
-             
-             if (transferLog && transferLog.topics[3]) {
-                 const mintedId = parseInt(transferLog.topics[3], 16);
-
-                 await supabase.from('activities').insert([{
-                     token_id: mintedId,
-                     activity_type: 'Mint',
-                     from_address: '0x0000000000000000000000000000000000000000',
-                     to_address: address, 
-                     price: actualPriceInPOL.toFixed(4),
-                     created_at: new Date().toISOString()
-                 }]);
-
-                 try {
-                     await fetch('/api/save-asset', {
-                         method: 'POST',
-                         headers: { 'Content-Type': 'application/json' },
-                         body: JSON.stringify({
-                             token_id: mintedId,
-                             name: searchTerm,
-                             tier: tierName,
-                             image_url: gatewayUrl,
-                             description: LONG_DESCRIPTION,
-                             attributes: [
-                              { trait_type: "Asset Type", value: "Digital Name" },
-                              { trait_type: "Generation", value: "Gen-0" },
-                              { trait_type: "Tier", value: tierName },
-                              { trait_type: "Platform", value: "NNM Registry" },
-                              { trait_type: "Collection", value: "Genesis - 001" },
-                              { trait_type: "Mint Date", value: dynamicDate }
-                            ],
-                             mint_date: dynamicDate,
-                             metadata_uri: tokenURI
-                         })
-                     });
-                 } catch (e) {}
-                 
-                 if (address) notifyRewardSystem(address, tierName, mintedId);
-
-                 if (receipt.transactionHash) {
-                     try {
-                         await fetch('/api/affiliate', {
-                             method: 'POST',
-                             headers: { 'Content-Type': 'application/json' },
-                             body: JSON.stringify({ 
-                                 action: 'mint', 
-                                 transactionHash: receipt.transactionHash, 
-                                 referrerWallet: referrerWallet ? referrerWallet.toLowerCase() : null 
-                             })
-                         });
-                     } catch (e: any) {}
-                 }
-             }
+          if (txHash) {
+               try {
+                   await fetch('/api/affiliate', {
+                       method: 'POST',
+                       headers: { 'Content-Type': 'application/json' },
+                       body: JSON.stringify({ action: 'mint', transactionHash: txHash, referrerWallet: referrerWallet ? referrerWallet.toLowerCase() : null })
+                   });
+               } catch (e: any) {}
           }
           
           setModalType('success');
@@ -439,7 +458,7 @@ const MintContent = () => {
 
   return (
     <main dir="ltr" style={{ backgroundColor: '#181A20', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
-      
+      <title>NNM | Mint</title>
       <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
         <MintTemplate 
             ref={templateRef} 
@@ -489,7 +508,7 @@ const MintContent = () => {
                 label="IMMORTAL" 
                 price="$10" 
                 isAvailable={status === 'available'} 
-                onMint={() => handleMintProcess("IMMORTAL", 0, "$10")} 
+                onMint={() => handleOpenPaymentModal("IMMORTAL", 0, "$10")} 
                 isMinting={isMinting} 
             />
 
@@ -497,19 +516,15 @@ const MintContent = () => {
                 label="ELITE" 
                 price="$5" 
                 isAvailable={status === 'available'} 
-                onMint={() => handleMintProcess("ELITE", 1, "$5")} 
+                onMint={() => handleOpenPaymentModal("ELITE", 1, "$5")} 
                 isMinting={isMinting} 
             />
 
             <LuxuryIngot 
                 label="FOUNDERS" 
-                price={
-                    <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#FCD535', fontSize: '16px', textShadow: '0px 1px 2px rgba(0,0,0,0.5)' }}>
-                        Free
-                    </span>
-                }
+                price="$3"
                 isAvailable={status === 'available'} 
-                onMint={() => handleMintProcess("FOUNDER", 2, "FREE")} 
+                onMint={() => handleOpenPaymentModal("FOUNDER", 2, "$3")} 
                 isMinting={isMinting} 
             />
 
@@ -518,11 +533,6 @@ const MintContent = () => {
             <div className="col-10 col-md-6 text-center">
                 <span style={{ fontSize: '14px', color: '#848E9C', opacity: 0.8, display: 'block' }}>
                     Minting means you accept the T&C
-                </span>
-                <span style={{ fontSize: '11px', color: '#848E9C', opacity: 0.5, display: 'block', marginTop: '10px' }}>
-                    This site is protected by reCAPTCHA and the Google 
-                    <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" style={{ color: '#848E9C', textDecoration: 'underline', marginLeft: '4px', marginRight: '4px' }}>Privacy Policy</a> and 
-                    <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" style={{ color: '#848E9C', textDecoration: 'underline', marginLeft: '4px' }}>Terms of Service</a> apply.
                 </span>
             </div>
         </div>
@@ -536,14 +546,17 @@ const MintContent = () => {
 
                 {modalType === 'success' && (
                    <div className="fade-in">
-                     {}
-                     <div className="mb-3"><i className="bi bi-check-circle-fill" style={{fontSize: '2.6rem', color: '#FCD535'}}></i></div>
-                     <h3 className="fw-bold mb-2" style={{ color: '#EAECEF', fontSize: '1.4rem' }}>History Made!</h3>
-                     <p className="mb-3" style={{ color: '#848E9C', fontSize: '13px' }}>The name <span style={{color: '#FCD535'}}>{searchTerm}</span> is now your eternal digital asset.</p>
+                     <div className="mb-3"><i className="bi bi-check-circle-fill" style={{fontSize: '2.6rem', color: '#0ecb81'}}></i></div>
+                     <h3 className="fw-bold mb-2" style={{ color: '#EAECEF', fontSize: '1.4rem' }}>Payment Successful</h3>
+                     <p className="mb-3" style={{ color: '#848E9C', fontSize: '13px', lineHeight: '1.6' }}>
+                        <br/><br/>
+                        <strong style={{color: '#0ecb81'}}>
+                        </strong>
+                     </p>
                      <Link href={`/dashboard`} passHref>
-                        <button className="btn w-100 fw-bold py-2" style={{ background: GOLD_GRADIENT_DIAGONAL, border: 'none', color: '#181A20', fontSize: '14px', borderRadius: '8px' }}>View Your New Asset <i className="bi bi-arrow-right ms-2"></i></button>
+                        <button className="btn w-100 fw-bold py-2" style={{ background: GOLD_GRADIENT_DIAGONAL, border: 'none', color: '#181A20', fontSize: '14px', borderRadius: '8px' }}>View Dashboard <i className="bi bi-arrow-right ms-2"></i></button>
                      </Link>
-                     <div className="mt-3"><button onClick={handleCloseModal} className="btn btn-link text-decoration-none" style={{fontSize: '11px', color: '#848E9C'}}>Mint Another</button></div>
+                     <div className="mt-3"><button onClick={handleCloseModal} className="btn btn-link text-decoration-none" style={{fontSize: '11px', color: '#848E9C'}}>Close</button></div>
                    </div>
                 )}
                 {modalType === 'founder_success' && (
@@ -590,8 +603,134 @@ const MintContent = () => {
         </div>
       )}
 
+      {isPaymentModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(8px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px' }}>
+            <div className="fade-in" style={{ width: '100%', maxWidth: '290px', backgroundColor: '#14151A', border: '1px solid rgba(252, 213, 53, 0.15)', borderRadius: '14px', padding: '16px', boxShadow: '0 15px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(252, 213, 53, 0.03)', position: 'relative' }}>
+                
+                <button onClick={() => setIsPaymentModalOpen(false)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: '#848E9C', fontSize: '15px', cursor: 'pointer', zIndex: 10 }}>
+                    <i className="bi bi-x-lg"></i>
+                </button>
+
+                <div style={{ textAlign: 'center', marginBottom: '6px' }}>
+                    <span style={{ background: 'rgba(252, 213, 53, 0.1)', color: '#FCD535', padding: '3px 8px', borderRadius: '5px', fontSize: '8px', fontWeight: '700', letterSpacing: '1px', border: '1px solid rgba(252, 213, 53, 0.2)' }}>
+                        🔥 {selectedTierForPayment.name === 'IMMORTAL' ? 'MOST POPULAR' : 'LIMITED ACCESS'}
+                    </span>
+                </div>
+
+                <h2 style={{ textAlign: 'center', color: '#EAECEF', fontSize: '15px', marginBottom: '8px', letterSpacing: '1px', fontWeight: '600' }}>
+                    {selectedTierForPayment.name} TIER
+                </h2>
+
+                <div style={{ textAlign: 'center', marginBottom: '2px' }}>
+                    <div style={{ fontSize: '38px', fontWeight: '800', color: '#FFFFFF', lineHeight: '1', textShadow: '0 0 15px rgba(252, 213, 53, 0.3)' }}>
+                        {selectedTierForPayment.name === 'IMMORTAL' ? '3000' : selectedTierForPayment.name === 'ELITE' ? '2000' : '1000'}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#FCD535', letterSpacing: '1.5px', fontWeight: '700', marginTop: '2px' }}>
+                        BONUS NNM TOKENS
+                    </div>
+                </div>
+
+                <div style={{ textAlign: 'center', fontSize: '10px', color: '#EAECEF', fontWeight: '500', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                    Competition Entry + Token Bonus
+                </div>
+
+                <p style={{ textAlign: 'center', color: '#848E9C', fontSize: '10px', marginBottom: '14px' }}>
+                    ≈ {selectedTierForPayment.priceDisplay} one-time access
+                </p>
+
+                <div style={{ textAlign: 'center', marginBottom: '14px' }}>
+                    <p style={{ fontSize: '9px', color: '#5E6673', marginBottom: '10px', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: '700' }}>
+                        Select Payment Network
+                    </p>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px' }}>
+                        
+                        <button 
+                            onClick={() => setSelectedCoin('POLYGON')}
+                            className={`payment-icon-btn ${selectedCoin === 'POLYGON' ? 'active-coin' : ''}`}
+                            title="Pay with Polygon (MATIC/POL)"
+                        >
+                            <img src={COIN_LOGOS.POLYGON} width="20" height="20" alt="Polygon" style={{ objectFit: 'contain' }} />
+                        </button>
+
+                        {['SOL', 'USDT', 'ETH'].map((coin) => (
+                            <button 
+                                key={coin}
+                                onClick={() => setSelectedCoin(coin)}
+                                className={`payment-icon-btn ${selectedCoin === coin ? 'active-coin' : ''}`}
+                                title={`Pay with ${coin}`}
+                                style={{ position: 'relative', overflow: 'visible' }}
+                            >
+                                <img src={COIN_LOGOS[coin]} width={coin === 'USDT' ? "24" : coin === 'ETH' ? "16" : "20"} height={coin === 'USDT' ? "24" : coin === 'ETH' ? "18" : "20"} alt={coin} style={{ objectFit: 'contain' }} />
+                                 {coin === 'USDT' && (
+                                    <span style={{ position: 'absolute', bottom: '-12px', left: '50%', transform: 'translateX(-50%)', fontSize: '7px', color: '#848E9C', fontWeight: '300', whiteSpace: 'nowrap', textTransform: 'uppercase' }}>
+                                        Solana
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <button 
+                  onClick={() => {
+                      setIsPaymentModalOpen(false);
+                      if(selectedCoin === 'POLYGON') {
+                          handleMintProcess(selectedTierForPayment.name, selectedTierForPayment.index, selectedTierForPayment.priceDisplay);
+                      } else {
+                          handleAlternativePayment(selectedCoin);
+                      }
+                  }}
+                  className="btn-ingot"
+                  style={{ width: '100%', height: '44px', fontSize: '13px', marginTop: '2px', boxShadow: '0 0 15px rgba(252, 213, 53, 0.2)' }}>
+                    Unlock Entry + {selectedTierForPayment.name === 'IMMORTAL' ? '3000' : selectedTierForPayment.name === 'ELITE' ? '2000' : '1000'} NNM
+                </button>
+
+                <div style={{ marginTop: '10px', textAlign: 'left', paddingLeft: '8px' }}>
+                    <div style={{ fontSize: '9px', color: '#848E9C', marginBottom: '2px' }}><i className="bi bi-check2 text-success me-1"></i> Instant access guaranteed</div>
+                    <div style={{ fontSize: '9px', color: '#848E9C', marginBottom: '2px' }}><i className="bi bi-check2 text-success me-1"></i> Bonus allocated instantly</div>
+                    <div style={{ fontSize: '9px', color: '#848E9C' }}><i className="bi bi-check2 text-success me-1"></i> Limited early participants</div>
+                </div>
+
+                <p style={{ textAlign: 'center', color: '#FCD535', fontSize: '9px', marginTop: '8px', marginBottom: '0', fontWeight: '700', letterSpacing: '0.5px' }}>
+                    ⏳ Early access phase – ending soon
+                </p>
+            </div>
+        </div>
+      )}
+
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
+        
+        .payment-icon-btn { 
+            width: 32px; 
+            height: 32px; 
+            border-radius: 8px; 
+            background: rgba(255, 255, 255, 0.02); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+        }
+        
+        .payment-icon-btn:hover { 
+            border-color: rgba(255, 255, 255, 0.2); 
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px); 
+        }
+
+        .payment-icon-btn.active-coin {
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
+        }
+        
+        .payment-icon-btn:active { 
+            transform: scale(0.97); 
+        }
+
         .force-ltr { direction: ltr !important; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -686,4 +825,5 @@ const LuxuryIngot = ({ label, price, isAvailable, onMint, isMinting }: LuxuryIng
 };
 
 export default dynamic(() => Promise.resolve(MintContent), { ssr: false });
+
 

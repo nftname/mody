@@ -42,8 +42,7 @@ export async function getNFXLiveScore(): Promise<NFXData> {
     const ethChange = marketData.ethereum.usd_24h_change || 0;
     const ensChange = marketData['ethereum-name-service'].usd_24h_change || 0;
 
-    const provider = new ethers.JsonRpcProvider("https://polygon-rpc.com");
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.registry, provider);
+const provider = new ethers.providers.JsonRpcProvider("https://polygon-rpc.com");    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.registry, provider);
     
     let nnmSupply = 0;
     try {

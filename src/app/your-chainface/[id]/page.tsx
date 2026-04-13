@@ -99,6 +99,8 @@ const ThreeVerificationBadges = ({ isPhoneVerified, isKycVerified }: { isPhoneVe
 
     return (
         <div className="badges-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
+                  <title>NNM | ChainFace</title>
+
             <svg width="0" height="0">
                 <defs>
                     <linearGradient id="goldLuxury" x1="0%" y1="0%" x2="100%" y2="100%">

@@ -328,6 +328,8 @@ function MarketPage() {
       <SafeWidget>
           <MarketTicker />
       </SafeWidget>
+      
+      <title>NNM | Market</title>
 
       <div className="header-wrapper shadow-sm" style={{ backgroundColor: '#181A20', borderBottom: '1px solid #2B3139', paddingTop: '10px' }}>
         <div className="container-fluid p-0"> 
