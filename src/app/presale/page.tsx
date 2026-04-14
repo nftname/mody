@@ -62,22 +62,8 @@ export default function PresalePage() {
             }
         }, 1000);
 
-        const observerOptions = { threshold: 0.15 };
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
-
-        const hiddenElements = document.querySelectorAll('.reveal');
-        hiddenElements.forEach((el) => observer.observe(el));
-
         return () => {
             clearInterval(timer);
-            observer.disconnect();
         };
     }, [isMounted]);
 
@@ -114,19 +100,19 @@ export default function PresalePage() {
                 <header className="nav-top">
                     <div className="neon-btn-group">
                         <Link href="/whitepaper" className="link-reset">
-                            <button className="neon-btn slide-right-to-left-1"><span>Whitepaper</span></button>
+                            <button className="neon-btn"><span>Whitepaper</span></button>
                         </Link>
                         <a href="#tokenomics-section" className="link-reset">
-                            <button className="neon-btn slide-right-to-left-2"><span>Tokenomics</span></button>
+                            <button className="neon-btn"><span>Tokenomics</span></button>
                         </a>
                         <a href="#burn-section" className="link-reset">
-                            <button className="neon-btn slide-right-to-left-3"><span>Burn Protocol</span></button>
+                            <button className="neon-btn"><span>Burn Protocol</span></button>
                         </a>
                         <a href="#roadmap-section" className="link-reset">
-                            <button className="neon-btn slide-right-to-left-4"><span>Roadmap</span></button>
+                            <button className="neon-btn"><span>Roadmap</span></button>
                         </a>
                         <Link href="/presale/balance" className="link-reset">
-                            <button className="neon-btn slide-right-to-left-5"><span>Balance</span></button>
+                            <button className="neon-btn"><span>Balance</span></button>
                         </Link>
                     </div>
                 </header>
@@ -139,29 +125,28 @@ export default function PresalePage() {
                            Powered by a native utility token.
                         </p>
 
-
-                    <div className="benefits-list reveal">
-                        <div className="benefit-bar reveal-left delay-1">
-                            <span className="benefit-number">1</span>
-                            <span className="benefit-text">Lifetime digital identity on the NNM Registry</span>
-                            <span className="benefit-icon">&#10003;</span>
+                        <div className="benefits-list">
+                            <div className="benefit-bar">
+                                <span className="benefit-number">1</span>
+                                <span className="benefit-text">Lifetime digital identity on the NNM Registry</span>
+                                <span className="benefit-icon">&#10003;</span>
+                            </div>
+                            <div className="benefit-bar">
+                                <span className="benefit-number">2</span>
+                                <span className="benefit-text">ChainFace payments & management</span>
+                                <span className="benefit-icon">&#10003;</span>
+                            </div>
+                            <div className="benefit-bar">
+                                <span className="benefit-number">3</span>
+                                <span className="benefit-text">1,000 WNNM points for platform rewards</span>
+                                <span className="benefit-icon">&#10003;</span>
+                            </div>
+                            <div className="benefit-bar">
+                                <span className="benefit-number">4</span>
+                                <span className="benefit-text">NNM utility allocation for early testers</span>
+                                <span className="benefit-icon">&#10003;</span>
+                            </div>
                         </div>
-                        <div className="benefit-bar reveal-left delay-2">
-                            <span className="benefit-number">2</span>
-                            <span className="benefit-text">ChainFace payments & management</span>
-                            <span className="benefit-icon">&#10003;</span>
-                        </div>
-                        <div className="benefit-bar reveal-left delay-3">
-                            <span className="benefit-number">3</span>
-                            <span className="benefit-text">1,000 WNNM points for platform rewards</span>
-                            <span className="benefit-icon">&#10003;</span>
-                        </div>
-                        <div className="benefit-bar reveal-left delay-4">
-                            <span className="benefit-number">4</span>
-                            <span className="benefit-text">NNM utility allocation for early testers</span>
-                            <span className="benefit-icon">&#10003;</span>
-                        </div>
-                    </div>
                     </div>
 
                     <div className="presale-fomo-panel">
@@ -302,33 +287,33 @@ export default function PresalePage() {
                     </div>
                 </section>
 
-                <section className="features-section reveal">
-                    <div className="feature-card reveal-right delay-1">
+                <section className="features-section">
+                    <div className="feature-card">
                         <h3 className="feature-title gradient-glow">ChainFace Identity</h3>
                         <p className="feature-desc">
                             Transforming purely speculative NFTs into hyper-functional Web3 utilities via verified cross-chain payment dashboards.
                         </p>
                     </div>
-                    <div className="feature-card reveal-right delay-2">
+                    <div className="feature-card">
                         <h3 className="feature-title gradient-glow">The NFX Global Index</h3>
                         <p className="feature-desc">
                             The authoritative observatory for the NFT ecosystem, featuring Ecosystem Sentiment, Network Activity, and Ecosystem Size.
                         </p>
                     </div>
-                    <div className="feature-card reveal-right delay-3">
+                    <div className="feature-card">
                         <h3 className="feature-title gradient-glow">Conviction Rank</h3>
                         <p className="feature-desc">
                             An immutable, sybil-resistant ranking system rewarding genuine community belief over artificial wash trading.
                         </p>
                     </div>
                 </section> 
-                <div className="tokenomics-header reveal">
+
+                <div className="tokenomics-header">
                     <h2 className="hero-title gradient-glow" style={{ fontSize: '1.25rem' }}>NNM Tokenomics</h2>
                 </div>
                 
                 <section className="tokenomics-section" id="tokenomics-section">
-                    
-                    <div className="tokenomics-card reveal-left reveal">
+                    <div className="tokenomics-card">
                         <div className="donut-container">
                             <div className="donut-legend">
                                 {allocations.map((item, i) => (
@@ -394,7 +379,7 @@ export default function PresalePage() {
                         </div>
                     </div>
 
-                    <div className="tokenomics-card reveal-right reveal delay-1">
+                    <div className="tokenomics-card">
                         <div className="allocation-details-scroll">
                             <div className="alloc-item">
                                 <h4 className="gradient-glow">Presale Allocation (30%)</h4>
@@ -428,7 +413,7 @@ export default function PresalePage() {
                     </div>
                 </section>
 
-                <div id="burn-section" className="burn-box-wide reveal reveal-left delay-1">
+                <div id="burn-section" className="burn-box-wide">
                     <div className="burn-header">
                         <span className="burn-icon">🔥</span>
                         <h4 className="gradient-glow">Automated Network Security</h4>
@@ -437,41 +422,41 @@ export default function PresalePage() {
                         10% of tokens generated from platform activity (digital name minting) are permanently removed from circulation to prevent network spam and ensure smart contract sustainability.
                     </p>
                 </div>
-                <div className="roadmap-header reveal-left reveal mt-100" id="roadmap-section">
+
+                <div className="roadmap-header mt-100" id="roadmap-section">
                     <h2 className="hero-title gradient-glow" style={{ fontSize: '1.25rem', textAlign: 'left' }}>NNM Roadmap</h2>
                 </div>
 
                 <section className="roadmap-section">
-
-                    <div className="roadmap-card reveal reveal-left delay-1">
+                    <div className="roadmap-card">
                         <h3 className="feature-title gradient-glow">Phase 1 - The Genesis & Identity Layer</h3>
                         <p className="feature-desc">
                             Deployment of the NNM Protocol on the Polygon Mainnet. Activation of ChainFace identity profiles, enabling cross-chain interactions and foundational ecosystem functionality. Initial minting of Nexus Digital Name Assets.
                         </p>
                     </div>
 
-                    <div className="roadmap-card reveal reveal-left delay-2">
+                    <div className="roadmap-card">
                         <h3 className="feature-title gradient-glow">Phase 2 - Network Infrastructure & Activation</h3>
                         <p className="feature-desc">
                             Establishment of core ecosystem infrastructure, including multi-chain interaction capabilities within ChainFace and initial integration of the NFX Index for tracking network activity and ecosystem data.
                         </p>
                     </div>
 
-                    <div className="roadmap-card reveal reveal-left delay-3">
+                    <div className="roadmap-card">
                         <h3 className="feature-title gradient-glow">Phase 3 - Ecosystem Utility Distribution</h3>
                         <p className="feature-desc">
                             Ongoing distribution of the NNM utility token to early participants, enabling access to ecosystem features, identity services, and internal protocol interactions.
                         </p>
                     </div>
 
-                    <div className="roadmap-card reveal reveal-left delay-4">
+                    <div className="roadmap-card">
                         <h3 className="feature-title gradient-glow">Phase 4 - Platform Infrastructure & Mechanics</h3>
                         <p className="feature-desc">
                             Initialization of Internal system balancing mechanisms with time-locked smart contracts. Activation of usage-based platform mechanics , including automated supply adjustments linked to network activity.
                         </p>
                     </div>
 
-                    <div className="roadmap-card reveal reveal-left delay-5">
+                    <div className="roadmap-card">
                         <h3 className="feature-title gradient-glow">Phase 5 - Global Integration & Ecosystem Expansion</h3>
                         <p className="feature-desc">
                             Continuous expansion of the ChainFace identity layer and ecosystem infrastructure, supporting broader accessibility and long-term protocol evolution.
@@ -515,11 +500,7 @@ export default function PresalePage() {
                     background-repeat: repeat;
                     background-size: 400px 400px;
                     opacity: 0.5;
-                    animation: starsRotate 120s linear infinite, starsFlash 6s infinite alternate;
                 }
-
-                @keyframes starsRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                @keyframes starsFlash { from { opacity: 0.3; } to { opacity: 0.8; filter: brightness(1.5); } }
 
                 .container-main {
                     position: relative;
@@ -551,7 +532,7 @@ export default function PresalePage() {
                     border-radius: 30px;
                     backdrop-filter: blur(10px);
                     cursor: pointer;
-                    opacity: 0;
+                    opacity: 1;
                     transition: all 0.3s ease;
                 }
 
@@ -567,17 +548,6 @@ export default function PresalePage() {
                     box-shadow: 0 0 20px rgba(255, 75, 130, 0.4);
                 }
 
-                .slide-right-to-left-1 { animation: slideNavBtn 1.8s forwards 0.2s; }
-                .slide-right-to-left-2 { animation: slideNavBtn 1.8s forwards 0.4s; }
-                .slide-right-to-left-3 { animation: slideNavBtn 1.8s forwards 0.6s; }
-                .slide-right-to-left-4 { animation: slideNavBtn 1.8s forwards 0.8s; }
-                .slide-right-to-left-5 { animation: slideNavBtn 1.8s forwards 1.0s; }
-
-                @keyframes slideNavBtn {
-                    0% { transform: translateX(100vw); opacity: 0; }
-                    100% { transform: translateX(0); opacity: 1; }
-                }
-
                 .hero-section {
                     display: flex;
                     align-items: flex-start;
@@ -589,16 +559,12 @@ export default function PresalePage() {
                 .hero-text-block {
                     width: 45%;
                     margin-top: 4%;
-                    opacity: 0;
-                    animation: slideLeftBlock 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.5s;
                     text-align: left;
                 }
 
                 .presale-fomo-panel {
                     margin-right: 3%;
                     width: 50%;
-                    opacity: 0;
-                    animation: slideRightBlock 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.5s;
                     background: rgba(14, 28, 65, 0.25);
                     border: 1px solid rgba(162, 0, 255, 0.15);
                     border-radius: 20px;
@@ -607,16 +573,6 @@ export default function PresalePage() {
                     padding: 28px 30px;
                     display: flex;
                     flex-direction: column;
-                }
-
-                @keyframes slideLeftBlock {
-                    0% { transform: translateX(-200vw); opacity: 0; }
-                    100% { transform: translateX(0); opacity: 1; }
-                }
-
-                @keyframes slideRightBlock {
-                    0% { transform: translateX(100vw); opacity: 0; }
-                    100% { transform: translateX(0); opacity: 1; }
                 }
 
                 .hero-title {
@@ -630,11 +586,7 @@ export default function PresalePage() {
                     background: linear-gradient(90deg, #9b51e0 15%, #ff4b82 50%, #9b51e0 85%);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
-                    background-size: 200% auto;
-                    animation: textShine 6s linear infinite;
                 }
-
-                @keyframes textShine { to { background-position: 200% center; } }
 
                 .hero-description {
                     color: #EAECEF;
@@ -660,23 +612,8 @@ export default function PresalePage() {
                     padding: 14px 20px;
                     backdrop-filter: blur(10px);
                     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-                    opacity: 0;
-                    transform: translateX(-100px);
+                    opacity: 1;
                 }
-
-                .benefits-list.active .benefit-bar {
-                    animation: slideInBarFromLeft 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-                }
-
-                @keyframes slideInBarFromLeft {
-                    0% { transform: translateX(-100px); opacity: 0; }
-                    100% { transform: translateX(0); opacity: 1; }
-                }
-
-                .benefits-list.active .delay-1 { animation-delay: 0.2s; }
-                .benefits-list.active .delay-2 { animation-delay: 0.9s; }
-                .benefits-list.active .delay-3 { animation-delay: 1.6s; }
-                .benefits-list.active .delay-4 { animation-delay: 2.3s; }
 
                 .benefit-number {
                     font-weight: 800;
@@ -917,21 +854,6 @@ export default function PresalePage() {
                     width: 100%;
                 }
 
-                .reveal-right {
-                    transform: translateX(100px);
-                    opacity: 0;
-                }
-
-                .active .reveal-right {
-                    transform: translateX(0);
-                    opacity: 1;
-                    transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-                }
-
-                .active .delay-1 { transition-delay: 0.2s; }
-                .active .delay-2 { transition-delay: 0.9s; }
-                .active .delay-3 { transition-delay: 1.6s; }
-
                 .feature-card {
                     flex: 1;
                     background: rgba(14, 28, 65, 0.4);
@@ -943,6 +865,7 @@ export default function PresalePage() {
                     display: flex;
                     flex-direction: column;
                     align-items: flex-start;
+                    opacity: 1;
                 }
 
                 .feature-title {
@@ -965,15 +888,6 @@ export default function PresalePage() {
                     margin-bottom: 20px;
                 }
 
-                .reveal-left.active, .reveal-right.active {
-                    transform: translateX(0);
-                    opacity: 1;
-                    transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-                }
-
-                .reveal-left.active.delay-1, .reveal-right.active.delay-1 { transition-delay: 0.2s; }
-                .reveal-left.active.delay-2, .reveal-right.active.delay-2 { transition-delay: 0.4s; }
-
                 .tokenomics-section {
                     display: flex;
                     justify-content: space-between;
@@ -993,6 +907,7 @@ export default function PresalePage() {
                     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
                     display: flex;
                     flex-direction: column;
+                    opacity: 1;
                 }
 
                 .donut-container {
@@ -1089,19 +1004,11 @@ export default function PresalePage() {
                     width: 70%;
                     text-align: center;
                     overflow: hidden;
-                    transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-                    opacity: 0;
-                    transform: translateX(-150px);
+                    opacity: 1;
                     scroll-margin-top: 35vh;
                 }
 
-                .burn-box-wide.active {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-
                 .burn-box-wide:hover {
-                    transform: translateX(-30px);
                     box-shadow: 0 0 30px rgba(162, 0, 255, 0.3);
                     border-color: rgba(162, 0, 255, 0.4);
                 }
@@ -1233,21 +1140,8 @@ export default function PresalePage() {
                         backdrop-filter: blur(10px);
                         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
                         width: 100%;
-                        opacity: 0;
-                        transform: translateX(-100px);
-                        transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-                    }
-
-                    .roadmap-card.active {
                         opacity: 1;
-                        transform: translateX(0);
                     }
-
-                    .roadmap-card.delay-1 { transition-delay: 0.2s; }
-                    .roadmap-card.delay-2 { transition-delay: 0.4s; }
-                    .roadmap-card.delay-3 { transition-delay: 0.6s; }
-                    .roadmap-card.delay-4 { transition-delay: 0.8s; }
-                    .roadmap-card.delay-5 { transition-delay: 1s; }
 
                     .important-notice-footer {
                         margin-top: 80px;
@@ -1356,7 +1250,6 @@ export default function PresalePage() {
                         width: 100% !important; 
                         padding: 25px 20px !important; 
                         margin-top: 60px !important; 
-                        transform: translateX(0) translateY(0) !important;
                     }
                     .burn-header { 
                         display: flex !important; 

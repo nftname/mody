@@ -729,17 +729,30 @@ export default function JoinCampaignPage() {
 
                 @media (max-width: 991px) {
                     .neon-btn-container {
-                        flex-direction: column;
-                        width: 90%;
+                        flex-direction: row;
+                        justify-content: center;
+                        width: 100%;
                         margin: 0 auto 1.5rem auto;
-                        gap: 10px;
+                        gap: 6px;
+                        flex-wrap: nowrap;
                     }
                     .neon-btn {
-                        width: 100%;
-                        padding: 12px;
+                        width: auto;
+                        padding: 6px 8px;
+                        flex: 1;
+                    }
+                    .neon-btn span {
+                        font-size: 11px !important;
+                        white-space: nowrap;
                     }
                     .giveaway-header {
                         text-align: center !important;
+                    }
+                    .header-title {
+                        font-size: 1.8rem !important;
+                    }
+                    .header-description {
+                        font-size: 0.85rem !important;
                     }
                 }
 
@@ -1324,53 +1337,6 @@ export default function JoinCampaignPage() {
                      font-size:1.1rem !important;
                     }
                 }
-                @keyframes slideInFromRight {
-                    0% {
-                        transform: translateX(50px);
-                        opacity: 0;
-                    }
-                    100% {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-
-                @keyframes slideInFromLeft {
-                    0% {
-                        transform: translateX(-50px);
-                        opacity: 0;
-                    }
-                    100% {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-
-                .giveaway-header .text-start {
-                    animation: slideInFromLeft 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-                }
-
-                .giveaway-header .text-end {
-                    animation: slideInFromRight 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-                }
-
-                @keyframes slideInFromFarRight {
-                    0% {
-                        transform: translateX(100vw); 
-                        opacity: 0;
-                    }
-                    100% {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-                .neon-btn-container button {
-                    opacity: 0;
-                    animation: slideInFromFarRight 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
-                }
-                .neon-btn-container button:nth-child(1) { animation-delay: 0.2s; }
-                .neon-btn-container button:nth-child(2) { animation-delay: 0.8s; }
-                .neon-btn-container button:nth-child(3) { animation-delay: 1.4s; }
 
                 .btn-lightchain-action {
                     background-color: #f8f9fa;

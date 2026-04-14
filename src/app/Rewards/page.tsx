@@ -62,26 +62,6 @@ export default function RewardsPage() {
         return () => clearInterval(timerInterval);
     }, [isMounted]);
 
-    useEffect(() => {
-        if (!isMounted) return;
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('show-element');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { 
-            threshold: 0.1, 
-            rootMargin: "0px 0px -15% 0px" 
-        });
-
-        const hiddenElements = document.querySelectorAll('.reveal-right, .reveal-left, .reveal-up, .reveal-hero-left, .reveal-hero-right, .reveal-right-slow, .reveal-cards-container');        hiddenElements.forEach((el) => observer.observe(el));
-
-        return () => observer.disconnect();
-    }, [isMounted]);
-
     const scroll = (direction: 'left' | 'right') => {
         if (!scrollRef.current) return;
         const scrollAmount = 265; 
@@ -509,19 +489,6 @@ export default function RewardsPage() {
                     display: inline-block;
                 }
 
-                .reveal-hero-left { opacity: 0; transform: translateX(-150px); transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-                .reveal-hero-right { opacity: 0; transform: translateX(150px); transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-                .reveal-left { opacity: 0; transform: translateX(-150px); transition: all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); }
-                .reveal-right { opacity: 0; transform: translateX(150px); transition: all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); }
-                .reveal-up { opacity: 0; transform: translateY(60px); transition: all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); }
-
-                .show-element {
-                    opacity: 1 !important;
-                    transform: translate(0, 0) !important;
-                    transition: opacity 0.7s ease-out, transform 0.7s ease-out !important;
-                }
-
-
                 .glow-unified-purple { 
                     box-shadow: 0 0 15px rgba(162, 0, 255, 0.2), 0 0 40px rgba(162, 0, 255, 0.1); 
                     border-color: rgba(162, 0, 255, 0.3); 
@@ -533,12 +500,6 @@ export default function RewardsPage() {
                     -webkit-text-fill-color: transparent;
                     display: inline-block;
                     font-weight: 900;
-                    animation: pulseScale 8s ease-in-out infinite;
-                }
-
-                @keyframes pulseScale {
-                    0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.05); }
                 }
 
                 .text-light-muted { color: #b0c0c0; }
@@ -551,7 +512,7 @@ export default function RewardsPage() {
                     border-radius: 30px;
                     backdrop-filter: blur(10px);
                     cursor: pointer;
-                    opacity: 0;
+                    opacity: 1;
                     transition: all 0.3s ease;
                     font-size: 0.85rem;
                 }
@@ -566,17 +527,6 @@ export default function RewardsPage() {
                 .neon-btn:hover {
                     background: rgba(255, 255, 255, 0.08);
                     box-shadow: 0 0 20px rgba(255, 75, 130, 0.4);
-                }
-
-                .slide-btn-1 { animation: slideIn 1.8s forwards 0.2s; }
-                .slide-btn-2 { animation: slideIn 1.8s forwards 0.4s; }
-                .slide-btn-3 { animation: slideIn 1.8s forwards 0.6s; }
-                .slide-btn-4 { animation: slideIn 1.8s forwards 0.8s; }
-                .slide-btn-5 { animation: slideIn 1.8s forwards 1.0s; }
-
-                @keyframes slideIn {
-                    0% { transform: translateX(100vw); opacity: 0; }
-                    100% { transform: translateX(0); opacity: 1; }
                 }
 
                 .btn-action-main {
@@ -652,8 +602,7 @@ export default function RewardsPage() {
                 }
                 
                 .vault-reward-container { display: flex; align-items: center; justify-content: flex-start; margin-top: 25px; }
-                .vault-box-img { width: 35px; height: auto; margin-right: 15px; animation: boxFloat 5s ease-in-out infinite; filter: drop-shadow(0 0 15px rgba(255, 75, 130, 0.2)); }
-                @keyframes boxFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+                 .vault-box-img { width: 35px; height: auto; margin-right: 15px; filter: drop-shadow(0 0 15px rgba(255, 75, 130, 0.2)); }
                 .vault-reward-amount { font-size: 1.25rem !important; line-height: 1; margin: 0; padding: 0; }
 
                 .stages-scroll {
@@ -697,20 +646,6 @@ export default function RewardsPage() {
                     -webkit-font-smoothing: antialiased;
                     -moz-osx-font-smoothing: grayscale;
                 }
-
-                .reveal-cards-container .stage-card {
-                    opacity: 0;
-                    transform: translateX(100px);
-                    transition: opacity 1.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 1.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-                }
-                .reveal-cards-container.show-element .stage-card {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-                .reveal-cards-container.show-element .stage-card:nth-child(1) { transition-delay: 0.2s; }
-                .reveal-cards-container.show-element .stage-card:nth-child(2) { transition-delay: 0.8s; }
-                .reveal-cards-container.show-element .stage-card:nth-child(3) { transition-delay: 1.4s; }
-                .reveal-cards-container.show-element .stage-card:nth-child(4) { transition-delay: 2.0s; }
 
                 .vaults-section { width: 95%; margin: 0 auto; }
                 .drag-hint { color: #b57edc; font-size: 0.85rem; font-style: italic; opacity: 0.8; animation: pulseHint 2s infinite; }
@@ -761,27 +696,7 @@ export default function RewardsPage() {
                     animation: shineEffect 4s linear infinite;
                     display: inline-block;
                 }
-                    
-
-                @keyframes leftToCenter {
-                    0% { transform: translateX(-100%); opacity: 0; }
-                    100% { transform: translateX(0); opacity: 1; }
-                }
-
-                @keyframes rightToCenter {
-                    0% { transform: translateX(100%); opacity: 0; }
-                    100% { transform: translateX(0); opacity: 1; }
-                }
-
-                .slide-in-left {
-                    animation: leftToCenter 1s ease-out forwards;
-                }
-
-                .slide-in-right {
-                    animation: rightToCenter 1s ease-out forwards;
-                    animation-delay: 0.4s;
-                }
-
+    
                 .stage-card p {
                     text-align: left;
                     margin: 0;
@@ -812,31 +727,34 @@ export default function RewardsPage() {
                 .vault-reward-item span { color: #fff; font-weight: 600; }
 
                 @media (max-width: 991px) {
+                    .neon-btn-container { gap: 8px !important; display: flex; flex-wrap: wrap; justify-content: center; width: 100%; margin-bottom: 10px; }
+                    .neon-btn-container a { flex: 0 0 auto; display: flex !important; }
+                    .neon-btn { padding: 6px 4px !important; font-size: 0.65rem !important; width: 100%; justify-content: center; }
+                    
+                    .neon-btn-container a:nth-child(5) { order: 1; width: 31%; } /* Utility */
+                    .neon-btn-container a:nth-child(3) { order: 2; width: 31%; } /* Socials */
+                    .neon-btn-container a:nth-child(1) { order: 3; width: 31%; } /* Rewards */
+                    .neon-btn-container a:nth-child(4) { order: 4; width: 47%; margin-top: 5px; } /* Balance */
+                    .neon-btn-container a:nth-child(2) { order: 5; width: 47%; margin-top: 5px; } /* Leaderboard */
+
+                    .hero-section { margin-bottom: 2rem !important; padding-top: 0 !important; }
+                    .hero-section h1 { font-size: 1.9rem !important; margin-top: 0 !important; }
+                    .hero-section p.text-light-muted { font-size: 0.8rem !important; line-height: 1.5 !important; margin-top: 10px !important; padding: 0 10px; }
+
                     .btn-action-main { padding: 10px 28px; font-size: 0.75rem; }
                     .vault-nav-btn { display: none !important; }
                     .info-panels-grid { grid-template-columns: 1fr; width: 95%; }
                     .glass-panel-80 { width: 100% !important; grid-column: 1 / -1 !important; padding: 30px 20px; }
-                    .reveal-left, .reveal-right, .reveal-right-slow { transform: translateX(0) translateY(40px); opacity: 0; }
-                    .reveal-hero-left, .reveal-hero-right { transform: translateX(0) translateY(40px); opacity: 0; }
-                    .hero-section h1 { font-size: 2.2rem !important; }
                     
-                    .tracker-container { flex-direction: column; gap: 30px; margin: 3rem 0; align-items: center; }
+                    .tracker-container { flex-direction: column; gap: 30px; margin: 1.5rem 0; align-items: center; }
                     .tracker-left, .tracker-center, .tracker-right { width: 100%; align-items: center; }
-                    .vault-reward-container { justify-content: center; margin-top: 30px; }
+                    .vault-reward-container { justify-content: center; margin-top: 20px; }
                     .tracker-center { order: -1; }
                     .countdown-text { text-align: center; white-space: normal; }
                     
-                    .stages-scroll {
-                        display: flex; overflow-x: auto; padding-left: 5%; padding-right: 5%; scroll-snap-type: x mandatory;
-                    }
-                    .stage-card {
-                        flex: 0 0 calc(85vw - 40px); max-width: 320px; scroll-snap-align: center;
-                    }
+                    .stages-scroll { display: flex; overflow-x: auto; padding-left: 5%; padding-right: 5%; scroll-snap-type: x mandatory; }
+                    .stage-card { flex: 0 0 calc(85vw - 40px); max-width: 320px; scroll-snap-align: center; }
                     
-                    .reveal-cards-container .stage-card { transform: translateY(40px); }
-                    .reveal-cards-container.show-element .stage-card { transform: translateY(0); }
-                    .reveal-cards-container.show-element .stage-card:nth-child(n) { transition-delay: 0s; }
-
                     .vaults-section { width: 100%; }
                     .vaults-scroll { padding-left: 5%; padding-right: 5%; }
                     .drag-hint { display: none; }
