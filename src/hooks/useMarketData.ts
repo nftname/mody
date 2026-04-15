@@ -71,7 +71,7 @@ export function useMarketData(timeFilter: string = 'All') {
 
                 const tokenIdsNumbers = tokenIds.map(id => Number(id));
                 // Reduced batch size to prevent Supabase timeout
-                const BATCH_SIZE = 300; 
+                const BATCH_SIZE = 200; 
                 let dbStats: any[] = [];
                 
                 for (let i = 0; i < tokenIdsNumbers.length; i += BATCH_SIZE) {
