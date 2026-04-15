@@ -70,18 +70,28 @@ export function useMarketData(timeFilter: string = 'All') {
                 }
 
                 const tokenIdsNumbers = tokenIds.map(id => Number(id));
-                const BATCH_SIZE = 200;
+                // Reduced batch size to prevent Supabase timeout
+                const BATCH_SIZE = 300; 
                 let dbStats: any[] = [];
                 
                 for (let i = 0; i < tokenIdsNumbers.length; i += BATCH_SIZE) {
                     const batch = tokenIdsNumbers.slice(i, i + BATCH_SIZE);
-                    const { data: statsBatch } = await supabase
-                        .from('market_stats_view')
-                        .select('*')
-                        .in('token_id', batch);
+                    try {
+                        const { data: statsBatch, error } = await supabase
+                            .from('market_stats_view')
+                            .select('*')
+                            .in('token_id', batch);
+                            
+                        if (error) {
+                            console.error("Supabase Batch Error:", error);
+                            continue; // Skip this batch and try the next
+                        }
                         
-                    if (statsBatch) {
-                        dbStats = [...dbStats, ...statsBatch];
+                        if (statsBatch) {
+                            dbStats = [...dbStats, ...statsBatch];
+                        }
+                    } catch (err) {
+                        console.error("Request Failed:", err);
                     }
                 }
 
