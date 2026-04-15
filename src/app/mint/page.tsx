@@ -143,6 +143,11 @@ const MintContent = () => {
               })
           }).catch(() => {});
 
+                    if (txHash && typeof window !== 'undefined' && (window as any).fbq) {
+              const priceVal = parseFloat(selectedTierForPayment.priceDisplay.replace(/[^0-9.]/g, '')) || 0;
+              (window as any).fbq('track', 'Purchase', { value: priceVal, currency: 'USD' });
+          }
+
           setModalType('founder_success'); 
           setShowModal(true);
 
@@ -441,6 +446,12 @@ const MintContent = () => {
                } catch (e: any) {}
           }
           
+                    if (txHash && typeof window !== 'undefined' && (window as any).fbq) {
+              const priceVal = parseFloat(priceDisplay.replace(/[^0-9.]/g, '')) || 0;
+              (window as any).fbq('track', 'Purchase', { value: priceVal, currency: 'USD' });
+          }
+
+
           setModalType('success');
           setShowModal(true);
 

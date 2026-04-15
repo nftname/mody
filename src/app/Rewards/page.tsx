@@ -1,13 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useReadContract } from 'wagmi';
-import { parseAbi } from 'viem';
-
 const NNM_CONTRACT_ADDRESS = "0x264D75F04b135e58E2d5cC8A6B9c1371dAc3ad81";
-const NNM_ABI = parseAbi([
-    "function totalSupply() view returns (uint256)"
-]);
 
 const COLOR_NAVY_BG = '#050a16';
 
@@ -63,23 +57,32 @@ export default function RewardsPage() {
     const [namesMinted, setNamesMinted] = useState(2000);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const { data: totalSupplyData } = useReadContract({
-        address: NNM_CONTRACT_ADDRESS,
-        abi: NNM_ABI,
-        functionName: 'totalSupply',
-        query: { refetchInterval: 15000 }
-    });
-
     useEffect(() => {
         setIsMounted(true);
-    }, []);
 
-    useEffect(() => {
-        if (isMounted && totalSupplyData !== undefined) {
-            const currentTotal = Number(totalSupplyData);
-            setNamesMinted(currentTotal);
-        }
-    }, [isMounted, totalSupplyData]);
+        const fetchTotalSupply = async () => {
+            try {
+                const response = await fetch('https://polygon-bor.publicnode.com', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'eth_call',
+                        params: [{ to: NNM_CONTRACT_ADDRESS, data: '0x18160ddd' }, 'latest']
+                    })
+                });
+                const result = await response.json();
+                if (result && result.result) {
+                    setNamesMinted(parseInt(result.result, 16));
+                }
+            } catch (e) {}
+        };
+
+        fetchTotalSupply();
+        const interval = setInterval(fetchTotalSupply, 15000);
+        return () => clearInterval(interval);
+    }, []);
 
     const scroll = (direction: 'left' | 'right') => {
         if (!scrollRef.current) return;
@@ -195,8 +198,7 @@ export default function RewardsPage() {
                     <div>
                         <div className="text-center" style={{ marginBottom: '5rem', marginTop: '-5rem', position: 'relative', zIndex: 10 }}>
                             <Link href="/mint" style={{ textDecoration: 'none' }}>
-                                <button className="btn-action-main">🎁 Get Free Tokens Now</button>
-                            </Link>
+                             <button onClick={() => { if (typeof window !== 'undefined' && (window as any).fbq) (window as any).fbq('track', 'InitiateCheckout'); }} className="btn-action-main">🎁 Get Free Tokens Now</button>                            </Link>
                             <p className="fst-italic text-white mb-3" style={{ fontSize: '1rem', letterSpacing: '1.5px', fontWeight: '300', marginTop: '15px' }}>
                                 Join early and start collecting rewards instantly.
                             </p>
@@ -391,8 +393,7 @@ export default function RewardsPage() {
                             Join early. Secure your position. Start earning through participation.
                         </p>
                         <Link href="/mint" style={{ textDecoration: 'none' }}>
-                            <button className="btn-action-main">🎁 Get Free Tokens Now</button>
-                        </Link>
+                          <button onClick={() => { if (typeof window !== 'undefined' && (window as any).fbq) (window as any).fbq('track', 'InitiateCheckout'); }} className="btn-action-main">🎁 Get Free Tokens Now</button>                        </Link>
                     </div>
 
                     <div className="legal-disclaimer-wrapper text-center reveal-up" style={{ marginTop: '2rem' }}>

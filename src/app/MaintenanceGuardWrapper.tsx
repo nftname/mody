@@ -3,10 +3,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import Navbar from "@/components/Navbar";
+import dynamic from "next/dynamic";
 import Footer from "@/components/Footer";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+
+const Navbar = dynamic(() => import("@/components/Navbar"), { ssr: false });
+const ConnectButton = dynamic(() => import("@rainbow-me/rainbowkit").then(mod => mod.ConnectButton), { ssr: false });
 
 const OWNER_WALLET = (process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS || "").toLowerCase();
 const CACHE_TIME = 60000;
