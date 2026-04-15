@@ -39,7 +39,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-
         <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" as="style" crossOrigin="anonymous" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" id="bs-icons" crossOrigin="anonymous" suppressHydrationWarning />
         <link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" as="style" crossOrigin="anonymous" />
@@ -70,6 +69,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             gtag('config', 'G-NQY65DTMFD');
           `}
         </Script>
+
+        <Script id="facebook-pixel" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '3639375526203894');
+
+            var pixelFired = false;
+            function fireFbPixel() {
+              if (!pixelFired) {
+                fbq('track', 'PageView');
+                pixelFired = true;
+                window.removeEventListener('scroll', fireFbPixel);
+              }
+            }
+            setTimeout(fireFbPixel, 3000);
+            window.addEventListener('scroll', fireFbPixel, { passive: true });
+          `}
+        </Script>
+        <noscript>
+          <img height="1" width="1" style={{ display: 'none' }} src="https://www.facebook.com/tr?id=3639375526203894&ev=PageView&noscript=1" alt="" />
+        </noscript>
 
         <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" strategy="lazyOnload" />
         <Script id="sw-unregister" strategy="afterInteractive">

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, MouseEvent } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useReadContract } from 'wagmi';
 import { parseAbi } from 'viem';
@@ -11,36 +11,10 @@ const NNM_ABI = parseAbi([
 
 const COLOR_NAVY_BG = '#050a16';
 
-export default function RewardsPage() {
-    const [isMounted, setIsMounted] = useState(false);
-    const [namesMinted, setNamesMinted] = useState(2000);
+const CountdownTimer = () => {
     const [timeLeft, setTimeLeft] = useState({ days: 30, hours: 0, minutes: 0, seconds: 0 });
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const [startX, setStartX] = useState(0);
-    const [scrollLeft, setScrollLeft] = useState(0);
-
-    const { data: totalSupplyData } = useReadContract({
-        address: NNM_CONTRACT_ADDRESS,
-        abi: NNM_ABI,
-        functionName: 'totalSupply',
-        query: { refetchInterval: 15000 }
-    });
 
     useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
-    useEffect(() => {
-        if (isMounted && totalSupplyData !== undefined) {
-            const currentTotal = Number(totalSupplyData);
-            setNamesMinted(currentTotal);
-        }
-    }, [isMounted, totalSupplyData]);
-
-    useEffect(() => {
-        if (!isMounted) return;
-
         const targetDate = new Date('2026-04-22T12:00:00Z').getTime();
 
         const timerInterval = setInterval(() => {
@@ -60,7 +34,52 @@ export default function RewardsPage() {
         }, 1000);
 
         return () => clearInterval(timerInterval);
-    }, [isMounted]);
+    }, []);
+
+    return (
+        <div className="countdown-wrapper">
+            <div className="time-box">
+                <span className="time-value">{timeLeft.days}</span>
+                <span className="time-label">DAYS</span>
+            </div>
+            <div className="time-box">
+                <span className="time-value">{timeLeft.hours}</span>
+                <span className="time-label">HOURS</span>
+            </div>
+            <div className="time-box">
+                <span className="time-value">{timeLeft.minutes}</span>
+                <span className="time-label">MINS</span>
+            </div>
+            <div className="time-box">
+                <span className="time-value">{timeLeft.seconds}</span>
+                <span className="time-label">SECS</span>
+            </div>
+        </div>
+    );
+};
+
+export default function RewardsPage() {
+    const [isMounted, setIsMounted] = useState(false);
+    const [namesMinted, setNamesMinted] = useState(2000);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    const { data: totalSupplyData } = useReadContract({
+        address: NNM_CONTRACT_ADDRESS,
+        abi: NNM_ABI,
+        functionName: 'totalSupply',
+        query: { refetchInterval: 15000 }
+    });
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (isMounted && totalSupplyData !== undefined) {
+            const currentTotal = Number(totalSupplyData);
+            setNamesMinted(currentTotal);
+        }
+    }, [isMounted, totalSupplyData]);
 
     const scroll = (direction: 'left' | 'right') => {
         if (!scrollRef.current) return;
@@ -76,7 +95,7 @@ export default function RewardsPage() {
 
     return (
         <main className="campaign-main">
-      <title>NNM | Rewards</title>
+            <title>NNM | Rewards</title>
             <div className="twinkling-stars"></div>
 
             <div className="container-fluid pt-3 position-relative z-index-content" style={{ padding: '0 4%', maxWidth: '1200px', margin: '0 auto' }}>
@@ -119,29 +138,11 @@ export default function RewardsPage() {
                         <h1 className="fw-bold gradient-title-hero mb-2 reveal-hero-left" style={{ fontSize: '1.5rem', lineHeight: '1.4' }}>
                             Join Early & Start Earning from <span className="gold-metallic-text" style={{ fontSize: '1.8rem' }}>$300,000</span><br/>
                              Earn Token Rewards Today
-
                         </h1>
                         <div>
                             <div className="tracker-container">
                                 <div className="tracker-left">
-                                    <div className="countdown-wrapper">
-                                        <div className="time-box">
-                                            <span className="time-value">{timeLeft.days}</span>
-                                            <span className="time-label">DAYS</span>
-                                        </div>
-                                        <div className="time-box">
-                                            <span className="time-value">{timeLeft.hours}</span>
-                                            <span className="time-label">HOURS</span>
-                                        </div>
-                                        <div className="time-box">
-                                            <span className="time-value">{timeLeft.minutes}</span>
-                                            <span className="time-label">MINS</span>
-                                        </div>
-                                        <div className="time-box">
-                                            <span className="time-value">{timeLeft.seconds}</span>
-                                            <span className="time-label">SECS</span>
-                                        </div>
-                                    </div>
+                                    <CountdownTimer />
                                     <div className="countdown-text">
                                        Time left to collect free tokens before launch
                                     </div>
@@ -160,7 +161,7 @@ export default function RewardsPage() {
                                         <div className="progress-bar-fill" style={{ width: `${(namesMinted / 2000) * 100}%` }}></div>
                                     </div>
                                     <div className="vault-reward-container">
-                                        <img src="/box.png" alt="Reward Vault" className="vault-box-img" />
+                                        <img src="/box.png" alt="Reward Vault" className="vault-box-img" width={30} height={30} loading="eager" fetchPriority="high" />
                                         <span className="gold-metallic-text vault-reward-amount">$1,000</span>
                                     </div>
                                 </div>
@@ -307,36 +308,36 @@ export default function RewardsPage() {
                     </div>
 
 
-<div className="info-panels-grid position-relative" style={{ marginBottom: '5rem' }}>
-    <div className="glass-panel-80 glow-unified-purple slide-in-left">
-        <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">$300,000 Reward Vaults</h3>
-        <div className="panel-text-content">
-            <p className="text-light-muted mb-2 fw-light">Up to $300,000 distributed to the top 50 active participants across 7 milestone phases.</p>
-            <p className="text-light-muted mb-2 fw-light">Every time a network milestone is reached, a new vault opens.</p>
-            <p className="text-light-muted fw-light">No random lotteries. The top 50 contributors on the leaderboard take the cash prizes directly to their wallets.</p>
-        </div>
-    </div>
+                    <div className="info-panels-grid position-relative" style={{ marginBottom: '5rem' }}>
+                        <div className="glass-panel-80 glow-unified-purple slide-in-left">
+                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">$300,000 Reward Vaults</h3>
+                            <div className="panel-text-content">
+                                <p className="text-light-muted mb-2 fw-light">Up to $300,000 distributed to the top 50 active participants across 7 milestone phases.</p>
+                                <p className="text-light-muted mb-2 fw-light">Every time a network milestone is reached, a new vault opens.</p>
+                                <p className="text-light-muted fw-light">No random lotteries. The top 50 contributors on the leaderboard take the cash prizes directly to their wallets.</p>
+                            </div>
+                        </div>
 
-    <div className="glass-panel-80 glow-unified-purple slide-in-right">
-        <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">4 Ways to Earn</h3>
-        <div className="panel-text-content">
-            <ul className="list-unstyled ms-3">
-                <li className="text-light-muted mb-2 fw-light">💰 <strong>Activate Account:</strong> Get up to 3,000 $WNNM instantly.</li>
-                <li className="text-light-muted mb-2 fw-light">🤝 <strong>Invite Friends:</strong> Earn 30% INSTANT cash directly to your wallet.</li>
-                <li className="text-light-muted mb-2 fw-light">📱 <strong>Daily Bounties:</strong> Complete social tasks to grow your balance.</li>
-                <li className="text-light-muted mb-3 fw-light">🏆 <strong>Vault Drops:</strong>  Rank in the Top 50 to win Phase Cash Prizes.</li>
-            </ul>
-        </div>
-    </div>
+                        <div className="glass-panel-80 glow-unified-purple slide-in-right">
+                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">4 Ways to Earn</h3>
+                            <div className="panel-text-content">
+                                <ul className="list-unstyled ms-3">
+                                    <li className="text-light-muted mb-2 fw-light">💰 <strong>Activate Account:</strong> Get up to 3,000 $WNNM instantly.</li>
+                                    <li className="text-light-muted mb-2 fw-light">🤝 <strong>Invite Friends:</strong> Earn 30% INSTANT cash directly to your wallet.</li>
+                                    <li className="text-light-muted mb-2 fw-light">📱 <strong>Daily Bounties:</strong> Complete social tasks to grow your balance.</li>
+                                    <li className="text-light-muted mb-3 fw-light">🏆 <strong>Vault Drops:</strong>  Rank in the Top 50 to win Phase Cash Prizes.</li>
+                                </ul>
+                            </div>
+                        </div>
 
-    <div className="glass-panel-80 glow-unified-purple reveal-up" style={{ gridColumn: '1 / -1', maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-        <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">May 22nd: Official Token Activation</h3>
-        <div className="panel-text-content">
-<p className="text-light-muted mb-2 fw-light">The Genesis Phase begins April 22nd, and the $WNNM token utility is expected to activate on May 22nd.</p>
-<p className="text-light-muted mb-0 fw-light">All $WNNM points collected during this phase will influence early ecosystem allocation. Accumulate as much as possible before the phase ends.</p>
-        </div>
-    </div>
-</div>
+                        <div className="glass-panel-80 glow-unified-purple reveal-up" style={{ gridColumn: '1 / -1', maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
+                            <h3 className="fw-bold gradient-title-hero mb-4 panel-main-title">May 22nd: Official Token Activation</h3>
+                            <div className="panel-text-content">
+                    <p className="text-light-muted mb-2 fw-light">The Genesis Phase begins April 22nd, and the $WNNM token utility is expected to activate on May 22nd.</p>
+                    <p className="text-light-muted mb-0 fw-light">All $WNNM points collected during this phase will influence early ecosystem allocation. Accumulate as much as possible before the phase ends.</p>
+                            </div>
+                        </div>
+                    </div>
 
                     <div className="stages-wrapper reveal-cards-container" style={{ marginBottom: '6rem' }}>
                     <div className="stages-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '40px', maxWidth: '900px', margin: '0 auto 6rem auto' }}>
@@ -602,7 +603,7 @@ export default function RewardsPage() {
                 }
                 
                 .vault-reward-container { display: flex; align-items: center; justify-content: flex-start; margin-top: 25px; }
-                 .vault-box-img { width: 35px; height: auto; margin-right: 15px; filter: drop-shadow(0 0 15px rgba(255, 75, 130, 0.2)); }
+                .vault-box-img { width: 30px; height: 30px; margin-right: 15px; filter: drop-shadow(0 0 15px rgba(255, 75, 130, 0.2)); object-fit: contain; }
                 .vault-reward-amount { font-size: 1.25rem !important; line-height: 1; margin: 0; padding: 0; }
 
                 .stages-scroll {
@@ -731,11 +732,11 @@ export default function RewardsPage() {
                     .neon-btn-container a { flex: 0 0 auto; display: flex !important; }
                     .neon-btn { padding: 6px 4px !important; font-size: 0.65rem !important; width: 100%; justify-content: center; }
                     
-                    .neon-btn-container a:nth-child(5) { order: 1; width: 31%; } /* Utility */
-                    .neon-btn-container a:nth-child(3) { order: 2; width: 31%; } /* Socials */
-                    .neon-btn-container a:nth-child(1) { order: 3; width: 31%; } /* Rewards */
-                    .neon-btn-container a:nth-child(4) { order: 4; width: 47%; margin-top: 5px; } /* Balance */
-                    .neon-btn-container a:nth-child(2) { order: 5; width: 47%; margin-top: 5px; } /* Leaderboard */
+                    .neon-btn-container a:nth-child(5) { order: 1; width: 31%; }
+                    .neon-btn-container a:nth-child(3) { order: 2; width: 31%; }
+                    .neon-btn-container a:nth-child(1) { order: 3; width: 31%; }
+                    .neon-btn-container a:nth-child(4) { order: 4; width: 47%; margin-top: 5px; }
+                    .neon-btn-container a:nth-child(2) { order: 5; width: 47%; margin-top: 5px; }
 
                     .hero-section { margin-bottom: 2rem !important; padding-top: 0 !important; }
                     .hero-section h1 { font-size: 1.9rem !important; margin-top: 0 !important; }

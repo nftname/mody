@@ -4,16 +4,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { parseAbi, formatEther } from 'viem';
 import { usePublicClient } from 'wagmi';
 import { supabase } from '@/lib/supabase';
-import { MARKETPLACE_ADDRESS, NFT_COLLECTION_ADDRESS } from '@/data/config';
+import { MARKETPLACE_ADDRESS } from '@/data/config';
 
 const MARKET_ABI = parseAbi([
     "function getAllListings() view returns (uint256[] tokenIds, uint256[] prices, address[] sellers)"
 ]);
-
-const resolveIPFS = (uri: string) => {
-    if (!uri) return '';
-    return uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://ipfs.io/ipfs/') : uri;
-};
 
 const fetchWithRetry = async (fn: () => Promise<any>, retries = 3, delay = 2000) => {
     for (let i = 0; i < retries; i++) {
@@ -54,6 +49,7 @@ export function useMarketData(timeFilter: string = 'All') {
         const fetchMarketData = async () => {
             if (!publicClient) return;
             if (isMounted) setLoading(true);
+
             try {
                 const data = await fetchWithRetry(() => 
                     publicClient.readContract({
@@ -73,74 +69,31 @@ export function useMarketData(timeFilter: string = 'All') {
                     return;
                 }
 
-                const tokenIdsStr = tokenIds.map(id => id.toString());
-                const CHUNK_SIZE = 60;
-                const chunks: string[][] = [];
-                for (let i = 0; i < tokenIdsStr.length; i += CHUNK_SIZE) {
-                    chunks.push(tokenIdsStr.slice(i, i + CHUNK_SIZE));
+                const tokenIdsNumbers = tokenIds.map(id => Number(id));
+                const BATCH_SIZE = 300;
+                let dbStats: any[] = [];
+                
+                for (let i = 0; i < tokenIdsNumbers.length; i += BATCH_SIZE) {
+                    const batch = tokenIdsNumbers.slice(i, i + BATCH_SIZE);
+                    const { data: statsBatch } = await supabase
+                        .from('market_stats_view')
+                        .select('*')
+                        .in('token_id', batch);
+                        
+                    if (statsBatch) {
+                        dbStats = [...dbStats, ...statsBatch];
+                    }
                 }
 
-                const fetchStats = async (targetChunks: string[][]) => {
-                    const promises = targetChunks.map(async (chunk) => {
-                        try {
-                            const { data } = await supabase
-                                .from('market_stats_view')
-                                .select('*')
-                                .in('token_id', chunk);
-                            return data || [];
-                        } catch (e) {
-                            return [];
-                        }
-                    });
-                    
-                    const results = await Promise.all(promises);
-                    return results.flat();
-                };
-
-                const dbStats = await fetchStats(chunks);
                 const statsMap: Record<string, any> = {};
-
-                const fetchActivities = async (targetChunks: string[][]) => {
-                    const promises = targetChunks.map(async (chunk) => {
-                        try {
-                            const { data } = await supabase
-                                .from('activities')
-                                .select('token_id, created_at')
-                                .eq('activity_type', 'List')
-                                .in('token_id', chunk);
-                            return data || [];
-                        } catch (e) {
-                            return [];
-                        }
-                    });
-                    const results = await Promise.all(promises);
-                    return results.flat();
-                };
-
-                const dbActivities = await fetchActivities(chunks);
-                const latestListTimeMap: Record<string, number> = {};
-
-                dbActivities.forEach((act: any) => {
-                    const tid = act.token_id.toString();
-                    let actTime = 0;
-                    try {
-                        const dateStr = act.created_at.includes('Z') ? act.created_at : act.created_at + 'Z';
-                        actTime = new Date(dateStr).getTime();
-                        if (isNaN(actTime)) actTime = new Date(act.created_at).getTime();
-                    } catch { actTime = new Date(act.created_at).getTime(); }
-
-                    if (!latestListTimeMap[tid] || actTime > latestListTimeMap[tid]) {
-                        latestListTimeMap[tid] = actTime;
-                    }
-                });
-                
                 let maxVolume = 0;
                 let maxSales = 0;
                 let maxOffers = 0;
                 let maxConviction = 0;
 
-                dbStats.forEach((s: any) => {
-                    statsMap[s.token_id.toString()] = s;
+                for (let i = 0; i < dbStats.length; i++) {
+                    const s = dbStats[i];
+                    statsMap[String(s.token_id)] = s;
                     
                     const vol = Number(s.volume) || 0;
                     const sales = Number(s.sales) || 0;
@@ -159,11 +112,14 @@ export function useMarketData(timeFilter: string = 'All') {
                     if (sales > maxSales) maxSales = sales;
                     if (offers > maxOffers) maxOffers = offers;
                     if (organicPoints > maxConviction) maxConviction = organicPoints;
-                });
+                }
 
-                const items = tokenIds.map((id, index) => {
+                const items = new Array(tokenIds.length);
+                
+                for (let index = 0; index < tokenIds.length; index++) {
+                    const id = tokenIds[index];
                     const tid = Number(id);
-                    const idStr = id.toString();
+                    const idStr = String(id);
                     
                     const dbRecord = statsMap[idStr] || {};
                     const finalName = dbRecord.name || `Asset #${tid}`;
@@ -190,11 +146,9 @@ export function useMarketData(timeFilter: string = 'All') {
                     const offersScore = maxOffers > 0 ? (offersCount / maxOffers) * 15 : 0;
 
                     const trendingScore = volScore + salesScore + convictionScorePercent + offersScore;
-                    
                     const pricePol = parseFloat(formatEther(prices[index]));
                     const lastSale = Number(dbRecord.lastsale) || 0;
 
-                    
                     let change = 0;
                     if (lastSale > 0) {
                         change = ((pricePol - lastSale) / lastSale) * 100;
@@ -202,14 +156,14 @@ export function useMarketData(timeFilter: string = 'All') {
 
                     const mintYear = dbRecord.minttime > 0 ? new Date(Number(dbRecord.minttime)).getFullYear() : 2026;
 
-                    return {
+                    items[index] = {
                         id: tid,
                         name: finalName,
                         tier: finalTier,
                         pricePol: pricePol,
                         lastSale: lastSale,
-                        volume: Number(dbRecord.volume) || 0,
-                        listedTime: latestListTimeMap[idStr] || Number(dbRecord.listedtime) || 0,
+                        volume: itemVolume,
+                        listedTime: Number(dbRecord.listedtime) || 0,
                         lastActive: Number(dbRecord.lastactive) || 0,
                         mintYear: mintYear,
                         trendingScore: trendingScore,
@@ -218,49 +172,18 @@ export function useMarketData(timeFilter: string = 'All') {
                         change: change,
                         currencySymbol: 'POL'
                     };
-                });
+                }
                 
                 if (isMounted) {
                     setListings(items);
                     setLoading(false); 
-                }
-                const itemsMissingNames = items.filter(item => item.name.startsWith('Asset #'));
-                if (itemsMissingNames.length > 0) {
-                    const fetchMissingNamesInChunks = async () => {
-                        const chunkSize = 15;
-                        for (let i = 0; i < itemsMissingNames.length; i += chunkSize) {
-                            if (!isMounted) break;
-                            const chunk = itemsMissingNames.slice(i, i + chunkSize);
-                            
-                            await Promise.all(chunk.map(async (item) => {
-                                try {
-                                    const uri = await publicClient.readContract({
-                                        address: NFT_COLLECTION_ADDRESS as `0x${string}`,
-                                        abi: parseAbi(["function tokenURI(uint256) view returns (string)"]),
-                                        functionName: 'tokenURI',
-                                        args: [BigInt(item.id)]
-                                    });
-                                    const metaRes = await fetch(resolveIPFS(uri as string));
-                                    const meta = await metaRes.json();
-                                    if (meta.name && isMounted) {
-                                        setListings(prev => prev.map(p => 
-                                            p.id === item.id 
-                                                ? { ...p, name: meta.name, tier: meta.attributes?.find((a:any) => a.trait_type === 'Tier')?.value || p.tier } 
-                                                : p
-                                        ));
-                                    }
-                                } catch (e) {
-                                }
-                            }));
-                        }
-                    };
-                    fetchMissingNamesInChunks();
                 }
 
             } catch (error) {
                 if (isMounted) setLoading(false);
             }
         };
+
         fetchMarketData();
 
         return () => {

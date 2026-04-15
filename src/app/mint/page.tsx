@@ -457,7 +457,7 @@ const MintContent = () => {
   if (!mounted) return null;
 
   return (
-    <main dir="ltr" style={{ backgroundColor: '#181A20', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
+<main dir="ltr" style={{ backgroundColor: '#0f121a', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '50px', position: 'relative', direction: 'ltr' }}>
       <title>NNM | Mint</title>
       <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
         <MintTemplate 
@@ -541,9 +541,7 @@ const MintContent = () => {
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
             {}
-            <div style={{ width: '100%', maxWidth: '320px', backgroundColor: '#181A20', border: '1px solid #2B3139', borderRadius: '15px', padding: '24px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative' }}>
-                <button onClick={handleCloseModal} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: '#848E9C', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
-
+<div style={{ width: '100%', maxWidth: '320px', backgroundColor: '#0f121a', border: '1px solid #2B3139', borderRadius: '15px', padding: '24px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative' }}>                <button onClick={handleCloseModal} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: '#848E9C', fontSize: '20px', cursor: 'pointer', zIndex: 10 }}><i className="bi bi-x-lg"></i></button>
                 {modalType === 'success' && (
                    <div className="fade-in">
                      <div className="mb-3"><i className="bi bi-check-circle-fill" style={{fontSize: '2.6rem', color: '#0ecb81'}}></i></div>
@@ -605,8 +603,7 @@ const MintContent = () => {
 
       {isPaymentModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(8px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px' }}>
-            <div className="fade-in" style={{ width: '100%', maxWidth: '290px', backgroundColor: '#14151A', border: '1px solid rgba(252, 213, 53, 0.15)', borderRadius: '14px', padding: '16px', boxShadow: '0 15px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(252, 213, 53, 0.03)', position: 'relative' }}>
-                
+<div className="fade-in" style={{ width: '100%', maxWidth: '290px', backgroundColor: '#0f121a', border: '1px solid rgba(252, 213, 53, 0.15)', borderRadius: '14px', padding: '16px', boxShadow: '0 15px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(252, 213, 53, 0.03)', position: 'relative' }}>                
                 <button onClick={() => setIsPaymentModalOpen(false)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: '#848E9C', fontSize: '15px', cursor: 'pointer', zIndex: 10 }}>
                     <i className="bi bi-x-lg"></i>
                 </button>
