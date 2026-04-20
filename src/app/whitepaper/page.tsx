@@ -1,12 +1,11 @@
 'use client';
 import React from 'react';
 
-// --- LIGHT THEME COLORS ---
-const GOLD_ACCENT = '#B8860B'; // Darker gold for better contrast on white
-const TEXT_MAIN = '#1A202C';   // Soft black for headings
-const TEXT_BODY = '#4A5568';   // Slate gray for body text
-const BG_MAIN = '#F7F9FA';     // Broken white (Off-white) for the background
-const BG_SURFACE = '#FFFFFF';  // Pure white for cards/disclaimer boxes
+const GOLD_ACCENT = '#B8860B';
+const TEXT_MAIN = '#1A202C';
+const TEXT_BODY = '#4A5568';
+const BG_MAIN = '#F7F9FA';
+const BG_SURFACE = '#FFFFFF';
 const BORDER_LIGHT = 'rgba(0, 0, 0, 0.08)';
 
 export default function WhitepaperPage() {
@@ -200,7 +199,6 @@ export default function WhitepaperPage() {
             font-weight: 700;
         }
 
-        /* Table Styles Added for Tokenomics Schedule */
        .wp-table-container {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -307,7 +305,7 @@ export default function WhitepaperPage() {
                   </div>
                   <div>
                       <div className="wp-stat-label">Genesis Date</div>
-                      <div className="wp-stat-value">April 22, 2026</div>
+                      <div className="wp-stat-value">May 22, 2026</div>
                   </div>
                   <div>
                       <div className="wp-stat-label">Presale Duration</div>
@@ -331,43 +329,49 @@ export default function WhitepaperPage() {
                               <td><strong>Presale Allocation</strong></td>
                               <td>30%</td>
                               <td>300,000,000</td>
-                              <td>40% unlocked at TGE; remaining released linearly over 60 days</td>
+                              <td>250% unlocked at TGE, remainder released linearly over 60 days</td>
                           </tr>
                           <tr>
                               <td><strong>Liquidity Pool</strong></td>
-                              <td>15%</td>
-                              <td>150,000,000</td>
-                              <td>100% locked for 365 days post-listing</td>
+                              <td>10%</td>
+                              <td>100,000,000</td>
+                              <td>Allocated to DEX liquidity. Locked for 365 days post‑listing to protect price stability.</td>
                           </tr>
                           <tr>
                               <td><strong>Platform Rewards & Ecosystem</strong></td>
                               <td>34%</td>
                               <td>340,000,000</td>
-                              <td>5% unlocked at TGE; remaining released linearly over 12 months</td>
+                              <td>5% unlocked at TGE; remaining 30% released linearly over 12 months</td>
                           </tr>
                           <tr>
                               <td><strong>Treasury & Growth</strong></td>
                               <td>8%</td>
                               <td>80,000,000</td>
-                              <td>5% unlocked at TGE; remaining 3% released linearly over 12 months</td>
+                              <td>5% unlocked at TGE; remaining 2% released linearly over 12 months</td>
                           </tr>
                           <tr>
                               <td><strong>Team Allocation</strong></td>
                               <td>5%</td>
                               <td>50,000,000</td>
-                              <td>6-month cliff; then linear vesting over 12 months</td>
+                              <td>Locked with 6‑month cliff, then linear vesting over 12 months</td>
                           </tr>
                           <tr>
                               <td><strong>Development Fund</strong></td>
                               <td>5%</td>
                               <td>50,000,000</td>
-                              <td>6-month cliff; then linear vesting over 12 months</td>
+                              <td>Locked with 6‑month cliff, then linear vesting over 12 months</td>
                           </tr>
                           <tr>
                               <td><strong>Emergency Reserve</strong></td>
                               <td>3%</td>
                               <td>30,000,000</td>
-                              <td>Available via multi-signature treasury wallet</td>
+                              <td>Available immediately via multi‑signature treasury wallet</td>
+                          </tr>
+                          <tr>
+                              <td><strong>Genesis Burn</strong></td>
+                              <td>5%</td>
+                              <td>50,000,000</td>
+                              <td>Permanently removed from circulation (Technical Exclusion)</td>
                           </tr>
                       </tbody>
                   </table>
@@ -387,7 +391,21 @@ export default function WhitepaperPage() {
           </section>
 
           <section className="wp-section">
-              <h3 className="wp-section-title">5. Security & Transparency</h3>
+              <h3 className="wp-section-title">5. Automated Integrity Protocol</h3>
+              
+              <h4 className="wp-sub-title"> - Genesis Supply Calibration</h4>
+              <p className="wp-text">
+                To fortify network resilience and ensure a stable technical launch, a "Technical Exclusion" of 50,000,000 units from the NNM total supply has been executed prior to the presale phase. This proactive measure optimizes smart contract efficiency and reinforces the infrastructure against inflation, ensuring a streamlined, high-performance operational environment from day one.
+              </p>
+
+              <h4 className="wp-sub-title"> - Operational Sustainability Mechanism</h4>
+              <p className="wp-text">
+                As part of our commitment to digital identity sovereignty, 10% of units generated via platform activity—including digital name minting—are autonomously and permanently decommissioned. This automated protocol functions as a technical shield, fortifying the network against adversarial spam while maintaining the long-term structural equilibrium of the NNM and ChainFace infrastructure.
+              </p>
+          </section>
+
+          <section className="wp-section">
+              <h3 className="wp-section-title">6. Security & Transparency</h3>
               <p className="wp-text">
                 All token allocations, vesting schedules, and liquidity mechanisms are enforced through publicly verifiable smart contracts deployed on the Solana blockchain.
               </p>
@@ -404,13 +422,13 @@ export default function WhitepaperPage() {
           </section>
 
           <section className="wp-section">
-              <h3 className="wp-section-title">6. Legal Notice & Disclaimer</h3>
+              <h3 className="wp-section-title">7. Legal Notice & Disclaimer</h3>
               
               <div className="wp-disclaimer" style={{ marginBottom: '2rem', marginTop: '1.5rem' }}>
                   <div className="wp-disclaimer-title">IMPORTANT: PLEASE READ THIS SECTION CAREFULLY.</div>
               </div>
 
-              <h4 className="wp-sub-title">6.1 No Financial Return Expectation</h4>
+              <h4 className="wp-sub-title">7.1 No Financial Return Expectation</h4>
               <p className="wp-text">
                 NNM Tokens are digital utility units designed solely for use within the NNM ecosystem and its protocol functionalities. They are not securities, investment contracts, or financial instruments. Participation in the Genesis distribution is entirely voluntary.
               </p>
@@ -418,7 +436,7 @@ export default function WhitepaperPage() {
                 By acquiring $NNM, you explicitly acknowledge that you are doing so for its intended utility within the ecosystem and <strong>NOT</strong> with any expectation of profit, capital appreciation, financial return, or speculative gain.
               </p>
 
-              <h4 className="wp-sub-title">6.2 No Guarantees</h4>
+              <h4 className="wp-sub-title">7.2 No Guarantees</h4>
               <p className="wp-text">The NNM Protocol does not guarantee:</p>
               <ul className="wp-list">
                   <li>Market value</li>
@@ -431,7 +449,7 @@ export default function WhitepaperPage() {
                 All forward-looking elements are subject to change based on technical, regulatory, and market conditions.
               </p>
 
-              <h4 className="wp-sub-title">6.3 Risk of Digital Asset Loss</h4>
+              <h4 className="wp-sub-title">7.3 Risk of Digital Asset Loss</h4>
               <p className="wp-text">
                 The use of blockchain-based systems involves inherent and significant risks. Participation in the NNM ecosystem may result in the partial or total loss of digital assets.
               </p>
@@ -446,7 +464,7 @@ export default function WhitepaperPage() {
                 Nexus Name Market, its developers, contributors, and affiliates shall not be held liable for any losses, damages, or disruptions resulting from participation in the protocol.
               </p>
 
-              <h4 className="wp-sub-title">6.4 Compliance & User Responsibility</h4>
+              <h4 className="wp-sub-title">7.4 Compliance & User Responsibility</h4>
               <p className="wp-text">
                 Participation in any token distribution event is the sole responsibility of the participant.
               </p>
@@ -457,7 +475,7 @@ export default function WhitepaperPage() {
                 The NNM project does not provide financial, legal, or investment advice.
               </p>
 
-              <h4 className="wp-sub-title">6.5 Forward-Looking Statements</h4>
+              <h4 className="wp-sub-title">7.5 Forward-Looking Statements</h4>
               <p className="wp-text">
                 This document may contain forward-looking statements related to future development, integrations, and ecosystem expansion.
               </p>
@@ -465,7 +483,7 @@ export default function WhitepaperPage() {
                 Such statements are not guarantees of future performance and are subject to uncertainty, technical feasibility, and evolving market conditions.
               </p>
 
-              <h4 className="wp-sub-title">6.6 Voluntary Participation</h4>
+              <h4 className="wp-sub-title">7.6 Voluntary Participation</h4>
               <p className="wp-text">
                 All participation within the NNM ecosystem is voluntary and based on engagement with experimental decentralized technologies.
               </p>

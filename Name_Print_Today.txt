@@ -938,3 +938,28 @@ Name: ADAM
 Tier: IMMORTAL
 Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
 ------------------------
+
+=================================
+Date: 2026-04-15
+=================================
+
+ID: 1346
+Name: ADAM35
+Tier: ELITE
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+ID: 1347
+Name: ADAM36
+Tier: ELITE
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+ID: 1348
+Name: ADAM41
+Tier: FOUNDER
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------
+ID: 1349
+Name: ADAM42
+Tier: FOUNDER
+Wallet: 0x825b7F1e181B3DDFbCd2fEE7D35E0089f6F9f36e
+------------------------

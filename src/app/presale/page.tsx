@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 const COLOR_NAVY_BG = '#050a16';
-const TARGET_DATE = new Date('2026-04-22T12:00:00Z').getTime();
+const TARGET_DATE = new Date('2026-05-22T12:00:00Z').getTime();
 
 export default function PresalePage() {
     const [isMounted, setIsMounted] = useState(false);
@@ -14,13 +14,13 @@ export default function PresalePage() {
         currentPhase: 1,
         currentPrice: 0.001,
         nextPrice: 0.0025,
-        phaseTarget: 60000000,
-        tokensSoldInPhase: 15000000,
-        baseFomoFill: 25
+        phaseTarget: 300000000,
+        tokensSoldInPhase: 0,
+        baseFomoFill: 5
     });
     
     const totalPresaleAllocation = 300000000;
-    const finalPrice = 0.005;
+    const finalPrice = 0.007;
     const currentRate = blockchainData.currentPrice === 0.001 ? 80000 : 32000;
 
     const progressPercentage = Math.min(
@@ -155,17 +155,14 @@ export default function PresalePage() {
                                 Phase {blockchainData.currentPhase} Price<br/>
                                 <span className="text-white fw-bold" style={{ fontSize: '1.2rem' }}>${blockchainData.currentPrice}</span>
                             </div>
-                            <div className="price-line text-center">
-                                Next Phase Price<br/>
-                                <span className="text-white fw-bold">${blockchainData.nextPrice}</span>
-                            </div>
+
                             <div className="price-line text-right">
                                 Listing Price<br/>
                                 <span className="gold-metallic-text" style={{ fontSize: '1.4rem' }}>${finalPrice}</span>
                             </div>
                         </div>
 
-                        <div className="countdown-inline-row mb-3">
+                        <div className="countdown-inline-row mb-3" style={{ justifyContent: 'center' }}>
                             <div className="countdown-wrapper">
                                 <div className="time-box">
                                     <span className="time-value">{timeLeft.days}</span>
@@ -184,19 +181,13 @@ export default function PresalePage() {
                                     <span className="time-label">S</span>
                                 </div>
                             </div>
-                            <div className="current-price-inline">
-                                <div className="price-line" style={{ fontSize: '0.65rem' }}>Current Phase</div>
-                                <div className="gold-metallic-text" style={{ fontSize: '0.7rem' }}>
-                                    ${blockchainData.currentPrice}
-                                </div>
-                            </div>
                         </div>
 
                         <div className="progress-container-presale mb-3">
                             <div className="d-flex justify-content-between mb-1">
                                 <span className="text-light-muted" style={{ fontSize: '0.75rem' }}>Phase {blockchainData.currentPhase} Availability</span>
                                 <span className="text-white fw-bold" style={{ fontSize: '0.75rem' }}>
-                                    {blockchainData.tokensSoldInPhase.toLocaleString()} / <span style={{ color: '#9b51e0' }}>{blockchainData.phaseTarget.toLocaleString()} NNM</span>
+                                    300,000,000 NNM
                                 </span>
                             </div>
                             <div className="presale-bar-style">
@@ -276,7 +267,7 @@ export default function PresalePage() {
                             
                             <div style={{ textAlign: 'center', margin: '12px 0' }}>
                                 <span className="gradient-glow" style={{ fontSize: '0.9rem', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-                                    ⏳ Opening ... 22-4-2026
+                                    ⏳ Opening ... 22-5-2026
                                 </span>
                             </div>
 
@@ -307,6 +298,34 @@ export default function PresalePage() {
                         </p>
                     </div>
                 </section> 
+
+                                <div style={{ textAlign: 'center', marginTop: '60px', marginBottom: '15px' }}>
+                    <h2 className="hero-title gradient-glow" style={{ fontSize: '1.25rem', margin: 0 }}>Automated Integrity Protocol</h2>
+                </div>
+
+                      <div id="burn-section" className="burn-box-wide" style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '40px', textAlign: 'left', marginTop: '0' }}>
+                    <div>
+                        <div className="burn-header" style={{ justifyContent: 'flex-start', marginBottom: '10px' }}>
+                            <span className="burn-icon">🔥</span>
+                            <h4 className="gradient-glow" style={{ fontSize: '1.1rem', margin: 0 }}>Genesis Supply Calibration</h4>
+                        </div>
+                        <p style={{ textAlign: 'left', margin: 0, color: '#b0c0c0', fontSize: '0.85rem', lineHeight: '1.6' }}>
+                            To fortify network resilience and ensure a stable technical launch, a "Technical Exclusion" of 50,000,000 units from the NNM total supply has been executed prior to the presale phase. This proactive measure optimizes smart contract efficiency and reinforces the infrastructure against inflation, ensuring a streamlined, high-performance operational environment from day one.
+                        </p>
+                    </div>
+
+                    <div style={{ height: '1px', background: 'rgba(162, 0, 255, 0.15)', width: '100%' }}></div>
+
+                    <div>
+                        <div className="burn-header" style={{ justifyContent: 'flex-start', marginBottom: '10px' }}>
+                            <span className="burn-icon">⚙️</span>
+                            <h4 className="gradient-glow" style={{ fontSize: '1.1rem', margin: 0 }}>Operational Sustainability Mechanism</h4>
+                        </div>
+                        <p style={{ textAlign: 'left', margin: 0, color: '#b0c0c0', fontSize: '0.85rem', lineHeight: '1.6' }}>
+                            As part of our commitment to digital identity sovereignty, 10% of units generated via platform activity—including digital name minting—are autonomously and permanently decommissioned. This automated protocol functions as a technical shield, fortifying the network against adversarial spam while maintaining the long-term structural equilibrium of the NNM and ChainFace infrastructure.
+                        </p>
+                    </div>
+                </div>
 
                 <div className="tokenomics-header">
                     <h2 className="hero-title gradient-glow" style={{ fontSize: '1.25rem' }}>NNM Tokenomics</h2>
@@ -373,7 +392,7 @@ export default function PresalePage() {
                             <div className="table-row">
                                 <span className="table-key">Contract</span>
                                 <span className="table-val">
-                                    <a href="https://solscan.io/token/BfKz5Afz5u2oARnGziyiqbDKzyqsxkeHM8fHFfbkoX5x" target="_blank" rel="noopener noreferrer" className="blue-link">BfKz5Afz...koX5x</a>
+                                    <a href="#!" onClick={(e) => e.preventDefault()} className="blue-link">BfKz5Afz...koX5x</a>
                                 </span>
                             </div>
                         </div>
@@ -383,45 +402,35 @@ export default function PresalePage() {
                         <div className="allocation-details-scroll">
                             <div className="alloc-item">
                                 <h4 className="gradient-glow">Presale Allocation (30%)</h4>
-                                <p>Distributed to early participants in the Genesis phase. 40% unlocked at TGE, remainder released linearly over 60 days. <a href="https://solscan.io/token/BfKz5Afz5u2oARnGziyiqbDKzyqsxkeHM8fHFfbkoX5x#holders" target="_blank" rel="noopener noreferrer" className="verify-link">View Contract ↗</a></p>
+                                <p>Distributed to early participants in the Genesis phase. 250% unlocked at TGE, remainder released linearly over 60 days. <a href="#!" onClick={(e) => e.preventDefault()} className="verify-link">View Contract ↗</a></p>
                             </div>
                             <div className="alloc-item">
-                                <h4 className="gradient-glow">Liquidity Pool (15%) 🔒</h4>
+                                <h4 className="gradient-glow">Liquidity Pool (10%) 🔒</h4>
                                 <p>Allocated to DEX liquidity. Locked for 365 days post‑listing to protect price stability.</p>
                             </div>
                             <div className="alloc-item">
                                 <h4 className="gradient-glow">Platform Rewards & Ecosystem (34%) 🔒</h4>
-                                <p>5% unlocked at TGE; remaining 30% released linearly over 12 months. <a href="https://app.streamflow.finance/contract/solana/mainnet/FZsJohSkoxwpQr1PAd7kkStx1V7W72H4FFfCjmMjj1XF" target="_blank" rel="noopener noreferrer" className="verify-link">View Vesting ↗</a></p>
+                                <p>5% unlocked at TGE; remaining 30% released linearly over 12 months. <a href="#!" onClick={(e) => e.preventDefault()} className="verify-link">View Vesting ↗</a></p>
                             </div>
                             <div className="alloc-item">
                                 <h4 className="gradient-glow">Treasury & Growth (8%) 🔒</h4>
-                                <p>5% unlocked at TGE; remaining 2% released linearly over 12 months. <a href="https://app.streamflow.finance/contract/solana/mainnet/FZsJohSkoxwpQr1PAd7kkStx1V7W72H4FFfCjmMjj1XF" target="_blank" rel="noopener noreferrer" className="verify-link">View Vesting ↗</a></p>
+                                <p>5% unlocked at TGE; remaining 2% released linearly over 12 months. <a href="#!" onClick={(e) => e.preventDefault()} className="verify-link">View Vesting ↗</a></p>
                             </div>
                             <div className="alloc-item">
                                 <h4 className="gradient-glow">Team Allocation (5%) 🔒</h4>
-                                <p>Locked with 6‑month cliff, then linear vesting over 12 months. <a href="https://app.streamflow.finance/contract/solana/mainnet/3BfN83ZJ5kS17onwqKARB3CMWw3nrRXHrnntWDCBtMxF" target="_blank" rel="noopener noreferrer" className="verify-link">View Vesting ↗</a></p>
+                                <p>Locked with 6‑month cliff, then linear vesting over 12 months. <a href="#!" onClick={(e) => e.preventDefault()} className="verify-link">View Vesting ↗</a></p>
                             </div>
                             <div className="alloc-item">
                                 <h4 className="gradient-glow">Development Fund (5%) 🔒</h4>
-                                <p>Locked with 6‑month cliff, then linear vesting over 12 months. <a href="https://app.streamflow.finance/contract/solana/mainnet/3BfN83ZJ5kS17onwqKARB3CMWw3nrRXHrnntWDCBtMxF" target="_blank" rel="noopener noreferrer" className="verify-link">View Vesting ↗</a></p>
+                                <p>Locked with 6‑month cliff, then linear vesting over 12 months. <a href="#!" onClick={(e) => e.preventDefault()} className="verify-link">View Vesting ↗</a></p>
                             </div>
                             <div className="alloc-item">
                                 <h4 className="gradient-glow">Emergency Reserve (3%) 🔒</h4>
-                                <p>Available immediately via multi‑signature treasury wallet. <a href="https://solscan.io/account/7mtVq6GVK7vZip9fSvcjvfXeh4MMTM5YCg1a9CaNCYyF" target="_blank" rel="noopener noreferrer" className="verify-link">View Wallet ↗</a></p>
+                                <p>Available immediately via multi‑signature treasury wallet. <a href="#!" onClick={(e) => e.preventDefault()} className="verify-link">View Wallet ↗</a></p>
                             </div>
                         </div>
                     </div>
                 </section>
-
-                <div id="burn-section" className="burn-box-wide">
-                    <div className="burn-header">
-                        <span className="burn-icon">🔥</span>
-                        <h4 className="gradient-glow">Automated Network Security</h4>
-                    </div>
-                    <p>
-                        10% of tokens generated from platform activity (digital name minting) are permanently removed from circulation to prevent network spam and ensure smart contract sustainability.
-                    </p>
-                </div>
 
                 <div className="roadmap-header mt-100" id="roadmap-section">
                     <h2 className="hero-title gradient-glow" style={{ fontSize: '1.25rem', textAlign: 'left' }}>NNM Roadmap</h2>
@@ -1265,7 +1274,7 @@ export default function PresalePage() {
 
                     .mt-100 { margin-top: 60px !important; }
                 }
-            ` }} />
+            ` }} />           
         </main>
     );
 }
